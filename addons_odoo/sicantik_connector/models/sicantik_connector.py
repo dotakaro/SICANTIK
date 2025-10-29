@@ -212,7 +212,36 @@ class SicantikConnector(models.Model):
         """
         registration_id = data.get('pendaftaran_id')
         if not registration_id:
+            _logger.warning(f'Missing registration_id in data: {data}')
             return 'failed'
+        
+        # Get permit type name
+        permit_type_name = data.get('n_perizinan')
+        if not permit_type_name:
+            _logger.warning(f'Missing permit type for {registration_id}')
+            return 'failed'
+        
+        # Find or create permit type
+        permit_type = self.env['sicantik.permit.type'].search([
+            ('name', '=', permit_type_name)
+        ], limit=1)
+        
+        if not permit_type:
+            _logger.info(f'Creating new permit type: {permit_type_name}')
+            permit_type = self.env['sicantik.permit.type'].create({
+                'name': permit_type_name,
+                'last_sync_date': fields.Datetime.now()
+            })
+        
+        # Prepare permit data
+        permit_vals = {
+            'registration_id': registration_id,
+            'applicant_name': data.get('n_pemohon') or 'Data tidak tersedia',
+            'permit_type_name': permit_type_name,
+            'permit_type_id': permit_type.id,
+            'permit_number': data.get('no_surat'),
+            'last_sync_date': fields.Datetime.now()
+        }
         
         # Check if permit already exists
         existing_permit = self.env['sicantik.permit'].search([
@@ -221,23 +250,12 @@ class SicantikConnector(models.Model):
         
         if existing_permit:
             # Update existing permit
-            existing_permit.write({
-                'applicant_name': data.get('n_pemohon'),
-                'permit_type_name': data.get('n_perizinan'),
-                'permit_number': data.get('no_surat'),
-                'last_sync_date': fields.Datetime.now()
-            })
+            existing_permit.write(permit_vals)
             return 'skipped'
         else:
             # Create new permit
-            self.env['sicantik.permit'].create({
-                'registration_id': registration_id,
-                'applicant_name': data.get('n_pemohon'),
-                'permit_type_name': data.get('n_perizinan'),
-                'permit_number': data.get('no_surat'),
-                'status': 'active',
-                'last_sync_date': fields.Datetime.now()
-            })
+            permit_vals['status'] = 'active'
+            self.env['sicantik.permit'].create(permit_vals)
             return 'synced'
     
     def sync_expiry_dates_workaround(self, max_permits=None):
@@ -416,6 +434,76 @@ class SicantikConnector(models.Model):
         except Exception as e:
             _logger.error(f'Scheduled expiry sync error: {str(e)}')
     
+    def sync_permit_types(self):
+        """
+        Sync permit types from SICANTIK API
+        
+        Fetches all permit types from jenisperizinanlist endpoint
+        and creates/updates permit type master data.
+        
+        Returns:
+            dict: Sync statistics
+        """
+        self.ensure_one()
+        start_time = time.time()
+        
+        _logger.info('Starting permit type sync...')
+        
+        try:
+            # Fetch permit types from API
+            data = self._make_api_request('jenisperizinanlist')
+            
+            if not data:
+                _logger.info('No permit types to sync')
+                return {'synced': 0, 'updated': 0, 'failed': 0}
+            
+            synced = 0
+            updated = 0
+            failed = 0
+            
+            for type_data in data:
+                try:
+                    type_name = type_data.get('jenis_perizinan')
+                    if not type_name:
+                        failed += 1
+                        continue
+                    
+                    # Find existing permit type
+                    permit_type = self.env['sicantik.permit.type'].search([
+                        ('name', '=', type_name)
+                    ], limit=1)
+                    
+                    type_vals = {
+                        'name': type_name,
+                        'code': type_data.get('id'),
+                        'last_sync_date': fields.Datetime.now()
+                    }
+                    
+                    if permit_type:
+                        permit_type.write(type_vals)
+                        updated += 1
+                    else:
+                        self.env['sicantik.permit.type'].create(type_vals)
+                        synced += 1
+                        
+                except Exception as e:
+                    _logger.error(f'Error processing permit type: {str(e)}')
+                    failed += 1
+            
+            duration = time.time() - start_time
+            _logger.info(f'Permit type sync completed in {duration:.2f}s: synced={synced}, updated={updated}, failed={failed}')
+            
+            return {
+                'synced': synced,
+                'updated': updated,
+                'failed': failed,
+                'duration': duration
+            }
+            
+        except Exception as e:
+            _logger.error(f'Fatal error in permit type sync: {str(e)}')
+            raise UserError(f'Permit type sync failed: {str(e)}')
+    
     def action_sync_permits(self):
         """Manual action to sync permits"""
         self.ensure_one()
@@ -426,8 +514,8 @@ class SicantikConnector(models.Model):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': 'Sync Completed',
-                'message': f'Synced: {result["synced"]}, Skipped: {result["skipped"]}, Failed: {result["failed"]}',
+                'title': 'Sinkronisasi Selesai',
+                'message': f'Tersinkronisasi: {result["synced"]}, Dilewati: {result["skipped"]}, Gagal: {result["failed"]}',
                 'type': 'success' if result['synced'] > 0 else 'warning',
                 'sticky': False,
             }

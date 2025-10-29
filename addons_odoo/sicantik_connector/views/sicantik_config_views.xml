@@ -7,9 +7,10 @@
         <field name="arch" type="xml">
             <form string="SICANTIK Configuration">
                 <header>
-                    <button name="action_test_connection" type="object" string="Test Connection" class="oe_highlight"/>
-                    <button name="action_sync_now" type="object" string="Sync Now" class="btn-primary"/>
-                    <button name="action_open_dashboard" type="object" string="Open Dashboard" class="btn-secondary"/>
+                    <button name="action_test_connection" type="object" string="Tes Koneksi" class="oe_highlight"/>
+                    <button name="action_sync_now" type="object" string="Sinkronkan Data Izin" class="btn-primary"/>
+                    <button name="%(action_sync_permit_types)d" type="action" string="Sinkronkan Jenis Izin" class="btn-info"/>
+                    <button name="action_open_dashboard" type="object" string="Buka Dashboard" class="btn-secondary"/>
                     <field name="connection_status" widget="badge" 
                            decoration-success="connection_status == 'connected'"
                            decoration-danger="connection_status == 'error'"
@@ -95,6 +96,41 @@
             <p>
                 Configure connection to SICANTIK API server for data synchronization.
             </p>
+        </field>
+    </record>
+
+    <!-- Action: Sync Permit Types -->
+    <record id="action_sync_permit_types" model="ir.actions.server">
+        <field name="name">Sinkronkan Jenis Izin</field>
+        <field name="model_id" ref="model_sicantik_connector"/>
+        <field name="binding_model_id" ref="model_sicantik_config"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get active connector
+connector = env['sicantik.connector'].search([('active', '=', True)], limit=1)
+if connector:
+    result = connector.sync_permit_types()
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Sinkronisasi Jenis Izin Selesai',
+            'message': f'Baru: {result["synced"]}, Diperbarui: {result["updated"]}, Gagal: {result["failed"]}',
+            'type': 'success' if result['synced'] > 0 or result['updated'] > 0 else 'warning',
+            'sticky': False,
+        }
+    }
+else:
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Error',
+            'message': 'Tidak ada connector aktif',
+            'type': 'danger',
+            'sticky': False,
+        }
+    }
         </field>
     </record>
 </odoo>

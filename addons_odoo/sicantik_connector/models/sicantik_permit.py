@@ -38,10 +38,9 @@ class SicantikPermit(models.Model):
     )
     
     applicant_name = fields.Char(
-        string='Applicant Name',
-        required=True,
+        string='Nama Pemohon',
         tracking=True,
-        help='Name of permit applicant (n_pemohon)'
+        help='Nama pemohon izin dari SICANTIK (n_pemohon)'
     )
     
     permit_type_name = fields.Char(
