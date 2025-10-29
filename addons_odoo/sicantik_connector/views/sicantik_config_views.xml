@@ -44,7 +44,7 @@
                     <group>
                         <group string="Rate Limiting">
                             <field name="rate_limit_enabled"/>
-                            <field name="rate_limit_requests" attrs="{'invisible': [('rate_limit_enabled', '=', False)]}"/>
+                            <field name="rate_limit_requests" invisible="rate_limit_enabled == False"/>
                         </group>
                         <group string="Statistics">
                             <field name="last_sync_date"/>
@@ -55,7 +55,7 @@
                     <notebook>
                         <page string="Connection Status" name="status">
                             <group>
-                                <field name="last_error" attrs="{'invisible': [('last_error', '=', False)]}" 
+                                <field name="last_error" invisible="last_error == False" 
                                        widget="text" readonly="1"/>
                             </group>
                         </page>

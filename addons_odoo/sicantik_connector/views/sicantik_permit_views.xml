@@ -8,7 +8,7 @@
             <form string="SICANTIK Permit">
                 <header>
                     <button name="action_mark_as_renewed" type="object" string="Mark as Renewed" 
-                            class="btn-primary" attrs="{'invisible': [('status', '!=', 'active')]}"/>
+                            class="btn-primary" invisible="status != 'active'"/>
                     <button name="action_view_history" type="object" string="View History" class="btn-secondary"/>
                     <button name="action_send_test_notification" type="object" string="Test Notification" class="btn-info"/>
                     <field name="status" widget="statusbar" statusbar_visible="draft,active,expired,renewed"/>
@@ -23,9 +23,9 @@
                     </div>
                     
                     <widget name="web_ribbon" title="Expired" bg_color="bg-danger" 
-                            attrs="{'invisible': [('status', '!=', 'expired')]}"/>
+                            invisible="status != 'expired'"/>
                     <widget name="web_ribbon" title="Critical" bg_color="bg-warning" 
-                            attrs="{'invisible': [('expiry_status', '!=', 'critical')]}"/>
+                            invisible="expiry_status != 'critical'"/>
                     
                     <div class="oe_title">
                         <label for="registration_id" class="oe_edit_only"/>
@@ -71,14 +71,14 @@
                             </group>
                         </page>
                         <page string="Renewal Information" name="renewal" 
-                              attrs="{'invisible': [('is_renewal', '=', False), ('renewal_permit_id', '=', False)]}">
+                              invisible="is_renewal == False and renewal_permit_id == False">
                             <group>
                                 <group>
                                     <field name="is_renewal"/>
-                                    <field name="original_permit_id" attrs="{'invisible': [('is_renewal', '=', False)]}"/>
+                                    <field name="original_permit_id" invisible="is_renewal == False"/>
                                 </group>
                                 <group>
-                                    <field name="renewal_permit_id" attrs="{'invisible': [('renewal_permit_id', '=', False)]}"/>
+                                    <field name="renewal_permit_id" invisible="renewal_permit_id == False"/>
                                 </group>
                             </group>
                         </page>
