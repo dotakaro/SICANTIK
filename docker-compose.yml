@@ -1,0 +1,240 @@
+services:
+  # SICANTIK Existing Application (PHP/CodeIgniter)
+  sicantik_web:
+    build:
+      context: .
+      dockerfile: Dockerfile.sicantik
+    container_name: sicantik_web
+    ports:
+      - "8070:80" # SICANTIK web interface
+    volumes:
+      - .:/var/www/html
+      - ./uploads:/var/www/html/uploads
+      - ./temp:/var/www/html/temp
+    environment:
+      - MYSQL_HOST=sicantik_mysql
+      - MYSQL_DATABASE=db_office
+      - MYSQL_USER=sicantik_user
+      - MYSQL_PASSWORD=sicantik_password
+    depends_on:
+      - sicantik_mysql
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # MySQL for SICANTIK
+  sicantik_mysql:
+    image: mysql:8.0
+    container_name: sicantik_mysql
+    ports:
+      - "3307:3306" # Avoid conflict with default MySQL
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password_123
+      - MYSQL_DATABASE=db_office
+      - MYSQL_USER=sicantik_user
+      - MYSQL_PASSWORD=sicantik_password
+    volumes:
+      - sicantik_mysql_data:/var/lib/mysql
+      - ./db_office_last-20250711.tar.gz:/docker-entrypoint-initdb.d/db_office.tar.gz
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # Odoo 18 Enterprise - Companion App
+  odoo_companion:
+    image: odoo:18.0
+    container_name: odoo_companion
+    ports:
+      - "8060:8069" # Odoo companion interface
+    environment:
+      - HOST=postgres_companion
+      - USER=odoo
+      - PASSWORD=odoo_password_secure
+      - POSTGRES_DB=sicantik_companion
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons:ro
+      - ./enterprise:/mnt/enterprise-addons:ro # Enterprise addons
+      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ./uploads:/mnt/sicantik_uploads:ro # Read-only access to SICANTIK uploads
+    depends_on:
+      - postgres_companion
+      - redis_cache
+      - sicantik_mysql
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # PostgreSQL for Odoo Companion
+  postgres_companion:
+    image: postgres:15
+    container_name: postgres_companion
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=sicantik_companion
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo_password_secure
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # MinIO for Document Storage
+  minio_storage:
+    image: minio/minio:latest
+    container_name: minio_storage
+    ports:
+      - "9000:9000" # MinIO Console
+      - "9001:9001" # MinIO API
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+    volumes:
+      - minio_data:/data
+    networks:
+      - sicantik_network
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  # Redis for Caching
+  redis_cache:
+    image: redis:7-alpine
+    container_name: redis_cache
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # BSRE Connector Service
+  bsre_connector:
+    build:
+      context: ./services/bsre-connector
+      dockerfile: Dockerfile
+    container_name: bsre_connector
+    ports:
+      - "8020:8000"
+    env_file:
+      - env.development
+    environment:
+      - BSRE_API_URL=${BSRE_API_URL:-https://api-sandbox.bsre.id/v1}
+      - BSRE_CLIENT_ID=${BSRE_CLIENT_ID:-demo_client_id}
+      - BSRE_CLIENT_SECRET=${BSRE_CLIENT_SECRET:-demo_client_secret}
+      - BSRE_ENVIRONMENT=${BSRE_ENVIRONMENT:-sandbox}
+    volumes:
+      - ./certs:/app/certs:ro
+      - bsre_logs:/app/logs
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # Odoo 18 Enterprise - Standalone Companion App
+  odoo_companion_standalone:
+    image: odoo:18.0
+    container_name: odoo_companion_standalone
+    ports:
+      - "8065:8069" # Different port to avoid conflicts
+    environment:
+      - HOST=postgres_companion_standalone
+      - USER=odoo
+      - PASSWORD=odoo_password_secure
+      - POSTGRES_DB=sicantik_companion_standalone
+    volumes:
+      - odoo_companion_data:/var/lib/odoo
+      - ./addons_odoo:/mnt/extra-addons
+      - ./enterprise:/mnt/enterprise-addons
+      - ./config_odoo:/etc/odoo
+      - ./uploads:/mnt/sicantik_uploads:ro
+    depends_on:
+      - postgres_companion_standalone
+      - redis_cache
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+    command: ["odoo", "--config=/etc/odoo/odoo.conf", "--dev=all"]
+
+  # PostgreSQL for Odoo Companion (Standalone)
+  postgres_companion_standalone:
+    image: postgres:15
+    container_name: postgres_companion_standalone
+    ports:
+      - "5435:5432" # Different port to avoid conflicts
+    environment:
+      - POSTGRES_DB=sicantik_companion_standalone
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo_password_secure
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_companion_data:/var/lib/postgresql/data/pgdata
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx_proxy:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    ports:
+      - "8085:80" # Main proxy entry point
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - sicantik_web
+      - odoo_companion
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # Adminer for Database Management
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    ports:
+      - "8090:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=sicantik_mysql
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+  # MailHog for Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP
+    networks:
+      - sicantik_network
+    restart: unless-stopped
+
+volumes:
+  sicantik_mysql_data:
+    driver: local
+  postgres_data:
+    driver: local
+  odoo_data:
+    driver: local
+  odoo_companion_data:
+    driver: local
+  postgres_companion_data:
+    driver: local
+  minio_data:
+    driver: local
+  redis_data:
+    driver: local
+  bsre_logs:
+    driver: local
+
+networks:
+  sicantik_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
