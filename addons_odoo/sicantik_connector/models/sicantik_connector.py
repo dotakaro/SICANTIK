@@ -4,6 +4,7 @@ import base64
 import requests
 import time
 import logging
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
@@ -61,19 +62,63 @@ class SicantikConnector(models.Model):
         url = self.config_id.get_api_url(endpoint)
         
         try:
-            _logger.debug(f'API Request: {method} {url} params={params}')
+            _logger.info(f'API Request: {method} {url} params={params} timeout={timeout}s')
             
             if method == 'GET':
                 response = requests.get(url, params=params, timeout=timeout)
             else:
                 raise NotImplementedError(f'HTTP method {method} not implemented')
             
+            _logger.info(f'Response status: {response.status_code}')
             response.raise_for_status()
-            data = response.json()
             
-            _logger.debug(f'API Response: {len(data) if isinstance(data, list) else "object"}')
+            # Check if response is empty
+            if not response.text or response.text.strip() == '':
+                raise ValueError('API mengembalikan response kosong')
             
-            return data
+            # Check content type and parse accordingly
+            content_type = response.headers.get('Content-Type', '')
+            _logger.info(f'Content-Type: {content_type}')
+            
+            if 'xml' in content_type.lower() or response.text.strip().startswith('<?xml'):
+                # Parse XML response
+                _logger.info(f'Parsing XML response (length: {len(response.text)})')
+                try:
+                    root = ET.fromstring(response.text)
+                    
+                    # Check if it's a list of items (multiple records)
+                    items = root.findall('.//item')
+                    if items:
+                        # Multiple items - convert to list of dicts
+                        data = []
+                        for item in items:
+                            item_dict = {}
+                            for child in item:
+                                item_dict[child.tag] = child.text
+                            data.append(item_dict)
+                        _logger.info(f'XML parsed: {len(data)} items')
+                    else:
+                        # Single item - convert to dict
+                        data = {}
+                        for child in root.iter():
+                            if child.text and child.text.strip():
+                                data[child.tag] = child.text
+                        _logger.info(f'XML parsed: single item with {len(data)} fields')
+                    
+                    return data
+                    
+                except ET.ParseError as xml_err:
+                    _logger.error(f'XML parsing error: {xml_err}. Response: {response.text[:500]}')
+                    raise ValueError(f'API tidak mengembalikan XML valid: {str(xml_err)}')
+            else:
+                # Try to parse JSON
+                try:
+                    data = response.json()
+                    _logger.info(f'JSON parsed: {len(data) if isinstance(data, list) else "object"}')
+                    return data
+                except ValueError as json_err:
+                    _logger.error(f'JSON parsing error. Response: {response.text[:500]}')
+                    raise ValueError(f'API tidak mengembalikan JSON valid. Response: {response.text[:100]}')
         
         except requests.exceptions.Timeout:
             error_msg = f'API request timeout after {timeout} seconds'
@@ -86,7 +131,7 @@ class SicantikConnector(models.Model):
             raise UserError(error_msg)
         
         except ValueError as e:
-            error_msg = f'Invalid JSON response: {str(e)}'
+            error_msg = f'Invalid response: {str(e)}'
             _logger.error(error_msg)
             raise UserError(error_msg)
     
