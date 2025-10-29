@@ -42,7 +42,10 @@ services:
 
   # Odoo 18 Enterprise - Companion App
   odoo_companion:
-    image: odoo:18.0
+    build:
+      context: .
+      dockerfile: Dockerfile.odoo
+    image: sicantik-odoo:18.0
     container_name: odoo_companion
     ports:
       - "8060:8069" # Odoo companion interface
@@ -135,7 +138,10 @@ services:
 
   # Odoo 18 Enterprise - Standalone Companion App
   odoo_companion_standalone:
-    image: odoo:18.0
+    build:
+      context: .
+      dockerfile: Dockerfile.odoo
+    image: sicantik-odoo:18.0
     container_name: odoo_companion_standalone
     ports:
       - "8065:8069" # Different port to avoid conflicts
