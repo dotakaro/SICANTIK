@@ -4,6 +4,7 @@ from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 import requests
 import logging
+import xml.etree.ElementTree as ET
 
 _logger = logging.getLogger(__name__)
 
@@ -152,10 +153,43 @@ class SicantikConfig(models.Model):
             _logger.info(f'Testing connection to: {url}')
             
             response = requests.get(url, timeout=self.api_timeout)
+            _logger.info(f'Response status: {response.status_code}')
+            _logger.info(f'Response headers: {response.headers}')
+            _logger.info(f'Response content (first 200 chars): {response.text[:200]}')
+            
             response.raise_for_status()
             
-            data = response.json()
-            _logger.info(f'Connection test successful: {data}')
+            # Check if response is empty
+            if not response.text or response.text.strip() == '':
+                raise ValueError('API mengembalikan response kosong')
+            
+            # Check content type and parse accordingly
+            content_type = response.headers.get('Content-Type', '')
+            _logger.info(f'Content-Type: {content_type}')
+            
+            if 'xml' in content_type.lower() or response.text.strip().startswith('<?xml'):
+                # Parse XML response
+                try:
+                    root = ET.fromstring(response.text)
+                    # Extract jumlahPerizinan from XML
+                    jumlah_elem = root.find('.//jumlahPerizinan')
+                    if jumlah_elem is not None:
+                        jumlah = jumlah_elem.text
+                        data = {'total': jumlah}
+                        _logger.info(f'XML parsed successfully: {data}')
+                    else:
+                        raise ValueError('Element jumlahPerizinan tidak ditemukan dalam XML')
+                except ET.ParseError as xml_err:
+                    _logger.error(f'XML parsing error: {xml_err}. Response: {response.text[:500]}')
+                    raise ValueError(f'API tidak mengembalikan XML valid: {str(xml_err)}')
+            else:
+                # Try to parse JSON
+                try:
+                    data = response.json()
+                    _logger.info(f'JSON parsed successfully: {data}')
+                except ValueError as json_err:
+                    _logger.error(f'JSON parsing error. Response: {response.text[:500]}')
+                    raise ValueError(f'API tidak mengembalikan JSON valid. Response: {response.text[:100]}')
             
             self.write({
                 'connection_status': 'connected',
@@ -166,8 +200,8 @@ class SicantikConfig(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': 'Connection Successful',
-                    'message': f'Successfully connected to SICANTIK API. Found {data.get("total", "N/A")} permit types.',
+                    'title': 'Koneksi Berhasil',
+                    'message': f'Berhasil terhubung ke API SICANTIK. Ditemukan {data.get("total", "N/A")} jenis izin.',
                     'type': 'success',
                     'sticky': False,
                 }
