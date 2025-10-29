@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sptl" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="be473d96-7d93-42ce-b6de-2bd454ecac32">
+	<property name="ireport.zoom" value="1.0000000000000042"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="137"/>
+	<parameter name="pendaftaran_id" class="java.lang.String"/>
+	<parameter name="n_perizinan" class="java.lang.String"/>
+	<parameter name="n_pemohon" class="java.lang.String"/>
+	<parameter name="telp_pemohon" class="java.lang.String"/>
+	<parameter name="a_pemohon" class="java.lang.String"/>
+	<parameter name="d_survey" class="java.lang.String"/>
+	<parameter name="repgen_tgl_sekarang" class="java.lang.String"/>
+	<parameter name="no_surat" class="java.lang.String"/>
+	<parameter name="n_perusahaan" class="java.lang.String"/>
+	<parameter name="a_perusahaan" class="java.lang.String"/>
+	<parameter name="d_survey_day" class="java.lang.String"/>
+	<parameter name="nip_pejabat" class="java.lang.String"/>
+	<parameter name="nama_pejabat" class="java.lang.String"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\xampp\\htdocs\\SICANTIK\\backoffice\\assets\\jasper\\template\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BASEPATH" class="java.lang.String"/>
+	<parameter name="nama_perusahaan" class="java.lang.String"/>
+	<parameter name="alamat_perusahaan" class="java.lang.String"/>
+	<parameter name="kecamatan_perusahaan" class="java.lang.String"/>
+	<parameter name="comp_nama_penandatangan" class="java.lang.String"/>
+	<parameter name="comp_jabatan" class="java.lang.String"/>
+	<parameter name="comp_nip" class="java.lang.String"/>
+	<parameter name="kelurahan_pemohon" class="java.lang.String"/>
+	<parameter name="kecamatan_pemohon" class="java.lang.String"/>
+	<parameter name="provinsi_pemohon" class="java.lang.String"/>
+	<parameter name="kabupaten_pemohon" class="java.lang.String"/>
+	<parameter name="kelurahan_perusahaan" class="java.lang.String"/>
+	<parameter name="kabupaten_perusahaan" class="java.lang.String"/>
+	<parameter name="provinsi_perusahaan" class="java.lang.String"/>
+	<parameter name="peg_survey" class="java.lang.String"/>
+	<parameter name="nip_survey" class="java.lang.String"/>
+	<parameter name="parameter1" class="java.lang.String"/>
+	<parameter name="alamat_izin" class="java.lang.String"/>
+	<queryString language="xPath">
+		<![CDATA[/result//data]]>
+	</queryString>
+	<field name="v_property" class="java.lang.String">
+		<fieldDescription><![CDATA[v_property]]></fieldDescription>
+	</field>
+	<field name="Parent" class="java.lang.String">
+		<fieldDescription><![CDATA[Parent]]></fieldDescription>
+	</field>
+	<field name="v_tinjauan" class="java.lang.String">
+		<fieldDescription><![CDATA[v_tinjauan]]></fieldDescription>
+	</field>
+	<field name="n_property" class="java.lang.String">
+		<fieldDescription><![CDATA[n_property]]></fieldDescription>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="436" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="103" width="555" height="20" uuid="ed99d070-3658-49c7-8084-5c0d238dce14"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[SURAT PERINTAH TINJAUAN LAPANGAN]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="-1" y="119" width="552" height="20" uuid="d74d8779-7ae6-4373-bedc-d64c2b41e7c4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["Nomor : "+$P{no_surat}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="141" y="288" width="414" height="50" uuid="2ea48d70-bd9a-4adf-b0ad-24e3b5e7ccd8"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{a_perusahaan}+" KEL./DESA "+$P{kelurahan_perusahaan}+" KECAMATAN "+$P{kecamatan_perusahaan}+" KABUPATEN "+$P{kabupaten_perusahaan}+" PROVINSI "+$P{provinsi_perusahaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="5" y="221" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Alamat Pemohon]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="131" y="388" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="141" y="266" width="314" height="20" uuid="6a04a253-2c2c-4304-9ff4-f75ef013c659"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{n_perusahaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="243" y="-103" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Nama Pemohon]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="131" y="181" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="5" y="201" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[No Telp/HP Pemohon]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="131" y="221" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="131" y="141" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="5" y="141" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Nomor Pendaftaran]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="131" y="161" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="131" y="201" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="141" y="161" width="315" height="20" uuid="e17afc61-366d-4f66-b5be-49f3812ca24f"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{n_perizinan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="5" y="285" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Alamat Bangunan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="5" y="265" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Jenis Bangunan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="131" y="285" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="141" y="181" width="315" height="20" uuid="2e7784c9-bbba-4aad-b8eb-63b23899f289"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{n_pemohon}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="141" y="222" width="414" height="43" uuid="a04b0bda-83df-49cc-858d-59476e8ea958"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{a_pemohon}+" KEL./DESA "+$P{kelurahan_pemohon}+" KECAMATAN "+$P{kecamatan_pemohon}+" KABUPATEN "+$P{kabupaten_pemohon}+" PROVINSI "+$P{provinsi_pemohon}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="5" y="161" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Jenis Layanan]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="141" y="388" width="314" height="20" uuid="261b2f93-0736-45ca-ad6b-5d85e5429e17"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{d_survey}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="131" y="266" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="141" y="201" width="315" height="20" uuid="9d93e241-d071-4a3e-a3c3-755047df0246"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{telp_pemohon}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="5" y="388" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Tanggal Peninjauan]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="141" y="141" width="315" height="20" uuid="d051dbd0-49fb-4707-b194-dc3499fef2ea"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{pendaftaran_id}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="131" y="332" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="5" y="332" width="126" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Lokasi Izin]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="141" y="332" width="406" height="56" uuid="001fa0d3-648b-415d-b174-7821a3fa1d93"/>
+				<text><![CDATA[Dinas Penanaman Modal dan Pelayanan Perizinan Terpadu Satu Pintu Jl. Jamin Ginting No.17 Kabanjahe]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="119" y="3" width="430" height="29" uuid="26957abd-657b-447b-a2ec-158355b4149f"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PEMERINTAH KABUPATEN KARO]]></text>
+			</staticText>
+			<image>
+				<reportElement mode="Opaque" x="5" y="2" width="110" height="92" uuid="a2349bff-07e7-456d-a9c9-b9c535353e2c"/>
+				<imageExpression><![CDATA["/var/www/html/Logo/Logo.Karo.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="120" y="77" width="430" height="15" uuid="d2e9177d-6557-4c81-8260-de738946e826"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Website : perizinan.karokab.go.id, Email : perizinan@karokab.go.id ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="122" y="62" width="430" height="15" uuid="04c44b5e-ca3d-4103-b94f-b8fd711455e7"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Jalan Jamin Ginting No. 17 Kabanjahe Telp : (0628) 324655, Kode Pos  22113]]></text>
+			</staticText>
+			<line>
+				<reportElement x="-1" y="96" width="551" height="1" uuid="51415bad-fca6-4029-b62c-805f1345b14c"/>
+			</line>
+			<staticText>
+				<reportElement x="118" y="23" width="430" height="39" uuid="a1f153d5-61f8-4833-8af2-903b2e86630e"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DINAS PENANAMAN MODAL DAN PELAYANAN PERIZINAN TERPADU SATU PINTU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="5" y="181" width="126" height="20" uuid="e3eb4ee4-7509-4501-be2b-0b95128f18ce"/>
+				<text><![CDATA[Nama Pemohon]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="318">
+			<staticText>
+				<reportElement x="5" y="0" width="182" height="20" uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Petugas Peninjau Lapangan]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="5" y="84" width="182" height="20" uuid="79aba88b-b15e-4072-879d-0f703b6f7682"/>
+				<textFieldExpression><![CDATA["NIP :"+$P{nip_survey}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="5" y="64" width="182" height="20" uuid="9375fad1-9b65-480d-aa06-30f7e9738088"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{peg_survey}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="404" y="3" width="151" height="20" uuid="666f926a-914c-467c-8f62-b0d9ebc059de"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Kabanjahe]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="309" y="23" width="85" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[Pada Tanggal]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="404" y="23" width="151" height="20" uuid="ec6f580e-111f-48d0-a3fe-1035cffbf95a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{repgen_tgl_sekarang}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="394" y="3" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="309" y="3" width="85" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[DiKeluarkan di]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="394" y="23" width="10" height="20" uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="309" y="98" width="246" height="20" uuid="1eab658c-a3c4-4faa-a1ec-73f8106c45d7"/>
+				<textElement>
+					<font fontName="SansSerif"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_jabatan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="309" y="137" width="246" height="20" uuid="548907ea-754d-414d-9ef4-6b46a4d04c20"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="SansSerif" isUnderline="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_nama_penandatangan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="309" y="157" width="246" height="20" uuid="d325aa8d-d2bf-4340-8a3b-afffc50a1837"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="SansSerif" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA['NIP. '+ $P{comp_nip}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="309" y="58" width="246" height="31" uuid="81d5e9a5-6f9c-41b3-969c-26cda11d1d71"/>
+				<text><![CDATA[a.n. Kepala Dinas Penanaman Modal Dan Pelayanan Perizinan Terpadu Satu Pintu]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>

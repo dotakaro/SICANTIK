@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Penerbitan Izin Mendirikan Rumah Sakit" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e34a3deb-983b-48e2-af45-01a02ccb0c09">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="703"/>
+	<parameter name="no_surat" class="java.lang.String"/>
+	<parameter name="tgl_surat" class="java.lang.String"/>
+	<parameter name="d_tglpemeriksaan" class="java.lang.String"/>
+	<parameter name="nama_perusahaan" class="java.lang.String"/>
+	<parameter name="alamat_perusahaan" class="java.lang.String"/>
+	<parameter name="kelurahan_perusahaan" class="java.lang.String"/>
+	<parameter name="kecamatan_perusahaan" class="java.lang.String"/>
+	<parameter name="qrcode" class="java.lang.String"/>
+	<parameter name="n_pemohon" class="java.lang.String"/>
+	<parameter name="d_terima_berkas" class="java.lang.String"/>
+	<parameter name="prop_titikkoordinat" class="java.lang.String"/>
+	<parameter name="prop_baruatauperpanjangan" class="java.lang.String"/>
+	<parameter name="comp_nip" class="java.lang.String"/>
+	<parameter name="comp_jabatan" class="java.lang.String"/>
+	<parameter name="comp_nama_penandatangan" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="106" splitType="Stretch">
+			<image>
+				<reportElement uuid="8a97e262-8ea1-483c-a713-76fd591abe06" x="13" y="0" width="87" height="98"/>
+			</image>
+			<staticText>
+				<reportElement uuid="304e2630-5b15-400e-9cf4-81351045b7cc" x="100" y="14" width="455" height="33"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PEMERINTAH KABUPATEN KARO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="599ec253-a0e6-4f9e-b984-042ab1a49e13" x="100" y="33" width="455" height="38"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DINAS PENANAMAN MODAL DAN PELAYANAN PERIZINAN TERPADU SATU PINTU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1012fb97-b981-4869-858b-9a7cda816f08" x="100" y="71" width="455" height="20"/>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Jalan Jamin Ginting No. 17 Kabanjahe Telp : (0628) 324655, Kode Pos  22113]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5f20b775-c206-4132-9dec-63a63fa66688" x="100" y="86" width="455" height="20"/>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Website : perizinan.karokab.go.id, Email : perizinan@karokab.go.id ]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="fc449d68-c402-459f-9309-e3647c47a539" x="1" y="99" width="552" height="1"/>
+			</line>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="69" splitType="Stretch">
+			<line>
+				<reportElement uuid="6bdd5dd4-af5e-4960-83ce-329479302ed9" x="0" y="0" width="555" height="1"/>
+			</line>
+			<staticText>
+				<reportElement uuid="a49ab03c-5bc9-48a5-b309-f75d7a9df82b" x="0" y="6" width="553" height="24"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KEPUTUSAN KEPALA DINAS PENANAMAN MODAL DAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c1425b17-cb5e-426f-ac02-326b3ba378ba" x="0" y="29" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PELAYANAN PERIZINAN TERPADU SATU PINTU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8c094aec-5f9a-4d9d-b7cb-ba17a9c16192" x="0" y="49" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KABUPATEN KARO]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="fc449d68-c402-459f-9309-e3647c47a539" x="1" y="-1" width="552" height="1"/>
+				<graphicElement>
+					<pen lineWidth="1.5"/>
+				</graphicElement>
+			</line>
+			<textField>
+				<reportElement uuid="5f8e214c-5984-495c-9458-12ce94691a37" x="454" y="2" width="99" height="20"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Status :"+$P{prop_baruatauperpanjangan}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="61" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="cd4180b4-7df4-4dee-b3a0-cbe53bf686ad" x="0" y="2" width="555" height="20"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA["NOMOR : "+$P{no_surat}]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3c0ef751-f27e-406c-b915-cd29a0e679dd" x="0" y="23" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[TENTANG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4a7b8f0b-8e89-4ac1-bbcb-c53805e4d7d6" x="0" y="41" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[IZIN MENDIRIKAN RUMAH SAKIT ]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="125" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="2fc19c0b-1440-49d3-999c-79214b833d2e" x="0" y="-5" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KEPALA DINAS PENANAMAN MODAL DAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3b28873e-ab21-4b8b-9c2c-2672d7ea09ac" x="0" y="10" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PELAYANAN PERIZINAN TERPADU SATU PINTU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="60c58552-08b2-4848-99fe-7aa1240c6151" x="0" y="26" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KABUPATEN KARO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f9537862-20e7-4b3c-854e-ec2498058e0c" x="0" y="47" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[Membaca]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="100" y="47" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="3da1afa6-112c-4770-9ce9-16905cdea7ac" x="113" y="47" width="441" height="39"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["Surat Permohonan "+$P{n_pemohon}+" tanggal"+$P{d_terima_berkas}+" Perihal Izin Mendirikan Yayasan Rumah Sakit"+$P{nama_perusahaan}+" "]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="49" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="18b0f600-6127-40dd-b97b-5a9518937a21" x="0" y="-39" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[Menimbang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="100" y="-39" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2e1bec8e-cf0d-40ec-9aaa-f1a0dbefd0e0" x="113" y="-39" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[a.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="f3071b59-1196-4a32-969e-a067f0279693" x="123" y="-39" width="431" height="28"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["Surat dari Dinas Kabupaten Karo perihal Rekomendasi Teknis Penerbitan Izin Medirikan Rumah Sakit Khusus Nomor : 41.62/IX/2017"+$P{tgl_surat}+"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="2e1bec8e-cf0d-40ec-9aaa-f1a0dbefd0e0" x="112" y="-12" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[b.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="7e38ebd5-0771-488e-a35b-d63aa9da6211" x="122" y="-12" width="433" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["Berita Acara Pemeriksaan Lokasi oleh Tim Teknis tanggal"+$P{d_tglpemeriksaan}+"]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnFooter>
+	<pageFooter>
+		<band height="142" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="98" y="-39" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="86042ded-3d0a-4b09-a7cf-10f374dcc3e2" x="-1" y="-39" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[Mengingat]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2e1bec8e-cf0d-40ec-9aaa-f1a0dbefd0e0" x="111" y="-39" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ec36710e-21e1-42e9-ae7b-54fc6af5ce15" x="121" y="-39" width="434" height="32"/>
+				<textElement/>
+				<text><![CDATA[Peraturan Menteri Kesehatan Republik Indonesia Nomor 56 Tahun 2014 tentang Klasifikasi dan Perizinan Rumah Sakit;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2e1bec8e-cf0d-40ec-9aaa-f1a0dbefd0e0" x="112" y="-9" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="924165d1-f3cd-4f46-a0a8-e6747208f19a" x="123" y="-10" width="430" height="113"/>
+				<textElement/>
+				<text><![CDATA[Peraturan Bupati Karo Nomor 01 Tahun 2017 tentang Pelimpahan Kewenangan Bupati Karo atas Pelayanan Perizinan dan Non Perizinan Kepada Dinas Penanaman Modal dan Pelayanan Perizinan Terpadu Satu Pintu Kabupaten Karo (Berita Daerah Kabupaten Karo Tahun 2017 nomor 01) sebagai mana telah diubah dengan Peraturan Bupati Karo Nomor 24 Tahun 2019 tentang Perubahan atas Peraturan Bupati  Nomor 01 Tahun 2017 tentang  Pelimpahan Kewenangan Bupati Karo atas Pelayanan Perizinan dan Non Perizinan Kepada Dinas Penanaman modal dan Pelayanan Perizianan Terpadu Satu Pintu Kabupaten Karo (Berita Daerah Kabupaten Karo Tahun 2019 Nomor 24).]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="706" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="844356f9-b4c3-48ac-ad50-bbb5971c29c7" x="0" y="10" width="554" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MEMUTUSKAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bbf97cc1-0dc1-4ee5-a970-0c748a17be03" x="0" y="29" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[Menetapkan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8bde8887-52ae-4e38-bd5b-a4e2371cbee9" x="0" y="48" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[KESATU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="99" y="48" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="bf6c2557-86ac-458e-b6e0-2e46d1c6aa96" x="112" y="48" width="441" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["Memberikan Izin Mendirikan"+$P{nama_perusahaan}+"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="f6fb299f-30b2-42d9-b345-5c0913cd5e47" x="112" y="67" width="442" height="40"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{alamat_perusahaan}+" KEL/DESA "+$P{kelurahan_perusahaan}+ " KECAMATAN "+$P{kecamatan_perusahaan} + "Titik Koordinat " + $P{prop_titikkoordinat}+"."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="f6183b00-dfe7-48a2-a1c4-8d520cf91dc8" x="0" y="94" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[KEDUA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="99" y="94" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f752d677-b8bf-4b4d-9344-5820e5d9c8fb" x="112" y="94" width="444" height="20"/>
+				<textElement/>
+				<text><![CDATA[Izin tersebut dalam diktum KESATU berlaku selama 1 (satu) tahun. ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b14fbe1b-2a14-4714-b83a-e29321ed7618" x="0" y="114" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[KETIGA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="99" y="114" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="fac2fd2b-f311-40d7-9325-74cabecde0e1" x="112" y="114" width="443" height="28"/>
+				<textElement/>
+				<text><![CDATA[Keputusan ini mulai berlaku sejak tanggal ditetapkannya dengan ketentuan apabila terdapat kekeliruan di dalamnya akan diperbaiki sebagaimana mestinya. ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="11cfcdbf-abdf-425b-b53b-c2b40ba082eb" x="0" y="159" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[Dengan Ketentuan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="99" y="159" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="0" y="179" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="51decf77-718b-4f1b-912c-953aec029ceb" x="13" y="179" width="540" height="31"/>
+				<textElement/>
+				<text><![CDATA[Pihak Rumah Sakit agar memenuhi ketentuan sesuai PERMENKES Nomor 56 Tahun 2014 tentang Klasifikasi dan Perizinan Rumah Sakit;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="0" y="209" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d44b1588-d8de-45b7-b059-a3ec82e7d92a" x="13" y="209" width="540" height="30"/>
+				<textElement/>
+				<text><![CDATA[Memberikan pelayanan efektif, aman, bermutu dan non diskriminasi dengan mengutamakan kepentingan terbaik pasien sesuai dengan standar profesi, standar pelayanan dan standar prosedur operasional;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="0" y="238" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="25b17a11-28c7-4609-8e91-e8d6ce3612bf" x="14" y="238" width="539" height="33"/>
+				<textElement/>
+				<text><![CDATA[Memberikan pelayanan gawat darurat kepada pasien sesuai dengan kemampuan pelayanannya tanpa meminta uang muka terlebih dahulu atau mendahulukan kepentingan finansial;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="1" y="270" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="723a280c-539b-4a56-9bfb-2da80b3cb3c3" x="14" y="270" width="127" height="20"/>
+				<textElement/>
+				<text><![CDATA[Melaksankan fungsi sosial;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="fe12133e-b16b-4aa8-bc41-aff0ccbe9d9d" x="14" y="289" width="539" height="20"/>
+				<textElement/>
+				<text><![CDATA[Melaksanakan program pemerintah di bidang kesehatan;  sebagai kawasan tanpa rokok;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="1" y="289" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[5.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="1" y="308" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[6.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2fdc9790-b467-4cfc-9946-ca2f298fc636" x="14" y="308" width="539" height="20"/>
+				<textElement/>
+				<text><![CDATA[Memasang nama dan klasifikasi Rumah Sakit;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="1" y="326" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[7.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1c49b6ab-f4e9-4826-9d29-8d2879c53706" x="14" y="326" width="539" height="31"/>
+				<textElement/>
+				<text><![CDATA[Membuat dan melaporkan daftar tenaga medis dan tenaga kesehatan lain yang bekerja di Rumah Sakit dan melaporkannya ke Dinas Kesehatan Kabupaten Karo;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="1" y="356" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[8.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0402e3db-5bf2-46bf-82af-b0d24d137d63" x="14" y="356" width="539" height="31"/>
+				<textElement/>
+				<text><![CDATA[Membuat dan melaporkan daftar tenaga medis dan tenaga kesehatan lain yang bekerja di Rumah Sakit dan melaporkannya ke Dinas Kesehatan Kabupaten Karo;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb206879-a893-4a8f-9e73-65277721974c" x="1" y="386" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[9.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="51e65685-6d79-4936-a123-d607c5a76c7c" x="13" y="386" width="540" height="20"/>
+				<textElement/>
+				<text><![CDATA[Melaksanakan pencatatan penyakit-penyakit tertentu dan melaporkannya ke Dinas Kesehatan Kabupaten Karo.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="77a26691-1ffa-4d89-962a-18e442c2f404" x="300" y="443" width="198" height="20"/>
+				<textElement/>
+				<text><![CDATA[Ditetapkan di Kabanjahe]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="15ff2e05-8393-4e6a-8433-f5a574e9affd" x="300" y="462" width="66" height="20"/>
+				<textElement/>
+				<text><![CDATA[Pada Tanggal]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="41ade35d-7c85-48c7-bee9-4464cc5025a3" x="365" y="463" width="133" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{tgl_surat}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="c76d90f0-6fce-4bc1-a033-2f7c445794f2" x="220" y="492" width="333" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[Plt.KEPALA DINAS PENANAMAN MODAL DAN PELAYANAN]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="0b3f7082-e133-4127-bc8d-b56a1a857ad2" x="220" y="506" width="333" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PERIZINAN TERPADU SATU PINTU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="992282f9-6756-404a-b2aa-6c3111a2d60d" x="220" y="523" width="336" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KABUPATEN KARO]]></text>
+			</staticText>
+			<image>
+				<reportElement uuid="5f42cd4e-d686-4591-9cbd-366d93554700" x="31" y="510" width="123" height="144"/>
+				<imageExpression><![CDATA[$P{qrcode}]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement uuid="fb4326d8-fc23-48e6-8772-d40d68e3d2b8" x="-2" y="406" width="17" height="20"/>
+				<textElement/>
+				<text><![CDATA[10.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9c8ee506-b0c1-4718-87bb-971708b847f1" x="13" y="406" width="540" height="37"/>
+				<textElement/>
+				<text><![CDATA[Izin ini dicabut apabila yang bersangkutan melakukan kegiatan diluar ketentuan yang telah ditetapkan pada izin ini, serta melanggar peraturan perundang-undangan yang berlaku.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="a09a3142-d6da-4269-b310-6a0ff43bc803" x="220" y="613" width="333" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+					<font fontName="SansSerif" size="12" isBold="true" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_jabatan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="dbb6d3f3-7d1f-4d7f-b173-05135d5bd7cb" x="220" y="601" width="333" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_nama_penandatangan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="727a4541-7704-4ad0-9021-3c3e2186bd09" x="220" y="625" width="333" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["NIP. "+$P{comp_nip}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

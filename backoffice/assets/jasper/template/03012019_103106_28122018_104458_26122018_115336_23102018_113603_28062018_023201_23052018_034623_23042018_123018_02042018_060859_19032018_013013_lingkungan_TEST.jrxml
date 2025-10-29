@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="lingkungan" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d2ca4b27-43ab-4a7d-ab1b-d82caa3a9ac8">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="1183"/>
+	<parameter name="no_surat" class="java.lang.String"/>
+	<parameter name="nama_perusahaan" class="java.lang.String"/>
+	<parameter name="tgl_surat" class="java.lang.String"/>
+	<parameter name="alamat_perusahaan" class="java.lang.String"/>
+	<parameter name="prop_bidangusaha" class="java.lang.String"/>
+	<parameter name="qrcode" class="java.lang.String"/>
+	<parameter name="nama_pemohon" class="java.lang.String"/>
+	<parameter name="alamat_pemohon" class="java.lang.String"/>
+	<parameter name="prop_luaslahan" class="java.lang.String"/>
+	<parameter name="prop_suratdinaslingkunganhidup" class="java.lang.String"/>
+	<parameter name="prop_tanggalsuratlingkunganhidup" class="java.lang.String"/>
+	<parameter name="prop_tanggalcetakizin" class="java.lang.String"/>
+	<parameter name="prop_nomorpermohonan" class="java.lang.String"/>
+	<parameter name="prop_tanggalpermohonan" class="java.lang.String"/>
+	<parameter name="prop_nomorberitaacarapengumuman" class="java.lang.String"/>
+	<parameter name="prop_tanggalberitaacarapengumuman" class="java.lang.String"/>
+	<parameter name="prop_nomorpengumuman" class="java.lang.String"/>
+	<parameter name="prop_tanggalpengumuman" class="java.lang.String"/>
+	<parameter name="prop_lokasikegiatan" class="java.lang.String"/>
+	<parameter name="prop_perihaldinaslingkunganhidup" class="java.lang.String"/>
+	<parameter name="kecamatan_perusahaan" class="java.lang.String"/>
+	<parameter name="kabupaten_perusahaan" class="java.lang.String"/>
+	<parameter name="kelurahan_perusahaan" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="802" splitType="Stretch">
+			<image>
+				<reportElement uuid="d1b1917a-1d2b-41ba-91b1-e9e4570cf72e" mode="Opaque" x="25" y="26" width="93" height="98"/>
+				<imageExpression><![CDATA["/var/www/html/Logo/Logo.Karo.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement uuid="ab6975a8-ca77-43f0-b16d-0bf6f5e6883f" x="110" y="26" width="423" height="19"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PEMERINTAH KABUPATEN KARO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="20664f96-fe94-4bea-b4d2-1cef8b04ad92" x="110" y="46" width="423" height="56"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DINAS PENANAMAN MODAL DAN PELAYANAN PERIZINAN
+TERPADU SATU PINTU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="444f8a3f-187c-4abe-8422-1e65096648da" x="110" y="83" width="423" height="19"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Jalan Jamin Ginting No. 17 Kabanjahe Telp : (0628) 324655, Kode Pos  22113]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="984a1b96-e356-4aef-adaa-b5b3ac5833ef" x="110" y="105" width="423" height="19"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Website : perizinan.karokab.go.id, Email : perizinan@karokab.go.id ]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="a5932bc9-43ab-4fea-b038-c9ba4f18a475" x="25" y="130" width="508" height="1"/>
+				<graphicElement>
+					<pen lineWidth="1.75"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement uuid="f939ad84-d828-4ac7-a8a4-1a1032c19c69" x="25" y="133" width="508" height="1"/>
+			</line>
+			<staticText>
+				<reportElement uuid="c6928766-986d-4534-8d73-a57a081d45f6" x="0" y="215" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[IZIN LINGKUNGAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="29eca89a-0773-4dd0-9a7f-1edac22e8d09" x="0" y="130" width="555" height="57"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KEPUTUSAN KEPALA DINAS
+PENANAMAN MODAL DAN PELAYANAN PERIZINAN TERPADU SATU PINTU
+KABUPATEN KARO]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="57042755-9139-4638-b184-0f9216dcc358" x="0" y="177" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["NOMOR : "+$P{no_surat}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="1db82464-31db-4e9a-ab53-4fb3c40f221a" x="0" y="196" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[T E N T A N G]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f211f2ab-e6f9-4b32-84d4-7ac1f1b3ac5b" x="20" y="272" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Menimbang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0318d209-fd0a-4188-8ea7-d5dda659c6ca" x="99" y="272" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0318d209-fd0a-4188-8ea7-d5dda659c6ca" x="109" y="272" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[a.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="0a240e65-e577-48d0-8e33-2194226be34f" x="119" y="272" width="414" height="95"/>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression><![CDATA["bahwa penanggung jawab " +$P{nama_perusahaan}+ " berdasarkan tanda terima berkas pendaftaran Nomor " +$P{prop_nomorpermohonan}+ " tanggal " +$P{prop_tanggalpermohonan}+ " perihal permohonan Izin Lingkungan " +$P{nama_perusahaan}+ " di " +$P{prop_lokasikegiatan}+ " yang merupakan kegiatan yang wajib memiliki Dokumen Upaya Pemantauan Lingkungan Hidup (UKL-UPL); "]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="8cb5e71b-c89b-4652-9f4e-cce9e67bbd61" x="108" y="380" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[c.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0318d209-fd0a-4188-8ea7-d5dda659c6ca" x="109" y="344" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[b.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="0efb64b5-53c8-4c1e-87ae-769266e20054" x="119" y="343" width="414" height="57"/>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression><![CDATA["bahwa Surat Kepala Dinas Lingkungan Hidup Kabupaten Karo Nomor " +$P{prop_suratdinaslingkunganhidup}+ " tanggal " +$P{prop_tanggalsuratlingkunganhidup}+ " perihal " +$P{prop_perihaldinaslingkunganhidup}+";"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="f4fe8880-0e73-4df1-8092-1bee47de1322" x="120" y="380" width="413" height="46"/>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression><![CDATA["bahwa berdasarkan pertimbangan sebagaimana dimaksud pada huruf a dan huruf b, perlu menetapkan Keputusan Kepala Dinas Penanaman Modal dan Pelayanan Perizinan Terpadu Satu Pintu Kabupaten Karo tentang Izin Lingkungan kegiatan " +$P{nama_perusahaan}+"."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="c5a0fbfa-e0c5-41a1-90f5-8530fb2c051e" x="20" y="424" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Mengingat]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0318d209-fd0a-4188-8ea7-d5dda659c6ca" x="99" y="424" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8cb5e71b-c89b-4652-9f4e-cce9e67bbd61" x="109" y="424" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="39c1ba0a-cc9c-4011-9ca3-86ab4ca5a23d" x="119" y="425" width="414" height="47"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Undang-Undang Nomor 7 Drt Tahun 1956 tentang Pembentukan Daerah Otonom Kabupaten-Kabupaten Dalam Lingkungan Daerah propinsi Sumatera Utara (Lembaran Negara Republik Indonesia Tahun 1956 Nomor 58, Tambahan Lembaran Negara Nomor 1092);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8cb5e71b-c89b-4652-9f4e-cce9e67bbd61" x="109" y="471" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="06a61e9d-25cb-484c-8b3a-221260ea51de" x="120" y="471" width="413" height="44"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Undang-Undang Nomor 32 Tahun 2009 tentang Perlindungan dan Pengelolaan Lingkungan Hidup (Lembaran Negara Republik Indonesia Tahun 2009 Nomor 139, Tambahan Lembaran Negara Republik Indonesia Nomor 5058);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6dd0f63d-f7f6-49a5-98a2-743c452ee576" x="109" y="516" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="28709411-724d-4fda-af68-bd9e5df1437e" x="120" y="515" width="413" height="43"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Pemerintah Nomor 27 Tahun 2012 tentang Izin Lingkungan (Lembaran Negara Republik Indonesia Tahun 2012 Nomor 48, Tambahan Lembaran Negara Republik Indonesia Nomor 5285);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6dd0f63d-f7f6-49a5-98a2-743c452ee576" x="110" y="554" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8dcb1788-a7de-4d03-990f-2c5460865bbe" x="119" y="554" width="414" height="34"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Daerah Kabupaten Karo Nomor 05 Tahun 2016 tentang Pembentukan Perangkat Daerah Kabupaten Karo (Tambahan Lembaran Daerah Kabupaten Karo Nomor 03);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6dd0f63d-f7f6-49a5-98a2-743c452ee576" x="109" y="589" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[5.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0b595248-b1b8-4ed2-83c1-ceab55af3f19" x="120" y="589" width="413" height="30"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Bupati Karo Nomor 21 Tahun 2015 tentang Izin Lingkungan (Berita Daerah Kabupaten Karo Tahun 2015 Nomor 22);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6dd0f63d-f7f6-49a5-98a2-743c452ee576" x="109" y="619" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[6.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2a9d03d6-d3c1-49f4-9404-d0a03439ced6" x="120" y="619" width="413" height="35"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Bupati Karo Nomor 39 Tahun 2016 tentang Tugas Pokok, Fungsi dan Uraian Tugas Dinas Daerah Kabupaten Karo;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f9e23c09-e830-49fd-8eda-d9970042efa6" x="109" y="654" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[7.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9b3bb1fb-4459-4829-b118-ee40c81f6aec" x="120" y="654" width="413" height="48"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Bupati Karo Nomor 01 Tahun 2017 tentang Pelimpahan Kewenangan Bupati Karo Atas Pelayanan Perizinan dan Non Perizinan Kepada Dinas Penanaman Modal dan Pelayanan Perizinan Terpadu Satu Pintu Kabupaten Karo.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d561e342-c37f-4807-a3f2-d7a76a1edc6b" x="20" y="703" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Memperhatikan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f9e23c09-e830-49fd-8eda-d9970042efa6" x="99" y="703" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f9e23c09-e830-49fd-8eda-d9970042efa6" x="110" y="703" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="269617a9-ab91-4e13-b3be-3e72bc3958c5" x="122" y="703" width="411" height="69"/>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression><![CDATA["Pengumuman Nomor " +$P{prop_nomorpengumuman}+ " tanggal " +$P{prop_tanggalpengumuman}+ " tentang Permohonan Izin Lingkungan kegiatan " +$P{prop_bidangusaha}+ ";"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="f9e23c09-e830-49fd-8eda-d9970042efa6" x="110" y="742" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="e0ad15f5-0809-4e33-a819-7c855a2e9a47" x="122" y="742" width="411" height="50"/>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression><![CDATA["Berdasarkan Surat Perintah Tinjau Lapangan Nomor " +$P{prop_nomorberitaacarapengumuman}+ " tanggal " +$P{prop_tanggalberitaacarapengumuman}+ " tentang Permohonan Izin Lingkungan kegiatan " +$P{prop_bidangusaha}+"."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="74fc6276-bcda-4dc6-9707-30d4250f5c48" x="1" y="234" width="554" height="39"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PEMBANGUNAN BALAI LATIHAN KERJA]]></text>
+			</staticText>
+		</band>
+	</title>
+	<summary>
+		<band height="802">
+			<staticText>
+				<reportElement uuid="dfd5f45c-a0f2-4871-af9a-aa41598fefeb" x="1" y="10" width="554" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MEMUTUSKAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0ec8f907-6643-4a43-9da7-958c1bc2a77b" x="19" y="28" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Menetapkan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="28" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="fac9f7f3-3da0-46a4-925f-509be8b85d0d" x="19" y="48" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KESATU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="48" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c7ef1636-1006-47e4-887c-3f6f8c6a9af8" x="109" y="32" width="446" height="20"/>
+				<textElement/>
+				<text><![CDATA[Memberikan Izin Lingkungan kepada :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="109" y="67" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="35ddc940-e92f-4677-9f1f-4ce0e3c9d3c9" x="119" y="67" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Nama Perusahaan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="218" y="67" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="ac1e646a-3146-4497-bb55-69a266ac9957" x="228" y="67" width="305" height="47"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{nama_perusahaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="109" y="97" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="857a4ddf-7092-44f6-8525-422e0ed31d81" x="119" y="97" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Bidang Usaha]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="218" y="97" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="0a0c01b9-c4e2-47fc-b9a0-231f1bcb6822" x="228" y="97" width="305" height="30"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_bidangusaha}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="109" y="113" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4f2c23d2-0f13-40b5-90ed-b7f2f1d86f57" x="119" y="113" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Penanggung Jawab]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="218" y="113" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c545c144-28b2-4626-8844-14a998cf9e58" x="228" y="113" width="305" height="24"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{nama_pemohon}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="a085ba93-bfa1-4302-bff0-f1ef672876bc" x="119" y="138" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Alamat]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="109" y="138" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="218" y="138" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="754af2f3-ba78-4f9b-995c-2b41b0d6184d" x="228" y="138" width="305" height="44"/>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression><![CDATA[$P{alamat_pemohon}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="109" y="163" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[5.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3c565220-ee7f-412e-b9b9-e040e26bd6c6" x="119" y="163" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Lokasi Kegiatan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="218" y="163" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="28e5ed04-1616-4716-a811-e49fde58272a" x="228" y="163" width="305" height="34"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_lokasikegiatan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="485f2b62-8d5d-4d42-b44d-e3d20a109ea7" x="18" y="188" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KEDUA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="188" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="8a745f53-a0cb-434a-be5e-7aeabc5e4d1b" x="109" y="188" width="424" height="39"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["Ruang Lingkup kegiatan dalam Izin Lingkungan ini meliputi : Lahan seluas " +$P{prop_luaslahan}+" m2."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="45f93634-edb6-4580-81d0-c7154a91a6ed" x="18" y="203" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KETIGA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="203" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ea007c5a-03c6-4117-b12d-fc8cad87aee3" x="109" y="204" width="424" height="73"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Pemegang Izin sebagaimana dimaksud pada Diktum Kesatu, dalam melaksanakan kegiatannya harus memenuhi kewajiban melakukan pengelolaan Dampak Lingkungan sebagaimana tercantum dalam upaya pengelolaan lingkungan hidup dan upaya pemantauan lingkungan (UKL-UPL) yang merupakan bagian yang tidak terpisahkan dari keputusan ini.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8c71c9c2-16c1-4c66-aab1-0c51a234bddc" x="18" y="256" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KEEMPAT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="256" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a6be5672-74b7-4947-aac4-a959d14d339a" x="109" y="254" width="424" height="62"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Pengawasan terhadap Izin Lingkungan sebagaimana dimaksud pada Diktum Kesatu dilakukan oleh Dinas Lingkungan Hidup Kabupaten Karo dan Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Karo dalam hal pelaksanaan kewajiban-kewajiban yang dilakukan oleh penanggung jawab kegiatan.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="402489c8-06ff-4e20-bcf6-cfdebea776cd" x="19" y="306" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KELIMA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="306" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="99a8b0be-e631-4c38-927b-c7f6f562a190" x="109" y="306" width="424" height="54"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Pemegang Izin sebagaimana dimaksud pada Diktum Kesatu wajib mengajukan permohonan perubahan izin lingkungan apabila terjadi perubahan atas rencana usaha dan/ atau kegiatan sesuai dengan kriteria perubahan yang tercantum dalam Pasal 22 Peraturan Bupati Karo Nomor 21 Tahun 2015 tentang Izin Lingkungan.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="75d71fef-cfb9-4e14-be1e-05cd5f736c97" x="20" y="357" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KEENAM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="98" y="357" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0f6a2fb2-e5b0-4484-add2-71e1c01e2987" x="109" y="357" width="424" height="40"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Pemegang Izin Lingkungan sebagaimana dimaksud pada Diktum Kesatu menyampaikan laporan apabila Pemegang Izin telah mengakhiri usaha dan/ atau kegiatannya, atau pemrakarsa melakukan perubahan usaha dan/ atau kegiatannya.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2d4b8e86-b5b6-480f-b350-94f3ac1b64ab" x="21" y="398" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KETUJUH]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="398" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bcdc7c13-e4f0-47be-924d-20ce3af7a22e" x="109" y="398" width="424" height="41"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Pemegang Izin sebagaimana dimaksud pada Diktum Kesatu menyampaikan laporan pelaksanaan persyaratan dan kewajiban terkait dengan komponen fisik, kimia dan biologi setiap 6 (enam) bulan sekali sejak Keputusan ini ditetapkan kepada:
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="803f5167-41be-4b52-9ae6-31179ad6e08f" x="109" y="439" width="13" height="19"/>
+				<textElement/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0449db78-af7f-4bfe-b983-93bc5fb9e581" x="122" y="453" width="411" height="38"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Gubernur Provinsi Sumatera Utara up. Kepala Badan Lingkungan Hidup Provinsi Sumatera Utara;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="31019d4f-b3e9-4fc5-a18b-cb0efb1964dd" x="121" y="476" width="412" height="28"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Bupati Karo up. Kepala Dinas Lingkungan Hidup Kabupaten Karo dan Dinas Penanaman Modal dan Pelayanan Perizinan Terpadu Satu Pintu Kabupaten Karo;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="955b29b6-b7e9-4697-9121-0906bb8427e4" x="121" y="439" width="412" height="19"/>
+				<textElement/>
+				<text><![CDATA[Menteri Lingkungan Hidup dan Kehutanan di Jakarta;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a157ba80-6585-4773-97e8-f55ef0257c3c" x="109" y="476" width="13" height="19"/>
+				<textElement/>
+				<text><![CDATA[3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5a5c7359-272d-43c4-974e-26a8be8355ed" x="109" y="453" width="13" height="19"/>
+				<textElement/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5e9b293a-b945-4a62-a571-e9ed128fd496" x="109" y="500" width="13" height="19"/>
+				<textElement/>
+				<text><![CDATA[4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d7078016-caad-41f4-8080-92c611879e3d" x="121" y="500" width="412" height="19"/>
+				<textElement/>
+				<text><![CDATA[Kepala Pusat Pengelolaan Ekoregion Sumatera.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a6b32c70-1170-4ba3-91a0-14e37df13ae2" x="21" y="519" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KEDELAPAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="519" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9276352b-a461-4e6d-a221-9a01bf4da433" x="109" y="519" width="424" height="37"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Izin ini dicabut apabila yang bersangkutan melakukan kegiatan diluar ketentuan yang telah ditetapkan pada izin ini, serta melanggarperaturan Perundang-undang yang berlaku.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3daf5b87-da88-4943-8d35-3478744a1f37" x="22" y="548" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[KESEMBILAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a184a28-b22a-4b9a-bf10-e5f7cf6e2513" x="99" y="548" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b59666a8-c015-4469-9176-0ce333f9ad2f" x="109" y="548" width="424" height="42"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Keputusan ini mulai berlaku pada tanggal ditetapkan, dengan ketentuan akan diubah dan diperbaiki sebagaimana mestinya apabila dikemudian hari ternyata terdapat kekeliruan didalamnya.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9733e7f5-1f17-4f28-83fe-687dfa9a542d" x="326" y="586" width="75" height="19"/>
+				<textElement/>
+				<text><![CDATA[Ditetapkan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="20a34ce3-f767-462a-a7b5-408466e88073" x="400" y="586" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d97fed04-ce0e-424d-974f-ff30f1563fb2" x="411" y="586" width="100" height="19"/>
+				<textElement/>
+				<text><![CDATA[Kabanjahe]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="60b485f3-153d-4593-a0fb-29179c651d49" x="326" y="606" width="75" height="19"/>
+				<textElement/>
+				<text><![CDATA[Pada Tanggal]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="20a34ce3-f767-462a-a7b5-408466e88073" x="400" y="606" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="aaa5507e-a889-4c0f-a786-ace68adc87d9" x="411" y="606" width="122" height="19"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_tanggalcetakizin}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="0c32b855-0af0-49de-a405-4c8308c3aa29" x="228" y="625" width="305" height="77"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KEPALA DINAS PENANAMAN MODAL DAN
+PELAYANAN PERIZINAN TERPADU SATU PINTU
+KABUPATEN KARO
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3f797c79-57c4-4bdd-9e15-adad37806953" x="229" y="713" width="304" height="67"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[SUSY ISWARA BANGUN,SE,M.Si
+Pembina Utama Muda
+NIP. 19660505 199303 2 003
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6ec1d280-967b-4a43-8567-82a2d9e0dc95" x="24" y="740" width="310" height="62"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Tembusan :
+1. Kementrian Lingkungan Hidup dan Kehutanan di Jakarta
+2. Badan Lingkungan Hidup Provinsi Sumatera Utara di Medan
+3. Dinas Lingkungan Hidup Kabupaten Karo di Kabanjahe
+]]></text>
+			</staticText>
+			<image>
+				<reportElement uuid="0a127b75-f063-4c35-8bb0-a7027ac9ce09" x="22" y="631" width="112" height="97"/>
+				<imageExpression><![CDATA[$P{qrcode}]]></imageExpression>
+			</image>
+		</band>
+	</summary>
+</jasperReport>

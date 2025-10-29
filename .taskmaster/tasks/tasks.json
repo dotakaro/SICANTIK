@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2025-01-12T10:00:00Z",
+    "lastModified": "2025-01-12T10:00:00Z",
+    "totalTasks": 12,
+    "tags": {
+      "master": {
+        "name": "master",
+        "description": "Main development tasks for SICANTIK Companion App",
+        "created": "2025-01-12T10:00:00Z",
+        "isDefault": true
+      }
+    },
+    "currentTag": "master"
+  },
+  "tasks": {
+    "master": [
+      {
+        "id": 1,
+        "title": "Setup Docker Development Environment",
+        "description": "Setup complete Docker Compose environment untuk SICANTIK Companion App development dengan semua services yang diperlukan",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "Buat Docker Compose environment yang include: Odoo 18 Enterprise (port 8018), PostgreSQL untuk Odoo (port 5433), MySQL connector ke SICANTIK database, MinIO untuk document storage (port 9000), Redis untuk caching (port 6380), BSRE API connector service (port 8020), Nginx reverse proxy (port 8000). Ensure semua services dapat communicate dan volumes untuk persistent storage sudah dikonfigurasi dengan benar.",
+        "testStrategy": "Verify semua services running dengan docker-compose ps, test connectivity antar services, confirm Odoo dapat diakses di http://localhost:8018, test MinIO admin di http://localhost:9001"
+      },
+      {
+        "id": 2,
+        "title": "Create Odoo 18 Enterprise Base Setup",
+        "description": "Install dan configure Odoo 18 Enterprise dengan enterprise addons dan basic configuration",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [1],
+        "details": "Install Odoo 18 Enterprise dengan enterprise addons, configure PostgreSQL database connection, setup basic company profile untuk Kabupaten Karo, configure Indonesian localization, setup user management dan basic security groups. Create development database dan ensure enterprise features tersedia.",
+        "testStrategy": "Login ke Odoo admin interface, verify enterprise modules tersedia, test database creation, confirm Indonesian localization active"
+      },
+      {
+        "id": 3,
+        "title": "Analyze SICANTIK Database Structure",
+        "description": "Analyze existing SICANTIK MySQL database structure untuk understand data model dan integration points",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "Study SICANTIK database schema, identify key tables (tmpermohonan, tmpemohon, trperizinan, trstspermohonan), understand relationships dan data flow, document field mappings untuk integration, identify PDF file storage locations dan naming conventions, create database documentation untuk development reference.",
+        "testStrategy": "Generate ER diagram dari SICANTIK database, create sample queries untuk test data retrieval, verify PDF file paths dan accessibility"
+      },
+      {
+        "id": 4,
+        "title": "Create sicantik_connector Module",
+        "description": "Develop core Odoo module untuk database integration dengan SICANTIK MySQL",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [2, 3],
+        "details": "Create custom Odoo module dengan models: sicantik.permit.monitor untuk monitor izin dari SICANTIK, sicantik.document.import untuk import PDF documents, sicantik.sync.log untuk synchronization logging. Implement read-only MySQL connection, create scheduled jobs untuk monitor new permits, implement data synchronization dengan error handling dan logging.",
+        "testStrategy": "Test MySQL connection dari Odoo, verify scheduled jobs running correctly, test data import dari SICANTIK tables, confirm logging functionality"
+      },
+      {
+        "id": 5,
+        "title": "Setup MinIO Document Storage",
+        "description": "Configure MinIO object storage untuk PDF document repository dengan proper security dan access control",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [1],
+        "details": "Setup MinIO server dengan buckets untuk original PDFs dan signed PDFs, configure access policies dan security, implement S3-compatible API integration dengan Odoo, setup backup dan retention policies, create bucket structure untuk organize documents by permit type dan date.",
+        "testStrategy": "Test MinIO admin interface access, verify bucket creation dan file upload, test S3 API integration dari Odoo, confirm access policies working"
+      },
+      {
+        "id": 6,
+        "title": "Implement PDF Import Functionality",
+        "description": "Develop functionality untuk detect dan import PDF documents dari SICANTIK ke MinIO repository",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [4, 5],
+        "details": "Create automated system untuk detect new PDF files dari SICANTIK upload directory, implement file import ke MinIO dengan metadata storage di Odoo, handle duplicate detection dan file versioning, create monitoring dashboard untuk import status, implement error handling untuk failed imports.",
+        "testStrategy": "Test PDF detection dari SICANTIK directory, verify import ke MinIO successful, test metadata storage di Odoo, confirm duplicate handling works"
+      },
+      {
+        "id": 7,
+        "title": "Create sicantik_tte Module",
+        "description": "Develop module untuk digital signature workflow dan TTE BSRE integration",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [6],
+        "details": "Create Odoo module dengan models: sicantik.document untuk document management, sicantik.signature.queue untuk signing workflow, sicantik.bsre.log untuk BSRE API logging, sicantik.authority untuk master data pejabat. Implement multi-level approval workflow, create signing queue management, implement basic BSRE API connector structure.",
+        "testStrategy": "Test module installation, verify models creation, test workflow functionality dengan sample data, confirm approval process working"
+      },
+      {
+        "id": 8,
+        "title": "Develop BSRE API Integration",
+        "description": "Implement integration dengan TTE BSRE API untuk digital signature functionality",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [7],
+        "details": "Research BSRE API documentation dan requirements, implement authentication dan API communication, create PDF signature placement functionality, implement batch signing capabilities, create error handling dan retry mechanisms, implement certificate management untuk signing authorities.",
+        "testStrategy": "Test BSRE API authentication, verify PDF signing functionality, test batch processing, confirm certificate management works, test error handling scenarios"
+      },
+      {
+        "id": 9,
+        "title": "Create sicantik_verification Module",
+        "description": "Develop module untuk QR code generation dan public verification system",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [8],
+        "details": "Create Odoo module dengan models: sicantik.qr.code untuk QR code management, sicantik.verification.log untuk verification history, sicantik.public.access untuk public portal access. Implement QR code generation dengan unique verification URLs, create QR embedding ke signed PDFs, implement verification API endpoints.",
+        "testStrategy": "Test QR code generation, verify QR embedding ke PDF, test verification API endpoints, confirm unique URL generation works"
+      },
+      {
+        "id": 10,
+        "title": "Develop Public Verification Portal",
+        "description": "Create public web portal untuk document verification menggunakan QR codes",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [9],
+        "details": "Develop responsive web interface untuk public document verification, implement QR code scanning functionality (camera + upload), create document information display, implement verification status checking, create public API untuk external integrations, ensure mobile-friendly design dengan Indonesian language support.",
+        "testStrategy": "Test QR scanning functionality, verify document information display, test responsive design on mobile devices, confirm public access tanpa login"
+      },
+      {
+        "id": 11,
+        "title": "Create Document Management Dashboard",
+        "description": "Develop comprehensive dashboard untuk monitoring document status dan signing workflow",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [10],
+        "details": "Create Odoo views dan forms untuk document management, implement dashboard dengan status monitoring, create search dan filter functionality, implement bulk operations untuk documents, create reporting untuk signing activities, implement user role-based access control untuk different document types.",
+        "testStrategy": "Test dashboard functionality, verify search dan filtering works, test bulk operations, confirm role-based access control, test reporting features"
+      },
+      {
+        "id": 12,
+        "title": "Production Deployment & Security Hardening",
+        "description": "Prepare system untuk production deployment dengan security hardening dan performance optimization",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [11],
+        "details": "Implement security hardening untuk all components, setup SSL/TLS certificates, configure backup dan disaster recovery, implement monitoring dan alerting, optimize performance untuk large document volumes, create deployment documentation, setup log management dan audit trails, implement security scanning dan vulnerability assessment.",
+        "testStrategy": "Perform security penetration testing, verify SSL certificates working, test backup dan recovery procedures, confirm monitoring alerts working, test performance dengan large document volumes"
+      }
+    ]
+  }
+} 

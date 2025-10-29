@@ -1,0 +1,821 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BAP" language="groovy" pageWidth="595" pageHeight="935" columnWidth="511" leftMargin="42" rightMargin="42" topMargin="20" bottomMargin="42" uuid="8e0fd619-7dec-4faa-bcd7-7c0f1bca66e1">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="932"/>
+	<parameter name="pendaftaran_id" class="java.lang.String"/>
+	<parameter name="n_perizinan" class="java.lang.String"/>
+	<parameter name="n_pemohon" class="java.lang.String"/>
+	<parameter name="telp_pemohon" class="java.lang.String"/>
+	<parameter name="a_pemohon" class="java.lang.String"/>
+	<parameter name="d_survey" class="java.lang.String"/>
+	<parameter name="n_perusahaan" class="java.lang.String"/>
+	<parameter name="a_perusahaan" class="java.lang.String"/>
+	<parameter name="bap_id" class="java.lang.String"/>
+	<parameter name="repgen_tgl_sekarang" class="java.lang.String"/>
+	<parameter name="BASEPATH" class="java.lang.String"/>
+	<parameter name="kategori_gangguan" class="java.lang.String"/>
+	<parameter name="indeks_gangguan" class="java.lang.String"/>
+	<parameter name="property_gangguan" class="java.lang.String"/>
+	<parameter name="comp_nama_penandatangan" class="java.lang.String"/>
+	<parameter name="comp_jabatan" class="java.lang.String"/>
+	<parameter name="comp_nama_kantor" class="java.lang.String"/>
+	<parameter name="comp_nip" class="java.lang.String"/>
+	<parameter name="tgl_terima_berkas" class="java.lang.String"/>
+	<parameter name="tgl_surat" class="java.lang.String"/>
+	<parameter name="prop_nama" class="java.lang.String"/>
+	<parameter name="prop_pekerjaan" class="java.lang.String"/>
+	<parameter name="prop_alamat" class="java.lang.String"/>
+	<parameter name="prop_untuk" class="java.lang.String"/>
+	<parameter name="prop_fungsi" class="java.lang.String"/>
+	<parameter name="prop_lokasi" class="java.lang.String"/>
+	<parameter name="prop_nilairetribusi" class="java.lang.String"/>
+	<parameter name="prop_terbilang" class="java.lang.String"/>
+	<parameter name="prop_tembusancamat" class="java.lang.String"/>
+	<parameter name="tgl_surat_hijriah" class="java.lang.String"/>
+	<parameter name="prop_tanggalmasuk" class="java.lang.String"/>
+	<queryString language="xPath">
+		<![CDATA[/result/property/data]]>
+	</queryString>
+	<field name="Parent" class="java.lang.String">
+		<fieldDescription><![CDATA[Parent]]></fieldDescription>
+	</field>
+	<field name="v_tinjauan" class="java.lang.String">
+		<fieldDescription><![CDATA[v_tinjauan]]></fieldDescription>
+	</field>
+	<field name="v_property" class="java.lang.String">
+		<fieldDescription><![CDATA[v_property]]></fieldDescription>
+	</field>
+	<field name="n_property" class="java.lang.String">
+		<fieldDescription><![CDATA[n_property]]></fieldDescription>
+	</field>
+	<field name="satuan" class="java.lang.String">
+		<fieldDescription><![CDATA[satuan]]></fieldDescription>
+	</field>
+	<group name="grup property">
+		<groupExpression><![CDATA[$F{Parent}]]></groupExpression>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="873" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="99" y="15" width="327" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[PEMERINTAH KABUPATEN AGAM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="99" y="31" width="327" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="14" isBold="true" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[KANTOR PENANAMAN MODAL DAN ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="98" y="49" width="328" height="19"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="14" isBold="true" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[PELAYANAN TERPADU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="99" y="62" width="327" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Jalan Veteran Nomor 1 Padang Baru, Lubuk Basung, Kode Pos 26415]]></text>
+			</staticText>
+			<image>
+				<reportElement uuid="c3d9ac9e-6c25-4c2a-aa66-127291dd91ff" x="25" y="15" width="69" height="72"/>
+				<imageExpression><![CDATA[$P{BASEPATH} != null ? $P{BASEPATH}+"//uploads//logo//pantas.jpg" : "C:\\xampp\\htdocs\\SICANTIK\\backoffice\\uploads\\logo\\pantas.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="54" y="72" width="418" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[www.ptsp.agamkab.go.id email : kpmpt.agam@yahoo.com sms center : 085388161145]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="3d511668-d20f-40de-bbc2-ef46444d28a3" x="0" y="89" width="511" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="3d511668-d20f-40de-bbc2-ef46444d28a3" x="0" y="93" width="511" height="1"/>
+				<graphicElement>
+					<pen lineWidth="3.0" lineStyle="Solid" lineColor="#000000"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="12" y="117" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[KEPUTUSAN KEPALA KANTOR PENANAMAN MODAL ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="12" y="134" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[DAN PELAYANAN TERPADU KABUPATEN AGAM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="12" y="166" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[NOMOR :        /IMB/KPMPT-2013]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="12" y="197" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[TENTANG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="12" y="214" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[IZIN MENDIRIKAN BANGUNAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="12" y="246" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[KEPALA KANTOR PENANAMAN MODAL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="12" y="263" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[DAN PELAYANAN TERPADU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="0" y="295" width="97" height="16"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Menimbang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="295" width="10" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="107" y="295" width="15" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[a.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="107" y="349" width="15" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[b.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="9e43042e-9939-452b-a719-8927e9b689c4" x="122" y="295" width="390" height="61"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA["bahwa berdasarkan penelitian administrasi dan peninjauan lokasi terhadap permohonan yang diajukan Saudara " + $P{prop_nama} + ", tanggal " + $P{prop_tanggalmasuk} + ", telah memenuhi syarat untuk diberikan Izin Mendirikan Bangunan."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="0" y="403" width="97" height="16"/>
+				<textElement verticalAlignment="Top">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Menimbang]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="403" width="10" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="107" y="403" width="15" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="447" width="25" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="477" width="25" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="507" width="25" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="122" y="349" width="389" height="44"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Peraturan Bupati Agam Nomor 9 Tahun 2012 tanggal 24 April 2012 tentang Pendelegasian Wewenang Pelayanan kepada Kantor Penanaman Modal dan Pelayanan Terpadu.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="403" width="389" height="44"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Undang-undang Nomor 12 Tahun 1956 tentang Pembentukan Daerah Otonom Kabupaten dalam lingkungan Provinsi Sumatera Tengah (Lembaran Negara Tahun 1956 Nomor 15);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="447" width="389" height="30"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Undang-undang Nomor 28 Tahun 2002 tentang Bangunan Gedung (Lembaran Negara Tahun 2002 Nomor 134);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="477" width="389" height="30"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Undang-undang Nomor 32 Tahun 2004 tentang Pemerintahan Daerah (Lembaran negara Tahun 2004 Nomor 125);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="507" width="389" height="44"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Undang-undang Nomor 26 Tahun 2007 tentang Penataan Ruang (Lembaran Negara Tahun 2007 Nomor 68, Tambahan Lembaran Negara Nomor 4725);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="537" width="26" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[5.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="537" width="389" height="44"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Undang-undang Nomor 28 Tahun 2009 tentang Pajak dan Retribusi Daerah (Lembaran Negara Tahun 2009 Nomor 130, Tambahan Lembaran Negara Nomor 5049);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="581" width="26" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[6.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="581" width="389" height="44"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Undang-undang Nomor 32 Tahun 2009  tentang Perlindungan dan Pengelolaan Lingkungan Hidup (Lembaran Negara Tahun 2009 Nomor 140, Tambahan Lembaran Negara Nomor 5059);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="625" width="25" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[7.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="625" width="389" height="44"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Peraturan Pemerintah Nomor 36 Tahun 2005 tentang Peraturan Pelaksanaan Undang-undang Nomor 28 Tahun 2002 tentang Bangunan Gedung (Lembaran Negara Tahun 2005 Nomor 83);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="669" width="26" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[8.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="669" width="389" height="29"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Peraturan Menteri Pekerjaan Umum  Nomor 24/PRT/M2007 Tahun 2007 tentang Pedoman Teknis Izin Mendirikan Bangunan Gedung;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="698" width="26" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[9.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="698" width="389" height="31"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Peraturan Daerah Kabupaten Agam No. 7 Tahun 2000 tentang Tata Bangunan.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="714" width="26" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[10.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="714" width="389" height="40"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Peraturan Daerah Kabupaten Agam No. 7 Tahun 2011 tentang Pajak Daerah.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="731" width="26" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[11.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="123" y="731" width="389" height="29"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Peraturan Daerah Kabupaten Agam No. 3 Tahun 2012 tentang Retribusi Perizinan Tertentu.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="760" width="25" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[12.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="122" y="760" width="389" height="32"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Keputusan Bupati Agam No. 33 Tahun 2012 tentang Garis Sempadan Bangunan.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="97" y="792" width="25" height="16"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[13.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="122" y="792" width="389" height="44"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Keputusan Bupati Agam No. 234 Tahun 2011 tentang Penetapan Nilai Sewa Reklame, Nilai Jual Mineral Bukan Logam dan Batuan, Nilai Perolehan Air Tanah Serta Nilai Jual Sarang Burung Walet.]]></text>
+			</staticText>
+			<image>
+				<reportElement uuid="c3d9ac9e-6c25-4c2a-aa66-127291dd91ff" x="426" y="15" width="85" height="72"/>
+				<imageExpression><![CDATA[$P{BASEPATH} != null ? $P{BASEPATH}+"//uploads//logo//pdkpm.jpg" : "C:\\xampp\\htdocs\\SICANTIK\\backoffice\\uploads\\logo\\pdkpn.jpg"]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<summary>
+		<band height="767" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="0" y="211" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[KEDUA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="98" y="211" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="110" y="211" width="400" height="15"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Pemegang izin wajib memenuhi ketentuan-ketentuan sebagai berikut :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="110" y="226" width="22" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="132" y="226" width="378" height="16"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Bangunan yang didirikan sesuai dengan ukuran atau gambar.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="110" y="242" width="22" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="110" y="258" width="22" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="110" y="274" width="22" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="109" y="318" width="22" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[5.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="132" y="242" width="378" height="16"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Jarak bangunan dengan As jalan sesuai dengan aturan yang berlaku.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="133" y="258" width="378" height="16"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Menjaga air tuturan atap, tidak jatuh ke pekarangan tetangga.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="133" y="274" width="378" height="44"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Menyediakan lahan atau ruang terbuka untuk peresapan air (tidak disemenitasi) sebesar 10 s.d 30 % dari luas tanah atau membuat biopori / sumur resapan.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="132" y="318" width="378" height="29"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Mendirikan bangunan dalam waktu paling lama 3 (tiga) bulan semenjak Surat Izin dikeluarkan.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="2" y="422" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[KETIGA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="99" y="422" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="110" y="422" width="400" height="47"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Apabila pemegang izin melanggar ketentuan sebagaimana dimaksud  diktum KEDUA, maka izin ini batal dengan sendirinya dan Bangunan harus dibongkar.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="2" y="454" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[KEEMPAT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="99" y="454" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="110" y="454" width="400" height="15"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[Keputusan ini mulai berlaku pada tanggal ditetapkan.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5b16085d-ba68-4322-a113-d82be7943a90" x="4" y="695" width="197" height="14"/>
+				<textElement/>
+				<text><![CDATA[1. Bapak Bupati Agam di Lubuk Basung; ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5b16085d-ba68-4322-a113-d82be7943a90" x="5" y="737" width="314" height="14"/>
+				<textElement/>
+				<text><![CDATA[4. Sdr.Kepala Kantor Sat Pol PP Kabupaten Agam di Lubuk Basung;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5b16085d-ba68-4322-a113-d82be7943a90" x="5" y="709" width="292" height="14"/>
+				<textElement/>
+				<text><![CDATA[2. bapak Kepala Dinas PU Kabupaten Agam di Lubuk Basung]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="341e3940-669d-4ece-934c-3e715663b705" x="5" y="680" width="100" height="15"/>
+				<textElement/>
+				<text><![CDATA[Tebusan Yth:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="5b16085d-ba68-4322-a113-d82be7943a90" x="4" y="723" width="293" height="14"/>
+				<textElement/>
+				<text><![CDATA[3. Bapak Kepala DPPKA Kabupaten Agam di Lubuk Basung;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="2" y="62" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[PERTAMA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="2" y="27" width="511" height="18"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[MEMUTUSKAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="99" y="62" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="1" y="47" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Menetapkan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="109" y="62" width="404" height="15"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Memberikan Izin  kepada:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="99" y="47" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="111" y="77" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Nama]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="208" y="77" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c2de6805-6c86-45fe-b191-fe79f7d5a997" x="218" y="77" width="293" height="15"/>
+				<textElement>
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prop_nama}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="111" y="92" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Pekerjaan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="208" y="92" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c2de6805-6c86-45fe-b191-fe79f7d5a997" x="218" y="92" width="293" height="15"/>
+				<textElement>
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prop_pekerjaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="111" y="107" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Alamat]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="208" y="107" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c2de6805-6c86-45fe-b191-fe79f7d5a997" x="218" y="107" width="293" height="28"/>
+				<textElement>
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prop_alamat}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="111" y="135" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Jenis]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="208" y="135" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c2de6805-6c86-45fe-b191-fe79f7d5a997" x="218" y="135" width="293" height="15"/>
+				<textElement>
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prop_untuk}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="111" y="150" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Fungsi	]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="208" y="150" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c2de6805-6c86-45fe-b191-fe79f7d5a997" x="218" y="150" width="293" height="15"/>
+				<textElement>
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prop_fungsi}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="111" y="165" width="97" height="15"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="11" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Lokasi]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="208" y="165" width="10" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" isBold="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c2de6805-6c86-45fe-b191-fe79f7d5a997" x="218" y="165" width="293" height="30"/>
+				<textElement>
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{prop_lokasi}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="109" y="347" width="22" height="16"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font fontName="SansSerif" size="11"/>
+				</textElement>
+				<text><![CDATA[6.]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c2de6805-6c86-45fe-b191-fe79f7d5a997" x="131" y="347" width="380" height="75"/>
+				<textElement textAlignment="Justified">
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Pemegang izin sewaktu menerima Surat Keputusan ini harus membayar retribusi Izin Mendirikan Bangunan (IMB)  sebesar RP." + $P{prop_nilairetribusi} + ",- (" + $P{prop_terbilang} + "), sesuai dengan Peraturan Daerah Kabupaten Agam 03 Tahun 2012 tanggal 12 Maret 2012."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="899e0b52-bdd1-4dce-97c7-0746719d5ed0" x="265" y="614" width="247" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="false" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[Fatimah, S.Sos, M.Si]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="283" y="485" width="90" height="20"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Lubuk Basung,]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="262" y="539" width="247" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Kepala Kantor PenanamaN Modal]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="266" y="641" width="247" height="19"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[NIP. 19680424 198903 2 020]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="b2590cf2-34f0-4a99-be62-e693f8d7d518" x="373" y="485" width="137" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{tgl_surat}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="263" y="528" width="247" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[An. BUPATI AGAM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="266" y="625" width="247" height="21"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Pembina Tk. I]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="262" y="554" width="247" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="false"/>
+				</textElement>
+				<text><![CDATA[dan Pelayana Terpadu]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="9df05917-f311-42e0-8cc3-dd666c6731e1" x="375" y="501" width="112" height="1"/>
+			</line>
+			<textField>
+				<reportElement uuid="b2590cf2-34f0-4a99-be62-e693f8d7d518" x="374" y="497" width="136" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{tgl_surat_hijriah}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="c2de6805-6c86-45fe-b191-fe79f7d5a997" x="4" y="751" width="332" height="15"/>
+				<textElement>
+					<font size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["5. Camat " +  $P{prop_tembusancamat}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

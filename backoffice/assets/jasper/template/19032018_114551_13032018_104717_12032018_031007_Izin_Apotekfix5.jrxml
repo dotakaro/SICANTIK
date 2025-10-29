@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Izin Apotek" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c113d6e7-c406-4f9a-9ccf-b63240e920eb">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="768"/>
+	<parameter name="no_surat" class="java.lang.String"/>
+	<parameter name="nama_pemohon" class="java.lang.String"/>
+	<parameter name="alamat_pemohon" class="java.lang.String"/>
+	<parameter name="prop_nomorsipa" class="java.lang.String"/>
+	<parameter name="nama_perusahaan" class="java.lang.String"/>
+	<parameter name="alamat_perusahaan" class="java.lang.String"/>
+	<parameter name="kecamatan_perusahaan" class="java.lang.String"/>
+	<parameter name="kabupaten_perusahaan" class="java.lang.String"/>
+	<parameter name="provinsi_perusahaan" class="java.lang.String"/>
+	<parameter name="prop_sarana" class="java.lang.String"/>
+	<parameter name="prop_namapemiliksarana" class="java.lang.String"/>
+	<parameter name="prop_akteperjanjiankerjasama" class="java.lang.String"/>
+	<parameter name="prop_tanggalkerjasamaakte" class="java.lang.String"/>
+	<parameter name="prop_namanotaris" class="java.lang.String"/>
+	<parameter name="prop_alamatnotaris" class="java.lang.String"/>
+	<parameter name="prop_tanggalcetakizin" class="java.lang.String"/>
+	<parameter name="qrcode" class="java.lang.String"/>
+	<parameter name="d_berlaku_izin" class="java.lang.String"/>
+	<parameter name="tgl_surat" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="802" splitType="Stretch">
+			<image>
+				<reportElement uuid="e2475d76-864b-452e-abfd-964fca39a052" x="35" y="30" width="92" height="103"/>
+				<imageExpression><![CDATA["/var/www/html/Logo/Logo.Karo.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement uuid="0b40ad3c-b101-4121-abbe-67af8e8f0d2f" x="127" y="30" width="396" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="15" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PEMERINTAH KABUPATEN KARO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1abc9bbe-956d-4609-83d7-da91a949b81b" x="127" y="50" width="396" height="43"/>
+				<textElement textAlignment="Center">
+					<font size="15" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DINAS PENANAMAN MODAL DAN PELAYANAN PERIZINAN TERPADU SATU PINTU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f80cee01-80c3-4430-8da1-de287a5a49ad" x="127" y="93" width="396" height="20"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Jalan Jamin Ginting No. 17 Kabanjahe Telp : (0628) 324655, Kode Pos  22113]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="98efb09b-0169-45a2-a6b6-f045156f23a4" x="127" y="113" width="396" height="20"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Website : perizinan.karokab.go.id, Email : perizinan@karokab.go.id ]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="875ae996-9dcf-4d26-ab40-d50c798ae22d" x="35" y="132" width="488" height="1"/>
+				<graphicElement>
+					<pen lineWidth="2.0"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement uuid="7790016c-8e47-4c36-9e9d-dc1a30d04b71" x="35" y="135" width="488" height="1"/>
+			</line>
+			<staticText>
+				<reportElement uuid="98f4b0da-eb22-497d-a850-bd3af56bf814" x="35" y="141" width="488" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[SURAT IZIN APOTEK]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="de5288fe-8ce8-40c3-9ed6-671e3958fdb4" x="35" y="161" width="488" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["NOMOR : "+$P{no_surat}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="20208fd8-e8ca-4028-aadb-c4ee419ec0e2" x="35" y="196" width="80" height="20"/>
+				<textElement/>
+				<text><![CDATA[MEMBACA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="2bb47854-768a-4254-a8de-69c83a4beea2" x="114" y="196" width="12" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="f464c290-0ec6-4ef9-ad45-c674fa291d1f" x="125" y="196" width="398" height="30"/>
+				<textElement textAlignment="Justified"/>
+				<textFieldExpression><![CDATA["Surat Permohonan " +$P{nama_pemohon}+ " tanggal " +$P{tgl_surat}+ " tentang permohonan untuk memperoleh Izin Apotek."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ee2128f0-96e5-452e-9211-c60596a5abe9" x="35" y="226" width="80" height="20"/>
+				<textElement/>
+				<text><![CDATA[MENIMBANG]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bb13a733-9ec6-4bdd-8046-9da7f6cb0029" x="114" y="226" width="12" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d3e6879d-107e-4401-9af0-f292611c3e34" x="125" y="226" width="398" height="51"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Bahwa pemohon telah memenuhi persyaratan yang telah ditetapkan dan permohonan dapat disetujui, oleh karena itu menganggap perlu menetapkan suatu Surat Keputusan.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="629b3bb0-f9c1-4e29-a944-7c6ab860435f" x="35" y="258" width="80" height="20"/>
+				<textElement/>
+				<text><![CDATA[MENGINGAT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="114" y="258" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="258" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="54714a16-4943-4742-b491-c5311b3bb239" x="134" y="258" width="389" height="20"/>
+				<textElement/>
+				<text><![CDATA[Undang-undang Obat Keras (St. 1937 No. 541);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="277" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8c33c9db-b2d7-4793-92c8-af354e47add8" x="134" y="277" width="389" height="31"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Undang-undang Nomor 23 Tahun 1992 tentang Kesehatan (Lembaran Negara) Tahun 1992 No. 100, Tambahan Lembaran Negara No. 3495);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="307" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="fbca9fd4-762c-4c34-a12a-081ac4157b5f" x="134" y="307" width="389" height="31"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Undang-undang nomor 5 tahun 1997 tentang Psikotropika (Lembaran Negara Tahun 1997 No. 10, Tambahan Lembaran Negara No. 3671);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="337" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="58e23fe3-b595-4081-9b62-3d4bbadae1d9" x="134" y="337" width="389" height="30"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Undang-undang Nomor 22 tahun 1997 tentang Narkotika (Lembaran Negara Tahun 1997 No. 67 Tambahan Lembaran Negara No. 3698);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="366" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[5.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="31d7651d-92f0-4606-8655-86338df8e42c" x="134" y="366" width="389" height="49"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Undang-undang Nomor 23 Tahun 2014 tentang Pemerintahan Daerah (Lembaran Negara RI Tahun 2014 Nomor 244, Tambahan Lembaran Negara RI Nomor 5587);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="395" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[6.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6cbb705d-1155-40c1-b715-7b98dcf298ff" x="134" y="395" width="389" height="42"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Undang-undang Nomor 25 tahun 1999 tentang Perimbangan Keuangan antara Pemerintah Pusat dan Daerah (Lembaran Negara Republik Indonesia No. 72 Tahun 1992 Tambahan Lembaran Negara Nomor 3848);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="436" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[7.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e496476c-77ee-44f5-b58a-b01896c8468a" x="134" y="436" width="389" height="58"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Pemerintah Nomor 25 tahun 1980 tentang Perubahan atas peraturan pemerintah Nomor 26 tahun 1965 tentang Apotek; (Lembaran Negara Republik Indonesia Tahun 1980 Nomor 40 Tambahan Lembaran Negara Nomor 3169);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="474" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[8.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="8a922238-a314-4b69-9b5d-6a7fd4766efb" x="134" y="474" width="389" height="50"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Pemerintah Nomor 32 tahun 1996 tentang Tenaga Kesehatan; (Lembaran Negara RI Nomor 49 tahun 1996 Tambahan Lembaran Negara Nomor 3637);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="124" y="504" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[9.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0e47688f-b5be-4d0e-b9f6-19698722050b" x="134" y="504" width="389" height="45"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Pemerintah Nomor 72 Tahun 1998 tentang Pengamanan Sediaan Farmasi dan Alat Kesehatan (Lembaran Negara Nomor 138 tahun 1998 Tambahan Lembaran Negara Nomor 3781);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="115" y="548" width="20" height="20"/>
+				<textElement/>
+				<text><![CDATA[10.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3763c985-c564-48ec-b21c-0a4e902b8ecc" x="134" y="548" width="389" height="44"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Pemerintah Nomor 25 tahun 2000 tentang Kewarganegaraan Propinsi sebagai Daerah Otonomi, (Lembaran Negara Nomor 54 tahun 2000, Tambahan Lembaran Negara Nomor 3952 tahun 2000);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6533bc1d-7f8d-4d53-bf75-bcdfe35bffae" x="115" y="591" width="20" height="20"/>
+				<textElement/>
+				<text><![CDATA[11.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="170546f6-7ba2-406f-ad11-d515a63b34f4" x="134" y="591" width="389" height="63"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Keputusan Menteri Kesehatan Republik Indonesia Nomor 1332/Menkes/SK/X/2002 tentang Perubahan atas Peraturan Menteri Kesehatan Republik Indonesia Nomor 922/Menkes/Per/X/1993 tentang Ketentuan dan Tata cara Pemberian Izin Apotek;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="874e66ce-0af1-4d15-bdd2-d2f5adf18a5b" x="114" y="635" width="21" height="20"/>
+				<textElement/>
+				<text><![CDATA[12.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="84ac47f6-a735-439c-a255-67399afe0fc9" x="134" y="635" width="389" height="20"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Daerah Nomor 5 Tahun 2016 Pembentukan Perangkat Daerah;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="874e66ce-0af1-4d15-bdd2-d2f5adf18a5b" x="114" y="654" width="21" height="20"/>
+				<textElement/>
+				<text><![CDATA[13.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d58e95b3-e379-43e9-bfcd-75e56418d7ce" x="134" y="654" width="389" height="20"/>
+				<textElement/>
+				<text><![CDATA[Peraturan Bupati Karo Nomor 39 Tahun 2016 tentang Tupoksi;]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="874e66ce-0af1-4d15-bdd2-d2f5adf18a5b" x="114" y="673" width="21" height="20"/>
+				<textElement/>
+				<text><![CDATA[14.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bfcd8109-4b35-4a15-82e1-02a77a62a603" x="134" y="673" width="389" height="60"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Peraturan Bupati Karo Nomor 01 Tahun 2017 Tentang Pelimpahan Kewenangan Bupati Karo Atas Pelayanan Perizinan dan Non Perizinan Terpadu Satu Pintu Kabupaten Karo (Berita Daerah Kabupaten Karo Tahun 2017 Nomor 01);]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f5520153-91b5-4f4b-b823-49ff2478d3c3" x="423" y="733" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[MEMUTUSKAN...]]></text>
+			</staticText>
+		</band>
+	</title>
+	<summary>
+		<band height="802" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="fc2959ea-0c2e-4997-9bc2-6c4131f561d2" x="35" y="27" width="488" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MEMUTUSKAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="13ba5f73-5ffd-4842-a1bf-bc11cd39f440" x="35" y="47" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[MENETAPKAN ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3254f6f6-8701-43a0-b71b-e6a90ae2ffdd" x="35" y="66" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[Kesatu]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e850eedd-8a8b-4268-a72d-c718a8042870" x="134" y="47" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d69ea68d-48c9-4a18-9a22-eb64620422bf" x="134" y="66" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="117bc40e-f2bb-441d-a0eb-f827cb7a4e5c" x="144" y="66" width="153" height="20"/>
+				<textElement/>
+				<text><![CDATA[Memberi Izin Apotik kepada]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6761daf3-31e9-4e60-b28f-d1f71b78e767" x="296" y="66" width="13" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="254a2f98-c2f5-4231-91ef-49cd7150c2e4" x="144" y="86" width="153" height="20"/>
+				<textElement/>
+				<text><![CDATA[Nama]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6761daf3-31e9-4e60-b28f-d1f71b78e767" x="296" y="86" width="13" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="bdb7b55b-481b-4464-bb2d-26332347fcc3" x="144" y="105" width="153" height="20"/>
+				<textElement/>
+				<text><![CDATA[Alamat]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="fdd64f00-014a-4266-864e-a34552aaff2f" x="308" y="86" width="215" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{nama_pemohon}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="b892d2c5-3a73-43be-b14f-620cc711d1fd" x="308" y="105" width="215" height="34"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{alamat_pemohon}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="0a018a7b-629d-4157-bc96-ffaafec05c43" x="296" y="105" width="13" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="85b3fd55-1536-407a-bfac-bb70bbbca95b" x="144" y="139" width="151" height="20"/>
+				<textElement/>
+				<text><![CDATA[Nomor SIPA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="c78a99e3-8367-478f-9808-7121d9239cf9" x="296" y="139" width="12" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="63106e72-e8a1-47be-82c9-61b936e21ef6" x="307" y="139" width="216" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_nomorsipa}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="09438ab9-d0c4-4651-8777-a4b7c5c02007" x="144" y="158" width="153" height="20"/>
+				<textElement/>
+				<text><![CDATA[Nama Apotek]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d940933b-f147-4e9d-9321-134a89dfab8d" x="296" y="158" width="12" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="02145fec-b9eb-4d98-88a2-76f50a8dc575" x="307" y="158" width="216" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{nama_perusahaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="a4514145-722e-4b9e-8e02-949bf95ade14" x="144" y="177" width="151" height="20"/>
+				<textElement/>
+				<text><![CDATA[Alamat Perusahaan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="32a25446-758a-424a-a19b-4ac8ca1ec559" x="296" y="177" width="11" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="7b59efab-afdb-4154-acfa-b207adecd906" x="307" y="177" width="216" height="37"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{alamat_perusahaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="f19d52a5-2f40-433a-97e4-f1a55bd3106a" x="144" y="213" width="151" height="20"/>
+				<textElement/>
+				<text><![CDATA[Kecamatan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ce9fde15-4b0e-4386-9c93-80a1bdfc6b22" x="296" y="213" width="13" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="03161c1b-6462-4c20-bf78-43cbc7636003" x="307" y="213" width="216" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{kecamatan_perusahaan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="f920a551-97e0-4e25-a39d-bd6923d08330" x="307" y="232" width="216" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{kabupaten_perusahaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="25d0391c-d898-4dd0-9e3d-f0dd7c391c61" x="144" y="232" width="151" height="20"/>
+				<textElement/>
+				<text><![CDATA[Kabupaten]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f70022d0-b1cb-458a-a316-9ba2d76cb14b" x="295" y="232" width="12" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="6311d300-e01d-4667-ab6c-fcef072b40b6" x="144" y="251" width="151" height="20"/>
+				<textElement/>
+				<text><![CDATA[Propinsi]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7ef72f95-efe6-46c2-95a6-7330985437d0" x="295" y="251" width="12" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="44925754-0126-49c9-8b3d-893e85559949" x="307" y="251" width="216" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{provinsi_perusahaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="518c8815-a55e-44d1-99a6-fd891fa591f8" x="144" y="270" width="151" height="20"/>
+				<textElement/>
+				<text><![CDATA[Dengan menggunakan sarana]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9a9e6d8b-aa09-432e-8cc6-c7918b5270b3" x="294" y="270" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="ec685760-8e62-4354-9a54-158c330c7b7f" x="307" y="270" width="216" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_sarana}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="9a1c5928-4c77-4341-b54d-ab819c0bcedd" x="144" y="289" width="150" height="20"/>
+				<textElement/>
+				<text><![CDATA[Nama Pemilik Sarana]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="0e714ec9-7f15-4626-bc54-097e7f5fbae4" x="294" y="289" width="13" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="cb611bde-767a-4065-b5e9-e837eff6e37b" x="308" y="289" width="215" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_namapemiliksarana}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="61091ac1-2078-46e8-ab53-0bd12a7b69bd" x="144" y="308" width="150" height="20"/>
+				<textElement/>
+				<text><![CDATA[Akte Perjanjian Kerja Sama]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f71750e6-942a-4482-8bc0-d44b213da8eb" x="294" y="308" width="15" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="a6f16ead-e3ec-4ff6-8b3b-95e124eb4206" x="307" y="308" width="216" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_akteperjanjiankerjasama}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="286f19a8-3031-49e1-b281-1a2194d1ff62" x="144" y="327" width="100" height="20"/>
+				<textElement/>
+				<text><![CDATA[Tanggal]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f71750e6-942a-4482-8bc0-d44b213da8eb" x="293" y="327" width="15" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="3b7cff05-573e-4659-8d04-4232c1414884" x="308" y="327" width="215" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_tanggalkerjasamaakte}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="eea0c596-6db8-4988-97e6-d4228425df11" x="144" y="346" width="149" height="20"/>
+				<textElement/>
+				<text><![CDATA[Nama Notaris]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="f71750e6-942a-4482-8bc0-d44b213da8eb" x="293" y="346" width="15" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="3666cc8e-2f8a-4cee-8cde-3e65d6417705" x="308" y="347" width="215" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_namanotaris}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="7039130f-9b83-4994-9535-014dc604a096" x="144" y="365" width="149" height="20"/>
+				<textElement/>
+				<text><![CDATA[Alamat Notaris]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="7a62612a-8343-403a-9824-e863da3817b8" x="293" y="365" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="4526012f-00f1-4bd2-91e1-bb663a02bfc3" x="307" y="365" width="216" height="39"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_alamatnotaris}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="49ee9e3f-e4d7-42ff-9b11-b2e7fbe0f681" x="144" y="404" width="149" height="20"/>
+				<textElement/>
+				<text><![CDATA[Masa Berlaku Surat Izin Apotek]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="b71d2198-fdca-4a4a-bb71-56156cdab1d5" x="293" y="404" width="14" height="20"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e62804c8-0108-4647-81ca-ad8c25aa4f5b" x="145" y="435" width="378" height="19"/>
+				<textElement/>
+				<text><![CDATA[Dengan ketentuan sebagai berikut :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9aa7663e-c503-4fbc-be48-576cfdecc381" x="308" y="404" width="215" height="32"/>
+				<textElement/>
+				<text><![CDATA[5 (lima) Tahun sejak dikeluarkannya Surat Izin Apotek ini.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3eedabd0-1dd2-4806-8982-f82e9d8fa684" x="144" y="454" width="16" height="19"/>
+				<textElement/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="68065d8a-4408-41f1-abbe-721f52a2b2d4" x="159" y="454" width="364" height="34"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Izin Apotek ini berlaku untuk Apoteker atau Apoteker bekerja sama dengan pemilik Sarana Apotek, dilokasi dan sarana sebagaimana tersebut diatas.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3eedabd0-1dd2-4806-8982-f82e9d8fa684" x="144" y="488" width="16" height="19"/>
+				<textElement/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="e4e86b77-2691-432d-b340-df8b212afd0f" x="159" y="488" width="364" height="31"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Penyelenggaraan Apotek, harus selalu mematuhi ketentuan peraturan perundang-undangan yang berlaku.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3eedabd0-1dd2-4806-8982-f82e9d8fa684" x="129" y="521" width="16" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="d27ff2f1-2b7c-4dff-ad46-ecfb098f1aff" x="144" y="521" width="379" height="55"/>
+				<textElement textAlignment="Justified"/>
+				<text><![CDATA[Surat Keputusan ini dicabut kembali apabila terjadi hal-hal dimaksud dalam pasal 7 ayat (5). Keputusan Menteri Kesehatan Nomor 1332/MENKES/SK/X/2002 tentang ketentuan dan tata cara Pemberian Izin Apotek.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="634ce21a-e9e7-42d7-88d1-0e575d936186" x="305" y="577" width="89" height="19"/>
+				<textElement/>
+				<text><![CDATA[Diberikan di]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="9fc5d896-b2eb-4d8e-8977-a0418ef0adc3" x="394" y="577" width="12" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4e8e1370-3804-4884-ac09-77072818a48d" x="405" y="577" width="118" height="19"/>
+				<textElement/>
+				<text><![CDATA[Kabanjahe]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a966faff-d736-4339-a993-eb899e401876" x="305" y="597" width="89" height="19"/>
+				<textElement/>
+				<text><![CDATA[Pada Tanggal]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="821de92a-1a46-49da-aadc-492f48fb8f48" x="394" y="597" width="11" height="19"/>
+				<textElement/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="1a35527b-b08f-40cd-85d3-627ed8d4bad5" x="405" y="597" width="118" height="19"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{prop_tanggalcetakizin}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="b8c2fb18-b999-49cf-acb9-dea764ea64e6" x="35" y="521" width="94" height="19"/>
+				<textElement/>
+				<text><![CDATA[Kedua]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="deac5f78-b024-4ec1-af50-b4eb84a33568" x="244" y="616" width="279" height="69"/>
+				<textElement textAlignment="Center">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KEPALA DINAS PENANAMAN MODAL
+DAN PELAYANAN PERIZINAN TERPADU SATU PINTU
+KABUPATEN KARO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="1577b8f5-4a57-4354-8512-cde734e1b5e2" x="244" y="694" width="279" height="61"/>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[SUSY ISWARA BANGUN, SE, M.Si
+Pembina Utama Muda
+NIP. 19660505 199303 2 003]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="74db5e19-f51e-4941-8d04-bac1d4d690ff" x="35" y="728" width="146" height="19"/>
+				<textElement/>
+				<text><![CDATA[Tembusan Kepada Yth :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="cb55c77b-2b35-460e-986b-0795db1e7b1e" x="35" y="745" width="274" height="57"/>
+				<textElement/>
+				<text><![CDATA[1. Menteri Kesehatan RI di Jakarta;
+2. Kepala Dinas Kesehatan Propinsi Sumatera Utara;
+3. Kepala Dinas Kesehatan Kabupaten Karo.]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="9ee79054-4c72-42a2-968e-829acba34141" x="35" y="784" width="258" height="1"/>
+				<graphicElement>
+					<pen lineStyle="Dashed"/>
+				</graphicElement>
+			</line>
+			<image>
+				<reportElement uuid="138e3a3d-bba0-4c18-804f-a3ac1aeafa38" x="35" y="617" width="100" height="81"/>
+				<imageExpression><![CDATA[$P{qrcode}+""+$P{d_berlaku_izin}]]></imageExpression>
+			</image>
+		</band>
+	</summary>
+</jasperReport>

@@ -1,0 +1,225 @@
+services:
+  # SICANTIK Existing Application (PHP/CodeIgniter)
+  sicantik_web:
+    build:
+      context: .
+      dockerfile: Dockerfile.sicantik
+    container_name: sicantik_web_prod
+    environment:
+      - MYSQL_HOST=sicantik_mysql
+      - MYSQL_DATABASE=db_office
+      - MYSQL_USER=sicantik_user
+      - MYSQL_PASSWORD=${SICANTIK_MYSQL_PASSWORD}
+    depends_on:
+      - sicantik_mysql
+    networks:
+      - sicantik_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # MySQL for SICANTIK
+  sicantik_mysql:
+    image: mysql:8.0
+    container_name: sicantik_mysql_prod
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=db_office
+      - MYSQL_USER=sicantik_user
+      - MYSQL_PASSWORD=${SICANTIK_MYSQL_PASSWORD}
+    volumes:
+      - sicantik_mysql_data_prod:/var/lib/mysql
+      - ./backups:/backups
+    networks:
+      - sicantik_network
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Odoo 18 Enterprise - Companion App
+  odoo_companion:
+    image: odoo:18.0
+    container_name: odoo_companion_prod
+    environment:
+      - HOST=postgres_companion
+      - USER=odoo
+      - PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=sicantik_companion
+      - ODOO_ADMIN_PASSWORD=${ODOO_ADMIN_PASSWORD}
+    volumes:
+      - odoo_data_prod:/var/lib/odoo
+      - ./addons:/mnt/extra-addons:ro
+      - ./enterprise:/mnt/enterprise-addons:ro
+      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ./uploads:/mnt/sicantik_uploads:ro
+    depends_on:
+      - postgres_companion
+      - redis_cache
+      - sicantik_mysql
+    networks:
+      - sicantik_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # PostgreSQL for Odoo Companion
+  postgres_companion:
+    image: postgres:15
+    container_name: postgres_companion_prod
+    environment:
+      - POSTGRES_DB=sicantik_companion
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data/pgdata
+      - ./backups:/backups
+    networks:
+      - sicantik_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # MinIO for Document Storage
+  minio_storage:
+    image: minio/minio:latest
+    container_name: minio_storage_prod
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data_prod:/data
+    networks:
+      - sicantik_network
+    command: server /data --console-address ":9001"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Redis for Caching
+  redis_cache:
+    image: redis:7-alpine
+    container_name: redis_cache_prod
+    volumes:
+      - redis_data_prod:/data
+    networks:
+      - sicantik_network
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # BSRE Connector Service
+  bsre_connector:
+    build:
+      context: ./services/bsre-connector
+      dockerfile: Dockerfile
+    container_name: bsre_connector_prod
+    env_file:
+      - env.production
+    environment:
+      - BSRE_API_URL=${BSRE_API_URL}
+      - BSRE_CLIENT_ID=${BSRE_CLIENT_ID}
+      - BSRE_CLIENT_SECRET=${BSRE_CLIENT_SECRET}
+      - BSRE_ENVIRONMENT=production
+    volumes:
+      - ./certs:/app/certs:ro
+      - bsre_logs_prod:/app/logs
+    networks:
+      - sicantik_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # Nginx Reverse Proxy with SSL
+  nginx_proxy:
+    image: nginx:alpine
+    container_name: nginx_proxy_prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./letsencrypt:/etc/letsencrypt:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - sicantik_web
+      - odoo_companion
+    networks:
+      - sicantik_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # Backup Service
+  backup_service:
+    image: mysql:8.0
+    container_name: backup_service
+    environment:
+      - MYSQL_HOST=sicantik_mysql
+      - MYSQL_USER=sicantik_user
+      - MYSQL_PASSWORD=${SICANTIK_MYSQL_PASSWORD}
+      - MYSQL_DATABASE=db_office
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    networks:
+      - sicantik_network
+    profiles:
+      - backup
+    command: /bin/sh -c "chmod +x /backup.sh && crond -f"
+
+volumes:
+  sicantik_mysql_data_prod:
+    driver: local
+  postgres_data_prod:
+    driver: local
+  odoo_data_prod:
+    driver: local
+  minio_data_prod:
+    driver: local
+  redis_data_prod:
+    driver: local
+  bsre_logs_prod:
+    driver: local
+
+networks:
+  sicantik_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16

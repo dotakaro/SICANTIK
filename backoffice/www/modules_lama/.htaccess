@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+#    Options +FollowSymLinks
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^(.+) - [PT,L]
+    #RewriteRule ^$ /kpmpt_agam/index.php [L]
+    #RewriteRule ^(.*)$ /kpmpt_agam/index.php/$1 [L]
+	#RewriteRule ^(.*)$ index.php?/$1 [L]  
+	RewriteRule ^$ /web/kpmpt_agam/index.php [L]
+    RewriteRule ^(.*)$ /web/kpmpt_agam/index.php/$1 [L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    ErrorDocument 404 /index.php
+</IfModule>

@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sptl" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="be473d96-7d93-42ce-b6de-2bd454ecac32">
+	<property name="ireport.zoom" value="1.1"/>
+	<property name="ireport.x" value="10"/>
+	<property name="ireport.y" value="271"/>
+	<style name="style1"/>
+	<parameter name="no_surat" class="java.lang.String"/>
+	<parameter name="tgl_surat" class="java.lang.String"/>
+	<parameter name="d_berlaku_izin" class="java.lang.String"/>
+	<parameter name="nama_ttd" class="java.lang.String"/>
+	<parameter name="nip_ttd" class="java.lang.String"/>
+	<parameter name="BASEPATH" class="java.lang.String"/>
+	<parameter name="bayar_retribusi" class="java.lang.String"/>
+	<parameter name="satuan" class="java.lang.String"/>
+	<parameter name="kategori_gangguan" class="java.lang.String"/>
+	<parameter name="indeks_gangguan" class="java.lang.String"/>
+	<parameter name="property_gangguan" class="java.lang.String"/>
+	<queryString language="xPath">
+		<![CDATA[/result/property/data]]>
+	</queryString>
+	<field name="n_property" class="java.lang.String">
+		<fieldDescription><![CDATA[n_property]]></fieldDescription>
+	</field>
+	<field name="satuan" class="java.lang.String">
+		<fieldDescription><![CDATA[satuan]]></fieldDescription>
+	</field>
+	<field name="v_property" class="java.lang.String">
+		<fieldDescription><![CDATA[v_property]]></fieldDescription>
+	</field>
+	<field name="v_tinjauan" class="java.lang.String">
+		<fieldDescription><![CDATA[v_tinjauan]]></fieldDescription>
+	</field>
+	<field name="Parent" class="java.lang.String">
+		<fieldDescription><![CDATA[Parent]]></fieldDescription>
+	</field>
+	<group name="test">
+		<groupExpression><![CDATA[$F{Parent}]]></groupExpression>
+		<groupHeader>
+			<band height="29">
+				<textField>
+					<reportElement uuid="e45b0784-bb02-4436-a5e5-68bc2433d884" x="13" y="9" width="100" height="20"/>
+					<textElement verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{Parent}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="11"/>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="200" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="95dc8c0c-343b-453a-a9c0-46b8aed809a2" x="129" y="-1" width="404" height="19"/>
+				<textElement textAlignment="Center">
+					<font size="15" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PEMERINTAH KABUPATEN AGAM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="129" y="68" width="404" height="14"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[jalan Veteran Nomor 1 Padang Baru, Lubuk Basung, Kode Pos 26153 Telp. 0752-66354]]></text>
+			</staticText>
+			<image>
+				<reportElement uuid="c3d9ac9e-6c25-4c2a-aa66-127291dd91ff" x="19" y="4" width="110" height="78"/>
+				<imageExpression><![CDATA[$P{BASEPATH} != null ? $P{BASEPATH}+"//uploads//logo//pantas.jpg" : "C:\\xampp\\htdocs\\SICANTIK\\backoffice\\uploads\\logo\\pantas.jpg"]]></imageExpression>
+			</image>
+			<line>
+				<reportElement uuid="d50d0977-e066-4cae-baee-32c2efe7abd8" x="0" y="85" width="555" height="1"/>
+			</line>
+			<line>
+				<reportElement uuid="d50d0977-e066-4cae-baee-32c2efe7abd8" x="0" y="89" width="555" height="1"/>
+			</line>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="0" y="104" width="451" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Nomor : ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="0" y="89" width="555" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" isItalic="false" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[IZIN PENELITIAN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="a18d7bb1-dac4-4585-bc2d-4c36c9269bac" x="129" y="18" width="404" height="50"/>
+				<textElement textAlignment="Center">
+					<font size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KANTOR PENANAMAN MODAL DAN PELAYANAN TERPADU]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ea3b5ad0-eb04-4603-b592-4fea5440a589" x="271" y="109" width="170" height="20"/>
+				<textElement/>
+				<text><![CDATA[/PNL/KPMPT-Ag/2013]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="389fafc6-f330-4e4b-8f46-dbb2fc1a4031" x="0" y="140" width="555" height="53"/>
+				<textElement textAlignment="Justified">
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[        Pemerintah Kabupaten Agam dengan ini menyatakan tidak keberatan atas maksud melaksanakan survey/riset/penelitian/observasi/data awal/ pemakaian lokasi praktek lapangan di Kabupaten Agam berdasarkan :]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="23">
+			<textField>
+				<reportElement uuid="8262adb6-859d-4b03-8832-f84c0fa47999" x="13" y="0" width="144" height="20"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{n_property}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="157" y="0" width="19" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField isStretchWithOverflow="true">
+				<reportElement uuid="ef89a6d5-82d9-466c-a14b-8d85bbcb0ca7" x="176" y="0" width="379" height="20"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[($F{v_tinjauan}== null ? ($F{n_property}==$P{property_gangguan} ? $P{kategori_gangguan} : "-" ) : $F{v_tinjauan})+" "+($F{satuan}  == null ? "" : $F{satuan} )]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="5" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="5" splitType="Stretch"/>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="5"/>
+	</lastPageFooter>
+	<summary>
+		<band height="419" splitType="Stretch">
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="0" y="31" width="19" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[1.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="0" y="0" width="198" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Dengan Ketentuan sebagai berikut :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="19" y="31" width="536" height="20"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle"/>
+				<text><![CDATA[Tidak boleh menyimpang dari kerangka serta tujuan penelitian]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="0" y="51" width="19" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[2.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="19" y="51" width="536" height="46"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle"/>
+				<text><![CDATA[Memberitahukan kedatangan serta maksud kegiatan yang akan dilaksanakan dengan menunjukan surat-surat keterangan yang berhubungan dengan penelitian, serta melaporkan diri sebelum meninggalkan daerah / wilayah penelitiaanya kepada pemerintah setempat.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="0" y="97" width="19" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[3.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="19" y="97" width="536" height="20"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle"/>
+				<text><![CDATA[Mematuhi semua peraturan yang berlaku dengan menghormati adat dan kebijaksanaan pada masyarakat setempat.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="0" y="117" width="19" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[4.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="19" y="117" width="536" height="30"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top"/>
+				<text><![CDATA[mengirimkan laporan hasil kegiatan sebanyak 1 (satu) eksemplar, masing-masing untuk Bupati Agam Cq. Kepala Kantor Penanaman Modal dan Pelayanan Terpadu Kabupaten Agam dan Camat/Instansi yang bersangkutan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="0" y="147" width="19" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[5.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="19" y="147" width="157" height="20"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle"/>
+				<text><![CDATA[Wajib membayar retribusi sebesar
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="364" y="391" width="36" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[NIP.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="308" y="231" width="247" height="20"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle"/>
+				<text><![CDATA[Ditetapkan di : ..............
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="308" y="211" width="69" height="20"/>
+				<textElement textAlignment="Justified" verticalAlignment="Middle"/>
+				<text><![CDATA[Pada tanggal :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="308" y="251" width="247" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[An. BUPATI AGAM]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="006ef3ad-1e6b-4ba9-9e45-05f93c9adf31" x="377" y="371" width="100" height="20"/>
+				<textElement textAlignment="Center">
+					<font isBold="true" isUnderline="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{nama_ttd}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="83c08197-9a4a-4b4b-8015-a99948013d3e" x="401" y="391" width="100" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{nip_ttd}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="b2590cf2-34f0-4a99-be62-e693f8d7d518" x="377" y="211" width="100" height="20"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$P{tgl_surat}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="308" y="268" width="247" height="28"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[KEPALA KANTOR PENANAMAN MODAL DAN PELAYANAN  TERPADU ]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

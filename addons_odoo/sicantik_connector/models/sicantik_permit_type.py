@@ -86,7 +86,7 @@ class SicantikPermitType(models.Model):
             'type': 'ir.actions.act_window',
             'name': f'Permits: {self.name}',
             'res_model': 'sicantik.permit',
-            'view_mode': 'tree,form,graph,pivot',
+            'view_mode': 'list,form,graph,pivot',
             'domain': [('permit_type_name', '=', self.name)],
             'context': {'default_permit_type_name': self.name},
         }

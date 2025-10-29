@@ -53,7 +53,7 @@ services:
       - POSTGRES_DB=sicantik_companion
     volumes:
       - odoo_data:/var/lib/odoo
-      - ./addons:/mnt/extra-addons:ro
+      - ./addons_odoo:/mnt/extra-addons:ro
       - ./enterprise:/mnt/enterprise-addons:ro # Enterprise addons
       - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
       - ./uploads:/mnt/sicantik_uploads:ro # Read-only access to SICANTIK uploads
@@ -156,7 +156,7 @@ services:
     networks:
       - sicantik_network
     restart: unless-stopped
-    command: ["odoo", "--config=/etc/odoo/odoo.conf", "--dev=all"]
+    #command: ["odoo", "--config=/etc/odoo/odoo.conf", "--dev=all"]
 
   # PostgreSQL for Odoo Companion (Standalone)
   postgres_companion_standalone:

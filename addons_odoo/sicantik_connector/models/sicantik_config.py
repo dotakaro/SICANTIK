@@ -208,7 +208,7 @@ class SicantikConfig(models.Model):
             'type': 'ir.actions.act_window',
             'name': 'SICANTIK Dashboard',
             'res_model': 'sicantik.permit',
-            'view_mode': 'kanban,tree,form,graph,pivot',
+            'view_mode': 'kanban,list,form,graph,pivot',
             'context': {'search_default_active': 1},
             'domain': [],
         }

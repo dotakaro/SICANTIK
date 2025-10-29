@@ -1,0 +1,3 @@
+<?php
+echo "JANGAN DIBUKA, LAGI DIKERJAKAN SAMA ORANG IT!!!!";
+

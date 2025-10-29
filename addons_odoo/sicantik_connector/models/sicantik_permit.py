@@ -328,7 +328,7 @@ class SicantikPermit(models.Model):
             'type': 'ir.actions.act_window',
             'name': 'Permit History',
             'res_model': 'sicantik.permit',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [
                 '|',
                 ('original_permit_id', '=', self.id),

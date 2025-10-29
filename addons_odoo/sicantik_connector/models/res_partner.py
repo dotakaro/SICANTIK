@@ -122,7 +122,7 @@ class ResPartner(models.Model):
             'type': 'ir.actions.act_window',
             'name': f'Permits: {self.name}',
             'res_model': 'sicantik.permit',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('partner_id', '=', self.id)],
             'context': {'default_partner_id': self.id},
         }

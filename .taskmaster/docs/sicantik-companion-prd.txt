@@ -1,0 +1,211 @@
+# Overview  
+SICANTIK Companion App adalah aplikasi pendamping untuk Sistem Informasi Perizinan Kabupaten Karo (SICANTIK) yang sudah berjalan. Aplikasi ini tidak mengubah sistem SICANTIK yang ada, melainkan menambahkan fitur-fitur modern seperti tanda tangan digital TTE BSRE, verifikasi QR code, dan portal verifikasi publik. Sistem ini memecahkan masalah autentikasi dokumen perizinan dan memberikan transparansi publik untuk verifikasi dokumen.
+
+Target pengguna adalah:
+- Pegawai Dinas Kabupaten Karo (untuk proses digital signature)
+- Masyarakat umum (untuk verifikasi dokumen melalui QR code)
+- Pemohon izin (untuk tracking status dan download dokumen tersertifikasi)
+
+Nilai utama: Meningkatkan kredibilitas dan keamanan dokumen perizinan dengan teknologi digital signature resmi Indonesia (TTE BSRE) tanpa mengganggu workflow SICANTIK yang sudah berjalan.
+
+# Core Features  
+## 1. Database Monitoring & Import
+- Monitor database SICANTIK MySQL untuk mendeteksi PDF dokumen yang sudah di-generate
+- Import metadata perizinan dan PDF files ke document repository (MinIO)
+- Sinkronisasi data real-time tanpa mengubah database SICANTIK (read-only access)
+
+## 2. Digital Signature Workflow (TTE BSRE)
+- Integrasi dengan sistem TTE BSRE (Tanda Tangan Elektronik Badan Siber dan Sandi Negara)
+- Workflow approval untuk digital signature oleh pejabat berwenang
+- Batch processing untuk multiple documents
+- Audit trail untuk semua aktivitas digital signature
+
+## 3. QR Code Generation & Verification
+- Generate QR code unik untuk setiap dokumen yang telah ditandatangani digital
+- QR code berisi link verifikasi dan hash dokumen untuk security
+- Embedded QR code ke dalam PDF dokumen yang sudah ditandatangani
+
+## 4. Public Verification Portal
+- Portal web publik untuk verifikasi dokumen menggunakan QR code
+- Verifikasi authenticity dokumen tanpa download
+- Display informasi dasar perizinan (nomor, tanggal, status) untuk transparansi
+- API endpoint untuk integrasi dengan sistem lain
+
+## 5. Document Repository Management
+- Storage aman untuk PDF dokumen original dan yang sudah ditandatangani
+- Version control untuk tracking perubahan dokumen
+- Backup dan recovery system
+- Access control berdasarkan role dan permissions
+
+# User Experience  
+## User Personas:
+1. **Pegawai Dinas** - Memproses digital signature dan monitoring dokumen
+2. **Kepala Dinas/Pejabat** - Approve dan tanda tangan digital dokumen
+3. **Masyarakat** - Verifikasi dokumen perizinan melalui QR code
+4. **Pemohon Izin** - Download dokumen tersertifikasi
+
+## Key User Flows:
+1. **Digital Signature Flow**: 
+   SICANTIK generate PDF → Companion detect → Import to repository → Workflow approval → TTE BSRE signature → QR code generation → Final document ready
+
+2. **Public Verification Flow**: 
+   Scan QR code → Portal verification → Display document info → Verify authenticity
+
+3. **Document Management Flow**: 
+   Monitor new documents → Categorize by permit type → Assign to appropriate authority → Track signature status
+
+## UI/UX Considerations:
+- Interface dalam Bahasa Indonesia
+- Mobile-responsive design untuk akses di lapangan
+- Simple QR code scanning interface
+- Dashboard untuk monitoring status dokumen
+- Integration dengan existing SICANTIK UI/UX patterns
+
+# Technical Architecture  
+## System Components:
+1. **Odoo 18 Enterprise Platform** sebagai foundation
+2. **MySQL Connector** untuk read-only access ke database SICANTIK
+3. **PostgreSQL** untuk metadata storage Odoo
+4. **MinIO Object Storage** untuk PDF document repository
+5. **TTE BSRE API Connector** untuk digital signature integration
+6. **QR Code Generator Service** menggunakan library Python
+7. **Public Verification Portal** sebagai separate web service
+
+## Data Models:
+- **sicantik.permit** - Mirror data perizinan dari SICANTIK
+- **sicantik.document** - Metadata dokumen PDF dan status signature
+- **sicantik.signature.workflow** - Workflow approval dan digital signature
+- **sicantik.verification.log** - Log aktivitas verifikasi QR code
+- **sicantik.authority** - Master data pejabat berwenang untuk signature
+
+## APIs and Integrations:
+- **SICANTIK Database API** - Read-only MySQL queries
+- **TTE BSRE REST API** - Digital signature service
+- **MinIO S3-compatible API** - Document storage
+- **Public Verification API** - RESTful API untuk verifikasi dokumen
+- **QR Code API** - Generate dan validate QR codes
+
+## Infrastructure Requirements:
+- **Docker Environment** untuk development dan deployment
+- **Nginx Reverse Proxy** untuk routing dan load balancing
+- **Redis Cache** untuk performance optimization
+- **SSL/TLS Certificates** untuk secure communication
+- **Backup Strategy** untuk data dan dokumen
+
+## Three Main Modules:
+1. **sicantik_connector** - Database integration dan data sync
+2. **sicantik_tte** - Digital signature workflow dan TTE BSRE integration
+3. **sicantik_verification** - QR code generation dan public verification portal
+
+# Development Roadmap  
+## Phase 1: Foundation & Database Integration (Week 1-2)
+- Setup Odoo 18 Enterprise environment
+- Create sicantik_connector module
+- Implement read-only MySQL connection to SICANTIK
+- Data model creation dan basic data sync
+- MinIO storage setup dan PDF import functionality
+
+## Phase 2: Core Digital Signature (Week 3-5)
+- Create sicantik_tte module
+- TTE BSRE API integration dan authentication
+- Digital signature workflow implementation
+- Document management dan version control
+- Basic approval workflow untuk signature process
+
+## Phase 3: QR Code & Verification (Week 6-7)
+- Create sicantik_verification module
+- QR code generation dan embedding to PDF
+- Public verification portal development
+- API endpoints untuk document verification
+- Database untuk verification logging
+
+## Phase 4: User Interface & Workflows (Week 8-9)
+- Odoo views dan forms untuk document management
+- Dashboard untuk monitoring signature status
+- User management dan role-based access control
+- Mobile-responsive verification portal
+- Integration testing dengan SICANTIK workflow
+
+## Phase 5: Production Readiness (Week 10)
+- Security hardening dan penetration testing
+- Performance optimization dan caching
+- Backup dan disaster recovery setup
+- Documentation dan user training materials
+- Production deployment dan monitoring setup
+
+# Logical Dependency Chain
+## Foundation First (Critical Path):
+1. **Database Connection** - Harus ada sebelum semua fitur lain
+2. **Document Import** - Dependency untuk signature workflow
+3. **MinIO Storage** - Required untuk document management
+4. **Basic Odoo Setup** - Foundation untuk semua modules
+
+## Quick Visible Results:
+1. **Document List View** - Show imported documents dari SICANTIK
+2. **Simple Dashboard** - Display document counts dan status
+3. **Basic QR Code Generation** - Proof of concept untuk verification
+4. **Mock TTE Integration** - Simulate signature process untuk demo
+
+## Atomic Feature Development:
+1. Each module (connector, tte, verification) dapat dikembangkan parallel
+2. API endpoints dapat di-mock untuk independent testing
+3. UI components dapat dikembangkan dengan sample data
+4. Integration testing dilakukan setelah individual modules complete
+
+## Build Upon Strategy:
+1. Start dengan basic CRUD operations untuk documents
+2. Add workflow dan approval layers
+3. Integrate dengan external services (TTE BSRE)
+4. Add advanced features (batch processing, reporting)
+5. Optimize performance dan add monitoring
+
+# Risks and Mitigations  
+## Technical Challenges:
+1. **TTE BSRE API Complexity** - Mitigasi: Create abstraction layer dan extensive testing
+2. **SICANTIK Database Changes** - Mitigasi: Read-only access dan defensive programming
+3. **PDF Manipulation** - Mitigasi: Use proven libraries (PyPDF2, ReportLab)
+4. **Performance dengan Large Files** - Mitigasi: Async processing dan chunked uploads
+
+## MVP Definition:
+**Minimum Viable Product** harus include:
+- Basic document import dari SICANTIK
+- Simple digital signature (even if mock)
+- QR code generation
+- Basic verification portal
+- Essential security measures
+
+## Resource Constraints:
+1. **Development Time** - Focus pada core features first, advanced features later
+2. **TTE BSRE Testing** - Use sandbox environment untuk development
+3. **SICANTIK Integration** - Minimal impact, read-only operations only
+4. **Security Requirements** - Cannot compromise, allocate sufficient time
+
+# Appendix  
+## Research Findings:
+- SICANTIK menggunakan PyroCMS + CodeIgniter dengan MySQL database
+- 89 jenis perizinan tersedia dengan data aktif sampai 2025
+- API endpoints tersedia tanpa authentication (perlu security review)
+- PDF generation sudah ada di SICANTIK, tidak perlu recreate
+
+## Technical Specifications:
+- **Odoo 18 Enterprise** dengan WhatsApp integration capabilities
+- **Python 3.10+** untuk TTE BSRE integration
+- **PostgreSQL 14+** untuk Odoo database
+- **MinIO** untuk S3-compatible object storage
+- **Docker Compose** untuk development environment
+- **Nginx** untuk reverse proxy dan SSL termination
+
+## Integration Points:
+- **Database**: Read-only MySQL connection ke SICANTIK
+- **File System**: Access ke SICANTIK uploads directory
+- **API**: TTE BSRE REST API untuk digital signature
+- **Storage**: MinIO untuk PDF repository
+- **Web**: Public portal untuk verification
+
+## Security Considerations:
+- Read-only database access untuk prevent accidental changes
+- Secure API communication dengan TTE BSRE
+- Document encryption at rest dalam MinIO
+- Access control berdasarkan user roles
+- Audit logging untuk semua signature activities
+- HTTPS only untuk all web communications

@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sptl" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="be473d96-7d93-42ce-b6de-2bd454ecac32">
+	<property name="ireport.zoom" value="1.0000000000000027"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="280"/>
+	<parameter name="pendaftaran_id" class="java.lang.String"/>
+	<parameter name="n_perizinan" class="java.lang.String"/>
+	<parameter name="n_pemohon" class="java.lang.String"/>
+	<parameter name="telp_pemohon" class="java.lang.String"/>
+	<parameter name="a_pemohon" class="java.lang.String"/>
+	<parameter name="d_survey" class="java.lang.String"/>
+	<parameter name="repgen_tgl_sekarang" class="java.lang.String"/>
+	<parameter name="no_surat" class="java.lang.String"/>
+	<parameter name="n_perusahaan" class="java.lang.String"/>
+	<parameter name="a_perusahaan" class="java.lang.String"/>
+	<parameter name="d_survey_day" class="java.lang.String"/>
+	<parameter name="nip_pejabat" class="java.lang.String"/>
+	<parameter name="nama_pejabat" class="java.lang.String"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\xampp\\htdocs\\SICANTIK\\backoffice\\assets\\jasper\\template\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BASEPATH" class="java.lang.String"/>
+	<parameter name="nama_perusahaan" class="java.lang.String"/>
+	<parameter name="alamat_perusahaan" class="java.lang.String"/>
+	<parameter name="kecamatan_perusahaan" class="java.lang.String"/>
+	<parameter name="comp_nama_penandatangan" class="java.lang.String"/>
+	<parameter name="comp_jabatan" class="java.lang.String"/>
+	<parameter name="comp_nip" class="java.lang.String"/>
+	<parameter name="no_bap" class="java.lang.String"/>
+	<parameter name="nama_pemohon" class="java.lang.String"/>
+	<parameter name="c_pesan" class="java.lang.String"/>
+	<parameter name="peg_survey" class="java.lang.String"/>
+	<parameter name="nip_survey" class="java.lang.String"/>
+	<parameter name="repgen_tgl_sekarang_day" class="java.lang.String"/>
+	<parameter name="kelurahan_perusahaan" class="java.lang.String"/>
+	<parameter name="a_izin" class="java.lang.String"/>
+	<parameter name="repgen_day" class="java.lang.String"/>
+	<queryString language="xPath">
+		<![CDATA[/result//data]]>
+	</queryString>
+	<field name="v_property" class="java.lang.String">
+		<fieldDescription><![CDATA[v_property]]></fieldDescription>
+	</field>
+	<field name="Parent" class="java.lang.String">
+		<fieldDescription><![CDATA[Parent]]></fieldDescription>
+	</field>
+	<field name="v_tinjauan" class="java.lang.String">
+		<fieldDescription><![CDATA[v_tinjauan]]></fieldDescription>
+	</field>
+	<field name="n_property" class="java.lang.String">
+		<fieldDescription><![CDATA[n_property]]></fieldDescription>
+	</field>
+	<field name="n_pegawai" class="java.lang.String"/>
+	<field name="nip" class="java.lang.String"/>
+	<field name="peg_survey" class="java.lang.String"/>
+	<field name="nip_survey" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="802" splitType="Stretch">
+			<textField>
+				<reportElement uuid="8dbb94d8-d391-42b2-9c05-fbeadc9991eb" x="3" y="158" width="551" height="31"/>
+				<textElement textAlignment="Justified">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["     Pada hari ini " + $P{repgen_day} + " tanggal " + $P{repgen_tgl_sekarang} + " kami yang bertanda tangan di bawah ini  :"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="28" y="113" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[BERITA ACARA PEMERIKSAAN]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="ba66bb01-2f25-4ea5-8923-77b43c080119" x="28" y="130" width="489" height="17"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+					<font fontName="SansSerif" size="12" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["NOMOR : "+$P{no_bap}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="a7fbdf8d-faf8-4141-947d-dab1c54cda1d" x="2" y="542" width="552" height="23"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[Demikianlah Berita Acara Pemeriksaan ini dibuat untuk dipergunakan sebagaimana mestinya.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="3fc7a19b-15dc-4b9a-9500-1bdb162053aa" x="10" y="589" width="127" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Peninjau Lapangan]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="c299540a-c41c-49b0-892e-b081410718e5" x="10" y="266" width="541" height="42"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Berdasarkan surat Perintah Tinjau Lapangan dari Dinas Penanaman Modal dan Pelayanan Perizinan Terpadu Satu Pintu Kabupaten Deli Serdang Nomor : "+$P{no_surat}+" pada tanggal "+$P{d_survey}+" hal Peninjauan Lapangan terhadap :"]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement uuid="1e0287ee-fc65-4523-b4ae-a1babc7c2aec" x="3" y="460" width="552" height="64"/>
+			</rectangle>
+			<textField>
+				<reportElement uuid="53195ba2-3a15-4ba7-9d1e-194ed94574ff" x="9" y="465" width="541" height="54"/>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$P{c_pesan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="f55aa327-2c11-480d-9545-b7dc0f9c39f2" x="120" y="10" width="430" height="29"/>
+				<textElement textAlignment="Center">
+					<font fontName="SansSerif" size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PEMERINTAH KABUPATEN KARO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="77f46dd7-6f40-48bf-888f-b547777892fb" x="120" y="25" width="441" height="38"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DINAS PENANAMAN MODAL DAN PELAYANAN PERIZINAN TERPADU SATU PINTU]]></text>
+			</staticText>
+			<line>
+				<reportElement uuid="1d3388eb-d4f3-40d1-9c40-cbb1f2164a57" x="5" y="101" width="551" height="1"/>
+			</line>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="13" y="189" width="58" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Nama       ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="13" y="209" width="58" height="19"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[NIP        ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="73" y="188" width="10" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="73" y="208" width="10" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="dbb6d3f3-7d1f-4d7f-b173-05135d5bd7cb" x="83" y="188" width="166" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{peg_survey}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="727a4541-7704-4ad0-9021-3c3e2186bd09" x="83" y="208" width="166" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{nip_survey}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="dbb6d3f3-7d1f-4d7f-b173-05135d5bd7cb" x="10" y="652" width="127" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font isUnderline="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{peg_survey}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="727a4541-7704-4ad0-9021-3c3e2186bd09" x="9" y="674" width="210" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA["Nip. "+$P{nip_survey}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="73" y="230" width="10" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="13" y="231" width="58" height="19"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Jabatan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="83" y="230" width="166" height="19"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Tim Pegawai Survey]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="727a4541-7704-4ad0-9021-3c3e2186bd09" x="347" y="209" width="203" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{comp_nip}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="dbb6d3f3-7d1f-4d7f-b173-05135d5bd7cb" x="347" y="189" width="203" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$P{comp_nama_penandatangan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="337" y="230" width="10" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="277" y="231" width="58" height="19"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Jabatan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="337" y="208" width="10" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="b98fbe97-ce52-4152-9f47-d53a2f6fdf52" x="347" y="231" width="203" height="35"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_jabatan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="337" y="188" width="10" height="16"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="277" y="209" width="58" height="19"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[NIP        ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="277" y="189" width="58" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Nama       ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="10" y="308" width="171" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Nama Pemohon/Perusahaan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="181" y="308" width="10" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="181" y="328" width="10" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="10" y="328" width="171" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Alamat Perusahaan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="10" y="363" width="171" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Jenis IzIn]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="ed99d070-3658-49c7-8084-5c0d238dce14" x="181" y="363" width="10" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="dd65ce0a-7a8b-4dd9-bc1d-fe23c9e8e9d2" x="191" y="308" width="358" height="20"/>
+				<textElement verticalAlignment="Middle" markup="none">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{nama_pemohon}+"/"+$P{nama_perusahaan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="dd65ce0a-7a8b-4dd9-bc1d-fe23c9e8e9d2" x="191" y="328" width="363" height="35"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{alamat_perusahaan}+" "+$P{kelurahan_perusahaan}+" "+$P{kecamatan_perusahaan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="dd65ce0a-7a8b-4dd9-bc1d-fe23c9e8e9d2" x="191" y="363" width="358" height="20"/>
+				<textElement verticalAlignment="Middle" markup="none">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{n_perizinan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="54289866-c2ab-4a85-9d42-06cd4d4adcd1" x="9" y="434" width="540" height="16"/>
+				<textElement/>
+				<text><![CDATA[Setelah dilakukan tinjauan terhadap lokasi tersebut di atas maka :]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="dbb6d3f3-7d1f-4d7f-b173-05135d5bd7cb" x="346" y="654" width="205" height="18"/>
+				<textElement verticalAlignment="Middle">
+					<font isUnderline="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_nama_penandatangan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="a09a3142-d6da-4269-b310-6a0ff43bc803" x="346" y="565" width="203" height="44"/>
+				<textElement verticalAlignment="Middle" markup="none">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{comp_jabatan}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="727a4541-7704-4ad0-9021-3c3e2186bd09" x="346" y="672" width="204" height="18"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["Nip. "+$P{comp_nip}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="98113997-e85c-49c2-b3f0-a56280f0b446" x="2" y="740" width="193" height="20"/>
+				<textElement>
+					<font isBold="true" isItalic="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[*Berkas Hasil Tinjauan Terlampir]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="48e017f8-18c6-47b5-b1ef-6170943bea11" x="10" y="388" width="171" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Alamat Lokasi Izin]]></text>
+			</staticText>
+			<textField>
+				<reportElement uuid="1749e2ea-a2e3-448d-8128-326ce7c4c953" x="191" y="388" width="363" height="42"/>
+				<textElement verticalAlignment="Top" markup="none">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{alamat_perusahaan}+" "+$P{kelurahan_perusahaan}+" "+$P{kecamatan_perusahaan}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement uuid="98814215-5db5-4e68-8d28-0313351f558e" x="181" y="388" width="10" height="20"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false" isItalic="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="4dc70c88-2a38-4bd4-8b08-4cc6a1c8d2a4" x="121" y="66" width="430" height="15"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Jalan Jamin Ginting No. 17 Kabanjahe Telp : (0628) 324655, Kode Pos  22113]]></text>
+			</staticText>
+			<staticText>
+				<reportElement uuid="694bf7f1-3113-4c3d-8605-0f4ec426db62" x="123" y="81" width="430" height="15"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[Website : perizinan.karokab.go.id, Email : perizinan@karokab.go.id ]]></text>
+			</staticText>
+			<image>
+				<reportElement uuid="2c0e9d52-3075-4b96-b677-7d7d492c23a4" x="17" y="0" width="135" height="96"/>
+				<imageExpression><![CDATA["/var/www/html/files/thumb/03018eb47eac36e/144x106/fit"]]></imageExpression>
+			</image>
+		</band>
+	</title>
+</jasperReport>
