@@ -156,10 +156,9 @@ class SicantikConnector(models.Model):
         
         try:
             # Fetch permits from API
-            data = self._make_api_request(
-                'listpermohonanterbit',
-                params={'limit': limit, 'offset': offset}
-            )
+            # SICANTIK API uses path parameters: /listpermohonanterbit/limit/X/offset/Y
+            endpoint = f'listpermohonanterbit/limit/{limit}/offset/{offset}'
+            data = self._make_api_request(endpoint)
             
             if not data:
                 _logger.info('No permits to sync')
