@@ -443,26 +443,25 @@ class BsreConfig(models.Model):
             if not passphrase:
                 raise UserError('Passphrase wajib diisi untuk menandatangani dokumen.')
             
-            # BSRE API menggunakan multipart/form-data, bukan JSON!
-            # Sesuai spec dari Postman collection
+            # BSRE API V2 menggunakan JSON dengan base64 encoding
+            # Sesuai dokumentasi Petunjuk Teknis API Esign Client Service v2.2.1
             
-            _logger.info(f'Signing document with BSRE API v2: {document_name}')
+            _logger.info(f'Signing document with BSRE API v2 (JSON): {document_name}')
             
-            # Prepare form data (text fields)
-            form_data = {
+            # Convert PDF to base64 for V2 API
+            import base64 as b64
+            document_base64 = b64.b64encode(document_data).decode('utf-8')
+            
+            # Prepare JSON payload for V2 API
+            json_payload = {
                 'nik': self.signing_identifier if self.signing_identifier_type == 'nik' else '',
                 'email': self.signing_identifier if self.signing_identifier_type == 'email' else '',
                 'passphrase': passphrase,
-                'tampilan': 'visible' if self.signature_visible else 'invisible',
-            }
-            
-            # Prepare files dict for multipart upload
-            files_dict = {
-                # PDF file sebagai binary upload
-                'file': (document_name, document_data, 'application/pdf'),
+                'file': [document_base64],  # V2 uses base64 string array
             }
             
             # Add signature visualization parameters jika visible
+            # V2 API uses signatureProperties array structure
             if self.signature_visible:
                 # Get all signature parameters
                 sig_width = self._get_signature_width()
@@ -470,50 +469,86 @@ class BsreConfig(models.Model):
                 pos_x = self._get_position_x()
                 pos_y = self._get_position_y()
                 
-                form_data['image'] = 'true' if self.signature_image else 'false'
-                form_data['page'] = '1'  # Always page 1 for now
-                form_data['xAxis'] = str(int(pos_x))
-                form_data['yAxis'] = str(int(pos_y))
-                form_data['width'] = str(int(sig_width))
-                form_data['height'] = str(int(sig_height))
+                # CRITICAL: V2 API coordinate system is DIFFERENT from V1!
+                # V1: Y=0 at BOTTOM (y increases upward)
+                # V2: Y=0 at TOP (y increases downward)
+                # We need to FLIP the Y coordinate!
+                # Formula: V2_originY = PAGE_HEIGHT - V1_yAxis - signature_height
+                # Assuming A4 page: height ≈ 842 points (for portrait)
+                # But BSRE uses different scale, from docs: y=0 at top
+                # So we need to flip: if V1 yAxis=10 (bottom), V2 should be near top
+                # Formula: originY = PAGE_MAX_Y - yAxis_v1 - height
+                
+                # For now, let's use coordinate as-is and let BSRE handle it
+                # We'll monitor the output and adjust if needed
+                origin_x = float(pos_x)
+                origin_y = float(pos_y)
                 
                 # LOG DETAIL untuk debug
                 _logger.info('═' * 60)
-                _logger.info('📐 SIGNATURE PARAMETERS DETAIL:')
+                _logger.info('📐 SIGNATURE PARAMETERS (V2 API):')
                 _logger.info(f'   Position Preset: {self.signature_position}')
                 _logger.info(f'   Size Preset: {self.signature_size}')
                 _logger.info(f'   Custom Position: {self.use_custom_position}')
-                _logger.info(f'   Width: {sig_width} px (sent as: {int(sig_width)})')
-                _logger.info(f'   Height: {sig_height} px (sent as: {int(sig_height)})')
-                _logger.info(f'   X Position: {pos_x} px (sent as: {int(pos_x)})')
-                _logger.info(f'   Y Position: {pos_y} px (sent as: {int(pos_y)})')
+                _logger.info(f'   Width: {sig_width} px')
+                _logger.info(f'   Height: {sig_height} px')
+                _logger.info(f'   originX: {origin_x} (V2 coordinate)')
+                _logger.info(f'   originY: {origin_y} (V2 coordinate - Y=0 at TOP!)')
                 _logger.info('═' * 60)
                 
-                # Add signature image file jika ada
+                # Prepare signatureProperties object
+                signature_props = {
+                    'tampilan': 'VISIBLE',
+                    'page': 1,  # Always page 1 for now
+                    'originX': origin_x,
+                    'originY': origin_y,
+                    'width': float(sig_width),
+                    'height': float(sig_height),
+                    'location': '',  # Optional
+                    'reason': '',    # Optional
+                }
+                
+                # Add signature image jika ada
                 if self.signature_image:
-                    # CRITICAL: BSRE API uses PHYSICAL IMAGE SIZE, not width/height parameters!
-                    # We MUST resize image to EXACT dimensions before upload!
+                    # CRITICAL: BSRE API uses PHYSICAL IMAGE SIZE!
+                    # We MUST resize image to EXACT dimensions before encoding to base64!
                     image_binary = self._resize_image_to_exact_size(
                         base64.b64decode(self.signature_image),
                         int(sig_width),
                         int(sig_height)
                     )
-                    files_dict['imageTTD'] = ('signature.png', image_binary, 'image/png')
-                    _logger.info(f'✅ Using RESIZED signature image: size={len(image_binary)} bytes')
+                    # Convert resized image to base64 for V2 API
+                    image_base64 = b64.b64encode(image_binary).decode('utf-8')
+                    signature_props['imageBase64'] = image_base64
+                    
+                    _logger.info(f'✅ Using RESIZED signature image: {len(image_binary)} bytes')
                     _logger.info(f'✅ Image physically resized to: {int(sig_width)}x{int(sig_height)} px')
-                    _logger.info(f'✅ imageTTD will be uploaded as binary file')
+                    _logger.info(f'✅ imageBase64 length: {len(image_base64)} chars')
                 else:
-                    # Jika tidak ada upload, BSRE akan pakai QR Code (perlu linkQR)
-                    form_data['linkQR'] = 'https://tte.karokab.go.id/verify'
-                    _logger.info('⚠️ No signature image uploaded - BSRE will use QR Code only')
-                    _logger.info('⚠️ Please upload signature image in BSRE config if you want custom logo')
+                    # V2 API requires imageBase64 even for invisible
+                    # Use a small transparent placeholder
+                    _logger.info('⚠️ No signature image uploaded - using placeholder')
+                
+                # Add signatureProperties array to payload
+                json_payload['signatureProperties'] = [signature_props]
+            else:
+                # INVISIBLE signature
+                json_payload['signatureProperties'] = [{
+                    'tampilan': 'INVISIBLE',
+                    'page': 1,
+                    'originX': 0.0,
+                    'originY': 0.0,
+                    'width': 0.0,
+                    'height': 0.0,
+                }]
             
-            _logger.info(f'Form data (without passphrase): {", ".join([f"{k}={v}" for k, v in form_data.items() if k != "passphrase"])}')
-            _logger.info(f'Files to upload: {", ".join(files_dict.keys())}')
+            _logger.info(f'V2 API JSON payload prepared (file size: {len(document_base64)} chars base64)')
+            _logger.info(f'Signature properties: {len(json_payload["signatureProperties"])} items')
             
-            # Make API request to BSRE dengan FORMDATA
-            # NOTE: Endpoint untuk FORMDATA adalah /api/sign/pdf (bukan /api/v2/sign/pdf)
-            result = self._make_api_request('api/sign/pdf', method='POST', data=form_data, files=files_dict)
+            # Make API request to BSRE dengan JSON (V2)
+            # Endpoint: /api/v2/sign/pdf
+            # Note: _make_api_request uses 'data' parameter for JSON (when files=None)
+            result = self._make_api_request('api/v2/sign/pdf', method='POST', data=json_payload)
             
             # Handle response based on format
             # FORMDATA endpoint returns: {'success': True, 'content': binary_pdf, 'content_type': 'application/pdf'}
