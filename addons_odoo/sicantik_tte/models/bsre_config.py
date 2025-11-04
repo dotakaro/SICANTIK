@@ -431,12 +431,30 @@ class BsreConfig(models.Model):
             
             # Add signature visualization parameters jika visible
             if self.signature_visible:
+                # Get all signature parameters
+                sig_width = self._get_signature_width()
+                sig_height = self._get_signature_height()
+                pos_x = self._get_position_x()
+                pos_y = self._get_position_y()
+                
                 form_data['image'] = 'true' if self.signature_image else 'false'
                 form_data['page'] = '1'  # Always page 1 for now
-                form_data['xAxis'] = str(int(self._get_position_x()))
-                form_data['yAxis'] = str(int(self._get_position_y()))
-                form_data['width'] = str(int(self._get_signature_width()))
-                form_data['height'] = str(int(self._get_signature_height()))
+                form_data['xAxis'] = str(int(pos_x))
+                form_data['yAxis'] = str(int(pos_y))
+                form_data['width'] = str(int(sig_width))
+                form_data['height'] = str(int(sig_height))
+                
+                # LOG DETAIL untuk debug
+                _logger.info('═' * 60)
+                _logger.info('📐 SIGNATURE PARAMETERS DETAIL:')
+                _logger.info(f'   Position Preset: {self.signature_position}')
+                _logger.info(f'   Size Preset: {self.signature_size}')
+                _logger.info(f'   Custom Position: {self.use_custom_position}')
+                _logger.info(f'   Width: {sig_width} px (sent as: {int(sig_width)})')
+                _logger.info(f'   Height: {sig_height} px (sent as: {int(sig_height)})')
+                _logger.info(f'   X Position: {pos_x} px (sent as: {int(pos_x)})')
+                _logger.info(f'   Y Position: {pos_y} px (sent as: {int(pos_y)})')
+                _logger.info('═' * 60)
                 
                 # Add signature image file jika ada
                 if self.signature_image:
@@ -565,10 +583,14 @@ class BsreConfig(models.Model):
         """
         Get X coordinate based on signature position or custom override
         
-        Koordinat sistem PDF STANDARD (sesuai Postman examples):
-        - xAxis=0 = KIRI
-        - xAxis bertambah ke KANAN
-        - Origin (0,0) = Kiri Atas
+        Koordinat sistem BSRE (CONFIRMED BY TESTING):
+        - xAxis=0 = KIRI (standard)
+        - xAxis bertambah ke KANAN (standard)
+        - Coordinates represent BOTTOM-LEFT corner of signature box
+        
+        CRITICAL FINDING: BSRE API does NOT auto-center the signature!
+        The coordinates ALWAYS represent the bottom-left corner.
+        We MUST calculate the position ourselves based on signature size.
         """
         self.ensure_one()
         
@@ -580,23 +602,26 @@ class BsreConfig(models.Model):
         sig_width = self._get_signature_width()
         
         # Koordinat BSRE X-axis (CALCULATED using same formula as Y)
-        # Test results:
-        # - xAxis=10 → LEFT (confirmed)
-        # - xAxis=505 → CENTER (user test: "kanan bawah" became "tengah bawah")
-        # 
-        # Mathematical calculation (same formula as Y):
-        # If center = 505 and left = 10
-        # RIGHT = (CENTER × 2) - LEFT
-        # RIGHT = (505 × 2) - 10 = 1000
+        # Base coordinates (for centering the signature properly):
+        # - LEFT edge = 10
+        # - CENTER point = 505
+        # - RIGHT edge = 1000 = (505 × 2) - 10
+        
+        # Calculate BOTTOM-LEFT corner position for each preset
+        # For corner positions: direct positioning
+        # For center positions: center_point - (sig_width / 2)
+        
         POSITIONS_X = {
-            'bottom_left': 10,                     # Kiri (confirmed)
-            'top_left': 10,                        # Kiri (confirmed)
-            'bottom_right': 1000,                  # Kanan = (505 × 2) - 10
-            'top_right': 1000,                     # Kanan = (505 × 2) - 10
-            'center': 505,                         # Tengah (confirmed by test)
+            'bottom_left': 10,                                   # Corner: direct
+            'top_left': 10,                                      # Corner: direct
+            'bottom_right': 1000 - sig_width,                    # Corner: right edge - width
+            'top_right': 1000 - sig_width,                       # Corner: right edge - width
+            'center': 505 - (sig_width / 2),                     # Center: center point - half width
         }
         
-        return POSITIONS_X.get(self.signature_position, 10)  # Default: kiri = 10
+        position = POSITIONS_X.get(self.signature_position, 10)
+        _logger.info(f'🎯 X Position: preset={self.signature_position}, sig_width={sig_width}, result={position}')
+        return position
     
     def _get_position_y(self):
         """
@@ -606,11 +631,11 @@ class BsreConfig(models.Model):
         - yAxis=0 = BAWAH (not top!)
         - yAxis bertambah ke ATAS (not down!)
         - Y axis is FLIPPED from standard PDF
+        - Coordinates represent BOTTOM-LEFT corner of signature box
         
-        Test results:
-        - Setting: KIRI ATAS (xAxis=10, yAxis=10)
-        - Result: Logo appeared at KIRI BAWAH
-        - Conclusion: yAxis=10 (small value) = BOTTOM position
+        CRITICAL FINDING: BSRE API does NOT auto-center the signature!
+        The coordinates ALWAYS represent the bottom-left corner.
+        We MUST calculate the position ourselves based on signature size.
         """
         self.ensure_one()
         
@@ -621,26 +646,28 @@ class BsreConfig(models.Model):
         # Get signature height untuk perhitungan posisi
         sig_height = self._get_signature_height()
         
-        # Koordinat BSRE (Y axis - CONFIRMED BY USER!)
-        # Test results:
-        # - yAxis=10 → BOTTOM (confirmed)
-        # - yAxis=772 → CENTER (confirmed)
-        # 
-        # Mathematical calculation (user insight):
-        # If center = 772 and bottom = 10
-        # Distance bottom→center = 772 - 10 = 762
-        # Distance center→top = 762
-        # TOP = 772 + 762 = 1534
-        # OR: TOP = (772 × 2) - 10 = 1534
+        # Koordinat BSRE Y-axis (CONFIRMED BY USER!)
+        # Base coordinates (for centering the signature properly):
+        # - BOTTOM edge = 10
+        # - CENTER point = 772
+        # - TOP edge = 1534 = (772 × 2) - 10
+        
+        # Calculate BOTTOM-LEFT corner position for each preset
+        # For bottom positions: direct positioning
+        # For top positions: top edge - height
+        # For center positions: center_point - (sig_height / 2)
+        
         POSITIONS_Y = {
-            'bottom_left': 10,                        # Bawah (confirmed)
-            'bottom_right': 10,                       # Bawah (confirmed)
-            'top_left': 1534,                         # Atas = (772 × 2) - 10
-            'top_right': 1534,                        # Atas = (772 × 2) - 10
-            'center': 772,                            # Tengah (confirmed)
+            'bottom_left': 10,                                   # Bottom: direct
+            'bottom_right': 10,                                  # Bottom: direct
+            'top_left': 1534 - sig_height,                       # Top: top edge - height
+            'top_right': 1534 - sig_height,                      # Top: top edge - height
+            'center': 772 - (sig_height / 2),                    # Center: center point - half height
         }
         
-        return POSITIONS_Y.get(self.signature_position, 10)  # Default: bawah = 10
+        position = POSITIONS_Y.get(self.signature_position, 10)
+        _logger.info(f'🎯 Y Position: preset={self.signature_position}, sig_height={sig_height}, result={position}')
+        return position
     
     def verify_signature(self, document_data):
         """
