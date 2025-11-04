@@ -112,13 +112,13 @@ class BsreConfig(models.Model):
     
     # Signature Size Preset
     signature_size = fields.Selection([
-        ('small', 'Kecil (80x60) - Corner Only'),
+        ('small', 'Kecil (80x60)'),
         ('medium', 'Sedang (120x90)'),
         ('large', 'Besar (160x120)'),
-        ('xlarge', 'Sangat Besar (200x150) - Untuk Center'),
+        ('xlarge', 'Sangat Besar (200x150)'),
         ('custom', 'Custom'),
-    ], string='Ukuran Signature', default='xlarge',
-       help='PENTING: Size kecil hanya bekerja untuk posisi CORNER. Untuk CENTER gunakan size besar!')
+    ], string='Ukuran Signature', default='small',
+       help='Ukuran signature akan di-resize secara otomatis sesuai preset yang dipilih')
     
     # Signature Dimensions (for custom size)
     signature_width = fields.Float(
@@ -491,12 +491,16 @@ class BsreConfig(models.Model):
                 
                 # Add signature image file jika ada
                 if self.signature_image:
-                    # Upload original high-resolution image
-                    # width/height parameters define DISPLAY SIZE (viewport), not physical image size
-                    image_binary = base64.b64decode(self.signature_image)
+                    # CRITICAL: BSRE API uses PHYSICAL IMAGE SIZE, not width/height parameters!
+                    # We MUST resize image to EXACT dimensions before upload!
+                    image_binary = self._resize_image_to_exact_size(
+                        base64.b64decode(self.signature_image),
+                        int(sig_width),
+                        int(sig_height)
+                    )
                     files_dict['imageTTD'] = ('signature.png', image_binary, 'image/png')
-                    _logger.info(f'✅ Using uploaded signature image: size={len(image_binary)} bytes')
-                    _logger.info(f'✅ Display size: {sig_width}x{sig_height} px (viewport, not physical resize)')
+                    _logger.info(f'✅ Using RESIZED signature image: size={len(image_binary)} bytes')
+                    _logger.info(f'✅ Image physically resized to: {int(sig_width)}x{int(sig_height)} px')
                     _logger.info(f'✅ imageTTD will be uploaded as binary file')
                 else:
                     # Jika tidak ada upload, BSRE akan pakai QR Code (perlu linkQR)
@@ -580,18 +584,75 @@ class BsreConfig(models.Model):
                 'message': f'Tanda tangan gagal: {error_msg}'
             }
     
+    def _resize_image_to_exact_size(self, image_binary, target_width, target_height):
+        """
+        Resize image to EXACT dimensions that BSRE API expects.
+        
+        CRITICAL FINDING: BSRE API ignores width/height parameters in API request!
+        It uses the PHYSICAL size of the uploaded image file!
+        
+        So we MUST resize the image to exact dimensions before upload.
+        
+        Args:
+            image_binary: Original image as bytes
+            target_width: Exact width in pixels (must match API width parameter)
+            target_height: Exact height in pixels (must match API height parameter)
+        
+        Returns:
+            Resized image as bytes (PNG format)
+        """
+        from PIL import Image
+        import io
+        
+        try:
+            # Open image from binary
+            image = Image.open(io.BytesIO(image_binary))
+            original_size = image.size
+            
+            _logger.info(f'📐 Resizing image from {original_size[0]}x{original_size[1]} to {target_width}x{target_height}')
+            
+            # Convert to RGB if necessary (for JPEG compatibility)
+            if image.mode in ('RGBA', 'LA', 'P'):
+                # Create white background
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                if image.mode == 'P':
+                    image = image.convert('RGBA')
+                background.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
+                image = background
+            elif image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Resize to EXACT dimensions (will distort if aspect ratio different)
+            # Using LANCZOS for high quality
+            resized_image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
+            
+            # Save to bytes as PNG (lossless)
+            output = io.BytesIO()
+            resized_image.save(output, format='PNG', optimize=True)
+            resized_binary = output.getvalue()
+            
+            _logger.info(f'✅ Image resized: {len(image_binary)} → {len(resized_binary)} bytes')
+            _logger.info(f'✅ New dimensions: {target_width}x{target_height} px (EXACT)')
+            
+            return resized_binary
+            
+        except Exception as e:
+            _logger.error(f'❌ Error resizing image: {str(e)}')
+            # Return original if resize fails
+            return image_binary
+    
     def _get_signature_width(self):
         """Get signature width based on size preset or custom value"""
         self.ensure_one()
         
         # Size presets (width x height)
-        # NOTE: Small/medium sizes only work for CORNER positions!
-        # For CENTER, BSRE API ignores small sizes and uses original image size
+        # CRITICAL: BSRE API uses PHYSICAL IMAGE SIZE, not API width/height parameters!
+        # We resize image to these exact dimensions before upload.
         SIZE_PRESETS = {
-            'small': 80,      # 80x60 - Corner only
-            'medium': 120,    # 120x90
-            'large': 160,     # 160x120
-            'xlarge': 200,    # 200x150 - Recommended for CENTER
+            'small': 80,      # 80x60 - Good for corners
+            'medium': 120,    # 120x90 - Balanced size
+            'large': 160,     # 160x120 - Larger signature
+            'xlarge': 200,    # 200x150 - Very visible
         }
         
         if self.signature_size == 'custom':
@@ -604,13 +665,13 @@ class BsreConfig(models.Model):
         self.ensure_one()
         
         # Size presets (width x height)
-        # NOTE: Small/medium sizes only work for CORNER positions!
-        # For CENTER, BSRE API ignores small sizes and uses original image size
+        # CRITICAL: BSRE API uses PHYSICAL IMAGE SIZE, not API width/height parameters!
+        # We resize image to these exact dimensions before upload.
         SIZE_PRESETS = {
-            'small': 60,      # 80x60 - Corner only
-            'medium': 90,     # 120x90
-            'large': 120,     # 160x120
-            'xlarge': 150,    # 200x150 - Recommended for CENTER
+            'small': 60,      # 80x60 - Good for corners
+            'medium': 90,     # 120x90 - Balanced size
+            'large': 120,     # 160x120 - Larger signature
+            'xlarge': 150,    # 200x150 - Very visible
         }
         
         if self.signature_size == 'custom':
