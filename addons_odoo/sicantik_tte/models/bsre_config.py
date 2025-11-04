@@ -709,6 +709,19 @@ class BsreConfig(models.Model):
             
             _logger.info(f'🎨 Original aspect ratio: {aspect_ratio:.3f} ({original_width}:{original_height})')
             
+            # OPTIMIZATION: Skip resize if image already small enough!
+            # This preserves MAXIMUM QUALITY for images that don't need downscaling
+            if original_width <= target_width and original_height <= target_height:
+                _logger.info(f'✨ Image already within bounds ({original_width}x{original_height} ≤ {target_width}x{target_height})')
+                _logger.info(f'✅ SKIPPING RESIZE for MAXIMUM QUALITY! (no quality loss)')
+                
+                # Still save as optimized PNG
+                output = io.BytesIO()
+                image.save(output, format='PNG', optimize=False, compress_level=1)
+                result = output.getvalue()
+                _logger.info(f'✅ Using original size: {len(image_binary)} → {len(result)} bytes')
+                return result
+            
             # Calculate new dimensions maintaining aspect ratio
             if original_width / target_width > original_height / target_height:
                 # Width is limiting factor
@@ -720,13 +733,24 @@ class BsreConfig(models.Model):
                 new_width = int(target_height * aspect_ratio)
             
             _logger.info(f'🎯 Resizing to: {new_width}x{new_height} (aspect ratio preserved)')
+            _logger.info(f'⚠️  Downscaling from {original_width}x{original_height} (applying sharpening to maintain clarity)')
             
-            # Resize maintaining aspect ratio using high-quality LANCZOS
+            # CRITICAL: Use HIGHEST QUALITY resize method
+            # LANCZOS is best for downscaling, maintains sharpness
             resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
             
-            # Save to bytes as PNG (lossless)
+            # Apply SHARPEN filter to compensate for downscaling blur
+            # This helps maintain text/logo clarity
+            from PIL import ImageFilter
+            resized_image = resized_image.filter(ImageFilter.SHARPEN)
+            
+            # Save to bytes as PNG with HIGH QUALITY settings
+            # optimize=False prevents aggressive compression
+            # compress_level=1 for best quality (0-9, lower=better quality)
             output = io.BytesIO()
-            resized_image.save(output, format='PNG', optimize=True)
+            resized_image.save(output, format='PNG', 
+                             optimize=False,  # Don't sacrifice quality!
+                             compress_level=1)  # Minimal compression
             resized_binary = output.getvalue()
             
             _logger.info(f'✅ Image resized: {len(image_binary)} → {len(resized_binary)} bytes')
