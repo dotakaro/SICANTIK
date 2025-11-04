@@ -112,13 +112,13 @@ class BsreConfig(models.Model):
     
     # Signature Size Preset
     signature_size = fields.Selection([
-        ('small', 'Kecil (80x60)'),
-        ('medium', 'Sedang (100x75)'),
-        ('large', 'Besar (120x90)'),
-        ('xlarge', 'Ekstra Besar (150x112)'),
+        ('small', 'Kecil (80x60) - Corner Only'),
+        ('medium', 'Sedang (120x90)'),
+        ('large', 'Besar (160x120)'),
+        ('xlarge', 'Sangat Besar (200x150) - Untuk Center'),
         ('custom', 'Custom'),
-    ], string='Ukuran Signature', default='medium',
-       help='Preset ukuran signature atau pilih Custom untuk input manual')
+    ], string='Ukuran Signature', default='xlarge',
+       help='PENTING: Size kecil hanya bekerja untuk posisi CORNER. Untuk CENTER gunakan size besar!')
     
     # Signature Dimensions (for custom size)
     signature_width = fields.Float(
@@ -491,12 +491,12 @@ class BsreConfig(models.Model):
                 
                 # Add signature image file jika ada
                 if self.signature_image:
-                    # CRITICAL FIX: BSRE API ignores width/height parameters for some positions!
-                    # Solution: Resize image to exact size before upload
-                    resized_image_binary = self._resize_signature_image_to_preset()
-                    files_dict['imageTTD'] = ('signature.png', resized_image_binary, 'image/png')
-                    _logger.info(f'✅ Using RESIZED signature image: size={len(resized_image_binary)} bytes')
-                    _logger.info(f'✅ Image resized to EXACT size: {sig_width}x{sig_height} px')
+                    # Upload original high-resolution image
+                    # width/height parameters define DISPLAY SIZE (viewport), not physical image size
+                    image_binary = base64.b64decode(self.signature_image)
+                    files_dict['imageTTD'] = ('signature.png', image_binary, 'image/png')
+                    _logger.info(f'✅ Using uploaded signature image: size={len(image_binary)} bytes')
+                    _logger.info(f'✅ Display size: {sig_width}x{sig_height} px (viewport, not physical resize)')
                     _logger.info(f'✅ imageTTD will be uploaded as binary file')
                 else:
                     # Jika tidak ada upload, BSRE akan pakai QR Code (perlu linkQR)
@@ -585,34 +585,38 @@ class BsreConfig(models.Model):
         self.ensure_one()
         
         # Size presets (width x height)
+        # NOTE: Small/medium sizes only work for CORNER positions!
+        # For CENTER, BSRE API ignores small sizes and uses original image size
         SIZE_PRESETS = {
-            'small': 80,
-            'medium': 100,
-            'large': 120,
-            'xlarge': 150,
+            'small': 80,      # 80x60 - Corner only
+            'medium': 120,    # 120x90
+            'large': 160,     # 160x120
+            'xlarge': 200,    # 200x150 - Recommended for CENTER
         }
         
         if self.signature_size == 'custom':
             return self.signature_width
         else:
-            return SIZE_PRESETS.get(self.signature_size, 100)
+            return SIZE_PRESETS.get(self.signature_size, 200)
     
     def _get_signature_height(self):
         """Get signature height based on size preset or custom value"""
         self.ensure_one()
         
         # Size presets (width x height)
+        # NOTE: Small/medium sizes only work for CORNER positions!
+        # For CENTER, BSRE API ignores small sizes and uses original image size
         SIZE_PRESETS = {
-            'small': 60,
-            'medium': 75,
-            'large': 90,
-            'xlarge': 112,
+            'small': 60,      # 80x60 - Corner only
+            'medium': 90,     # 120x90
+            'large': 120,     # 160x120
+            'xlarge': 150,    # 200x150 - Recommended for CENTER
         }
         
         if self.signature_size == 'custom':
             return self.signature_height
         else:
-            return SIZE_PRESETS.get(self.signature_size, 75)
+            return SIZE_PRESETS.get(self.signature_size, 150)
     
     def _get_position_x(self):
         """
@@ -642,20 +646,21 @@ class BsreConfig(models.Model):
         # - CENTER point = 505
         # - RIGHT edge = 1000 = (505 × 2) - 10
         
-        # Calculate BOTTOM-LEFT corner position for each preset
-        # For corner positions: direct positioning
-        # For center positions: center_point - (sig_width / 2)
+        # Calculate position based on preset
+        # CRITICAL FINDING: BSRE API needs adjusted coordinates for ALL positions!
+        # Pattern from working KANAN BAWAH: xAxis = 1000 - width (not just 1000!)
+        # So for CENTER: xAxis = 505 - (width/2) to properly define bounding box
         
         POSITIONS_X = {
-            'bottom_left': 10,                                   # Corner: direct
-            'top_left': 10,                                      # Corner: direct
-            'bottom_right': 1000 - sig_width,                    # Corner: right edge - width
-            'top_right': 1000 - sig_width,                       # Corner: right edge - width
-            'center': 505 - (sig_width / 2),                     # Center: center point - half width
+            'bottom_left': 10,                                   # Left edge
+            'top_left': 10,                                      # Left edge
+            'bottom_right': 1000 - sig_width,                    # Right edge - width (WORKING!)
+            'top_right': 1000 - sig_width,                       # Right edge - width
+            'center': 505 - (sig_width / 2),                     # Center point - half width (like kanan bawah pattern!)
         }
         
         position = POSITIONS_X.get(self.signature_position, 10)
-        _logger.info(f'🎯 X Position: preset={self.signature_position}, sig_width={sig_width}, result={position}')
+        _logger.info(f'🎯 X Position: preset={self.signature_position}, sig_width={sig_width}, calculated={position}')
         return position
     
     def _get_position_y(self):
@@ -687,21 +692,21 @@ class BsreConfig(models.Model):
         # - CENTER point = 772
         # - TOP edge = 1534 = (772 × 2) - 10
         
-        # Calculate BOTTOM-LEFT corner position for each preset
-        # For bottom positions: direct positioning
-        # For top positions: top edge - height
-        # For center positions: center_point - (sig_height / 2)
+        # Calculate position based on preset
+        # CRITICAL FINDING: BSRE API needs adjusted coordinates for ALL positions!
+        # Pattern from working positions: coordinate = edge - size
+        # So for CENTER: yAxis = 772 - (height/2) to properly define bounding box
         
         POSITIONS_Y = {
-            'bottom_left': 10,                                   # Bottom: direct
-            'bottom_right': 10,                                  # Bottom: direct
-            'top_left': 1534 - sig_height,                       # Top: top edge - height
-            'top_right': 1534 - sig_height,                      # Top: top edge - height
-            'center': 772 - (sig_height / 2),                    # Center: center point - half height
+            'bottom_left': 10,                                   # Bottom edge
+            'bottom_right': 10,                                  # Bottom edge (WORKING!)
+            'top_left': 1534 - sig_height,                       # Top edge - height
+            'top_right': 1534 - sig_height,                      # Top edge - height
+            'center': 772 - (sig_height / 2),                    # Center point - half height (like kanan bawah pattern!)
         }
         
         position = POSITIONS_Y.get(self.signature_position, 10)
-        _logger.info(f'🎯 Y Position: preset={self.signature_position}, sig_height={sig_height}, result={position}')
+        _logger.info(f'🎯 Y Position: preset={self.signature_position}, sig_height={sig_height}, calculated={position}')
         return position
     
     def verify_signature(self, document_data):

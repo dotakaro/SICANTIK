@@ -47,12 +47,14 @@ License: LGPL-3
         
         # Data
         'data/sicantik_config_data.xml',
+        'data/minio_config_data.xml',
         'data/cron_data.xml',
         
         # Views
         'views/sicantik_config_views.xml',
         'views/sicantik_permit_views.xml',
         'views/sicantik_permit_type_views.xml',
+        'views/minio_connector_views.xml',
         'views/sicantik_menus.xml',
         
         # Wizards
