@@ -84,25 +84,50 @@
                             </group>
                             
                             <group>
-                                <group string="Dimensions (pixels)">
-                                    <field name="signature_width"/>
-                                    <field name="signature_height"/>
+                                <group string="Ukuran Signature">
+                                    <field name="signature_size"/>
+                                    <field name="signature_width" 
+                                           invisible="signature_size != 'custom'"
+                                           required="signature_size == 'custom'"/>
+                                    <field name="signature_height" 
+                                           invisible="signature_size != 'custom'"
+                                           required="signature_size == 'custom'"/>
                                     <p colspan="2" class="text-muted">
-                                        Default: 100 x 75 pixels. Sesuaikan dengan ukuran logo Anda.
+                                        <strong>Preset:</strong><br/>
+                                        • Kecil: 80x60 px<br/>
+                                        • Sedang: 100x75 px (recommended)<br/>
+                                        • Besar: 120x90 px<br/>
+                                        • Ekstra Besar: 150x112 px<br/>
+                                        • Custom: Input manual
                                     </p>
                                 </group>
                                 <group string="Custom Position Override">
                                     <field name="use_custom_position"/>
+                                    
+                                    <div colspan="2" invisible="use_custom_position == False">
+                                        <div class="alert alert-info" role="alert" style="margin-bottom: 15px;">
+                                            <strong>📐 Sistem Koordinat BSRE:</strong><br/>
+                                            • <strong>X (Horizontal):</strong> dari kiri → kanan (Range: 10 - 1000)<br/>
+                                            • <strong>Y (Vertikal):</strong> dari bawah → atas (Range: 10 - 1534)<br/>
+                                            <br/>
+                                            <strong>✨ Preset Posisi:</strong><br/>
+                                            • Kiri Bawah: X=10, Y=10 | Kanan Bawah: X=1000, Y=10<br/>
+                                            • Kiri Atas: X=10, Y=1534 | Kanan Atas: X=1000, Y=1534<br/>
+                                            • Tengah: X=505, Y=772
+                                        </div>
+                                    </div>
+                                    
                                     <field name="custom_position_x" 
+                                           string="Posisi X (Horizontal) - px"
                                            invisible="use_custom_position == False"
-                                           required="use_custom_position == True"/>
+                                           required="use_custom_position == True"
+                                           placeholder="10 (kiri) - 1000 (kanan)"/>
+                                    
                                     <field name="custom_position_y" 
+                                           string="Posisi Y (Vertikal) - px"
                                            invisible="use_custom_position == False"
-                                           required="use_custom_position == True"/>
-                                    <p colspan="2" class="text-muted" invisible="use_custom_position == False">
-                                        <strong>Info:</strong> X dari kiri (0=kiri), Y dari bawah (0=bawah).
-                                        <br/>Koordinat dalam pixel. Preset posisi akan di-override jika diaktifkan.
-                                    </p>
+                                           required="use_custom_position == True"
+                                           placeholder="10 (bawah) - 1534 (atas)"/>
                                 </group>
                             </group>
                             

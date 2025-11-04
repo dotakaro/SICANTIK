@@ -110,16 +110,26 @@ class BsreConfig(models.Model):
         string='Nama File'
     )
     
-    # Signature Dimensions
+    # Signature Size Preset
+    signature_size = fields.Selection([
+        ('small', 'Kecil (80x60)'),
+        ('medium', 'Sedang (100x75)'),
+        ('large', 'Besar (120x90)'),
+        ('xlarge', 'Ekstra Besar (150x112)'),
+        ('custom', 'Custom'),
+    ], string='Ukuran Signature', default='medium',
+       help='Preset ukuran signature atau pilih Custom untuk input manual')
+    
+    # Signature Dimensions (for custom size)
     signature_width = fields.Float(
         string='Lebar Signature (px)',
         default=100.0,
-        help='Lebar signature field dalam pixel'
+        help='Lebar signature field dalam pixel (aktif jika ukuran = Custom)'
     )
     signature_height = fields.Float(
         string='Tinggi Signature (px)',
         default=75.0,
-        help='Tinggi signature field dalam pixel'
+        help='Tinggi signature field dalam pixel (aktif jika ukuran = Custom)'
     )
     
     # Custom Position Override
@@ -425,19 +435,21 @@ class BsreConfig(models.Model):
                 form_data['page'] = '1'  # Always page 1 for now
                 form_data['xAxis'] = str(int(self._get_position_x()))
                 form_data['yAxis'] = str(int(self._get_position_y()))
-                form_data['width'] = str(int(self.signature_width or 100))
-                form_data['height'] = str(int(self.signature_height or 75))
+                form_data['width'] = str(int(self._get_signature_width()))
+                form_data['height'] = str(int(self._get_signature_height()))
                 
                 # Add signature image file jika ada
                 if self.signature_image:
                     # Decode base64 to binary
                     image_binary = base64.b64decode(self.signature_image)
                     files_dict['imageTTD'] = ('signature.png', image_binary, 'image/png')
-                    _logger.info(f'Using uploaded signature image (size: {len(image_binary)} bytes)')
+                    _logger.info(f'✅ Using uploaded signature image: size={len(image_binary)} bytes, base64_length={len(self.signature_image)} chars')
+                    _logger.info(f'✅ imageTTD will be uploaded as binary file')
                 else:
                     # Jika tidak ada upload, BSRE akan pakai QR Code (perlu linkQR)
                     form_data['linkQR'] = 'https://tte.karokab.go.id/verify'
-                    _logger.info('No signature image - BSRE will use QR Code')
+                    _logger.info('⚠️ No signature image uploaded - BSRE will use QR Code only')
+                    _logger.info('⚠️ Please upload signature image in BSRE config if you want custom logo')
             
             _logger.info(f'Form data (without passphrase): {", ".join([f"{k}={v}" for k, v in form_data.items() if k != "passphrase"])}')
             _logger.info(f'Files to upload: {", ".join(files_dict.keys())}')
@@ -515,37 +527,120 @@ class BsreConfig(models.Model):
                 'message': f'Tanda tangan gagal: {error_msg}'
             }
     
+    def _get_signature_width(self):
+        """Get signature width based on size preset or custom value"""
+        self.ensure_one()
+        
+        # Size presets (width x height)
+        SIZE_PRESETS = {
+            'small': 80,
+            'medium': 100,
+            'large': 120,
+            'xlarge': 150,
+        }
+        
+        if self.signature_size == 'custom':
+            return self.signature_width
+        else:
+            return SIZE_PRESETS.get(self.signature_size, 100)
+    
+    def _get_signature_height(self):
+        """Get signature height based on size preset or custom value"""
+        self.ensure_one()
+        
+        # Size presets (width x height)
+        SIZE_PRESETS = {
+            'small': 60,
+            'medium': 75,
+            'large': 90,
+            'xlarge': 112,
+        }
+        
+        if self.signature_size == 'custom':
+            return self.signature_height
+        else:
+            return SIZE_PRESETS.get(self.signature_size, 75)
+    
     def _get_position_x(self):
-        """Get X coordinate based on signature position or custom override"""
+        """
+        Get X coordinate based on signature position or custom override
+        
+        Koordinat sistem PDF STANDARD (sesuai Postman examples):
+        - xAxis=0 = KIRI
+        - xAxis bertambah ke KANAN
+        - Origin (0,0) = Kiri Atas
+        """
         self.ensure_one()
         
         # Use custom position if enabled
         if self.use_custom_position:
             return self.custom_position_x
         
-        # Use preset positions
-        if self.signature_position in ['bottom_left', 'top_left']:
-            return 0.0
-        elif self.signature_position in ['bottom_right', 'top_right']:
-            return 512.0
-        else:  # center
-            return 256.0
+        # Get signature width untuk perhitungan posisi
+        sig_width = self._get_signature_width()
+        
+        # Koordinat BSRE X-axis (CALCULATED using same formula as Y)
+        # Test results:
+        # - xAxis=10 → LEFT (confirmed)
+        # - xAxis=505 → CENTER (user test: "kanan bawah" became "tengah bawah")
+        # 
+        # Mathematical calculation (same formula as Y):
+        # If center = 505 and left = 10
+        # RIGHT = (CENTER × 2) - LEFT
+        # RIGHT = (505 × 2) - 10 = 1000
+        POSITIONS_X = {
+            'bottom_left': 10,                     # Kiri (confirmed)
+            'top_left': 10,                        # Kiri (confirmed)
+            'bottom_right': 1000,                  # Kanan = (505 × 2) - 10
+            'top_right': 1000,                     # Kanan = (505 × 2) - 10
+            'center': 505,                         # Tengah (confirmed by test)
+        }
+        
+        return POSITIONS_X.get(self.signature_position, 10)  # Default: kiri = 10
     
     def _get_position_y(self):
-        """Get Y coordinate based on signature position or custom override"""
+        """
+        Get Y coordinate based on signature position or custom override
+        
+        Koordinat sistem BSRE (CONFIRMED BY TESTING):
+        - yAxis=0 = BAWAH (not top!)
+        - yAxis bertambah ke ATAS (not down!)
+        - Y axis is FLIPPED from standard PDF
+        
+        Test results:
+        - Setting: KIRI ATAS (xAxis=10, yAxis=10)
+        - Result: Logo appeared at KIRI BAWAH
+        - Conclusion: yAxis=10 (small value) = BOTTOM position
+        """
         self.ensure_one()
         
         # Use custom position if enabled
         if self.use_custom_position:
             return self.custom_position_y
         
-        # Use preset positions
-        if self.signature_position in ['bottom_left', 'bottom_right']:
-            return 717.0  # Bottom of A4 page
-        elif self.signature_position in ['top_left', 'top_right']:
-            return 0.0
-        else:  # center
-            return 358.5  # Middle of A4 page
+        # Get signature height untuk perhitungan posisi
+        sig_height = self._get_signature_height()
+        
+        # Koordinat BSRE (Y axis - CONFIRMED BY USER!)
+        # Test results:
+        # - yAxis=10 → BOTTOM (confirmed)
+        # - yAxis=772 → CENTER (confirmed)
+        # 
+        # Mathematical calculation (user insight):
+        # If center = 772 and bottom = 10
+        # Distance bottom→center = 772 - 10 = 762
+        # Distance center→top = 762
+        # TOP = 772 + 762 = 1534
+        # OR: TOP = (772 × 2) - 10 = 1534
+        POSITIONS_Y = {
+            'bottom_left': 10,                        # Bawah (confirmed)
+            'bottom_right': 10,                       # Bawah (confirmed)
+            'top_left': 1534,                         # Atas = (772 × 2) - 10
+            'top_right': 1534,                        # Atas = (772 × 2) - 10
+            'center': 772,                            # Tengah (confirmed)
+        }
+        
+        return POSITIONS_Y.get(self.signature_position, 10)  # Default: bawah = 10
     
     def verify_signature(self, document_data):
         """
