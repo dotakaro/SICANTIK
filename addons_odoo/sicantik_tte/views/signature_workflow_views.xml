@@ -148,23 +148,63 @@
         <field name="name">signature.workflow.kanban</field>
         <field name="model">signature.workflow</field>
         <field name="arch" type="xml">
-            <kanban string="Workflow" default_group_by="state">
+            <kanban string="Workflow" default_group_by="state" class="o_kanban_small_column">
                 <field name="document_number"/>
                 <field name="permit_number"/>
                 <field name="state"/>
                 <field name="progress"/>
+                <field name="requester_id"/>
+                <field name="create_date"/>
                 <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_global_click">
+                    <!-- Odoo 18: Use 'card' instead of deprecated 'kanban-box' -->
+                    <t t-name="card">
+                        <div class="oe_kanban_card oe_kanban_global_click">
                             <div class="oe_kanban_details">
-                                <strong class="o_kanban_record_title">
-                                    <field name="document_number"/>
-                                </strong>
-                                <ul>
-                                    <li>Izin: <field name="permit_number"/></li>
-                                    <li>Peminta: <field name="requester_id"/></li>
-                                    <li>Progress: <field name="progress" widget="progressbar"/></li>
-                                </ul>
+                                <div class="o_kanban_record_top mb-2">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="document_number"/>
+                                    </strong>
+                                    <div class="o_dropdown_kanban dropdown">
+                                        <a class="dropdown-toggle o-no-caret btn" role="button" data-bs-toggle="dropdown" href="#" aria-label="Dropdown menu">
+                                            <span class="fa fa-ellipsis-v"/>
+                                        </a>
+                                        <div class="dropdown-menu" role="menu">
+                                            <a role="menuitem" type="edit" class="dropdown-item">Edit</a>
+                                            <a role="menuitem" type="delete" class="dropdown-item">Delete</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="o_kanban_record_body">
+                                    <div class="row g-0 mb-1">
+                                        <div class="col-4 text-muted">Izin:</div>
+                                        <div class="col-8"><field name="permit_number"/></div>
+                                    </div>
+                                    <div class="row g-0 mb-2">
+                                        <div class="col-4 text-muted">Peminta:</div>
+                                        <div class="col-8"><field name="requester_id"/></div>
+                                    </div>
+                                    <div class="row g-0 mb-1">
+                                        <div class="col-12">
+                                            <label class="text-muted small">Progress:</label>
+                                            <field name="progress" widget="progressbar"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="o_kanban_record_bottom mt-2">
+                                    <div class="oe_kanban_bottom_left">
+                                        <field name="state" widget="badge" 
+                                               decoration-success="state == 'signed'"
+                                               decoration-info="state == 'approved'"
+                                               decoration-warning="state == 'pending'"
+                                               decoration-muted="state == 'draft'"
+                                               decoration-danger="state == 'rejected'"/>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <span class="text-muted" t-esc="record.create_date.value and record.create_date.value.toLocaleDateString()"/>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </t>
