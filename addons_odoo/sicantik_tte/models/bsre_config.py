@@ -112,13 +112,13 @@ class BsreConfig(models.Model):
     
     # Signature Size Preset
     signature_size = fields.Selection([
-        ('small', 'Kecil (80x60)'),
-        ('medium', 'Sedang (120x90)'),
-        ('large', 'Besar (160x120)'),
-        ('xlarge', 'Sangat Besar (200x150)'),
+        ('small', 'Kecil (Max 80x60)'),
+        ('medium', 'Sedang (Max 120x90)'),
+        ('large', 'Besar (Max 160x120)'),
+        ('xlarge', 'Sangat Besar (Max 200x150)'),
         ('custom', 'Custom'),
     ], string='Ukuran Signature', default='small',
-       help='Ukuran signature akan di-resize secara otomatis sesuai preset yang dipilih')
+       help='Ukuran maksimum signature. Aspek rasio original akan dipertahankan - gambar akan di-fit dalam bounds tanpa distorsi.')
     
     # Signature Dimensions (for custom size)
     signature_width = fields.Float(
@@ -658,20 +658,28 @@ class BsreConfig(models.Model):
     
     def _resize_image_to_exact_size(self, image_binary, target_width, target_height):
         """
-        Resize image to EXACT dimensions that BSRE API expects.
+        Resize image MAINTAINING ASPECT RATIO to fit within target bounds.
         
-        CRITICAL FINDING: BSRE API ignores width/height parameters in API request!
-        It uses the PHYSICAL size of the uploaded image file!
+        CRITICAL: BSRE API uses PHYSICAL size of the uploaded image!
+        We must resize the image file itself before upload.
         
-        So we MUST resize the image to exact dimensions before upload.
+        ASPECT RATIO PRESERVED:
+        - Fit image within bounding box (max_width x max_height)
+        - Calculate actual dimensions maintaining original aspect ratio
+        - No distortion - image stays proportional
+        
+        Example:
+            Original: 569x308 (ratio 1.85:1)
+            Target bounds: 120x90
+            Result: 120x65 (maintains 1.85:1 ratio)
         
         Args:
             image_binary: Original image as bytes
-            target_width: Exact width in pixels (must match API width parameter)
-            target_height: Exact height in pixels (must match API height parameter)
+            target_width: Maximum width in pixels (bounding box)
+            target_height: Maximum height in pixels (bounding box)
         
         Returns:
-            Resized image as bytes (PNG format)
+            Resized image as bytes (PNG format, aspect ratio maintained)
         """
         from PIL import Image
         import io
@@ -694,9 +702,27 @@ class BsreConfig(models.Model):
             elif image.mode != 'RGB':
                 image = image.convert('RGB')
             
-            # Resize to EXACT dimensions (will distort if aspect ratio different)
-            # Using LANCZOS for high quality
-            resized_image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
+            # Calculate aspect ratio and resize MAINTAINING it
+            # Fit within bounding box (target_width x target_height)
+            original_width, original_height = original_size
+            aspect_ratio = original_width / original_height
+            
+            _logger.info(f'🎨 Original aspect ratio: {aspect_ratio:.3f} ({original_width}:{original_height})')
+            
+            # Calculate new dimensions maintaining aspect ratio
+            if original_width / target_width > original_height / target_height:
+                # Width is limiting factor
+                new_width = int(target_width)
+                new_height = int(target_width / aspect_ratio)
+            else:
+                # Height is limiting factor  
+                new_height = int(target_height)
+                new_width = int(target_height * aspect_ratio)
+            
+            _logger.info(f'🎯 Resizing to: {new_width}x{new_height} (aspect ratio preserved)')
+            
+            # Resize maintaining aspect ratio using high-quality LANCZOS
+            resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
             
             # Save to bytes as PNG (lossless)
             output = io.BytesIO()
@@ -704,7 +730,7 @@ class BsreConfig(models.Model):
             resized_binary = output.getvalue()
             
             _logger.info(f'✅ Image resized: {len(image_binary)} → {len(resized_binary)} bytes')
-            _logger.info(f'✅ New dimensions: {target_width}x{target_height} px (EXACT)')
+            _logger.info(f'✅ Final dimensions: {new_width}x{new_height} px (ASPECT RATIO MAINTAINED ✨)')
             
             return resized_binary
             
