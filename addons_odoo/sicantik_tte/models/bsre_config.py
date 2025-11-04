@@ -202,6 +202,43 @@ class BsreConfig(models.Model):
             if active_configs:
                 raise ValidationError('Hanya satu konfigurasi BSRE yang dapat aktif pada satu waktu')
     
+    @api.constrains('use_custom_position', 'custom_position_x', 'custom_position_y', 'signature_width', 'signature_height')
+    def _check_custom_position_bounds(self):
+        """
+        Validate custom position coordinates stay within A4 page bounds
+        V2 API menggunakan A4 Portrait: 595 x 842 points
+        """
+        for record in self:
+            if record.use_custom_position:
+                PAGE_WIDTH = 595
+                PAGE_HEIGHT = 842
+                
+                # Get signature dimensions
+                sig_width = record._get_signature_width()
+                sig_height = record._get_signature_height()
+                
+                # Validate X coordinate
+                if record.custom_position_x < 0:
+                    raise ValidationError('Posisi X tidak boleh negatif!')
+                if record.custom_position_x + sig_width > PAGE_WIDTH:
+                    raise ValidationError(
+                        f'Signature keluar dari halaman!\n'
+                        f'originX ({record.custom_position_x}) + width ({sig_width}) = {record.custom_position_x + sig_width}\n'
+                        f'MAX allowed: {PAGE_WIDTH} (A4 width)\n\n'
+                        f'Solusi: Kurangi originX atau gunakan signature yang lebih kecil.'
+                    )
+                
+                # Validate Y coordinate
+                if record.custom_position_y < 0:
+                    raise ValidationError('Posisi Y tidak boleh negatif!')
+                if record.custom_position_y + sig_height > PAGE_HEIGHT:
+                    raise ValidationError(
+                        f'Signature keluar dari halaman!\n'
+                        f'originY ({record.custom_position_y}) + height ({sig_height}) = {record.custom_position_y + sig_height}\n'
+                        f'MAX allowed: {PAGE_HEIGHT} (A4 height)\n\n'
+                        f'Solusi: Kurangi originY atau gunakan signature yang lebih kecil.'
+                    )
+    
     def _make_api_request(self, endpoint, method='POST', data=None, files=None):
         """
         Make API request to BSRE using Basic Authentication

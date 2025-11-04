@@ -106,10 +106,12 @@
                                     
                                     <div colspan="2" invisible="use_custom_position == False">
                                         <div class="alert alert-info" role="alert" style="margin-bottom: 15px;">
-                                            <strong>📐 Sistem Koordinat BSRE:</strong><br/>
-                                            • <strong>X (Horizontal):</strong> dari kiri → kanan (Range: 10 - 1000)<br/>
-                                            • <strong>Y (Vertikal):</strong> dari bawah → atas (Range: 10 - 1534)<br/>
+                                            <strong>📐 Sistem Koordinat V2 API (A4 Portrait):</strong><br/>
+                                            • <strong>X (Horizontal):</strong> dari kiri → kanan (Range: 10 - 585)<br/>
+                                            • <strong>Y (Vertikal):</strong> dari atas → bawah (Range: 10 - 832)<br/>
+                                            • <strong>Page Size:</strong> 595 x 842 points (21 x 29.7 cm)<br/>
                                             <br/>
+                                            <strong>⚠️ PENTING:</strong> Y=0 di ATAS! (Top-left origin)<br/>
                                             <strong>✨ Quick Preset:</strong> Klik nilai di bawah untuk mengisi otomatis
                                         </div>
                                         
@@ -117,72 +119,81 @@
                                             <thead style="background-color: #f8f9fa;">
                                                 <tr>
                                                     <th style="text-align: center;">Posisi</th>
-                                                    <th style="text-align: center;">X</th>
-                                                    <th style="text-align: center;">Y</th>
+                                                    <th style="text-align: center;">X (originX)</th>
+                                                    <th style="text-align: center;">Y (originY)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr>
                                                     <td><strong>Kiri Atas</strong></td>
                                                     <td style="text-align: center;"><code>10</code></td>
-                                                    <td style="text-align: center;"><code>1534</code></td>
+                                                    <td style="text-align: center;"><code>10</code></td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Tengah Atas</strong></td>
-                                                    <td style="text-align: center;"><code>505</code></td>
-                                                    <td style="text-align: center;"><code>1534</code></td>
+                                                    <td style="text-align: center;"><code>250</code></td>
+                                                    <td style="text-align: center;"><code>10</code></td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Kanan Atas</strong></td>
-                                                    <td style="text-align: center;"><code>1000</code></td>
-                                                    <td style="text-align: center;"><code>1534</code></td>
+                                                    <td style="text-align: center;"><code>475</code></td>
+                                                    <td style="text-align: center;"><code>10</code></td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Kiri Tengah</strong></td>
                                                     <td style="text-align: center;"><code>10</code></td>
-                                                    <td style="text-align: center;"><code>772</code></td>
+                                                    <td style="text-align: center;"><code>381</code></td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Center</strong></td>
-                                                    <td style="text-align: center;"><code>505</code></td>
-                                                    <td style="text-align: center;"><code>772</code></td>
+                                                    <td style="text-align: center;"><code>257</code></td>
+                                                    <td style="text-align: center;"><code>391</code></td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Kanan Tengah</strong></td>
-                                                    <td style="text-align: center;"><code>1000</code></td>
-                                                    <td style="text-align: center;"><code>772</code></td>
+                                                    <td style="text-align: center;"><code>475</code></td>
+                                                    <td style="text-align: center;"><code>381</code></td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Kiri Bawah</strong></td>
                                                     <td style="text-align: center;"><code>10</code></td>
-                                                    <td style="text-align: center;"><code>10</code></td>
+                                                    <td style="text-align: center;"><code>772</code></td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Tengah Bawah</strong></td>
-                                                    <td style="text-align: center;"><code>505</code></td>
-                                                    <td style="text-align: center;"><code>10</code></td>
+                                                    <td style="text-align: center;"><code>250</code></td>
+                                                    <td style="text-align: center;"><code>772</code></td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>Kanan Bawah</strong></td>
-                                                    <td style="text-align: center;"><code>1000</code></td>
-                                                    <td style="text-align: center;"><code>10</code></td>
+                                                    <td style="text-align: center;"><code>475</code></td>
+                                                    <td style="text-align: center;"><code>772</code></td>
                                                 </tr>
                                             </tbody>
                                         </table>
+                                        
+                                        <div class="alert alert-warning" role="alert" style="margin-bottom: 10px;">
+                                            <strong>⚠️ Catatan Koordinat Custom:</strong><br/>
+                                            • Koordinat di atas untuk signature <strong>120x90 px</strong> (medium)<br/>
+                                            • <strong>originX, originY</strong> = posisi TOP-LEFT corner signature<br/>
+                                            • Pastikan: originX + width ≤ 595<br/>
+                                            • Pastikan: originY + height ≤ 842<br/>
+                                            • Jika signature keluar halaman → ERROR 500!
+                                        </div>
                                     </div>
                                     
                                     <field name="custom_position_x" 
                                            string="Posisi X (Horizontal) - px"
                                            invisible="use_custom_position == False"
                                            required="use_custom_position == True"
-                                           placeholder="10 (kiri) - 505 (tengah) - 1000 (kanan)"
+                                           placeholder="10 (kiri) - 257 (tengah) - 475 (kanan) [MAX: 585]"
                                            style="font-size: 14px; font-weight: bold;"/>
                                     
                                     <field name="custom_position_y" 
                                            string="Posisi Y (Vertikal) - px"
                                            invisible="use_custom_position == False"
                                            required="use_custom_position == True"
-                                           placeholder="10 (bawah) - 772 (tengah) - 1534 (atas)"
+                                           placeholder="10 (atas) - 391 (tengah) - 772 (bawah) [MAX: 832]"
                                            style="font-size: 14px; font-weight: bold;"/>
                                 </group>
                             </group>
