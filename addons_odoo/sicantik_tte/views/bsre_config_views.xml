@@ -37,12 +37,24 @@
                     </div>
                     
                     <group>
-                        <group string="API Configuration">
+                        <group string="API Configuration (Basic Auth)">
                             <field name="api_url"/>
-                            <field name="api_key" password="True"/>
-                            <field name="api_secret" password="True"/>
+                            <field name="username"/>
+                            <field name="password" password="True"/>
                             <field name="active"/>
                         </group>
+                        <group string="Signing Credentials">
+                            <field name="signing_identifier_type"/>
+                            <field name="signing_identifier" 
+                                   placeholder="NIK atau Email"/>
+                            <field name="use_otp"/>
+                            <p colspan="2" class="text-muted">
+                                Note: Passphrase akan diminta saat proses signing untuk keamanan.
+                            </p>
+                        </group>
+                    </group>
+                    
+                    <group>
                         <group string="Certificate Information">
                             <field name="certificate_id" readonly="1"/>
                             <field name="certificate_owner" readonly="1"/>
@@ -53,12 +65,49 @@
                     <notebook>
                         <page string="Signature Settings" name="signature">
                             <group>
-                                <group string="Position">
-                                    <field name="signature_position"/>
-                                    <field name="signature_page"/>
+                                <group string="Visibility &amp; Appearance">
                                     <field name="signature_visible"/>
+                                    <field name="signature_image" widget="image" 
+                                           class="oe_avatar" 
+                                           options="{'size': [150, 100]}"
+                                           invisible="signature_visible == False"/>
+                                    <field name="signature_image_filename" invisible="1"/>
+                                    <p colspan="2" class="text-muted" invisible="signature_visible == False">
+                                        Upload logo atau gambar tanda tangan (PNG dengan transparansi). 
+                                        Jika kosong, akan menggunakan placeholder transparan.
+                                    </p>
                                 </group>
-                                <group string="Timeout & Retry">
+                                <group string="Position &amp; Page">
+                                    <field name="signature_page"/>
+                                    <field name="signature_position"/>
+                                </group>
+                            </group>
+                            
+                            <group>
+                                <group string="Dimensions (pixels)">
+                                    <field name="signature_width"/>
+                                    <field name="signature_height"/>
+                                    <p colspan="2" class="text-muted">
+                                        Default: 100 x 75 pixels. Sesuaikan dengan ukuran logo Anda.
+                                    </p>
+                                </group>
+                                <group string="Custom Position Override">
+                                    <field name="use_custom_position"/>
+                                    <field name="custom_position_x" 
+                                           invisible="use_custom_position == False"
+                                           required="use_custom_position == True"/>
+                                    <field name="custom_position_y" 
+                                           invisible="use_custom_position == False"
+                                           required="use_custom_position == True"/>
+                                    <p colspan="2" class="text-muted" invisible="use_custom_position == False">
+                                        <strong>Info:</strong> X dari kiri (0=kiri), Y dari bawah (0=bawah).
+                                        <br/>Koordinat dalam pixel. Preset posisi akan di-override jika diaktifkan.
+                                    </p>
+                                </group>
+                            </group>
+                            
+                            <group>
+                                <group string="Timeout &amp; Retry">
                                     <field name="api_timeout"/>
                                     <field name="max_retry"/>
                                 </group>

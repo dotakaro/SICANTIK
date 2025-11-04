@@ -51,16 +51,22 @@ Technical:
         
         # Data
         'data/document_sequence.xml',
+        'data/bsre_config_data.xml',  # Default BSRE configuration
         
-        # Views
-        'views/sicantik_document_views.xml',
-        'views/bsre_config_views.xml',
+        # Views - signature_workflow_views.xml HARUS di-load SEBELUM sicantik_document_views.xml
+        # karena sicantik_document_views.xml mereferensikan action_signature_workflow
         'views/signature_workflow_views.xml',
+        'views/bsre_config_views.xml',
+        'views/sicantik_document_views.xml',
         'views/sicantik_tte_menus.xml',
+        
+        # Templates (Public pages)
+        'views/templates/verification_templates.xml',
         
         # Wizards
         'wizard/document_upload_wizard_views.xml',
         'wizard/batch_sign_wizard_views.xml',
+        'wizard/sign_passphrase_wizard_views.xml',
     ],
     'assets': {
         'web.assets_backend': [

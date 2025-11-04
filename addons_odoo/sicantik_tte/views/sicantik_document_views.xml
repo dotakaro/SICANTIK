@@ -25,9 +25,11 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_view_document" type="object" class="oe_stat_button" icon="fa-file-pdf-o">
+                        <!-- Stat button tanpa action untuk menampilkan ukuran file -->
+                        <button class="oe_stat_button" icon="fa-file-pdf-o" disabled="1">
                             <field name="file_size" widget="statinfo" string="Ukuran File"/>
                         </button>
+                        <!-- Stat button untuk workflow -->
                         <button name="%(action_signature_workflow)d" type="action" 
                                 class="oe_stat_button" icon="fa-pencil-square-o"
                                 context="{'search_default_document_id': id}">
@@ -35,9 +37,9 @@
                                 <span class="o_stat_text">Workflow</span>
                             </div>
                         </button>
-                        <button name="action_view_verifications" type="object" 
-                                class="oe_stat_button" icon="fa-check-circle"
-                                invisible="verification_count == 0">
+                        <!-- Stat button tanpa action untuk menampilkan jumlah verifikasi -->
+                        <button class="oe_stat_button" icon="fa-check-circle" 
+                                disabled="1" invisible="verification_count == 0">
                             <field name="verification_count" widget="statinfo" string="Verifikasi"/>
                         </button>
                     </div>

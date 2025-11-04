@@ -4,6 +4,7 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
 import requests
 import base64
+import json
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -31,18 +32,37 @@ class BsreConfig(models.Model):
     api_url = fields.Char(
         string='URL API BSRE',
         required=True,
-        default='https://api.bsre.id/v1',
+        default='http://tte.karokab.go.id',
         help='Base URL untuk BSRE API'
     )
-    api_key = fields.Char(
-        string='API Key',
+    username = fields.Char(
+        string='Username',
         required=True,
-        help='API Key dari BSRE'
+        help='Username akun BSRE (untuk Basic Auth header)'
     )
-    api_secret = fields.Char(
-        string='API Secret',
+    password = fields.Char(
+        string='Password',
         required=True,
-        help='API Secret dari BSRE'
+        help='Password akun BSRE (untuk Basic Auth header)'
+    )
+    
+    # User Signing Credentials (untuk actual signing)
+    signing_identifier_type = fields.Selection([
+        ('nik', 'NIK'),
+        ('email', 'Email'),
+    ], string='Tipe Identifier', default='nik', required=True,
+       help='Identifier untuk signing: NIK atau Email')
+    
+    signing_identifier = fields.Char(
+        string='NIK/Email untuk Signing',
+        required=True,
+        help='NIK atau Email yang akan digunakan untuk sign dokumen'
+    )
+    
+    use_otp = fields.Boolean(
+        string='Gunakan OTP',
+        default=False,
+        help='Gunakan OTP instead of passphrase (belum diimplementasikan)'
     )
     
     # Certificate Configuration
@@ -78,6 +98,45 @@ class BsreConfig(models.Model):
         string='Tanda Tangan Visible',
         default=True,
         help='Tampilkan tanda tangan visual di PDF'
+    )
+    
+    # Custom Signature Appearance
+    signature_image = fields.Binary(
+        string='Logo/Tanda Tangan',
+        attachment=True,
+        help='Upload logo atau gambar tanda tangan untuk ditampilkan di PDF. Format: PNG dengan transparansi. Jika kosong, akan menggunakan placeholder default.'
+    )
+    signature_image_filename = fields.Char(
+        string='Nama File'
+    )
+    
+    # Signature Dimensions
+    signature_width = fields.Float(
+        string='Lebar Signature (px)',
+        default=100.0,
+        help='Lebar signature field dalam pixel'
+    )
+    signature_height = fields.Float(
+        string='Tinggi Signature (px)',
+        default=75.0,
+        help='Tinggi signature field dalam pixel'
+    )
+    
+    # Custom Position Override
+    use_custom_position = fields.Boolean(
+        string='Gunakan Posisi Custom',
+        default=False,
+        help='Centang untuk menggunakan koordinat X,Y manual (override preset posisi)'
+    )
+    custom_position_x = fields.Float(
+        string='Posisi X (px)',
+        default=0.0,
+        help='Koordinat X dari kiri PDF (0 = kiri). Hanya aktif jika "Gunakan Posisi Custom" dicentang.'
+    )
+    custom_position_y = fields.Float(
+        string='Posisi Y (px)',
+        default=0.0,
+        help='Koordinat Y dari bawah PDF (0 = bawah). Hanya aktif jika "Gunakan Posisi Custom" dicentang.'
     )
     
     # Timeout & Retry
@@ -135,7 +194,7 @@ class BsreConfig(models.Model):
     
     def _make_api_request(self, endpoint, method='POST', data=None, files=None):
         """
-        Make API request to BSRE
+        Make API request to BSRE using Basic Authentication
         
         Args:
             endpoint (str): API endpoint
@@ -150,29 +209,81 @@ class BsreConfig(models.Model):
         
         url = f'{self.api_url}/{endpoint}'
         
-        headers = {
-            'X-API-Key': self.api_key,
-            'X-API-Secret': self.api_secret,
-        }
+        # Use Basic Authentication with username and password
+        auth = (self.username, self.password)
+        
+        headers = {}
         
         try:
             _logger.info(f'BSRE API Request: {method} {url}')
             
             if method == 'POST':
                 if files:
-                    response = requests.post(url, headers=headers, data=data, files=files, timeout=self.api_timeout)
+                    response = requests.post(url, auth=auth, data=data, files=files, timeout=self.api_timeout)
                 else:
                     headers['Content-Type'] = 'application/json'
-                    response = requests.post(url, headers=headers, json=data, timeout=self.api_timeout)
+                    # Log request data (tanpa file base64 untuk tidak flood log)
+                    debug_data = {k: v if k != 'file' else f'[{len(v)} files]' for k, v in (data or {}).items()}
+                    _logger.info(f'Request data: {json.dumps(debug_data)}')
+                    
+                    response = requests.post(url, auth=auth, headers=headers, json=data, timeout=self.api_timeout)
             elif method == 'GET':
-                response = requests.get(url, headers=headers, params=data, timeout=self.api_timeout)
+                response = requests.get(url, auth=auth, params=data, timeout=self.api_timeout)
             else:
                 raise NotImplementedError(f'HTTP method {method} not implemented')
             
             _logger.info(f'BSRE API Response: {response.status_code}')
+            
+            # Log response body untuk debugging (truncate jika terlalu panjang)
+            try:
+                response_text = response.text[:1000] if len(response.text) > 1000 else response.text
+                _logger.info(f'Response body: {response_text}')
+            except:
+                pass
+            
+            # Check status code before raise_for_status
+            if response.status_code != 200:
+                error_details = {
+                    'status_code': response.status_code,
+                    'url': url,
+                    'method': method,
+                    'response_text': response.text[:500] if response.text else 'No response body'
+                }
+                _logger.error(f'BSRE API Error: {json.dumps(error_details, indent=2)}')
+                
+                # IMPORTANT: BSRE sometimes returns 500 but with valid signed PDF in response body
+                # Try to parse response as JSON first to check for 'file' key
+                try:
+                    error_json = response.json()
+                    
+                    # If response contains 'file' key with signed PDF, treat as success despite 500 error
+                    if isinstance(error_json, dict) and 'file' in error_json and error_json.get('file'):
+                        _logger.warning(f'BSRE returned {response.status_code} but response contains valid signed file. Treating as success.')
+                        return error_json
+                    
+                    # Otherwise, it's a real error
+                    error_msg = f"BSRE API Error {response.status_code}: {error_json.get('message', error_json)}"
+                except:
+                    error_msg = f"BSRE API Error {response.status_code}: {response.text[:200]}"
+                
+                raise UserError(error_msg)
+            
             response.raise_for_status()
             
-            return response.json()
+            # IMPORTANT: For FORMDATA signing (with files parameter), response is binary PDF
+            # For JSON endpoints, response is JSON
+            if files:
+                # Signing with FORMDATA returns binary PDF directly
+                _logger.info(f'FORMDATA signing successful, returning binary PDF (size: {len(response.content)} bytes)')
+                # Return dict dengan content dan metadata untuk compatibility
+                return {
+                    'success': True,
+                    'content': response.content,
+                    'content_type': response.headers.get('Content-Type', 'application/pdf')
+                }
+            else:
+                # JSON endpoints return JSON
+                return response.json()
             
         except requests.exceptions.Timeout:
             error_msg = f'API request timeout after {self.api_timeout} seconds'
@@ -181,7 +292,7 @@ class BsreConfig(models.Model):
         
         except requests.exceptions.RequestException as e:
             error_msg = f'API request failed: {str(e)}'
-            _logger.error(error_msg)
+            _logger.error(f'{error_msg}\nURL: {url}\nMethod: {method}')
             raise UserError(error_msg)
         
         except Exception as e:
@@ -190,53 +301,91 @@ class BsreConfig(models.Model):
             raise UserError(error_msg)
     
     def action_test_connection(self):
-        """Test koneksi ke BSRE API"""
+        """Test koneksi ke BSRE API - Simplified version"""
         self.ensure_one()
         
-        try:
-            # Test connection by getting certificate info
-            result = self._make_api_request('certificate/info', method='GET')
-            
-            if result.get('success'):
-                self.write({
-                    'connection_status': 'connected',
-                    'last_error': False,
-                    'certificate_id': result.get('certificate_id'),
-                    'certificate_owner': result.get('owner'),
-                    'certificate_valid_until': result.get('valid_until'),
-                })
-                
-                return {
-                    'type': 'ir.actions.client',
-                    'tag': 'display_notification',
-                    'params': {
-                        'title': 'Koneksi Berhasil',
-                        'message': f'Berhasil terhubung ke BSRE API. Sertifikat: {result.get("owner")}',
-                        'type': 'success',
-                        'sticky': False,
-                    }
-                }
-            else:
-                raise UserError('BSRE API mengembalikan status tidak berhasil')
-                
-        except Exception as e:
-            error_msg = str(e)
-            _logger.error(f'BSRE connection test failed: {error_msg}')
-            
-            self.write({
-                'connection_status': 'error',
-                'last_error': error_msg
-            })
-            
-            raise UserError(f'Koneksi gagal: {error_msg}')
+        # TODO: Update dengan endpoint BSRE yang benar setelah dapat dokumentasi
+        # Untuk sementara, hanya validasi konfigurasi
+        
+        if not self.api_url or not self.username or not self.password:
+            raise UserError('Konfigurasi tidak lengkap. Pastikan URL, Username, dan Password sudah diisi.')
+        
+        self.write({
+            'connection_status': 'disconnected',
+            'last_error': 'Test connection belum diimplementasikan. Silakan langsung test dengan sign dokumen.'
+        })
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Perhatian',
+                'message': 'Konfigurasi tersimpan. Untuk test koneksi, silakan langsung sign dokumen. Endpoint test belum tersedia di API BSRE.',
+                'type': 'warning',
+                'sticky': False,
+            }
+        }
     
-    def sign_document(self, document_data, document_name):
+    def _process_signature_image(self):
         """
-        Sign document dengan BSRE TTE
+        Process and optimize signature image for BSRE API
+        - Resize to max 100x75 pixel
+        - Convert to simple PNG format
+        - Compress to reduce base64 size
+        
+        Returns:
+            str: Base64 encoded optimized image, or None if no image
+        """
+        if not self.signature_image:
+            return None
+        
+        try:
+            from PIL import Image
+            import io
+            
+            # Decode uploaded image
+            image_data = base64.b64decode(self.signature_image)
+            image = Image.open(io.BytesIO(image_data))
+            
+            # Convert to RGB (remove alpha channel if exists)
+            if image.mode in ('RGBA', 'LA', 'P'):
+                # Create white background
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                if image.mode == 'P':
+                    image = image.convert('RGBA')
+                background.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
+                image = background
+            elif image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Resize to max 100x75 maintaining aspect ratio
+            max_width, max_height = 100, 75
+            image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+            
+            # Save as optimized PNG
+            output = io.BytesIO()
+            image.save(output, format='PNG', optimize=True)
+            optimized_data = output.getvalue()
+            
+            # Convert to base64
+            optimized_base64 = base64.b64encode(optimized_data).decode('utf-8')
+            
+            _logger.info(f'Signature image optimized: {len(self.signature_image)} -> {len(optimized_base64)} chars')
+            
+            return optimized_base64
+            
+        except Exception as e:
+            _logger.warning(f'Failed to process signature image: {str(e)}. Will use placeholder.')
+            return None
+    
+    def sign_document(self, document_data, document_name, passphrase=None):
+        """
+        Sign document dengan BSRE TTE API v2
         
         Args:
             document_data (bytes): Binary data PDF
             document_name (str): Nama dokumen
+            passphrase (str): Passphrase untuk signing (dari user input)
         
         Returns:
             dict: Result with success status, signed data, and metadata
@@ -244,51 +393,112 @@ class BsreConfig(models.Model):
         self.ensure_one()
         
         try:
-            # Prepare request data
-            data = {
-                'certificate_id': self.certificate_id,
-                'signature_position': self.signature_position,
-                'signature_page': self.signature_page,
-                'visible': self.signature_visible,
+            # Validate passphrase
+            if self.use_otp:
+                raise UserError('OTP signing belum diimplementasikan. Silakan gunakan Passphrase.')
+            
+            if not passphrase:
+                raise UserError('Passphrase wajib diisi untuk menandatangani dokumen.')
+            
+            # BSRE API menggunakan multipart/form-data, bukan JSON!
+            # Sesuai spec dari Postman collection
+            
+            _logger.info(f'Signing document with BSRE API v2: {document_name}')
+            
+            # Prepare form data (text fields)
+            form_data = {
+                'nik': self.signing_identifier if self.signing_identifier_type == 'nik' else '',
+                'email': self.signing_identifier if self.signing_identifier_type == 'email' else '',
+                'passphrase': passphrase,
+                'tampilan': 'visible' if self.signature_visible else 'invisible',
             }
             
-            # Prepare file
-            files = {
-                'document': (document_name, document_data, 'application/pdf')
+            # Prepare files dict for multipart upload
+            files_dict = {
+                # PDF file sebagai binary upload
+                'file': (document_name, document_data, 'application/pdf'),
             }
             
-            # Make API request
-            result = self._make_api_request('sign/document', method='POST', data=data, files=files)
+            # Add signature visualization parameters jika visible
+            if self.signature_visible:
+                form_data['image'] = 'true' if self.signature_image else 'false'
+                form_data['page'] = '1'  # Always page 1 for now
+                form_data['xAxis'] = str(int(self._get_position_x()))
+                form_data['yAxis'] = str(int(self._get_position_y()))
+                form_data['width'] = str(int(self.signature_width or 100))
+                form_data['height'] = str(int(self.signature_height or 75))
+                
+                # Add signature image file jika ada
+                if self.signature_image:
+                    # Decode base64 to binary
+                    image_binary = base64.b64decode(self.signature_image)
+                    files_dict['imageTTD'] = ('signature.png', image_binary, 'image/png')
+                    _logger.info(f'Using uploaded signature image (size: {len(image_binary)} bytes)')
+                else:
+                    # Jika tidak ada upload, BSRE akan pakai QR Code (perlu linkQR)
+                    form_data['linkQR'] = 'https://tte.karokab.go.id/verify'
+                    _logger.info('No signature image - BSRE will use QR Code')
             
-            if result.get('success'):
-                # Update statistics
-                self.write({
-                    'total_signatures': self.total_signatures + 1,
-                    'successful_signatures': self.successful_signatures + 1,
-                    'last_signature_date': fields.Datetime.now()
-                })
+            _logger.info(f'Form data (without passphrase): {", ".join([f"{k}={v}" for k, v in form_data.items() if k != "passphrase"])}')
+            _logger.info(f'Files to upload: {", ".join(files_dict.keys())}')
+            
+            # Make API request to BSRE dengan FORMDATA
+            # NOTE: Endpoint untuk FORMDATA adalah /api/sign/pdf (bukan /api/v2/sign/pdf)
+            result = self._make_api_request('api/sign/pdf', method='POST', data=form_data, files=files_dict)
+            
+            # Handle response based on format
+            # FORMDATA endpoint returns: {'success': True, 'content': binary_pdf, 'content_type': 'application/pdf'}
+            # JSON endpoint returns: {'time': 1099, 'file': ['base64_signed_pdf']}
+            
+            if result and isinstance(result, dict):
+                # Check for FORMDATA response (binary PDF)
+                if 'content' in result and result.get('success'):
+                    signed_data = result['content']
+                    _logger.info(f'Document signed successfully with FORMDATA: {document_name} (PDF size: {len(signed_data)} bytes)')
+                    
+                    # Update statistics
+                    self.write({
+                        'total_signatures': self.total_signatures + 1,
+                        'successful_signatures': self.successful_signatures + 1,
+                        'last_signature_date': fields.Datetime.now()
+                    })
+                    
+                    return {
+                        'success': True,
+                        'message': 'Dokumen berhasil ditandatangani dengan BSRE',
+                        'signed_data': signed_data,
+                    }
                 
-                # Get signed document
-                signed_data = base64.b64decode(result.get('signed_document'))
-                
-                _logger.info(f'Document signed successfully: {document_name}')
-                
-                return {
-                    'success': True,
-                    'message': 'Dokumen berhasil ditandatangani',
-                    'signed_data': signed_data,
-                    'request_id': result.get('request_id'),
-                    'signature_id': result.get('signature_id'),
-                    'certificate': result.get('certificate'),
-                }
+                # Check for JSON response (base64 PDF in 'file' key)
+                elif 'file' in result:
+                    file_list = result.get('file', [])
+                    processing_time = result.get('time', 0)
+                    
+                    if file_list and isinstance(file_list, list) and len(file_list) > 0:
+                        # Get first signed document
+                        signed_base64 = file_list[0]
+                        signed_data = base64.b64decode(signed_base64)
+                        
+                        # Update statistics
+                        self.write({
+                            'total_signatures': self.total_signatures + 1,
+                            'successful_signatures': self.successful_signatures + 1,
+                            'last_signature_date': fields.Datetime.now()
+                        })
+                        
+                        _logger.info(f'Document signed successfully with JSON: {document_name} (processing time: {processing_time}ms)')
+                        
+                        return {
+                            'success': True,
+                            'message': 'Dokumen berhasil ditandatangani dengan BSRE',
+                            'signed_data': signed_data,
+                        }
+                    else:
+                        raise UserError(f'BSRE API response tidak mengandung file yang valid: {result}')
+                else:
+                    raise UserError(f'BSRE API response tidak valid (expected "content" or "file" key): {result}')
             else:
-                # Update statistics
-                self.write({
-                    'total_signatures': self.total_signatures + 1,
-                    'failed_signatures': self.failed_signatures + 1,
-                })
-                
-                raise UserError(f'BSRE signing failed: {result.get("message")}')
+                raise UserError(f'BSRE API response bukan dict yang valid: {result}')
                 
         except Exception as e:
             error_msg = str(e)
@@ -304,6 +514,38 @@ class BsreConfig(models.Model):
                 'success': False,
                 'message': f'Tanda tangan gagal: {error_msg}'
             }
+    
+    def _get_position_x(self):
+        """Get X coordinate based on signature position or custom override"""
+        self.ensure_one()
+        
+        # Use custom position if enabled
+        if self.use_custom_position:
+            return self.custom_position_x
+        
+        # Use preset positions
+        if self.signature_position in ['bottom_left', 'top_left']:
+            return 0.0
+        elif self.signature_position in ['bottom_right', 'top_right']:
+            return 512.0
+        else:  # center
+            return 256.0
+    
+    def _get_position_y(self):
+        """Get Y coordinate based on signature position or custom override"""
+        self.ensure_one()
+        
+        # Use custom position if enabled
+        if self.use_custom_position:
+            return self.custom_position_y
+        
+        # Use preset positions
+        if self.signature_position in ['bottom_left', 'bottom_right']:
+            return 717.0  # Bottom of A4 page
+        elif self.signature_position in ['top_left', 'top_right']:
+            return 0.0
+        else:  # center
+            return 358.5  # Middle of A4 page
     
     def verify_signature(self, document_data):
         """

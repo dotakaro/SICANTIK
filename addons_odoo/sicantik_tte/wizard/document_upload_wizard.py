@@ -116,22 +116,14 @@ class DocumentUploadWizard(models.TransientModel):
                 
                 _logger.info(f'Document uploaded successfully: {document.document_number}')
                 
+                # Return action to open the uploaded document
                 return {
-                    'type': 'ir.actions.client',
-                    'tag': 'display_notification',
-                    'params': {
-                        'title': 'Berhasil',
-                        'message': f'Dokumen berhasil diupload: {document.document_number}',
-                        'type': 'success',
-                        'sticky': False,
-                        'next': {
-                            'type': 'ir.actions.act_window',
-                            'res_model': 'sicantik.document',
-                            'res_id': document.id,
-                            'view_mode': 'form',
-                            'target': 'current',
-                        }
-                    }
+                    'type': 'ir.actions.act_window',
+                    'name': 'Dokumen Terupload',
+                    'res_model': 'sicantik.document',
+                    'res_id': document.id,
+                    'view_mode': 'form',
+                    'target': 'current',
                 }
             else:
                 # Delete document if upload failed
