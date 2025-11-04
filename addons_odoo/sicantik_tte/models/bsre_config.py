@@ -336,16 +336,24 @@ class BsreConfig(models.Model):
             }
         }
     
-    def _process_signature_image(self):
+    def _resize_signature_image_to_preset(self):
         """
-        Process and optimize signature image for BSRE API
-        - Resize to max 100x75 pixel
-        - Convert to simple PNG format
-        - Compress to reduce base64 size
+        CRITICAL METHOD: Resize signature image to EXACT preset size
+        
+        WHY THIS IS NEEDED:
+        BSRE API has a BUG where it ignores width/height parameters for
+        certain positions (like CENTER). The API uses the uploaded image's
+        actual size instead of the width/height parameters we send!
+        
+        SOLUTION:
+        Resize the image to EXACT size before upload, so even if API ignores
+        parameters, the image itself is already the correct size.
         
         Returns:
-            str: Base64 encoded optimized image, or None if no image
+            bytes: Resized image as binary PNG data
         """
+        self.ensure_one()
+        
         if not self.signature_image:
             return None
         
@@ -353,40 +361,65 @@ class BsreConfig(models.Model):
             from PIL import Image
             import io
             
+            # Get target size from preset
+            target_width = int(self._get_signature_width())
+            target_height = int(self._get_signature_height())
+            
+            _logger.info(f'🔧 Resizing signature image to EXACT size: {target_width}x{target_height} px')
+            
             # Decode uploaded image
             image_data = base64.b64decode(self.signature_image)
             image = Image.open(io.BytesIO(image_data))
             
-            # Convert to RGB (remove alpha channel if exists)
-            if image.mode in ('RGBA', 'LA', 'P'):
-                # Create white background
-                background = Image.new('RGB', image.size, (255, 255, 255))
-                if image.mode == 'P':
-                    image = image.convert('RGBA')
-                background.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
-                image = background
-            elif image.mode != 'RGB':
-                image = image.convert('RGB')
+            _logger.info(f'📐 Original image size: {image.size[0]}x{image.size[1]} px')
             
-            # Resize to max 100x75 maintaining aspect ratio
-            max_width, max_height = 100, 75
-            image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+            # Convert to RGBA for transparency support
+            if image.mode != 'RGBA':
+                image = image.convert('RGBA')
             
-            # Save as optimized PNG
+            # Resize to EXACT target size (maintain aspect ratio, then crop/pad)
+            # Calculate scaling to fit within target size
+            img_ratio = image.size[0] / image.size[1]
+            target_ratio = target_width / target_height
+            
+            if img_ratio > target_ratio:
+                # Image is wider, fit to width
+                new_width = target_width
+                new_height = int(target_width / img_ratio)
+            else:
+                # Image is taller, fit to height
+                new_height = target_height
+                new_width = int(target_height * img_ratio)
+            
+            # Resize maintaining aspect ratio
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # Create final image with exact target size (white background)
+            final_image = Image.new('RGBA', (target_width, target_height), (255, 255, 255, 0))
+            
+            # Paste resized image centered
+            paste_x = (target_width - new_width) // 2
+            paste_y = (target_height - new_height) // 2
+            final_image.paste(image, (paste_x, paste_y), image)
+            
+            # Convert to RGB for PNG (remove alpha)
+            final_rgb = Image.new('RGB', (target_width, target_height), (255, 255, 255))
+            final_rgb.paste(final_image, mask=final_image.split()[3])  # Use alpha as mask
+            
+            # Save as PNG
             output = io.BytesIO()
-            image.save(output, format='PNG', optimize=True)
-            optimized_data = output.getvalue()
+            final_rgb.save(output, format='PNG', optimize=True)
+            resized_data = output.getvalue()
             
-            # Convert to base64
-            optimized_base64 = base64.b64encode(optimized_data).decode('utf-8')
+            _logger.info(f'✅ Image resized successfully: {len(image_data)} → {len(resized_data)} bytes')
             
-            _logger.info(f'Signature image optimized: {len(self.signature_image)} -> {len(optimized_base64)} chars')
-            
-            return optimized_base64
+            return resized_data
             
         except Exception as e:
-            _logger.warning(f'Failed to process signature image: {str(e)}. Will use placeholder.')
-            return None
+            error_msg = f'Failed to resize signature image: {str(e)}'
+            _logger.error(error_msg)
+            # Fallback: return original image
+            return base64.b64decode(self.signature_image)
     
     def sign_document(self, document_data, document_name, passphrase=None):
         """
@@ -458,10 +491,12 @@ class BsreConfig(models.Model):
                 
                 # Add signature image file jika ada
                 if self.signature_image:
-                    # Decode base64 to binary
-                    image_binary = base64.b64decode(self.signature_image)
-                    files_dict['imageTTD'] = ('signature.png', image_binary, 'image/png')
-                    _logger.info(f'✅ Using uploaded signature image: size={len(image_binary)} bytes, base64_length={len(self.signature_image)} chars')
+                    # CRITICAL FIX: BSRE API ignores width/height parameters for some positions!
+                    # Solution: Resize image to exact size before upload
+                    resized_image_binary = self._resize_signature_image_to_preset()
+                    files_dict['imageTTD'] = ('signature.png', resized_image_binary, 'image/png')
+                    _logger.info(f'✅ Using RESIZED signature image: size={len(resized_image_binary)} bytes')
+                    _logger.info(f'✅ Image resized to EXACT size: {sig_width}x{sig_height} px')
                     _logger.info(f'✅ imageTTD will be uploaded as binary file')
                 else:
                     # Jika tidak ada upload, BSRE akan pakai QR Code (perlu linkQR)
