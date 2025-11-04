@@ -736,23 +736,23 @@ class BsreConfig(models.Model):
         # Get signature width untuk perhitungan posisi
         sig_width = self._get_signature_width()
         
-        # Koordinat BSRE X-axis (CALCULATED using same formula as Y)
-        # Base coordinates (for centering the signature properly):
-        # - LEFT edge = 10
-        # - CENTER point = 505
-        # - RIGHT edge = 1000 = (505 × 2) - 10
+        # V2 API Coordinate System - A4 Portrait Dimensions
+        # Page Width: 595.28 points (~210mm)
+        # Page Height: 841.89 points (~297mm)
+        PAGE_WIDTH = 595
+        PAGE_HEIGHT = 842
+        MARGIN = 10
         
         # Calculate position based on preset
-        # CRITICAL FINDING: BSRE API needs adjusted coordinates for ALL positions!
-        # Pattern from working KANAN BAWAH: xAxis = 1000 - width (not just 1000!)
-        # So for CENTER: xAxis = 505 - (width/2) to properly define bounding box
+        # V2 API: originX, originY represent TOP-LEFT corner of signature
+        # We need to ensure signature stays within page boundaries
         
         POSITIONS_X = {
-            'bottom_left': 10,                                   # Left edge
-            'top_left': 10,                                      # Left edge
-            'bottom_right': 1000 - sig_width,                    # Right edge - width (WORKING!)
-            'top_right': 1000 - sig_width,                       # Right edge - width
-            'center': 505 - (sig_width / 2),                     # Center point - half width (like kanan bawah pattern!)
+            'bottom_left': MARGIN,                                      # Left edge with margin
+            'top_left': MARGIN,                                         # Left edge with margin
+            'bottom_right': PAGE_WIDTH - sig_width - MARGIN,            # Right edge - width - margin
+            'top_right': PAGE_WIDTH - sig_width - MARGIN,               # Right edge - width - margin
+            'center': (PAGE_WIDTH / 2) - (sig_width / 2),               # Center - half width
         }
         
         position = POSITIONS_X.get(self.signature_position, 10)
@@ -782,23 +782,25 @@ class BsreConfig(models.Model):
         # Get signature height untuk perhitungan posisi
         sig_height = self._get_signature_height()
         
-        # Koordinat BSRE Y-axis (CONFIRMED BY USER!)
-        # Base coordinates (for centering the signature properly):
-        # - BOTTOM edge = 10
-        # - CENTER point = 772
-        # - TOP edge = 1534 = (772 × 2) - 10
+        # V2 API Coordinate System - A4 Portrait Dimensions
+        # Page Height: 841.89 points (~297mm)
+        # V2 API: Y=0 at TOP (increases downward - standard PDF)
+        PAGE_WIDTH = 595
+        PAGE_HEIGHT = 842
+        MARGIN = 10
         
         # Calculate position based on preset
-        # CRITICAL FINDING: BSRE API needs adjusted coordinates for ALL positions!
-        # Pattern from working positions: coordinate = edge - size
-        # So for CENTER: yAxis = 772 - (height/2) to properly define bounding box
+        # V2 API: originY represents TOP-LEFT corner of signature (Y from top)
+        # For BOTTOM positions: originY = PAGE_HEIGHT - sig_height - margin
+        # For TOP positions: originY = margin
+        # For CENTER: originY = (PAGE_HEIGHT / 2) - (sig_height / 2)
         
         POSITIONS_Y = {
-            'bottom_left': 10,                                   # Bottom edge
-            'bottom_right': 10,                                  # Bottom edge (WORKING!)
-            'top_left': 1534 - sig_height,                       # Top edge - height
-            'top_right': 1534 - sig_height,                      # Top edge - height
-            'center': 772 - (sig_height / 2),                    # Center point - half height (like kanan bawah pattern!)
+            'bottom_left': PAGE_HEIGHT - sig_height - MARGIN,           # Bottom: from top to bottom edge
+            'bottom_right': PAGE_HEIGHT - sig_height - MARGIN,          # Bottom: from top to bottom edge
+            'top_left': MARGIN,                                          # Top: margin from top
+            'top_right': MARGIN,                                         # Top: margin from top
+            'center': (PAGE_HEIGHT / 2) - (sig_height / 2),             # Center: middle - half height
         }
         
         position = POSITIONS_Y.get(self.signature_position, 10)
