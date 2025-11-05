@@ -90,27 +90,53 @@ class SicantikPermitInherit(models.Model):
         - registration_id (ID Pendaftaran)
         
         Ini membuat search di dropdown lebih powerful!
+        
+        CRITICAL: Method ini harus return list of IDs, bukan recordset!
         """
+        import logging
+        _logger = logging.getLogger(__name__)
+        
         if args is None:
             args = []
         
+        _logger.info(f'🔍 _name_search called with name="{name}", operator={operator}, limit={limit}')
+        _logger.info(f'🔍 Initial args: {args}')
+        
         # Domain untuk search di multiple fields
         if name:
-            domain = [
+            # Build domain dengan OR logic untuk search di multiple fields
+            search_domain = [
                 '|', '|', '|',
                 ('applicant_name', operator, name),
                 ('permit_type_name', operator, name),
                 ('permit_number', operator, name),
                 ('registration_id', operator, name),
             ]
+            
+            # Combine dengan args existing menggunakan AND logic
+            if args:
+                # If args exist, we need to AND them with our search domain
+                # Format: [search_domain] + args
+                domain = search_domain + args
+            else:
+                domain = search_domain
         else:
-            domain = []
+            # No search term, just use original args
+            domain = args if args else []
         
-        # Combine dengan args existing
-        domain = domain + args
+        _logger.info(f'🔍 Final domain: {domain}')
         
-        # Search dengan domain baru
-        permit_ids = self._search(domain, limit=limit, order=order)
+        # CRITICAL: Use self.search() instead of self._search() 
+        # to get recordset, then extract IDs
+        # This ensures proper access rights and filters are applied
+        permits = self.search(domain, limit=limit, order=order)
         
-        return permit_ids
+        _logger.info(f'🔍 Found {len(permits)} permits')
+        if permits:
+            _logger.info(f'🔍 Sample results: {permits[:3].mapped("applicant_name")}')
+        
+        # Return list of IDs (not recordset!)
+        # Odoo's name_search expects: list of IDs or list of (id, name) tuples
+        # We return IDs and let name_get() handle the display
+        return permits.ids
 
