@@ -23,6 +23,12 @@ class DocumentUploadWizard(models.TransientModel):
         domain=[('status', '=', 'active')],
         help='Pilih izin yang akan diupload dokumennya'
     )
+    # Related fields untuk display info lengkap
+    applicant_name = fields.Char(
+        related='permit_id.applicant_name',
+        string='Nama Pemohon',
+        readonly=True
+    )
     permit_number = fields.Char(
         related='permit_id.permit_number',
         string='Nomor Izin',
@@ -31,6 +37,11 @@ class DocumentUploadWizard(models.TransientModel):
     permit_type_id = fields.Many2one(
         related='permit_id.permit_type_id',
         string='Jenis Izin',
+        readonly=True
+    )
+    permit_type_name = fields.Char(
+        related='permit_id.permit_type_name',
+        string='Nama Jenis Izin',
         readonly=True
     )
     
@@ -118,12 +129,12 @@ class DocumentUploadWizard(models.TransientModel):
                 
                 # Return action to open the uploaded document
                 return {
-                    'type': 'ir.actions.act_window',
+                            'type': 'ir.actions.act_window',
                     'name': 'Dokumen Terupload',
-                    'res_model': 'sicantik.document',
-                    'res_id': document.id,
-                    'view_mode': 'form',
-                    'target': 'current',
+                            'res_model': 'sicantik.document',
+                            'res_id': document.id,
+                            'view_mode': 'form',
+                            'target': 'current',
                 }
             else:
                 # Delete document if upload failed

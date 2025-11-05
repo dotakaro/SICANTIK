@@ -8,12 +8,44 @@
             <form string="Upload Dokumen">
                 <sheet>
                     <group>
-                        <group string="Pilih Izin">
-                            <field name="permit_id" options="{'no_create': True, 'no_open': True}"/>
-                            <field name="permit_number" readonly="1"/>
-                            <field name="permit_type_id" readonly="1"/>
+                        <group string="PILIH IZIN">
+                            <!-- 
+                                Enhanced permit selection dengan search di multiple fields:
+                                - Nama Pemohon
+                                - Jenis Izin
+                                - Nomor Izin
+                                - Registration ID
+                                
+                                Display format: Nama Pemohon - Jenis Izin (No. Izin)
+                            -->
+                            <field name="permit_id" 
+                                   options="{'no_create': True, 'no_open': True, 'no_quick_create': True}"
+                                   placeholder="Ketik nama pemohon, jenis izin, atau nomor izin..."
+                                   context="{'search_default_active': 1}"
+                                   help="Search berdasarkan: Nama Pemohon, Jenis Izin, Nomor Izin, atau ID Pendaftaran"/>
+                            
+                            <!-- Info fields - auto-filled setelah pilih permit -->
+                            <field name="applicant_name" readonly="1" 
+                                   invisible="not permit_id"
+                                   string="👤 Nama Pemohon"/>
+                            <field name="permit_type_name" readonly="1" 
+                                   invisible="not permit_id"
+                                   string="📋 Jenis Izin"/>
+                            <field name="permit_number" readonly="1" 
+                                   invisible="not permit_id"
+                                   string="📄 Nomor Izin"/>
+                            <field name="permit_type_id" invisible="1"/>
                         </group>
                     </group>
+                    
+                    <!-- Alert info untuk user -->
+                    <div class="alert alert-info" role="alert" style="margin: 10px 0;" invisible="permit_id">
+                        <strong>💡 Tip Pencarian:</strong><br/>
+                        • Ketik nama pemohon untuk mencari berdasarkan nama<br/>
+                        • Ketik jenis izin (misal: "perdagangan", "industri")<br/>
+                        • Ketik nomor izin (misal: "123/2025")<br/>
+                        • Ketik ID pendaftaran (misal: "12345")
+                    </div>
                     
                     <group>
                         <group string="Upload File">
