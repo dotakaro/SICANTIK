@@ -330,7 +330,7 @@ class BsreConfig(models.Model):
                 }
             else:
                 # JSON endpoints return JSON
-            return response.json()
+                return response.json()
             
         except requests.exceptions.Timeout:
             error_msg = f'API request timeout after {self.api_timeout} seconds'
@@ -357,21 +357,21 @@ class BsreConfig(models.Model):
         if not self.api_url or not self.username or not self.password:
             raise UserError('Konfigurasi tidak lengkap. Pastikan URL, Username, dan Password sudah diisi.')
         
-                self.write({
+        self.write({
             'connection_status': 'disconnected',
             'last_error': 'Test connection belum diimplementasikan. Silakan langsung test dengan sign dokumen.'
-                })
-                
-                return {
-                    'type': 'ir.actions.client',
-                    'tag': 'display_notification',
-                    'params': {
+        })
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
                 'title': 'Perhatian',
                 'message': 'Konfigurasi tersimpan. Untuk test koneksi, silakan langsung sign dokumen. Endpoint test belum tersedia di API BSRE.',
                 'type': 'warning',
-                        'sticky': False,
-                    }
-                }
+                'sticky': False,
+            }
+        }
     
     def _resize_signature_image_to_preset(self):
         """
@@ -597,13 +597,13 @@ class BsreConfig(models.Model):
                     signed_data = result['content']
                     _logger.info(f'Document signed successfully with FORMDATA: {document_name} (PDF size: {len(signed_data)} bytes)')
                     
-                # Update statistics
-                self.write({
-                    'total_signatures': self.total_signatures + 1,
-                    'successful_signatures': self.successful_signatures + 1,
-                    'last_signature_date': fields.Datetime.now()
-                })
-                
+                    # Update statistics
+                    self.write({
+                        'total_signatures': self.total_signatures + 1,
+                        'successful_signatures': self.successful_signatures + 1,
+                        'last_signature_date': fields.Datetime.now()
+                    })
+                    
                     return {
                         'success': True,
                         'message': 'Dokumen berhasil ditandatangani dengan BSRE',
@@ -626,14 +626,14 @@ class BsreConfig(models.Model):
                             'successful_signatures': self.successful_signatures + 1,
                             'last_signature_date': fields.Datetime.now()
                         })
-                
+                        
                         _logger.info(f'Document signed successfully with JSON: {document_name} (processing time: {processing_time}ms)')
-                
-                return {
-                    'success': True,
+                        
+                        return {
+                            'success': True,
                             'message': 'Dokumen berhasil ditandatangani dengan BSRE',
-                    'signed_data': signed_data,
-                }
+                            'signed_data': signed_data,
+                        }
                     else:
                         raise UserError(f'BSRE API response tidak mengandung file yang valid: {result}')
                 else:
