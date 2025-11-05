@@ -351,4 +351,66 @@ class SicantikPermit(models.Model):
                 'sticky': False,
             }
         }
+    
+    def name_get(self):
+        """
+        Override name_get untuk menampilkan info lengkap di dropdown
+        Format: Nama Pemohon - Jenis Izin - No. Izin
+        
+        Memudahkan user dalam memilih izin dari dropdown wizard upload
+        """
+        result = []
+        for record in self:
+            # Build display name dengan info lengkap
+            parts = []
+            
+            # 1. Nama Pemohon (primary identifier)
+            if record.applicant_name:
+                parts.append(record.applicant_name)
+            
+            # 2. Jenis Izin (permit type)
+            if record.permit_type_name:
+                parts.append(record.permit_type_name)
+            
+            # 3. Nomor Izin (official number)
+            if record.permit_number:
+                parts.append(f"No: {record.permit_number}")
+            elif record.registration_id:
+                # Fallback ke registration ID jika nomor izin belum ada
+                parts.append(f"ID: {record.registration_id}")
+            
+            # Join dengan separator yang jelas
+            display_name = ' - '.join(parts) if parts else record.registration_id or f'Permit #{record.id}'
+            
+            result.append((record.id, display_name))
+        
+        return result
+    
+    @api.model
+    def _name_search(self, name='', args=None, operator='ilike', limit=100, name_get_uid=None):
+        """
+        Override search untuk enable pencarian berdasarkan:
+        - Nama Pemohon
+        - Jenis Izin
+        - Nomor Izin
+        - Registration ID
+        
+        Memudahkan user dalam search dropdown wizard upload
+        """
+        args = args or []
+        
+        if name:
+            # Search di multiple fields
+            domain = [
+                '|', '|', '|',
+                ('applicant_name', operator, name),
+                ('permit_type_name', operator, name),
+                ('permit_number', operator, name),
+                ('registration_id', operator, name)
+            ]
+            
+            # Combine dengan args existing
+            args = domain + args
+        
+        return self._search(args, limit=limit, access_rights_uid=name_get_uid)
 
