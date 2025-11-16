@@ -984,24 +984,30 @@ class SicantikConnector(models.Model):
                         failed_count += 1
                         _logger.warning(f'⚠️ No detailed data from API untuk permit {permit.registration_id} (permit_number: {permit.permit_number})')
                     
+                    # Log progress setiap 10 records (lebih sering untuk debugging)
+                    if index % 10 == 0:
+                        progress = (index / total_permits) * 100
+                        elapsed = time.time() - start_time
+                        estimated_total = (elapsed / index) * total_permits if index > 0 else 0
+                        remaining = estimated_total - elapsed if estimated_total > elapsed else 0
+                        
+                        _logger.info(f'📊 Progress: {progress:.1f}% ({index}/{total_permits}) - Synced: {synced_count}, Failed: {failed_count}')
+                        _logger.info(f'   Elapsed: {elapsed:.1f}s, Remaining: {remaining:.1f}s')
+                    
                     # Rate limiting
                     if self.config_id.rate_limit_enabled:
                         time.sleep(1.0 / self.config_id.rate_limit_requests)
-                    
-                    # Progress update every 50 permits
-                    if index % 50 == 0:
-                        progress = (index / total_permits) * 100
-                        elapsed = time.time() - start_time
-                        estimated_total = (elapsed / index) * total_permits
-                        remaining = estimated_total - elapsed
-                        
-                        _logger.info(f'Progress: {progress:.1f}% ({index}/{total_permits})')
-                        _logger.info(f'Elapsed: {elapsed:.1f}s, Remaining: {remaining:.1f}s')
                 
                 except Exception as e:
                     failed_count += 1
-                    _logger.error(f'❌ Error: {str(e)}')
+                    _logger.error(f'❌ Error processing permit {permit.registration_id if permit else "Unknown"}: {str(e)}', exc_info=True)
                     continue
+            
+            # Log final status sebelum return
+            _logger.info('='*80)
+            _logger.info(f'Loop completed. Processed {total_permits} permits.')
+            _logger.info(f'Final stats: Synced={synced_count}, Failed={failed_count}')
+            _logger.info('='*80)
             
             duration = time.time() - start_time
             
