@@ -44,10 +44,19 @@ class SicantikPermit(models.Model):
         3. Jika tidak bisa, fallback ke SMS/Email atau skip
         """
         for record in self:
-            if not record.partner_id or not record.partner_id.mobile:
+            if not record.partner_id:
                 _logger.warning(
                     f'⏭️  Skip notifikasi izin selesai untuk {record.registration_id}: '
-                    f'Tidak ada partner atau nomor WhatsApp'
+                    f'Tidak ada partner'
+                )
+                continue
+            
+            # Safe access untuk mobile/phone
+            mobile_number = record.partner_id._get_mobile_or_phone()
+            if not mobile_number:
+                _logger.warning(
+                    f'⏭️  Skip notifikasi izin selesai untuk {record.registration_id}: '
+                    f'Tidak ada nomor WhatsApp'
                 )
                 continue
             
@@ -101,7 +110,12 @@ class SicantikPermit(models.Model):
         Template: status_update
         """
         for record in self:
-            if not record.partner_id or not record.partner_id.mobile:
+            if not record.partner_id:
+                continue
+            
+            # Safe access untuk mobile/phone
+            mobile_number = record.partner_id._get_mobile_or_phone()
+            if not mobile_number:
                 continue
             
             # Skip jika status tidak berubah secara signifikan
@@ -137,7 +151,12 @@ class SicantikPermit(models.Model):
         Template: permit_renewal_approved
         """
         for record in self:
-            if not record.partner_id or not record.partner_id.mobile:
+            if not record.partner_id:
+                continue
+            
+            # Safe access untuk mobile/phone
+            mobile_number = record.partner_id._get_mobile_or_phone()
+            if not mobile_number:
                 continue
             
             template = self.env['whatsapp.template'].search([
@@ -223,8 +242,14 @@ class SicantikPermit(models.Model):
                 ('expiry_date', '=', target_date),
                 ('status', '=', 'active'),
                 (field_name, '=', False),
-                ('partner_id.mobile', '!=', False)
+                ('partner_id', '!=', False)
             ])
+            # Filter permits with mobile/phone manually (cannot use related field in domain)
+            permits_with_mobile = self.env['sicantik.permit']
+            for permit in izin_expiring:
+                if permit.partner_id and permit.partner_id._get_mobile_or_phone():
+                    permits_with_mobile |= permit
+            izin_expiring = permits_with_mobile
             
             if not izin_expiring:
                 _logger.info(f'  {hari} hari: Tidak ada izin yang perlu notifikasi')
@@ -316,7 +341,9 @@ class SicantikPermit(models.Model):
                 }
             }
         
-        if not self.partner_id.mobile:
+        # Safe access untuk mobile/phone
+        mobile_number = self.partner_id._get_mobile_or_phone()
+        if not mobile_number:
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
@@ -357,7 +384,7 @@ class SicantikPermit(models.Model):
             }
         
         try:
-            _logger.info(f'📱 Starting test notification untuk {self.partner_id.name} ({self.partner_id.mobile})')
+            _logger.info(f'📱 Starting test notification untuk {self.partner_id.name} ({mobile_number})')
             _logger.info(f'   Template: {template.name} (ID: {template.id}, Status: {template.status})')
             _logger.info(f'   WhatsApp Account: {template.wa_account_id.name if template.wa_account_id else "N/A"}')
             
@@ -387,11 +414,11 @@ class SicantikPermit(models.Model):
                 if debug_info['last_inbound']:
                     error_msg += f'• Pesan inbound terakhir ditemukan: {debug_info["last_inbound"]["mobile_number"]}\n'
                 else:
-                    error_msg += f'• ⚠️ TIDAK ditemukan pesan inbound untuk nomor {self.partner_id.mobile}\n'
+                    error_msg += f'• ⚠️ TIDAK ditemukan pesan inbound untuk nomor {mobile_number}\n'
                 
                 error_msg += f'\n📋 Solusi:\n'
                 error_msg += f'1. Pastikan Webhook sudah terkonfigurasi di Meta Business Manager\n'
-                error_msg += f'2. Pastikan nomor {self.partner_id.mobile} sudah mengirim pesan ke WhatsApp Business Account\n'
+                error_msg += f'2. Pastikan nomor {mobile_number} sudah mengirim pesan ke WhatsApp Business Account\n'
                 error_msg += f'3. Cek di menu WhatsApp → Messages apakah pesan inbound sudah ter-record\n'
                 error_msg += f'4. Jika belum ter-record, berarti webhook tidak bekerja - cek konfigurasi webhook di Meta\n'
                 error_msg += f'5. Atau tambahkan nomor ke daftar kontak di Meta Business Manager untuk pre-approval'
@@ -500,13 +527,13 @@ class SicantikPermit(models.Model):
                         except:
                             pass
                     
-                    _logger.info(f'✅ Test notification berhasil dikirim ke {self.partner_id.name} ({self.partner_id.mobile}) dengan UID: {message.msg_uid}')
+                    _logger.info(f'✅ Test notification berhasil dikirim ke {self.partner_id.name} ({mobile_number}) dengan UID: {message.msg_uid}')
                     return {
                         'type': 'ir.actions.client',
                         'tag': 'display_notification',
                         'params': {
                             'title': 'Test Notification',
-                            'message': f'✅ Test notification berhasil dikirim ke {self.partner_id.name} ({self.partner_id.mobile}).\n\nMessage ID: {message.msg_uid}\n\n⚠️ PENTING: Jika pesan tidak masuk ke WhatsApp, kemungkinan nomor belum opt-in.\n\n📋 Aturan Meta WhatsApp Business API:\nNomor penerima HARUS sudah opt-in sebelum bisa menerima template messages.\n\n🔧 Cara Opt-In:\n1. Dari nomor {self.partner_id.mobile}, kirim pesan ke nomor WhatsApp Business Account ({wa_phone_number})\n2. Setelah itu, template message bisa dikirim ke nomor tersebut\n3. Atau tambahkan nomor ke daftar kontak di Meta Business Manager\n\n💡 Untuk Development:\nGunakan nomor test di Meta Business Manager yang bisa langsung menerima template messages tanpa opt-in.',
+                            'message': f'✅ Test notification berhasil dikirim ke {self.partner_id.name} ({mobile_number}).\n\nMessage ID: {message.msg_uid}\n\n⚠️ PENTING: Jika pesan tidak masuk ke WhatsApp, kemungkinan nomor belum opt-in.\n\n📋 Aturan Meta WhatsApp Business API:\nNomor penerima HARUS sudah opt-in sebelum bisa menerima template messages.\n\n🔧 Cara Opt-In:\n1. Dari nomor {mobile_number}, kirim pesan ke nomor WhatsApp Business Account ({wa_phone_number})\n2. Setelah itu, template message bisa dikirim ke nomor tersebut\n3. Atau tambahkan nomor ke daftar kontak di Meta Business Manager\n\n💡 Untuk Development:\nGunakan nomor test di Meta Business Manager yang bisa langsung menerima template messages tanpa opt-in.',
                             'type': 'success',
                             'sticky': True,
                         }
