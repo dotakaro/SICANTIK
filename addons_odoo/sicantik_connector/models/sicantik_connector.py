@@ -761,13 +761,18 @@ class SicantikConnector(models.Model):
             if partner_vals.get('phone'):
                 current_phone = getattr(partner, 'phone', False)
                 
-                if not current_phone:
+                # Cek apakah phone kosong atau None
+                phone_is_empty = not current_phone or (isinstance(current_phone, str) and current_phone.strip() == '')
+                
+                if phone_is_empty:
                     # Phone kosong, update dengan nomor baru
                     update_vals['phone'] = partner_vals['phone']
+                    _logger.debug(f'   Partner {partner.name} phone kosong, akan di-update dengan {partner_vals["phone"]}')
                 elif partner_vals['phone'] != current_phone:
                     # Update jika nomor baru lebih lengkap (ada +62)
                     if partner_vals['phone'].startswith('+62') and (not current_phone or not current_phone.startswith('+62')):
                         update_vals['phone'] = partner_vals['phone']
+                        _logger.debug(f'   Partner {partner.name} phone akan di-update dengan nomor yang lebih lengkap')
             
             # Jika mobile juga tersedia, update juga (untuk kompatibilitas)
             partner_model = self.env['res.partner']
@@ -860,27 +865,39 @@ class SicantikConnector(models.Model):
         _logger.info('='*80)
         
         try:
-            # Find permits without partner or partner without mobile
-            # Note: Cannot use 'partner_id.mobile' directly in domain, need to filter manually
+            # Find permits without partner or partner without phone
+            # Note: Cannot use 'partner_id.phone' directly in domain, need to filter manually
+            # Cari semua permit yang aktif dan punya permit_number
             all_permits = self.env['sicantik.permit'].search([
                 ('permit_number', '!=', False),
+                ('permit_number', '!=', ''),
                 ('status', '=', 'active')
             ])
+            
+            _logger.info(f'Found {len(all_permits)} active permits with permit_number')
             
             # Filter permits that need partner sync
             # Di Odoo 18.4, field 'phone' selalu tersedia di res.partner
             permits_to_sync = self.env['sicantik.permit']
+            permits_without_partner = 0
+            permits_without_phone = 0
+            
             for permit in all_permits:
                 if not permit.partner_id:
                     # No partner - needs sync
                     permits_to_sync |= permit
+                    permits_without_partner += 1
                 elif permit.partner_id:
                     # Check if partner has phone field and if it's empty
                     # Di Odoo 18.4, phone selalu tersedia, jadi langsung cek
                     partner_phone = getattr(permit.partner_id, 'phone', False)
-                    if not partner_phone:
+                    # Cek apakah phone kosong atau None
+                    if not partner_phone or (isinstance(partner_phone, str) and partner_phone.strip() == ''):
                         # Has partner but no phone - needs sync
                         permits_to_sync |= permit
+                        permits_without_phone += 1
+            
+            _logger.info(f'Permits breakdown: {permits_without_partner} without partner, {permits_without_phone} without phone')
             
             if max_permits:
                 permits_to_sync = permits_to_sync[:max_permits]
@@ -905,14 +922,28 @@ class SicantikConnector(models.Model):
                 try:
                     _logger.info(f'Processing {index}/{total_permits}: {permit.registration_id} - {permit.applicant_name}')
                     
+                    # Validasi: Pastikan permit_number ada
+                    if not permit.permit_number or permit.permit_number.strip() == '':
+                        failed_count += 1
+                        _logger.warning(f'⚠️ Permit {permit.registration_id} tidak memiliki permit_number yang valid')
+                        continue
+                    
                     # Get detailed data from API
+                    _logger.debug(f'   Calling API untuk permit_number: {permit.permit_number}')
                     detailed_data = self._get_permit_expiry_workaround(permit.permit_number)
                     
                     if detailed_data:
+                        # Validasi: Pastikan ada nama pemohon
+                        applicant_name = detailed_data.get('n_pemohon') or permit.applicant_name
+                        if not applicant_name or applicant_name.strip() in ('', '0', '-', 'null'):
+                            failed_count += 1
+                            _logger.warning(f'⚠️ Permit {permit.registration_id} tidak memiliki nama pemohon yang valid')
+                            continue
+                        
                         # Create or update partner
                         try:
                             partner = self._create_or_update_partner_from_applicant({
-                                'n_pemohon': detailed_data.get('n_pemohon') or permit.applicant_name,
+                                'n_pemohon': applicant_name,
                                 'telp_pemohon': detailed_data.get('telp_pemohon', ''),
                                 'a_pemohon': detailed_data.get('a_pemohon', ''),
                                 'email_pemohon': detailed_data.get('email_pemohon', ''),
