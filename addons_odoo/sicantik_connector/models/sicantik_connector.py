@@ -501,7 +501,15 @@ class SicantikConnector(models.Model):
                             })
                             if partner:
                                 partner_id = partner.id
-                                _logger.info(f'✅ Created/updated partner: {partner.name} (ID: {partner_id}, Mobile: {partner.mobile or "N/A"})')
+                                # Safe access untuk mobile field
+                                partner_model = self.env['res.partner']
+                                if 'mobile' in partner_model._fields:
+                                    mobile_display = getattr(partner, 'mobile', 'N/A')
+                                elif 'phone' in partner_model._fields:
+                                    mobile_display = getattr(partner, 'phone', 'N/A')
+                                else:
+                                    mobile_display = 'N/A'
+                                _logger.info(f'✅ Created/updated partner: {partner.name} (ID: {partner_id}, Mobile: {mobile_display})')
                             # Also update expiry date if available
                             if detailed_data.get('d_berlaku_izin'):
                                 permit_vals['expiry_date'] = detailed_data['d_berlaku_izin']
@@ -722,7 +730,18 @@ class SicantikConnector(models.Model):
                 phone = '+62' + phone[1:]
             elif not phone.startswith('+'):
                 phone = '+62' + phone
-            partner_vals['mobile'] = phone
+            
+            # Cek apakah field mobile tersedia sebelum menambahkannya
+            # Gunakan _fields untuk cek field existence (lebih reliable)
+            partner_model = self.env['res.partner']
+            if 'mobile' in partner_model._fields:
+                partner_vals['mobile'] = phone
+            elif 'phone' in partner_model._fields:
+                # Fallback ke field phone jika mobile tidak tersedia
+                partner_vals['phone'] = phone
+                _logger.debug('⚠️ Field mobile tidak tersedia, menggunakan field phone')
+            else:
+                _logger.warning('⚠️ Field mobile dan phone tidak tersedia di res.partner')
         
         # Update address jika ada
         address = applicant_data.get('a_pemohon', '').strip()
@@ -737,12 +756,29 @@ class SicantikConnector(models.Model):
         if partner:
             # Update existing partner (hanya update field yang kosong atau lebih lengkap)
             update_vals = {}
-            if not partner.mobile and partner_vals.get('mobile'):
-                update_vals['mobile'] = partner_vals['mobile']
-            elif partner_vals.get('mobile') and partner_vals['mobile'] != partner.mobile:
-                # Update jika nomor baru lebih lengkap (ada +62)
-                if partner_vals['mobile'].startswith('+62') and (not partner.mobile or not partner.mobile.startswith('+62')):
+            
+            # Safe access untuk field mobile (mungkin tidak tersedia di semua environment)
+            partner_model = self.env['res.partner']
+            has_mobile_field = 'mobile' in partner_model._fields
+            
+            if partner_vals.get('mobile') and has_mobile_field:
+                # Cek current mobile value dengan safe access
+                current_mobile = getattr(partner, 'mobile', False)
+                
+                if not current_mobile:
+                    # Field mobile tersedia, update jika kosong
                     update_vals['mobile'] = partner_vals['mobile']
+                elif partner_vals['mobile'] != current_mobile:
+                    # Update jika nomor baru lebih lengkap (ada +62)
+                    if partner_vals['mobile'].startswith('+62') and (not current_mobile or not current_mobile.startswith('+62')):
+                        update_vals['mobile'] = partner_vals['mobile']
+            elif partner_vals.get('mobile') and not has_mobile_field:
+                # Mobile tidak tersedia, coba gunakan phone
+                if 'phone' in partner_model._fields:
+                    current_phone = getattr(partner, 'phone', False)
+                    if not current_phone or (partner_vals['mobile'].startswith('+62') and (not current_phone or not current_phone.startswith('+62'))):
+                        update_vals['phone'] = partner_vals['mobile']
+                        _logger.debug('⚠️ Field mobile tidak tersedia, menggunakan field phone untuk update')
             
             if not partner.street and partner_vals.get('street'):
                 update_vals['street'] = partner_vals['street']
@@ -750,12 +786,51 @@ class SicantikConnector(models.Model):
                 update_vals['email'] = partner_vals['email']
             
             if update_vals:
-                partner.write(update_vals)
-                _logger.info(f'✅ Updated partner: {partner.name} with {list(update_vals.keys())}')
+                try:
+                    partner.write(update_vals)
+                    _logger.info(f'✅ Updated partner: {partner.name} with {list(update_vals.keys())}')
+                except Exception as e:
+                    _logger.error(f'❌ Error updating partner {partner.name}: {str(e)}')
+                    # Remove mobile dari update_vals jika error dan coba lagi tanpa mobile
+                    if 'mobile' in update_vals:
+                        update_vals_without_mobile = {k: v for k, v in update_vals.items() if k != 'mobile'}
+                        if update_vals_without_mobile:
+                            try:
+                                partner.write(update_vals_without_mobile)
+                                _logger.info(f'✅ Updated partner: {partner.name} with {list(update_vals_without_mobile.keys())} (mobile skipped)')
+                            except Exception as e2:
+                                _logger.error(f'❌ Error updating partner without mobile: {str(e2)}')
         else:
             # Create new partner
-            partner = self.env['res.partner'].create(partner_vals)
-            _logger.info(f'✅ Created new partner: {partner.name} (phone: {partner_vals.get("mobile", "N/A")})')
+            # Cek field availability dan adjust create_vals
+            create_vals = partner_vals.copy()
+            partner_model = self.env['res.partner']
+            
+            # Jika mobile tidak tersedia tapi ada di create_vals, ganti dengan phone
+            if 'mobile' in create_vals and 'mobile' not in partner_model._fields:
+                if 'phone' in partner_model._fields:
+                    create_vals['phone'] = create_vals.pop('mobile')
+                    _logger.debug('⚠️ Field mobile tidak tersedia, menggunakan field phone untuk create')
+                else:
+                    create_vals.pop('mobile', None)
+                    _logger.warning('⚠️ Field mobile dan phone tidak tersedia di res.partner, akan skip field ini')
+            
+            try:
+                partner = self.env['res.partner'].create(create_vals)
+                # Get phone display value (bisa dari mobile atau phone field)
+                phone_display = create_vals.get('mobile') or create_vals.get('phone', 'N/A')
+                _logger.info(f'✅ Created new partner: {partner.name} (phone: {phone_display})')
+            except Exception as e:
+                _logger.error(f'❌ Error creating partner: {str(e)}')
+                # Coba create tanpa mobile jika error
+                if 'mobile' in create_vals:
+                    create_vals_without_mobile = {k: v for k, v in create_vals.items() if k != 'mobile'}
+                    try:
+                        partner = self.env['res.partner'].create(create_vals_without_mobile)
+                        _logger.info(f'✅ Created new partner: {partner.name} (mobile field skipped)')
+                    except Exception as e2:
+                        _logger.error(f'❌ Error creating partner without mobile: {str(e2)}')
+                        return None
         
         return partner
     
@@ -797,9 +872,15 @@ class SicantikConnector(models.Model):
                 if not permit.partner_id:
                     # No partner - needs sync
                     permits_to_sync |= permit
-                elif permit.partner_id and not permit.partner_id.mobile:
-                    # Has partner but no mobile - needs sync
-                    permits_to_sync |= permit
+                elif permit.partner_id:
+                    # Check if partner has mobile field and if it's empty
+                    partner_model = self.env['res.partner']
+                    if 'mobile' in partner_model._fields:
+                        partner_mobile = getattr(permit.partner_id, 'mobile', False)
+                        if not partner_mobile:
+                            # Has partner but no mobile - needs sync
+                            permits_to_sync |= permit
+                    # Jika mobile field tidak tersedia, skip (field tidak available di environment ini)
             
             if max_permits:
                 permits_to_sync = permits_to_sync[:max_permits]
@@ -845,7 +926,15 @@ class SicantikConnector(models.Model):
                                 permit.write({'expiry_date': detailed_data['d_berlaku_izin']})
                             
                             synced_count += 1
-                            _logger.info(f'✅ Synced partner: {partner.name} ({partner.mobile or "no phone"})')
+                            # Safe access untuk mobile field
+                            partner_model = self.env['res.partner']
+                            if 'mobile' in partner_model._fields:
+                                mobile_display = getattr(partner, 'mobile', 'no phone')
+                            elif 'phone' in partner_model._fields:
+                                mobile_display = getattr(partner, 'phone', 'no phone')
+                            else:
+                                mobile_display = 'no phone'
+                            _logger.info(f'✅ Synced partner: {partner.name} ({mobile_display})')
                         else:
                             failed_count += 1
                             _logger.warning(f'⚠️ Could not create/update partner')
