@@ -863,20 +863,19 @@ class SicantikConnector(models.Model):
             ])
             
             # Filter permits that need partner sync
+            # Di Odoo 18.4, field 'phone' selalu tersedia di res.partner
             permits_to_sync = self.env['sicantik.permit']
             for permit in all_permits:
                 if not permit.partner_id:
                     # No partner - needs sync
                     permits_to_sync |= permit
                 elif permit.partner_id:
-                    # Check if partner has mobile field and if it's empty
-                    partner_model = self.env['res.partner']
-                    if 'mobile' in partner_model._fields:
-                        partner_mobile = getattr(permit.partner_id, 'mobile', False)
-                        if not partner_mobile:
-                            # Has partner but no mobile - needs sync
-                            permits_to_sync |= permit
-                    # Jika mobile field tidak tersedia, skip (field tidak available di environment ini)
+                    # Check if partner has phone field and if it's empty
+                    # Di Odoo 18.4, phone selalu tersedia, jadi langsung cek
+                    partner_phone = getattr(permit.partner_id, 'phone', False)
+                    if not partner_phone:
+                        # Has partner but no phone - needs sync
+                        permits_to_sync |= permit
             
             if max_permits:
                 permits_to_sync = permits_to_sync[:max_permits]
@@ -906,37 +905,35 @@ class SicantikConnector(models.Model):
                     
                     if detailed_data:
                         # Create or update partner
-                        partner = self._create_or_update_partner_from_applicant({
-                            'n_pemohon': detailed_data.get('n_pemohon') or permit.applicant_name,
-                            'telp_pemohon': detailed_data.get('telp_pemohon', ''),
-                            'a_pemohon': detailed_data.get('a_pemohon', ''),
-                            'email_pemohon': detailed_data.get('email_pemohon', ''),
-                        })
-                        
-                        if partner:
-                            # Link partner to permit
-                            permit.write({'partner_id': partner.id})
+                        try:
+                            partner = self._create_or_update_partner_from_applicant({
+                                'n_pemohon': detailed_data.get('n_pemohon') or permit.applicant_name,
+                                'telp_pemohon': detailed_data.get('telp_pemohon', ''),
+                                'a_pemohon': detailed_data.get('a_pemohon', ''),
+                                'email_pemohon': detailed_data.get('email_pemohon', ''),
+                            })
                             
-                            # Also update expiry date if available
-                            if detailed_data.get('d_berlaku_izin') and not permit.expiry_date:
-                                permit.write({'expiry_date': detailed_data['d_berlaku_izin']})
-                            
-                            synced_count += 1
-                            # Safe access untuk mobile field
-                            partner_model = self.env['res.partner']
-                            if 'mobile' in partner_model._fields:
-                                mobile_display = getattr(partner, 'mobile', 'no phone')
-                            elif 'phone' in partner_model._fields:
-                                mobile_display = getattr(partner, 'phone', 'no phone')
+                            if partner:
+                                # Link partner to permit
+                                permit.write({'partner_id': partner.id})
+                                
+                                # Also update expiry date if available
+                                if detailed_data.get('d_berlaku_izin') and not permit.expiry_date:
+                                    permit.write({'expiry_date': detailed_data['d_berlaku_izin']})
+                                
+                                synced_count += 1
+                                # Get phone number for display (phone selalu tersedia di Odoo 18.4)
+                                phone_display = getattr(partner, 'phone', 'no phone')
+                                _logger.info(f'✅ Synced partner: {partner.name} (phone: {phone_display})')
                             else:
-                                mobile_display = 'no phone'
-                            _logger.info(f'✅ Synced partner: {partner.name} ({mobile_display})')
-                        else:
+                                failed_count += 1
+                                _logger.warning(f'⚠️ Could not create/update partner untuk {permit.registration_id}')
+                        except Exception as partner_error:
                             failed_count += 1
-                            _logger.warning(f'⚠️ Could not create/update partner')
+                            _logger.error(f'❌ Error creating/updating partner untuk {permit.registration_id}: {str(partner_error)}', exc_info=True)
                     else:
                         failed_count += 1
-                        _logger.warning(f'⚠️ No detailed data from API')
+                        _logger.warning(f'⚠️ No detailed data from API untuk permit {permit.registration_id} (permit_number: {permit.permit_number})')
                     
                     # Rate limiting
                     if self.config_id.rate_limit_enabled:
