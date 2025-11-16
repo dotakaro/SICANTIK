@@ -918,9 +918,22 @@ class SicantikConnector(models.Model):
             synced_count = 0
             failed_count = 0
             
+            # Log sample permits untuk debugging
+            if total_permits > 0:
+                sample_permits = permits_to_sync[:min(5, total_permits)]
+                _logger.info(f'Sample permits to sync (first {len(sample_permits)}):')
+                for sample in sample_permits:
+                    partner_info = f'Partner: {sample.partner_id.name if sample.partner_id else "None"}'
+                    phone_info = f'Phone: {getattr(sample.partner_id, "phone", "N/A") if sample.partner_id else "N/A"}'
+                    _logger.info(f'  - {sample.registration_id}: {partner_info}, {phone_info}')
+            
+            _logger.info('='*80)
+            _logger.info('Starting loop processing...')
+            _logger.info('='*80)
+            
             for index, permit in enumerate(permits_to_sync, 1):
                 try:
-                    _logger.info(f'Processing {index}/{total_permits}: {permit.registration_id} - {permit.applicant_name}')
+                    _logger.info(f'[{index}/{total_permits}] Processing: {permit.registration_id} - {permit.applicant_name}')
                     
                     # Validasi: Pastikan permit_number ada
                     if not permit.permit_number or permit.permit_number.strip() == '':
