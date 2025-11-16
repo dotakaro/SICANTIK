@@ -27,21 +27,16 @@ class ResPartner(models.Model):
         """
         self.ensure_one()
         
-        # Try mobile first (safe access with getattr)
-        try:
-            mobile_value = getattr(self, 'mobile', False)
-            if mobile_value:
-                return mobile_value
-        except (AttributeError, KeyError):
-            pass
+        # Try mobile first (safe access - gunakan getattr dengan default False)
+        # getattr tidak akan raise AttributeError jika field tidak ada
+        mobile_value = getattr(self, 'mobile', None)
+        if mobile_value:
+            return mobile_value
         
-        # Fallback to phone (safe access with getattr)
-        try:
-            phone_value = getattr(self, 'phone', False)
-            if phone_value:
-                return phone_value
-        except (AttributeError, KeyError):
-            pass
+        # Fallback to phone (safe access - gunakan getattr dengan default False)
+        phone_value = getattr(self, 'phone', None)
+        if phone_value:
+            return phone_value
         
         # Fallback to whatsapp_number
         if hasattr(self, 'whatsapp_number') and self.whatsapp_number:
