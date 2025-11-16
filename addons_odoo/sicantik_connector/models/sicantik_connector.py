@@ -708,6 +708,7 @@ class SicantikConnector(models.Model):
         """
         applicant_name = applicant_data.get('n_pemohon', '').strip()
         if not applicant_name or applicant_name in ('', '0', '-', 'null'):
+            _logger.warning(f'⚠️ Applicant name kosong atau invalid: {applicant_data.get("n_pemohon", "N/A")}')
             return None
         
         # Cari partner berdasarkan nama (case-insensitive)
@@ -790,7 +791,7 @@ class SicantikConnector(models.Model):
                     partner.write(update_vals)
                     _logger.info(f'✅ Updated partner: {partner.name} with {list(update_vals.keys())}')
                 except Exception as e:
-                    _logger.error(f'❌ Error updating partner {partner.name}: {str(e)}')
+                    _logger.error(f'❌ Error updating partner {partner.name}: {str(e)}', exc_info=True)
                     # Remove mobile dari update_vals jika error dan coba lagi tanpa mobile
                     if 'mobile' in update_vals:
                         update_vals_without_mobile = {k: v for k, v in update_vals.items() if k != 'mobile'}
@@ -799,7 +800,7 @@ class SicantikConnector(models.Model):
                                 partner.write(update_vals_without_mobile)
                                 _logger.info(f'✅ Updated partner: {partner.name} with {list(update_vals_without_mobile.keys())} (mobile skipped)')
                             except Exception as e2:
-                                _logger.error(f'❌ Error updating partner without mobile: {str(e2)}')
+                                _logger.error(f'❌ Error updating partner without mobile: {str(e2)}', exc_info=True)
         else:
             # Create new partner
             # Di Odoo 18.4, field 'phone' selalu tersedia
@@ -817,7 +818,7 @@ class SicantikConnector(models.Model):
                 phone_display = create_vals.get('phone', 'N/A')
                 _logger.info(f'✅ Created new partner: {partner.name} (phone: {phone_display})')
             except Exception as e:
-                _logger.error(f'❌ Error creating partner: {str(e)}')
+                _logger.error(f'❌ Error creating partner "{create_vals.get("name", "N/A")}": {str(e)}', exc_info=True)
                 # Coba create tanpa mobile jika error (phone harus tetap ada)
                 if 'mobile' in create_vals:
                     create_vals_without_mobile = {k: v for k, v in create_vals.items() if k != 'mobile'}
@@ -825,8 +826,12 @@ class SicantikConnector(models.Model):
                         partner = self.env['res.partner'].create(create_vals_without_mobile)
                         _logger.info(f'✅ Created new partner: {partner.name} (phone: {create_vals_without_mobile.get("phone", "N/A")}, mobile skipped)')
                     except Exception as e2:
-                        _logger.error(f'❌ Error creating partner: {str(e2)}')
+                        _logger.error(f'❌ Error creating partner without mobile: {str(e2)}', exc_info=True)
                         return None
+                else:
+                    # Jika tidak ada mobile di create_vals, berarti error bukan karena mobile
+                    _logger.error(f'❌ Cannot create partner, error: {str(e)}')
+                    return None
         
         return partner
     
