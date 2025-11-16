@@ -176,6 +176,15 @@ class SicantikDocument(models.Model):
         string='Catatan'
     )
     
+    # Phone field for WhatsApp notifications
+    mobile = fields.Char(
+        string='Mobile',
+        compute='_compute_mobile',
+        readonly=True,
+        store=False,
+        help='Mobile number from signer or creator (for WhatsApp notifications)'
+    )
+    
     # Computed Fields
     can_sign = fields.Boolean(
         string='Dapat Ditandatangani',
@@ -185,6 +194,18 @@ class SicantikDocument(models.Model):
         string='Dapat Diunduh',
         compute='_compute_can_download'
     )
+    
+    @api.depends('signer_id', 'create_uid')
+    def _compute_mobile(self):
+        """Compute mobile number from signer or creator"""
+        for record in self:
+            mobile_number = False
+            # Prioritize signer_id, fallback to create_uid
+            if record.signer_id:
+                mobile_number = getattr(record.signer_id, 'mobile', False) or getattr(record.signer_id.partner_id, 'mobile', False)
+            elif record.create_uid:
+                mobile_number = getattr(record.create_uid, 'mobile', False) or getattr(record.create_uid.partner_id, 'mobile', False)
+            record.mobile = mobile_number
     
     @api.depends('minio_bucket', 'minio_object_name')
     def _compute_minio_url(self):
@@ -251,10 +272,20 @@ class SicantikDocument(models.Model):
         self.ensure_one()
         
         try:
-            # Get MinIO connector
-            minio_connector = self.env['minio.connector'].search([], limit=1)
+            # Get MinIO connector (prioritize active one)
+            minio_connector = self.env['minio.connector'].search([
+                ('active', '=', True)
+            ], limit=1)
             if not minio_connector:
-                raise UserError('Konfigurasi MinIO tidak ditemukan')
+                # Fallback to any connector if no active one
+                minio_connector = self.env['minio.connector'].search([], limit=1)
+            if not minio_connector:
+                raise UserError('Konfigurasi MinIO tidak ditemukan. Silakan buat konfigurasi MinIO terlebih dahulu.')
+            
+            # Determine bucket name
+            bucket_name = self.minio_bucket or minio_connector.default_bucket or 'sicantik-documents'
+            if not bucket_name:
+                raise UserError('Nama bucket tidak ditemukan. Silakan set bucket name di dokumen atau konfigurasi MinIO.')
             
             # Generate unique object name
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -263,9 +294,11 @@ class SicantikDocument(models.Model):
             # Calculate file hash
             file_hash = hashlib.sha256(file_data).hexdigest()
             
+            _logger.info(f'Uploading document: bucket={bucket_name}, object={object_name}, size={len(file_data)} bytes')
+            
             # Upload to MinIO
             result = minio_connector.upload_file(
-                bucket_name=self.minio_bucket,
+                bucket_name=bucket_name,
                 object_name=object_name,
                 file_data=file_data,
                 content_type='application/pdf'
@@ -277,6 +310,7 @@ class SicantikDocument(models.Model):
                     'original_filename': filename,
                     'file_size': len(file_data),
                     'file_hash': file_hash,
+                    'minio_bucket': bucket_name,  # Ensure bucket name is saved
                     'minio_object_name': object_name,
                     'state': 'uploaded',
                     'upload_date': fields.Datetime.now()
@@ -657,6 +691,18 @@ class SicantikDocument(models.Model):
         except Exception as e:
             _logger.error(f'Error embedding QR code: {str(e)}', exc_info=True)
             raise UserError(f'Error embed QR code: {str(e)}')
+    
+    def action_open_upload_wizard(self):
+        """Buka wizard upload dokumen baru"""
+        # Bisa dipanggil dari form view yang sudah ada record atau dari action
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Upload Dokumen',
+            'res_model': 'document.upload.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {}
+        }
     
     def action_cancel(self):
         """Cancel dokumen"""

@@ -9,6 +9,7 @@ from odoo import api, Command, fields, models, tools, _
 from odoo.addons.mail.tools.discuss import Store
 from odoo.addons.whatsapp.tools import phone_validation as wa_phone_validation
 from odoo.exceptions import ValidationError
+from odoo.models import Constraint
 
 
 _logger = logging.getLogger(__name__)
@@ -28,10 +29,10 @@ class DiscussChannel(models.Model):
     wa_account_id = fields.Many2one(comodel_name='whatsapp.account', string="WhatsApp Business Account")
     whatsapp_channel_active = fields.Boolean('Is Whatsapp Channel Active', compute="_compute_whatsapp_channel_active")
 
-    _sql_constraints = [
-        ('group_public_id_check',
-         "CHECK (channel_type = 'channel' OR channel_type = 'whatsapp' OR group_public_id IS NULL)",
-         'Group authorization and group auto-subscription are only supported on channels and whatsapp.'),
+    _constraints = [
+        Constraint('group_public_id_check',
+                   "CHECK (channel_type = 'channel' OR channel_type = 'whatsapp' OR group_public_id IS NULL)",
+                   'Group authorization and group auto-subscription are only supported on channels and whatsapp.'),
     ]
 
     @api.constrains('channel_type', 'whatsapp_number')

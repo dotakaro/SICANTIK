@@ -63,6 +63,25 @@ class SicantikPermit(models.Model):
         help='Linked partner/contact'
     )
     
+    # Phone field for WhatsApp notifications
+    mobile = fields.Char(
+        string='Mobile',
+        compute='_compute_mobile',
+        readonly=True,
+        store=False,
+        help='Mobile number from linked partner (for WhatsApp notifications)'
+    )
+    
+    @api.depends('partner_id')
+    def _compute_mobile(self):
+        """Compute mobile number from partner"""
+        for record in self:
+            if record.partner_id:
+                # Access mobile field directly, will be None if field doesn't exist
+                record.mobile = getattr(record.partner_id, 'mobile', False)
+            else:
+                record.mobile = False
+    
     # Dates
     issue_date = fields.Date(
         string='Issue Date',
@@ -340,13 +359,32 @@ class SicantikPermit(models.Model):
         """Send test WhatsApp notification"""
         self.ensure_one()
         
-        # Will be implemented in sicantik_whatsapp module
+        # Cek apakah modul sicantik_whatsapp sudah terinstall
+        whatsapp_module = self.env['ir.module.module'].search([
+            ('name', '=', 'sicantik_whatsapp'),
+            ('state', '=', 'installed')
+        ], limit=1)
+        
+        if not whatsapp_module:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Test Notification',
+                    'message': 'WhatsApp notification feature akan tersedia setelah modul sicantik_whatsapp diinstall. Silakan install modul sicantik_whatsapp terlebih dahulu.',
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        # Jika modul sudah terinstall, method ini akan di-override oleh sicantik_whatsapp
+        # Tapi sebagai fallback, tampilkan pesan bahwa fitur tersedia
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': 'Test Notification',
-                'message': 'WhatsApp notification feature will be available after sicantik_whatsapp module is installed.',
+                'message': 'Fitur WhatsApp notification tersedia. Silakan pastikan template WhatsApp sudah di-setup dan approved.',
                 'type': 'info',
                 'sticky': False,
             }

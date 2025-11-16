@@ -16,6 +16,7 @@ from odoo.addons.whatsapp.tools.whatsapp_api import WhatsAppApi
 from odoo.addons.whatsapp.tools.whatsapp_exception import WhatsAppError
 from odoo.exceptions import ValidationError, UserError
 from odoo.tools import frozendict, groupby, html2plaintext
+from odoo.models import Constraint
 
 _logger = logging.getLogger(__name__)
 
@@ -80,8 +81,8 @@ class WhatsAppMessage(models.Model):
     mail_message_id = fields.Many2one(comodel_name='mail.message', index=True)
     body = fields.Html(related='mail_message_id.body', string="Body", related_sudo=False)
 
-    _sql_constraints = [
-        ('unique_msg_uid', 'unique(msg_uid)', "Each whatsapp message should correspond to a single message uuid.")
+    _constraints = [
+        Constraint('unique_msg_uid', 'unique(msg_uid)', "Each whatsapp message should correspond to a single message uuid.")
     ]
 
     @api.depends('mobile_number')

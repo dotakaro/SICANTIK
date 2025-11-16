@@ -4,6 +4,7 @@ from werkzeug.urls import url_join
 
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.models import Constraint
 
 
 class WhatsAppTemplateVariable(models.Model):
@@ -30,8 +31,8 @@ class WhatsAppTemplateVariable(models.Model):
     field_name = fields.Char(string="Field")
     demo_value = fields.Char(string="Sample Value", default="Sample Value", required=True)
 
-    _sql_constraints = [
-        (
+    _constraints = [
+        Constraint(
             'name_type_template_unique',
             'UNIQUE(name, line_type, wa_template_id, button_id)',
             'Variable names must be unique for a given template'

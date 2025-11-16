@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
+import logging
 import re
 import mimetypes
 
@@ -13,6 +14,9 @@ from odoo.addons.whatsapp.tools.whatsapp_exception import WhatsAppError
 from odoo.exceptions import UserError, ValidationError, AccessError
 from odoo.tools import plaintext2html
 from odoo.tools.safe_eval import safe_eval
+from odoo.models import Constraint
+
+_logger = logging.getLogger(__name__)
 
 LATITUDE_LONGITUDE_REGEX = r'^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$'
 
@@ -135,8 +139,8 @@ class WhatsAppTemplate(models.Model):
     messages_count = fields.Integer(string="Messages Count", compute='_compute_messages_count')
     has_action = fields.Boolean(string="Has Action", compute='_compute_has_action')
 
-    _sql_constraints = [
-        ('unique_name_account_template', 'unique(template_name, lang_code, wa_account_id)', "Duplicate template is not allowed for one Meta account.")
+    _constraints = [
+        Constraint('unique_name_account_template', 'unique(template_name, lang_code, wa_account_id)', "Duplicate template is not allowed for one Meta account.")
     ]
 
     @api.constrains('header_text')
@@ -824,6 +828,47 @@ class WhatsAppTemplate(models.Model):
     def button_reset_to_draft(self):
         for tmpl in self:
             tmpl.write({'status': 'draft'})
+
+    def button_sync_selected_templates(self):
+        """Sync selected templates from WhatsApp Business Account"""
+        templates_to_sync = self.filtered(lambda t: t.wa_template_uid and t.wa_account_id)
+        if not templates_to_sync:
+            raise UserError(_("No templates selected with WhatsApp Template ID. Please select templates that have been submitted to Meta."))
+        
+        synced_count = 0
+        error_count = 0
+        error_messages = []
+        
+        for template in templates_to_sync:
+            try:
+                wa_api = WhatsAppApi(template.wa_account_id)
+                response = wa_api._get_template_data(wa_template_uid=template.wa_template_uid)
+                if response.get('id'):
+                    template._update_template_from_response(response)
+                    synced_count += 1
+            except (WhatsAppError, ValidationError) as e:
+                error_count += 1
+                error_messages.append(f"{template.name}: {str(e)}")
+                _logger.warning("Error syncing template %s: %s", template.name, str(e))
+        
+        message = _("%(synced)s template(s) synchronized successfully.", synced=synced_count)
+        if error_count > 0:
+            message += _("\n%(error)s template(s) failed to sync.", error=error_count)
+            if error_messages:
+                message += "\n\n" + "\n".join(error_messages[:5])  # Show first 5 errors
+                if len(error_messages) > 5:
+                    message += f"\n... and {len(error_messages) - 5} more errors."
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _("Sync Templates"),
+                'type': 'success' if error_count == 0 else 'warning',
+                'message': message,
+                'sticky': error_count > 0,
+            }
+        }
 
     def action_open_messages(self):
         self.ensure_one()

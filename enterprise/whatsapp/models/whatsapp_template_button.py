@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from odoo import api, fields, models, _
 from odoo.addons.phone_validation.tools import phone_validation
 from odoo.exceptions import UserError, ValidationError
+from odoo.models import Constraint
 
 
 class WhatsAppTemplateButton(models.Model):
@@ -31,8 +32,8 @@ class WhatsAppTemplateButton(models.Model):
         compute='_compute_variable_ids', precompute=True, store=True,
         copy=True)
 
-    _sql_constraints = [
-        (
+    _constraints = [
+        Constraint(
             'unique_name_per_template',
             'UNIQUE(name, wa_template_id)',
             "Button names must be unique in a given template"
