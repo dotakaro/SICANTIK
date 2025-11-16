@@ -67,6 +67,10 @@ class MinioConnector(models.Model):
         ('error', 'Error')
     ], string='Status Koneksi', default='disconnected', readonly=True)
     
+    last_connection_test = fields.Datetime(
+        string='Last Connection Test',
+        readonly=True
+    )
     last_error = fields.Text(
         string='Error Terakhir',
         readonly=True
@@ -109,13 +113,55 @@ class MinioConnector(models.Model):
         
         try:
             from minio import Minio
+            import socket
             
+            # Use endpoint exactly as stored - don't modify unless necessary
+            endpoint = self.endpoint.strip()
+            secure = self.secure
+            
+            # Only remove protocol if present (MinIO library doesn't need it)
+            if endpoint.startswith('http://'):
+                endpoint = endpoint[7:]
+                secure = False
+            elif endpoint.startswith('https://'):
+                endpoint = endpoint[8:]
+                secure = True
+            
+            # Remove any path after host:port (keep only host:port)
+            if '/' in endpoint:
+                endpoint = endpoint.split('/')[0]
+            
+            # Remove trailing slash
+            endpoint = endpoint.rstrip('/')
+            
+            # WORKAROUND: MinIO Python library 7.2.18 uses virtual-host style 
+            # when endpoint contains underscore (e.g., minio_storage:9000)
+            # This causes "invalid hostname" error. Solution: resolve to IP address
+            if ':' in endpoint:
+                host, port = endpoint.rsplit(':', 1)
+                # If hostname contains underscore, resolve to IP to force path-style
+                if '_' in host:
+                    try:
+                        _logger.info(f'Resolving hostname {host} to IP address (workaround for underscore issue)')
+                        ip_address = socket.gethostbyname(host)
+                        endpoint = f'{ip_address}:{port}'
+                        _logger.info(f'Using IP address: {endpoint}')
+                    except socket.gaierror:
+                        _logger.warning(f'Could not resolve {host} to IP, using original endpoint')
+                        # Keep original endpoint if resolution fails
+            
+            _logger.info(f'Creating MinIO client: endpoint={endpoint}, secure={secure}, region=None')
+            
+            # Create client WITHOUT region parameter
+            # This forces MinIO to use path-style access instead of virtual-host style
+            # Path-style: http://endpoint/bucket/object
+            # Virtual-host: http://bucket.endpoint/object (causes invalid hostname error)
             client = Minio(
-                self.endpoint,
+                endpoint,
                 access_key=self.access_key,
                 secret_key=self.secret_key,
-                secure=self.secure,
-                region=self.region
+                secure=secure
+                # Explicitly NOT setting region to force path-style access
             )
             
             return client
@@ -124,6 +170,7 @@ class MinioConnector(models.Model):
             raise UserError('Library MinIO (boto3/minio) tidak terinstall. Jalankan: pip install minio')
         except Exception as e:
             _logger.error(f'Error creating MinIO client: {str(e)}')
+            _logger.error(f'Endpoint used: {self.endpoint}, Secure: {self.secure}')
             raise UserError(f'Error koneksi MinIO: {str(e)}')
     
     def action_test_connection(self):
@@ -138,6 +185,7 @@ class MinioConnector(models.Model):
             
             self.write({
                 'connection_status': 'connected',
+                'last_connection_test': fields.Datetime.now(),
                 'last_error': False
             })
             
@@ -158,6 +206,7 @@ class MinioConnector(models.Model):
             
             self.write({
                 'connection_status': 'error',
+                'last_connection_test': fields.Datetime.now(),
                 'last_error': error_msg
             })
             
@@ -172,23 +221,44 @@ class MinioConnector(models.Model):
         
         Returns:
             bool: True if bucket exists or created successfully
+        
+        Raises:
+            UserError: If bucket creation fails
         """
         self.ensure_one()
         
+        if not bucket_name:
+            raise UserError('Nama bucket tidak boleh kosong')
+        
         try:
+            _logger.info(f'Checking bucket existence: {bucket_name}')
+            _logger.info(f'MinIO config: endpoint={self.endpoint}, secure={self.secure}, region={self.region}')
+            
             client = self._get_minio_client()
             
             # Check if bucket exists
-            if not client.bucket_exists(bucket_name):
-                # Create bucket
+            bucket_exists = client.bucket_exists(bucket_name)
+            _logger.info(f'Bucket {bucket_name} exists: {bucket_exists}')
+            
+            if not bucket_exists:
+                # Create bucket without region to avoid hostname validation issues
+                # MinIO doesn't require region for local/Docker setups
+                _logger.info(f'Creating bucket: {bucket_name}')
                 client.make_bucket(bucket_name)
-                _logger.info(f'MinIO bucket created: {bucket_name}')
+                _logger.info(f'MinIO bucket created successfully: {bucket_name}')
+            else:
+                _logger.info(f'Bucket {bucket_name} already exists')
             
             return True
             
         except Exception as e:
-            _logger.error(f'Error ensuring bucket exists: {str(e)}')
-            return False
+            error_msg = str(e)
+            _logger.error(f'Error ensuring bucket exists: {error_msg}')
+            _logger.error(f'Endpoint: {self.endpoint}, Secure: {self.secure}, Region: {self.region}')
+            _logger.error(f'Bucket name: {bucket_name}')
+            import traceback
+            _logger.error(traceback.format_exc())
+            raise UserError(f'Gagal membuat atau memastikan bucket "{bucket_name}" ada: {error_msg}')
     
     def upload_file(self, bucket_name, object_name, file_data, content_type='application/pdf'):
         """
@@ -208,14 +278,18 @@ class MinioConnector(models.Model):
         try:
             from io import BytesIO
             
+            _logger.info(f'Starting upload to MinIO: endpoint={self.endpoint}, bucket={bucket_name}, object={object_name}')
+            
             client = self._get_minio_client()
             
-            # Ensure bucket exists
+            # Ensure bucket exists (will raise UserError if fails)
             self.ensure_bucket_exists(bucket_name)
             
             # Convert bytes to file-like object
             file_stream = BytesIO(file_data)
             file_size = len(file_data)
+            
+            _logger.info(f'Uploading file: size={file_size} bytes, content_type={content_type}')
             
             # Upload to MinIO
             client.put_object(
@@ -232,7 +306,7 @@ class MinioConnector(models.Model):
                 'total_storage_used': self.total_storage_used + (file_size / 1024 / 1024)  # Convert to MB
             })
             
-            _logger.info(f'File uploaded to MinIO: {bucket_name}/{object_name}')
+            _logger.info(f'File uploaded successfully to MinIO: {bucket_name}/{object_name}')
             
             return {
                 'success': True,
@@ -245,6 +319,9 @@ class MinioConnector(models.Model):
         except Exception as e:
             error_msg = str(e)
             _logger.error(f'Error uploading file to MinIO: {error_msg}')
+            _logger.error(f'Endpoint: {self.endpoint}, Secure: {self.secure}, Region: {self.region}')
+            import traceback
+            _logger.error(traceback.format_exc())
             
             return {
                 'success': False,

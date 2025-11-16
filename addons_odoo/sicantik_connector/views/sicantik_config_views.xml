@@ -35,6 +35,117 @@ else:
         </field>
     </record>
 
+    <!-- Action: Full Sync Permits -->
+    <record id="action_full_sync_permits" model="ir.actions.server">
+        <field name="name">Full Sync (Semua Data)</field>
+        <field name="model_id" ref="model_sicantik_connector"/>
+        <field name="binding_model_id" ref="model_sicantik_config"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get active connector
+connector = env['sicantik.connector'].search([('active', '=', True)], limit=1)
+if connector:
+    action = connector.action_full_sync_permits()
+else:
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Error',
+            'message': 'Tidak ada connector aktif',
+            'type': 'danger',
+            'sticky': False,
+        }
+    }
+        </field>
+    </record>
+
+    <!-- Action: Cleanup Invalid Permits -->
+    <record id="action_cleanup_invalid_permits" model="ir.actions.server">
+        <field name="name">Cleanup Data Invalid</field>
+        <field name="model_id" ref="model_sicantik_connector"/>
+        <field name="binding_model_id" ref="model_sicantik_config"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get active connector
+connector = env['sicantik.connector'].search([('active', '=', True)], limit=1)
+if connector:
+    action = connector.action_cleanup_invalid_permits()
+else:
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Error',
+            'message': 'Tidak ada connector aktif',
+            'type': 'danger',
+            'sticky': False,
+        }
+    }
+        </field>
+    </record>
+
+    <!-- Action: Analyze Database -->
+    <record id="action_analyze_database" model="ir.actions.server">
+        <field name="name">Analisis Database</field>
+        <field name="model_id" ref="model_sicantik_connector"/>
+        <field name="binding_model_id" ref="model_sicantik_config"/>
+        <field name="state">code</field>
+        <field name="code">
+# Get active connector
+connector = env['sicantik.connector'].search([('active', '=', True)], limit=1)
+if connector:
+    action = connector.action_analyze_database()
+else:
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Error',
+            'message': 'Tidak ada connector aktif',
+            'type': 'danger',
+            'sticky': False,
+        }
+    }
+        </field>
+    </record>
+
+    <!-- Action: Sync Partner Details -->
+    <record id="action_sync_partner_details" model="ir.actions.server">
+        <field name="name">Sync Partner Details (Phone &amp; Address)</field>
+        <field name="model_id" ref="model_sicantik_connector"/>
+        <field name="binding_model_id" ref="model_sicantik_config"/>
+        <field name="binding_view_types">form</field>
+        <field name="state">code</field>
+        <field name="code">
+# Get active connector
+connector = env['sicantik.connector'].search([('active', '=', True)], limit=1)
+if connector:
+    result = connector.sync_partner_details_for_permits()
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Sync Partner Details Selesai',
+            'message': f'Total: {result["total"]}, Berhasil: {result["synced"]}, Gagal: {result["failed"]}, Durasi: {result["duration"]:.1f}s',
+            'type': 'success' if result['synced'] > 0 else 'warning',
+            'sticky': result['failed'] > 0,
+        }
+    }
+else:
+    action = {
+        'type': 'ir.actions.client',
+        'tag': 'display_notification',
+        'params': {
+            'title': 'Error',
+            'message': 'Tidak ada connector aktif',
+            'type': 'danger',
+            'sticky': False,
+        }
+    }
+        </field>
+    </record>
+
     <!-- SICANTIK Configuration Form View -->
     <record id="view_sicantik_config_form" model="ir.ui.view">
         <field name="name">sicantik.config.form</field>
@@ -43,8 +154,13 @@ else:
             <form string="SICANTIK Configuration">
                 <header>
                     <button name="action_test_connection" type="object" string="Tes Koneksi" class="oe_highlight"/>
+                    <button name="%(action_full_sync_permits)d" type="action" string="🔄 Full Sync (Semua Data)" class="btn-success"/>
                     <button name="action_sync_now" type="object" string="Sinkronkan Data Izin" class="btn-primary"/>
                     <button name="%(action_sync_permit_types)d" type="action" string="Sinkronkan Jenis Izin" class="btn-info"/>
+                    <button name="%(action_sync_partner_details)d" type="action" string="👤 Sync Partner Details" class="btn-info" 
+                            title="Sync nomor HP dan alamat pemohon dari API untuk permit yang belum punya partner"/>
+                    <button name="%(action_cleanup_invalid_permits)d" type="action" string="🧹 Cleanup Data Invalid" class="btn-warning"/>
+                    <button name="%(action_analyze_database)d" type="action" string="📊 Analisis Database" class="btn-info"/>
                     <button name="action_open_dashboard" type="object" string="Buka Dashboard" class="btn-secondary"/>
                     <field name="connection_status" widget="badge" 
                            decoration-success="connection_status == 'connected'"
@@ -76,6 +192,17 @@ else:
                             <field name="sync_limit"/>
                         </group>
                     </group>
+                    
+                    <!-- Info box explaining sync modes -->
+                    <div class="alert alert-info" role="alert">
+                        <p><strong>ℹ️ Penjelasan Mode Sinkronisasi:</strong></p>
+                        <ul class="mb-0">
+                            <li><strong>🔄 Full Sync (Semua Data)</strong>: Mengambil SEMUA data dari API dengan pagination otomatis. 
+                                Batch size di atas menentukan jumlah records per API call, akan looping sampai semua data terambil.</li>
+                            <li><strong>Sinkronkan Data Izin</strong>: Hanya mengambil 1 batch sesuai limit di atas (default 300 records). 
+                                Cocok untuk testing atau update cepat.</li>
+                        </ul>
+                    </div>
                     
                     <group>
                         <group string="Rate Limiting">
