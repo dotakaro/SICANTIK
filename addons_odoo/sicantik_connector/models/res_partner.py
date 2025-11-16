@@ -11,48 +11,37 @@ class ResPartner(models.Model):
     """
     _inherit = 'res.partner'
     
-    # Phone/Mobile Fields (fallback jika tidak tersedia di base)
-    # Cek apakah field mobile/phone sudah ada di base
-    @api.model
-    def _check_base_fields(self):
-        """Check if mobile/phone fields exist in base model"""
-        base_model = self.env['res.partner']
-        has_mobile = 'mobile' in base_model._fields
-        has_phone = 'phone' in base_model._fields
-        return has_mobile, has_phone
-    
     # WhatsApp Fields
     whatsapp_number = fields.Char(
         string='WhatsApp Number',
         help='WhatsApp number for notifications (format: +62xxx)'
     )
     
-    # Mobile field fallback (jika tidak tersedia di base Odoo)
-    # Field ini akan di-ignore jika mobile sudah ada di base
-    mobile = fields.Char(
-        string='Mobile',
-        help='Mobile phone number (fallback if not available in base Odoo)'
-    )
-    
     def _get_mobile_or_phone(self):
         """
         Safe method to get mobile or phone number
-        Returns mobile if available, otherwise phone, otherwise False
+        Returns mobile if available, otherwise phone, otherwise whatsapp_number, otherwise False
+        
+        Note: This method uses safe access (getattr) to avoid AttributeError
+        if fields don't exist in database or model definition.
         """
         self.ensure_one()
-        partner_model = self.env['res.partner']
         
-        # Try mobile first
-        if 'mobile' in partner_model._fields:
+        # Try mobile first (safe access with getattr)
+        try:
             mobile_value = getattr(self, 'mobile', False)
             if mobile_value:
                 return mobile_value
+        except (AttributeError, KeyError):
+            pass
         
-        # Fallback to phone
-        if 'phone' in partner_model._fields:
+        # Fallback to phone (safe access with getattr)
+        try:
             phone_value = getattr(self, 'phone', False)
             if phone_value:
                 return phone_value
+        except (AttributeError, KeyError):
+            pass
         
         # Fallback to whatsapp_number
         if hasattr(self, 'whatsapp_number') and self.whatsapp_number:
