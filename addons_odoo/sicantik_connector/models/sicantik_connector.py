@@ -721,6 +721,7 @@ class SicantikConnector(models.Model):
         }
         
         # Update phone jika ada
+        # Di Odoo 18.4, field 'phone' selalu tersedia di res.partner (contact)
         phone = applicant_data.get('telp_pemohon', '').strip()
         if phone and phone not in ('', '0', '-', 'null', 'None'):
             # Normalize phone number (remove spaces, dashes, etc)
@@ -731,17 +732,14 @@ class SicantikConnector(models.Model):
             elif not phone.startswith('+'):
                 phone = '+62' + phone
             
-            # Cek apakah field mobile tersedia sebelum menambahkannya
-            # Gunakan _fields untuk cek field existence (lebih reliable)
+            # Di Odoo 18.4, field 'phone' selalu ada di res.partner
+            # Gunakan phone sebagai primary field untuk nomor handphone
+            partner_vals['phone'] = phone
+            
+            # Jika mobile juga tersedia, isi juga (untuk kompatibilitas)
             partner_model = self.env['res.partner']
             if 'mobile' in partner_model._fields:
                 partner_vals['mobile'] = phone
-            elif 'phone' in partner_model._fields:
-                # Fallback ke field phone jika mobile tidak tersedia
-                partner_vals['phone'] = phone
-                _logger.debug('⚠️ Field mobile tidak tersedia, menggunakan field phone')
-            else:
-                _logger.warning('⚠️ Field mobile dan phone tidak tersedia di res.partner')
         
         # Update address jika ada
         address = applicant_data.get('a_pemohon', '').strip()
@@ -757,28 +755,30 @@ class SicantikConnector(models.Model):
             # Update existing partner (hanya update field yang kosong atau lebih lengkap)
             update_vals = {}
             
-            # Safe access untuk field mobile (mungkin tidak tersedia di semua environment)
-            partner_model = self.env['res.partner']
-            has_mobile_field = 'mobile' in partner_model._fields
+            # Di Odoo 18.4, field 'phone' selalu tersedia
+            # Prioritas: update phone dulu (primary field untuk nomor handphone)
+            if partner_vals.get('phone'):
+                current_phone = getattr(partner, 'phone', False)
+                
+                if not current_phone:
+                    # Phone kosong, update dengan nomor baru
+                    update_vals['phone'] = partner_vals['phone']
+                elif partner_vals['phone'] != current_phone:
+                    # Update jika nomor baru lebih lengkap (ada +62)
+                    if partner_vals['phone'].startswith('+62') and (not current_phone or not current_phone.startswith('+62')):
+                        update_vals['phone'] = partner_vals['phone']
             
-            if partner_vals.get('mobile') and has_mobile_field:
-                # Cek current mobile value dengan safe access
+            # Jika mobile juga tersedia, update juga (untuk kompatibilitas)
+            partner_model = self.env['res.partner']
+            if 'mobile' in partner_model._fields and partner_vals.get('phone'):
                 current_mobile = getattr(partner, 'mobile', False)
                 
                 if not current_mobile:
-                    # Field mobile tersedia, update jika kosong
-                    update_vals['mobile'] = partner_vals['mobile']
-                elif partner_vals['mobile'] != current_mobile:
-                    # Update jika nomor baru lebih lengkap (ada +62)
-                    if partner_vals['mobile'].startswith('+62') and (not current_mobile or not current_mobile.startswith('+62')):
-                        update_vals['mobile'] = partner_vals['mobile']
-            elif partner_vals.get('mobile') and not has_mobile_field:
-                # Mobile tidak tersedia, coba gunakan phone
-                if 'phone' in partner_model._fields:
-                    current_phone = getattr(partner, 'phone', False)
-                    if not current_phone or (partner_vals['mobile'].startswith('+62') and (not current_phone or not current_phone.startswith('+62'))):
-                        update_vals['phone'] = partner_vals['mobile']
-                        _logger.debug('⚠️ Field mobile tidak tersedia, menggunakan field phone untuk update')
+                    # Mobile kosong, update dengan nomor yang sama dengan phone
+                    update_vals['mobile'] = partner_vals['phone']
+                elif partner_vals['phone'].startswith('+62') and (not current_mobile or not current_mobile.startswith('+62')):
+                    # Update jika nomor baru lebih lengkap
+                    update_vals['mobile'] = partner_vals['phone']
             
             if not partner.street and partner_vals.get('street'):
                 update_vals['street'] = partner_vals['street']
@@ -802,34 +802,30 @@ class SicantikConnector(models.Model):
                                 _logger.error(f'❌ Error updating partner without mobile: {str(e2)}')
         else:
             # Create new partner
-            # Cek field availability dan adjust create_vals
+            # Di Odoo 18.4, field 'phone' selalu tersedia
+            # Pastikan phone diisi jika ada nomor dari API
             create_vals = partner_vals.copy()
-            partner_model = self.env['res.partner']
             
-            # Jika mobile tidak tersedia tapi ada di create_vals, ganti dengan phone
-            if 'mobile' in create_vals and 'mobile' not in partner_model._fields:
-                if 'phone' in partner_model._fields:
-                    create_vals['phone'] = create_vals.pop('mobile')
-                    _logger.debug('⚠️ Field mobile tidak tersedia, menggunakan field phone untuk create')
-                else:
-                    create_vals.pop('mobile', None)
-                    _logger.warning('⚠️ Field mobile dan phone tidak tersedia di res.partner, akan skip field ini')
+            # Jika mobile juga tersedia, isi juga (untuk kompatibilitas)
+            partner_model = self.env['res.partner']
+            if 'mobile' in partner_model._fields and create_vals.get('phone'):
+                # Copy phone ke mobile juga
+                create_vals['mobile'] = create_vals['phone']
             
             try:
                 partner = self.env['res.partner'].create(create_vals)
-                # Get phone display value (bisa dari mobile atau phone field)
-                phone_display = create_vals.get('mobile') or create_vals.get('phone', 'N/A')
+                phone_display = create_vals.get('phone', 'N/A')
                 _logger.info(f'✅ Created new partner: {partner.name} (phone: {phone_display})')
             except Exception as e:
                 _logger.error(f'❌ Error creating partner: {str(e)}')
-                # Coba create tanpa mobile jika error
+                # Coba create tanpa mobile jika error (phone harus tetap ada)
                 if 'mobile' in create_vals:
                     create_vals_without_mobile = {k: v for k, v in create_vals.items() if k != 'mobile'}
                     try:
                         partner = self.env['res.partner'].create(create_vals_without_mobile)
-                        _logger.info(f'✅ Created new partner: {partner.name} (mobile field skipped)')
+                        _logger.info(f'✅ Created new partner: {partner.name} (phone: {create_vals_without_mobile.get("phone", "N/A")}, mobile skipped)')
                     except Exception as e2:
-                        _logger.error(f'❌ Error creating partner without mobile: {str(e2)}')
+                        _logger.error(f'❌ Error creating partner: {str(e2)}')
                         return None
         
         return partner

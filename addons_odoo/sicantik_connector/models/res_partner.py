@@ -20,25 +20,26 @@ class ResPartner(models.Model):
     def _get_mobile_or_phone(self):
         """
         Safe method to get mobile or phone number
-        Returns mobile if available, otherwise phone, otherwise whatsapp_number, otherwise False
+        Di Odoo 18.4, field 'phone' selalu tersedia di res.partner (contact)
+        
+        Returns phone (prioritas utama), otherwise mobile, otherwise whatsapp_number, otherwise False
         
         Note: This method uses safe access (getattr) to avoid AttributeError
         if fields don't exist in database or model definition.
         """
         self.ensure_one()
         
-        # Try mobile first (safe access - gunakan getattr dengan default False)
-        # getattr tidak akan raise AttributeError jika field tidak ada
-        mobile_value = getattr(self, 'mobile', None)
-        if mobile_value:
-            return mobile_value
-        
-        # Fallback to phone (safe access - gunakan getattr dengan default False)
+        # Prioritas 1: phone (selalu tersedia di Odoo 18.4)
         phone_value = getattr(self, 'phone', None)
         if phone_value:
             return phone_value
         
-        # Fallback to whatsapp_number
+        # Prioritas 2: mobile (jika tersedia)
+        mobile_value = getattr(self, 'mobile', None)
+        if mobile_value:
+            return mobile_value
+        
+        # Prioritas 3: whatsapp_number (custom field)
         if hasattr(self, 'whatsapp_number') and self.whatsapp_number:
             return self.whatsapp_number
         
