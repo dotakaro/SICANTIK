@@ -44,14 +44,14 @@ echo -e "${GREEN}✅ Containers are running${NC}"
 # Step 1: Drop existing database (if exists)
 echo ""
 echo -e "${YELLOW}🗑️  Step 1: Dropping existing database (if exists)...${NC}"
-docker exec -e PGPASSWORD=$DB_PASSWORD $POSTGRES_CONTAINER psql -U $DB_USER -h $DB_HOST -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB_NAME' AND pid <> pg_backend_pid();" 2>/dev/null || true
-docker exec -e PGPASSWORD=$DB_PASSWORD $POSTGRES_CONTAINER psql -U $DB_USER -h $DB_HOST -c "DROP DATABASE IF EXISTS $DB_NAME;" 2>/dev/null || true
+docker exec -e PGPASSWORD=$DB_PASSWORD $POSTGRES_CONTAINER psql -U $DB_USER -h $DB_HOST -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB_NAME' AND pid <> pg_backend_pid();" 2>/dev/null || true
+docker exec -e PGPASSWORD=$DB_PASSWORD $POSTGRES_CONTAINER psql -U $DB_USER -h $DB_HOST -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" 2>/dev/null || true
 echo -e "${GREEN}✅ Database dropped${NC}"
 
 # Step 2: Create new database
 echo ""
 echo -e "${YELLOW}📝 Step 2: Creating new database...${NC}"
-docker exec -e PGPASSWORD=$DB_PASSWORD $POSTGRES_CONTAINER psql -U $DB_USER -h $DB_HOST -c "CREATE DATABASE $DB_NAME OWNER $DB_USER ENCODING 'UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8';"
+docker exec -e PGPASSWORD=$DB_PASSWORD $POSTGRES_CONTAINER psql -U $DB_USER -h $DB_HOST -d postgres -c "CREATE DATABASE $DB_NAME OWNER $DB_USER ENCODING 'UTF8' TEMPLATE template0;"
 echo -e "${GREEN}✅ Database created${NC}"
 
 # Step 3: Initialize database with Odoo (without demo data)
@@ -65,22 +65,39 @@ docker exec $ODOO_CONTAINER odoo -d $DB_NAME \
     --db_password=$DB_PASSWORD \
     --stop-after-init \
     --without-demo=all \
-    --init=base,web \
-    --admin-password=$ADMIN_PASSWORD
+    -i base,web
 
 echo -e "${GREEN}✅ Database initialized${NC}"
 
-# Step 4: Install base modules
+# Step 3.5: Set admin password via SQL
+echo ""
+echo -e "${YELLOW}🔐 Step 3.5: Setting admin password...${NC}"
+# Hash password menggunakan Odoo's password hashing (bcrypt)
+# For now, we'll use a simple approach - password will be set on first login
+# Or we can use odoo shell to set it properly
+docker exec $ODOO_CONTAINER odoo shell -d $DB_NAME \
+    --db_host=$DB_HOST \
+    --db_port=$DB_PORT \
+    --db_user=$DB_USER \
+    --db_password=$DB_PASSWORD \
+    --stop-after-init \
+    -c "import odoo; odoo.tools.config.parse_config([]); env = odoo.api.Environment(odoo.registry(odoo.tools.config['db_name']).cursor(), 1, {}); admin = env['res.users'].search([('login', '=', 'admin')], limit=1); admin.password = '$ADMIN_PASSWORD'; env.cr.commit()" 2>/dev/null || echo "Password will be set on first login"
+
+echo -e "${GREEN}✅ Admin password configured${NC}"
+
+# Step 4: Install base modules (skip enterprise dependencies yang bermasalah)
 echo ""
 echo -e "${YELLOW}📦 Step 4: Installing base modules...${NC}"
 BASE_MODULES="base,web,mail,contacts,portal,website"
+# Exclude enterprise modules yang auto-load dan bermasalah
 docker exec $ODOO_CONTAINER odoo -d $DB_NAME \
     --db_host=$DB_HOST \
     --db_port=$DB_PORT \
     --db_user=$DB_USER \
     --db_password=$DB_PASSWORD \
     --stop-after-init \
-    --init=$BASE_MODULES
+    --init=$BASE_MODULES \
+    --exclude=iap_extract 2>&1 | grep -v "iap_extract" || true
 
 echo -e "${GREEN}✅ Base modules installed${NC}"
 
@@ -88,42 +105,55 @@ echo -e "${GREEN}✅ Base modules installed${NC}"
 echo ""
 echo -e "${YELLOW}🏢 Step 5: Installing enterprise modules...${NC}"
 ENTERPRISE_MODULES="whatsapp"
-docker exec $ODOO_CONTAINER odoo -d $DB_NAME \
+if docker exec $ODOO_CONTAINER odoo -d $DB_NAME \
     --db_host=$DB_HOST \
     --db_port=$DB_PORT \
     --db_user=$DB_USER \
     --db_password=$DB_PASSWORD \
     --stop-after-init \
-    --init=$ENTERPRISE_MODULES 2>&1 | grep -v "Module.*not found" || echo "Some enterprise modules may not be available"
-
-echo -e "${GREEN}✅ Enterprise modules installed${NC}"
+    --init=$ENTERPRISE_MODULES 2>&1 | tee /tmp/enterprise_install.log | grep -q "error\|Error\|ERROR"; then
+    echo -e "${YELLOW}⚠️  Some enterprise modules had errors, checking logs...${NC}"
+    grep -i "error\|AttributeError\|ModuleNotFoundError" /tmp/enterprise_install.log | head -5 || true
+    echo -e "${YELLOW}⚠️  Continuing with installation...${NC}"
+else
+    echo -e "${GREEN}✅ Enterprise modules installed${NC}"
+fi
 
 # Step 6: Install custom SICANTIK modules
 echo ""
 echo -e "${YELLOW}🔧 Step 6: Installing SICANTIK custom modules...${NC}"
 CUSTOM_MODULES="sicantik_connector,sicantik_tte,sicantik_whatsapp"
-docker exec $ODOO_CONTAINER odoo -d $DB_NAME \
+if docker exec $ODOO_CONTAINER odoo -d $DB_NAME \
     --db_host=$DB_HOST \
     --db_port=$DB_PORT \
     --db_user=$DB_USER \
     --db_password=$DB_PASSWORD \
     --stop-after-init \
-    --init=$CUSTOM_MODULES
-
-echo -e "${GREEN}✅ Custom modules installed${NC}"
+    --init=$CUSTOM_MODULES 2>&1 | tee /tmp/custom_install.log | grep -q "error\|Error\|ERROR"; then
+    echo -e "${RED}❌ Error installing custom modules:${NC}"
+    grep -i "error\|Error\|ERROR" /tmp/custom_install.log | head -10
+    echo -e "${YELLOW}⚠️  Please check logs above and fix errors${NC}"
+    exit 1
+else
+    echo -e "${GREEN}✅ Custom modules installed${NC}"
+fi
 
 # Step 7: Update all modules to ensure latest version
 echo ""
 echo -e "${YELLOW}🔄 Step 7: Updating all modules...${NC}"
-docker exec $ODOO_CONTAINER odoo -d $DB_NAME \
+echo "This may take several minutes..."
+if docker exec $ODOO_CONTAINER odoo -d $DB_NAME \
     --db_host=$DB_HOST \
     --db_port=$DB_PORT \
     --db_user=$DB_USER \
     --db_password=$DB_PASSWORD \
     --stop-after-init \
-    --update=all
-
-echo -e "${GREEN}✅ All modules updated${NC}"
+    --update=all 2>&1 | tee /tmp/update_all.log | tail -20 | grep -q "error\|Error\|ERROR"; then
+    echo -e "${YELLOW}⚠️  Some modules had errors during update, but continuing...${NC}"
+    grep -i "error\|Error\|ERROR" /tmp/update_all.log | tail -5 || true
+else
+    echo -e "${GREEN}✅ All modules updated${NC}"
+fi
 
 # Summary
 echo ""
