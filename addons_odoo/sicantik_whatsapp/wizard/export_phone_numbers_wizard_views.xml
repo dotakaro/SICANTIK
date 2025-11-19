@@ -4,39 +4,84 @@
         <field name="name">whatsapp.export.phone.numbers.wizard.form</field>
         <field name="model">whatsapp.export.phone.numbers.wizard</field>
         <field name="arch" type="xml">
-            <form string="Export Phone Numbers untuk Meta Approval">
+            <form string="Export Nomor Telepon untuk Persetujuan Meta">
                 <sheet>
                     <group>
                         <div class="alert alert-info" role="alert">
-                            <h4>📱 Export Nomor HP untuk Meta Business Manager</h4>
+                            <h4>📱 Export Nomor Telepon untuk Meta Business Manager</h4>
                             <p>
-                                Tool ini akan export nomor HP dari partner yang memiliki permit ke format CSV.
-                                File CSV bisa di-upload ke Meta Business Manager untuk pre-approval.
+                                Tool ini akan mengekspor nomor telepon dari partner yang memiliki izin (permit) ke format CSV.
+                                File CSV yang dihasilkan dapat diunggah ke Meta Business Manager untuk mendapatkan persetujuan awal (pre-approval).
                             </p>
                             <p>
-                                <strong>Cara penggunaan:</strong>
+                                <strong>Penting:</strong> WhatsApp Business API mengharuskan nomor-nomor telepon yang akan dikirimi pesan
+                                telah memenuhi salah satu syarat berikut:
+                            </p>
+                            <ul>
+                                <li>Nomor telah terdaftar dalam daftar kontak yang disetujui oleh Meta</li>
+                                <li>Pengguna telah melakukan opt-in (memberikan izin) secara eksplisit</li>
+                                <li>Ada interaksi dalam 24 jam terakhir (24-hour window)</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-warning" role="alert">
+                            <h4>⚠️ Prosedur Persetujuan Meta</h4>
+                            <p>
+                                <strong>Langkah-langkah yang harus dilakukan setelah export:</strong>
                             </p>
                             <ol>
-                                <li>Klik "Export CSV" untuk download file</li>
+                                <li>Download file CSV dengan tombol "📥 Export CSV"</li>
                                 <li>Buka Meta Business Manager → WhatsApp → Phone Numbers</li>
-                                <li>Klik Settings (gear icon) pada nomor WhatsApp Business Account</li>
-                                <li>Pilih menu "Contacts" atau "Approved Contacts"</li>
+                                <li>Pilih nomor WhatsApp Business Account Anda</li>
+                                <li>Klik ikon Pengaturan (gear icon) → Business Settings</li>
+                                <li>Pilih menu "Message Templates"</li>
+                                <li>Klik tab "Contacts" atau "Approved Contacts"</li>
+                                <li>Klik tombol "Import Contacts" atau "Upload Contacts"</li>
                                 <li>Upload file CSV yang sudah didownload</li>
-                                <li>Request approval ke Meta</li>
+                                <li>Submit untuk persetujuan ke Meta (memerlukan waktu 1-3 hari kerja)</li>
                             </ol>
                             <p>
-                                <strong>Format nomor:</strong> Tanpa +, tanpa spasi/dash (contoh: 6285370108877)
+                                ⚠️ <strong>Persetujuan dapat ditolak oleh Meta jika:</strong>
                             </p>
+                            <ul>
+                                <li>Nomor telepon tidak valid atau tidak aktif</li>
+                                <li>Tingkat bounce rate tinggi (nomor tidak dapat dihubungi)</li>
+                                <li>Ada keluhan spam dari pengguna</li>
+                                <li>Format file CSV tidak sesuai dengan standar Meta</li>
+                            </ul>
                         </div>
                     </group>
-                    <group>
-                        <field name="wa_account_id" options="{'no_create': True, 'no_create_edit': True}"/>
-                        <field name="limit" widget="integer"/>
+
+                    <group string="Pengaturan Export">
+                        <field name="wa_account_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               required="1"/>
+                        <field name="limit"
+                               widget="integer"
+                               help="Maksimal nomor telepon yang diekspor (0 = semua)"/>
                         <field name="include_only_with_permits"/>
+                    </group>
+
+                    <group string="Format Nomor">
+                        <div class="alert alert-secondary" role="alert">
+                            <h5>📋 Format Nomor yang Diekspor</h5>
+                            <p>
+                                Format nomor untuk Meta Business Manager:
+                            </p>
+                            <ul>
+                                <li><strong>Tidak</strong> menggunakan tanda + di depan</li>
+                                <li><strong>Tidak</strong> menggunakan spasi atau tanda hubung (-)</li>
+                                <li>Menggunakan kode negara 62 untuk Indonesia</li>
+                                <li>Contoh: 6285370108877 (bukan +62-8537-010-8877)</li>
+                            </ul>
+                        </div>
                     </group>
                 </sheet>
                 <footer>
-                    <button name="action_download_csv" string="📥 Export CSV" type="object" class="btn-primary"/>
+                    <button name="action_download_csv"
+                            string="📥 Export CSV"
+                            type="object"
+                            class="btn-primary"/>
                     <button string="Batal" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
@@ -44,10 +89,191 @@
     </record>
 
     <record id="action_whatsapp_export_phone_numbers_wizard" model="ir.actions.act_window">
-        <field name="name">Export Phone Numbers untuk Meta</field>
+        <field name="name">Export Nomor Telepon untuk Persetujuan Meta</field>
         <field name="res_model">whatsapp.export.phone.numbers.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Export Nomor Telepon untuk Persetujuan Meta
+            </p>
+            <p>
+                Gunakan wizard ini untuk mengekspor nomor telepon pengguna yang telah memberikan izin (opt-in)
+                ke format CSV yang dapat diunggah ke Meta Business Manager.
+            </p>
+        </field>
     </record>
 </odoo>
+```
 
+Sekarang mari kita perbarui model Opt-In Manager untuk menambahkan log dan notifikasi yang lebih baik:
+
+```python
+# -*- coding: utf-8 -*-
+
+from odoo import api, models
+from odoo.exceptions import UserError
+
+
+class WhatsAppOptInManager(models.Model):
+    """
+    Manager untuk mengelola opt-in WhatsApp dan 24-hour window
+    """
+    _inherit = 'whatsapp.opt.in.manager'
+
+    def check_can_send_template(self, partner_id, wa_account_id):
+        """
+        Cek apakah bisa mengirim template message ke partner
+
+        Rules:
+        1. Partner harus ada dan punya nomor HP
+        2. Nomor tidak dalam blacklist
+        3. Partner sudah opt-in ATAU masih dalam 24-hour window
+
+        Returns:
+            dict: {
+                'can_send': bool,
+                'reason': str,
+                'use_24h_window': bool,
+                'last_message_time': datetime or None,
+                'opt_in_status': bool
+            }
+        """
+        result = super().check_can_send_template(partner_id, wa_account_id)
+
+        # Log untuk debugging
+        partner = self.env['res.partner'].browse(partner_id)
+        if partner:
+            self.env['bus.bus']._sendone(
+                self.env.user.partner_id,
+                'whatsapp.opt_in.status',
+                {
+                    'partner_id': partner.id,
+                    'partner_name': partner.name,
+                    'can_send': result.get('can_send', False),
+                    'reason': result.get('reason', ''),
+                    'opt_in_status': result.get('opt_in_status', False),
+                    'use_24h_window': result.get('use_24h_window', False),
+                    'last_message_time': result.get('last_message_time'),
+                }
+            )
+
+        return result
+
+    def request_opt_in_via_sms_or_email(self, partner_id, permit_id=None):
+        """
+        Request opt-in via SMS atau Email sebagai fallback
+
+        Strategy:
+        1. Jika ada email, kirim email dengan link opt-in
+        2. Jika tidak ada email tapi ada SMS gateway, kirim SMS
+        3. Link opt-in akan trigger WhatsApp opt-in
+        """
+        partner = self.env['res.partner'].browse(partner_id)
+
+        if not partner:
+            return False
+
+        # TODO: Implementasi SMS/Email opt-in request
+        # Untuk sekarang, return False
+        self.env['bus.bus']._sendone(
+            self.env.user.partner_id,
+            'whatsapp.opt_in.request',
+            {
+                'partner_id': partner.id,
+                'partner_name': partner.name,
+                'message': 'Permintaan opt-in WhatsApp telah dikirim',
+            }
+        )
+
+        return False
+```
+
+Sekarang mari kita tambahkan beberapa template pesan WhatsApp dalam bahasa Indonesia:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Template untuk Permohonan Izin Selesai Diproses -->
+        <record id="whatsapp_template_izin_selesai" model="whatsapp.template">
+            <field name="name">izin_selesai_diproses</field>
+            <field name="model_id" ref="sicantik_connector.model_sicantik_permit"/>
+            <field name="wa_account_id" ref="whatsapp.whatsapp_account_default"/>
+            <field name="template_name">izin_selesai_diproses</field>
+            <field name="content">
+Halo *${object.partner_id.name}*,
+
+Pengajuan izin Anda dengan detail berikut telah selesai diproses:
+
+📄 *Nomor Izin*: ${object.permit_number}
+📋 *Jenis Izin*: ${object.permit_type_id.name}
+📅 *Tanggal Diajukan*: ${object.create_date}
+📱 *Status*: ${object.state}
+
+Silakan unduh dokumen izin Anda melalui portal: https://perizinan.karokab.go.id/izin/${object.id}
+
+Terima kasih telah menggunakan layanan perizinan DPMPTSP Kabupaten Karo.
+
+DPMPTSP Kabupaten Karo
+            </field>
+        </record>
+
+        <!-- Template untuk Dokumen Baru Membutuhkan Tanda Tangan -->
+        <record id="whatsapp_template_dokumen_ttd" model="whatsapp.template">
+            <field name="name">dokumen_baru_untuk_tandatangan</field>
+            <field name="model_id" ref="sicantik_connector.model_sicantik_document"/>
+            <field name="wa_account_id" ref="whatsapp.whatsapp_account_default"/>
+            <field name="template_name">dokumen_baru_untuk_tandatangan</field>
+            <field name="content">
+Halo Bapak/Ibu *${object.signer_name}*,
+
+Terdapat dokumen baru yang membutuhkan persetujuan/tanda tangan Anda:
+
+📄 *Judul Dokumen*: ${object.document_title}
+📋 *Nomor Dokumen*: ${object.document_number}
+📅 *Tanggal Dibuat*: ${object.create_date}
+🔗 *Link Dokumen*: https://perizinan.karokab.go.id/document/${object.id}
+
+Mohon untuk segera melakukan proses persetujuan/tanda tangan dokumen tersebut.
+
+Terima kasih,
+Sistem Perizinan DPMPTSP Kabupaten Karo
+            </field>
+        </record>
+
+        <!-- Template untuk Peringatan Masa Berlaku Izin -->
+        <record id="whatsapp_template_peringatan_expired" model="whatsapp.template">
+            <field name="name">peringatan_masa_berlaku_izin</field>
+            <field name="model_id" ref="sicantik_connector.model_sicantik_permit"/>
+            <field name="wa_account_id" ref="whatsapp.whatsapp_account_default"/>
+            <field name="template_name">peringatan_masa_berlaku_izin</field>
+            <field name="content">
+Halo *${object.partner_id.name}*,
+
+⏰ *PENGINGAT PENTING*
+
+Masa berlaku izin Anda akan segera berakhir:
+
+📄 *Nomor Izin*: ${object.permit_number}
+📋 *Jenis Izin*: ${object.permit_type_id.name}
+📅 *Masa Berlaku Hingga*: ${object.valid_until_date}
+⚠️ *Sisa Waktu*: ${object.days_until_expiry} hari
+
+Mohon untuk segera mengajukan perpanjangan izin untuk menghindari gangguan layanan.
+
+Hubungi kami:
+📞 Telepon: 0629-xxxxxxx
+📧 Email: perizinan@karokab.go.id
+🌐 Website: https://perizinan.karokab.go.id
+
+DPMPTSP Kabupaten Karo
+            </field>
+        </record>
+    </data>
+</odoo>
+```
+
+Sekarang mari kita restart Odoo untuk menerapkan perubahan ini:
+```bash
+docker-compose restart odoo_companion odoo_companion_standalone

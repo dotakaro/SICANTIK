@@ -1,9 +1,239 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 
-    Menu untuk WhatsApp Templates SICANTIK
-    Note: Menu ini bisa ditambahkan manual melalui UI atau setelah modul WhatsApp terinstall
-    Template WhatsApp dapat diakses melalui menu WhatsApp > Templates dengan filter model
+    <!--
+    Menu Manajemen WhatsApp untuk SICANTIK
+    Menu ini menyediakan akses ke fitur-fitur WhatsApp Business API
+    yang digunakan untuk notifikasi perizinan.
     -->
-</odoo>
 
+    <!-- Menu Utama WhatsApp -->
+    <menuitem id="menu_sicantik_whatsapp_root"
+              name="WhatsApp"
+              parent="menu_sicantik_root"
+              sequence="50"
+              web_icon="sicantik_whatsapp,static/description/icon.png"/>
+
+    <!-- Menu Konfigurasi WhatsApp -->
+    <menuitem id="menu_sicantik_whatsapp_config"
+              name="Konfigurasi"
+              parent="menu_sicantik_whatsapp_root"
+              sequence="10"/>
+
+    <!-- Menu untuk Akun WhatsApp -->
+    <menuitem id="menu_whatsapp_accounts"
+              name="Akun WhatsApp"
+              parent="menu_sicantik_whatsapp_config"
+              action="whatsapp.action_whatsapp_account"
+              sequence="10"/>
+
+    <!-- Menu untuk Template WhatsApp -->
+    <menuitem id="menu_whatsapp_templates"
+              name="Template Pesan"
+              parent="menu_sicantik_whatsapp_config"
+              action="whatsapp.action_whatsapp_template"
+              sequence="20"/>
+
+    <!-- Menu untuk Kelola Opt-In -->
+    <menuitem id="menu_sicantik_whatsapp_opt_in"
+              name="Manajemen Opt-In"
+              parent="menu_sicantik_whatsapp_root"
+              sequence="20"/>
+
+    <!-- Menu untuk Export Nomor Telepon -->
+    <menuitem id="menu_whatsapp_export_phone_numbers"
+              name="Export Nomor Telepon"
+              parent="menu_sicantik_whatsapp_opt_in"
+              action="action_whatsapp_export_phone_numbers_wizard"
+              sequence="10"/>
+
+    <!-- Menu untuk Wizard Cleanup -->
+    <menuitem id="menu_sicantik_whatsapp_cleanup"
+              name="Pembersihan Data"
+              parent="menu_sicantik_whatsapp_opt_in"
+              action="action_sicantik_whatsapp_cleanup_wizard"
+              sequence="20"/>
+
+    <!-- Menu Monitoring -->
+    <menuitem id="menu_sicantik_whatsapp_monitoring"
+              name="Pantauan &amp; Laporan"
+              parent="menu_sicantik_whatsapp_root"
+              sequence="30"/>
+
+    <!-- Menu untuk Pesan WhatsApp -->
+    <menuitem id="menu_whatsapp_messages"
+              name="Riwayat Pesan"
+              parent="menu_sicantik_whatsapp_monitoring"
+              action="whatsapp.action_whatsapp_message"
+              sequence="10"/>
+
+    <!-- Menu untuk Partner dengan Opt-In -->
+    <menuitem id="menu_partners_with_whatsapp_opt_in"
+              name="Kontak WhatsApp"
+              parent="menu_sicantik_whatsapp_monitoring"
+              action="action_res_partner_whatsapp_opt_in"
+              sequence="20"/>
+
+    <!-- Action untuk Partner dengan Opt-In -->
+    <record id="action_res_partner_whatsapp_opt_in" model="ir.actions.act_window">
+        <field name="name">Kontak WhatsApp</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('mobile', '!=', False)]</field>
+        <field name="context">{
+            'default_is_company': False,
+            'search_default_whatsapp_opt_in': 1,
+            'default_whatsapp_opt_in': True
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Belum ada kontak WhatsApp
+            </p>
+            <p>
+                Gunakan menu ini untuk mengelola kontak yang telah memberikan izin (opt-in)
+                untuk menerima notifikasi WhatsApp.
+            </p>
+        </field>
+    </record>
+
+    <!-- Filter untuk Partner dengan Opt-In -->
+    <record id="filter_res_partner_whatsapp_opt_in" model="ir.filters">
+        <field name="name">Kontak dengan Opt-In Aktif</field>
+        <field name="model_id">res.partner</field>
+        <field name="domain">[('whatsapp_opt_in', '=', True)]</field>
+        <field name="user_id" eval="False"/>
+        <field name="is_default" eval="True"/>
+    </record>
+
+    <!-- Filter untuk Partner tanpa Opt-In -->
+    <record id="filter_res_partner_whatsapp_no_opt_in" model="ir.filters">
+        <field name="name">Kontak Belum Opt-In</field>
+        <field name="model_id">res.partner</field>
+        <field name="domain">[('mobile', '!=', False), ('whatsapp_opt_in', '=', False)]</field>
+        <field name="user_id" eval="False"/>
+    </record>
+
+    <!-- Action untuk Form Partner dengan Tombol Opt-In -->
+    <record id="view_res_partner_whatsapp_form" model="ir.ui.view">
+        <field name="name">res.partner.whatsapp.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='mobile']" position="after">
+                <field name="whatsapp_opt_in" widget="boolean_toggle"/>
+                <field name="whatsapp_opt_in_date" readonly="1"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_opt_in_whatsapp"
+                        type="object"
+                        class="oe_stat_button"
+                        attrs="{'invisible': [('whatsapp_opt_in', '=', True)]}"
+                        icon="fa-whatsapp">
+                    <field name="whatsapp_opt_in" widget="boolean_button"
+                           options='{"terminology": {
+                               "string_true": "Opt-In Aktif",
+                               "string_false": "Aktifkan Opt-In",
+                               "hover_true": "Klik untuk non-aktifkan notifikasi WhatsApp",
+                               "hover_false": "Klik untuk mengaktifkan notifikasi WhatsApp"
+                           }}'/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Smart Button untuk View di Form Partner -->
+    <record id="view_partner_form_whatsapp" model="ir.ui.view">
+        <field name="name">res.partner.whatsapp.buttons</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_permits"
+                        type="object"
+                        class="oe_stat_button"
+                        attrs="{'invisible': [('sicantik_permit_count', '=', 0)]}"
+                        icon="fa-file-text">
+                    <field name="sicantik_permit_count" widget="statinfo"
+                           string="Perizinan"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+```
+
+Sekarang kita perlu memperbarui file __manifest__.py untuk menyertakan file menu ini:</think>
+You are an expert engineer and your task is to write a new file from scratch.
+
+You MUST respond with the file's content wrapped in triple backticks (```).
+The backticks should be on their own line.
+The text you output will be saved verbatim as the content of the file.
+Tool calls have been disabled.
+Start your response with ```.
+
+<file_path>
+SICANTIK/addons_odoo/sicantik_whatsapp/__manifest__.py
+</file_path>
+
+<edit_description>
+Update manifest to include the new menu file
+</edit_description></think>
+<think></think>
+```python
+# -*- coding: utf-8 -*-
+
+{
+    'name': 'SICANTIK WhatsApp Notifications',
+    'version': '1.0.0',
+    'category': 'SICANTIK',
+    'summary': 'Sistem Notifikasi WhatsApp untuk SICANTIK Companion',
+    'description': """
+SICANTIK WhatsApp Notifications
+================================
+
+Modul ini mengintegrasikan sistem notifikasi WhatsApp untuk SICANTIK Companion App.
+
+Fitur Utama:
+------------
+* Notifikasi otomatis ke pemohon izin
+* Notifikasi ke staff DPMPTSP untuk dokumen baru
+* Notifikasi approval ke pejabat berwenang
+* Peringatan masa berlaku izin (90/60/30/7 hari sebelum expired)
+* Notifikasi perpanjangan izin disetujui
+* Reminder dokumen pending
+* Update status perizinan
+
+Menggunakan modul WhatsApp Enterprise Odoo untuk integrasi dengan Meta Cloud API.
+
+Kepatuhan WhatsApp Business:
+----------------------------
+* Manajemen Opt-In sesuai kebijakan Meta
+* 24-hour window untuk pesan respons
+* Export nomor untuk pre-approval Meta
+* Tracking status pengiriman pesan
+    """,
+    'author': 'DPMPTSP Kabupaten Karo',
+    'website': 'https://perizinan.karokab.go.id',
+    'depends': [
+        'whatsapp',  # Odoo Enterprise WhatsApp module
+        'sicantik_connector',
+        'sicantik_tte',
+    ],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/sicantik_whatsapp_menus.xml',  # Menu untuk WhatsApp
+        'wizard/sicantik_whatsapp_cleanup_wizard_views.xml',
+        'wizard/export_phone_numbers_wizard_views.xml',
+        'data/whatsapp_templates.xml',
+        'data/cron_data.xml',
+    ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+    'license': 'LGPL-3',
+    'images': [
+        'static/description/main.png',
+    ],
+}
+```
+
+Sekarang kita perlu memperbarui wizard untuk pembersihan data agar memiliki tampilan yang lebih baik:
