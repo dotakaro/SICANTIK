@@ -1,6 +1,6 @@
 {
     'name': 'eCommerce Rental',
-    'category': 'Hidden',
+    'category': 'Website/Website',
     'summary': 'Sell rental products on your eCommerce',
     'version': '1.0',
     'description': """
@@ -26,16 +26,16 @@ appropriate views and selling choices.
             'sale_renting/static/src/js/combo_configurator_dialog/*',
             'sale_renting/static/src/js/product_configurator_dialog/*',
             'website_sale_renting/static/src/scss/*.scss',
-            'website_sale_renting/static/src/js/website_sale_configurators.js',
             ('before', 'website_sale/static/src/js/website_sale.js', 'website_sale_renting/static/src/js/*.js'),
         ],
         'web.assets_tests': [
             'website_sale_renting/static/tests/tours/**/*',
         ],
-        'website.assets_wysiwyg': [
-            'website_sale_renting/static/src/snippets/s_rental_search/options.js',
+        'website.website_builder_assets': [
+            'website_sale_renting/static/src/plugins/**/*',
         ],
     },
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

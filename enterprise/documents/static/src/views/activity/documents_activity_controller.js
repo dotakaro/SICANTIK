@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { ActivityController } from "@mail/views/web/activity/activity_controller";
 
@@ -49,7 +47,7 @@ export class DocumentsActivityController extends ActivityController {
      *
      * @override
      */
-    async openRecord(record, mode) {
+    async openRecord(record) {
         for (const record of this.model.root.selection) {
             record.selected = false;
         }

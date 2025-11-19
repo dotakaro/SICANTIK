@@ -5,29 +5,26 @@ patch(PosOrder.prototype, {
     setup(vals) {
         super.setup(vals);
         this.isDeliveryRefundOrder = false;
-        if (!this.uiState) {
-            this.uiState = {
-                ...this.uiState,
-                orderAcceptTime: 0,
-            };
-        }
     },
 
-    get_delivery_provider_name() {
+    initState() {
+        super.initState();
+        this.uiState = {
+            ...this.uiState,
+            orderAcceptTime: 0,
+        };
+    },
+
+    getDeliveryProviderName() {
         return this.delivery_provider_id ? this.delivery_provider_id.name : "";
     },
 
-    get_order_status() {
+    getOrderStatus() {
         return this.delivery_status ? this.delivery_status : "";
     },
 
-    export_for_printing(baseUrl, headerData) {
-        const data = super.export_for_printing(baseUrl, headerData);
-        data.headerData.deliveryId = this.delivery_identifier;
-        data.headerData.deliveryChannel = this.delivery_provider_id?.name;
-        data.headerData.providerOrderId = this.getProviderOrderId;
-        data.partner = this.partner_id;
-        return data;
+    get isDirectSale() {
+        return Boolean(super.isDirectSale && !this.delivery_identifier);
     },
 
     get deliveryOrderType() {

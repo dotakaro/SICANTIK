@@ -82,4 +82,4 @@ class TestShopeeMultiCompany(common.TestShopeeCommon):
             self.assertEqual(order.company_id.id, self.other_shopee_shop.company_id.id)
             self.assertEqual(len(order_lines), 1) # product line only
             self.assertEqual(product_line.price_unit, 100.0)
-            self.assertEqual(product_line.tax_id, self.parent_tax)
+            self.assertEqual(product_line.tax_ids, self.parent_tax)

@@ -4,7 +4,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import AccessError
 
 
-class HrReferralSendSMS(models.TransientModel):
+class HrReferralSendSms(models.TransientModel):
     _name = 'hr.referral.send.sms'
     _description = 'Referral Send sms'
 

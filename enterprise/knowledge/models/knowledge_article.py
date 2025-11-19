@@ -22,8 +22,8 @@ from odoo.tools.sql import create_index, make_index_name, SQL
 ARTICLE_PERMISSION_LEVEL = {'none': 0, 'read': 1, 'write': 2}
 
 
-class Article(models.Model):
-    _name = "knowledge.article"
+class KnowledgeArticle(models.Model):
+    _name = 'knowledge.article'
     _description = "Knowledge Article"
     _inherit = ['mail.thread', 'mail.activity.mixin', 'html.field.history.mixin']
     _order = "favorite_count desc, write_date desc, id desc"
@@ -31,7 +31,7 @@ class Article(models.Model):
     _parent_store = True
 
     def _get_versioned_fields(self):
-        return [Article.body.name]
+        return [KnowledgeArticle.body.name]
 
     DEFAULT_ARTICLE_TRASH_LIMIT_DAYS = 30
 
@@ -39,7 +39,7 @@ class Article(models.Model):
     name = fields.Char(string="Title", tracking=20, default_export_compatible=True, index="trigram")
     body = fields.Html(string="Body", prefetch=False)
     icon = fields.Char(string='Emoji')
-    cover_image_id = fields.Many2one("knowledge.cover", string='Article cover')
+    cover_image_id = fields.Many2one("knowledge.cover", string='Article cover', index='btree_not_null')
     cover_image_url = fields.Char(related="cover_image_id.attachment_url", string="Cover url")
     cover_image_position = fields.Float(string="Cover vertical offset")
     is_locked = fields.Boolean(
@@ -160,6 +160,8 @@ class Article(models.Model):
     article_properties = fields.Properties('Properties', definition="parent_id.article_properties_definition", copy=True)
 
     # Templates
+    is_listed_in_templates_gallery = fields.Boolean(string="Is listed in Templates Gallery?",
+        help="If checked, the article will appear in the templates gallery under the 'Shared Templates' section")
     is_template = fields.Boolean(string="Is Template")
     template_body = fields.Text(string="Template Body", translate=html_translate)
     template_category_id = fields.Many2one("knowledge.article.template.category", string="Template Category",
@@ -170,36 +172,34 @@ class Article(models.Model):
     template_preview = fields.Html(string="Template Preview", compute="_compute_template_preview")
     template_sequence = fields.Integer(string="Template Sequence", help="It determines the display order of the template within its category")
 
-    _sql_constraints = [
-        ('check_permission_on_root',
-         'check(parent_id IS NOT NULL OR internal_permission IS NOT NULL)',
-         'Root articles must have internal permission.'
-        ),
-        ('check_permission_on_desync',
-         'check(is_desynchronized IS NOT TRUE OR internal_permission IS NOT NULL)',
-         'Desynchronized articles must have internal permission.'
-        ),
-        ('check_desync_on_root',
-         'check(parent_id IS NOT NULL OR is_desynchronized IS NOT TRUE)',
-         'Root articles cannot be desynchronized.'
-        ),
-        ('check_article_item_parent',
-         'check(is_article_item IS NOT TRUE OR parent_id IS NOT NULL)',
-         'Article items must have a parent.'
-         ),
-        ('check_trash',
-         'check(to_delete IS NOT TRUE or active IS NOT TRUE)',
-         'Trashed articles must be archived.'
-        ),
-        ('check_template_category_on_root',
-         'check(is_template IS NOT TRUE OR parent_id IS NOT NULL OR template_category_id IS NOT NULL)',
-         'Root templates must have a category.'
-        ),
-        ('check_template_name_required',
-         'check(is_template IS NOT TRUE OR template_name IS NOT NULL)',
-         'Templates should have a name.'
-        ),
-    ]
+    _check_permission_on_root = models.Constraint(
+        'check(parent_id IS NOT NULL OR internal_permission IS NOT NULL)',
+        "Root articles must have internal permission.",
+    )
+    _check_permission_on_desync = models.Constraint(
+        'check(is_desynchronized IS NOT TRUE OR internal_permission IS NOT NULL)',
+        "Desynchronized articles must have internal permission.",
+    )
+    _check_desync_on_root = models.Constraint(
+        'check(parent_id IS NOT NULL OR is_desynchronized IS NOT TRUE)',
+        "Root articles cannot be desynchronized.",
+    )
+    _check_article_item_parent = models.Constraint(
+        'check(is_article_item IS NOT TRUE OR parent_id IS NOT NULL)',
+        "Article items must have a parent.",
+    )
+    _check_trash = models.Constraint(
+        'check(to_delete IS NOT TRUE or active IS NOT TRUE)',
+        "Trashed articles must be archived.",
+    )
+    _check_template_category_on_root = models.Constraint(
+        'check(is_template IS NOT TRUE OR parent_id IS NOT NULL OR template_category_id IS NOT NULL)',
+        "Root templates must have a category.",
+    )
+    _check_template_name_required = models.Constraint(
+        'check(is_template IS NOT TRUE OR template_name IS NOT NULL)',
+        "Templates should have a name.",
+    )
 
     def init(self):
         super().init()
@@ -508,24 +508,25 @@ class Article(models.Model):
           - The article allow read or write access to all internal users AND the user
             is not member with 'none' access
         """
-        Article = self.env["knowledge.article"]
-        if operator not in ('=', '!=') or not isinstance(value, bool):
-            raise NotImplementedError("Unsupported search operator")
+        KnowledgeArticle = self.env["knowledge.article"]
+        # The ORM will optimize the domain leaf
+        # before calling the search method:
+        # = True | != False -> in [True]
+        # != True | = False -> not in [True]
+        if operator not in ('in', 'not in'):
+            return NotImplemented
 
-        member_permissions = Article._get_partner_member_permissions(self.env.user.partner_id)
+        member_permissions = KnowledgeArticle._get_partner_member_permissions(self.env.user.partner_id)
         articles_with_member_access = {article_id for article_id, perm in member_permissions.items() if perm != 'none'}
 
-        is_positive_search = (value is True and operator == '=') or (value is False and operator == '!=')
-        op = 'in' if is_positive_search else 'not in'
-
         if self.env.user.share:
-            return [('id', op, list(articles_with_member_access))]
+            return [('id', operator, list(articles_with_member_access))]
 
         # sudo reason: we're already computing ir.rules, avoid re-applying it.
-        articles_with_access = Article.with_context(active_test=False).sudo().search([('inherited_permission', 'in', ('read', 'write'))])
+        articles_with_access = KnowledgeArticle.with_context(active_test=False).sudo().search([('inherited_permission', 'in', ('read', 'write'))])
         articles_with_no_member_access = member_permissions.keys() - articles_with_member_access
         article_ids = list((set(articles_with_access.ids) - articles_with_no_member_access) | articles_with_member_access)
-        return [('id', op, article_ids)]
+        return [('id', operator, article_ids)]
 
     @api.depends_context('uid')
     @api.depends('user_has_access', 'parent_id.user_has_access_parent_path')
@@ -551,14 +552,12 @@ class Article(models.Model):
 
     def _search_user_has_write_access(self, operator, value):
         KnowledgeArticle = self.env["knowledge.article"]
-        if operator not in ('=', '!=') or not isinstance(value, bool):
-            raise NotImplementedError("Unsupported search operator")
+        if operator not in ('in', 'not in'):
+            return NotImplemented
 
         # share is never allowed to write
         if self.env.user.share:
-            if (value and operator == '=') or (not value and operator == '!='):
-                return expression.FALSE_DOMAIN
-            return expression.TRUE_DOMAIN
+            return expression.TRUE_DOMAIN if operator == 'in' else expression.FALSE_DOMAIN
 
         articles_with_access = KnowledgeArticle._get_internal_permission(filter_domain=[('internal_permission', '=', 'write')])
         member_permissions = KnowledgeArticle._get_partner_member_permissions(self.env.user.partner_id)
@@ -566,7 +565,7 @@ class Article(models.Model):
         articles_with_no_member_access = list(set(member_permissions.keys() - set(articles_with_member_access)))
 
         # If searching articles for which user has write access.
-        if (value and operator == '=') or (not value and operator == '!='):
+        if operator == 'in':
             return ['|',
                         '&', ('id', 'in', list(articles_with_access.keys())), ('id', 'not in', articles_with_no_member_access),
                         ('id', 'in', articles_with_member_access)
@@ -657,17 +656,11 @@ class Article(models.Model):
             fav_article.user_favorite_sequence = fav_sequence_by_article[fav_article.id]
 
     def _search_is_user_favorite(self, operator, value):
-        if operator not in ('=', '!='):
-            raise NotImplementedError("Unsupported search operation on favorite articles")
-
-        if (value and operator == '=') or (not value and operator == '!='):
-            return [('favorite_ids', 'in', self.env['knowledge.article.favorite'].sudo()._search(
-                [('user_id', '=', self.env.uid)]
-            ))]
-
+        if operator != 'in':
+            return NotImplemented
         # easier than a not in on a 2many field (hint: use sudo because of
         # complicated ACL on favorite based on user access on article)
-        return [('favorite_ids', 'not in', self.env['knowledge.article.favorite'].sudo()._search(
+        return [('favorite_ids', 'in', self.env['knowledge.article.favorite'].sudo()._search(
             [('user_id', '=', self.env.uid)]
         ))]
 
@@ -703,37 +696,23 @@ class Article(models.Model):
             )
 
     def _search_is_article_visible(self, operator, value):
-        if operator not in ('=', '!='):
-            raise NotImplementedError(_("Unsupported search operation"))
         if self.env.user._is_public():
-            return []
+            return expression.FALSE_DOMAIN
+        if operator != 'in':
+            return NotImplemented
         members_from_partner = self.env['knowledge.article.member']._search(
             [('partner_id', '=', self.env.user.partner_id.id)]
         )
-        if (value and operator == '=') or (not value and operator == '!='):
-            members_domain = [
-                '|',
-                    ('article_member_ids', 'in', members_from_partner),
-                    ('root_article_id.article_member_ids', 'in', members_from_partner)
-            ]
-            if not self.env.user._is_internal():
-                return members_domain
-            return expression.OR([
-                [('is_article_visible_by_everyone', '=', True)],
-                members_domain
-            ])
-
         members_domain = [
-            '&',
-                ('article_member_ids', 'not in', members_from_partner),
-                ('root_article_id.article_member_ids', 'not in', members_from_partner)
+            '|',
+                ('article_member_ids', 'in', members_from_partner),
+                ('root_article_id.article_member_ids', 'in', members_from_partner)
         ]
         if not self.env.user._is_internal():
             return members_domain
-
-        return expression.AND([
-               [('is_article_visible_by_everyone', '=', False)],
-               members_domain
+        return expression.OR([
+            [('is_article_visible_by_everyone', '=', True)],
+            members_domain
         ])
 
     @api.depends('root_article_id.is_article_visible_by_everyone')
@@ -941,16 +920,16 @@ class Article(models.Model):
                     current_sequence += 1
 
         # sort by sudo / not sudo
-        notsudo_articles = iter(super(Article, self).create([
+        notsudo_articles = iter(super().create([
             vals for vals, can_sudo in zip(vals_list, vals_as_sudo)
             if not can_sudo
         ]))
-        sudo_articles = iter(super(Article, self.sudo()).create([
+        sudo_articles = iter(super(KnowledgeArticle, self.sudo()).create([
             vals for vals, can_sudo in zip(vals_list, vals_as_sudo)
             if can_sudo
         ]).with_env(self.env))
         articles = self.env['knowledge.article']
-        for vals, is_sudo in zip(vals_list, vals_as_sudo):
+        for is_sudo in vals_as_sudo:
             if is_sudo:
                 articles += next(sudo_articles)
             else:
@@ -1005,7 +984,7 @@ class Article(models.Model):
             else:
                 _resequence = True
 
-        result = super(Article, self).write(vals)
+        result = super().write(vals)
 
         # resequence only if a sequence was not already computed based on current
         # parent maximum to avoid unnecessary recomputation of sequences
@@ -1140,11 +1119,18 @@ class Article(models.Model):
         are based on display_name / name_search to match records (for example when importing the article
         parent record, without this override it will never match). """
 
+        if operator == 'in':
+            return expression.OR(self._search_display_name('=', v) for v in value)
+        if operator == 'not in':
+            return NotImplemented
         if operator not in ('=', 'ilike') or not isinstance(value, str):
             return super()._search_display_name(operator, value)
 
         article_name, icon = self._extract_icon_from_name(value)
         if not icon:
+            if operator == '=':
+                operator = 'in'
+                value = [value]
             return super()._search_display_name(operator, value)
 
         if icon == self._get_no_icon_placeholder():
@@ -1163,101 +1149,100 @@ class Article(models.Model):
 
         return domain
 
-    def _get_common_copied_data(self):
-        return {
-            "article_properties_definition": self.article_properties_definition,
-            "body": self.body,
-            "cover_image_id": self.cover_image_id.id,
-            "cover_image_position": self.cover_image_position,
-            "full_width": self.full_width,
-            "icon": self.icon,
-            "is_desynchronized": False,
-            "is_locked": False,
-            "name": _("%(article_name)s (copy)", article_name=self.name) if self.name else False,
-        }
-
-    def _update_article_references(self, original_article):
+    def _get_transformed_body_from(self, source_article):
+        """ Returns the body of the source article with the following transformations:
+        - Updates the embedded views so that the views listing the article items
+        of the source article now lists the article items of the current article.
+        - Removes the history steps from the document.
+        :param <knowledge.article> source_article: Source article
         """
-        Updates the IDs stored in the body of the current articles.
-        After calling that method, the embedded views listing the article items
-        of the original article will now list the article items of the current record.
-        :param <knowledge.article> original_article: original article
-        """
-        for article in self:
-            if is_html_empty(article.body):
-                continue
-            needs_embed_view_update = False
-            fragment = html.fragment_fromstring(article.body, create_parent=True)
-            for element in fragment.findall(".//*[@data-embedded='view']"):
-                embedded_props = json.loads(element.get("data-embedded-props"))
-                view_props = embedded_props.get("viewProps", {})
-                context = view_props.get("context", {})
-                if context.get("default_is_article_item") and context.get("active_id") == original_article.id:
-                    context.update({
-                        "active_id": article.id,
-                        "default_parent_id": article.id
-                    })
-                    element.set("data-embedded-props", json.dumps(embedded_props))
-                    needs_embed_view_update = True
+        fragment = html.fragment_fromstring(source_article.body, create_parent=True)
 
-            if needs_embed_view_update:
-                article.write({
-                    "body": html.tostring(fragment, encoding="unicode")
-                })
+        # Remove history steps to prevent divergence errors:
+        for element in fragment.findall('.//*[@data-last-history-steps]'):
+            del element.attrib["data-last-history-steps"]
+
+        # Update the embedded views:
+        for element in fragment.findall(".//*[@data-embedded='view']"):
+            embedded_props = json.loads(element.get("data-embedded-props"))
+            view_props = embedded_props.get("viewProps", {})
+            context = view_props.get("context", {})
+            if context.get("default_is_article_item") and context.get("active_id") == source_article.id:
+                context.update({"active_id": self.id, "default_parent_id": self.id})
+                element.set("data-embedded-props", json.dumps(embedded_props))
+
+        return html.tostring(fragment, encoding="unicode")
 
     # ------------------------------------------------------------
     # ACTIONS
     # ------------------------------------------------------------
 
-    @api.returns('self', lambda value: value.id)
-    def action_make_private_copy(self):
-        """ Creates a copy of an article. != duplicate article (see `copy`).
-        Creates a new private article with the same body, icon and cover,
-        but drops other fields such as members, children, permissions etc.
-        Note: Article references will be update, see `_update_article_references`
-        """
+    def action_make_private_copy(self, preserve_name=False):
+        """ Creates a duplicate of the current article and saves it in the user's
+        private section. This method replicates the article items and Kanban stages.
+        Additionally, it updates the embedded views to ensure they reference the
+        new article's items instead of those from the original article.
+        :param preserve_name: if False, append the name with (copy) """
         self.ensure_one()
-        article_vals = self._get_common_copied_data()
-        article_vals.update({
-            "article_member_ids": [(0, 0, {
-                "partner_id": self.env.user.partner_id.id,
-                "permission": 'write'
+        name = _('%(article_name)s (copy)', article_name=self.name) \
+            if not preserve_name and self.name else self.name
+
+        # Copy the article and make it private:
+        article = self.create({
+            'article_member_ids': [(0, 0, {
+                'partner_id': self.env.user.partner_id.id,
+                'permission': 'write'
             })],
-            "internal_permission": "none",
-            "parent_id": False,
+            'article_properties_definition': self.article_properties_definition,
+            'cover_image_id': self.cover_image_id.id,
+            'cover_image_position': self.cover_image_position,
+            'full_width': self.full_width,
+            'icon': self.icon,
+            'internal_permission': 'none',
+            'name': name,
         })
-        article = self.create(article_vals)
-        article._update_article_references(self)
+
+        # Remove the history steps and transform the embedded views:
+        article.write({
+            'body': article._get_transformed_body_from(self)
+        })
+
         # Copy the related stages for the /kanban command:
-        for stage in self.env["knowledge.article.stage"].search([("parent_id", "=", self.id)]):
-            stage.copy({
-                "parent_id": article.id
-            })
+        stages_mapping = {}
+        for stage in self.env['knowledge.article.stage'].search([('parent_id', '=', self.id)]):
+            new_stage = stage.copy({'parent_id': article.id})
+            stages_mapping[stage.id] = new_stage.id
+
+        # Copy the related article items and link them to their corresponding stage:
+        article_items = self.child_ids.filtered(lambda article: article.is_article_item)
+        self.create([{
+            'article_properties': article_item.article_properties,
+            'body': article_item.body,
+            'cover_image_id': article_item.cover_image_id.id,
+            'cover_image_position': article_item.cover_image_position,
+            'full_width': article_item.full_width,
+            'icon': article_item.icon,
+            'is_article_item': True,
+            'name': article_item.name,
+            'parent_id': article.id,
+            'stage_id': stages_mapping.get(article_item.stage_id.id, False),
+        } for article_item in article_items.sorted(lambda child: child.sequence)])
+
         return article
 
-    @api.returns('self', lambda value: value.id)
-    def action_clone(self):
-        """Creates a duplicate of an article in the same context as the original.
-        This means that this methods create a copy with the same parent,
-        permission and properties as the original
-        Note: Article references will be update, see `_update_article_references`
+    def action_make_copy(self, preserve_name=False):
+        """ Create a copy of the current article and attempt to attach it to the
+        parent of the original. If the new parent article is not editable by the
+        user, the copied article will be placed in the user's private section,
+        ensuring the user retains access.
+        :param preserve_name: if False, append the name with (copy)
         """
         self.ensure_one()
-        if not self.user_can_write or not (self.parent_id and self.parent_id.user_can_write):
-            return self.action_make_private_copy()
-        article_vals = self._get_common_copied_data()
-        article_vals.update({
-            "internal_permission": self.internal_permission,
-            "parent_id": self.parent_id.id,
-            "article_properties": self.article_properties,
-            "is_article_item": self.is_article_item,
-        })
-        article = self.create(article_vals)
-        article._update_article_references(self)
-        # Copy the related stages for the /kanban command:
-        for stage in self.env["knowledge.article.stage"].search([("parent_id", "=", self.id)]):
-            stage.copy({
-                "parent_id": article.id
+        article = self.action_make_private_copy(preserve_name)
+        # Attach the new copy to the parent of the original article:
+        if self.parent_id and self.parent_id.user_can_write:
+            article.write({
+                'parent_id': self.parent_id.id,
             })
         return article
 
@@ -1290,11 +1275,8 @@ class Article(models.Model):
             if self.parent_id and self.parent_id.user_has_access \
                 else self.env['knowledge.article'].action_home_page()
 
-    def action_set_lock(self):
-        self.is_locked = True
-
-    def action_set_unlock(self):
-        self.is_locked = False
+    def action_set_lock(self, lock):
+        self.is_locked = lock
 
     def action_toggle_favorite(self):
         """ Read access is sufficient for toggling its own favorite status. """
@@ -1322,12 +1304,12 @@ class Article(models.Model):
                   * archive the current article and all its writable descendants;
                   * unreachable descendants (none, read) are set as free articles without
                     root;
-        :param bool send_to_trash: Article specific archive:
+        :param bool send_to_trash: KnowledgeArticle specific archive:
         """
         # _detach_unwritable_descendants calls _filtered_access() which returns
         # a sudo-ed recordset
         articles = self + self._detach_unwritable_descendants().with_env(self.env)
-        articles.filtered('active').toggle_active()
+        articles.filtered('active').active = False
         if send_to_trash:
             articles.to_delete = True
             articles._send_trash_notifications()
@@ -1355,7 +1337,7 @@ class Article(models.Model):
 
         writable_descendants = self.with_context(active_test=False)._detach_unwritable_descendants().with_env(self.env)
         articles_to_restore = self + writable_descendants
-        super(Article, articles_to_restore).action_unarchive()
+        super(KnowledgeArticle, articles_to_restore).action_unarchive()
         # Removes the article from the trash:
         articles_to_restore.filtered('to_delete').to_delete = False
         for article_sudo in self.sudo().filtered(lambda article: article.parent_id.to_delete):
@@ -1486,7 +1468,7 @@ class Article(models.Model):
 
         for sequence in article_to_update_by_sequence:
             # call super to avoid loops in write
-            super(Article, article_to_update_by_sequence[sequence]).write({'sequence': sequence})
+            super(KnowledgeArticle, article_to_update_by_sequence[sequence]).write({'sequence': sequence})
 
     @api.model
     def _get_max_sequence_inside_parents(self, parent_ids):
@@ -1506,7 +1488,6 @@ class Article(models.Model):
     # ------------------------------------------------------------
 
     @api.model
-    @api.returns('knowledge.article', lambda article: article.id)
     def article_create(self, title=False, parent_id=False, is_private=False, is_article_item=False, article_properties=False):
         """ Helper to create articles, allowing to pre-compute some configuration
         values.
@@ -1559,11 +1540,38 @@ class Article(models.Model):
         return values
 
     def get_user_sorted_articles(self, search_query, limit=40, hidden_mode=False):
-        """ Called when using the Command palette to search for articles matching
-            with the given search terms. If no search terms are provided, the
-            function returns the user's favorite articles when hidden_mode is False;
-            otherwise, it returns all the hidden articles the user has access to,
-            not exceeding the limit.
+        """
+        Called when using the Command palette to search for articles matching
+        with the given search terms. If no search terms are provided, the
+        function returns the user's favorite articles when hidden_mode is False;
+        otherwise, it returns all the hidden articles the user has access to,
+        not exceeding the limit.
+
+        :param str search_query: Search terms of the user
+        :param int limit: Maximal number of records to return
+        :param bool hidden_mode: If True, scope the search to the hidden articles.
+                                 If False, scope the search to the visible articles.
+        """
+        domain = [
+            ('is_article_visible', '!=', hidden_mode),
+            ("user_has_access", "=", True)  # Admins won't see other's private articles.
+        ]
+        if not search_query:
+            if not hidden_mode:
+                domain = [('is_user_favorite', '=', True)]
+            domain = expression.AND([domain, [('is_template', '=', False)]])
+            return self.search_read(domain, limit=limit, fields=[
+                'id',
+                'icon',
+                'name',
+                'is_user_favorite',
+                'root_article_id'
+            ])
+        return self.get_sorted_articles(search_query, domain, limit)
+
+    def get_sorted_articles(self, search_query, domain=False, limit=40):
+        """
+            Get the articles matching with the given search term.
 
             To reduce the query runtime, the search method limits the number of
             candidates to consider using the `knowledge.fts_search_cut_off`
@@ -1587,26 +1595,16 @@ class Article(models.Model):
               we pre-select relevant matches first, the query should return
               relevant results but not necessarily the most relevant ones.
 
-        :param str search_query: Search terms of the user
+        :param str search_query: Search terms
+        :param domain: domain used to filter the articles
         :param int limit: Maximal number of records to return
-        :param bool hidden_mode: If True, scope the search to the hidden articles.
-                                 If False, scope the search to the visible articles.
         """
-        domain = [
-            ('is_template', '=', False),
-            ('is_article_visible', '!=', hidden_mode),
-            ('user_has_access', '=', True),  # Admins won't see other's private articles.
-        ]
         if not search_query:
-            if not hidden_mode:
-                domain = [('is_user_favorite', '=', True)]
-            return self.search(domain, limit=limit).read([
-                'id',
-                'icon',
-                'name',
-                'is_user_favorite',
-                'root_article_id'
-            ])
+            return []
+        domain = expression.AND([
+            domain or [],
+            [('is_template', '=', False)],
+        ])
 
         query = self._search(domain)
 
@@ -1722,6 +1720,23 @@ class Article(models.Model):
     # PERMISSIONS / MEMBERS MANAGEMENT
     # ------------------------------------------------------------
 
+    def get_permission_panel_members(self):
+        self.ensure_one()
+        member_permissions = list(self._get_article_member_permissions(additional_fields={
+            'res.partner': [
+                ('name', 'name'), ('email', 'email'), ('partner_share', 'partner_share'), ('id', 'partner_id'),
+            ],
+            'knowledge.article': [
+                ('icon', 'based_on_icon'),
+                ('name', 'based_on_name'),
+            ],
+        })[self.id].values())
+        return sorted(
+            member_permissions,
+            key=lambda member: '' if member['partner_id'] == self.env.user.partner_id.id else member['name']
+        )  # our own permission, if it exists, should appear first in the panel so we
+        # use the smallest key possible for it: the empty string ''
+
     def restore_article_access(self):
         """ Resets permissions based on ancestors. It removes all members except
         members on the articles that are not on any ancestor or that have higher
@@ -1764,9 +1779,10 @@ class Article(models.Model):
         access is straightforward (just set permission). Inviting with rights
         requires to check for privilege escalation in descendants.
 
-        :param Model<res.partner> partner_ids: recordset of invited partners;
-        :param string permission: permission of newly invited members, one of
+        :param partners recordset of invited partners;
+        :param str permission: permission of newly invited members, one of
           'none', 'read' or 'write';
+        :param message: the message relayed to :meth:`~_send_invite_mail`.
         """
         self.ensure_one()
         if permission == 'none':
@@ -1783,7 +1799,7 @@ class Article(models.Model):
 
         return True
 
-    def _set_internal_permission(self, permission):
+    def set_internal_permission(self, permission):
         """ Set the internal permission of the article.
 
         Special cases:
@@ -1797,6 +1813,8 @@ class Article(models.Model):
         :param str permission: internal permission to set, one of 'none', 'read'
           or 'write';
         """
+        if not self.env.user._is_internal():
+            raise AccessError(_("Only internal users are allowed to alter internal permission."))
         self.ensure_one()
         if self.user_has_write_access and permission != "write":
             self._add_members(self.env.user.partner_id, 'write')
@@ -1824,7 +1842,7 @@ class Article(models.Model):
             })
         return self.write(values)
 
-    def _set_member_permission(self, member, permission, is_based_on=False):
+    def set_member_permission(self, member_id, permission):
         """ Sets the given permission to the given member.
 
         If the member has rights based on membership: simply update it.
@@ -1839,11 +1857,13 @@ class Article(models.Model):
           considering it as sufficient to modify members permissions.
         - portal users cannot alter memberships in any way.
 
-        :param <knowledge.article.member> member: member whose permission
-          is to be updated. Can be a member of 'self' or one of its ancestors;
+        :param int member_id: member_id whose permission is to be updated.
+          Can be a member of 'self' or one of its ancestors;
         :param str permission: new permission, one of 'none', 'read' or 'write';
-        :param bool is_based_on: whether rights are inherited or through membership;
         """
+        member = self.env['knowledge.article.member'].browse(member_id)
+        if not member.exists():
+            raise UserError(_("The membership you are trying to edit has been deleted"))
         self.ensure_one()
         if not self.env.su and not self.user_can_write:
             raise AccessError(
@@ -1852,7 +1872,8 @@ class Article(models.Model):
         elif not self.env.su and not self.env.user._is_internal():
             raise AccessError(_("Only internal users are allowed to alter memberships."))
 
-        if is_based_on:
+        # member is inherited
+        if member.article_id != self:
             downgrade = ARTICLE_PERMISSION_LEVEL[member.permission] > ARTICLE_PERMISSION_LEVEL[permission]
             if downgrade:
                 # sudo to write on members
@@ -1881,7 +1902,7 @@ class Article(models.Model):
         if (not is_article_visible_by_everyone) and not self.env.user.partner_id in self.article_member_ids.partner_id:
             self._add_members(self.env.user.partner_id, self.internal_permission)
 
-    def _remove_member(self, member):
+    def remove_member(self, member_id):
         """ Removes a member from the article. If the member was based on a
         parent article, the current article will be desynchronized form its parent.
         We also ensure the partner to remove is removed after the desynchronization
@@ -1896,28 +1917,31 @@ class Article(models.Model):
           * when removing someone else: write access is required on the article
             (explicitly checked);
 
-        :param <knowledge.article.member> member: member to remove
+        :param int member_id: member's id to remove
         """
         self.ensure_one()
-        if not member:
-            raise ValueError(_('Trying to remove wrong member.'))
-
         if not self.env.su and not self.env.user._is_internal():
             raise AccessError(_("Only internal users are allowed to remove memberships."))
+
+        member = self.env['knowledge.article.member'].browse(member_id)
+        if not member.exists():
+            raise UserError(_("The selected member does not exist or has already been deleted."))
 
         # belongs to current article members
         current_membership = self.article_member_ids.filtered(lambda m: m == member)
 
-        # Archive private article if remove self member.
+        # Send private article to trash if leaving it
+        # (note: admin could be member with access none on a private article and leave the article,
+        # should not send the article to the trash in that case)
         remove_self = member.partner_id == self.env.user.partner_id
-        if remove_self and self.category == 'private' and current_membership:
-            self.action_archive()
+        if remove_self and self.category == 'private' and current_membership and len(self.article_member_ids) == 1:
+            self.action_send_to_trash()
             return
 
         # If user doesn't gain higher access when removing own member,
         # we should allow to do it.
-        self_escalation = not (remove_self and \
-                             ARTICLE_PERMISSION_LEVEL[member.permission] > ARTICLE_PERMISSION_LEVEL[self.inherited_permission])
+        self_escalation = not (remove_self and
+                             ARTICLE_PERMISSION_LEVEL[member.permission] >= ARTICLE_PERMISSION_LEVEL[self.inherited_permission])
         if not self.env.su and self_escalation and not self.user_can_write:
             raise AccessError(
                 _("You have to be editor on %(article_name)s to remove or exclude member %(member_name)s.",
@@ -2028,8 +2052,8 @@ class Article(models.Model):
           given by force_partners. Otherwise fallback on inherited computed
           internal permission;
 
-        :return list member_commands: commands to be applied on 'article_member_ids'
-          field;
+        :returns: commands to be applied on 'article_member_ids' field;
+        :rtype: list
         """
         self.ensure_one()
         members_permission = self._get_article_member_permissions()[self.id]
@@ -2070,7 +2094,7 @@ class Article(models.Model):
         Security note: this method does not check accesses. Caller has to ensure
         access is granted, depending on the business flow.
 
-        :return <knowledge.article> children: the children articles which were
+        :returns: the children knowledge.article which were
           not detached, meaning that current user has write access on them """
         all_descendants_sudo = self.sudo()._get_descendants()
         writable_descendants_sudo = all_descendants_sudo.with_env(self.env)._filtered_access('write').sudo()
@@ -2267,7 +2291,8 @@ class Article(models.Model):
           should not be considered when checking for a write access, used when
           unlinking members that should not be taken into account;
 
-        :return boolean: whether a write member has been found;
+        :returns: whether a write member has been found;
+        :rtype: bool
         """
         self.ensure_one()
         partners_to_exclude = partners_to_exclude if partners_to_exclude else self.env['res.partner']
@@ -2403,7 +2428,10 @@ class Article(models.Model):
 
         Please note that these additional fields are not sanitized, the caller
         has the responsibility to check that user can access those fields and
-        that no injection is possible. """
+        that no injection is possible.
+        If add_empty_member is set to True, an empty member will be added to
+        the results for each article that has no member.
+        """
         self.env['res.partner'].flush_model()
         self.env['knowledge.article'].flush_model()
         self.env['knowledge.article.member'].flush_model()
@@ -2534,16 +2562,6 @@ class Article(models.Model):
                 }
             }
 
-        # add empty member for each article that doesn't have any.
-        empty_member = {
-            'based_on': False, 'member_id': False, 'permission': None,
-            **{
-                field_alias: False
-                for model, fields_list in additional_fields.items()
-                for field, field_alias in fields_list
-            }}
-        for article in self.filtered(lambda a: a.id not in article_members):
-            article_members[article.id][None] = empty_member
         return article_members
 
     # ------------------------------------------------------------
@@ -2593,13 +2611,15 @@ class Article(models.Model):
                 subtitles=[self.display_name, _('Your Access: %s', permission_label)],
             )
 
-    def _notify_get_recipients_groups(self, message, model_description, msg_vals=None):
+    def _notify_get_recipients_groups(self, message, model_description, msg_vals=False):
         groups = super()._notify_get_recipients_groups(message, model_description, msg_vals=msg_vals)
-        if not self or not msg_vals.get('partner_ids'):
+        msg_vals = msg_vals or {}
+        partner_ids = msg_vals['partner_ids'] if 'partner_ids' in msg_vals else message.partner_ids.ids
+        if not self or not partner_ids:
             return groups
         new_group = []
         for member in self.article_member_ids.filtered(
-            lambda member: member.partner_id.id in msg_vals['partner_ids'] and member.partner_id.partner_share
+            lambda member: member.partner_id.id in partner_ids and member.partner_id.partner_share
         ):
             url = url_join(
                 self.get_base_url(),
@@ -2697,8 +2717,9 @@ class Article(models.Model):
           - False: when creating a template based article from scratch;
           - True: in other cases to avoid collaborative issues (write on
             body should be done at client side);
-        :return str: body of the article, used notably client side for
+        :returns: body of the article, used notably client side for
           collaborative mode
+        :rtype: str
         """
         self.ensure_one()
         template = self.env['knowledge.article'].browse(template_id)
@@ -2855,6 +2876,64 @@ class Article(models.Model):
         return ''.join(html.tostring(child, encoding='unicode', method='html') \
             for child in fragment.getchildren()) # unwrap the elements from the parent node
 
+    def apply_article_as_template(self, article_id):
+        """Substitute the current article fields for the given article and return
+        the body so that it can be applied in the editor. This function is meant
+        to be called while in edition, so that the body update is shared in
+        collaboration with other users.
+        :param int article_id: Article id to copy"""
+        self.ensure_one()
+        article = self.env['knowledge.article'].browse(article_id)
+        article.ensure_one()
+
+        self.write({
+            'article_properties_definition': article.article_properties_definition,
+            'cover_image_id': article.cover_image_id.id,
+            'cover_image_position': article.cover_image_position,
+            'full_width': article.full_width,
+            'icon': article.icon,
+            'name': article.name,
+        })
+
+        body = self._get_transformed_body_from(article)
+
+        # Copy the article stages:
+        stages_mapping = {}
+        for stage in self.env['knowledge.article.stage'].search([('parent_id', '=', article.id)]):
+            new_stage = stage.copy({'parent_id': self.id})
+            stages_mapping[stage.id] = new_stage.id
+
+        # Copy the related article items and link them to their corresponding stage:
+        article_items = article.child_ids.filtered(lambda article: article.is_article_item).sorted(lambda child: child.sequence)
+        new_article_items = self.create([{
+            'article_properties': article_item.article_properties,
+            'cover_image_id': article_item.cover_image_id.id,
+            'cover_image_position': article_item.cover_image_position,
+            'full_width': article_item.full_width,
+            'icon': article_item.icon,
+            'is_article_item': True,
+            'name': article_item.name,
+            'parent_id': self.id,
+            'stage_id': stages_mapping.get(article_item.stage_id.id, False),
+        } for article_item in article_items])
+
+        stages_by_parent_id = self.env['knowledge.article.stage'].search([
+            ('parent_id', 'in', article_items.ids)
+        ]).grouped('parent_id')
+
+        for article_item, new_article_item in zip(article_items, new_article_items):
+            # Create the stages for the article items:
+            stages = stages_by_parent_id.get(article_item)
+            if stages:
+                stages.copy({
+                    'parent_id': new_article_item.id
+                })
+            new_article_item.write({
+                'body': new_article_item._get_transformed_body_from(article_item),
+            })
+
+        return body
+
     def create_default_item_stages(self):
         """ Need to create stages if this article has no stage yet. """
         stage_count = self.env['knowledge.article.stage'].search_count(
@@ -2891,7 +2970,7 @@ class Article(models.Model):
     def _get_ancestor_ids(self):
         """ Return the union of sets including the ids for the ancestors of
         records in recordset. E.g.,
-         * if self = Article `8` which has for parent `4` that has itself
+         * if self = KnowledgeArticle `8` which has for parent `4` that has itself
            parent `2`, return `{2, 4}`;
          * if article `11` is a child of `6` and is also in `self`, return
            `{2, 4, 6}`;

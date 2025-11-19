@@ -3,10 +3,10 @@
 
 from random import sample
 
-from odoo import api, fields, models
+from odoo import fields, models
 
 
-class PickingType(models.Model):
+class StockPickingType(models.Model):
     _inherit = "stock.picking.type"
 
     iot_scale_ids = fields.Many2many(
@@ -26,7 +26,6 @@ class PickingType(models.Model):
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    @api.returns('mail.message', lambda value: value.id)
     def message_post(self, **kwargs):
         message = super(StockPicking, self).message_post(**kwargs)
         report = self.env['ir.actions.report']
@@ -43,9 +42,9 @@ class StockPicking(models.Model):
 
     def print_attachment(self, report, attachments):
         if report.device_ids:
-            self.env.user._bus_send('iot_print_documents', {
-                'documents': attachments.mapped('datas'),
-                'iot_device_identifier': report.device_ids[0].identifier,
-                'iot_ip': report.device_ids[0].iot_ip,
-                'iot_idempotent_ids': sample(range(1, 100000000), len(attachments)),
+            self.env['iot.channel'].send_message({
+                'iot_identifiers': [report.device_ids[0].iot_id.identifier],
+                'device_identifiers': [report.device_ids[0].identifier],
+                'print_id': 0,
+                'document': attachments.datas,
             })

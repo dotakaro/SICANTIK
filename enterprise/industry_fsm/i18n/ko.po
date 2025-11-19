@@ -3,17 +3,15 @@
 # 	* industry_fsm
 # 
 # Translators:
-# Daye Jeong, 2025
 # Wil Odoo, 2025
-# Sarah Park, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-27 13:54+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Sarah Park, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -37,6 +35,12 @@ msgstr "%(partner)s가 %(number)s 작업을 동시에 진행 중입니다."
 msgid ""
 "'Field Service Report - %s - %s' % (object.name, object.partner_id.name)"
 msgstr "'현장 서비스 보고서 - %s - %s' % (object.name, object.partner_id.name)"
+
+#. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_sharing_inherit_project_task_view_form
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
+msgid "(incl."
+msgstr "(포함 내역"
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
@@ -77,7 +81,7 @@ msgid ""
 "    Best regards,\n"
 "    <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
 "        <br/>\n"
-"        <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"        <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "    </t>\n"
 "</div>\n"
 "        "
@@ -87,18 +91,18 @@ msgstr ""
 "\n"
 "    <t t-set=\"date_end\" t-value=\"format_datetime(object.date_deadline, tz=object.partner_id.tz, lang_code=object.partner_id.lang)\"/>\n"
 "\n"
-"    안녕하세요, <t t-out=\"object.partner_id.name or 'customer'\">고객</t>님.<br/><br/>\n"
+"    안녕하세요, <t t-out=\"object.partner_id.name or 'customer'\">customer</t>님.<br/><br/>\n"
 "    <t t-if=\"date_begin and date_end\">\n"
-"        요청하신 <t t-out=\"object.name or ''\">보일러 유지 보수</t> 작업에 관한 일정이 <t t-out=\"date_begin or ''\">05/31/2021 12:30:00</t>부터 <t t-out=\"date_end or ''\">05/31/2021 14:30:00</t> 사이에 예약되었음을 알려드립니다.\n"
+"        요청하신 <t t-out=\"object.name or ''\">보일러 유지 보수</t> 작업에 관한 일정이 <t t-out=\"date_begin or ''\">05/31/2021 12:30:00</t>부터 <t t-out=\"date_end or ''\">05/31/2021 14:30:00</t> 사이로 예약되었음을 알려드립니다.\n"
 "    </t>\n"
 "    <t t-else=\"\">\n"
-"        <t t-out=\"object.name or ''\">보일러 유지 보수</t> 작업 예약이 완료되었습니다.\n"
+"        <t t-out=\"object.name or ''\">보일러 유지 보수</t> 작업이 예약되었습니다.\n"
 "    </t>\n"
 "    <br/><br/>\n"
 "    감사합니다.\n"
 "    <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
 "        <br/>\n"
-"        <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"        <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "    </t>\n"
 "</div>\n"
 "        "
@@ -139,6 +143,11 @@ msgstr ""
 "not is_task_phone_update\"/>"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
+msgid "<span class=\"o_stat_text text-wrap\">Customer Preview</span>"
+msgstr "<span class=\"o_stat_text text-wrap\">고객 미리보기</span>"
+
+#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
 msgid ""
 "<span style=\"                             font-size: 10px;                             color: #fff;                             text-transform: uppercase;                             text-align: center;                             font-weight: bold; line-height: 20px;                             transform: rotate(45deg);                             width: 100px; height: auto; display: block;                             background: green;                             position: absolute;                             top: 19px; right: -21px; left: auto;                             padding: 0;\">\n"
@@ -160,11 +169,6 @@ msgid "<strong class=\"me-2\">Total</strong>"
 msgstr "<strong class=\"me-2\">합계</strong>"
 
 #. module: industry_fsm
-#: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_gantt_fsm
-msgid "<strong>Contact Number — </strong>"
-msgstr "<strong>연락처 번호 — </strong>"
-
-#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
 msgid "<strong>Customer: </strong>"
 msgstr "<strong>고객 : </strong>"
@@ -178,11 +182,6 @@ msgstr "<strong>작업자: </strong>"
 #: model:ir.model.constraint,message:industry_fsm.constraint_project_project_company_id_required_for_fsm_project
 msgid "A fsm project must be company restricted"
 msgstr "fsm 프로젝트는 회사 제한 사항이어야 합니다"
-
-#. module: industry_fsm
-#: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__active
-msgid "Active"
-msgstr "활성화"
 
 #. module: industry_fsm
 #: model:ir.ui.menu,name:industry_fsm.mail_activity_plan_menu_config_task
@@ -213,9 +212,20 @@ msgid "All Tasks Server Action"
 msgstr "모든 작업 서버 활동"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_task.py:0
+msgid "All running timers should be linked to a timesheet and a task."
+msgstr "실행 중인 타이머는 모두 작업시간표 및 작업에 연결되어야 합니다."
+
+#. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__allocated_hours
 msgid "Allocated Time"
 msgstr "할당된 시간"
+
+#. module: industry_fsm
+#: model:ir.model,name:industry_fsm.model_account_analytic_line
+msgid "Analytic Line"
+msgstr "분석 라인"
 
 #. module: industry_fsm
 #: model_terms:ir.actions.act_window,help:industry_fsm.project_task_user_action_report_fsm
@@ -259,6 +269,12 @@ msgid "By User"
 msgstr "사용자별"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
+msgid "Cancelled"
+msgstr "취소됨"
+
+#. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task__partner_city
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__partner_city
 msgid "City"
@@ -285,6 +301,11 @@ msgid "Company"
 msgstr "회사"
 
 #. module: industry_fsm
+#: model:ir.model,name:industry_fsm.model_base_document_layout
+msgid "Company Document Layout"
+msgstr "회사 문서 양식"
+
+#. module: industry_fsm
 #: model:ir.model,name:industry_fsm.model_res_config_settings
 msgid "Config Settings"
 msgstr "환경 설정"
@@ -308,12 +329,16 @@ msgid ""
 msgstr "<b>작업에 소요된 시간</b>을 확인하십시오. <i>팁: 시간은 15분 단위로 올림하여 계산됩니다.</i>"
 
 #. module: industry_fsm
+#: model:ir.model,name:industry_fsm.model_hr_timesheet_stop_timer_confirmation_wizard
+msgid "Confirm timesheet creation when stop timer"
+msgstr "타이머 중지 시 작업시간표 생성 확인"
+
+#. module: industry_fsm
 #: model:ir.model,name:industry_fsm.model_res_partner
 msgid "Contact"
 msgstr "연락처"
 
 #. module: industry_fsm
-#: model:ir.model.fields,field_description:industry_fsm.field_project_task__partner_phone
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_map_view_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_mobile_form
 msgid "Contact Number"
@@ -336,14 +361,19 @@ msgid "Create Date"
 msgstr "작성일자"
 
 #. module: industry_fsm
-#: model:ir.model,name:industry_fsm.model_project_task_create_timesheet
-msgid "Create Timesheet from task"
-msgstr "작업에서 작업 기록 만들기"
+#: model:ir.model,website_form_label:industry_fsm.model_res_partner
+msgid "Create a Customer"
+msgstr "고객 만들기"
 
 #. module: industry_fsm
 #: model:ir.actions.act_window,name:industry_fsm.open_create_project_fsm
 msgid "Create a Project"
 msgstr "프로젝트 생성"
+
+#. module: industry_fsm
+#: model:ir.model,website_form_label:industry_fsm.model_project_task
+msgid "Create a Task"
+msgstr "작업 만들기"
 
 #. module: industry_fsm
 #: model:res.groups,name:industry_fsm.group_fsm_quotation_from_task
@@ -380,11 +410,6 @@ msgstr "작성일자"
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__partner_id
 msgid "Customer"
 msgstr "고객"
-
-#. module: industry_fsm
-#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
-msgid "Customer Preview"
-msgstr "고객 리뷰"
 
 #. module: industry_fsm
 #: model:ir.ui.menu,name:industry_fsm.fsm_menu_reporting_customer_ratings
@@ -433,9 +458,22 @@ msgid "Discard"
 msgstr "취소"
 
 #. module: industry_fsm
+#: model:ir.model.fields,field_description:industry_fsm.field_account_analytic_line__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_base_document_layout__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_hr_timesheet_stop_timer_confirmation_wizard__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_ir_actions_report__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_ir_ui_menu__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_project_project__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task_recurrence__display_name
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard__display_name
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard_line__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task_type__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_report_industry_fsm_worksheet_custom__display_name
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_res_company__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_res_partner__display_name
 msgid "Display Name"
 msgstr "표시명"
 
@@ -452,6 +490,12 @@ msgstr "현장 서비스 모듈에 작업을 표시하고 시작/종료 날짜�
 #: code:addons/industry_fsm/models/project_task.py:0
 msgid "Do you want to stop the running timers?"
 msgstr "타이머 실행을 중지하시겠습니까?"
+
+#. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
+msgid "Done"
+msgstr "완료"
 
 #. module: industry_fsm
 #: model:mail.template,description:industry_fsm.mail_template_data_task_report
@@ -481,6 +525,7 @@ msgstr "FSM 작업 분석"
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task__is_fsm
 #: model:ir.ui.menu,name:industry_fsm.fsm_menu_root
 #: model:project.project,name:industry_fsm.fsm_project
+#: model:res.groups.privilege,name:industry_fsm.res_groups_privilege_field_service
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_view_form_inherit
 #: model_terms:ir.ui.view,arch_db:industry_fsm.res_config_settings_view_form
 msgid "Field Service"
@@ -534,6 +579,25 @@ msgid "Future Activities"
 msgstr "향후 활동"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_task.py:0
+msgid "GPS Coordinates: %(localisation_start)s (%(latitude)s, %(longitude)s)"
+msgstr "GPS 좌표: %(localisation_start)s (%(latitude)s, %(longitude)s)"
+
+#. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/wizard/hr_timesheet_stop_timer_confirmation_wizard.py:0
+msgid "GPS Coordinates: %(localisation_stop)s (%(latitude)s, %(longitude)s)"
+msgstr "GPS 좌표: %(localisation_stop)s (%(latitude)s, %(longitude)s)"
+
+#. module: industry_fsm
+#: model:ir.model.fields,field_description:industry_fsm.field_hr_timesheet_stop_timer_confirmation_wizard__allow_geolocation
+#: model:ir.model.fields,field_description:industry_fsm.field_project_project__allow_geolocation
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task__allow_geolocation
+msgid "Geolocation"
+msgstr "위치정보"
+
+#. module: industry_fsm
 #. odoo-javascript
 #: code:addons/industry_fsm/static/src/js/tours/industry_fsm_tour.js:0
 msgid ""
@@ -542,18 +606,28 @@ msgid ""
 msgstr "<b>제목</b> <i>(예. 보일러 유지 보수, 에어컨 설치 등)을 입력해주세요.</i>"
 
 #. module: industry_fsm
-#: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__total_hours_spent
-msgid "Hours By Task (Including Subtasks)"
-msgstr "작업별 시간 (하위 작업 포함)"
-
-#. module: industry_fsm
+#: model:ir.model.fields,field_description:industry_fsm.field_account_analytic_line__id
+#: model:ir.model.fields,field_description:industry_fsm.field_base_document_layout__id
+#: model:ir.model.fields,field_description:industry_fsm.field_hr_timesheet_stop_timer_confirmation_wizard__id
+#: model:ir.model.fields,field_description:industry_fsm.field_ir_actions_report__id
+#: model:ir.model.fields,field_description:industry_fsm.field_ir_ui_menu__id
+#: model:ir.model.fields,field_description:industry_fsm.field_project_project__id
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task__id
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task_recurrence__id
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard__id
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard_line__id
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task_type__id
+#: model:ir.model.fields,field_description:industry_fsm.field_report_industry_fsm_worksheet_custom__id
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__id
+#: model:ir.model.fields,field_description:industry_fsm.field_res_company__id
+#: model:ir.model.fields,field_description:industry_fsm.field_res_config_settings__id
+#: model:ir.model.fields,field_description:industry_fsm.field_res_partner__id
 msgid "ID"
 msgstr "ID"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
 #: model:project.task.type,name:industry_fsm.planning_project_stage_2
 msgid "In Progress"
 msgstr "진행 중"
@@ -574,6 +648,11 @@ msgstr "서명 데이터가 유효하지 않습니다."
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__message_is_follower
 msgid "Is Follower"
 msgstr "팔로워임"
+
+#. module: industry_fsm
+#: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__is_template
+msgid "Is Template"
+msgstr "서식"
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
@@ -645,6 +724,19 @@ msgid "Line"
 msgstr "선"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_task.py:0
+#: code:addons/industry_fsm/wizard/hr_timesheet_stop_timer_confirmation_wizard.py:0
+msgid "Location error"
+msgstr "위치 오류"
+
+#. module: industry_fsm
+#. odoo-javascript
+#: code:addons/industry_fsm/static/src/services/timer_geolocation_service.js:0
+msgid "Location error: %s"
+msgstr "위치 오류: %s"
+
+#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
 msgid "Manage SME"
 msgstr "중소기업 관리"
@@ -692,6 +784,11 @@ msgid "Milestones"
 msgstr "마일스톤"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_search_fsm
+msgid "My Activities"
+msgstr "내 활동"
+
+#. module: industry_fsm
 #. odoo-python
 #: code:addons/industry_fsm/controllers/webmanifest.py:0
 msgid "My Calendar"
@@ -717,9 +814,20 @@ msgid "My Tasks in mobile Server Action"
 msgstr "모바일의 내 작업 서버 작업"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_project_fsm
+msgid "Name"
+msgstr "이름"
+
+#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.view_partner_address_form_industry_fsm
 msgid "Navigate To"
 msgstr "다음으로 이동"
+
+#. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
+msgid "New"
+msgstr "신규"
 
 #. module: industry_fsm
 #. odoo-python
@@ -777,12 +885,16 @@ msgid "Personal Stage"
 msgstr "개인 단계"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
 #: model:project.task.type,name:industry_fsm.planning_project_stage_1
 msgid "Planned"
 msgstr "계획됨"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_sharing_inherit_project_task_view_form
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_list_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
 msgid "Planned Date"
 msgstr "계획일"
 
@@ -918,8 +1030,8 @@ msgstr "설정"
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_search_fsm
-msgid "Show all records which has next action date is before today"
-msgstr "다음 행동 날짜가 오늘 이전 인 모든 기록보기"
+msgid "Show all records whose next activity date is past"
+msgstr "다음 활동할 날짜가 이미 지난 모든 레코드 표시"
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.portal_task_sign_modal
@@ -1125,34 +1237,21 @@ msgid "Time Spent"
 msgstr "소요 시간"
 
 #. module: industry_fsm
-#: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__subtask_effective_hours
-msgid "Time Spent on Sub-Tasks"
-msgstr "하위 작업에 소요된 시간"
-
-#. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_res_config_settings__module_industry_fsm_sale
 msgid "Time and Material Invoicing"
 msgstr "시간 및 자재 청구서"
 
 #. module: industry_fsm
-#: model:ir.model.fields,help:industry_fsm.field_report_project_task_user_fsm__subtask_effective_hours
-msgid "Time spent on the sub-tasks (and their own sub-tasks) of this task."
-msgstr "이 작업의 하위 작업(및 자신의 하위 작업)에 소요된 시간입니다."
-
-#. module: industry_fsm
-#: model:ir.model.fields,help:industry_fsm.field_report_project_task_user_fsm__total_hours_spent
-msgid "Time spent on this task, including its sub-tasks."
-msgstr "하위 작업을 포함하여 이 작업에 소요된 시간입니다."
-
-#. module: industry_fsm
 #. odoo-python
+#: code:addons/industry_fsm/models/account_analytic_line.py:0
 #: code:addons/industry_fsm/models/project_task.py:0
 msgid "Timer started at: %(date)s %(time)s"
 msgstr "타이머 시작 시간: %(date)s %(time)s"
 
 #. module: industry_fsm
 #. odoo-python
-#: code:addons/industry_fsm/wizard/project_task_create_timesheet.py:0
+#: code:addons/industry_fsm/models/account_analytic_line.py:0
+#: code:addons/industry_fsm/wizard/hr_timesheet_stop_timer_confirmation_wizard.py:0
 msgid "Timer stopped at: %(date)s %(time)s"
 msgstr "타이머 중지 시간: %(date)s %(time)s"
 
@@ -1218,9 +1317,42 @@ msgid "Track the progress of your tasks from their creation to their closing."
 msgstr "작업의 생성부터 종료까지, 모든 진행 상황을 추적하세요."
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_view_form_inherit
+msgid "Track worker location when running the timer"
+msgstr "타이머 실행 시 작업자 위치를 추적합니다"
+
+#. module: industry_fsm
+#: model:ir.model.fields,help:industry_fsm.field_hr_timesheet_stop_timer_confirmation_wizard__allow_geolocation
+#: model:ir.model.fields,help:industry_fsm.field_project_project__allow_geolocation
+#: model:ir.model.fields,help:industry_fsm.field_project_task__allow_geolocation
+msgid "Track worker location when running the timer."
+msgstr "타이머 실행 시 작업자 위치를 추적합니다."
+
+#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_search_fsm
 msgid "Unread Messages"
 msgstr "읽지 않은 메세지"
+
+#. module: industry_fsm
+#: model:ir.model.fields,help:industry_fsm.field_project_task__display_name
+msgid ""
+"Use these keywords in the title to set new tasks:\n"
+"\n"
+"        30h Allocate 30 hours to the task\n"
+"        #tags Set tags on the task\n"
+"        @user Assign the task to a user\n"
+"        ! Set the task a high priority\n"
+"\n"
+"        Make sure to use the right format and order e.g. Improve the configuration screen 5h #feature #v16 @Mitchell !"
+msgstr ""
+"새로운 작업을 설정하려면 제목에 다음 키워드를 사용하십시오:\n"
+"\n"
+"        30h 작업에 30시간 할당\n"
+"        #tag 작업에 태그 설정\n"
+"        @user 사용자에게 작업 배정\n"
+"        ! 작업에 우선 순위를 설정\n"
+"\n"
+"        올바른 형식과 순서를 사용했는지 확인하십시오. 예. 환경 설정 화면 개선 5h #feature #v16 @Mitchell !"
 
 #. module: industry_fsm
 #: model:res.groups,name:industry_fsm.group_fsm_user
@@ -1231,6 +1363,13 @@ msgstr "사용자"
 #: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
 msgid "View Itinerary"
 msgstr "일정 보기"
+
+#. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_task.py:0
+#: code:addons/industry_fsm/wizard/hr_timesheet_stop_timer_confirmation_wizard.py:0
+msgid "View on Map"
+msgstr "지도에서 보기"
 
 #. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard_line__wizard_id
@@ -1298,6 +1437,16 @@ msgstr "예: 보일러 교체"
 #: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
 msgid "is FSM?"
 msgstr "FSM입니까?"
+
+#. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_sharing_inherit_project_task_view_form
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
+msgid ""
+"on\n"
+"                        <span class=\"fw-bold text-dark\"> Sub-tasks</span>)"
+msgstr ""
+".\n"
+"                        <span class=\"fw-bold text-dark\"> 하위 작업</span>)"
 
 #. module: industry_fsm
 #: model:ir.actions.server,name:industry_fsm.fsm_customer_ratings_server_action

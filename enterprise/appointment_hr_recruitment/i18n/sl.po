@@ -3,15 +3,15 @@
 # 	* appointment_hr_recruitment
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Aleš Pipan, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:52+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:22+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Aleš Pipan, 2025\n"
 "Language-Team: Slovenian (https://app.transifex.com/odoo/teams/41243/sl/)\n"
 "MIME-Version: 1.0\n"
@@ -23,47 +23,37 @@ msgstr ""
 #. module: appointment_hr_recruitment
 #: model:mail.template,body_html:appointment_hr_recruitment.email_template_data_applicant_schedule_interview
 msgid ""
-"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
-"    <tr>\n"
-"        <td valign=\"top\">\n"
-"            <h2>Hello,</h2>\n"
-"            <div style=\"font-size: 13px;\">\n"
-"                Thanks for your application and interest in <t t-out=\"object.company_id.name or ''\">YourCompany</t>.<br/>\n"
-"                <br/>\n"
-"                I would like to organize a phone interview with you, it should last about 30 min.\n"
-"                We'll go through your resume and motivations to join the <t t-out=\"object.company_id.name or ''\">YourCompany</t> team.\n"
-"                You can book a slot in our agenda by cliking on the button below.<br/>\n"
-"            </div>\n"
-"            <br/>\n"
-"            <a t-att-href=\"env['ir.config_parameter'].sudo().get_param('web.base.url') + '/book/interview'\" style=\"background-color: #875a7b; text-decoration: none; color: #fff; padding: 8px 16px 8px 16px; border-radius: 5px;\">Schedule my interview</a><br/>\n"
-"            <br/>\n"
-"            Best regards,\n"
-"        </td>\n"
-"    </tr>\n"
-"</table>\n"
+"<div style=\"margin: 0px; padding: 0px;\">\n"
+"    <h2>Hello,</h2>\n"
+"    <div style=\"font-size: 13px;\">\n"
+"        Thanks for your application and interest in <t t-out=\"object.company_id.name or ''\">YourCompany</t>.<br/>\n"
+"        <br/>\n"
+"        I would like to organize a phone interview with you, it should last about 30 min.\n"
+"        We'll go through your resume and motivations to join the <t t-out=\"object.company_id.name or ''\">YourCompany</t> team.\n"
+"        You can book a slot in our agenda by cliking on the button below.<br/>\n"
+"    </div>\n"
+"    <br/>\n"
+"    <a t-att-href=\"object._get_interview_invite_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; padding: 8px 16px 8px 16px; border-radius: 5px;\">Schedule my interview</a><br/>\n"
+"    <br/>\n"
+"    Best regards,\n"
+"</div>\n"
 "        "
 msgstr ""
 
 #. module: appointment_hr_recruitment
-#: model:ir.model.fields,field_description:appointment_hr_recruitment.field_appointment_invite__applicant_id
-#: model:ir.model.fields,field_description:appointment_hr_recruitment.field_calendar_event__applicant_id
+#: model:ir.model,name:appointment_hr_recruitment.model_hr_applicant
 msgid "Applicant"
 msgstr "Kandidat"
+
+#. module: appointment_hr_recruitment
+#: model:ir.model,website_form_label:appointment_hr_recruitment.model_hr_applicant
+msgid "Apply for a Job"
+msgstr "Prijavite se za službo"
 
 #. module: appointment_hr_recruitment
 #: model:ir.model,name:appointment_hr_recruitment.model_appointment_invite
 msgid "Appointment Invite"
 msgstr "Vabilo na termin"
-
-#. module: appointment_hr_recruitment
-#: model:ir.model,name:appointment_hr_recruitment.model_appointment_type
-msgid "Appointment Type"
-msgstr "Tip termina"
-
-#. module: appointment_hr_recruitment
-#: model:ir.model,name:appointment_hr_recruitment.model_calendar_event
-msgid "Calendar Event"
-msgstr "Dogodek v koledarju"
 
 #. module: appointment_hr_recruitment
 #: model:mail.template,subject:appointment_hr_recruitment.email_template_data_applicant_schedule_interview
@@ -75,19 +65,26 @@ msgstr ""
 "object.job_id else '' }}aplikacija?"
 
 #. module: appointment_hr_recruitment
+#: model:ir.model.fields,field_description:appointment_hr_recruitment.field_appointment_invite__display_name
+#: model:ir.model.fields,field_description:appointment_hr_recruitment.field_hr_applicant__display_name
+msgid "Display Name"
+msgstr "Prikazani naziv"
+
+#. module: appointment_hr_recruitment
+#: model:ir.model.fields,field_description:appointment_hr_recruitment.field_appointment_invite__id
+#: model:ir.model.fields,field_description:appointment_hr_recruitment.field_hr_applicant__id
+msgid "ID"
+msgstr "ID"
+
+#. module: appointment_hr_recruitment
+#: model:ir.model.fields,field_description:appointment_hr_recruitment.field_hr_applicant__interview_invite_code
+msgid "Interview Invite Code"
+msgstr ""
+
+#. module: appointment_hr_recruitment
 #: model:appointment.type,name:appointment_hr_recruitment.appointment_type_interviews
 msgid "Interviews availabilities"
 msgstr "Razpoložljivost intervjujev"
-
-#. module: appointment_hr_recruitment
-#: model:ir.model.fields,help:appointment_hr_recruitment.field_appointment_invite__applicant_id
-#: model:ir.model.fields,help:appointment_hr_recruitment.field_calendar_event__applicant_id
-msgid ""
-"Link an applicant to the appointment invite created.\n"
-"Used when creating an invitation from the Meeting action in the applicant form view."
-msgstr ""
-"Poveži prijavitelja z ustvarjenim povabilom na sestanek.\n"
-"Uporablja se pri ustvarjanju povabila iz dejanja Sestanek v pogledu obrazca prijavitelja."
 
 #. module: appointment_hr_recruitment
 #: model:mail.template,name:appointment_hr_recruitment.email_template_data_applicant_schedule_interview
@@ -97,5 +94,6 @@ msgstr "Zaposlovanje: Načrtovanje razgovora"
 #. module: appointment_hr_recruitment
 #: model:mail.template,description:appointment_hr_recruitment.email_template_data_applicant_schedule_interview
 msgid ""
-"Send this email when you want to schedule an interview with a candidate"
+"Send this email when you want to schedule an interview with an applicant"
 msgstr ""
+"Pošljite to e-poštno sporočilo, ko želite rezervirati razgovor s kandidatom"

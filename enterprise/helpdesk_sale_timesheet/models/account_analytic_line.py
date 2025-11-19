@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models
 from odoo.osv import expression
-from odoo.addons.sale_timesheet_enterprise.models.sale import DEFAULT_INVOICED_TIMESHEET
+from odoo.addons.sale_timesheet_enterprise.models.sale_order_line import DEFAULT_INVOICED_TIMESHEET
+
 
 class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
@@ -44,10 +44,10 @@ class AccountAnalyticLine(models.Model):
         return self
 
     def _check_timesheet_can_be_billed(self):
-        return super(AccountAnalyticLine, self)._check_timesheet_can_be_billed() or self.so_line == self.helpdesk_ticket_id.sale_line_id
+        return super()._check_timesheet_can_be_billed() or self.so_line == self.helpdesk_ticket_id.sale_line_id
 
     def _timesheet_get_sale_domain(self, order_lines_ids, invoice_ids):
-        domain = super(AccountAnalyticLine, self)._timesheet_get_sale_domain(order_lines_ids, invoice_ids)
+        domain = super()._timesheet_get_sale_domain(order_lines_ids, invoice_ids)
         if not invoice_ids:
             return domain
 

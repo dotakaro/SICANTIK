@@ -4,7 +4,7 @@
 from odoo import models, fields
 
 
-class SpanishMod347TaxReportCustomHandler(models.AbstractModel):
+class L10n_EsMod347TaxReportHandler(models.AbstractModel):
     _inherit = 'l10n_es.mod347.tax.report.handler'
 
     def _get_real_estates_data(self, boe_report_options, currency_id):

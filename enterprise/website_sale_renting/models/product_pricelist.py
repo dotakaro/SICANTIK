@@ -2,7 +2,8 @@
 
 from odoo import models
 
-class Pricelist(models.Model):
+
+class ProductPricelist(models.Model):
     _inherit = "product.pricelist"
 
     def _enable_rental_price(self, *args, **kwargs):

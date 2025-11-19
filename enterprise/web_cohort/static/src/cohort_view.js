@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { CohortController } from "./cohort_controller";
 import { CohortRenderer } from "./cohort_renderer";
@@ -9,7 +7,7 @@ import { CohortModel } from "./cohort_model";
 export const cohortView = {
     type: "cohort",
     buttonTemplate: "web_cohort.CohortView.Buttons",
-    searchMenuTypes: ["filter", "comparison", "favorite"],
+    searchMenuTypes: ["filter", "favorite"],
     Model: CohortModel,
     ArchParser: CohortArchParser,
     Controller: CohortController,

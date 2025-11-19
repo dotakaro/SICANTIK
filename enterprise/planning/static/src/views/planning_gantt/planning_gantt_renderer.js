@@ -1,25 +1,26 @@
 import { formatFloatTime } from "@web/views/fields/formatters";
 import { user } from "@web/core/user";
-import { formatFloat } from "@web/core/utils/numbers";
 import { GanttRenderer } from "@web_gantt/gantt_renderer";
-import { getUnionOfIntersections } from "@web_gantt/gantt_helpers";
+import { getColumnStart, getUnionOfIntersections } from "@web_gantt/gantt_helpers";
 import { PlanningEmployeeAvatar } from "./planning_employee_avatar";
 import { PlanningMaterialRole } from "./planning_material_role";
 import { PlanningGanttRowProgressBar } from "./planning_gantt_row_progress_bar";
-import { useEffect, onWillStart, reactive, onWillUnmount, markup, useState } from "@odoo/owl";
+import { useEffect, onWillStart, reactive, markup, useState } from "@odoo/owl";
 import { serializeDateTime } from "@web/core/l10n/dates";
 import { planningAskRecurrenceUpdate } from "../planning_calendar/planning_ask_recurrence_update/planning_ask_recurrence_update_hook";
 import { PlanningGanttRendererControls } from "./planning_gantt_renderer_controls";
-import { escape } from "@web/core/utils/strings";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { usePlanningRecurringDeleteAction } from "../planning_hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { AddressRecurrencyConfirmationDialog } from "@planning/components/address_recurrency_confirmation_dialog/address_recurrency_confirmation_dialog";
+import { localization } from "@web/core/l10n/localization";
+import { PlanningSplitTool } from "./planning_split_tool";
 
 const { Duration, DateTime } = luxon;
 
 export class PlanningGanttRenderer extends GanttRenderer {
+    static template = "planning.PlanningGanttRenderer";
     static rowHeaderTemplate = "planning.PlanningGanttRenderer.RowHeader";
     static pillTemplate = "planning.PlanningGanttRenderer.Pill";
     static groupPillTemplate = "planning.PlanningGanttRenderer.GroupPill";
@@ -29,9 +30,11 @@ export class PlanningGanttRenderer extends GanttRenderer {
         GanttRendererControls: PlanningGanttRendererControls,
         GanttRowProgressBar: PlanningGanttRowProgressBar,
         Material: PlanningMaterialRole,
+        PlanningSplitTool,
     };
     setup() {
         this.duplicateToolHelperReactive = reactive({ shouldDisplay: false });
+        this.splitToolHelperReactive = reactive({});
         super.setup();
         useEffect(() => {
             this.gridRef.el.classList.add("o_planning_gantt");
@@ -44,15 +47,10 @@ export class PlanningGanttRenderer extends GanttRenderer {
         this.isPlanningManager = false;
         this.notificationService = useService("notification");
         onWillStart(this.onWillStart);
-        onWillUnmount(this.onWillUnmount);
     }
 
     async onWillStart() {
         this.isPlanningManager = await user.hasGroup('planning.group_planning_manager');
-    }
-
-    async onWillUnmount() {
-        this.closePillSplitToolNotifications();
     }
 
     /**
@@ -73,24 +71,67 @@ export class PlanningGanttRenderer extends GanttRenderer {
         super.computeDerivedParams();
     }
 
-    computeVisiblePills() {
-        super.computeVisiblePills();
-        this.splitTools = {};
+    onPillClicked(ev, pill) {
+        if (this.env.isSmall || !this.isPlanningManager || this.model.useSampleModel) {
+            super.onPillClicked(...arguments);
+            return;
+        }
+        const splitToolEl = this.cellContainerRef.el.querySelector(".o_gantt_pill_split_tool");
+        if (splitToolEl) {
+            const { clientX, clientY } = ev;
+            const { x, y, width, height } = splitToolEl.getBoundingClientRect();
+            if (x <= clientX && clientX <= x + width && y <= clientY <= y + height) {
+                const splitCol = getColumnStart(getComputedStyle(splitToolEl));
+                this.onPillSplitToolClicked(pill, splitCol);
+                delete this.splitToolHelperReactive.position;
+                this.popover.close();
+                return;
+            }
+        }
+        super.onPillClicked(...arguments);
+    }
+
+    onCreate(rowId, startCol, stopCol, additionalContext = {}) {
+        additionalContext = Object.create(additionalContext);
+        if (startCol !== stopCol && this.model.metaData.scale.interval === "day") {
+            additionalContext.shifts_multi_day = true;
+        }
+        return super.onCreate(rowId, startCol, stopCol, additionalContext);
+    }
+
+    computeDerivedParamsFromHover() {
+        super.computeDerivedParamsFromHover(...arguments);
+        delete this.splitToolHelperReactive.position;
         if (this.env.isSmall || !this.isPlanningManager || this.model.useSampleModel) {
             return;
         }
-        const [firstVisibleCol, lastVisibleCol] = this.getVisibleCols();
-        for (const pill of this.pillsToRender) {
+        if (this.isDragging || this.connectorDragState.dragging) {
+            return;
+        }
+        const { pill: pillEl } = this.hovered;
+        const { el: cellEl } = this.cellForDrag;
+        if (pillEl && cellEl) {
+            const rtl = localization.direction === "rtl"
+            const { x, width } = cellEl.getBoundingClientRect();
+            const coef = (rtl ? -1 : 1) * width;
+            const startBorder = (rtl ? x + width : x);
+            const endBorder = startBorder + coef;
+            let col = getColumnStart(getComputedStyle(cellEl));
+            if (Math.abs(endBorder - this.cursorPosition.x) <= 8) {
+                col += 1;
+            } else if (Math.abs(startBorder - this.cursorPosition.x) > 8) {
+                return;
+            }
+            const pillId = pillEl.dataset.pillId;
+            const pill = this.pills[pillId];
             const [first, last] = pill.grid.column;
-            if (last === first + 1) {
-                continue;
+            if ([first, last].includes(col)) {
+                return;
             }
-            this.splitTools[pill.id] = [];
-            for (let col = Math.max(first + 1, firstVisibleCol); col <= Math.min(last - 1, lastVisibleCol); col++) {
-                const splitTool = { grid: { column: [col, col + 1], row: pill.grid.row } };
-                this.splitTools[pill.id].push(splitTool);
-                this.addCoordinatesToCoarseGrid(splitTool);
-            }
+            this.splitToolHelperReactive.position = this.getGridPosition({
+                row: pill.grid.row,
+                column: [col, col + 1]
+            });
         }
     }
 
@@ -99,8 +140,7 @@ export class PlanningGanttRenderer extends GanttRenderer {
      */
     getDurationStr(record) {
         const { allocated_hours, allocated_percentage } = record;
-        const res = super.getDurationStr(...arguments);
-        return allocated_percentage !== 100 && allocated_hours ? res : "";
+        return (allocated_percentage !== 100 && allocated_hours) ? super.getDurationStr(...arguments) : "";
     }
 
     getSpan({ grid }) {
@@ -116,7 +156,7 @@ export class PlanningGanttRenderer extends GanttRenderer {
         const { record } = pill;
 
         if (record.employee_id && !this.model.metaData.groupedBy.includes("resource_id")) {
-            const [resId, displayName] = record.employee_id;
+            const { id: resId, display_name: displayName } = record.employee_id;
             pill.hasAvatar = true;
             pill.avatarProps = {
                 resModel: "hr.employee.public",
@@ -138,7 +178,7 @@ export class PlanningGanttRenderer extends GanttRenderer {
             return pill;
         }
         const resource = record.resource_id;
-        const resourceId = resource && resource[0];
+        const resourceId = resource && resource.id;
         if (this.isOpenShift(record) || this.isFlexibleHours(resourceId)) {
             for (let col = this.getFirstGridCol(pill); col < this.getLastGridCol(pill); col++) {
                 const subColumn = this.getSubColumnFromColNumber(col);
@@ -220,17 +260,9 @@ export class PlanningGanttRenderer extends GanttRenderer {
     /**
      * @override
      */
-    getPopoverProps(pill) {
-        const popoverProps = super.getPopoverProps(pill);
+    async getPopoverProps(pill) {
+        const popoverProps = await super.getPopoverProps(...arguments);
         const { record } = pill;
-        if (popoverProps.bodyTemplate) {
-            Object.assign(popoverProps.context, {
-                allocatedHoursFormatted:
-                    record.allocated_hours && formatFloatTime(record.allocated_hours),
-                allocatedPercentageFormatted:
-                    record.allocated_percentage && formatFloat(record.allocated_percentage),
-            });
-        }
         if (this.isPlanningManager) {
             const recurrenceProps = { resId: record.id, resModel: this.model.metaData.resModel };
             popoverProps.buttons.push({
@@ -280,8 +312,7 @@ export class PlanningGanttRenderer extends GanttRenderer {
      * @returns {any[]}
      */
     getRecordIntervals(record) {
-        const val = record.resource_id;
-        const resourceId = Array.isArray(val) ? val[0] : false;
+        const resourceId = record.resource_id && record.resource_id.id;
         const startTime = record.start_datetime;
         const endTime = record.end_datetime;
         if (!this.model.data.workIntervals) {
@@ -293,10 +324,6 @@ export class PlanningGanttRenderer extends GanttRenderer {
         }
         const recordIntervals = getUnionOfIntersections([startTime, endTime], resourceIntervals);
         return recordIntervals;
-    }
-
-    getSplitToolGrids(pill) {
-        return this.splitTools[pill.id] || [];
     }
 
     /**
@@ -485,42 +512,72 @@ export class PlanningGanttRenderer extends GanttRenderer {
     }
 
     /**
-     * @param {MouseEvent} ev
-     * @param {Pill} pill
-     * @param {number} splitIndex - Index of the split tool used on the pill
+     * Given a {start, end} datetime for a resource (row), return whether the resource is on day off.
+     * This is determined by checking if the resource has any unavailabilities that intersect with the given column
+     *
+     * @param {number} column - Column index
+     * @param {Row} row - Row Object
+     * @returns {boolean} - Whether the resource is on day off
      */
-    async onPillSplitToolClicked(ev, pill, splitIndex) {
-        const pillStart = pill.grid.column[0];
+    _resourceOnDayoff(column, row) {
+        const { unavailabilities } = row;
+        const { start, stop } = column;
 
-        // 1. Create a copy of the current pill after the split tool
-        const startColumnId = pillStart + 1 + splitIndex;
-        const { start } = this.getColumnAvailabilitiesLimit(pill, startColumnId, {
-            fixed_stop: pill.record.end_datetime,
+        return unavailabilities.some(unavailability => {
+            const unavailabilityStart = unavailability.start;
+            const unavailabilityEnd = unavailability.stop ? unavailability.stop : null;
+            return unavailabilityStart <= start &&
+                (!unavailabilityEnd || unavailabilityEnd >= stop);
         });
-        const values = { start_datetime: serializeDateTime(start) };
-        const context = { planning_split_tool: true };
-        const [ copiedShiftId ] = await this.model.orm.call(
-            this.model.metaData.resModel,
-            'copy',
-            [[pill.record.id]],
-            { context, default: values },
-        );
+    }
 
-        // 2. Reduce the size of the current pill down to the split tool
-        const { stop } = this.getColumnAvailabilitiesLimit(pill, startColumnId - 1, {
-            fixed_start: pill.record.start_datetime,
-        });
-        const schedule = { end_datetime: serializeDateTime(stop) };
-        this.model.reschedule(pill.record.id, schedule, this.openPlanDialogCallback);
+    /**
+     * Split a shift (pill) into two shifts.
+     * For shifts with flexible hours or open slots, the split is done without taking into account availabbilities.
+     * For shifts with regular working hours, the split is done taking into account the resource's availabilities.
+     * As an exception, if the shift spans on weekends (where the resource had no availabilities unavailable)
+     * for a regular working schedule, we split the shift but set a 8-17 schedule for the shift in weekends.
+     *
+     * @param {Pill} pill
+     * @param {number} startColumnId - column where to split the pill
+     */
+    async onPillSplitToolClicked(pill, startColumnId) {
+        const resourceId = pill.record.resource_id.id || false;
+        const splitRightPill = this.getColumnStartStop(startColumnId, startColumnId);
+        const splitLeftPill = this.getColumnStartStop(startColumnId - 1, startColumnId - 1);
+        let copiedShiftId;
+        if (!resourceId || this.isFlexibleHours(resourceId)) {
+            const start = splitRightPill.start;
+            const stop = splitLeftPill.stop;
+            copiedShiftId = await this.model.splitPill(start, stop, pill.record);
+        } else {
+            let start;
+            let stop;
+            const currentRow = this.getRowFromPill(pill);
+            if (!this._resourceOnDayoff(splitRightPill, currentRow)) {
+                ({ start } = this.getColumnAvailabilitiesLimit(pill, startColumnId, {
+                    fixed_stop: pill.record.end_datetime,
+                }));
+            } else {
+                start = splitRightPill.start.set({ hour: 8, minute: 0, second: 0, millisecond: 0 });
+            }
 
-        // 3. Close the last split notification if any and show a new split notification with an Undo button
-        this.notificationSplit?.();
-        this.notificationSplit = this.notificationService.add(
-            markup(
-                `<i class="fa fa-fw fa-check"></i><span class="ms-1">${escape(_t(
-                    "Shift divided into two"
-                ))}</span>`
-            ),
+            if (!this._resourceOnDayoff(splitLeftPill, currentRow)) {
+                ({ stop } = this.getColumnAvailabilitiesLimit(pill, startColumnId - 1, {
+                    fixed_start: pill.record.start_datetime,
+                }));
+            } else {
+                stop = splitLeftPill.stop.set({ hour: 17, minute: 0, second: 0, millisecond: 0 });
+            }
+            copiedShiftId = await this.model.splitPill(start, stop, pill.record);
+        }
+
+        // Close the last split notification if any and show a new split notification with an Undo button
+        this.closeNotificationFn?.();
+        this.closeNotificationFn = this.notificationService.add(
+            markup`<i class="fa fa-fw fa-check"></i><span class="ms-1">${_t(
+                "Shift divided into two"
+            )}</span>`,
             {
                 type: "success",
                 className: "planning_notification",
@@ -536,27 +593,23 @@ export class PlanningGanttRenderer extends GanttRenderer {
                                 [pill.record.id, copiedShiftId],
                                 serializeDateTime(pill.record.start_datetime),
                                 serializeDateTime(pill.record.end_datetime),
-                                !pill.record.resource_id ? false : pill.record.resource_id[0],
+                                !pill.record.resource_id ? false : pill.record.resource_id.id,
                             ],
                         );
-                        this.closePillSplitToolNotifications();
+                        this.closeNotificationFn?.();
                         if (!result) {
-                            this.notificationFail = this.notificationService.add(
-                                markup(
-                                    `<i class="fa fa-fw fa-check"></i><span class="ms-1">${escape(_t(
-                                        "Shifts could not be merged back"
-                                    ))}</span>`
-                                ),
+                            this.closeNotificationFn = this.notificationService.add(
+                                markup`<i class="fa fa-fw fa-check"></i><span class="ms-1">${_t(
+                                    "Shifts could not be merged back"
+                                )}</span>`,
                                 { type: 'danger' },
                             );
                         } else {
                             this.model.fetchData();
-                            this.notificationMerge = this.notificationService.add(
-                                markup(
-                                    `<i class="fa fa-fw fa-check"></i><span class="ms-1">${escape(_t(
-                                        "Shifts merged back"
-                                    ))}</span>`
-                                ),
+                            this.closeNotificationFn = this.notificationService.add(
+                                markup`<i class="fa fa-fw fa-check"></i><span class="ms-1">${_t(
+                                    "Shifts merged back"
+                                )}</span>`,
                                 { type: 'success' },
                             );
                         }
@@ -566,10 +619,26 @@ export class PlanningGanttRenderer extends GanttRenderer {
         );
     }
 
-    closePillSplitToolNotifications() {
-        this.notificationFail?.();
-        this.notificationMerge?.();
-        this.notificationSplit?.();
+    getUndoAfterDragMessages(dragAction) {
+        if (dragAction === "copy") {
+            return {
+                success: _t("Shift duplicated"),
+                undo: _t("Shift removed"),
+                failure: _t("Shift could not be removed"),
+            };
+        }
+        return {
+            success: _t("Shift rescheduled"),
+            undo: _t("Shift reschedule undone"),
+            failure: _t("Failed to undo reschedule"),
+        };
+    }
+
+    getUndoAfterDragRecordData(record) {
+        return {
+            ...super.getUndoAfterDragRecordData(...arguments),
+            recurrence_update: record.recurrence_update,
+        };
     }
 
     /**
@@ -583,7 +652,7 @@ export class PlanningGanttRenderer extends GanttRenderer {
      * @returns {{ Datetime, Datetime }} { start, stop }
      */
     getColumnAvailabilitiesLimit(pill, column, { fixed_start, fixed_stop } = {}) {
-        const defaultColumnTiming = super.getColumnStartStop(column, column, false);
+        const defaultColumnTiming = super.getColumnStartStop(column, column);
         let start = fixed_start || defaultColumnTiming.start;
         let stop = fixed_stop || defaultColumnTiming.stop;
         const currentRow = this.getRowFromPill(pill);

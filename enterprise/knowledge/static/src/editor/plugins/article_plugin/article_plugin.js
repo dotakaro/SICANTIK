@@ -1,8 +1,9 @@
 import { Plugin } from "@html_editor/plugin";
 import { rightPos } from "@html_editor/utils/position";
-import { ArticleSelectionDialog } from "@knowledge/components/article_selection_dialog/article_selection_dialog";
+import { ArticleSearchDialog } from "@knowledge/components/article_search_dialog/article_search_dialog";
 import { _t } from "@web/core/l10n/translation";
 import { renderToElement } from "@web/core/utils/render";
+import { isHtmlContentSupported } from "@html_editor/core/selection_plugin";
 
 const ARTICLE_LINKS_SELECTOR = ".o_knowledge_article_link";
 export class KnowledgeArticlePlugin extends Plugin {
@@ -16,6 +17,7 @@ export class KnowledgeArticlePlugin extends Plugin {
                 description: _t("Insert an Article shortcut"),
                 icon: "fa-newspaper-o",
                 run: this.addArticle.bind(this),
+                isAvailable: isHtmlContentSupported,
             },
         ],
         powerbox_items: [
@@ -39,22 +41,59 @@ export class KnowledgeArticlePlugin extends Plugin {
         if (recordInfo.resModel === "knowledge.article" && recordInfo.resId) {
             parentArticleId = recordInfo.resId;
         }
-        this.dependencies.dialog.addDialog(ArticleSelectionDialog, {
-            title: _t("Link an Article"),
-            confirmLabel: _t("Insert Link"),
-            articleSelected: (article) => {
-                const articleLinkBlock = renderToElement("knowledge.ArticleBlueprint", {
-                    href: `/knowledge/article/${article.articleId}`,
-                    articleId: article.articleId,
-                    displayName: article.displayName,
-                });
-
-                this.dependencies.dom.insert(articleLinkBlock);
-                this.dependencies.history.addStep();
-                const [anchorNode, anchorOffset] = rightPos(articleLinkBlock);
-                this.dependencies.selection.setSelection({ anchorNode, anchorOffset });
+        const cursors = this.dependencies.selection.preserveSelection();
+        const renderArticleLink = (id, displayName) => {
+            const articleLinkBlock = renderToElement("knowledge.ArticleBlueprint", {
+                href: `/knowledge/article/${id}`,
+                articleId: id,
+                displayName,
+            });
+            cursors.restore();
+            this.dependencies.dom.insert(articleLinkBlock);
+            this.dependencies.history.addStep();
+            const [anchorNode, anchorOffset] = rightPos(articleLinkBlock);
+            this.dependencies.selection.setSelection({ anchorNode, anchorOffset });
+        };
+        this.services.dialog.add(ArticleSearchDialog, {
+            create: async (label) => {
+                const articleIds = await this.services.orm.call(
+                    "knowledge.article",
+                    "article_create",
+                    [],
+                    {
+                        title: label,
+                        parent_id: parentArticleId,
+                    }
+                );
+                const articleId = articleIds[0];
+                renderArticleLink(articleId, `📄 ${label}`);
+                if (parentArticleId) {
+                    this.config.embeddedComponentInfo.env.bus.trigger(
+                        "knowledge.sidebar.insertNewArticle",
+                        {
+                            articleId,
+                            name: label,
+                            icon: "📄",
+                            parentId: parentArticleId,
+                        }
+                    );
+                }
             },
-            parentArticleId,
+            search: (searchValue) => {
+                const params = { search_query: searchValue };
+                let searchFunction = "get_user_sorted_articles";
+                if (searchValue) {
+                    searchFunction = "get_sorted_articles";
+                    params.domain = [
+                        "|",
+                        ["is_article_visible", "=", true],
+                        ["is_user_favorite", "=", true],
+                    ];
+                }
+                return this.services.orm.call("knowledge.article", searchFunction, [[]], params);
+            },
+            searchEmptyQuery: true,
+            select: (article) => renderArticleLink(article.id, article.displayName),
         });
     }
 

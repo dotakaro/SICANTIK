@@ -1,5 +1,4 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-# -*- coding: utf-8 -*-
 
 
 from odoo import Command
@@ -36,13 +35,11 @@ class TestSaleReport(TestSubscriptionCommon):
                 'is_subscription': True,
                 'note': "Subscription description",
                 'partner_id': self.user_portal.partner_id.id,
-                'pricelist_id': self.company_data['default_pricelist'].id,
                 'plan_id': self.plan_month.id,
                 'order_line': [Command.create({
                     'name': self.recurring_product.name,
                     'product_id': self.recurring_product.id,
                     'product_uom_qty': 2.0,
-                    'product_uom': self.recurring_product.uom_id.id,
                     'price_unit': self.recurring_product.list_price,
                 })]
             })

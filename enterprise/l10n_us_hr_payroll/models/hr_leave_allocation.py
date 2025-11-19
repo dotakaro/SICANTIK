@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from odoo import models
 
 
-class HolidaysAllocation(models.Model):
+class HrLeaveAllocation(models.Model):
     _inherit = "hr.leave.allocation"
 
     def _l10n_us_get_total_allocated(self, date):

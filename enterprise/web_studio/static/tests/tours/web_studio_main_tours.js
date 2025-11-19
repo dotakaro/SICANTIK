@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { browser } from "@web/core/browser/browser";
 import { registry } from "@web/core/registry";
 import { randomString } from "@web_studio/utils";
@@ -398,7 +396,7 @@ registry.category("web_tour.tours").add("web_studio_main_and_rename", {
         },
         {
             // edit action
-            trigger: ".o_web_studio_menu .o_menu_sections li a:contains(Views)",
+            trigger: ".o_web_studio_menu .o_menu_sections button:contains(Views)",
             run: "click",
         },
         {
@@ -507,7 +505,7 @@ registry.category("web_tour.tours").add("web_studio_main_and_rename", {
         },
         {
             // edit action
-            trigger: '.o_web_studio_menu .o_menu_sections li a:contains("Views")',
+            trigger: '.o_web_studio_menu .o_menu_sections button:contains("Views")',
             run: "click",
         },
         {
@@ -577,7 +575,7 @@ registry.category("web_tour.tours").add("web_studio_main_and_rename", {
         },
         {
             // edit action
-            trigger: '.o_web_studio_menu .o_menu_sections li a:contains("Views")',
+            trigger: '.o_web_studio_menu .o_menu_sections button:contains("Views")',
             run: "click",
         },
         {
@@ -594,7 +592,7 @@ registry.category("web_tour.tours").add("web_studio_main_and_rename", {
         },
         {
             // edit action
-            trigger: '.o_web_studio_menu .o_menu_sections li a:contains("Views")',
+            trigger: '.o_web_studio_menu .o_menu_sections button:contains("Views")',
             timeout: 20000, // activating a view takes a while and sometimes reaches the default 10s timeout
             run: "click",
         },
@@ -607,7 +605,7 @@ registry.category("web_tour.tours").add("web_studio_main_and_rename", {
             trigger: ".o_graph_renderer",
         },
         {
-            trigger: '.o_web_studio_menu .o_menu_sections li a:contains("Views")',
+            trigger: '.o_web_studio_menu .o_menu_sections button:contains("Views")',
             run: "click",
         },
         {
@@ -637,9 +635,8 @@ registry.category("web_tour.tours").add("web_studio_main_and_rename", {
             run: "click",
         },
         {
-            content: "close modal",
-            trigger: ".modal .modal-footer button:contains(cancel)",
-            run: "click",
+            content: "modal is closed",
+            trigger: ":not(.modal)",
         },
         {
             // click on the created app
@@ -965,7 +962,7 @@ registry.category("web_tour.tours").add("web_studio_new_report_tour", {
         },
         {
             // edit reports
-            trigger: ".o_web_studio_menu li a:contains(Reports)",
+            trigger: ".o_web_studio_menu button:contains(Reports)",
             run: "click",
         },
         {
@@ -985,17 +982,23 @@ registry.category("web_tour.tours").add("web_studio_new_report_tour", {
         },
         {
             // add a new group on the node
-            trigger: '.o_web_studio_sidebar .o_field_many2many_tags[name="groups_id"] input',
+            trigger: '.o_web_studio_sidebar .o_field_many2many_tags[name="group_ids"] input',
             run: "click",
         },
         {
-            trigger: ".o-autocomplete--dropdown-menu li:contains(Access Rights)",
+            trigger: ".o-autocomplete--dropdown-menu li:contains(Administrator)",
             run: "click",
         },
         {
             // wait for the group to appear
             trigger:
-                '.o_web_studio_sidebar .o_field_many2many_tags[name="groups_id"] .o_tag_badge_text:contains(Access Rights)',
+                '.o_web_studio_sidebar .o_field_many2many_tags[name="group_ids"] .o_tag_badge_text:contains(Administrator)',
+        },
+        {
+            // Focus the editable area
+            trigger:
+                ".o-web-studio-report-editor-wysiwyg :iframe .odoo-editor-editable div.page div",
+            run: "click",
         },
         {
             trigger:
@@ -1062,7 +1065,7 @@ registry.category("web_tour.tours").add("web_studio_new_report_tour", {
         },
         {
             trigger:
-                '.o_web_studio_sidebar .o_field_many2many_tags[name="groups_id"] .o_tag_badge_text:contains(Access Rights)',
+                '.o_web_studio_sidebar .o_field_many2many_tags[name="group_ids"] .o_tag_badge_text:contains(Administrator)',
         },
         {
             trigger: ".o_web_studio_leave > a.btn",
@@ -1093,7 +1096,7 @@ registry.category("web_tour.tours").add("web_studio_new_report_basic_layout_tour
         },
         {
             // edit reports
-            trigger: ".o_web_studio_menu li a:contains(Reports)",
+            trigger: ".o_web_studio_menu button:contains(Reports)",
             run: "click",
         },
         {
@@ -1113,17 +1116,17 @@ registry.category("web_tour.tours").add("web_studio_new_report_basic_layout_tour
         },
         {
             // add a new group on the node
-            trigger: '.o_web_studio_sidebar .o_field_many2many_tags[name="groups_id"] input',
+            trigger: '.o_web_studio_sidebar .o_field_many2many_tags[name="group_ids"] input',
             run: "click",
         },
         {
-            trigger: ".o-autocomplete--dropdown-menu li:contains(Access Rights)",
+            trigger: ".o-autocomplete--dropdown-menu li:contains(Administrator)",
             run: "click",
         },
         {
             // wait for the group to appear
             trigger:
-                '.o_web_studio_sidebar .o_field_many2many_tags[name="groups_id"] .o_tag_badge_text:contains(Access Rights)',
+                '.o_web_studio_sidebar .o_field_many2many_tags[name="group_ids"] .o_tag_badge_text:contains(Administrator)',
         },
         {
             trigger: ".o_web_studio_menu .o-web-studio-save-report.btn-primary",
@@ -1292,7 +1295,7 @@ registry.category("web_tour.tours").add("web_studio_approval_tour", {
             run: "edit web_studio",
         },
         {
-            trigger: ".o_menu_item.dropdown-item:contains(Module)",
+            trigger: ".dropdown-item:contains(Search Module for)",
             run: "click",
         },
         {
@@ -1385,6 +1388,7 @@ registry.category("web_tour.tours").add("web_studio_local_storage_tour", {
                 localStorage.setItem("openStudioOnReload", "main");
                 window.location.reload();
             },
+            expectUnloadPage: true,
         },
         {
             trigger: ".o_web_client.o_in_studio",
@@ -1411,6 +1415,7 @@ registry.category("web_tour.tours").add("web_studio_local_storage_tour", {
             run: function () {
                 window.location.reload();
             },
+            expectUnloadPage: true,
         },
         {
             trigger: ".o_web_client:not(.o_in_studio)",
@@ -1450,6 +1455,7 @@ registry.category("web_tour.tours").add("web_studio_custom_background_tour", {
             content: "validate the reset of the background",
             trigger: ".modal-dialog .btn-primary",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             content: "class for custom background must be disabled (inside studio)",
@@ -1517,7 +1523,7 @@ registry.category("web_tour.tours").add("web_studio_create_app_with_pipeline_and
             run: "click",
         },
         {
-            trigger: ".o_web_studio_editor .o_menu_sections a:contains(Views)",
+            trigger: ".o_web_studio_editor .o_menu_sections button:contains(Views)",
             run: "click",
         },
         {
@@ -1679,7 +1685,7 @@ const buttonToogleStudio = {
     trigger: `button[title="Toggle Studio"]`,
     run: "click",
 };
-const addActionButtonModalSteps = (
+const addActionButtonSteps = (
     ActionLabel = "web_studio_new_button_action_name",
     ActionName = "Privacy Lookup"
 ) => [
@@ -1688,47 +1694,43 @@ const addActionButtonModalSteps = (
         run: "click",
     },
     {
-        trigger: ".o-web-studio-editor--modal-add-action input#set_label",
+        trigger: ".o_web_studio_property input[name='string']",
         run: `edit ${ActionLabel}`,
     },
     {
-        trigger: ".o-web-studio-editor--modal-add-action input#set_button_type_to_action",
+        trigger: ".o_web_studio_property [name='name'] button",
         run: "click",
     },
     {
-        trigger: ".o-web-studio-editor--modal-add-action .o_record_selector input",
-        run: `edit ${ActionName}`,
-    },
-    {
-        trigger: `.o-web-studio-editor--modal-add-action .o-autocomplete--dropdown-menu li a:not(:has(.fa-spin)):contains(${ActionName})`,
-        run: "click",
-    },
-    {
-        trigger: "footer button.o-web-studio-editor--add-button-confirm",
+        trigger: `.o_select_menu_menu .o_select_menu_item:contains(${ActionName})`,
         run: "click",
     },
 ];
 
-const addMethodButtonModalSteps = () => [
+const addMethodButtonSteps = () => [
     {
         trigger: ".o-web-studio-editor--add-button-action",
         run: "click",
     },
     {
-        trigger: ".o-web-studio-editor--modal-add-action input#set_label",
+        trigger: ".o_web_studio_property input[name='string']",
         run: `edit test`,
     },
     {
-        trigger: ".o-web-studio-editor--modal-add-action input#set_button_type_to_object",
+        trigger: ".o_web_studio_property [name='type'] button",
         run: "click",
     },
     {
-        trigger: ".o-web-studio-editor--modal-add-action  input#set_method",
+        trigger: ".o_select_menu_menu .o_select_menu_item:contains(Call a method)",
+        run: "click",
+    },
+    {
+        trigger: ".o_web_studio_property input[name='name']",
         run: `edit demo && click body`,
     },
 ];
 
-registry.category("web_tour.tours").add("web_studio_check_method_in_model", {
+registry.category("web_tour.tours").add("web_studio_add_button_type_object", {
     steps: () => [
         {
             trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']",
@@ -1739,17 +1741,7 @@ registry.category("web_tour.tours").add("web_studio_check_method_in_model", {
             run: "click",
         },
         buttonToogleStudio,
-        ...addMethodButtonModalSteps(),
-        {
-            trigger: "div.text-danger",
-            run() {
-                const div_error = document.querySelector("div.text-danger");
-                assertEqual(
-                    div_error.innerHTML,
-                    "The method demo does not exist on the model res.partner()."
-                );
-            },
-        },
+        ...addMethodButtonSteps(),
     ],
 });
 
@@ -1764,7 +1756,7 @@ registry.category("web_tour.tours").add("web_studio_test_create_action_button_in
             run: "click",
         },
         buttonToogleStudio,
-        ...addActionButtonModalSteps(),
+        ...addActionButtonSteps(),
         {
             trigger: ".o_web_studio_leave a",
             run: "click",
@@ -1786,7 +1778,7 @@ registry
                 run: "click",
             },
             buttonToogleStudio,
-            ...addActionButtonModalSteps("web_studio_other_button_action_name", "Download (vCard)"),
+            ...addActionButtonSteps("web_studio_other_button_action_name", "Download (vCard)"),
             {
                 trigger: ".o_web_studio_leave a",
                 run: "click",
@@ -1814,7 +1806,7 @@ registry.category("web_tour.tours").add("web_studio_test_create_action_button_in
             trigger: ".o_optional_columns_dropdown button",
             run: "click",
         },
-        ...addActionButtonModalSteps(),
+        ...addActionButtonSteps(),
         {
             trigger: ".o_web_studio_leave a",
             run: "click",

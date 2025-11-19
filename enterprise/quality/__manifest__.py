@@ -5,7 +5,7 @@
 {
     'name': 'Quality Base',
     'version': '1.0',
-    'category': 'Manufacturing/Quality',
+    'category': 'Supply Chain/Quality',
     'sequence': 50,
     'summary': 'Basic Feature for Quality',
     'depends': ['stock'],
@@ -25,6 +25,7 @@ Quality Base
         'data/quality_data.xml',
         'views/quality_views.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

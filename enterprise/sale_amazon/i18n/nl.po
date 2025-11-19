@@ -3,17 +3,16 @@
 # 	* sale_amazon
 # 
 # Translators:
-# Wil Odoo, 2024
 # Manon Rondou, 2025
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-07 20:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -303,40 +302,43 @@ msgid "Account Name"
 msgstr "Rekeningnaam"
 
 #. module: sale_amazon
+#: model:ir.ui.menu,name:sale_amazon.accounts_menu
+msgid "Accounts"
+msgstr "Rekeningen"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__active
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_search
 msgid "Active"
 msgstr "Actief"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid ""
-"After validation of the credentials, the marketplaces\n"
-"                                                to which this account has access will be\n"
-"                                                synchronized and automatically made available."
+"Add any new marketplace that this account has gained"
+"                                           access to."
 msgstr ""
-"Na validatie van de verificatiegegevens, de marketplaces\n"
-"Waarvan deze rekening toegang heeft,\n"
-"worden gesynchroniseerd en automatisch beschikbaar gesteld."
+"Voeg elke nieuwe marktplaats toe waarvoor dit account"
+"                                            toegang heeft verkregen."
+
+#. module: sale_amazon
+#: model:ir.ui.menu,name:sale_amazon.root_menu
+msgid "Amazon"
+msgstr "Amazon"
 
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_amazon_account
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_search
 msgid "Amazon Account"
 msgstr "Amazon account"
 
 #. module: sale_amazon
 #: model:ir.actions.act_window,name:sale_amazon.list_amazon_account_action
+#: model:ir.actions.act_window,name:sale_amazon.quick_create_account_action
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_tree
 #: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
 msgid "Amazon Accounts"
 msgstr "Amazon accounts"
-
-#. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_res_partner__amazon_email
-#: model:ir.model.fields,field_description:sale_amazon.field_res_users__amazon_email
-msgid "Amazon Email"
-msgstr "Amazon e-mail"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__amazon_feed_ref
@@ -356,9 +358,7 @@ msgid "Amazon Marketplace"
 msgstr "Amazon Marketplace"
 
 #. module: sale_amazon
-#: model:ir.actions.act_window,name:sale_amazon.list_amazon_marketplace_action
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_marketplace_view_tree
-#: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
 msgid "Amazon Marketplaces"
 msgstr "Amazon Marketplaces"
 
@@ -389,6 +389,11 @@ msgid "Amazon Reference"
 msgstr "Referentie Amazon"
 
 #. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__sku
+msgid "Amazon SKU"
+msgstr "Amazon SKU"
+
+#. module: sale_amazon
 #: model:product.template,name:sale_amazon.default_product_product_template
 msgid "Amazon Sale"
 msgstr "Amazon verkoop"
@@ -417,9 +422,21 @@ msgstr "Amazon marketplaces kunnen niet verwijderd worden."
 
 #. module: sale_amazon
 #. odoo-python
-#: code:addons/sale_amazon/models/amazon_account.py:0
+#: code:addons/sale_amazon/models/stock_move.py:0
 msgid "Amazon move: %s"
 msgstr "Amazon verplaatsing: %s"
+
+#. module: sale_amazon
+#. odoo-python
+#: code:addons/sale_amazon/models/stock_picking.py:0
+msgid ""
+"Amazon require certain information for the shipping location. Please make "
+"sure the following information are set on '%(location_name)s' "
+"(%(location)s): street, country and country code."
+msgstr ""
+"Amazon vereist bepaalde informatie voor de verzendlocatie. Zorg ervoor dat "
+"de volgende informatie is ingesteld voor '%(location_name)s' (%(location)s):"
+" straat, land en landcode."
 
 #. module: sale_amazon
 #. odoo-python
@@ -514,6 +531,11 @@ msgid "Amazon.fr"
 msgstr "Amazon.fr"
 
 #. module: sale_amazon
+#: model:amazon.marketplace,name:sale_amazon.marketplace_IE
+msgid "Amazon.ie"
+msgstr "Amazon.ie"
+
+#. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_IN
 msgid "Amazon.in"
 msgstr "Amazon.in"
@@ -551,8 +573,7 @@ msgstr "Amazon.sg"
 #. module: sale_amazon
 #: model:mail.template,name:sale_amazon.inventory_sync_failure
 msgid "Amazon: Available Inventory for Offers Synchronization Failure"
-msgstr ""
-"Amazon: Mislukte synchronisatie beschikbare voorraad voor aanbiedingen"
+msgstr "Amazon: Mislukte synchronisatie aanwezige voorraad voor aanbiedingen"
 
 #. module: sale_amazon
 #: model:mail.template,name:sale_amazon.picking_sync_failure
@@ -567,7 +588,7 @@ msgstr "Amazon: synchronisatie van orders mislukt"
 #. module: sale_amazon
 #: model:ir.actions.server,name:sale_amazon.ir_cron_sync_amazon_inventory_ir_actions_server
 msgid "Amazon: sync available inventory"
-msgstr "Amazon: synchronisatie beschikbare voorraad"
+msgstr "Amazon: synchronisatie aanwezige voorraad"
 
 #. module: sale_amazon
 #: model:ir.actions.server,name:sale_amazon.ir_cron_sync_amazon_pickings_ir_actions_server
@@ -595,6 +616,17 @@ msgid "An error occurred while linking your account with Amazon."
 msgstr "Er is een fout opgetreden bij het koppelen van je account aan Amazon."
 
 #. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_search
+msgid "Archived"
+msgstr "Gearchiveerd"
+
+#. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Are you sure you want to disconnect this account?"
+msgstr "Weet je zeker dat je dit account wilt loskoppelen?"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__available_marketplace_ids
 msgid "Available Marketplaces"
 msgstr "Beschikbare marketplaces"
@@ -603,6 +635,11 @@ msgstr "Beschikbare marketplaces"
 #: model_terms:ir.ui.view,arch_db:sale_amazon.authorization_error
 msgid "Back to my account"
 msgstr "Terug naar mijn account"
+
+#. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.quick_create_account_form
+msgid "Cancel"
+msgstr "Annuleren"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__company_id
@@ -614,6 +651,18 @@ msgstr "Bedrijf"
 #: model:ir.model,name:sale_amazon.model_res_config_settings
 msgid "Config Settings"
 msgstr "Configuratie-instellingen"
+
+#. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+#: model_terms:ir.ui.view,arch_db:sale_amazon.quick_create_account_form
+msgid "Connect"
+msgstr "Verbinden"
+
+#. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_account__state__connected
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Connected"
+msgstr "Verbonden"
 
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_res_partner
@@ -651,6 +700,11 @@ msgid "Could not process the feed document send by Amazon."
 msgstr "Kan het door Amazon verzonden feed document niet verwerken."
 
 #. module: sale_amazon
+#: model:ir.model,website_form_label:sale_amazon.model_res_partner
+msgid "Create a Customer"
+msgstr "Een klant aanmaken"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__create_uid
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__create_uid
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__create_uid
@@ -672,9 +726,8 @@ msgid "Credentials"
 msgstr "Inloggegevens"
 
 #. module: sale_amazon
-#. odoo-python
-#: code:addons/sale_amazon/models/res_config_settings.py:0
-#: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__default_product_ids
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Default Products"
 msgstr "Standaard producten"
 
@@ -684,10 +737,29 @@ msgid "Discard"
 msgstr "Negeren"
 
 #. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Disconnect"
+msgstr "Verbinding verbreken"
+
+#. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_account__state__disconnected
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Disconnected"
+msgstr "Verbinding verbroken"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__display_name
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__display_name
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__display_name
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_recover_order_wizard__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_product_product__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_product_template__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_res_partner__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_sale_order__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_sale_order_line__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_stock_move__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "Schermnaam"
 
@@ -721,21 +793,34 @@ msgid "Europe"
 msgstr "Europa"
 
 #. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__location_id
+msgid "FBA Stock Location"
+msgstr "Voorraadlocatie FBA"
+
+#. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__synchronize_inventory
+msgid "FBM Stock"
+msgstr "Voorraad FBM"
+
+#. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_marketplace__region__us-west-2
 msgid "Far East"
 msgstr "Verre oosten"
 
 #. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_offer__amazon_channel__fba
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_order_view_form
 msgid "Fulfilled by Amazon"
 msgstr "Vervuld door Amazon"
 
 #. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_offer__amazon_channel__fbm
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_order_view_form
 msgid "Fulfilled by Merchant"
 msgstr "Vervuld door handelaar"
 
 #. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__amazon_channel
 #: model:ir.model.fields,field_description:sale_amazon.field_sale_order__amazon_channel
 msgid "Fulfillment Channel"
 msgstr "Vervullingskanaal"
@@ -761,6 +846,11 @@ msgstr ""
 "%s"
 
 #. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_res_config_settings__has_amazon_account
+msgid "Has Amazon Account"
+msgstr "Heeft een Amazon-account"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__base_marketplace_id
 msgid "Home Marketplace"
 msgstr "Startpagina marketplace"
@@ -770,6 +860,14 @@ msgstr "Startpagina marketplace"
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__id
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__id
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_recover_order_wizard__id
+#: model:ir.model.fields,field_description:sale_amazon.field_product_product__id
+#: model:ir.model.fields,field_description:sale_amazon.field_product_template__id
+#: model:ir.model.fields,field_description:sale_amazon.field_res_config_settings__id
+#: model:ir.model.fields,field_description:sale_amazon.field_res_partner__id
+#: model:ir.model.fields,field_description:sale_amazon.field_sale_order__id
+#: model:ir.model.fields,field_description:sale_amazon.field_sale_order_line__id
+#: model:ir.model.fields,field_description:sale_amazon.field_stock_move__id
+#: model:ir.model.fields,field_description:sale_amazon.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -804,30 +902,9 @@ msgstr ""
 "wel mogelijk de order te factureren of te leveren."
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid ""
-"If this account gained access to new marketplaces,"
-"                                         synchronize and add them to the "
-"current sync marketplaces"
-msgstr ""
-"Als dit account toegang heeft gekregen tot nieuwe marketplaces, "
-"synchroniseer ze dan en voeg ze toe aan de huidige gesynchroniseerde "
-"marketplaces"
-
-#. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.picking_view_form
 msgid "In Processing by Amazon"
 msgstr "In verwerking door Amazon"
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_search
-msgid "Inactive"
-msgstr "Inactief"
-
-#. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__is_follow_up_displayed
-msgid "Is Follow Up Displayed"
-msgstr "Wordt betalingsherinnering getoond"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__access_token
@@ -866,23 +943,18 @@ msgid "Last Updated on"
 msgstr "Laatst bijgewerkt op"
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Link with Amazon"
-msgstr "Koppel met Amazon"
+#: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
+msgid "Link My Account"
+msgstr "Koppel mijn account"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid ""
-"Link your Amazon account with Odoo to start synchronizing your\n"
-"                                Amazon orders."
+"Link your Amazon account with Odoo to start synchronizing your Amazon"
+"                               orders."
 msgstr ""
-"Koppel je Amazon-account aan Odoo om te beginnen met het synchroniseren van je\n"
-"                                Amazon-orders."
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Linked Account"
-msgstr "Gekoppeld account"
+"Koppel je Amazon-account aan Odoo om je Amazon-bestellingen te"
+"                               synchroniseren."
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_order_view_form
@@ -890,12 +962,18 @@ msgid "Lock"
 msgstr "Vergrendelen"
 
 #. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_search
+msgid "MarketPlace"
+msgstr "MarketPlace"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__marketplace_id
 msgid "Marketplace"
 msgstr "Marketplace"
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__active_marketplace_ids
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__active_marketplace_ids
 msgid "Marketplaces"
 msgstr "Marketplaces"
 
@@ -904,6 +982,17 @@ msgstr "Marketplaces"
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__name
 msgid "Name"
 msgstr "Naam"
+
+#. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_tree
+msgid "New"
+msgstr "Nieuw"
+
+#. module: sale_amazon
+#. odoo-python
+#: code:addons/sale_amazon/models/amazon_offer.py:0
+msgid "Non-storable product cannot be synced."
+msgstr ""
 
 #. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_marketplace__region__us-east-1
@@ -922,7 +1011,9 @@ msgstr "Offer aantal"
 #: code:addons/sale_amazon/models/amazon_account.py:0
 #: code:addons/sale_amazon/models/product_product.py:0
 #: code:addons/sale_amazon/models/product_template.py:0
+#: model:ir.actions.act_window,name:sale_amazon.amazon_offer_action
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__offer_ids
+#: model:ir.ui.menu,name:sale_amazon.offers_menu
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_product_product_view_form
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_product_template_view_form
@@ -939,11 +1030,6 @@ msgstr "Alleen beschikbare marketplaces kunnen geselecteerd worden"
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__order_count
 msgid "Order Count"
 msgstr "Aantal orders"
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Order Follow-up"
-msgstr "Order opvolging"
 
 #. module: sale_amazon
 #. odoo-python
@@ -966,6 +1052,7 @@ msgstr "In verwerking"
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_product_template
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__product_id
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_search
 msgid "Product"
 msgstr "Product"
 
@@ -1021,6 +1108,11 @@ msgstr ""
 "Registreer het uwe om het synchroniseren van orders in je Odoo te starten."
 
 #. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_offer__amazon_sync_status__reset
+msgid "Reset FBM stock"
+msgstr ""
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__restricted_data_token
 msgid "Restricted Data Token"
 msgstr "Beperkte gegevenstoken"
@@ -1034,11 +1126,6 @@ msgstr "Vervaldatum beperkte gegevenstoken"
 #: model_terms:ir.ui.view,arch_db:sale_amazon.picking_view_form
 msgid "Retry Amazon Sync"
 msgstr "Synchronisatie Amazon opnieuw proberen"
-
-#. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__sku
-msgid "SKU"
-msgstr "SKU"
 
 #. module: sale_amazon
 #: model:ir.model.constraint,message:sale_amazon.constraint_amazon_offer_unique_sku
@@ -1071,13 +1158,9 @@ msgid "Scheduled for Amazon Synchronization"
 msgstr "Gepland voor Amazon synchronisatie"
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid ""
-"Select the marketplace on which your seller account\n"
-"                                                was initially created."
-msgstr ""
-"Selecteer de marketplace waar je verkopersaccount\n"
-"                                                initieel werd aangemaakt."
+#: model_terms:ir.ui.view,arch_db:sale_amazon.quick_create_account_form
+msgid "Select the amazon marketplace to log in from."
+msgstr "Kies de Amazon-marktplaats om in te loggen."
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__seller_central_url
@@ -1090,9 +1173,19 @@ msgid "Seller Key"
 msgstr "Verkopersleutel"
 
 #. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__location_id
-msgid "Stock Location"
-msgstr "Voorraadlocatie"
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__state
+msgid "State"
+msgstr "Status"
+
+#. module: sale_amazon
+#: model:ir.model,name:sale_amazon.model_stock_move
+msgid "Stock Move"
+msgstr "Voorraadverplaatsing"
+
+#. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__sync_stock
+msgid "Stock Synchronization"
+msgstr ""
 
 #. module: sale_amazon
 #. odoo-python
@@ -1116,12 +1209,6 @@ msgstr "Synchronisatie FBM voorraad"
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Sync Feeds Status"
 msgstr "Status synchronisatie feed"
-
-#. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__active_marketplace_ids
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__active_marketplace_ids
-msgid "Sync Marketplaces"
-msgstr "Synchronisatie Marketplaces"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
@@ -1151,9 +1238,9 @@ msgid "Synchronization with Amazon failed"
 msgstr "Synchronisatie met Amazon mislukt"
 
 #. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__synchronize_inventory
-msgid "Synchronize FBM Inventory"
-msgstr "Synchronisatie FBM voorraad"
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Synchronize"
+msgstr "Synchroniseer"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.picking_view_form
@@ -1229,6 +1316,13 @@ msgid "The Stock Keeping Unit."
 msgstr "De voorraadbeheereenheid."
 
 #. module: sale_amazon
+#: model:ir.model.fields,help:sale_amazon.field_amazon_offer__amazon_channel
+msgid ""
+"The channel will be updated with the incomming orders or during the next "
+"stock synchronization."
+msgstr ""
+
+#. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/utils.py:0
 msgid "The communication with the API failed."
@@ -1243,12 +1337,6 @@ msgid ""
 msgstr ""
 "De communicatie met de API is mislukt.\n"
 "Foutcode: %(error_code)s; omschrijving: %(error_message)s"
-
-#. module: sale_amazon
-#: model:ir.model.fields,help:sale_amazon.field_res_partner__amazon_email
-#: model:ir.model.fields,help:sale_amazon.field_res_users__amazon_email
-msgid "The encrypted email of the customer. Does not forward mails."
-msgstr "De versleutelde e-mail van de klant. Stuurt geen e-mails door."
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__base_marketplace_id
@@ -1390,12 +1478,9 @@ msgid ""
 "The synchronization status of the product's stock level to Amazon:\n"
 "- Processing: The stock level has been sent and is being processed.\n"
 "- Done: The stock level has been processed.\n"
-"- Error: The synchronization of the stock level failed."
+"- Error: The synchronization of the stock level failed.\n"
+"- Reset: The next stock synchronization will reset the FBM stock level to 0."
 msgstr ""
-"De synchronisatiestatus van het voorraadniveau van het product met Amazon:\n"
-"- In verwerking: Het voorraadniveau is verzonden en wordt verwerkt.\n"
-"- Gereed: Het voorraadniveau is verwerkt.\n"
-"- Fout: De synchronisatie van het voorraadniveau is mislukt."
 
 #. module: sale_amazon
 #. odoo-python
@@ -1442,34 +1527,14 @@ msgstr ""
 "handmatig de juiste status in."
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid ""
-"This action will disconnect your account with Amazon and"
-"                                          cannot be undone. Are you sure you"
-" want to proceed?"
-msgstr ""
-"Met deze actie wordt je account bij Amazon ontkoppeld en kan dit niet "
-"ongedaan worden gemaakt. Weet je zeker dat je verder wilt gaan?"
-
-#. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_stock_picking
 msgid "Transfer"
 msgstr "Verplaatsing"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Unlink account"
-msgstr "Account ontkoppelen"
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Unlinked Account"
-msgstr "Ongekoppeld account"
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Update Available Marketplaces"
-msgstr "Update beschikbare marketplaces"
+msgid "Update available marketplaces"
+msgstr "Werk marktplaatsen bij"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_tree
@@ -1498,6 +1563,16 @@ msgstr "Of de prijs nu inclusief btw is of niet."
 
 #. module: sale_amazon
 #. odoo-python
+#: code:addons/sale_amazon/models/amazon_account.py:0
+msgid ""
+"You cannot delete an account that is linked to sale orders. Please archive "
+"it instead."
+msgstr ""
+"Een account dat gekoppeld is aan verkooporders kan niet worden verwijderd. "
+"Archiveer het in plaats daarvan."
+
+#. module: sale_amazon
+#. odoo-python
 #: code:addons/sale_amazon/utils.py:0
 msgid "You first need to authorize the Amazon account %s."
 msgstr "Je moet eerst het %s Amazon-account autoriseren."
@@ -1523,11 +1598,6 @@ msgstr ""
 "het later opnieuw."
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Your Amazon account is linked with Odoo."
-msgstr "Je Amazon-account is gekoppeld aan Odoo."
-
-#. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/models/amazon_account.py:0
 msgid "[%(gift_wrap_code)s] Gift Wrapping Charges for %(product)s"
@@ -1549,6 +1619,18 @@ msgstr ""
 "[%(sku)s] %(item_title)sVoorwaarde: %(main_condition)s - %(sub_condition)s"
 
 #. module: sale_amazon
+#. odoo-python
+#: code:addons/sale_amazon/models/amazon_account.py:0
+msgid "account_id"
+msgstr "account_id"
+
+#. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "e.g. American Market"
 msgstr "Bijv. Amerikaanse markt"
+
+#. module: sale_amazon
+#. odoo-python
+#: code:addons/sale_amazon/models/amazon_account.py:0
+msgid "id"
+msgstr "ID"

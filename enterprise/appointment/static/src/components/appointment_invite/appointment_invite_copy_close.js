@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { browser } from "@web/core/browser/browser";
 import { registry } from '@web/core/registry';
@@ -28,21 +26,27 @@ export class AppointmentInviteCopyClose extends Component {
         if (this.props.readonly) {
             return;
         }
-        if (await this.props.record.save()) {
-            const bookUrl = this.props.record.data.book_url;
-            setTimeout(async () => {
-                await browser.navigator.clipboard.writeText(bookUrl);
-                this.notification.add(
-                    _t("Link copied to clipboard!"),
-                    { type: "success" }
-                );
-                this.env.dialogData.close();
-                if (this.action.currentController?.props?.resModel === "appointment.invite") {
-                    // coming from an appointment.invite action, refresh the model state to show the changes
-                    this.action.loadState();
-                }
-            });
+
+        if (!this.props.record.data.has_identical_config) {
+            const recordSaved = await this.props.record.save();
+            if (!recordSaved) {
+                return;
+            }
         }
+
+        const bookUrl = this.props.record.data.book_url;
+        setTimeout(async () => {
+            await browser.navigator.clipboard.writeText(bookUrl);
+            this.notification.add(
+                _t("Link copied to clipboard!"),
+                { type: "success" }
+            );
+            this.env.dialogData.close();
+            if (this.action.currentController?.props?.resModel === "appointment.invite") {
+                // coming from an appointment.invite action, refresh the model state to show the changes
+                this.action.loadState();
+            }
+        });
     }
 }
 

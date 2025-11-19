@@ -6,6 +6,7 @@ from odoo.osv import expression
 
 from odoo.addons.resource.models.utils import filter_domain_leaf
 
+
 class PlanningSlot(models.Model):
     _inherit = 'planning.slot'
 

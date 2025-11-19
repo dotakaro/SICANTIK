@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import base64
+
+from ast import literal_eval
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
@@ -20,6 +22,8 @@ class MrpProduction(models.Model):
     employee_ids = fields.Many2many('hr.employee', string="working employees", compute='_compute_employee_ids')
 
     log_note = fields.Text(string="Log note")
+
+    picking_type_auto_close = fields.Boolean(related='picking_type_id.auto_close_production')
 
     def write(self, vals):
         if 'lot_producing_id' in vals:
@@ -71,27 +75,18 @@ class MrpProduction(models.Model):
     def action_open_shop_floor(self):
         self.ensure_one()
         action = self.env['ir.actions.actions']._for_xml_id('mrp_workorder.action_mrp_display')
-        action['context'] = {
-            'show_all_workorders': True,
+        action['context'] = literal_eval(action['context']) | {
             'search_default_name': self.name,
+            'search_default_blocked': True,
             'shouldHideNewWorkcenterButton': True,
         }
+        del action['context']['search_default_filter_ready']
         return action
 
     @api.depends('workorder_ids', 'workorder_ids.employee_ids')
     def _compute_employee_ids(self):
         for record in self:
             record.employee_ids = record.workorder_ids.employee_ids
-
-    def _split_productions(self, amounts=False, cancel_remaining_qty=False, set_consumed_qty=False):
-        productions = super()._split_productions(amounts=amounts, cancel_remaining_qty=cancel_remaining_qty, set_consumed_qty=set_consumed_qty)
-        backorders = productions[1:]
-        if not backorders:
-            return productions
-        for wo in backorders.workorder_ids:
-            if wo.current_quality_check_id.component_id:
-                wo.current_quality_check_id._update_component_quantity()
-        return productions
 
     def pre_button_mark_done(self):
         res = super().pre_button_mark_done()
@@ -123,15 +118,17 @@ class MrpProduction(models.Model):
 
         warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
 
+        def read_image_datas(path):
+            with file_open(path, "rb") as f:
+                return base64.b64encode(f.read())
+
         products = [{'xml_id': xmlid, 'noupdate': True, 'values': {
             'name': name,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'is_storable': True,
             'uom_id': self.env.ref('uom.product_uom_unit').id,
-            'uom_po_id': self.env.ref('uom.product_uom_unit').id,
             'description': desc,
             'default_code': code,
-            'image_1920': base64.b64encode(file_open(img, "rb").read()),
+            'image_1920': read_image_datas(img),
         }} for (xmlid, name, desc, code, img) in (
             (
                 'mrp.product_product_computer_desk',
@@ -210,10 +207,6 @@ class MrpProduction(models.Model):
                     'time_cycle': 120,
                     'sequence': 10,
                     'name': 'Assembly',
-                    'worksheet_type': 'pdf',
-                    'worksheet': base64.b64encode(
-                        file_open('mrp/static/img/cutting-worksheet.pdf', "rb").read()
-                    )
                 }
             }], True)
             bom_lines.operation_id = routing
@@ -225,16 +218,14 @@ class MrpProduction(models.Model):
                 'test_type_id': self.env.ref(testtype).id,
                 'note': note,
                 'title': title,
-                'worksheet_page': page,
                 'sequence': seq,
                 'component_id': comp,
-            }} for (xmlid, testtype, note, title, page, seq, comp) in (
+            }} for (xmlid, testtype, note, title, seq, comp) in (
                 (
                     'mrp_workorder.quality_point_register_serial_production',
                     'mrp_workorder.test_type_register_production',
                     'Register the produced quantity.',
                     'Register production',
-                    0,
                     5,
                     None,
                 ),
@@ -243,7 +234,6 @@ class MrpProduction(models.Model):
                     'mrp_workorder.test_type_register_consumed_materials',
                     'Please register consumption of the table top.',
                     'Component Registration: Table Head',
-                    1,
                     20,
                     tabletop.id,
                 ),
@@ -252,7 +242,6 @@ class MrpProduction(models.Model):
                     'quality.test_type_instructions',
                     'Please ensure you are using the new SRX679 screwdriver.',
                     'Choice of screwdriver',
-                    1,
                     30,
                     None,
                 ),
@@ -261,7 +250,6 @@ class MrpProduction(models.Model):
                     'mrp_workorder.test_type_register_consumed_materials',
                     'Please register consumption of the table legs.',
                     'Component Registration: Table Legs',
-                    4,
                     70,
                     tableleg.id,
                 ),
@@ -270,7 +258,6 @@ class MrpProduction(models.Model):
                     'quality.test_type_instructions',
                     'Please attach the legs to the table as shown below.',
                     'Table Legs',
-                    4,
                     60,
                     None,
                 ),
@@ -279,7 +266,6 @@ class MrpProduction(models.Model):
                     'mrp_workorder.test_type_print_label',
                     None,
                     'Print Labels',
-                    0,
                     90,
                     None,
                 ),

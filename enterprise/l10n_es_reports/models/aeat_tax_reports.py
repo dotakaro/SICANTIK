@@ -4,7 +4,7 @@
 from odoo import fields, models, _
 from odoo.exceptions import RedirectWarning, UserError
 import odoo.release
-from odoo.tools import SQL
+from odoo.tools import SQL, float_is_zero
 from odoo.tools.float_utils import float_split_str, float_compare
 
 from datetime import datetime
@@ -106,9 +106,9 @@ class AccountReport(models.Model):
             return super()._get_expression_audit_aml_domain(expression, options)
 
 
-class SpanishTaxReportCustomHandler(models.AbstractModel):
+class L10n_EsTaxReportHandler(models.AbstractModel):
     _name = 'l10n_es.tax.report.handler'
-    _inherit = 'account.tax.report.handler'
+    _inherit = ['account.tax.report.handler']
     _description = 'Spanish Tax Report Custom Handler'
 
     def _append_boe_button(self, options, boe_number):
@@ -129,17 +129,6 @@ class SpanishTaxReportCustomHandler(models.AbstractModel):
         """
         period, _year = self._get_mod_period_and_year(options)
         if boe_number == 390:
-            # mod390 must be up to date to be able to generate boe
-            if not self.env.ref('l10n_es.mod_390_casilla_667', raise_if_not_found=False):
-                raise RedirectWarning(
-                    message=_('Please update the "Spain - Accounting (PGCE 2008)" (l10n_es) module to be able to export BOE'),
-                    action=self.env['ir.actions.act_window']._for_xml_id('base.open_module_tree'),
-                    button_text=_("Go to Apps"),
-                    additional_context={
-                        'search_default_name': 'l10n_es',
-                        'search_default_extra': True,
-                    },
-                )
             # period will be falsy if a whole year is selected
             if period and not options.get('_running_export_test'):
                 raise UserError(_("Wrong report dates for BOE generation : please select a range of a year."))
@@ -419,9 +408,9 @@ class SpanishTaxReportCustomHandler(models.AbstractModel):
         return rslt
 
 
-class SpanishMod111TaxReportCustomHandler(models.AbstractModel):
+class L10n_EsMod111TaxReportHandler(models.AbstractModel):
     _name = 'l10n_es.mod111.tax.report.handler'
-    _inherit = 'l10n_es.tax.report.handler'
+    _inherit = ['l10n_es.tax.report.handler']
     _description = 'Spanish Tax Report Custom Handler (Mod111)'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -490,9 +479,9 @@ class SpanishMod111TaxReportCustomHandler(models.AbstractModel):
         }
 
 
-class SpanishMod115TaxReportCustomHandler(models.AbstractModel):
+class L10n_EsMod115TaxReportHandler(models.AbstractModel):
     _name = 'l10n_es.mod115.tax.report.handler'
-    _inherit = 'l10n_es.tax.report.handler'
+    _inherit = ['l10n_es.tax.report.handler']
     _description = 'Spanish Tax Report Custom Handler (Mod115)'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -535,9 +524,64 @@ class SpanishMod115TaxReportCustomHandler(models.AbstractModel):
         }
 
 
-class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
+class L10n_EsMod130TaxReportHandler(models.AbstractModel):
+    _name = 'l10n_es.mod130.tax.report.handler'
+    _inherit = ['l10n_es.tax.report.handler']
+    _description = 'Spanish Tax Report Custom Handler (Mod130)'
+
+    def _custom_options_initializer(self, report, options, previous_options=None):
+        super()._custom_options_initializer(report, options, previous_options=previous_options)
+        super()._append_boe_button(options, 130)
+
+    def open_boe_wizard(self, options, boe_number):
+        result = super().open_boe_wizard(options, boe_number)
+        result['res_model'] = 'l10n_es_reports.aeat.boe.mod130.export.wizard'
+        return result
+
+    def export_boe(self, options):
+        period, year = self._get_mod_period_and_year(options)
+        # Legal requirement for the export of boe file for modelo 130
+        boe_modelo_id = 'T13001000'
+
+        rslt = f"<{boe_modelo_id}>".encode()
+        report = self.env['account.report'].browse(options['report_id'])
+        report_lines = report._get_lines(options)
+        casilla_lines_map = self._retrieve_casilla_lines(report_lines)
+
+        # Wizard with manually-entered data
+        boe_wizard = self._retrieve_boe_manual_wizard(options, 130)
+
+        rslt += self._l10n_es_boe_format_string(' ' * 1)
+        rslt += self._l10n_es_boe_format_string(f'{boe_wizard.declaration_type}')
+        rslt += self._l10n_es_boe_format_string(boe_wizard.taxpayer_id or 'n/a', length=9)
+        rslt += self._l10n_es_boe_format_string(boe_wizard.taxpayer_last_name or 'n/a', length=60)
+        rslt += self._l10n_es_boe_format_string(boe_wizard.taxpayer_first_name or 'n/a', length=20)
+        rslt += self._l10n_es_boe_format_string(year, length=4)
+        rslt += self._l10n_es_boe_format_string(period, length=2)
+
+        # Content of the report
+        for casilla in casilla_lines_map.values():
+            rslt += self._l10n_es_boe_format_number(options, casilla, length=17, decimal_places=2, signed=True, in_currency=True)
+
+        rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and 'X' or ' ')
+        rslt += self._l10n_es_boe_format_string(boe_wizard.complementary_declaration and boe_wizard.previous_report_number or '', length=13)
+        _, iban = self._get_bic_and_iban(boe_wizard.partner_bank_id)
+        rslt += self._l10n_es_boe_format_string(iban, length=34)
+        rslt += self._l10n_es_boe_format_string(' ' * 96)
+        rslt += self._l10n_es_boe_format_string(' ' * 13)
+
+        rslt += self._l10n_es_boe_format_string(f'</{boe_modelo_id}>')
+
+        return {
+            'file_name': report.get_default_report_filename(options, 'txt'),
+            'file_content': rslt,
+            'file_type': 'txt',
+        }
+
+
+class L10n_EsMod303TaxReportHandler(models.AbstractModel):
     _name = 'l10n_es.mod303.tax.report.handler'
-    _inherit = 'l10n_es.tax.report.handler'
+    _inherit = ['l10n_es.tax.report.handler']
     _description = 'Spanish Tax Report Custom Handler (Mod303)'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -873,9 +917,9 @@ class SpanishMod303TaxReportCustomHandler(models.AbstractModel):
         return rslt
 
 
-class SpanishMod347TaxReportCustomHandler(models.AbstractModel):
+class L10n_EsMod347TaxReportHandler(models.AbstractModel):
     _name = 'l10n_es.mod347.tax.report.handler'
-    _inherit = 'l10n_es.tax.report.handler'
+    _inherit = ['l10n_es.tax.report.handler']
     _description = 'Spanish Tax Report Custom Handler (Mod347)'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -1200,9 +1244,9 @@ class SpanishMod347TaxReportCustomHandler(models.AbstractModel):
         }
 
 
-class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
+class L10n_EsMod349TaxReportHandler(models.AbstractModel):
     _name = 'l10n_es.mod349.tax.report.handler'
-    _inherit = 'l10n_es.tax.report.handler'
+    _inherit = ['l10n_es.tax.report.handler']
     _description = 'Spanish Tax Report Custom Handler (Mod349)'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -1296,6 +1340,8 @@ class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
                             # To be sure we don't add a move value twice (in case there is multiple refunds for a same move),
                             # we add it to a list
                             if matching_move.id not in treated_moves:
+                                if float_is_zero(matching_move.amount_residual, precision_digits=2) and options.get('export_mode') == 'file':
+                                    result_dict['value'] += matching_move.amount_total
                                 result_dict['value'] += matching_move.amount_residual
                                 treated_moves.append(matching_move.id)
 
@@ -1357,7 +1403,7 @@ class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
         # Build query
         query = report._get_report_query(options, 'strict_range', domain=domain)
         groupby_field_sql = self.env['account.move.line']._field_to_sql('account_move_line', current_groupby, query) if current_groupby else SQL()
-
+        self.env.flush_all()
         query = SQL("""
             SELECT DISTINCT account_move.id AS move_id,
                 %(select_from_groupby)s
@@ -1450,7 +1496,14 @@ class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
 
         matched_moves = []
         period_dict = {}
-        for refund_invoice in self.env['account.move'].search([('date', '<=', report_date_to), ('date', '>=', report_date_from), ('move_type', 'in', ['in_refund', 'out_refund']), ('l10n_es_reports_mod349_invoice_type', '=', mod_349_type), ('partner_id', '=', line_partner.id)]):
+        for refund_invoice in self.env['account.move'].search([
+            ('date', '<=', report_date_to),
+            ('date', '>=', report_date_from),
+            ('move_type', 'in', ['in_refund', 'out_refund']),
+            ('l10n_es_reports_mod349_invoice_type', '=', mod_349_type),
+            ('partner_id', '=', line_partner.id),
+            ('state', '=', 'posted'),
+        ]):
             original_invoice = refund_invoice.reversed_entry_id
 
             if not original_invoice:
@@ -1458,6 +1511,9 @@ class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
                                   'while we need that information for this report. ', refund_invoice.display_name))
 
             invoice_period, invoice_year = self._retrieve_period_and_year(original_invoice.date, trimester=report_period[-1] == 'T')
+
+            if original_invoice.date <= datetime.strptime(report_date_to, '%Y-%m-%d').date() and original_invoice.date >= datetime.strptime(report_date_from, '%Y-%m-%d').date():
+                continue
 
             if f"{invoice_period}{invoice_year}" not in period_dict:
                 period_dict[f"{invoice_period}{invoice_year}"] = {
@@ -1497,7 +1553,7 @@ class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
 
         # Wizard with manually-entered data
         boe_wizard = self._retrieve_boe_manual_wizard(options, 349)
-
+        options['export_mode'] = 'file'
         if boe_wizard.trimester_2months_report:
             if period[-1] == 'T':
                 options = options.copy()
@@ -1540,9 +1596,9 @@ class SpanishMod349TaxReportCustomHandler(models.AbstractModel):
         }
 
 
-class SpanishMod390TaxReportCustomHandler(models.AbstractModel):
+class L10n_EsMod390TaxReportHandler(models.AbstractModel):
     _name = 'l10n_es.mod390.tax.report.handler'
-    _inherit = 'l10n_es.tax.report.handler'
+    _inherit = ['l10n_es.tax.report.handler']
     _description = 'Spanish Tax Report Custom Handler (Mod390)'
 
     def _custom_options_initializer(self, report, options, previous_options):

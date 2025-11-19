@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { _t } from "@web/core/l10n/translation";
 import * as spreadsheet from "@odoo/o-spreadsheet";
 import { initCallbackRegistry } from "@spreadsheet/o_spreadsheet/init_callbacks";
@@ -17,7 +15,7 @@ const { featurePluginRegistry, sidePanelRegistry, cellMenuRegistry } = spreadshe
 featurePluginRegistry.add("odooListAutofillPlugin", ListAutofillPlugin);
 
 sidePanelRegistry.add("LIST_PROPERTIES_PANEL", {
-    title: () => _t("List properties"),
+    title: (env, props) => _t("List #%s", props.listId),
     Body: ListDetailsSidePanel,
     computeState(getters, initialProps) {
         return {
@@ -34,6 +32,7 @@ cellMenuRegistry.add("listing_properties", {
     separator: true,
     name: _t("See list properties"),
     sequence: 190,
+    isReadonlyAllowed: true,
     execute(env) {
         const position = env.model.getters.getActivePosition();
         const listId = env.model.getters.getListIdFromPosition(position);
@@ -41,7 +40,10 @@ cellMenuRegistry.add("listing_properties", {
     },
     isVisible: (env) => {
         const position = env.model.getters.getActivePosition();
-        return env.model.getters.isExistingList(env.model.getters.getListIdFromPosition(position));
+        return (
+            !env.isSmall &&
+            env.model.getters.isExistingList(env.model.getters.getListIdFromPosition(position))
+        );
     },
     icon: "o-spreadsheet-Icon.ODOO_LIST",
 });

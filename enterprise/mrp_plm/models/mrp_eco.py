@@ -12,7 +12,7 @@ from odoo.exceptions import UserError, ValidationError
 
 
 class MrpEcoType(models.Model):
-    _name = "mrp.eco.type"
+    _name = 'mrp.eco.type'
     _description = 'ECO Type'
     _inherit = ['mail.alias.mixin', 'mail.thread']
 
@@ -28,23 +28,23 @@ class MrpEcoType(models.Model):
     stage_ids = fields.Many2many('mrp.eco.stage', 'mrp_eco_stage_type_rel', 'type_id', 'stage_id', string='Stages')
 
     def _compute_nb(self):
-        # TDE FIXME: this seems not good for performances, to check (replace by read_group later on)
+        # TDE FIXME: this seems not good for performances, to check (replace by _read_group later on)
         MrpEco = self.env['mrp.eco']
         for eco_type in self:
             eco_type.nb_ecos = MrpEco.search_count([
-                ('type_id', '=', eco_type.id), ('state', '!=', 'done')
+                ('type_id', 'in', eco_type.ids), ('state', '!=', 'done')
             ])
             eco_type.nb_validation = MrpEco.search_count([
-                ('type_id', '=', eco_type.id),
+                ('type_id', 'in', eco_type.ids),
                 ('stage_id.allow_apply_change', '=', True),
                 ('state', '=', 'progress')
             ])
             eco_type.nb_approvals = MrpEco.search_count([
-                ('type_id', '=', eco_type.id),
+                ('type_id', 'in', eco_type.ids),
                 ('approval_ids.status', '=', 'none')
             ])
             eco_type.nb_approvals_my = MrpEco.search_count([
-                ('type_id', '=', eco_type.id),
+                ('type_id', 'in', eco_type.ids),
                 ('approval_ids.status', '=', 'none'),
                 ('approval_ids.required_user_ids', '=', self.env.user.id)
             ])
@@ -59,7 +59,7 @@ class MrpEcoType(models.Model):
 
 
 class MrpEcoApprovalTemplate(models.Model):
-    _name = "mrp.eco.approval.template"
+    _name = 'mrp.eco.approval.template'
     _order = "sequence"
     _description = 'ECO Approval Template'
 
@@ -70,8 +70,8 @@ class MrpEcoApprovalTemplate(models.Model):
         ('mandatory', 'Is required to approve'),
         ('comment', 'Comments only')], 'Approval Type',
         default='mandatory', required=True, index=True)
-    user_ids = fields.Many2many('res.users', string='Users', domain=lambda self: [('groups_id', 'in', self.env.ref('mrp_plm.group_plm_user').id)], required=True)
-    stage_id = fields.Many2one('mrp.eco.stage', 'Stage', required=True)
+    user_ids = fields.Many2many('res.users', string='Users', domain=lambda self: [('all_group_ids', 'in', self.env.ref('mrp_plm.group_plm_user').id)], required=True)
+    stage_id = fields.Many2one('mrp.eco.stage', 'Stage', required=True, index=True)
 
     @api.constrains('user_ids', 'stage_id')
     def _check_unique_user_stage(self):
@@ -87,27 +87,27 @@ class MrpEcoApprovalTemplate(models.Model):
 
 
 class MrpEcoApproval(models.Model):
-    _name = "mrp.eco.approval"
+    _name = 'mrp.eco.approval'
     _description = 'ECO Approval'
     _order = 'approval_date desc'
 
     eco_id = fields.Many2one(
         'mrp.eco', 'ECO',
-        ondelete='cascade', required=True)
+        ondelete='cascade', required=True, index=True)
     approval_template_id = fields.Many2one(
         'mrp.eco.approval.template', 'Template',
         ondelete='cascade', required=True)
-    name = fields.Char('Role', related='approval_template_id.name', store=True, readonly=False)
+    name = fields.Char('Role', related='approval_template_id.name')
     user_id = fields.Many2one(
         'res.users', 'Approved by')
     required_user_ids = fields.Many2many(
         'res.users', string='Requested Users', related='approval_template_id.user_ids', readonly=False)
     template_stage_id = fields.Many2one(
         'mrp.eco.stage', 'Approval Stage',
-        related='approval_template_id.stage_id', store=True, readonly=False)
+        related='approval_template_id.stage_id')
     eco_stage_id = fields.Many2one(
         'mrp.eco.stage', 'ECO Stage',
-        related='eco_id.stage_id', store=True, readonly=False)
+        related='eco_id.stage_id')
     status = fields.Selection([
         ('none', 'Not Yet'),
         ('comment', 'Commented'),
@@ -148,12 +148,13 @@ class MrpEcoApproval(models.Model):
         (self - awaiting_validation_approval).awaiting_my_validation = False
 
     def _search_awaiting_my_validation(self, operator, value):
-        if (operator, value) not in [('=', True), ('!=', False)]:
-            raise NotImplementedError(_('Operation not supported'))
+        if operator != 'in':
+            return NotImplemented
         return [('required_user_ids', 'in', self.env.uid),
                 ('approval_template_id.approval_type', 'in', ('mandatory', 'optional')),
                 ('status', '!=', 'approved'),
                 ('is_closed', '=', False)]
+
 
 class MrpEcoStage(models.Model):
     _name = 'mrp.eco.stage'
@@ -261,9 +262,9 @@ class MrpEco(models.Model):
     allow_apply_change = fields.Boolean(
         'Show Apply Change', compute='_compute_allow_apply_change')
 
-    product_tmpl_id = fields.Many2one('product.template', "Product", check_company=True)
+    product_tmpl_id = fields.Many2one('product.template', "Product", check_company=True, index='btree_not_null')
     production_id = fields.Many2one(
-        'mrp.production', string='Manufacturing Orders', readonly=True, copy=False)
+        'mrp.production', string='Manufacturing Orders', readonly=True, copy=False, index='btree_not_null')
     type = fields.Selection(selection=_get_type_selection, string='Apply on',
         default='bom', required=True)
     bom_id = fields.Many2one(
@@ -271,8 +272,8 @@ class MrpEco(models.Model):
         domain="[('product_tmpl_id', '=', product_tmpl_id)]", check_company=True)  # Should at least have bom or routing on which it is applied?
     new_bom_id = fields.Many2one(
         'mrp.bom', 'New Bill of Materials',
-        copy=False)
-    new_bom_revision = fields.Integer('BoM Revision', related='new_bom_id.version', store=True, readonly=False)
+        copy=False, index='btree_not_null')
+    new_bom_revision = fields.Integer('BoM Revision', related='new_bom_id.version', readonly=False)
     will_update_version = fields.Boolean(
         "Update Version", default=True,
         help="If unchecked, the version of the product/BoM will remain unchanged once the ECO is applied")
@@ -653,7 +654,6 @@ class MrpEco(models.Model):
         stage_ids = stages.sudo()._search(search_domain, order=stages._order)
         return stages.browse(stage_ids)
 
-    @api.returns('mail.message', lambda value: value.id)
     def message_post(self, **kwargs):
         message = super(MrpEco, self).message_post(**kwargs)
         if message.message_type == 'comment' and message.author_id == self.env.user.partner_id:  # should use message_values to avoid a read
@@ -678,8 +678,10 @@ class MrpEco(models.Model):
                         'approval_template_id': approval_template.id,
                     })
                     for user in approval_template.user_ids:
+                        # TDE TODO: link to eco approval record ?
                         activity_vals.append({
-                            'activity_type_id': self.env.ref('mrp_plm.mail_activity_eco_approval').id,
+                            'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
+                            'summary': _('ECO Approval'),
                             'user_id': user.id,
                             'res_id': eco.id,
                             'res_model_id': self.env.ref('mrp_plm.model_mrp_eco').id,
@@ -875,10 +877,10 @@ class MrpEcoBomChange(models.Model):
     _name = 'mrp.eco.bom.change'
     _description = 'ECO BoM changes'
 
-    eco_id = fields.Many2one('mrp.eco', 'Engineering Change', ondelete='cascade')
+    eco_id = fields.Many2one('mrp.eco', 'Engineering Change', index=True, ondelete='cascade')
     company_id = fields.Many2one(related='eco_id.company_id')
-    eco_rebase_id = fields.Many2one('mrp.eco', 'ECO Rebase', ondelete='cascade')
-    rebase_id = fields.Many2one('mrp.eco', 'Rebase', ondelete='cascade')
+    eco_rebase_id = fields.Many2one('mrp.eco', 'ECO Rebase', index='btree_not_null', ondelete='cascade')
+    rebase_id = fields.Many2one('mrp.eco', 'Rebase', ondelete='cascade', index='btree_not_null')
     change_type = fields.Selection([('add', 'Add'), ('remove', 'Remove'), ('update', 'Update')], string='Type', required=True)
     product_id = fields.Many2one('product.product', 'Product', required=True)
     old_uom_id = fields.Many2one('uom.uom', 'Previous Product UoM')
@@ -888,7 +890,7 @@ class MrpEcoBomChange(models.Model):
     old_operation_id = fields.Many2one('mrp.routing.workcenter', 'Previous Consumed in Operation')
     new_operation_id = fields.Many2one('mrp.routing.workcenter', 'New Consumed in Operation')
     upd_product_qty = fields.Float('Quantity', compute='_compute_upd_product_qty', store=True)
-    uom_change = fields.Char('Unit of Measure', compute='_compute_change', compute_sudo=True)
+    uom_change = fields.Char('Unit', compute='_compute_change', compute_sudo=True)
     operation_change = fields.Char(compute='_compute_change', string='Consumed in Operation', compute_sudo=True)
     conflict = fields.Boolean()
     bom_line_id = fields.Many2one('mrp.bom.line', 'BoM Line', check_company=True)
@@ -934,7 +936,7 @@ class MrpEcoRoutingChange(models.Model):
     _name = 'mrp.eco.routing.change'
     _description = 'Eco Routing changes'
 
-    eco_id = fields.Many2one('mrp.eco', 'Engineering Change', ondelete='cascade', required=True)
+    eco_id = fields.Many2one('mrp.eco', 'Engineering Change', ondelete='cascade', required=True, index=True)
     change_type = fields.Selection([('add', 'Add'), ('remove', 'Remove'), ('update', 'Update')], string='Type', required=True)
     workcenter_id = fields.Many2one('mrp.workcenter', 'Work Center')
     upd_time_mode = fields.Char('Mode Change')
@@ -953,8 +955,9 @@ class MrpEcoRoutingChange(models.Model):
             'view_mode': 'form',
         }
 
+
 class MrpEcoTag(models.Model):
-    _name = "mrp.eco.tag"
+    _name = 'mrp.eco.tag'
     _description = "ECO Tags"
 
     def _get_default_color(self):
@@ -963,6 +966,7 @@ class MrpEcoTag(models.Model):
     name = fields.Char('Tag Name', required=True)
     color = fields.Integer('Color Index', default=_get_default_color)
 
-    _sql_constraints = [
-        ('name_uniq', 'unique (name)', "Tag name already exists!"),
-    ]
+    _name_uniq = models.Constraint(
+        'unique (name)',
+        "Tag name already exists!",
+    )

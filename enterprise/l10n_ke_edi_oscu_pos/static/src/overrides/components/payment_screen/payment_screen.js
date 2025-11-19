@@ -60,9 +60,9 @@ patch(PaymentScreen.prototype, {
     async validateOrder(isForceValidate) {
         if (this.pos.config.is_kenyan) {
             let errorMessage = "";
-            const unregisteredProducts = this.currentOrder
-                .get_orderlines()
-                .filter((line) => !line.product_id.checkEtimsFields());
+            const unregisteredProducts = this.currentOrder.lines.filter(
+                (line) => !line.product_id.checkEtimsFields()
+            );
 
             if (unregisteredProducts.length > 0) {
                 errorMessage += _t(
@@ -71,10 +71,10 @@ patch(PaymentScreen.prototype, {
             }
 
             if (
-                ![0, this.currentOrder.get_orderlines().length].includes(
-                    this.currentOrder
-                        .get_orderlines()
-                        .filter((line) => line.refunded_orderline_id !== undefined).length
+                ![0, this.currentOrder.lines.length].includes(
+                    this.currentOrder.lines.filter(
+                        (line) => line.refunded_orderline_id !== undefined
+                    ).length
                 )
             ) {
                 errorMessage += _t("You can't mix refund lines and order lines.\n");

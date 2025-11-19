@@ -7,7 +7,7 @@ from odoo.exceptions import UserError, ValidationError
 
 
 class BudgetAnalytic(models.Model):
-    _name = "budget.analytic"
+    _name = 'budget.analytic'
     _description = "Budget"
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
@@ -15,6 +15,7 @@ class BudgetAnalytic(models.Model):
     parent_id = fields.Many2one(
         string="Revision Of",
         comodel_name='budget.analytic',
+        index=True,
         ondelete='cascade',
     )
     children_ids = fields.One2many(
@@ -51,6 +52,12 @@ class BudgetAnalytic(models.Model):
     )
     budget_line_ids = fields.One2many('budget.line', 'budget_analytic_id', 'Budget Lines', copy=True)
     company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
+
+    @api.constrains('date_from', 'date_to')
+    def _check_dates(self):
+        for record in self:
+            if record.date_from > record.date_to:
+                raise ValidationError(_("Budget end date may not be before the starting date."))
 
     @api.constrains('parent_id')
     def _check_parent_id(self):
@@ -91,12 +98,25 @@ class BudgetAnalytic(models.Model):
         return revised._get_records_action()
 
     def action_open_budget_lines(self):
+        context = dict(self.env.context)
+        if len(self) == 1:
+            context['default_budget_analytic_id'] = self.id
         return {
             'type': 'ir.actions.act_window',
             'name': _('Budget Lines'),
             'res_model': 'budget.line',
             'view_mode': 'list,pivot,graph',
             'domain': [('budget_analytic_id', 'in', self.ids)],
+            'context': context,
+        }
+
+    def action_open_budget_report(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Budget Report'),
+            'res_model': 'budget.report',
+            'view_mode': 'pivot,list,graph',
+            'context': {'search_default_budget_analytic_id': self.id},
         }
 
     def _get_view(self, view_id=None, view_type='form', **options):

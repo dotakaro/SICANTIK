@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models
@@ -34,8 +33,6 @@ class ResConfigSettings(models.TransientModel):
         readonly=False,
         domain=[('type', '=', 'service')],
     )
-
-    module_sale_renting_sign = fields.Boolean(string="Digital Documents")
 
     @api.depends('company_id')
     def _compute_extra_hour(self):

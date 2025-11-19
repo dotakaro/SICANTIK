@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 import { useService } from "@web/core/utils/hooks";
 import { Layout } from "@web/search/layout";
 import { useModelWithSampleData } from "@web/model/model";
@@ -7,12 +5,14 @@ import { standardViewProps } from "@web/views/standard_view_props";
 import { useSetupAction } from "@web/search/action_hook";
 import { SearchBar } from "@web/search/search_bar/search_bar";
 import { CogMenu } from "@web/search/cog_menu/cog_menu";
+import { Widget } from "@web/views/widgets/widget";
+import { ActionHelper } from "@web/views/action_helper";
 
 import { Component, toRaw, useRef } from "@odoo/owl";
 
 export class CohortController extends Component {
     static template = "web_cohort.CohortView";
-    static components = { Layout, SearchBar, CogMenu };
+    static components = { Layout, SearchBar, CogMenu, Widget, ActionHelper };
     static props = {
         ...standardViewProps,
         Model: Function,
@@ -42,7 +42,7 @@ export class CohortController extends Component {
     /**
      * @param {Object} row
      */
-    onRowClicked(row) {
+    onRowClicked(row, newWindow) {
         if (row.value === undefined || this.model.metaData.disableLinking) {
             return;
         }
@@ -57,15 +57,22 @@ export class CohortController extends Component {
             return [context[`${viewType}_view_id`] || views[viewType] || false, viewType];
         }
         const actionViews = [getView("list"), getView("form")];
-        this.actionService.doAction({
-            type: "ir.actions.act_window",
-            name: this.model.metaData.title,
-            res_model: this.model.metaData.resModel,
-            views: actionViews,
-            view_mode: "list",
-            target: "current",
-            context: context,
-            domain: domain,
-        });
+        this.openView(domain, actionViews, context, newWindow);
+    }
+
+    openView(domain, views, context, newWindow) {
+        this.actionService.doAction(
+            {
+                type: "ir.actions.act_window",
+                name: this.model.metaData.title,
+                res_model: this.model.metaData.resModel,
+                views,
+                view_mode: "list",
+                target: "current",
+                context,
+                domain,
+            },
+            { newWindow }
+        );
     }
 }

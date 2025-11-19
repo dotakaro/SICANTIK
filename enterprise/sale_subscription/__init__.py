@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from . import controllers
@@ -30,7 +29,6 @@ def _pre_init_sale_subscription(env):
         ADD COLUMN  "kpi_3months_mrr_delta" double precision,
         ADD COLUMN  "kpi_3months_mrr_percentage" double precision,
         ADD COLUMN  "percentage_satisfaction" int4,
-        ADD COLUMN  "health" varchar,
         ADD COLUMN  "origin_order_id" int4,
         ADD COLUMN  "subscription_id" int4,
         ADD COLUMN  "recurring_monthly" numeric

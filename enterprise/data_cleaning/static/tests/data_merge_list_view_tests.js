@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { click, getFixture } from "@web/../tests/helpers/utils";
 import { makeView, setupViewRegistries } from "@web/../tests/views/helpers";
 
@@ -79,7 +77,7 @@ QUnit.module("data_merge", (hooks) => {
         });
         await click(target, ".o_group_header:first-child"); // fold the first group
         await click(target, "thead .o_list_record_selector");
-        await click(target, ".o_list_selection_box .o_list_select_domain");
+        await click(target, ".o_selection_box .o_select_domain");
         await click(target, ".btn-primary.o_data_merge_merge_button");
         await click(target, ".modal-dialog button.btn-primary");
     });

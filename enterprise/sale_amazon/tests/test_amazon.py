@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import datetime
+import json
 from unittest.mock import Mock, patch
 
 from odoo import Command
@@ -188,7 +189,7 @@ class TestAmazon(common.TestAmazonCommon):
                     'LastUpdatedBefore': '2020-01-01T00:00:00Z',
                     'Orders': [common.ORDER_MOCK, dict(
                         common.ORDER_MOCK,
-                        AmazonOrderId={'value': '987654321'},
+                        AmazonOrderId='987654321',
                         LastUpdateDate='2019-01-20T00:00:00Z',
                     )],
                 })
@@ -593,21 +594,17 @@ class TestAmazon(common.TestAmazonCommon):
 
     def test_offer_get_feed_data(self):
         self.offer.amazon_feed_ref = 'incorrect json'  # force fetch of feed data
+        self.offer.amazon_channel = False
 
         with patch(
             'odoo.addons.sale_amazon.utils.make_sp_api_request',
-            return_value={
-                'items': [{
-                    'sku': self.offer.sku,
-                    'productTypes': [{'productType': 'PRODUCT'}],
-                    'attributes': {'merchant_shipping_group': {}},
-                }],
-            },
+            return_value=common.SEARCH_LISTINGS_ITEMS_MOCK,
         ):
             feed_info = self.offer._get_feed_data()
 
         self.assertIn(self.offer, feed_info)
-        self.assertEqual(self.offer.amazon_feed_ref, '{"productType":"PRODUCT","is_fbm":true}')
+        self.assertEqual(self.offer.amazon_feed_ref, '{"productType":"PRODUCT"}')
+        self.assertEqual(self.offer.amazon_channel, 'fbm')
 
     def test_offer_get_feed_data_fallback_when_missing_data(self):
         self.offer.amazon_feed_ref = 'incorrect json'  # force fetch of feed data
@@ -616,7 +613,8 @@ class TestAmazon(common.TestAmazonCommon):
             feed_info = self.offer._get_feed_data()
 
         self.assertIn(self.offer, feed_info)
-        self.assertEqual(self.offer.amazon_feed_ref, '{"productType":false,"is_fbm":false}')
+        self.assertEqual(self.offer.amazon_feed_ref, '{"productType":false}')
+        self.assertEqual(self.offer.amazon_channel, 'fba')
 
     @mute_logger('odoo.addons.sale_amazon.models.amazon_offer')
     def test_offer_get_feed_data_fails_gracefully(self):
@@ -633,13 +631,96 @@ class TestAmazon(common.TestAmazonCommon):
 
     def test_offer_get_feed_info_calls_sp_api_only_if_needed(self):
         # Every necessary feed data is already stored
-        self.offer.amazon_feed_ref = '{"productType":"PRODUCT","is_fbm":true}'
+        self.offer.amazon_feed_ref = '{"productType":"PRODUCT"}'
+        self.offer.amazon_channel = 'fba'
 
         with patch('odoo.addons.sale_amazon.utils.make_sp_api_request') as make_sp_api_request_mock:
             feed_info = self.offer._get_feed_data()
 
         make_sp_api_request_mock.assert_not_called()  # does not need to be called anymore
         self.assertIn(self.offer, feed_info)
+
+    def test_schedule_inventory_reset_if_order_channel_is_fba_but_offer_is_fbm(self):
+        self.offer.sku = 'TEST'
+        self.offer.amazon_channel = 'fbm'
+        self.account.last_orders_sync = datetime(1, 1, 1)  # Incomming order should be newer ^^
+        operation_responses_map = {
+            **common.OPERATIONS_RESPONSES_MAP,
+            'getOrders': {
+                'payload': {
+                    'LastUpdatedBefore': '2020-01-01T00:00:00Z',
+                    'Orders': [{
+                        **common.ORDER_MOCK,
+                        'FulfillmentChannel': 'AFN',
+                        'OrderStatus': 'Shipped',
+                    }],
+                }
+            },
+        }
+
+        with patch(
+            'odoo.addons.sale_amazon.utils.make_sp_api_request',
+            new=lambda _account, operation_, **_kwargs: operation_responses_map[operation_],
+        ):
+            self.account._sync_orders(auto_commit=False)
+
+        self.assertEqual(self.offer.amazon_sync_status, 'reset')
+        self.assertFalse(self.offer.amazon_channel)
+
+    def test_no_inventory_reset_if_order_channel_is_fbm_but_offer_is_fba(self):
+        self.offer.sku = 'TEST'
+        self.offer.amazon_channel = 'fba'
+        old_sync_status = self.offer.amazon_sync_status
+        self.account.last_orders_sync = datetime(1, 1, 1)  # Incomming order should be newer ^^
+
+        with patch(
+            'odoo.addons.sale_amazon.utils.make_sp_api_request',
+            new=lambda _account, operation_, **_kwargs: common.OPERATIONS_RESPONSES_MAP[operation_],
+        ):
+            self.account._sync_orders(auto_commit=False)
+
+        self.assertEqual(self.offer.amazon_sync_status, old_sync_status)  # No inventory reset
+        self.assertFalse(self.offer.amazon_channel)  # Will be re-updated with next call to _sync_inventory
+
+    def test_inventory_reset(self):
+        self.env['stock.quant']._update_available_quantity(self.product, self.stock_location, 100)
+        self.offer.amazon_channel = False
+        self.offer.amazon_sync_status = 'reset'
+
+        def submit_feed_mock_(_account, feed_, *_args, **_kwargs):
+            decoded_feed_ = json.loads(feed_)
+            message_ = decoded_feed_['messages'][0]
+            self.assertEqual(message_['sku'], self.offer.sku)
+            self.assertEqual(message_['attributes']['fulfillment_availability'][0]['quantity'], 0)
+            return 'An_amazing_id'
+
+        with patch(
+            'odoo.addons.sale_amazon.utils.make_sp_api_request',
+            return_value={'items': [common.FBA_LISTINGS_ITEM_MOCK]},
+        ), patch(
+            'odoo.addons.sale_amazon.utils.submit_feed', new=submit_feed_mock_,
+        ):
+            self.account._sync_inventory()
+
+    def test_no_stock_reset_if_offer_is_fbm(self):
+        self.env['stock.quant']._update_available_quantity(self.product, self.stock_location, 100)
+        self.offer.amazon_channel = False
+        self.offer.amazon_sync_status = 'reset'
+
+        def submit_feed_mock_(_account, feed_, *_args, **_kwargs):
+            decoded_feed_ = json.loads(feed_)
+            message_ = decoded_feed_['messages'][0]
+            self.assertEqual(message_['sku'], self.offer.sku)
+            self.assertEqual(message_['attributes']['fulfillment_availability'][0]['quantity'], 100)
+            return 'An_amazing_id'
+
+        with patch(
+            'odoo.addons.sale_amazon.utils.make_sp_api_request',
+            return_value={'items': [common.FBM_LISTINGS_ITEM_MOCK]},
+        ), patch(
+            'odoo.addons.sale_amazon.utils.submit_feed', new=submit_feed_mock_,
+        ):
+            self.account._sync_inventory()
 
     @mute_logger('odoo.addons.sale_amazon.models.amazon_account')
     @mute_logger('odoo.addons.sale_amazon.models.stock_picking')
@@ -765,7 +846,7 @@ class TestAmazon(common.TestAmazonCommon):
                 'phone': '+1 234-567-8910 ext. 12345',
                 'customer_rank': 1,
                 'company_id': self.account.company_id.id,
-                'amazon_email': 'iliketurtles@marketplace.amazon.com',
+                'email': 'iliketurtles@marketplace.amazon.com',
             })
             contacts_count = self.env['res.partner'].search_count([])
             order_data = common.OPERATIONS_RESPONSES_MAP['getOrders']['payload']['Orders'][0]
@@ -773,7 +854,7 @@ class TestAmazon(common.TestAmazonCommon):
             self.assertEqual(self.env['res.partner'].search_count([]), contacts_count)
             self.assertEqual(contact.id, delivery.id)
             self.assertEqual(contact.type, 'contact')
-            self.assertEqual(contact.amazon_email, 'iliketurtles@marketplace.amazon.com')
+            self.assertEqual(contact.email, 'iliketurtles@marketplace.amazon.com')
 
     def test_get_partners_no_creation_different_partners(self):
         """ Test the partners search with different partners for contact and delivery. """
@@ -790,7 +871,7 @@ class TestAmazon(common.TestAmazonCommon):
             'phone': '+1 234-567-8910 ext. 12345',
             'customer_rank': 1,
             'company_id': self.account.company_id.id,
-            'amazon_email': 'iliketurtles@marketplace.amazon.com',
+            'email': 'iliketurtles@marketplace.amazon.com',
         }
         contact = self.env['res.partner'].create(dict(new_partner_vals, name='Gederic Frilson'))
         self.env['res.partner'].create(dict(
@@ -808,7 +889,7 @@ class TestAmazon(common.TestAmazonCommon):
         self.assertNotEqual(contact.id, delivery.id)
         self.assertEqual(delivery.type, 'delivery')
         self.assertEqual(delivery.parent_id.id, contact.id)
-        self.assertEqual(contact.amazon_email, delivery.amazon_email)
+        self.assertEqual(contact.email, delivery.email)
 
     def test_get_partners_creation_delivery(self):
         """ Test the partners search with creation of the delivery. """
@@ -838,7 +919,7 @@ class TestAmazon(common.TestAmazonCommon):
             self.env['res.partner'].create({
                 'name': 'Gederic Frilson',
                 'company_id': self.account.company_id.id,
-                'amazon_email': 'iliketurtles@marketplace.amazon.com',
+                'email': 'iliketurtles@marketplace.amazon.com',
             })
             partners_count = self.env['res.partner'].search_count([])
             order_data = common.OPERATIONS_RESPONSES_MAP['getOrders']['payload']['Orders'][0]
@@ -853,7 +934,7 @@ class TestAmazon(common.TestAmazonCommon):
             self.assertEqual(delivery.type, 'delivery')
             self.assertEqual(delivery.parent_id.id, contact.id)
             self.assertEqual(delivery.company_id.id, self.account.company_id.id)
-            self.assertEqual(contact.amazon_email, delivery.amazon_email)
+            self.assertEqual(contact.email, delivery.email)
 
     def test_get_partners_creation_contact(self):
         """ Test the partners search with creation of the contact. """
@@ -883,7 +964,7 @@ class TestAmazon(common.TestAmazonCommon):
             self.assertEqual(contact.phone, '+1 234-567-8910 ext. 12345')
             self.assertEqual(contact.customer_rank, 1)
             self.assertEqual(contact.company_id.id, self.account.company_id.id)
-            self.assertEqual(contact.amazon_email, 'iliketurtles@marketplace.amazon.com')
+            self.assertEqual(contact.email, 'iliketurtles@marketplace.amazon.com')
 
     def test_get_partners_creation_contact_delivery(self):
         """ Test the partners search with creation of the contact and delivery. """
@@ -903,14 +984,14 @@ class TestAmazon(common.TestAmazonCommon):
         self.assertEqual(delivery.type, 'delivery')
         self.assertEqual(delivery.parent_id.id, contact.id)
         self.assertEqual(contact.company_id.id, delivery.company_id.id)
-        self.assertEqual(contact.amazon_email, delivery.amazon_email)
+        self.assertEqual(contact.email, delivery.email)
 
     def test_get_partners_missing_buyer_name(self):
         """ Test the partners search with missing buyer name. """
         self.env['res.partner'].create({
             'name': 'Gederic Frilson',
             'company_id': self.account.company_id.id,
-            'amazon_email': 'iliketurtles@marketplace.amazon.com',
+            'email': 'iliketurtles@marketplace.amazon.com',
         })
         partners_count = self.env['res.partner'].search_count([])
         order_data = dict(common.ORDER_MOCK, BuyerInfo=dict(
@@ -928,7 +1009,7 @@ class TestAmazon(common.TestAmazonCommon):
         self.assertEqual(contact.type, 'contact')
         self.assertEqual(delivery.type, 'delivery')
         self.assertEqual(delivery.parent_id.id, contact.id)
-        self.assertEqual(contact.amazon_email, 'iliketurtles@marketplace.amazon.com')
+        self.assertEqual(contact.email, 'iliketurtles@marketplace.amazon.com')
         self.assertEqual(
             contact.street,
             '123 RainBowMan Street',
@@ -936,12 +1017,12 @@ class TestAmazon(common.TestAmazonCommon):
                 "the available personal information.",
         )
 
-    def test_get_partners_missing_amazon_email(self):
+    def test_get_partners_missing_email(self):
         """ Test the partners search with missing amazon email. """
         self.env['res.partner'].create({
             'name': 'Gederic Frilson',
             'company_id': self.account.company_id.id,
-            'amazon_email': 'iliketurtles@marketplace.amazon.com',
+            'email': 'iliketurtles@marketplace.amazon.com',
         })
         partners_count = self.env['res.partner'].search_count([])
         order_data = dict(common.ORDER_MOCK, BuyerInfo=dict(
@@ -953,7 +1034,7 @@ class TestAmazon(common.TestAmazonCommon):
             partners_count + 1,
             msg="A contact partner should always be created when the amazon email is missing.",
         )
-        self.assertFalse(contact.amazon_email)
+        self.assertFalse(contact.email)
 
     def test_get_partners_arbitrary_fields(self):
         """ Test the partners search with all PII filled but in arbitrary fields. """
@@ -965,7 +1046,7 @@ class TestAmazon(common.TestAmazonCommon):
         self.assertTrue(contact.street2)
         self.assertTrue(contact.phone)
         self.assertTrue(contact.customer_rank)
-        self.assertTrue(contact.amazon_email)
+        self.assertTrue(contact.email)
 
     def _get_activity_count(self, contact):
         """" Return activity count of given the contact. """

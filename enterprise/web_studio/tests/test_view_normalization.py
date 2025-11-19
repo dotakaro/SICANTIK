@@ -65,12 +65,10 @@ class TestViewNormalization(TransactionCase):
                         <group>
                             <field name="function" placeholder="e.g. Sales Director" invisible="is_company"/>
                             <field name="phone" widget="phone"/>
-                            <field name="mobile" widget="phone"/>
                             <field name="user_ids" invisible="1"/>
                             <field name="email" widget="email" required="user_ids"/>
-                            <field name="title" options="{&quot;no_open&quot;: True}" invisible="is_company"/>
-                            <field name="lang"/>
                             <field name="category_id" widget="many2many_tags" placeholder="Tags..."/>
+                            <field name="lang"/>
                         </group>
                         <group>
                             <field name="display_name"/>
@@ -82,11 +80,9 @@ class TestViewNormalization(TransactionCase):
                             <field name="child_ids" mode="kanban" context="{'default_parent_id': id, 'default_street': street, 'default_street2': street2, 'default_city': city, 'default_state_id': state_id, 'default_zip': zip, 'default_country_id': country_id}">
                                 <kanban>
                                     <field name="color"/>
-                                    <field name="title"/>
                                     <field name="email"/>
                                     <field name="function"/>
                                     <field name="phone"/>
-                                    <field name="mobile"/>
                                     <templates>
                                         <t t-name="card">
                                             <div>
@@ -280,10 +276,10 @@ class TestViewNormalization(TransactionCase):
     def test_view_normalization_05(self):
         self._test_view_normalization("""
             <data>
-              <xpath expr="//field[@name='mobile']" position="after">
+              <xpath expr="//field[@name='phone']" position="after">
                 <field name="contact_address"/>
               </xpath>
-              <xpath expr="//field[@name='mobile']" position="replace"/>
+              <xpath expr="//field[@name='phone']" position="replace"/>
               <xpath expr="//field[@name='contact_address']" position="after">
                 <field name="tz"/>
               </xpath>
@@ -291,7 +287,7 @@ class TestViewNormalization(TransactionCase):
             </data>
         """, """
             <data>
-              <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='mobile']" position="replace">
+              <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='phone']" position="replace">
                 <field name="tz"/>
               </xpath>
             </data>
@@ -326,7 +322,7 @@ class TestViewNormalization(TransactionCase):
     def test_view_normalization_07(self):
         self._test_view_normalization("""
             <data>
-              <xpath expr="//field[@name='mobile']" position="after">
+              <xpath expr="//field[@name='phone']" position="after">
                 <field name="contact_address"/>
               </xpath>
               <xpath expr="//field[@name='contact_address']" position="after">
@@ -343,7 +339,7 @@ class TestViewNormalization(TransactionCase):
             </data>
         """, """
             <data>
-              <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='mobile']" position="after">
+              <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='phone']" position="after">
                 <field name="tz"/>
                 <field name="create_uid"/>
               </xpath>
@@ -390,7 +386,7 @@ class TestViewNormalization(TransactionCase):
               <xpath expr="//field[@name='contact_address']" position="replace">
                   <field name="id"/>
               </xpath>
-              <xpath expr="//field[@name='mobile']" position="after">
+              <xpath expr="//field[@name='email']" position="after">
                   <field name="contact_address"/>
               </xpath>
               <xpath expr="//field[@name='contact_address']" position="after">
@@ -403,7 +399,7 @@ class TestViewNormalization(TransactionCase):
               <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='phone']" position="after">
                 <field name="id"/>
               </xpath>
-              <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='mobile']" position="after">
+              <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='email']" position="after">
                 <field name="create_uid"/>
               </xpath>
             </data>
@@ -452,16 +448,12 @@ class TestViewNormalization(TransactionCase):
               <xpath expr="//field[@name='create_uid']" position="before">
                 <field name="create_date"/>
               </xpath>
-              <xpath expr="//field[@name='create_date']" position="after">
-                  <field name="mobile"/>
-              </xpath>
               <xpath expr="//field[@name='create_date']" position="replace"/>
             </data>
         """, """
             <data>
               <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='phone']" position="replace">
                 <field name="id"/>
-                <field name="mobile"/>
                 <field name="create_uid"/>
               </xpath>
             </data>
@@ -573,7 +565,7 @@ class TestViewNormalization(TransactionCase):
     def test_view_normalization_16(self):
         self._test_view_normalization("""
             <data>
-              <xpath expr="//field[@name='mobile']" position="after">
+              <xpath expr="//field[@name='phone']" position="after">
                 <field name="contact_address"/>
               </xpath>
               <xpath expr="//field[@name='contact_address']" position="after">
@@ -585,7 +577,7 @@ class TestViewNormalization(TransactionCase):
             </data>
         """, """
             <data>
-              <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='mobile']" position="after">
+              <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='phone']" position="after">
                 <field name="contact_address"/>
                 <field name="phone"/>
                 <field name="tz"/>
@@ -610,15 +602,15 @@ class TestViewNormalization(TransactionCase):
     def test_view_normalization_18(self):
         self._test_view_normalization("""
             <data>
-              <xpath expr="//field[@name='mobile']" position="replace"/>
+              <xpath expr="//field[@name='phone']" position="replace"/>
               <xpath expr="//field[@name='function']" position="after">
-                <field name="mobile" widget="phone"/>
+                <field name="phone" widget="phone"/>
               </xpath>
             </data>
         """, """
             <data>
               <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='function']" position="after">
-                <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='mobile']" position="move"/>
+                <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='phone']" position="move"/>
               </xpath>
             </data>
         """)
@@ -675,9 +667,6 @@ class TestViewNormalization(TransactionCase):
               <xpath expr="//templates//field[@name='name']" position="after">
                 <field name="phone"/>
               </xpath>
-              <xpath expr="//templates//field[@name='phone']" position="after">
-                <field name="mobile"/>
-              </xpath>
               <xpath expr="//templates//field[@name='name']" position="before">
                 <field name="color"/>
               </xpath>
@@ -689,7 +678,6 @@ class TestViewNormalization(TransactionCase):
               </xpath>
               <xpath expr="//form[1]/sheet[1]/notebook[1]/page[1]/field[@name='child_ids']/kanban[1]/templates[1]/t[@t-name='card']/div[1]/field[@name='name']" position="after">
                 <field name="phone"/>
-                <field name="mobile"/>
               </xpath>
             </data>
         """)
@@ -719,7 +707,7 @@ class TestViewNormalization(TransactionCase):
             </data>
         """, """
             <data>
-              <xpath expr="//form[1]/sheet[1]/notebook[1]/page[1]/field[@name='child_ids']/kanban[1]/field[@name='mobile']" position="after">
+              <xpath expr="//form[1]/sheet[1]/notebook[1]/page[1]/field[@name='child_ids']/kanban[1]/field[@name='phone']" position="after">
                 <field name="lang"/>
               </xpath>
               <xpath expr="//form[1]/sheet[1]/notebook[1]/page[1]/field[@name='child_ids']/kanban[1]/templates[1]/t[@t-name='card']/div[1]" position="attributes">
@@ -1041,7 +1029,6 @@ class TestViewNormalization(TransactionCase):
         self._test_view_normalization("""
             <data>
               <xpath expr="//field[@name='display_name']" position="before">
-                <field name="title" position="move"/>
                 <field name="lang" position="move"/>
                 <field name="category_id" position="move"/>
               </xpath>
@@ -1049,7 +1036,6 @@ class TestViewNormalization(TransactionCase):
         """, """
             <data>
               <xpath expr="//field[@name='display_name']" position="before">
-                <xpath expr="//form[1]/sheet[1]/group[1]/group[2]/field[@name='title']" position="move"/>
                 <xpath expr="//field[@name='lang']" position="move"/>
                 <xpath expr="//field[@name='category_id']" position="move"/>
               </xpath>
@@ -1431,7 +1417,6 @@ class TestViewNormalization(TransactionCase):
                             <field name="create_date"/>
                             <field name="display_name"/>
                             <field name="name"/>
-                            <field name="title"/>
                         </group>
                     </group>
                 </form>

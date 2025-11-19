@@ -1,8 +1,7 @@
-/** @odoo-module */
-
 import {
     changeInternalPermission,
     dragAndDropArticle,
+    openPermissionPanel,
 } from "@knowledge/../tests/tours/knowledge_tour_utils";
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
@@ -76,11 +75,11 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
     run: "edit Shared Article && click body",
 }, {
     // Open the share dropdown
-    trigger: '.o_knowledge_header .btn-share',
+    trigger: '.o_knowledge_header button:contains("Share")',
     run: "click",
 }, {
     // Click on 'Invite'
-    trigger: '.o_knowledge_share_panel .btn:contains("Invite")',
+    trigger: '.o_knowledge_permission_panel .btn:contains("Invite")',
     run: "click",
 }, {
     // Type the invited person's name
@@ -110,6 +109,7 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
             run: "click",
         },
         {
+            content: "Close permission panel after that the wizard closed",
             trigger: "body:not(:has(.modal:contains(invite))",
         },
         {
@@ -177,7 +177,7 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
 // Open an article using the searchBox
 {
     // Open the CP
-    trigger: '#knowledge_search_bar',
+    trigger: '.o_knowledge_search',
     run: "click",
 }, {
     trigger: '.o_command_palette_search input',
@@ -192,7 +192,7 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
 },
 // Open the trash
 {
-    trigger: '.o_knowledge_sidebar_trash > div[role="button"]',
+    trigger: '.o_knowledge_sidebar_trash a:contains("Open the Trash")',
     run: "click",
 }, {
     // Check that trash has been opened
@@ -379,13 +379,17 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
 },
 // Add a random icon
 {
-    trigger: '#dropdown_tools_panel',
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: "click",
 }, {
     // Click on the "add Icon" button
-    trigger: '.o_knowledge_add_icon',
+    trigger: '.o_knowledge_options_dropdown .dropdown-item:contains("Add Icon")',
     run: "click",
-}, {
+},
+{
+    trigger: ".o_article_active .o_article_emoji:not(:contains(📄))",
+},
+{
     // Check that the icon has been updated in the sidenar
     trigger: '.o_knowledge_body div[name="icon"]',
     run: () => {
@@ -443,10 +447,10 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
         },
         {
     // Lock the article
-    trigger: '#dropdown_tools_panel',
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: "click",
 }, {
-    trigger: '.o_knowledge_more_options_panel .btn-lock',
+    trigger: '.o_knowledge_options_dropdown .dropdown-item:contains("Lock")',
     run: "click",
         },
         {
@@ -463,10 +467,10 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
 // Update icon of unlocked article
 {
     // Unlock the article
-    trigger: '#dropdown_tools_panel',
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: "click",
 }, {
-    trigger: '.o_knowledge_more_options_panel .btn-lock .fa-unlock',
+    trigger: '.o_knowledge_options_dropdown .dropdown-item:contains("Unlock")',
     run: "click",
         },
         {
@@ -486,16 +490,16 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
 },
 // Convert article into item
 {
-    // Open the kebab menu
-    trigger: '#dropdown_tools_panel',
+    // Open the options dropdown
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: "click",
 }, {
     // Click on convert button
-    trigger: '.dropdown-item .fa-tasks',
+    trigger: '.o_knowledge_options_dropdown .dropdown-item:contains("Convert")',
     run: "click",
         },
         {
-            trigger: 'section[data-section="workspace"] .o_article:contains("Workspace Article"):not(.o_article_has_children)',
+            trigger: 'section[data-section="workspace"] .o_article:contains("Workspace Article")',
         },
         {
     // Check that article has been removed from the sidebar
@@ -512,12 +516,12 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
 },
 // Convert item into article
 {
-    // Open the kebab menu
-    trigger: '#dropdown_tools_panel',
+    // Open the options dropdown
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: "click",
 }, {
     // Click on convert button
-    trigger: '.dropdown-item .fa-sitemap',
+    trigger: '.o_knowledge_options_dropdown .dropdown-item:contains("Convert")',
     run: "click",
 }, {
     // Check that article has been readded in the main tree
@@ -525,16 +529,16 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
 },
 // Convert a favorite article to an item
 {
-    // Open the kebab menu
-    trigger: '#dropdown_tools_panel',
+    // Open the options dropdown
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: "click",
 }, {
     // Click on the convert button
-    trigger: '.dropdown-item .fa-tasks',
+    trigger: '.o_knowledge_options_dropdown .dropdown-item:contains("Convert")',
     run: "click",
         },
         {
-            trigger: 'section[data-section="workspace"] .o_article:contains("Workspace Article"):not(.o_article_has_children)',
+            trigger: 'section[data-section="workspace"] .o_article:contains("Workspace Article")',
         },
         {
     // Check that article has been removed from the main tree but not from the favorite tree
@@ -550,14 +554,22 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
             run: "click",
         },
         {
+            trigger: ".o_article_active:contains('Shared Child')",
+        },
+        {
             content: "Open the share dropdown",
-            trigger: ".o_knowledge_header .btn-share",
+            trigger: ".o_knowledge_header button:contains('Share')",
             run: "click",
         },
         {
-            content: "Make remove member button visible and click on the delete member button",
-            trigger: ".o_knowledge_share_panel:not(:has(.fa-spin))",
-            run: "hover && click .o_knowledge_share_panel .o_delete.o_remove",
+            content: "Open the member dropdown",
+            trigger: ".o_knowledge_permission_panel_members .dropdown-toggle",
+            run: "click",
+        },
+        {
+            content: "Remove the member",
+            trigger: ".o_knowledge_permission_panel_remove_member",
+            run: "click",
         },
         {
             content: "Confirm restriction",
@@ -568,27 +580,12 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
             trigger: "body:not(:has(.modal))",
         },
         {
-            trigger: ".o_knowledge_share_panel_icon",
-        },
-        {
     // Check that the article did not move
     trigger: 'section[data-section="shared"] .o_article .o_article',
-    run: "click",
 },
 // Publish child of a shared article
+...changeInternalPermission('write'),
 {
-    // Open the share dropdown
-    trigger: '.o_knowledge_header .btn-share',
-    run: "click",
-        },
-        {
-            trigger: '.o_permission[aria-label="Internal Permission"]',
-        },
-        {
-    // Change permission
-    trigger: '.o_knowledge_share_panel:not(:has(.fa-spin))',
-    run: () => changeInternalPermission('write'),
-}, {
     // Check that the article did not move
     trigger: 'section[data-section="shared"] .o_article .o_article',
 },
@@ -601,43 +598,33 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
         {
             trigger: '.o_article_active:contains("Shared Article")',
         },
-        {
-    // Open the share dropdown
-    trigger: '.o_knowledge_header .btn-share',
-    run: "click",
-}, {
-    // Change permission
-    trigger: '.o_knowledge_share_panel:not(:has(.fa-spin))',
-    run: () => changeInternalPermission('write'),
-}, {
+...changeInternalPermission('write'),
+{
     // Check that the article moved to the workspace
     trigger: 'section[data-section="workspace"] .o_article:contains("Shared Article")',
 },
 // Restrict workspace article with member
+...changeInternalPermission('none'),
 {
-    // Change permission
-    trigger: '.o_knowledge_share_panel:not(:has(.fa-spin))',
-    run: () => changeInternalPermission('none'),
-}, {
     // Check that article moved to shared
     trigger: 'section[data-section="shared"] .o_article:contains("Shared Article")',
 },
 // Remove member of shared article
-        {
-            content: "Make remove member button visible and click on the delete member button",
-            trigger: ".o_knowledge_share_panel:not(:has(.fa-spin))",
-            run: "hover && click .o_knowledge_share_panel .o_delete.o_remove",
-        },
-        {
+        ...openPermissionPanel,
+{
+    trigger: '.o_knowledge_permission_panel_members > div:contains("Guest") .dropdown-toggle',
+    run: 'click',
+}, {
+    trigger: '.o_knowledge_permission_panel_remove_member',
+    run: 'click',
+}, {
     // Check that article moved to private
     trigger: 'section[data-section="private"] .o_article:contains("Shared Article")',
-    run: "click",
-}, {
-    // Readd the member to replace the article in the shared section
-    trigger: '.o_knowledge_header .btn-share',
-    run: "click",
-}, {
-    trigger: '.o_knowledge_share_panel .btn:contains("Invite")',
+},
+        ...openPermissionPanel,
+, {
+    // Re-add the member to replace the article in the shared section
+    trigger: '.o_knowledge_permission_panel .btn:contains("Invite")',
     run: "click",
 }, {
     trigger: '.o_field_many2many_tags_email[name=partner_ids] input',
@@ -669,15 +656,8 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
         {
             trigger: '.o_article_active:contains("Private Child 2")',
         },
-        {
-    // Open the share dropown
-    trigger: '.o_knowledge_header .btn-share',
-    run: "click",
-}, {
-    // Change permission
-    trigger: '.o_knowledge_share_panel:not(:has(.fa-spin))',
-    run: () => changeInternalPermission('read'),
-}, {
+...changeInternalPermission('read'),
+{
     // Check that article is still in private
     trigger: 'section[data-section="private"] .o_article .o_article:contains("Private Child 2")',
 },
@@ -690,42 +670,26 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
         {
             trigger: '.o_article_active:contains("Private Article")',
         },
-        {
-    // Open the share dropdown
-    trigger: '.o_knowledge_header .btn-share',
-    run: "click",
-}, {
-    // Change permission
-    trigger: '.o_knowledge_share_panel:not(:has(.fa-spin))',
-    run: () => changeInternalPermission('read'),
-}, {
+...changeInternalPermission('read'),
+{
     // Check that article moved to the workspace
     trigger: 'section[data-section="workspace"] .o_article:contains("Private Article")',
 },
 // Change permission of workspace article to write
+...changeInternalPermission('write'),
 {
-    // Change permission
-    trigger: '.o_knowledge_share_panel:not(:has(.fa-spin))',
-    run: () => changeInternalPermission('write'),
-}, {
     // Check that article did not move
     trigger: 'section[data-section="workspace"] .o_article:contains("Private Article")',
 },
 // Change permission of workspace article to read
+...changeInternalPermission('read'),
 {
-    // Change permission
-    trigger: '.o_knowledge_share_panel:not(:has(.fa-spin))',
-    run: () => changeInternalPermission('read'),
-}, {
     // Check that article did not move
     trigger: 'section[data-section="workspace"] .o_article:contains("Private Article")',
 },
 // Restrict workspace article
+...changeInternalPermission('none'),
 {
-    // Change permission
-    trigger: '.o_knowledge_share_panel:not(:has(.fa-spin))',
-    run: () => changeInternalPermission('none'),
-}, {
     // Check that the article moved to private
     trigger: 'section[data-section="private"] .o_article:contains("Private Article")',
 },
@@ -757,11 +721,11 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
             trigger: '.o_article_active:contains("Private Child 2")',
         },
         {
-    // Check that article shows "Add Properties" button
-    trigger: '#dropdown_tools_panel',
+    // Check that article shows "Add Properties" button in the options dropdown
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: "click",
 }, {
-    trigger: '.o_knowledge_add_properties',
+    trigger: '.o_knowledge_options_dropdown .dropdown-item:contains("Add Properties")',
 }, {
     trigger: 'section[data-section="private"] .o_article:first:contains("Private Article")',
     run: () => {
@@ -770,19 +734,25 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
             '.o_section[data-section="private"] .o_article_name:contains("Private Article")',
         );
     },
-        },
-        {
-            trigger: '.o_section[data-section="private"] ul li:first:contains("Private Child 2")',
-        },
-        {
+},
+{
+    trigger: '.o_section[data-section="private"] ul li:first:contains("Private Child 2") .o_article_active',
+},
+{
     // Check that child became the first private root article
     trigger: '.o_section[data-section="private"] .o_article:not(:has(.o_article:contains("Private Child 2")))',
 }, {
     // Check that article was removed from children in favorites
     trigger: '.o_section[data-section="favorites"]:not(:has(.o_article:contains("Private Child 2")))',
 }, {
-    // Check that article does not show "Add Properties" button anymore
-    trigger: '.o_knowledge_more_options_panel:not(:has(button.o_knowledge_add_properties))',
+    // Check that the "Add Properties" button is disabled
+    trigger: '.o_knowledge_header .dropdown-toggle',
+    async run(helpers) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await helpers.click();
+    }
+}, {
+    trigger: '.o_knowledge_options_dropdown .dropdown-item:contains("Add Properties").o_disabled_option',
 },
 // Drag and drop root above root
 {
@@ -936,10 +906,10 @@ registry.category("web_tour.tours").add('knowledge_sidebar_tour', {
     run: "edit Shared 2 && click body",
 }, {
     // Share the article
-    trigger: '.o_knowledge_header .btn-share',
+    trigger: '.o_knowledge_header button:contains("Share")',
     run: "click",
 }, {
-    trigger: '.o_knowledge_share_panel .btn:contains("Invite")',
+    trigger: '.o_knowledge_permission_panel .btn:contains("Invite")',
     run: "click",
 }, {
     trigger: '.o_field_many2many_tags_email[name=partner_ids] input',

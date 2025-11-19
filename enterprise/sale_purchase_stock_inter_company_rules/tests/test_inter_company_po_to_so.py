@@ -9,6 +9,12 @@ from .common import TestInterCompanyRulesCommonStock
 
 @tagged('post_install', '-at_install')
 class TestInterCompanyPurchaseToSaleWithStock(TestInterCompanyRulesCommonStock):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.env['res.currency']._activate_group_multi_currency()
+
     def test_01_inter_company_purchase_order_with_stock_picking(self):
         partner = self.env['res.partner'].create({
             'name': 'Odoo',
@@ -44,6 +50,7 @@ class TestInterCompanyPurchaseToSaleWithStock(TestInterCompanyRulesCommonStock):
                 'partner_id': children[2].id,
             },
         ])
+        self.product_consultant.standard_price = 450.0
 
         def generate_purchase_and_validate_sale_order(first_company, second_company, warehouse_id):
             stock_picking_type = self.env['stock.picking.type'].search(['&', ('warehouse_id', '=', warehouse_id), ('name', '=', 'Receipts')])
@@ -57,6 +64,7 @@ class TestInterCompanyPurchaseToSaleWithStock(TestInterCompanyRulesCommonStock):
                     line.name = 'Service'
                     line.product_id = self.product_consultant
                     line.price_unit = 450.0
+                    line.product_uom_id = self.product_consultant.uom_id
                     line.discount = 10.0
             purchase_order.with_company(first_company).button_confirm()
             self.validate_generated_sale_order(purchase_order, first_company, second_company)
@@ -84,7 +92,7 @@ class TestInterCompanyPurchaseToSaleWithStock(TestInterCompanyRulesCommonStock):
         self.assertTrue(sale_order.partner_shipping_id == purchase_order.picking_type_id.warehouse_id.partner_id, "Partner shipping is incorrect.")
 
     def test_02_inter_company_sale_purchase_auto_validation(self):
-        self.env.user.groups_id += self.env.ref('base.group_multi_currency')
+        self.env.user.group_ids += self.env.ref('base.group_multi_currency')
         today = fields.Datetime.today()
         (self.company_b | self.company_a).update({
             'intercompany_generate_sales_orders': True,
@@ -102,7 +110,6 @@ class TestInterCompanyPurchaseToSaleWithStock(TestInterCompanyRulesCommonStock):
 
         product_storable = self.env['product.product'].create({
             'name': 'Storable',
-            'categ_id': self.env.ref('product.product_category_all').id,
             'is_storable': True,
             'taxes_id': [(6, 0, (self.company_a.account_sale_tax_id + self.company_b.account_sale_tax_id).ids)],
             'supplier_taxes_id': [(6, 0, (self.company_a.account_purchase_tax_id + self.company_b.account_purchase_tax_id).ids)],
@@ -133,6 +140,7 @@ class TestInterCompanyPurchaseToSaleWithStock(TestInterCompanyRulesCommonStock):
         with Form(purchase_order.with_company(self.company_b)) as po:
             with po.order_line.new() as line:
                 line.product_id = product_storable
+                line.product_uom_id = product_storable.uom_id
 
         purchase_order.date_planned = today + relativedelta(days=7)
         # Confirm Purchase order
@@ -224,7 +232,6 @@ class TestInterCompanyPurchaseToSaleWithStock(TestInterCompanyRulesCommonStock):
         self.env["stock.putaway.rule"].with_company(self.company_a).create({
             "location_in_id": stock_location_a.id,
             "location_out_id": shelf_location.id,
-            'category_id': self.env.ref('product.product_category_all').id,
         })
         # with company B:
         my_product = self.env['product.product'].with_company(self.company_b).create({
@@ -348,7 +355,7 @@ class TestInterCompanyPurchaseToSaleWithStock(TestInterCompanyRulesCommonStock):
             Follows the trail of a serial-tracked product along the following flow:
             Vendor -> Company A -> Company B -> Customer
         """
-        self.env.user.groups_id |= self.env.ref('stock.group_production_lot')
+        self.env.user.group_ids |= self.env.ref('stock.group_production_lot')
         (self.company_a | self.company_b).write({
             'intercompany_generate_sales_orders': True,
             'intercompany_generate_purchase_orders': True,

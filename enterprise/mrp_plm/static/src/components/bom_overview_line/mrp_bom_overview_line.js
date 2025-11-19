@@ -1,11 +1,13 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { patch } from "@web/core/utils/patch";
 import { BomOverviewLine } from "@mrp/components/bom_overview_line/mrp_bom_overview_line";
 
 patch(BomOverviewLine.prototype, {
     //---- Handlers ----
+
+    get showEcos() {
+        return this.props.showOptions.mode == 'overview' && this.props.showOptions.ecos;
+    },
 
     async goToEco() {
         return this.actionService.doAction({
@@ -25,7 +27,6 @@ patch(BomOverviewLine, {
         showOptions: { 
             ...BomOverviewLine.showOptions,
             ecos: Boolean,
-            ecoAllowed: Boolean,
         },
     },
 });

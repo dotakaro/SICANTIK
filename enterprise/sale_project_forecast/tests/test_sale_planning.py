@@ -65,7 +65,7 @@ class TestSaleForecast(TestCommonSalePlanning):
             'name': 'Wout',
             'login': 'Wout',
             'email': 'wout@test.com',
-            'groups_id': [(6, 0, [user_group_employee.id, user_group_project_user.id])],
+            'group_ids': [(6, 0, [user_group_employee.id, user_group_project_user.id])],
         })
         cls.employee_wout.write({'user_id': cls.user_projectuser_wout.id})
 
@@ -82,7 +82,7 @@ class TestSaleForecast(TestCommonSalePlanning):
         # changing project of slot should not change to new project's sol if sol of slot is already set
         self.assertEqual(slot1.sale_line_id, line1_project.sale_line_id, 'Sale order item of Planning should not change to new project\'s sol if it\'s already set')
 
-    @freeze_time('2023-1-1')
+    @freeze_time('2023-01-01')
     def test_archive_employee_should_move_shifts_to_open_shifts(self):
         slot = self.env['planning.slot'].create([{
             'resource_id': self.employee_joseph.resource_id.id,

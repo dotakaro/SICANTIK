@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { setRecurringAnimationFrame, debounce } from "@web/core/utils/timing";
 const MIN_ID = -(2 ** 30);
 
@@ -127,7 +125,7 @@ export function generateRandomId() {
  * @param {HelperLines} helperLines instance of helper lines for guiding the user while dragging
  * @returns {Function} cleanup function to be executed when dragging is over
  */
-export function startSmoothScroll(container, element, dragImageElement = null, helperLines) {
+export function startSmoothScroll(container, element, dragImageElement = null, helperLines, offsetX = 0, offsetY = 0) {
     const boundary = 0.2;
     const directions = {
         up: -1,
@@ -141,9 +139,9 @@ export function startSmoothScroll(container, element, dragImageElement = null, h
     const el = dragImageElement || element;
     function updateMousePosition(e) {
         // calculates the event's position relative to the container
-        mouse.x = e.clientX - containerOffset.left;
-        mouse.y = e.clientY - containerOffset.top;
-        helperLines.show(el, { x: e.clientX, y: e.clientY });
+        mouse.x = e.clientX - containerOffset.left - offsetX;
+        mouse.y = e.clientY - containerOffset.top - offsetY;
+        helperLines.show(el, { x: e.clientX - offsetX, y: e.clientY - offsetY });
     }
     const debouncedOnMouseMove = debounce(updateMousePosition, "animationFrame", true);
     container.addEventListener("dragover", debouncedOnMouseMove);
@@ -213,14 +211,14 @@ export function startResize(signItem, onResize) {
             direction === "width" || direction === "both"
                 ? Math.round(
                       normalizeDimension(factor.x * signItem.data.width, signItem.data.posX) * 1000
-                  ) / 1000
+                ) / 1000
                 : signItem.data.width;
 
         const height =
             direction === "height" || direction === "both"
                 ? Math.round(
                       normalizeDimension(factor.y * signItem.data.height, signItem.data.posY) * 1000
-                  ) / 1000
+                ) / 1000
                 : signItem.data.height;
 
         return { height, width };
@@ -255,61 +253,6 @@ export function startResize(signItem, onResize) {
 }
 
 /**
- * Adds pinch listeners to zoom in/zoom out of iframe when in mobile
- * @param {HTMLElement} target
- * @param {handlers} handlers
- * @param {Function} handlers.increaseDistanceHandler Handler called when the distance pinched between the 2 pointer is decreased
- * @param {Function} handlers.decreaseDistanceHandler Handler called when the distance pinched between the 2 pointer is increased
- */
-export function pinchService(target, handlers) {
-    let prevDiff = null;
-    const { increaseDistanceHandler, decreaseDistanceHandler } = handlers;
-
-    target.addEventListener("touchstart", reset);
-    target.addEventListener("touchmove", touchMove);
-    target.addEventListener("touchend", reset);
-
-    /**
-     * This function implements a 2-pointer horizontal pinch/zoom gesture.
-     *
-     * If the distance between the two pointers has increased (zoom in),
-     * distance is decreasing (zoom out)
-     *
-     * @param e
-     * @private
-     */
-    function touchMove(e) {
-        const touches = e.touches;
-        // If two pointers are down, check for pinch gestures
-        if (touches.length === 2) {
-            // Calculate the current distance between the 2 fingers
-            const deltaX = touches[0].pageX - touches[1].pageX;
-            const deltaY = touches[0].pageY - touches[1].pageY;
-            const curDiff = Math.hypot(deltaX, deltaY);
-            if (prevDiff === null) {
-                prevDiff = curDiff;
-            }
-            const scale = prevDiff / curDiff;
-            if (scale < 1) {
-                decreaseDistanceHandler(e);
-            } else if (scale > 1) {
-                increaseDistanceHandler(e);
-            }
-        }
-    }
-
-    function reset() {
-        prevDiff = null;
-    }
-
-    return () => {
-        target.removeEventListener("touchstart", reset);
-        target.removeEventListener("touchmove", touchMove);
-        target.removeEventListener("touchend", reset);
-    };
-}
-
-/**
  * Generates the PDF.JS URL from the attachment location
  * @param { String } attachmentLocation
  * @param { Boolean } isSmall
@@ -323,5 +266,100 @@ export function buildPDFViewerURL(attachmentLocation, isSmall) {
         .replace(/'/g, "%27")
         .replace(/"/g, "%22");
     const zoom = isSmall ? "page-fit" : "page-width";
-    return `${baseURL}?unique=${date}&file=${attachmentLocation}#page=1&zoom=${zoom}`;
+    return `${baseURL}?unique=${date}&file=${attachmentLocation}#page=1&zoom=${zoom}&pagemode=none`;
+}
+
+export function injectPDFCustomStyles(iframeDoc) {
+    /* Apply custom styles for documents's PDF viewers as early as possible
+    to minimize the visibility of default PDF.js styles during rendering. */
+    const link = iframeDoc.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = '/sign/static/src/css/pdfjs_overrides.css';
+    iframeDoc.head.appendChild(link);
+}
+
+
+/**
+ * Adds auto-scrolling functionality when mouse is near container top/bottom edges
+ * @param {HTMLElement} container the container that sets the reference for scrolling
+ * @param {Object} mousePosition relative x,y coordinates within container
+ * @param {Number} boundary percentage of container edge that triggers scrolling (default 0.2 = 20%)
+ * @param {Number} maxDragAmount maximum pixels to scroll per frame (default 80)
+ * @returns {Number} scrollY amount to scroll
+ */
+export function getAutoScrollOffset(container, mousePosition, boundary = 0.2, maxDragAmount = 200) {
+    let isScrolling = false;
+    let scrollCleanup = null;
+
+    /**
+     * Calculates the scroll amount based on the mouse position
+     * @param {Object} pos - The mouse position
+     * @param {number} pos.y - The y coordinate of the mouse position
+     * @returns {number} The scroll amount
+     */
+    function calculateScrollAmount(pos) {
+        let scrollY = 0;
+        const boundaryPixels = container.clientHeight * boundary;
+        if (pos.y <= boundaryPixels) {
+            const distance = pos.y;
+            const factor = 1 - (distance / boundaryPixels);
+            scrollY = -Math.round(maxDragAmount * factor);
+        } else if (pos.y >= container.clientHeight * (1 - boundary)) {
+            const distance = container.clientHeight - pos.y;
+            const factor = 1 - (distance / boundaryPixels);
+            scrollY = Math.round(maxDragAmount * factor);
+        }
+        return scrollY;
+    }
+
+    /**
+     * Starts the auto-scrolling animation
+     * @param {Object} pos - The mouse position
+     * @param {number} pos.y - The y coordinate of the mouse position
+     */
+    function startScrolling(pos) {
+        if (isScrolling) {
+            return;
+        }
+        isScrolling = true;
+        scrollCleanup = setRecurringAnimationFrame(() => {
+            const scrollAmount = calculateScrollAmount(pos);
+            if (scrollAmount !== 0) {
+                container.scrollBy(0, scrollAmount);
+            } else {
+                stopScrolling();
+            }
+        });
+    }
+
+    /**
+     * Stops the auto-scrolling animation
+     */
+    function stopScrolling() {
+        if (scrollCleanup) {
+            scrollCleanup();
+            scrollCleanup = null;
+        }
+        isScrolling = false;
+    }
+
+    /**
+     * Updates the position of the mouse and starts the auto-scrolling animation if necessary
+     * @param {Object} pos - The mouse position
+     * @param {number} pos.y - The y coordinate of the mouse position
+     */
+    function updatePosition(pos) {
+        const scrollAmount = calculateScrollAmount(pos);
+        if (scrollAmount !== 0) {
+            startScrolling(pos);
+        } else {
+            stopScrolling();
+        }
+    }
+    updatePosition(mousePosition);
+    return {
+        updatePosition,
+        stopScrolling,
+    };
 }

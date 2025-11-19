@@ -66,6 +66,7 @@ class HelpdeskTeam(models.Model):
 
             team.top_forum_posts = self.env['forum.post'].search(search_domain, order='vote_count desc, last_activity_date desc', limit=5)
 
+
 class HelpdeskTicket(models.Model):
     _inherit = "helpdesk.ticket"
 

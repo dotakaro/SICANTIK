@@ -173,7 +173,7 @@ class TestRentalKits(TestRentalCommon):
         """Create a rental with a kit and confirm it. Then, pickup the kit.
         """
         # disable the setting to don't create a picking and allow the user to pickup the kit
-        self.env.user.groups_id -= self.env.ref('sale_stock_renting.group_rental_stock_picking')
+        self.env.user.group_ids -= self.env.ref('sale_stock_renting.group_rental_stock_picking')
         settings = self.env['res.config.settings'].with_user(self.env.user).create({})
         settings.group_rental_stock_picking = False
         settings.set_values()

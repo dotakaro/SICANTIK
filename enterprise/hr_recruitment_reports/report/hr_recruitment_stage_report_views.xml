@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <record id="recruitment_stage_report_view_list" model="ir.ui.view">
+        <field name="model">hr.recruitment.stage.report</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="stage_id"/>
+                <field name="days_in_stage"/>
+                <field name="date_begin"/>
+                <field name="date_end"/>
+                <field name="state" optional="hide"/>
+                <field name="job_id" optional="hide"/>
+                <field name="company_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
     <record id="recruitment_stage_report_view_graph" model="ir.ui.view">
         <field name="model">hr.recruitment.stage.report</field>
         <field name="arch" type="xml">
@@ -36,6 +52,7 @@
                     ('date_begin', '>=', (context_today() + relativedelta(days=-365)).strftime('%Y-%m-%d')),
                     ('date_begin', '&lt;', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d'))]"/>
                 <separator/>
+                <separator/>
                 <filter name="filter_date_begin" date="date_begin"/>
                 <separator/>
                 <filter string="Hired" name="filter_hired" domain="[('state', '=', 'is_hired')]"/>
@@ -68,7 +85,7 @@
                 No data to display
             </p>
             <p>
-                This report allows you to check the more time-consuming stages of your pipes and optimize your recruitment flow.
+                Keep an eye on the stages of your recruitment process and prevent any bottleneck.
             </p>
         </field>
     </record>
@@ -87,7 +104,7 @@
                 No data to display
             </p>
             <p>
-                This report allows you to check the more time-consuming stages of your pipes and optimize your recruitment flow.
+                Keep an eye on the stages of your recruitment process and prevent any bottleneck.
             </p>
         </field>
     </record>

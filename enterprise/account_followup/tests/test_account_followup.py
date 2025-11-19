@@ -36,6 +36,7 @@ class TestAccountFollowupReports(TestAccountFollowupCommon, MailCommon):
         invoice = self.env['account.move'].create({
             'move_type': 'out_invoice',
             'invoice_date': date,
+            'invoice_date_due': date,
             'partner_id': partner.id if partner else self.partner_a.id,
             'invoice_line_ids': [Command.create({
                 'quantity': 1,
@@ -56,13 +57,13 @@ class TestAccountFollowupReports(TestAccountFollowupCommon, MailCommon):
             'name': 'A User',
             'login': 'a_user',
             'email': 'a@user.com',
-            'groups_id': [(6, 0, [self.env.ref('account.group_account_user').id])]
+            'group_ids': [(6, 0, [self.env.ref('account.group_account_user').id])]
         })
         user2 = self.env['res.users'].create({
             'name': 'Another User',
             'login': 'another_user',
             'email': 'another@user.com',
-            'groups_id': [(6, 0, [self.env.ref('account.group_account_user').id])]
+            'group_ids': [(6, 0, [self.env.ref('account.group_account_user').id])]
         })
         # 1- no info, use current user
         self.assertEqual(self.partner_a._get_followup_responsible(), self.env.user)
@@ -89,10 +90,45 @@ class TestAccountFollowupReports(TestAccountFollowupCommon, MailCommon):
         # 4- Modify the default responsible on followup level
         self.partner_a.followup_line_id.activity_default_responsible_type = 'salesperson'
         self.assertEqual(self.partner_a._get_followup_responsible(), user1)
+        self.assertEqual(self.partner_a._get_followup_responsible(multiple_responsible=True), (user1 + user2))
 
         self.partner_a.followup_line_id.activity_default_responsible_type = 'account_manager'
         self.partner_a.user_id = user2
         self.assertEqual(self.partner_a._get_followup_responsible(), self.partner_a.user_id)
+
+    def test_followup_activity(self):
+        first_followup_line = self.create_followup(delay=10)
+        first_followup_line.create_activity = True
+        first_followup_line.activity_default_responsible_type = 'salesperson'
+        user1 = self.env['res.users'].create({
+            'name': 'A User',
+            'login': 'a_user',
+            'email': 'a@user.com',
+            'group_ids': [Command.set([self.env.ref('account.group_account_user').id])]
+        })
+        user2 = self.env['res.users'].create({
+            'name': 'Another User',
+            'login': 'another_user',
+            'email': 'another@user.com',
+            'group_ids': [Command.set([self.env.ref('account.group_account_user').id])]
+        })
+        inv1 = self.create_invoice('2022-01-02')
+        inv1.invoice_user_id = user1
+        inv2 = self.create_invoice('2022-01-02')
+        inv2.invoice_user_id = user2
+
+        with freeze_time('2022-01-13'):
+            self.partner_a._execute_followup_partner(options={'snailmail': False})
+            self.assertEqual(self.partner_a.activity_ids.user_id, (user1 + user2))
+
+    def test_followup_no_invoice_user_id(self):
+        first_followup_line = self.create_followup(delay=10)
+        first_followup_line.create_activity = True
+        first_followup_line.activity_default_responsible_type = 'salesperson'
+        inv1 = self.create_invoice('2022-01-02')
+        inv1.invoice_user_id = None
+        with freeze_time('2022-01-13'):
+            self.assertEqual(self.partner_a._get_followup_responsible(), self.user)
 
     def test_followup_line_and_status(self):
         self.first_followup_line = self.create_followup(delay=-10)
@@ -254,41 +290,66 @@ class TestAccountFollowupReports(TestAccountFollowupCommon, MailCommon):
             self.partner_a._execute_followup_partner(options={'snailmail': False})
             self.assertPartnerFollowup(self.partner_a, 'with_overdue_invoices', followup_30)
 
+    def test_followup_status_entry_lines(self):
+        """
+            Creating an entry should not affect the followups as there is no concept of due date with this flow.
+        """
+        self.followup_line = self.create_followup(delay=10)
+
+        with freeze_time('2022-01-02'):
+            invoice = self.env['account.move'].create({
+                'move_type': 'entry',
+                'date': fields.Date.from_string('2022-01-02'),
+                'partner_id': self.partner_a.id,
+                'invoice_line_ids': [
+                    Command.create({
+                        'name': 'line1',
+                        'account_id': self.company_data['default_account_revenue'].id,
+                        'debit': 500.0,
+                        'credit': 0.0,
+                    }),
+                    Command.create({
+                        'name': 'counterpart line',
+                        'account_id': self.company_data['default_account_receivable'].id,
+                        'debit': 0.0,
+                        'credit': 500.0,
+                    })
+                ]
+            })
+            invoice.action_post()
+
+        with freeze_time('2022-01-13'):
+            self.assertPartnerFollowup(self.partner_a, 'no_action_needed', self.followup_line)
+
     def test_followup_contacts(self):
         followup_contacts = self.partner_a._get_all_followup_contacts()
         billing_contact = self.env['res.partner'].browse(self.partner_a.address_get(['invoice'])['invoice'])
         self.assertEqual(billing_contact, followup_contacts)
 
-        followup_partner_1 = self.env['res.partner'].create({
-            'name': 'followup partner 1',
-            'parent_id': self.partner_a.id,
-            'type': 'followup',
-        })
-        followup_partner_2 = self.env['res.partner'].create({
-            'name': 'followup partner 2',
-            'parent_id': self.partner_a.id,
-            'type': 'followup',
-        })
-        expected_partners = followup_partner_1 + followup_partner_2
-        followup_contacts = self.partner_a._get_all_followup_contacts()
-        self.assertEqual(expected_partners, followup_contacts)
-
     def test_followup_cron(self):
-        cron = self.env.ref('account_followup.ir_cron_auto_post_draft_entry')
+        cron = self.env.ref('account_followup.ir_cron_follow_up')
         followup_10 = self.create_followup(delay=10)
         followup_10.auto_execute = True
 
         self.create_invoice('2022-01-01')
 
         # Check that no followup is automatically done if there is no action needed
-        with freeze_time('2022-01-10'), patch.object(type(self.env['res.partner']), '_send_followup') as patched:
+        with (
+            freeze_time('2022-01-10'),
+            patch.object(self.env.registry['res.partner'], '_send_followup') as patched,
+            self.enter_registry_test_mode(),
+        ):
             self.assertPartnerFollowup(self.partner_a, 'with_overdue_invoices', followup_10)
             cron.method_direct_trigger()
             patched.assert_not_called()
             self.assertPartnerFollowup(self.partner_a, 'with_overdue_invoices', followup_10)
 
         # Check that the action is taken one and only one time when there is an action needed
-        with freeze_time('2022-01-11'), patch.object(type(self.env['res.partner']), '_send_followup') as patched:
+        with (
+            freeze_time('2022-01-11'),
+            patch.object(self.env.registry['res.partner'], '_send_followup') as patched,
+            self.enter_registry_test_mode(),
+        ):
             self.assertPartnerFollowup(self.partner_a, 'in_need_of_action', followup_10)
             cron.method_direct_trigger()
             patched.assert_called_once()
@@ -396,11 +457,12 @@ class TestAccountFollowupReports(TestAccountFollowupCommon, MailCommon):
             'name': 'reminder',
             'model_id': self.env['ir.model']._get_id('res.partner'),
             'email_cc': mail_cc.email,
+            'use_default_to': False,
         })
 
         reminder = self.env['account_followup.manual_reminder'].with_context(
             active_model='res.partner',
-            active_ids=mail_partner.id,
+            active_ids=mail_partner.ids,
         ).create({'template_id': mail_template.id})
 
         self.assertTrue(mail_partner in reminder.email_recipient_ids, "Mai Lang should be in the Email Recipients List")
@@ -453,6 +515,7 @@ class TestAccountFollowupReports(TestAccountFollowupCommon, MailCommon):
             'name': 'reminder',
             'model_id': self.env['ir.model']._get_id('res.partner'),
             'email_cc': mail_cc.email,
+            'use_default_to': False,
         })
         followup_10 = self.create_followup(delay=10)
         followup_10.mail_template_id = mail_template

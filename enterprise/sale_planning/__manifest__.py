@@ -3,7 +3,7 @@
 
 {
     'name': 'Sale Planning',
-    'category': 'Hidden',
+    'category': 'Sales/Sales',
     'description': """
 This module allows you to schedule your Sales Order based on the product configuration.
 
@@ -18,6 +18,7 @@ Plan shifts and keep an eye on the hours consumed on your plannable products.
     'data': [
         'security/ir.model.access.csv',
         'security/sale_planning_security.xml',
+        'data/planning_role_data.xml',
         'views/planning_role_views.xml',
         'views/planning_slot_views.xml',
         'views/planning_templates.xml',
@@ -46,6 +47,7 @@ Plan shifts and keep an eye on the hours consumed on your plannable products.
             'sale_planning/static/tests/*',
         ]
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'uninstall_hook': 'uninstall_hook',
 }

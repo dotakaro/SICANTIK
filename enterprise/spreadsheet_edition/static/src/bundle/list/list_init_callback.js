@@ -1,4 +1,3 @@
-/** @odoo-module **/
 import { helpers, stores } from "@odoo/o-spreadsheet";
 import { Domain } from "@web/core/domain";
 import { _t } from "@web/core/l10n/translation";
@@ -47,8 +46,8 @@ export function insertList({ list, threshold, fields, name }) {
             })
         );
         if (!this.isEmptySpreadsheet) {
-            const sheetId = uuidGenerator.uuidv4();
             const sheetIdFrom = model.getters.getActiveSheetId();
+            const sheetId = uuidGenerator.smallUuid();
             if (model.getters.getSheetIdByName(sheetName)) {
                 sheetName = undefined;
             }
@@ -59,9 +58,11 @@ export function insertList({ list, threshold, fields, name }) {
             });
             model.dispatch("ACTIVATE_SHEET", { sheetIdFrom, sheetIdTo: sheetId });
         } else {
+            const sheetId = model.getters.getActiveSheetId();
             model.dispatch("RENAME_SHEET", {
-                sheetId: model.getters.getActiveSheetId(),
-                name: sheetName,
+                sheetId,
+                oldName: model.getters.getSheetName(sheetId),
+                newName: sheetName,
             });
         }
         const defWithoutFields = JSON.parse(JSON.stringify(definition));

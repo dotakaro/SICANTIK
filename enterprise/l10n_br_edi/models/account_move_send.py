@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from odoo import _, api, models
+from odoo.exceptions import UserError
 
 
 class AccountMoveSend(models.AbstractModel):
@@ -14,6 +15,16 @@ class AccountMoveSend(models.AbstractModel):
         res = super()._get_all_extra_edis()
         res.update({'br_edi': {'label': _("e-invoice (Brazil)"), 'is_applicable': self._is_br_edi_applicable}})
         return res
+
+    def _check_move_constrains(self, moves):
+        # EXTENDS 'account'. Allow sending Avalara vendor bills."""
+        avatax_moves = moves.filtered('l10n_br_is_avatax')
+        if any(move.state != 'posted' for move in avatax_moves):
+            raise UserError(_("You can't electronically send invoices or bills that are not posted."))
+        if any(not move.is_sale_document() and not move.is_purchase_document() for move in avatax_moves):
+            raise UserError(_("You can only electronically send invoices and bills."))
+
+        return super()._check_move_constrains(moves - avatax_moves)
 
     # -------------------------------------------------------------------------
     # ALERTS
@@ -69,11 +80,16 @@ class AccountMoveSend(models.AbstractModel):
         for invoice, invoice_data in invoices_data.items():
             # Not all invoices may need EDI.
             if 'br_edi' in invoice_data['extra_edis']:
-                if errors := invoice.with_company(invoice.company_id)._l10n_br_edi_send():
-                    invoice.l10n_br_edi_error = "\n".join(errors)
+                if validation_errors := invoice._l10n_br_avatax_blocking_errors():
                     invoice_data["error"] = {
                         "error_title": _("Errors when submitting the e-invoice:"),
-                        "errors": errors,
+                        "errors": [error["message"] for error in validation_errors],
+                    }
+                elif api_error := invoice.with_company(invoice.company_id)._l10n_br_edi_send():
+                    invoice.l10n_br_edi_error = api_error
+                    invoice_data["error"] = {
+                        "error_title": _("Errors when submitting the e-invoice:"),
+                        "errors": [api_error],
                     }
                 else:
                     invoice.l10n_br_edi_error = False

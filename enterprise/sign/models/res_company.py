@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = 'res.company'
 
     sign_terms = fields.Html(string='Sign Default Terms and Conditions', translate=True,
@@ -17,3 +16,5 @@ class Company(models.Model):
     sign_terms_html = fields.Html(string='Sign Default Terms and Conditions as a Web page', translate=True,
         default="""<h1 style="text-align: center; ">Terms &amp; Conditions</h1>
         <p>Your conditions...</p>""", sanitize_attributes=False)
+
+    signing_certificate_id = fields.Many2one("certificate.certificate", string="Signing Certificate")

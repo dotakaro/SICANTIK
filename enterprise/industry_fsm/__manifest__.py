@@ -36,6 +36,7 @@ Adds the following options:
         'views/project_sharing_views.xml',
         'views/project_portal_templates.xml',
         'data/mail_template_data.xml',
+        'wizard/hr_timesheet_stop_timer_confirmation_wizard_views.xml',
         'wizard/task_stop_timer_wizard_views.xml'
     ],
     'application': True,
@@ -45,6 +46,7 @@ Adds the following options:
         'web.assets_backend': [
             'industry_fsm/static/src/**/*',
             ('remove', 'industry_fsm/static/src/views/fsm_my_task_map/**'),
+            ('remove', 'industry_fsm/static/src/views/fsm_task_map/**'),
             ('remove', 'industry_fsm/static/src/views/industry_fsm_grid/**'),
             ('remove', 'industry_fsm/static/src/views/fsm_task_gantt/**'),
             ('remove', 'industry_fsm/static/src/fsm_gantt_controller.js'),
@@ -52,6 +54,7 @@ Adds the following options:
         ],
         'web.assets_backend_lazy': [
             'industry_fsm/static/src/views/fsm_my_task_map/**',
+            'industry_fsm/static/src/views/fsm_task_map/**',
             'industry_fsm/static/src/views/industry_fsm_grid/**',
             'industry_fsm/static/src/views/fsm_task_gantt/**',
             'industry_fsm/static/src/fsm_gantt_controller.js',
@@ -67,5 +70,6 @@ Adds the following options:
             'industry_fsm/static/tests/tours/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

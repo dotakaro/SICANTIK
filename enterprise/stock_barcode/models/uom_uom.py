@@ -3,14 +3,12 @@
 from odoo import models, api
 
 
-class UoM(models.Model):
+class UomUom(models.Model):
     _inherit = 'uom.uom'
 
     @api.model
     def _get_fields_stock_barcode(self):
         return [
             'name',
-            'category_id',
             'factor',
-            'rounding',
         ]

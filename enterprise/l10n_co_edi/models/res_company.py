@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from odoo import models, fields
+
+from odoo import fields, models
 
 TEMPLATE_CODE = [
     ('01', 'CGEN03'),
@@ -11,8 +11,8 @@ TEMPLATE_CODE = [
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
-    l10n_co_edi_username = fields.Char(string='Username', groups='base.group_system')
-    l10n_co_edi_password = fields.Char(string='Password', groups='base.group_system')
+    l10n_co_edi_username = fields.Char(string="Carvajal Username", groups='base.group_system')
+    l10n_co_edi_password = fields.Char(string="Carvajal Password", groups='base.group_system')
     l10n_co_edi_company = fields.Char(string='Company Registry')
     l10n_co_edi_account = fields.Char(string='Account ID', groups='base.group_system')
     l10n_co_edi_test_mode = fields.Boolean(string='Test mode', default=True)
@@ -27,3 +27,6 @@ class ResCompany(models.Model):
 
     def _get_l10n_co_edi_template_code_description(self):
         return dict(TEMPLATE_CODE).get(self.l10n_co_edi_template_code)
+
+    def _is_latam(self):
+        return super()._is_latam() or self.country_code == 'CO'

@@ -5,21 +5,21 @@ from collections import defaultdict
 from odoo import api, models, fields, _
 from odoo.tools import float_is_zero
 
-class SaleOrder(models.Model):
-    _inherit = ['sale.order']
 
-    task_id = fields.Many2one('project.task', string="Task", help="Task from which this quotation have been created")
+class SaleOrder(models.Model):
+    _inherit = 'sale.order'
+
+    task_id = fields.Many2one('project.task', string="Source Task", help="Task from which this quotation have been created")
 
     @api.model_create_multi
-    def create(self, vals):
-        orders = super().create(vals)
+    def create(self, vals_list):
+        orders = super().create(vals_list)
         for sale_order in orders:
             if sale_order.task_id:
                 message = _("Extra Quotation Created: %s", sale_order._get_html_link())
                 sale_order.task_id.message_post(body=message)
         return orders
 
-    @api.returns('mail.message', lambda value: value.id)
     def message_post(self, **kwargs):
         if self.env.context.get('fsm_no_message_post'):
             return False
@@ -58,33 +58,33 @@ class SaleOrder(models.Model):
 
 
 class SaleOrderLine(models.Model):
-    _inherit = ['sale.order.line']
+    _inherit = 'sale.order.line'
 
     delivered_price_subtotal = fields.Monetary(compute='_compute_delivered_amount', string='Delivered Subtotal', export_string_translation=False)
     delivered_price_tax = fields.Float(compute='_compute_delivered_amount', string='Delivered Total Tax', export_string_translation=False)
     delivered_price_total = fields.Monetary(compute='_compute_delivered_amount', string='Delivered Total', export_string_translation=False)
 
-    @api.depends('qty_delivered', 'discount', 'price_unit', 'tax_id')
+    @api.depends('qty_delivered', 'discount', 'price_unit', 'tax_ids')
     def _compute_delivered_amount(self):
         """
         Compute the amounts of the SO line for delivered quantity.
         """
         for line in self:
             price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
-            taxes = line.tax_id.compute_all(price, line.order_id.currency_id, line.qty_delivered, product=line.product_id, partner=line.order_id.partner_shipping_id)
+            taxes = line.tax_ids.compute_all(price, line.order_id.currency_id, line.qty_delivered, product=line.product_id, partner=line.order_id.partner_shipping_id)
             line.delivered_price_tax = sum(t.get('amount', 0.0) for t in taxes.get('taxes', []))
             line.delivered_price_total = taxes['total_included']
             line.delivered_price_subtotal = taxes['total_excluded']
 
     def _timesheet_create_task_prepare_values(self, project):
-        res = super(SaleOrderLine, self)._timesheet_create_task_prepare_values(project)
+        res = super()._timesheet_create_task_prepare_values(project)
         if project.is_fsm:
             res.update({'partner_id': self.order_id.partner_shipping_id.id})
         return res
 
     def _timesheet_create_project_prepare_values(self):
         """Generate project values"""
-        values = super(SaleOrderLine, self)._timesheet_create_project_prepare_values()
+        values = super()._timesheet_create_project_prepare_values()
         if self.product_id.project_template_id.is_fsm:
             values.pop('sale_line_id', False)
         return values
@@ -94,9 +94,13 @@ class SaleOrderLine(models.Model):
             lambda sol:
                 sol.task_id.is_fsm
                 and float_is_zero(sol.price_unit, precision_rounding=sol.currency_id.rounding)
-                and sol.invoice_status in (None, 'to_invoice')
+                and sol.invoice_status not in ('invoiced', 'upselling')
         )
-        sol_from_task_without_amount.invoice_status = 'no'
+        sol_from_task_with_anglo = sol_from_task_without_amount.filtered(
+            lambda sol: sol.company_id.anglo_saxon_accounting
+        )
+        sol_from_task_with_anglo.invoice_status = 'to invoice'
+        (sol_from_task_without_amount - sol_from_task_with_anglo).invoice_status = 'no'
         super(SaleOrderLine, self - sol_from_task_without_amount)._compute_invoice_status()
 
     @api.depends('price_unit')
@@ -106,9 +110,9 @@ class SaleOrderLine(models.Model):
                 sol.task_id.is_fsm
                 and float_is_zero(sol.price_unit, precision_rounding=sol.currency_id.rounding)
         )
-        sol_from_task_without_amount.qty_to_invoice = 0.0
-        super(SaleOrderLine, self - sol_from_task_without_amount)._compute_qty_to_invoice()
-
-    def action_add_from_catalog(self):
-        # TODO: remove me in master
-        return super().action_add_from_catalog()
+        sol_from_task_with_anglo = sol_from_task_without_amount.filtered(
+            lambda sol: sol.company_id.anglo_saxon_accounting
+        )
+        sol_from_task_without_anglo = sol_from_task_without_amount - sol_from_task_with_anglo
+        sol_from_task_without_anglo.qty_to_invoice = 0.0
+        super(SaleOrderLine, self - sol_from_task_without_anglo)._compute_qty_to_invoice()

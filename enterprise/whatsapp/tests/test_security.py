@@ -8,7 +8,6 @@ from odoo.addons.mail.tests.common import mail_new_test_user
 from odoo.addons.whatsapp.tests.common import WhatsAppCommon, MockIncomingWhatsApp
 from odoo.tests import tagged, users
 from odoo.tools import mute_logger
-from odoo.tools.misc import limited_field_access_token
 
 
 class WhatsAppSecurityCase(WhatsAppCommon):
@@ -89,10 +88,10 @@ class WhatsAppControllerSecurity(MockIncomingWhatsApp, WhatsAppSecurityCase):
     def test_signature_verification(self):
         # valid signature for
         # >>> {"entry": [{"id": "abcdef123456"}]}
-        signature = '0a354a1c094d43355c4b478408ba4344564de72fc8ff9699a64ea9095ecb5415'
+        sig = '0a354a1c094d43355c4b478408ba4344564de72fc8ff9699a64ea9095ecb5415'
         response = self._make_webhook_request(
             self.whatsapp_account,
-            headers={'X-Hub-Signature-256': f'sha256={signature}'})
+            headers={'X-Hub-Signature-256': f'sha256={sig}'})
         # the endpoint return nothing when everything is fine
         self.assertFalse(response.get('result'))
 
@@ -100,8 +99,8 @@ class WhatsAppControllerSecurity(MockIncomingWhatsApp, WhatsAppSecurityCase):
         for signature in [
             False,  # no signature
             'sha256=',  # empty
-            signature,  # wrong format
-            f'sha256=a{signature[1:]}',  # wrong
+            sig,  # wrong format
+            f'sha256=a{sig[1:]}',  # wrong
         ]:
             with self.subTest(signature=signature):
                 headers = {'X-Hub-Signature-256': signature} if signature else None
@@ -115,6 +114,7 @@ class WhatsAppDiscussSecurity(WhatsAppSecurityCase):
     @users('admin')
     @mute_logger('odoo.addons.base.models.ir_rule')
     def test_member_creation(self):
+        self.maxDiff = None
         channel_channel, channel_wa = self.env['discuss.channel'].create([
             {
                 'channel_type': 'channel',
@@ -177,20 +177,16 @@ class WhatsAppDiscussSecurity(WhatsAppSecurityCase):
                                     "message_unread_counter": 0,
                                     "message_unread_counter_bus_id": 0,
                                     "new_message_separator": message.id + 1,
-                                    "persona": {
+                                    "partner_id": {
                                         "id": self.user_admin.partner_id.id,
                                         "type": "partner",
                                     },
-                                    "syncUnread": True,
-                                    "thread": {
+                                    "channel_id": {
                                         "id": employee_channel.id,
                                         "model": "discuss.channel",
                                     },
                                 },
                             ],
-                            "res.partner": self._filter_partners_fields(
-                                {"id": self.user_admin.partner_id.id, "name": "Mitchell Admin"},
-                            ),
                         },
                     },
                     {
@@ -206,34 +202,36 @@ class WhatsAppDiscussSecurity(WhatsAppSecurityCase):
                                 "mail.message": self._filter_messages_fields(
                                     {
                                         "attachment_ids": [],
-                                        "author": {
+                                        "author_guest_id": False,
+                                        "author_id": {
                                             "id": self.user_admin.partner_id.id,
                                             "type": "partner",
                                         },
-                                        "body": '<div class="o_mail_notification">joined the channel</div>',
+                                        "body": [
+                                            "markup",
+                                            '<div class="o_mail_notification">joined the channel</div>',
+                                        ],
                                         "create_date": fields.Datetime.to_string(
                                             message.create_date
                                         ),
                                         "date": "2020-03-22 10:31:06",
                                         "default_subject": "employee channel",
-                                        "email_from": '"Mitchell Admin" <test.admin@test.example.com>',
                                         "id": message.id,
-                                        "is_discussion": True,
-                                        "is_note": False,
-                                        "linkPreviews": [],
+                                        "incoming_email_cc": False,
+                                        "incoming_email_to": False,
+                                        "message_link_preview_ids": [],
                                         "message_type": "notification",
                                         "model": "discuss.channel",
-                                        "notifications": [],
-                                        "parentMessage": False,
+                                        "parent_id": False,
+                                        "partner_ids": [],
                                         "pinned_at": False,
                                         "rating_id": False,
                                         "reactions": [],
-                                        "recipients": [],
                                         "record_name": "employee channel",
                                         "res_id": employee_channel.id,
                                         "scheduledDatetime": False,
                                         "subject": False,
-                                        "subtype_description": False,
+                                        "subtype_id": self.env.ref("mail.mt_comment").id,
                                         "thread": {
                                             "id": employee_channel.id,
                                             "model": "discuss.channel",
@@ -241,25 +239,29 @@ class WhatsAppDiscussSecurity(WhatsAppSecurityCase):
                                         "write_date": fields.Datetime.to_string(message.write_date),
                                     },
                                 ),
-                                "mail.thread": [
+                                "mail.message.subtype": [
+                                    {"description": False, "id": self.env.ref("mail.mt_comment").id}
+                                ],
+                                "mail.thread": self._filter_threads_fields(
                                     {
+                                        "display_name": "employee channel",
                                         "id": employee_channel.id,
                                         "model": "discuss.channel",
                                         "module_icon": "/mail/static/description/icon.png",
                                     },
-                                ],
+                                ),
                                 "res.partner": self._filter_partners_fields(
                                     {
-                                        "avatar_128_access_token": limited_field_access_token(
-                                            self.partner_admin, "avatar_128"
-                                        ),
+                                        "avatar_128_access_token": self.partner_admin._get_avatar_128_access_token(),
                                         "id": self.user_admin.partner_id.id,
-                                        "isInternalUser": True,
                                         "is_company": False,
+                                        "main_user_id": self.user_admin.id,
                                         "name": "Mitchell Admin",
-                                        "userId": self.user_admin.id,
                                         "write_date": admin_write_date,
                                     },
+                                ),
+                                "res.users": self._filter_users_fields(
+                                    {"id": self.user_admin.id, "share": False},
                                 ),
                             },
                             "id": employee_channel.id,
@@ -268,19 +270,19 @@ class WhatsAppDiscussSecurity(WhatsAppSecurityCase):
                     {
                         "type": "mail.record/insert",
                         "payload": {
-                            "discuss.channel": [{"id": employee_channel.id, "memberCount": 2}],
+                            "discuss.channel": [{"id": employee_channel.id, "member_count": 2}],
                             "discuss.channel.member": [
                                 {
                                     "create_date": member_create_date,
                                     "fetched_message_id": message.id,
                                     "id": member.id,
                                     "last_seen_dt": "2020-03-22 10:31:06",
-                                    "persona": {
+                                    "partner_id": {
                                         "id": self.user_admin.partner_id.id,
                                         "type": "partner",
                                     },
                                     "seen_message_id": message.id,
-                                    "thread": {
+                                    "channel_id": {
                                         "id": employee_channel.id,
                                         "model": "discuss.channel",
                                     },
@@ -289,18 +291,18 @@ class WhatsAppDiscussSecurity(WhatsAppSecurityCase):
                             "res.partner": self._filter_partners_fields(
                                 {
                                     "active": True,
-                                    "avatar_128_access_token": limited_field_access_token(
-                                        self.partner_admin, "avatar_128"
-                                    ),
-                                    "email": "test.admin@test.example.com",
+                                    "avatar_128_access_token": self.partner_admin._get_avatar_128_access_token(),
                                     "id": self.user_admin.partner_id.id,
                                     "im_status": "offline",
-                                    "isInternalUser": True,
+                                    "im_status_access_token": self.partner_admin._get_im_status_access_token(),
                                     "is_company": False,
+                                    "main_user_id": self.user_admin.id,
                                     "name": "Mitchell Admin",
-                                    "userId": self.user_admin.id,
                                     "write_date": admin_write_date,
                                 },
+                            ),
+                            "res.users": self._filter_users_fields(
+                                {"id": self.user_admin.id, "share": False},
                             ),
                         },
                     },
@@ -381,20 +383,14 @@ class WhatsAppMessageSecurity(WhatsAppSecurityCase):
         # To handle the `cr.commit()` in the `send_cron` method:
         # it shouldn't actually commit the transaction, as we are in a test, but simulate it,
         # which is the goal of the test_mode/TestCursor
-        self.registry.enter_test_mode(self.cr)
-        self.addCleanup(self.registry.leave_test_mode)
-        cron_cr = self.registry.cursor()
-        self.addCleanup(cron_cr.close)
-
-        # Process the queue to send the whatsapp message through the cron/queue,
-        # as the cron queue would do.
-        default_progress = {'done': 0, 'remaining': 0, 'timed_out_counter': 0}
-        with self.mockWhatsappGateway():
-            self.registry['ir.cron']._process_job(
-                self.registry.db_name,
-                cron_cr,
-                {**self.env.ref('whatsapp.ir_cron_send_whatsapp_queue').read(load=None)[0], **default_progress}
-            )
+        with (
+            self.enter_registry_test_mode(),
+            self.mockWhatsappGateway(),
+            env.registry.cursor() as cr,
+        ):
+            # Process the queue to send the whatsapp message through the cron/queue,
+            # as the cron queue would do.
+            env(cr=cr).ref('whatsapp.ir_cron_send_whatsapp_queue').sudo().method_direct_trigger()
 
         # Invalidate the cache of the whatsapp message, to force fetching the new values,
         # as the cron wrote on the message using another cursor
@@ -449,13 +445,12 @@ class WhatsAppTemplateSecurity(WhatsAppSecurityCase):
         })
         test_partner = self.env['res.partner'].create({
             'country_id': self.env.ref('base.be').id,
-            'mobile': '0455001122',
             'name': 'Test Partner',
             'phone': '0455334455',
             })
 
-        field_paths_allowed = ['mobile', 'phone', 'phone_sanitized']
-        field_paths_allowed_ko = ['x_studio_phone']  # allowed but does not exist
+        field_paths_allowed = ['phone', 'phone_sanitized']
+        field_paths_allowed_ko = ['mobile', 'x_studio_phone']  # allowed but does not exist
         field_paths_disallowed = ['name']  # not allowed
         field_paths_disallowed_ko = ['my_custom_phone_field']  # not allowed and does not exist
         for field_paths, invalid, admin_only in [
@@ -466,7 +461,7 @@ class WhatsAppTemplateSecurity(WhatsAppSecurityCase):
         ]:
             for field_path, test_user in product(field_paths, (self.user_employee, self.user_wa_admin, self.user_admin)):
                 with self.subTest(field_path=field_path, test_user_name=test_user.name):
-                    template.sudo().write({'phone_field': 'mobile'})
+                    template.sudo().write({'phone_field': 'phone'})
                     template = template.with_user(test_user)
                     # employee can never updates templates; wa_admin allowed fields only
                     if test_user == self.user_employee or (admin_only and test_user == self.user_wa_admin):

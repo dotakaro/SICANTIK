@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-sudo mount -o remount,rw /
-sudo mount -o remount,rw /root_bypass_ramdisks
-
-PATH_ZIP_LIB=/home/pi/odoo/addons/hw_drivers/iot_handlers/lib/
+PATH_ZIP_LIB=/home/pi/odoo/addons/iot_drivers/iot_handlers/lib/
 PATH_LIB=${PATH_ZIP_LIB}ctep/lib/
 
 curl -sS https://download.odoo.com/master/posbox/iotbox/worldline-ctepv21_07.zip -o  "${PATH_ZIP_LIB}worldline-ctepv21_07.zip"
@@ -22,6 +19,3 @@ fi
 if id odoo > /dev/null 2>&1; then
 	sudo chown -R odoo:odoo "${PATH_ZIP_LIB}"
 fi
-
-sudo mount -o remount,ro /
-sudo mount -o remount,ro /root_bypass_ramdisks

@@ -6,7 +6,7 @@ from odoo.addons.helpdesk.models.helpdesk_ticket import TICKET_PRIORITY
 from odoo.addons.rating.models.rating_data import RATING_LIMIT_MIN
 
 
-class HelpdeskSLAReport(models.Model):
+class HelpdeskSlaReportAnalysis(models.Model):
     _name = 'helpdesk.sla.report.analysis'
     _description = "SLA Status Analysis"
     _auto = False

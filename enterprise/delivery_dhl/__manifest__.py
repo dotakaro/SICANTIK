@@ -4,18 +4,17 @@
     'name': "DHL Express Shipping (Legacy)",
     'description': "This is the legacy integration with DHL Express that is no longer supported. \
         Please install the new \"DHL Express Shipping\" module and uninstall this one as soon as possible.",
-    'category': 'Inventory/Delivery',
+    'category': 'Shipping Connectors',
     'sequence': 285,
     'version': '1.0',
-    'application': True,
     'depends': ['stock_delivery', 'mail'],
     'data': [
         'data/delivery_dhl_data.xml',
         'views/delivery_dhl_view.xml',
-        'views/res_config_settings_views.xml',
     ],
     'demo': [
         'demo/demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -13,11 +13,12 @@ from werkzeug.urls import url_join
 _logger = logging.getLogger(__name__)
 
 
-class SocialStreamTwitter(models.Model):
+class SocialStream(models.Model):
     _inherit = 'social.stream'
 
     twitter_searched_keyword = fields.Char('Search Keyword')
     twitter_followed_account_search = fields.Char('Search User')
+    twitter_account_user_id = fields.Char(related="account_id.twitter_user_id")
     # TODO awa: clean unused 'social.twitter.account' in a cron job
     twitter_followed_account_id = fields.Many2one('social.twitter.account')
 
@@ -32,7 +33,7 @@ class SocialStreamTwitter(models.Model):
 
     def _apply_default_name(self):
         twitter_streams = self.filtered(lambda s: s.media_id.media_type == 'twitter')
-        super(SocialStreamTwitter, (self - twitter_streams))._apply_default_name()
+        super(SocialStream, (self - twitter_streams))._apply_default_name()
 
         for stream in twitter_streams:
             name = False
@@ -192,6 +193,12 @@ class SocialStreamTwitter(models.Model):
                         f"RT @{username}: "
                         f"{origin_tweet_msg}"
                     )
+                # For retweets, it is more interesting to know the likes number of the actual post
+                # instead of the retweet. As this number is less likely to change a lot, contrary to
+                # the original post.
+                retweet_like_count = quote_and_retweet_per_ids.get(retweets[0].get('id'), {}).get('public_metrics', {}).get('like_count', False)
+                if retweet_like_count is not False:
+                    values['twitter_likes_count'] = retweet_like_count
 
             existing_tweet = existing_tweets_by_tweet_id.get(tweet.get('id'))
             if existing_tweet:

@@ -47,9 +47,9 @@ class AppointmentAccountPaymentTest(AppointmentAccountPaymentCommon):
                 'appointment_resource_id': resource.id,
                 'calendar_booking_id': calendar_booking.id,
                 'capacity_reserved': new_capacity_reserved,
-                'capacity_used': new_capacity_reserved if resource.shareable and appointment_type.resource_manage_capacity else resource.capacity,
+                'capacity_used': new_capacity_reserved if resource.shareable and appointment_type.manage_capacity else resource.capacity,
             }
-        self.env['calendar.booking.line'].create(calendar_booking_lines_values.values())
+        self.env['calendar.booking.line'].create(list(calendar_booking_lines_values.values()))
 
         # Assert Booking Lines are not taking capacity
         resources_remaining_capacity = appointment_type._get_resources_remaining_capacity(appointment_type.resource_ids, start, stop)
@@ -75,8 +75,8 @@ class AppointmentAccountPaymentTest(AppointmentAccountPaymentCommon):
         self.assertTrue(event.active)
         self.assertEqual(event, calendar_booking.calendar_event_id)
         self.assertEqual(event.appointment_type_id, calendar_booking.appointment_type_id)
-        self.assertEqual(event.resource_total_capacity_reserved, calendar_booking.asked_capacity)
-        self.assertEqual(event.resource_total_capacity_used, calendar_booking.asked_capacity)
+        self.assertEqual(event.total_capacity_reserved, calendar_booking.asked_capacity)
+        self.assertEqual(event.total_capacity_used, calendar_booking.asked_capacity)
         self.assertEqual(event.duration, calendar_booking.duration)
         self.assertEqual(event.partner_ids, calendar_booking.partner_id)
         self.assertEqual(event.start, calendar_booking.start)
@@ -98,7 +98,7 @@ class AppointmentAccountPaymentTest(AppointmentAccountPaymentCommon):
             self.assertEqual(booking_line.event_stop, calendar_booking.stop)
 
     @mute_logger('odoo.sql_db')
-    @freeze_time('2022-2-13 20:00:00')
+    @freeze_time('2022-02-13 20:00:00')
     @users('apt_manager')
     def test_booking_to_event_on_invoice_paid_users(self):
         """ Replace booking with Event when invoice is paid - staff user appointment """
@@ -114,6 +114,7 @@ class AppointmentAccountPaymentTest(AppointmentAccountPaymentCommon):
         # Create Calendar Event Booking
         booking_values = {
             'appointment_type_id': appointment_type.id,
+            'booking_line_ids': [(0, 0, {'appointment_user_id': self.staff_user_bxls.id, 'capacity_reserved': 1, 'capacity_used': 1})],
             'duration': 1.0,
             'partner_id': self.apt_manager.partner_id.id,
             'product_id': appointment_type.product_id.id,
@@ -197,6 +198,7 @@ class AppointmentAccountPaymentTest(AppointmentAccountPaymentCommon):
         """ Checks that two bookings with the same user (or resource) are both considered as available on contiguous slots. """
         booking_values = {
             'appointment_type_id': self.appointment_users_payment.id,
+            'booking_line_ids': [(0, 0, {'appointment_user_id': self.staff_user_bxls.id, 'capacity_reserved': 1, 'capacity_used': 1})],
             'duration': 1.0,
             'partner_id': self.apt_manager.partner_id.id,
             'product_id': self.appointment_users_payment.product_id.id,

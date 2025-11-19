@@ -182,7 +182,7 @@ class AccountMove(models.Model):
                 to_usd_rate = 0.0
 
             # Misc.
-            if customer.country_id in self.env.ref('base.europe').country_ids:
+            if customer.country_id and 'EU' in customer.country_id.country_group_codes:
                 ext_trade_values['numero_exportador_confiable'] = self.company_id.l10n_mx_edi_num_exporter
             else:
                 ext_trade_values['numero_exportador_confiable'] = None
@@ -206,7 +206,10 @@ class AccountMove(models.Model):
                 total_usd = usd.round(product_values['total'] * to_usd_rate)
                 weighted_prices = sum(price_unit * qty for (price_unit, qty) in zip(product_values['price_unit_list'], product_values['quantity_list']))
                 weights = sum(product_values['quantity_list'])
-                amount = weighted_prices / weights
+                if weights != 0:
+                    amount = weighted_prices / weights
+                else:
+                    amount = sum(product_values['price_unit_list']) / len(product_values['price_unit_list'])
                 ext_trade_values['mercancia_list'].append({
                     'no_identificacion': product.default_code,
                     'fraccion_arancelaria': product.l10n_mx_edi_tariff_fraction_id.code,
@@ -220,6 +223,7 @@ class AccountMove(models.Model):
             # Invoice lines.
             for line_vals in cfdi_values['conceptos_list']:
                 line_vals['informacion_aduanera_list'] = line_vals['line']['record']._l10n_mx_edi_get_custom_numbers()
+
 
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"

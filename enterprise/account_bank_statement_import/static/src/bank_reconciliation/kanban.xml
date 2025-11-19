@@ -1,19 +1,20 @@
 <templates id="template" xml:space="preserve">
-    <t t-name="account.BankRecKanbanButtons">
+    <t t-name="account_accountant.BankRecoKanbanUploadButton" t-inherit="web.KanbanView.Buttons" t-inherit-mode="primary">
         <xpath expr="//div[hasclass('o_cp_buttons')]" position="inside">
-            <t t-call="account.AccountViewUploadButton"/>
+            <t t-if="showUploadButton" t-call="account.AccountViewUploadButton"/>
         </xpath>
     </t>
 
-    <t t-name="account.BankRecKanbanUploadRenderer" t-inherit="account.BankRecKanbanRenderer" t-inherit-mode="primary">
+    <t t-name="account.BankRecKanbanUploadRenderer" t-inherit="account_accountant.BankRecKanbanRenderer">
         <xpath expr="//div[@t-ref='root']" position="before">
             <UploadDropZone
+                t-if="showUploadButton"
                 visible="dropzoneState.visible"
                 hideZone="() => dropzoneState.visible = false"/>
         </xpath>
+
         <xpath expr="//div[@t-ref='root']" position="attributes">
             <attribute name="t-on-dragenter.stop.prevent">onDragStart</attribute>
         </xpath>
     </t>
-
 </templates>

@@ -6,14 +6,8 @@ from odoo import api, fields, models
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
-    billable_time_target = fields.Float("Billing Time Target", groups="hr.group_hr_user")
-    show_billable_time_target = fields.Boolean(related="company_id.timesheet_show_rates", groups="hr.group_hr_user")
-
-    @api.model
-    def get_billable_time_target(self, user_ids):
-        if self.env.user.has_group("hr_timesheet.group_hr_timesheet_user"):
-            return self.sudo().search_read([("user_id", 'in', user_ids), ("company_id", "=", self.env.company.id)], ["billable_time_target"])
-        return []
+    billable_time_target = fields.Float("Billing Time Target", groups="hr_timesheet.group_hr_timesheet_user")
+    show_billable_time_target = fields.Boolean(related="company_id.timesheet_show_rates")
 
     @api.model
     def get_all_billable_time_targets(self):
@@ -21,10 +15,18 @@ class HrEmployee(models.Model):
             return self.sudo().search_read([("company_id", "=", self.env.company.id)], ["billable_time_target"])
         return []
 
-    _sql_constraints = [
-        (
-            "check_billable_time_target",
-            "CHECK(billable_time_target >= 0)",
-            "The billable time target cannot be negative."
-        ),
-    ]
+    _check_billable_time_target = models.Constraint(
+        'CHECK(billable_time_target >= 0)',
+        "The billable time target cannot be negative.",
+    )
+
+
+class HREmployeePublic(models.Model):
+    _inherit = "hr.employee.public"
+
+    billable_time_target = fields.Float(compute='_compute_billable_time_target')
+    show_billable_time_target = fields.Boolean(compute='_compute_billable_time_target')
+
+    def _compute_billable_time_target(self):
+        self._compute_from_employee('billable_time_target')
+        self._compute_from_employee('show_billable_time_target')

@@ -8,6 +8,7 @@ from odoo.fields import Datetime
 from odoo.exceptions import UserError
 from odoo.tools.float_utils import float_compare
 
+
 class HrLeave(models.Model):
     _inherit = 'hr.leave'
 
@@ -17,7 +18,9 @@ class HrLeave(models.Model):
         ('blocked', 'To defer to next payslip')], string='Payslip State',
         copy=False, default='normal', required=True, tracking=True)
 
-    def action_validate(self, check_state=True):
+    employee_registration_number = fields.Char(related="employee_id.registration_number")
+
+    def _action_validate(self, check_state=True):
         # Get employees payslips
         all_payslips = self.env['hr.payslip'].sudo().search([
             ('employee_id', 'in', self.mapped('employee_id').ids),
@@ -35,19 +38,30 @@ class HrLeave(models.Model):
                 and (payslip.date_from <= leave.date_to.date() \
                 and payslip.date_to >= leave.date_from.date()) for payslip in waiting_payslips):
                 leave.payslip_state = 'blocked'
-        res = super().action_validate(check_state=check_state)
+        res = super()._action_validate(check_state=check_state)
         self.sudo()._recompute_payslips()
         return res
+
+    def _get_to_clean_activities(self):
+        activities = super()._get_to_clean_activities()
+        activities.append('hr_payroll_holidays.mail_activity_data_hr_leave_to_defer')
+        return activities
 
     def action_refuse(self):
         res = super().action_refuse()
         self.sudo()._recompute_payslips()
         return res
 
-    def _action_user_cancel(self, reason):
+    def _action_user_cancel(self, reason=None):
         res = super()._action_user_cancel(reason)
+        self.sudo().payslip_state = 'done'
         self.sudo()._recompute_payslips()
         return res
+    
+    def action_reset_confirm(self):
+        super().action_reset_confirm()
+        self.sudo().payslip_state = 'normal'
+        return True
 
     def _recompute_payslips(self):
         # Recompute draft/waiting payslips
@@ -80,10 +94,10 @@ class HrLeave(models.Model):
                 user_id=leave.employee_id.company_id.deferred_time_off_manager.id or self.env.ref('base.user_admin').id)
         return super(HrLeave, self - leaves_to_defer)._cancel_work_entry_conflict()
 
-    def activity_feedback(self, act_type_xmlids, user_id=None, feedback=None):
+    def activity_feedback(self, act_type_xmlids, user_id=None, feedback=None, attachment_ids=None, only_automated=True):
         if 'hr_payroll_holidays.mail_activity_data_hr_leave_to_defer' in act_type_xmlids:
             self.write({'payslip_state': 'done'})
-        return super().activity_feedback(act_type_xmlids, user_id=user_id, feedback=feedback)
+        return super().activity_feedback(act_type_xmlids, user_id=user_id, feedback=feedback, attachment_ids=attachment_ids, only_automated=only_automated)
 
     def action_report_to_next_month(self):
         for leave in self:

@@ -5,16 +5,17 @@ import base64
 
 from datetime import date
 from collections import defaultdict
-from lxml import etree
+from lxml import html
 
 from odoo import _, models, api
 from odoo.exceptions import UserError
-from odoo.tools import format_list
+
+etree = html.etree
 
 
-class L10nHkIr56f(models.Model):
+class L10n_HkIr56f(models.Model):
     _name = 'l10n_hk.ir56f'
-    _inherit = 'l10n_hk.ird'
+    _inherit = ['l10n_hk.ird']
     _description = 'IR56F Sheet'
     _order = 'start_period'
 
@@ -50,7 +51,7 @@ class L10nHkIr56f(models.Model):
         if invalid_lines:
             error_messages += "\n" + _(
                 "The following employees don't have a valid departure reason: %s",
-                format_list(self.env, invalid_lines.employee_id.mapped("name")),
+                invalid_lines.employee_id.mapped("name"),
             )
         return error_messages
 
@@ -86,8 +87,8 @@ class L10nHkIr56f(models.Model):
                 code: sum(all_line_values[code][p.id]['total'] for p in payslips)
                 for code in line_codes}
 
-            start_date = self.start_period if self.start_period > employee.first_contract_date else employee.first_contract_date
-            end_date = employee.contract_id.date_end if employee.contract_id.date_end else self.end_period
+            start_date = self.start_period if self.start_period > employee.contract_date_start else employee.contract_date_start
+            end_date = employee.version_id.date_end if employee.version_id.date_end else self.end_period
 
             rental_ids = employee.l10n_hk_rental_ids.filtered_domain([
                 ('state', 'in', ['open', 'close']),
@@ -99,7 +100,7 @@ class L10nHkIr56f(models.Model):
             if departure_code == 5:
                 departure_reason_other = sheet_line.employee_id.departure_description
                 departure_reason_str = sheet_line.employee_id.departure_description
-            else:
+            elif departure_code:
                 departure_reason_other = ''
                 departure_reason_str = {
                     '1': 'Resignation',
@@ -206,4 +207,4 @@ class L10nHkIr56f(models.Model):
         return result
 
     def _get_posted_document_owner(self, employee):
-        return employee.contract_id.hr_responsible_id or self.env.user
+        return employee.version_id.hr_responsible_id or self.env.user

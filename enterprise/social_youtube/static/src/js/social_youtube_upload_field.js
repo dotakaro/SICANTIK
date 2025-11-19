@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { CharField, charField } from '@web/views/fields/char/char_field';
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
@@ -367,6 +365,9 @@ export class YoutubeUploadField extends CharField {
 export const youtubeUploadField = {
     ...charField,
     component: YoutubeUploadField,
+    fieldDependencies: [
+        { name: "youtube_video_category_id", type: "char", readonly: false },
+    ],
 };
 
 registry.category("fields").add("youtube_upload", youtubeUploadField);

@@ -11,7 +11,23 @@
                 <field name="struct_id" column_invisible="True"/>
                 <field name="sequence" column_invisible="True"/>
                 <field name="partner_id"/>
+                <field name="country_id" optional="hidden"/>
             </list>
+        </field>
+    </record>
+
+    <record id="hr_salary_rule_view_list_m2m" model="ir.ui.view">
+        <field name="name">hr.salary.rule.view.list.m2m</field>
+        <field name="model">hr.salary.rule</field>
+        <field name="inherit_id" ref="hr_payroll.hr_salary_rule_list"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <field name="struct_id" position="attributes">
+                <attribute name="column_invisible">0</attribute>
+            </field>
+            <field name="partner_id" position="attributes">
+                <attribute name="optional">hidden</attribute>
+            </field>
         </field>
     </record>
 
@@ -37,16 +53,15 @@
         <field name="name">hr.salary.rule.form</field>
         <field name="model">hr.salary.rule</field>
         <field name="arch" type="xml">
-            <form string="Salary Rules">
+            <form string="Salary Rules" js_class="hr_salary_rule_preview">
             <sheet>
                 <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                 <label for="name" string="Rule Name"/>
                 <h1><field name="name" placeholder="e.g. Net Salary"/></h1>
-                <label for="category_id"/>
-                <h2><field name="category_id" placeholder="e.g. Net"/></h2>
 
                 <group name="main_details" col="4">
                    <field name="code"/>
+                   <field name="category_id" placeholder="e.g. Net"/>
                    <field name="sequence"/>
                    <field name="struct_id"/>
                    <field name="active" widget="boolean_toggle"/>
@@ -83,8 +98,34 @@
                             </group>
                         </group>
                     </page>
-                    <page name="description" string="Description">
-                        <field name="note"/>
+                    <page name="display" string="Display">
+                        <group name="options" string="Options">
+                            <group>
+                                <field name="color" widget="color"/>
+                                <field name="title"/>
+                            </group>
+                            <group>
+                                <field name="bold"/>
+                                <field name="underline"/>
+                                <field name="italic"/>
+                            </group>
+                            <label for="note" string="Description" class="fw-bold text-900 opacity-100"/>
+                            <field name="note"/>
+                        </group>
+                        <group name="preview" string="Preview">
+                            <group>
+                                <div>
+                                    <field name="name" readonly="1" class="o_preview fs-4"/>
+                                    <field name="note" readonly="1" class="text-truncate o_preview fs-6" invisible="not note"/>
+                                </div>
+                            </group>
+                            <group>
+                                <field name="preview_currency_position" invisible="1"/>
+                                <field name="preview_currency_symbol" class="o_preview fs-4" nolabel="1" invisible="title or preview_currency_position == 'after'"/>
+                                <span class="o_preview fs-4" invisible="title">99.99</span>
+                                <field name="preview_currency_symbol" class="o_preview fs-4" nolabel="1" invisible="title or preview_currency_position == 'before'"/>
+                            </group>
+                        </group>
                     </page>
                 </notebook>
             </sheet>

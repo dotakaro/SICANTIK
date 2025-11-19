@@ -1,11 +1,11 @@
-import * as Chrome from "@point_of_sale/../tests/tours/utils/chrome_util";
-import * as Dialog from "@point_of_sale/../tests/tours/utils/dialog_util";
-import * as ProductScreen from "@point_of_sale/../tests/tours/utils/product_screen_util";
-import * as PaymentScreen from "@point_of_sale/../tests/tours/utils/payment_screen_util";
-import * as ReceiptScreen from "@point_of_sale/../tests/tours/utils/receipt_screen_util";
+import * as Chrome from "@point_of_sale/../tests/pos/tours/utils/chrome_util";
+import * as Dialog from "@point_of_sale/../tests/generic_helpers/dialog_util";
+import * as ProductScreen from "@point_of_sale/../tests/pos/tours/utils/product_screen_util";
+import * as PaymentScreen from "@point_of_sale/../tests/pos/tours/utils/payment_screen_util";
+import * as ReceiptScreen from "@point_of_sale/../tests/pos/tours/utils/receipt_screen_util";
 import { registry } from "@web/core/registry";
 
-export function addDocument(documentParams) {
+function addDocument(documentParams) {
     const steps = [];
     for (const values of documentParams) {
         steps.push(...ProductScreen.addOrderline(values.product, values.quantity));
@@ -23,13 +23,14 @@ export function addDocument(documentParams) {
     return steps;
 }
 
-export function assertTaxTotals(baseAmount, taxAmount, totalAmount) {
+function assertTaxTotals(baseAmount, taxAmount, totalAmount) {
     return [
         PaymentScreen.totalIs(totalAmount),
         PaymentScreen.clickPaymentMethod("Bank"),
         PaymentScreen.remainingIs("0.0"),
 
         PaymentScreen.clickInvoiceButton(),
+        PaymentScreen.isInvoiceOptionSelected(),
         PaymentScreen.clickValidate(),
 
         ReceiptScreen.receiptAmountTotalIs(totalAmount),

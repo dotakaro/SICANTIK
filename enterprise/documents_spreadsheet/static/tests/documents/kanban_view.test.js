@@ -213,7 +213,7 @@ test("open xlsx converts to o-spreadsheet, clone it and opens the spreadsheet", 
     await makeDocumentsSpreadsheetMockEnv({
         serverData,
         mockRPC: async (route, args) => {
-            if (args.method === "clone_xlsx_into_spreadsheet") {
+            if (args.method === "import_to_spreadsheet") {
                 expect.step("spreadsheet_cloned");
                 expect(args.model).toBe("documents.document");
                 expect(args.args).toEqual([spreadsheetId]);
@@ -255,7 +255,7 @@ test("open WPS-marked xlsx converts to o-spreadsheet, clone it and opens the spr
     await makeDocumentsSpreadsheetMockEnv({
         serverData,
         mockRPC: async (route, args) => {
-            if (args.method === "clone_xlsx_into_spreadsheet") {
+            if (args.method === "import_to_spreadsheet") {
                 expect.step("spreadsheet_cloned");
                 expect(args.model).toBe("documents.document");
                 expect(args.args).toEqual([spreadsheetId]);
@@ -274,6 +274,48 @@ test("open WPS-marked xlsx converts to o-spreadsheet, clone it and opens the spr
         expect(action.params.spreadsheet_id).toEqual(spreadsheetCopyId);
     });
     await contains(".o_kanban_record:contains('My excel file') .oe_kanban_previewer").click();
+
+    // confirm conversion to o-spreadsheet
+    await contains(".modal-content .btn.btn-primary").click();
+    expect.verifySteps(["spreadsheet_cloned", "action_open_spreadsheet"]);
+});
+
+test("open csv converts to o-spreadsheet, clone it and opens the spreadsheet", async function () {
+    const spreadsheetId = 1;
+    const spreadsheetCopyId = 99;
+    const serverData = getTestServerData();
+    serverData.models["ir.attachment"] = { records: [{ id: 1 }] };
+    serverData.models["documents.document"].records = [
+        {
+            id: spreadsheetId,
+            name: "My CSV file",
+            mimetype: "text/csv",
+            thumbnail_status: "present",
+            attachment_id: 1, // Necessary to not be considered as a request
+        },
+    ];
+    await makeDocumentsSpreadsheetMockEnv({
+        serverData,
+        mockRPC: async (route, args) => {
+            if (args.method === "import_to_spreadsheet") {
+                expect.step("spreadsheet_cloned");
+                expect(args.model).toBe("documents.document");
+                expect(args.args).toEqual([spreadsheetId]);
+                return spreadsheetCopyId;
+            }
+        },
+    });
+    await mountView({
+        type: "kanban",
+        resModel: "documents.document",
+        arch: basicDocumentKanbanArch,
+        searchViewArch: getEnrichedSearchArch(),
+    });
+    mockActionService((action) => {
+        expect.step(action.tag);
+        expect(action.params.spreadsheet_id).toEqual(spreadsheetCopyId);
+    });
+    await contains(".o_kanban_image_wrapper").click();
 
     // confirm conversion to o-spreadsheet
     await contains(".modal-content .btn.btn-primary").click();
@@ -434,6 +476,7 @@ test("spreadsheet should be skipped while toggling the preview in the FileViewer
 });
 
 test("Cannot download spreadsheets", async function () {
+    onRpc("/documents/touch/accessTokenFolder1", () => true);
     const serverData = getDocumentsTestServerData([
         {
             folder_id: 1,
@@ -480,6 +523,9 @@ test("Cannot download spreadsheets", async function () {
     // Spreadsheet should not be downloadable
     await contains(`.o_kanban_record:contains('Spreadsheet')`).click();
     await waitForNone(".o_control_panel_actions:contains('Download')");
+    // deselect spreadsheet
+    await contains(`.o_kanban_record:contains('Spreadsheet')`).click({ ctrlKey: true });
+
     // Multiple documents can be downloaded
     await contains(`.o_kanban_record:contains(${folder1Name})`).click({ ctrlKey: true });
     await waitFor(".o_control_panel_actions:contains('Download')");

@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { markup } from "@odoo/owl";
@@ -20,7 +18,7 @@ registry.category("web_tour.tours").add('planning_tour', {
         run: "click",
     }, {
         isActive: ["desktop"],
-        trigger: ".o_gantt_button_add",
+        trigger: ".o_gantt_button_add, .o_gantt_cells",
         content: markup(_t("Let's create your first <b>shift</b>. <i>Tip: use the (+) shortcut available on each cell of the Gantt view to save time.</i>")),
         tooltipPosition: "bottom",
         run: "click",
@@ -93,7 +91,7 @@ registry.category("web_tour.tours").add('planning_tour', {
         tooltipPosition: "bottom",
         run: "click",
     }, {
-        trigger: ".o_gantt_renderer_controls button i.fa-arrow-right",
+        trigger: ".o_gantt_renderer_controls button i.oi-arrow-right",
         content: markup(_t("Now that this week is ready, let's get started on <b>next week's schedule</b>.")),
         tooltipPosition: "bottom",
         run: "click",

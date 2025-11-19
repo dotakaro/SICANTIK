@@ -5,9 +5,19 @@
         id="iot_menu_root"
         name="IoT"
         web_icon="iot,static/description/icon.png"
-        groups="base.group_system"
+        groups="iot.group_iot_user"
         sequence="265"
     />
+
+    <!-- Client Actions -->
+    <record id="action_iot_delete_linked_devices_menu" model="ir.actions.client">
+        <field name="name">reset.linked.printers</field>
+        <field name="tag">iot_delete_linked_devices_action</field>
+    </record>
+    <record id="action_discover_iot_boxes" model="ir.actions.client">
+        <field name="name">Discover IoT boxes</field>
+        <field name="tag">discover_iot_boxes</field>
+    </record>
 
     <!-- IoT Boxes -->
     <record id="iot_box_view_form" model="ir.ui.view">
@@ -15,11 +25,22 @@
         <field name="model">iot.box</field>
         <field name="arch" type="xml">
             <form create="false">
-                <header groups="base.group_no_one">
-                    <widget name="iot_download_logs"/>
-                    <widget name="iot_restart_odoo_or_reboot" btn_name="Restart Odoo" action="restart_odoo"/>
+                <header>
+                    <button name="open_homepage" type="object" string="Homepage" class="btn btn-secondary"/>
+                    <t groups="base.group_no_one">
+                        <widget name="iot_download_logs" btn_name="Download Logs" btn_class="primary"/>
+                        <widget name="iot_restart_odoo" btn_name="Restart Odoo" btn_class="secondary"/>
+                        <widget groups="iot.group_iot_admin" name="iot_reset_password" btn_name="Reset Password" btn_class="secondary"/>
+                    </t>
                 </header>
                 <sheet>
+                    <div class="alert alert-warning d-flex align-items-center" role="alert" invisible="not must_install_fdm_module">
+                        <span>
+                            A fiscal data module has been connected. To use it,
+                            <a class="alert-link text-decoration-underline" type="object" name="install_fdm_module">install the Fiscal Data Module</a>
+                            app.
+                        </span>
+                    </div>
                     <div class="oe_title">
                         <h1>
                             <field name="name"/>
@@ -27,18 +48,18 @@
                     </div>
                     <group>
                         <group>
-                            <field name="ip_url" widget="url"/>
-                            <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                            <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}" placeholder="Visible to all"/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Devices" name="devices">
                             <field name="device_ids" readonly="False" widget="device_list_field">
-                                <list>
+                                <list default_order="connection, name">
                                     <field name="name"/>
                                     <field name="identifier"/>
                                     <field name="type"/>
                                     <field name="connection"/>
+                                    <field name="connected_status" string="Status"/>
                                 </list>
                             </field>
                         </page>
@@ -48,23 +69,12 @@
                                 <field name="ip"/>
                                 <field name="version"/>
                                 <field name="drivers_auto_update"/>
-                                <field name="is_websocket_active"/>
+                                <field name="ssl_certificate_end_date" invisible="not ssl_certificate_end_date"/>
                             </group>
                         </page>
                     </notebook>
                 </sheet>
             </form>
-        </field>
-    </record>
-    <record id="iot_device_action_search_iot_box" model="ir.actions.act_window">
-        <field name="name">Devices</field>
-        <field name="res_model">iot.device</field>
-        <field name="view_mode">kanban,list,form</field>
-        <field name="context">{'search_default_iot_id': [active_id], 'search_default_group_by_type': 1}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_empty_folder">
-                There is no device connected to this IoT Box
-            </p>
         </field>
     </record>
     <record id="iot_box_view_kanban" model="ir.ui.view">
@@ -73,16 +83,16 @@
         <field name="arch" type="xml">
             <kanban create="false">
                 <header>
-                    <button name="%(iot.action_add_iot_box)d" type="action" string="Connect" class="btn-primary o-kanban-button-new"  display="always"/>
+                    <button groups="iot.group_iot_admin" name="iot.action_discover_iot_boxes" type="action" string="Connect" class="btn-primary o-kanban-button-new"  display="always"/>
                 </header>
                 <templates>
                     <t t-name="card" class="p-0">
-                        <div class="p-4 border-start">
-                            <div class="text-truncate fw-bold" t-att-title="record.name.raw_value"><field name="name"/></div>
-                            <field name="ip_url" widget="url"/>
-                            <a class="p-2" name="%(iot_device_action_search_iot_box)d" type="action">
-                                <span class="float-end" aria-label="Device Count"><field name="device_count"/> <i t-attf-class="fa fa-plug"/></span>
-                            </a>
+                        <div id="card" class="p-3 d-flex flex-column justify-content-between">
+                            <div class="text-truncate fw-bold d-flex align-items-center justify-content-between" t-att-title="record.name.raw_value">
+                                <field name="name"/>
+                                <span class="float-end"><field name="device_count"/> <i t-attf-class="fa fa-plug" title="device-icon"/></span>
+                            </div>
+                            <field class="fs-6 pb-2" name="create_date" widget="datetime" options="{'show_time': false}"/>
                         </div>
                     </t>
                 </templates>
@@ -95,7 +105,7 @@
         <field name="arch" type="xml">
             <list create="false">
                 <header>
-                    <button name="%(iot.action_add_iot_box)d" type="action" string="Connect" class="btn-primary o_list_button_save" display="always"/>
+                    <button groups="iot.group_iot_admin" name="iot.action_discover_iot_boxes" type="action" string="Connect" class="btn-primary" display="always"/>
                 </header>
                 <field name="name"/>
                 <field name="identifier"/>
@@ -112,7 +122,7 @@
                 No IoT Box found!
             </p><p>
                 Click on the 
-                <a name="%(iot.action_add_iot_box)d" type="action" tabindex="-1">connect</a>
+                <a name="connect_iot_box" type="object" tabindex="-1">connect</a>
                  to add an IoT Box.
             </p>
         </field>
@@ -124,6 +134,10 @@
         <field name="model">iot.device</field>
         <field name="arch" type="xml">
             <form create="false" js_class="iot_device_form">
+                <header>
+                    <button name="test_printer" string="Test" class="btn btn-primary" invisible="type != 'printer'"/>
+                    <field name="connected_status" widget="statusbar"/>
+                </header>
                 <sheet>
                     <div class="oe_title">
                         <h1>
@@ -135,20 +149,21 @@
                             <field name="iot_id" readonly="type != 'printer' or connection != 'network'"/>
                             <field name="iot_ip" invisible="True"/>
                             <field name="identifier" readonly="True"/>
-                            <field name="type"/>
-                            <field name="subtype" invisible= "type != 'printer'"/>
                             <field name="is_scanner" invisible="type not in ['keyboard', 'scanner']" widget="boolean_toggle"/>
                             <field name="manufacturer" invisible="manufacturer == ''"/>
-                            <field name="connection"/>
-                            <field name="connected"/>
                             <field name="keyboard_layout" invisible="type not in ['keyboard', 'scanner']"/>
                             <field name="display_url" invisible="type != 'display'"/>
                             <div class='fw-bold' groups="base.group_no_one">Last Sent Value</div>
                             <widget name="iot_device_value_display" groups="base.group_no_one"/>
                         </group>
+                        <group>
+                            <field name="type"/>
+                            <field name="subtype" invisible= "type != 'printer'"/>
+                            <field name="connection"/>
+                        </group>
                     </group>
                     <notebook>
-                        <page string="Printer Reports" name="reports" invisible="type != 'printer'">
+                        <page string="Reports to Auto-Print" name="reports" invisible="type != 'printer'">
                             <field name="report_ids" widget="many2many" context="{'list_view_ref': 'iot.act_report_xml_view_tree_iot'}"/>
                         </page>
                     </notebook>
@@ -160,29 +175,27 @@
         <field name="name">iot.device.view.kanban</field>
         <field name="model">iot.device</field>
         <field name="arch" type="xml">
-            <kanban create="false" group_create="false" sample="1">
+            <kanban create="false" group_create="false" sample="1" default_group_by="iot_id" default_order="type">
                 <field name="type"/>
                 <field name="connection"/>
-                <field name="connected"/>
+                <field name="connected_status"/>
                 <templates>
                     <t t-name="card" class="row g-0 p-0">
                         <aside class="col-3 text-center align-self-center">
-                            <t t-set="types" t-value="{'camera': 'camera', 'printer': 'printer', 'device': 'rulers', 'payment': 'payment-terminal', 'scale': 'scales', 'keyboard': 'keyboard', 'scanner': 'barcode-scanner', 'display': 'desktop', 'fiscal_data_module': 'fdm'}"/>
-                            <img t-attf-src="/iot/static/src/img/#{types[record.type.raw_value]}.svg" t-attf-alt="Device type is #{record.type.raw_value}"/>
+                            <t t-set="types" t-value="{'camera': 'camera', 'printer': 'printer', 'device': 'rulers', 'payment': 'payment-terminal', 'scale': 'scales', 'keyboard': 'keyboard', 'scanner': 'barcode-scanner', 'display': 'desktop', 'fiscal_data_module': 'fdm', 'unsupported': 'unsupported'}"/>
+                            <img t-attf-src="/iot/static/src/img/#{types[record.type.raw_value]}.svg" t-attf-alt="Device type is #{record.type.raw_value}" class="w-50"/>
                         </aside>
                         <main class="col p-2 border-start">
-                            <div class="text-truncate fw-bold" t-att-title="record.name.raw_value"><field name="name"/></div>
-                            <field name="iot_id" class="text-muted fst-italic text-truncate"/>
-                            <div>
-                                <t t-if="record.connected.raw_value">
-                                    <span class="badge text-bg-success">Connected</span>
-                                </t>
-                                <t t-else="">
-                                    <span class="badge text-bg-secondary">Disconnected</span>
-                                </t>
+                            <div class="text-truncate fw-bold d-flex align-items-center justify-content-between" t-att-title="record.name.raw_value">
+                                <field name="name" class="text-truncate"/>
+                                <i class="fa fa-circle text-success" t-if="record.connected_status.raw_value == 'connected'"/>
+                                <i class="fa fa-circle text-danger" t-else=""/>
                             </div>
-                            <t t-set="connections" t-value="{'network': 'wifi', 'direct': 'usb', 'bluetooth': 'bluetooth-b', 'serial': 'usb', 'hdmi': 'usb'}"/>
-                            <span class="ms-auto fa-stack" t-att-title="record.connection.raw_value"><i t-attf-class="fa fa-#{connections[record.connection.raw_value]}"></i></span>
+                            <div class="d-flex align-items-center gap-2">
+                                <t t-set="connections" t-value="{'network': 'wifi', 'direct': 'usb', 'bluetooth': 'bluetooth-b', 'serial': 'usb', 'hdmi': 'usb'}"/>
+                                <i t-attf-class="fa fa-#{connections[record.connection.raw_value]} fa-fw" title="connection_type"/>
+                                <field name="iot_id" class="text-truncate" readonly="1"/>
+                            </div>
                         </main>
                     </t>
                 </templates>
@@ -193,10 +206,11 @@
         <field name="name">iot.device.view.list</field>
         <field name="model">iot.device</field>
         <field name="arch" type="xml">
-            <list create="false">
+            <list create="false" default_order="type">
                 <field name="name"/>
                 <field name="iot_id"/>
                 <field name="identifier"/>
+                <field name="connected_status"/>
             </list>
         </field>
     </record>
@@ -209,8 +223,6 @@
                 <field name="type"/>
                 <field name="iot_id"/>
                 <group expand="0" string="Group By">
-                    <filter name="group_by_type" string="Device type" context="{'group_by': 'type'}"/>
-                    <filter name="group_by_iot_id" string="IoT Box" context="{'group_by':'iot_id'}"/>
                     <filter name="group_by_connection" string="Connection" context="{'group_by':'connection'}"/>
                 </group>
             </search>
@@ -227,11 +239,6 @@
             </p>
         </field>
     </record>
-
-    <record id="action_iot_delete_linked_devices_menu" model="ir.actions.client">
-        <field name="name">reset.linked.printers</field>
-        <field name="tag">iot_delete_linked_devices_action</field>
-    </record>
     
     <menuitem
         id="iot_box_menu_action"
@@ -247,12 +254,13 @@
         id="view_iot_selected_printer_local_action"
         name="Configuration"
         parent="iot_menu_root"
-        sequence="3"/>
+        sequence="3"
+        groups="base.group_no_one"/>
 
-    <!-- Reports submenu -->
+    <!-- Cache submenu -->
     <menuitem
         id="iot_settings_menu_action"
-        name="Reports"
+        name="Cache"
         parent="view_iot_selected_printer_local_action"
         sequence="4"/>
     <menuitem

@@ -3,27 +3,21 @@
 # 	* timesheet_grid
 # 
 # Translators:
-# Wil Odoo, 2024
-# Tony Ng, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:44+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Tony Ng, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:07+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: zh_TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-
-#. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_kanban
-msgid "<i class=\"fa fa-pause text-warning\" title=\"Timer is Paused\"/>"
-msgstr "<i class=\"fa fa-pause text-warning\" title=\"計時器已暫停\"/>"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_kanban
@@ -34,11 +28,6 @@ msgstr "<i class=\"fa fa-play text-success\" title=\"計時器正在計時\"/>"
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
 msgid "<span class=\"col-auto ms-2\">min</span>"
 msgstr "<span class=\"col-auto ms-2\">分鐘</span>"
-
-#. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_gantt_timesheet
-msgid "<strong>Time Spent — </strong>"
-msgstr "<strong>已花費時間 — </strong>"
 
 #. module: timesheet_grid
 #: model:mail.template,body_html:timesheet_grid.mail_template_timesheet_reminder_user
@@ -74,11 +63,11 @@ msgid ""
 "                        This is a friendly reminder to log your hours for the following period: <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> <i class=\"fa fa-long-arrow-right\"/> <t t-out=\"ctx.get('date_stop') or ''\">05/06/2021</t>.\n"
 "                        For the time being, you <t t-if=\"timesheet_hours != 0\">only</t> logged <t t-out=\"'%d' %int(timesheet_hours)\">2</t><t t-if=\"timesheet_hours % 1 != 0\" t-out=\"':%02d' % (round(timesheet_hours % 1 * 60))\">:30</t> hours on the <t t-out=\"'%d' %int(working_hours)\">8</t><t t-if=\"working_hours % 1 != 0\" t-out=\"':%02d' % (round(working_hours % 1 * 60))\">:30</t> requested.<br/>\n"
 "                        <div t-if=\"ctx.get('action_url')\" style=\"margin: 16px 0px 16px 0px;\">\n"
-"                            <a t-att-href=\"ctx.get('action_url')\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\">Fill in your timesheet</a>\n"
+"                            <a t-att-href=\"ctx.get('action_url')\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}};; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\">Fill in your timesheet</a>\n"
 "                        </div>\n"
 "                        <br/>Thank you,<br/>\n"
 "                        <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
-"                            <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </div>\n"
 "                </td></tr>\n"
@@ -114,7 +103,7 @@ msgid ""
 "<tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "      <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" style=\"color: #875A7B;\">Odoo</a>\n"
+"        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" t-attf-style=\"color: {{object.company_id.email_secondary_color or '#875A7B'}};\">Odoo</a>\n"
 "      </td></tr>\n"
 "    </table>\n"
 "</td></tr>\n"
@@ -149,14 +138,14 @@ msgstr ""
 "                    <t t-set=\"working_hours\" t-value=\"ctx.get('working_hours', 0)\"/>\n"
 "                    <div>\n"
 "                        <t t-out=\"object.name or ''\">Abigail Peterson</t> 你好！<br/><br/>\n"
-"                        善意提醒你，請記錄你以下時段的工作時間： <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> <i class=\"fa fa-long-arrow-right\"/> <t t-out=\"ctx.get('date_stop') or ''\">05/06/2021</t>。<br>\n"
+"                        善意提醒你，請記錄你以下時段的工作時間： <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> <i class=\"fa fa-long-arrow-right\"/> <t t-out=\"ctx.get('date_stop') or ''\">05/06/2021</t>。<br/>\n"
 "                        目前，你<t t-if=\"timesheet_hours != 0\">只</t>記錄了 <t t-out=\"'%d 小時' %int(timesheet_hours)\">2 小時</t><t t-if=\"timesheet_hours % 1 != 0\" t-out=\"' %02d 分鐘' % (round(timesheet_hours % 1 * 60))\"> 30 分鐘</t>，但要求的工時應為 <t t-out=\"'%d 小時' %int(working_hours)\">8 小時</t><t t-if=\"working_hours % 1 != 0\" t-out=\"' %02d 分鐘' % (round(working_hours % 1 * 60))\"> 30 分鐘</t>。<br/>\n"
 "                        <div t-if=\"ctx.get('action_url')\" style=\"margin: 16px 0px 16px 0px;\">\n"
-"                            <a t-att-href=\"ctx.get('action_url')\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\">填寫工時表</a>\n"
+"                            <a t-att-href=\"ctx.get('action_url')\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}};; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\">填寫工時表</a>\n"
 "                        </div>\n"
 "                        <br/>謝謝！<br/>\n"
 "                        <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
-"                            <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </div>\n"
 "                </td></tr>\n"
@@ -192,7 +181,7 @@ msgstr ""
 "<tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "      <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"        由 <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" style=\"color: #875A7B;\">Odoo</a> 驅動\n"
+"        由 <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" t-attf-style=\"color: {{object.company_id.email_secondary_color or '#875A7B'}};\">Odoo</a> 驅動\n"
 "      </td></tr>\n"
 "    </table>\n"
 "</td></tr>\n"
@@ -230,11 +219,11 @@ msgid ""
 "                        Hello <t t-out=\"object.name or ''\">Abigail Peterson</t>,<br/><br/>\n"
 "                        This is a friendly reminder to approve your team's timesheets for the following period: <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> - <t t-out=\"ctx.get('date_stop') or ''\">06/05/2021</t>.<br/>\n"
 "                        <div t-if=\"ctx.get('action_url')\" style=\"margin: 16px 0px 16px 0px;\">\n"
-"                            <a t-att-href=\"ctx.get('action_url')\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\">Validate the Timesheets</a>\n"
+"                            <a t-att-href=\"ctx.get('action_url')\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\">Validate the Timesheets</a>\n"
 "                        </div>\n"
 "                        <br/>Thank you,<br/>\n"
 "                        <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
-"                            <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </div>\n"
 "                </td></tr>\n"
@@ -270,13 +259,87 @@ msgid ""
 "<tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "      <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" style=\"color: #875A7B;\">Odoo</a>\n"
+"        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" t-attf-style=\"color: {{object.company_id.email_secondary_color or '#875A7B'}};\">Odoo</a>\n"
 "      </td></tr>\n"
 "    </table>\n"
 "</td></tr>\n"
 "</table>\n"
 "            "
 msgstr ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;\"><tr><td align=\"center\">\n"
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"padding: 16px; background-color: white; color: #454748; border-collapse:separate;\">\n"
+"<tbody>\n"
+"    <!-- HEADER -->\n"
+"    <tr>\n"
+"        <td align=\"center\" style=\"min-width: 590px;\">\n"
+"            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                <tr><td valign=\"middle\">\n"
+"                    <span style=\"font-size: 10px;\">你的工時表</span><br/>\n"
+"                    <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.name or ''\">Abigail Peterson</span>\n"
+"                </td><td valign=\"middle\" align=\"right\" t-if=\"not object.company_id.uses_default_logo\">\n"
+"                    <img t-attf-src=\"/logo.png?company={{ object.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.company_id.name\"/>\n"
+"                </td></tr>\n"
+"                <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
+"                <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                </td></tr>\n"
+"            </table>\n"
+"        </td>\n"
+"    </tr>\n"
+"    <!-- CONTENT -->\n"
+"    <tr>\n"
+"        <td align=\"center\" style=\"min-width: 590px;\">\n"
+"            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
+"                    <div>\n"
+"                        <t t-out=\"object.name or ''\">Abigail Peterson</t> 你好！<br/><br/>\n"
+"                        善意提醒你，請批核你團隊以下時段的工時表： <t t-out=\"ctx.get('date_start') or ''\">05/05/2021</t> 至 <t t-out=\"ctx.get('date_stop') or ''\">06/05/2021</t>。<br/>\n"
+"                        <div t-if=\"ctx.get('action_url')\" style=\"margin: 16px 0px 16px 0px;\">\n"
+"                            <a t-att-href=\"ctx.get('action_url')\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\">核實工時表</a>\n"
+"                        </div>\n"
+"                        <br/>謝謝！<br/>\n"
+"                        <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
+"                        </t>\n"
+"                    </div>\n"
+"                </td></tr>\n"
+"                <tr><td style=\"text-align:center;\">\n"
+"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                </td></tr>\n"
+"            </table>\n"
+"        </td>\n"
+"    </tr>\n"
+"    <!-- FOOTER -->\n"
+"    <tr>\n"
+"        <td align=\"center\" style=\"min-width: 590px;\">\n"
+"            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; font-size: 11px; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                <tr><td valign=\"middle\" align=\"left\">\n"
+"                    <t t-out=\"object.company_id.name or ''\">YourCompany</t>\n"
+"                </td></tr>\n"
+"                <tr><td valign=\"middle\" align=\"left\" style=\"opacity: 0.7;\">\n"
+"                    <t t-out=\"object.company_id.phone or ''\">+1 650-123-4567</t>\n"
+"                    <t t-if=\"object.company_id.email\">\n"
+"                        | <a t-attf-href=\"'mailto:%s' % {{ object.company_id.email }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"object.company_id.email or ''\">info@yourcompany.com</a>\n"
+"                    </t>\n"
+"                    <t t-if=\"object.company_id.website\">\n"
+"                        | <a t-attf-href=\"'%s' % {{ object.company_id.website }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"object.company_id.website or ''\">http://www.example.com</a>\n"
+"                    </t>\n"
+"                </td></tr>\n"
+"            </table>\n"
+"        </td>\n"
+"    </tr>\n"
+"</tbody>\n"
+"</table>\n"
+"</td></tr>\n"
+"<!-- POWERED BY -->\n"
+"<tr><td align=\"center\" style=\"min-width: 590px;\">\n"
+"    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
+"      <tr><td style=\"text-align: center; font-size: 13px;\">\n"
+"        由 <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" t-attf-style=\"color: {{object.company_id.email_secondary_color or '#875A7B'}};\">Odoo</a> 驅動\n"
+"      </td></tr>\n"
+"    </table>\n"
+"</td></tr>\n"
+"</table>\n"
+"            "
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -296,7 +359,7 @@ msgstr "金額"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "An employee must be linked to your user to record time."
 msgstr "員工必須已連結至你的使用者帳戶，才可開始記錄時間。"
 
@@ -349,9 +412,14 @@ msgstr "在工時表設定中配置提醒，以提醒批核人驗證工時表"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/task.py:0
+#: code:addons/timesheet_grid/models/project_task.py:0
 msgid "Confirm Time Spent"
 msgstr "確認已花費工時"
+
+#. module: timesheet_grid
+#: model:ir.model,name:timesheet_grid.model_hr_timesheet_stop_timer_confirmation_wizard
+msgid "Confirm timesheet creation when stop timer"
+msgstr "停止計時器時，確認建立工時表"
 
 #. module: timesheet_grid
 #: model_terms:web_tour.tour,rainbow_man_message:timesheet_grid.timesheet_tour
@@ -359,19 +427,19 @@ msgid "Congratulations, you are now a master of Timesheets."
 msgstr "恭喜，你現在已是工時表專家！"
 
 #. module: timesheet_grid
-#: model:ir.model,name:timesheet_grid.model_project_task_create_timesheet
-msgid "Create Timesheet from task"
-msgstr "從任務建立工時表"
+#: model:ir.model,website_form_label:timesheet_grid.model_project_task
+msgid "Create a Task"
+msgstr "建立待辦任務"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__create_uid
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__create_uid
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__create_uid
 msgid "Created by"
 msgstr "建立人員"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__create_date
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__create_date
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__create_date
 msgid "Created on"
 msgstr "建立於"
 
@@ -404,7 +472,7 @@ msgid "Days to Remind User"
 msgstr "提醒使用者天數"
 
 #. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_timesheet_stop_timer_confirmation_wizard_view_form
 msgid "Delete"
 msgstr "刪除"
 
@@ -425,13 +493,12 @@ msgstr "描述你的活動（例如：發送電子郵件、與客戶會面等）
 #. odoo-javascript
 #: code:addons/timesheet_grid/static/src/components/grid_timesheet_timer_header/grid_timesheet_timer_header.js:0
 #: code:addons/timesheet_grid/static/src/hooks/timesheet_timer_hooks.js:0
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_timesheet_stop_timer_confirmation_wizard_view_form
 msgid "Describe your activity..."
 msgstr "描述你的活動..."
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__name
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__description
 msgid "Description"
 msgstr "說明"
 
@@ -475,12 +542,26 @@ msgid "Discard"
 msgstr "捨棄"
 
 #. module: timesheet_grid
+#: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee_public__display_name
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__display_name
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_ir_module_module__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_project_project__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_project_task__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_res_company__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_res_users__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_timesheet_grid_mixin__display_name
+#: model:ir.model.fields,field_description:timesheet_grid.field_timesheets_analysis_report__display_name
 msgid "Display Name"
 msgstr "顯示名稱"
 
 #. module: timesheet_grid
+#. odoo-javascript
+#: code:addons/timesheet_grid/static/src/views/timesheet_calendar/timesheet_calendar_side_panel/timesheet_calendar_side_panel.xml:0
+#: code:addons/timesheet_grid/static/src/views/timesheet_calendar_my_timesheets/timesheet_calendar_my_timesheets_side_panel/timesheet_calendar_my_timesheets_side_panel.xml:0
 #: model:ir.model.fields.selection,name:timesheet_grid.selection__account_analytic_line__validated_status__draft
 #: model:ir.model.fields.selection,name:timesheet_grid.selection__timesheets_analysis_report__validated_status__draft
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_view_search
@@ -516,8 +597,19 @@ msgid "Grouping by date is not supported"
 msgstr "不支援按日期分組"
 
 #. module: timesheet_grid
+#: model:ir.model.fields,field_description:timesheet_grid.field_account_analytic_line__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee_public__id
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__id
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_ir_module_module__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_project_project__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_project_task__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_res_company__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_res_config_settings__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_res_users__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_timesheet_grid_mixin__id
+#: model:ir.model.fields,field_description:timesheet_grid.field_timesheets_analysis_report__id
 msgid "ID"
 msgstr "識別號"
 
@@ -536,13 +628,13 @@ msgstr "上一期間"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__write_uid
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__write_uid
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__write_uid
 msgid "Last Updated by"
 msgstr "最後更新者"
 
 #. module: timesheet_grid
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__write_date
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__write_date
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__write_date
 msgid "Last Updated on"
 msgstr "最後更新於"
 
@@ -570,7 +662,14 @@ msgid "Launch the <b>timer</b> to start a new activity."
 msgstr "啟動<b>計時器</b>，開始新活動。"
 
 #. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
+#. odoo-javascript
+#: code:addons/timesheet_grid/static/src/views/timesheet_calendar/timesheet_calendar_side_panel/timesheet_calendar_side_panel.xml:0
+#: code:addons/timesheet_grid/static/src/views/timesheet_calendar_my_timesheets/timesheet_calendar_my_timesheets_side_panel/timesheet_calendar_my_timesheets_side_panel.xml:0
+msgid "Legend"
+msgstr "圖例"
+
+#. module: timesheet_grid
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_timesheet_stop_timer_confirmation_wizard_view_form
 msgid "Log Time"
 msgstr "記錄工時"
 
@@ -586,7 +685,7 @@ msgstr "合併工時表"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 #: model:ir.actions.server,name:timesheet_grid.merge_timesheet_action
 #: model:ir.model,name:timesheet_grid.model_hr_timesheet_merge_wizard
 msgid "Merge Timesheets"
@@ -611,7 +710,7 @@ msgstr "月"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/task.py:0
+#: code:addons/timesheet_grid/models/project_task.py:0
 msgid ""
 "Moving this task to a project without timesheet support will retain "
 "timesheet drafts in the original project. Although they won't be visible "
@@ -637,6 +736,11 @@ msgstr "我的任務"
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_view_search
 msgid "My Team"
 msgstr "我的團隊"
+
+#. module: timesheet_grid
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__timesheet_name
+msgid "Name"
+msgstr "名稱"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -668,7 +772,7 @@ msgstr "星期或月份結束後的天數。相隔此天數後，會向仍有工
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "Only a Timesheets Approver or Manager is allowed to modify a validated "
 "entry."
@@ -676,14 +780,9 @@ msgstr "只限工時表批核人或經理可修改已驗證的記項。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "Open Form"
 msgstr "開啟表單"
-
-#. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_form
-msgid "Pause"
-msgstr "暫停"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -730,12 +829,7 @@ msgid "Reset to draft"
 msgstr "重設為草稿"
 
 #. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_view_form
-msgid "Resume"
-msgstr "重新開始"
-
-#. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_timesheet_stop_timer_confirmation_wizard_view_form
 msgid "Resume Timer"
 msgstr "恢復計時器"
 
@@ -748,11 +842,6 @@ msgstr "向上取整"
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
 msgid "Rounding applied when tracking your time using the timer"
 msgstr "使用計時器追蹤工時，套用的捨入取整方式"
-
-#. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
-msgid "Save time"
-msgstr "儲存時間"
 
 #. module: timesheet_grid
 #. odoo-javascript
@@ -799,7 +888,7 @@ msgstr "排班"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "Sorry, you cannot use a timer for a validated timesheet"
 msgstr "抱歉，不可在已驗證工時表上使用計時器"
 
@@ -830,14 +919,8 @@ msgstr "完成後，停止<b>計時器</b>。提示：在描述中按一下 <b>[
 #. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_project_task
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_merge_wizard__task_id
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__task_id
 msgid "Task"
 msgstr "任務"
-
-#. module: timesheet_grid
-#: model:ir.model.fields,help:timesheet_grid.field_project_task_create_timesheet__task_id
-msgid "Task for which we are creating a sales order"
-msgstr "我們為其建立銷售訂單的任務"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
@@ -858,43 +941,38 @@ msgid "The timesheet entry has successfully been created."
 msgstr "工時表記項已成功建立。"
 
 #. module: timesheet_grid
-#: model:ir.model.constraint,message:timesheet_grid.constraint_project_task_create_timesheet_time_positive
-msgid "The timesheet's time must be positive"
-msgstr "工時表之時間紀錄必須為正數"
-
-#. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/wizard/timesheet_merge_wizard.py:0
+#: code:addons/timesheet_grid/wizard/hr_timesheet_merge_wizard.py:0
 msgid "The timesheets have successfully been merged."
 msgstr "工時表已成功合併。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "The timesheets have successfully been reset to draft."
 msgstr "工時表已成功重設為草稿。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "The timesheets have successfully been validated."
 msgstr "工時表已成功驗證。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/wizard/timesheet_merge_wizard.py:0
+#: code:addons/timesheet_grid/wizard/hr_timesheet_merge_wizard.py:0
 msgid "The timesheets must have the same encoding unit"
 msgstr "工時表必須採用相同的編碼單位"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "There are no timesheets to merge."
 msgstr "沒有需要合併的工時表。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "There are no timesheets to reset to draft or they have already been "
 "invoiced."
@@ -902,14 +980,23 @@ msgstr "沒有工時表可以重設為草稿，或它們已經開立發票。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/task.py:0
+#: code:addons/timesheet_grid/models/project_project.py:0
+msgid "This Progress Bar is not implemented."
+msgstr "此進度列未被採用。"
+
+#. module: timesheet_grid
+#. odoo-python
+#: code:addons/timesheet_grid/models/project_task.py:0
 msgid "This project isn't expected to have task during this period."
 msgstr "此專案在此期間並不預期有任務的。"
 
 #. module: timesheet_grid
-#: model:ir.model.fields,field_description:timesheet_grid.field_project_task_create_timesheet__time_spent
-msgid "Time"
-msgstr "時間"
+#. odoo-python
+#: code:addons/timesheet_grid/models/project_project.py:0
+msgid ""
+"This user isn't expected to have any projects assigned during this period "
+"because they don't have any running contract."
+msgstr "此用戶在此期間內，預期不會獲分配任何專案，因為他們在該期間內沒有任何生效合約。"
 
 #. module: timesheet_grid
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.res_config_settings_view_form
@@ -917,7 +1004,7 @@ msgid "Time Rounding"
 msgstr "工時捨入取整"
 
 #. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.project_task_create_timesheet_view_form
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__time_spent
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_kanban_view
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_merge_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_view_grid
@@ -927,14 +1014,17 @@ msgid "Time Spent"
 msgstr "已花費時間"
 
 #. module: timesheet_grid
-#: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee__timesheet_manager_id
 #: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee_public__timesheet_manager_id
-#: model:ir.model.fields,field_description:timesheet_grid.field_res_users__timesheet_manager_id
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_timesheet_stop_timer_confirmation_wizard__timesheet_id
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_employee_view_form_inherit_timesheet_validation
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.res_users_view_form
 msgid "Timesheet"
 msgstr "工時表"
 
 #. module: timesheet_grid
-#: model_terms:ir.ui.view,arch_db:timesheet_grid.view_employee_tree_inherit_timesheet
+#: model:ir.model.fields,field_description:timesheet_grid.field_hr_employee__timesheet_manager_id
+#: model:ir.model.fields,field_description:timesheet_grid.field_res_users__timesheet_manager_id
+#: model_terms:ir.ui.view,arch_db:timesheet_grid.hr_employee_search_view
 msgid "Timesheet Approver"
 msgstr "工時表批核人"
 
@@ -948,6 +1038,11 @@ msgstr "工時表網格混入程式"
 #: model:ir.model.fields,field_description:timesheet_grid.field_timesheets_analysis_report__is_timesheet
 msgid "Timesheet Line"
 msgstr "工時表資料行"
+
+#. module: timesheet_grid
+#: model:ir.model.fields,field_description:timesheet_grid.field_project_task__timesheet_unit_amount
+msgid "Timesheet Unit Amount"
+msgstr "工時表單位金額"
 
 #. module: timesheet_grid
 #: model:ir.actions.server,name:timesheet_grid.timesheet_reminder_ir_actions_server
@@ -973,7 +1068,7 @@ msgstr "工時表分析報表"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "Timesheets before the %(date)s (included) have been validated, and can no "
 "longer be deleted."
@@ -981,7 +1076,7 @@ msgstr "%(date)s 及之前的工時表已完成驗證，無法刪除。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "Timesheets before the %(date)s (included) have been validated, and can no "
 "longer be modified."
@@ -1028,6 +1123,27 @@ msgid "Track the <b>time spent</b> on your projects. <i>It starts here.</i>"
 msgstr "追蹤專案項目所<b>花費的工時</b>。<i></i>"
 
 #. module: timesheet_grid
+#: model:ir.model.fields,help:timesheet_grid.field_project_task__display_name
+msgid ""
+"Use these keywords in the title to set new tasks:\n"
+"\n"
+"        30h Allocate 30 hours to the task\n"
+"        #tags Set tags on the task\n"
+"        @user Assign the task to a user\n"
+"        ! Set the task a high priority\n"
+"\n"
+"        Make sure to use the right format and order e.g. Improve the configuration screen 5h #feature #v16 @Mitchell !"
+msgstr ""
+"在新任務標題中，使用這些關鍵字進行設定：\n"
+"\n"
+"        30h：向任務分配 30 小時\n"
+"        #標籤名稱：對任務設定標籤\n"
+"        @用戶名稱：將任務指派給用戶\n"
+"        !：將任務設為高優先級別\n"
+"\n"
+"        記得使用正確格式和順序，例如：改進配置畫面 5h #特色功能 #v16 @志明 !"
+
+#. module: timesheet_grid
 #: model:ir.model,name:timesheet_grid.model_res_users
 msgid "User"
 msgstr "使用者"
@@ -1059,6 +1175,9 @@ msgid "Validate"
 msgstr "核實"
 
 #. module: timesheet_grid
+#. odoo-javascript
+#: code:addons/timesheet_grid/static/src/views/timesheet_calendar/timesheet_calendar_side_panel/timesheet_calendar_side_panel.xml:0
+#: code:addons/timesheet_grid/static/src/views/timesheet_calendar_my_timesheets/timesheet_calendar_my_timesheets_side_panel/timesheet_calendar_my_timesheets_side_panel.xml:0
 #: model:ir.model.fields.selection,name:timesheet_grid.selection__account_analytic_line__validated_status__validated
 #: model:ir.model.fields.selection,name:timesheet_grid.selection__timesheets_analysis_report__validated_status__validated
 #: model_terms:ir.ui.view,arch_db:timesheet_grid.timesheet_view_search
@@ -1079,7 +1198,7 @@ msgstr "已驗證資料行"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/task.py:0
+#: code:addons/timesheet_grid/models/project_task.py:0
 msgid "Warning"
 msgstr "警告"
 
@@ -1111,7 +1230,7 @@ msgstr "你不可查看工時表。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "You can only reset to draft the timesheets of employees of whom you are the "
 "manager or the timesheet approver."
@@ -1119,7 +1238,7 @@ msgstr "只限在你是員工的經理或工時表批核人時，才可將員工
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "You can only validate the timesheets of employees of whom you are the "
 "manager or the timesheet approver."
@@ -1127,19 +1246,19 @@ msgstr "只限在你是員工的經理或工時表批核人時，才可驗證員
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "You can't encode numbers with more than six digits."
 msgstr "你不可編碼多於六位數的數字。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "You cannot access timesheets that are not yours."
 msgstr "您無法存取不屬於您的工時表。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "You cannot adjust the time of the timesheet for a project with timesheets "
 "disabled."
@@ -1147,7 +1266,7 @@ msgstr "若專案已停用工時表，不可調整專案工時表的工時。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "You cannot delete a validated entry. Please contact your manager or your "
 "timesheet approver."
@@ -1155,7 +1274,7 @@ msgstr "已驗證記項不可刪除。請聯絡你的經理或工時表批核人
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/project.py:0
+#: code:addons/timesheet_grid/models/project_project.py:0
 msgid ""
 "You cannot start the timer for a project in a company encoding its "
 "timesheets in days."
@@ -1163,13 +1282,13 @@ msgstr "不可在一個以天為單位編碼的公司啟動專案項目計時器
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid "You cannot use the timer on validated timesheets."
 msgstr "不可在已驗證工時表上使用計時器。"
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "You cannot validate the selected timesheets as they either belong to "
 "employees who are not part of your team or are not in a state that can be "
@@ -1178,7 +1297,7 @@ msgstr "未能驗證所選工時表，可能因為它們屬於非你團隊的員
 
 #. module: timesheet_grid
 #. odoo-python
-#: code:addons/timesheet_grid/models/analytic.py:0
+#: code:addons/timesheet_grid/models/account_analytic_line.py:0
 msgid ""
 "Your timesheet entry is missing a project. Please either group the Grid view"
 " by project or enter your timesheets by adding a line via the Form view."

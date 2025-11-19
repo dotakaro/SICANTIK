@@ -5,7 +5,7 @@ import {
 import { getEnrichedSearchArch } from "@documents/../tests/helpers/views/search";
 import { mockActionService } from "@documents_spreadsheet/../tests/helpers/spreadsheet_test_utils";
 import { describe, expect, test } from "@odoo/hoot";
-import { click, dblclick, queryFirst, select } from "@odoo/hoot-dom";
+import { click, dblclick, queryFirst, select, press } from "@odoo/hoot-dom";
 import { animationFrame } from "@odoo/hoot-mock";
 import { makeDocumentsSpreadsheetMockEnv } from "@documents_spreadsheet/../tests/helpers/model";
 import { contains, mountView } from "@web/../tests/web_test_helpers";
@@ -146,6 +146,8 @@ test("Can search template in modal with searchbar", async function () {
     expect(`${dialogSelector} .o-spreadsheet-grid:first`).toHaveText("Blank spreadsheet");
 
     await contains(`${dialogSelector} .o_searchview_input`).edit("Template 1");
+    await press("Enter");
+    await animationFrame();
     expect(`${dialogSelector} .o-spreadsheet-grid:not(.o-spreadsheet-grid-ghost-item)`).toHaveCount(
         2
     );
@@ -203,7 +205,7 @@ test("Can create a blank spreadsheet from template dialog", async function () {
                 args.model === "documents.document" &&
                 args.method === "action_open_new_spreadsheet"
             ) {
-                expect(args.args[0].folder_id).toBe(1);
+                expect(args.args[0].folder_id).toBe(false);
                 expect.step("action_open_new_spreadsheet");
             }
         },
@@ -290,7 +292,7 @@ test("Can create a spreadsheet from a template", async function () {
                 args.method === "action_create_spreadsheet"
             ) {
                 expect.step("action_create_spreadsheet");
-                expect(args.args[1].folder_id).toBe(1);
+                expect(args.args[1].folder_id).toBe(false);
                 const action = {
                     type: "ir.actions.client",
                     tag: "an_action",
@@ -352,6 +354,7 @@ test("Offset reset to zero after searching for template in template dialog", asy
     ]);
 
     await contains(`${dialogSelector} .o_searchview_input`).edit("Template 1");
+    await press("Enter");
     await animationFrame();
     await animationFrame();
 
@@ -408,7 +411,7 @@ test("Can create a blank spreadsheet from template dialog in a specific folder",
 
     await openTemplateDialog();
 
-    await select("2", { target: ".o-spreadsheet-templates-dialog select" });
+    await select("1", { target: ".o-spreadsheet-templates-dialog select" });
 
     await contains(`${dialogSelector} .o-spreadsheet-grid-image`).click();
     await contains(`${dialogSelector} .o-spreadsheet-create`).click();

@@ -8,15 +8,22 @@
             <field name="arch" type="xml">
                 <xpath expr="//page[@name='invoicing']//group[@name='accounting']" position="inside">
                     <group name="intrastat" string="Intrastat" invisible="product_variant_count &gt; 1 and not is_product_variant" >
-                        <field name="intrastat_code_id"/>
+                        <label class="o_form_label" for="intrastat_code_id" invisible="type != 'consu'" string="Commodity Code"/>
+                        <div class="o_row" invisible="type != 'consu'">
+                            <field name="intrastat_code_id" nolabel="1" domain="intrastat_code_domain"/>
+                        </div>
+                        <label class="o_form_label" for="intrastat_code_id" invisible="type != 'service'" string="Service Code"/>
+                        <div class="o_row" invisible="type != 'service'">
+                            <field name="intrastat_code_id" nolabel="1" domain="intrastat_code_domain"/>
+                        </div>
                         <label for="intrastat_supplementary_unit_amount" invisible="not intrastat_code_id or not intrastat_supplementary_unit"/>
                         <div class="o_row" invisible="not intrastat_code_id or not intrastat_supplementary_unit">
                             <field name="intrastat_supplementary_unit_amount"/>
                             <span class="oe_inline"></span>
                             <field name="intrastat_supplementary_unit"/>
                         </div>
-                        <label for="weight" invisible="not intrastat_code_id or intrastat_supplementary_unit"/>
-                        <div class="o_row" invisible="not intrastat_code_id or intrastat_supplementary_unit">
+                        <label for="weight" invisible="not intrastat_code_id or intrastat_supplementary_unit or type == 'service'"/>
+                        <div class="o_row" invisible="not intrastat_code_id or intrastat_supplementary_unit or type == 'service'">
                             <field name="weight"/>
                             <span class="oe_inline"></span>
                             <field name="weight_uom_name"/>
@@ -48,8 +55,8 @@
                                 <span class="oe_inline"></span>
                                 <field name="intrastat_supplementary_unit"/>
                             </div>
-                            <label for="weight" invisible="not intrastat_code_id or intrastat_supplementary_unit"/>
-                            <div class="o_row" invisible="not intrastat_code_id or intrastat_supplementary_unit">
+                            <label for="weight" invisible="not intrastat_code_id or intrastat_supplementary_unit or type == 'service'"/>
+                            <div class="o_row" invisible="not intrastat_code_id or intrastat_supplementary_unit or type == 'service'">
                                 <field name="weight"/>
                                 <span class="oe_inline"></span>
                                 <field name="weight_uom_name"/>
@@ -72,7 +79,7 @@
             <field name="mode">primary</field>
             <field eval="7" name="priority"/>
             <field name="arch" type="xml">
-                <list string="Product" multi_edit="1" duplicate="false" editable="bottom" expand="context.get('expand', False)">
+                <list string="Product" multi_edit="1" duplicate="false" editable="bottom" expand="context.get('expand', False)" default_order="is_favorite desc, default_code, name, id">
                     <field name="default_code" readonly="1"/>
                     <field name="name" readonly="1"/>
                     <field name="intrastat_code_id"/>
@@ -86,7 +93,7 @@
             <field name="mode">primary</field>
             <field eval="7" name="priority"/>
             <field name="arch" type="xml">
-                <list string="product" multi_edit="1" duplicate="false" editable="bottom" expand="context.get('expand', false)">
+                <list string="product" multi_edit="1" duplicate="false" editable="bottom" expand="context.get('expand', false)" default_order="is_favorite desc, default_code, name, id">
                     <field name="default_code" readonly="1"/>
                     <field name="name" readonly="1"/>
                     <field name="intrastat_code_id" string="Commodity Code" readonly="1"/>
@@ -102,7 +109,7 @@
             <field name="mode">primary</field>
             <field eval="7" name="priority"/>
             <field name="arch" type="xml">
-                <list string="Product" multi_edit="1" duplicate="false" editable="bottom" expand="context.get('expand', False)">
+                <list string="Product" multi_edit="1" duplicate="false" editable="bottom" expand="context.get('expand', False)" default_order="is_favorite desc, default_code, name, id">
                     <field name="default_code" readonly="1"/>
                     <field name="name" readonly="1"/>
                     <field name="intrastat_code_id" string="Commodity Code" readonly="1"/>

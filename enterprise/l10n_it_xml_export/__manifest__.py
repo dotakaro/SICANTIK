@@ -18,5 +18,6 @@ Additional module to allow the export of the Italian monthly tax report to XML f
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'LGPL-3',
 }

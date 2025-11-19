@@ -1,13 +1,11 @@
-/** @odoo-module **/
-
-import { formatDateTime } from "@web/core/l10n/dates";
-import { localization } from "@web/core/l10n/localization";
-import { patch } from "@web/core/utils/patch";
 import {
     QtyAtDatePopover,
     QtyAtDateWidget,
     qtyAtDateWidget,
 } from "@sale_stock/widgets/qty_at_date_widget";
+import { formatDateTime } from "@web/core/l10n/dates";
+import { localization } from "@web/core/l10n/localization";
+import { patch } from "@web/core/utils/patch";
 
 patch(QtyAtDatePopover.prototype, {
     async openRentalGanttView() {
@@ -39,6 +37,7 @@ patch(QtyAtDateWidget.prototype, {
 export const rentalQtyAtDateWidget = {
     ...qtyAtDateWidget,
     fieldDependencies: [
+        ...qtyAtDateWidget.fieldDependencies,
         { name: 'start_date', type: 'datetime' },
         { name: 'return_date', type: 'datetime' },
     ],

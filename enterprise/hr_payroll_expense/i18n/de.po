@@ -3,16 +3,15 @@
 # 	* hr_payroll_expense
 # 
 # Translators:
-# Wil Odoo, 2024
-# Larissa Manderfeld, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:26+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Larissa Manderfeld, 2024\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -32,18 +31,41 @@ msgstr ""
 "                        </span>"
 
 #. module: hr_payroll_expense
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "<span class=\"o_stat_text\">Payslip</span>"
 msgstr "<span class=\"o_stat_text\">Gehaltsabrechnung</span>"
 
 #. module: hr_payroll_expense
-#: model:ir.model,name:hr_payroll_expense.model_hr_expense_sheet
-msgid "Expense Report"
-msgstr "Spesenabrechnung"
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_move__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payroll_structure__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__display_name
+msgid "Display Name"
+msgstr "Anzeigename"
+
+#. module: hr_payroll_expense
+#: model:ir.model,name:hr_payroll_expense.model_hr_expense
+msgid "Expense"
+msgstr "Ausgabe"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "Expense (\"%(name)s\") was removed from the next payslip."
+msgstr ""
+"Ausgabe („%(name)s“) wurde von der nächsten Gehaltsabrechnung entfernt."
+
+#. module: hr_payroll_expense
+#. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "Expense (\"%(name)s\") will be added to the next payslip."
+msgstr ""
+"Ausgabe („%(name)s“) wurde der nächsten Gehaltsabrechnung hinzugefügt."
+
+#. module: hr_payroll_expense
+#. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
 "Expense reimbursement rule needs to be configured to add expenses to payslips.\n"
 "Please create one salary rule with the \"%(code)s\" code on the relevant salary structures."
@@ -52,23 +74,8 @@ msgstr ""
 "Bitte erstellen Sie eine Gehaltsregel mit dem Code „%(code)s“ auf den entsprechenden Gehaltsstrukturen."
 
 #. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "Expense report (\"%(name)s\") was removed from the next payslip."
-msgstr ""
-"Spesenabrechnung („%(name)s“) wurde von der nächsten Gehaltsabrechnung "
-"entfernt."
-
-#. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "Expense report (\"%(name)s\") will be added to the next payslip."
-msgstr ""
-"Spesenabrechnung („%(name)s“) wurde der nächsten Gehaltsabrechnung "
-"hinzugefügt."
-
-#. module: hr_payroll_expense
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__expense_sheet_ids
+#: model:hr.payslip.input.type,name:hr_payroll_expense.expense_other_input
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__expense_ids
 #: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_payslip_view_form_inherit_expense
 msgid "Expenses"
 msgstr "Spesen"
@@ -84,15 +91,24 @@ msgid "Expenses Reimbursement"
 msgstr "Kostenerstattung"
 
 #. module: hr_payroll_expense
-#: model:ir.model.fields,help:hr_payroll_expense.field_hr_payslip__expense_sheet_ids
+#: model:ir.model.fields,help:hr_payroll_expense.field_hr_payslip__expense_ids
 msgid "Expenses to reimburse to employee."
 msgstr "Dem Mitarbeiter zu erstattende Ausgaben."
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid "Go to salary rules"
 msgstr "Zu den Gehaltsregeln"
+
+#. module: hr_payroll_expense
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_move__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payroll_structure__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__id
+msgid "ID"
+msgstr "ID"
 
 #. module: hr_payroll_expense
 #: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__is_already_paid_through_a_payslip
@@ -110,12 +126,12 @@ msgstr "Journalbuchung"
 msgid ""
 "No debit account found in the '%(rule_name)s' payslip salary rule. Please "
 "add a payable debit account to be able to create an accounting entry for the"
-" expense reports linked to this payslip."
+" expenses linked to this payslip."
 msgstr ""
 "Kein Sollkonto in der Regel Gehaltsabrechnungsregel „%(rule_name)s“ "
 "gefunden. Bitte fügen Sie ein Sollkonto für Kreditoren hinzu, um einen "
-"Buchungseintrag für die mit dieser Gehaltsabrechnung verbundene "
-"Spesenabrechnung erstellen zu können."
+"Buchungseintrag für die mit dieser Gehaltsabrechnung verbundene Ausgabe "
+"erstellen zu können."
 
 #. module: hr_payroll_expense
 #. odoo-python
@@ -129,13 +145,13 @@ msgstr ""
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
-"Only approved expense reports that were paid by an employee can be "
+"Only approved and posted expenses that were paid by an employee can be "
 "reimbursed in a payslip."
 msgstr ""
-"Nur genehmigte Spesenabrechnungen, die von einem Mitarbeiter bezahlt wurden,"
-" können in einer Gehaltsabrechnung erstattet werden."
+"Nur genehmigte und gebuchte Ausgaben, die von einem Mitarbeiter bezahlt "
+"wurden, können in einer Gehaltsabrechnung erstattet werden."
 
 #. module: hr_payroll_expense
 #: model:ir.model,name:hr_payroll_expense.model_account_payment_register
@@ -149,13 +165,13 @@ msgstr "Gehaltsabrechnung"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense_sheet__payslip_id
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__payslip_id
 msgid "Payslip"
 msgstr "Gehaltsabrechnung"
 
 #. module: hr_payroll_expense
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense_sheet__refund_in_payslip
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__refund_in_payslip
 msgid "Reimburse In Next Payslip"
 msgstr "Mit nächster Gehaltszahlung erstatten"
 
@@ -166,13 +182,13 @@ msgid "Reimbursed Expenses"
 msgstr "Erstattete Spesen"
 
 #. module: hr_payroll_expense
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "Remove from Payslip"
 msgstr "Aus Gehaltsabrechnung entfernen"
 
 #. module: hr_payroll_expense
 #: model:ir.actions.server,name:hr_payroll_expense.hr_expense_add_to_payslip_action_server
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "Report in Next Payslip"
 msgstr "In nächster Gehaltsabrechnung verrechnen"
 
@@ -205,23 +221,13 @@ msgstr ""
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid ""
-"The state of the accounting entries linked to this expense report do not "
-"allow it to be reimbursed through a payslip."
-msgstr ""
-"Der Status der Buchungseinträge, die mit dieser Spesenabrechnung verknüpft "
-"sind, erlaubt es nicht, diese über eine Gehaltsabrechnung zu erstatten."
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "There are no valid expenses selected."
+msgstr "Es sind keine gültigen Ausgaben ausgewählt."
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "There are no valid expense sheets selected."
-msgstr "Es sind keine gültigen Ausgabenblätter ausgewählt."
-
-#. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
 "You cannot remove an expense from a payslip that has already been validated.\n"
 "Expenses can only be removed from draft or canceled payslips."
@@ -231,12 +237,20 @@ msgstr ""
 
 #. module: hr_payroll_expense
 #. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "You do not have permission to add this expense to a payslip."
+msgstr ""
+"Sie sind nicht berechtigt, diese Ausgabe einer Gehaltsabrechnung "
+"hinzuzufügen."
+
+#. module: hr_payroll_expense
+#. odoo-python
 #: code:addons/hr_payroll_expense/models/hr_payslip.py:0
 msgid ""
-"You don't have the access rights to link an expense report to a payslip. You"
-" need to be a payroll officer to do that."
+"You don't have the access rights to link an expense to a payslip. You need "
+"to be a payroll officer to do that."
 msgstr ""
-"Sie haben nicht die Zugriffsrechte, um eine Spesenabrechnung mit einer "
+"Sie haben nicht die Zugriffsrechte, um eine Ausgabe mit einer "
 "Gehaltsabrechnung zu verknüpfen. Dazu müssen Sie ein "
 "Personalabrechnungsbeauftragter sein."
 

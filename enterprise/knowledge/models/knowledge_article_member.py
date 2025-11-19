@@ -5,7 +5,7 @@ from odoo import api, fields, models, tools, _
 from odoo.exceptions import AccessError, ValidationError
 
 
-class ArticleMember(models.Model):
+class KnowledgeArticleMember(models.Model):
     _name = 'knowledge.article.member'
     _description = 'Article Member'
     _rec_name = 'partner_id'
@@ -25,11 +25,10 @@ class ArticleMember(models.Model):
         related='article_id.inherited_permission',
         readonly=True, store=True)
 
-    _sql_constraints = [
-        ('unique_article_partner',
-         'unique(article_id, partner_id)',
-         'You already added this partner on this article.')
-    ]
+    _unique_article_partner = models.Constraint(
+        'unique(article_id, partner_id)',
+        "You already added this partner on this article.",
+    )
 
     @api.constrains('article_permission', 'permission')
     def _check_is_writable(self, on_unlink=False):

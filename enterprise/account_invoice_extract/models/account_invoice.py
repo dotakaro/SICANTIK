@@ -14,30 +14,12 @@ from odoo.tools.misc import clean_context, formatLang
 _logger = logging.getLogger(__name__)
 
 PARTNER_AUTOCOMPLETE_ENDPOINT = 'https://partner-autocomplete.odoo.com'
-OCR_VERSION = 122
-
-
-class AccountInvoiceExtractionWords(models.Model):
-    _name = "account.invoice_extract.words"
-    _description = "Extracted words from invoice scan"
-
-    invoice_id = fields.Many2one("account.move", required=True, ondelete='cascade', index=True, string="Invoice")
-    field = fields.Char()
-
-    ocr_selected = fields.Boolean()
-    user_selected = fields.Boolean()
-    word_text = fields.Char()
-    word_page = fields.Integer()
-    word_box_midX = fields.Float()
-    word_box_midY = fields.Float()
-    word_box_width = fields.Float()
-    word_box_height = fields.Float()
-    word_box_angle = fields.Float()
+OCR_VERSION = 123
 
 
 class AccountMove(models.Model):
     _name = 'account.move'
-    _inherit = ['extract.mixin', 'account.move']
+    _inherit = ['extract.mixin.with.words', 'account.move']
 
     @api.depends('state')
     def _compute_is_in_extractable_state(self):
@@ -62,8 +44,6 @@ class AccountMove(models.Model):
             )
 
     extract_prefill_data = fields.Json()
-    extract_word_ids = fields.One2many("account.invoice_extract.words", inverse_name="invoice_id", copy=False)
-    extract_attachment_id = fields.Many2one('ir.attachment', readonly=True, ondelete='set null', copy=False, index='btree_not_null')
     extract_can_show_banners = fields.Boolean("Can show the ocr banners", compute=_compute_show_banners)
 
     extract_detected_layout = fields.Integer("Extract Detected Layout Id", readonly=True)
@@ -148,12 +128,8 @@ class AccountMove(models.Model):
     def _get_user_error_invalid_state_message(self):
         return _("You cannot send a expense that is not in draft state!")
 
-    def _upload_to_extract_success_callback(self):
-        super()._upload_to_extract_success_callback()
-        self.extract_attachment_id = self.message_main_attachment_id
-
     def is_indian_taxes(self):
-        l10n_in = self.env['ir.module.module'].search([('name', '=', 'l10n_in')])
+        l10n_in = self.env['ir.module.module'].sudo().search([('name', '=', 'l10n_in')])
         return self.company_id.country_id.code == "IN" and l10n_in and l10n_in.state == 'installed'
 
     def _get_user_infos(self):
@@ -244,29 +220,31 @@ class AccountMove(models.Model):
         else:
             return None
 
-        user_selected_box = self.env['account.invoice_extract.words'].search([
-            ('invoice_id', '=', self.id),
-            ('field', '=', field),
-            ('user_selected', '=', True),
-            ('ocr_selected', '=', False),
-        ])
-        if user_selected_box and user_selected_box.word_text == text_to_send['content']:
-            text_to_send['box'] = [
-                user_selected_box.word_text,
-                user_selected_box.word_page,
-                user_selected_box.word_box_midX,
-                user_selected_box.word_box_midY,
-                user_selected_box.word_box_width,
-                user_selected_box.word_box_height,
-                user_selected_box.word_box_angle,
-            ]
+        if 'content' in text_to_send:
+            if user_selected_box := self.env['iap.extracted.words'].search([
+                ('res_model', '=', self._name),
+                ('res_id', '=', self.id),
+                ('field', '=', field),
+                ('user_selected', '=', True),
+                ('ocr_selected', '=', False),
+                ('word_text', '=', text_to_send['content']),
+            ]):
+                text_to_send['box'] = [
+                    user_selected_box.word_text,
+                    user_selected_box.word_page,
+                    user_selected_box.word_box_midX,
+                    user_selected_box.word_box_midY,
+                    user_selected_box.word_box_width,
+                    user_selected_box.word_box_height,
+                    user_selected_box.word_box_angle,
+                ]
         return text_to_send
 
     @api.model
     def _cron_validate(self):
         validated = super()._cron_validate()
         # We don't need word or prefill data anymore, we can delete them
-        validated.mapped('extract_word_ids').unlink()
+        validated.mapped('extracted_word_ids').unlink()
         for record in validated:
             record.extract_prefill_data = None
         return validated
@@ -278,20 +256,6 @@ class AccountMove(models.Model):
         self.with_context(skip_is_manually_modified=True)._validate_ocr()
         return posted
 
-    def get_boxes(self):
-        return [{
-            "id": data.id,
-            "feature": data.field,
-            "text": data.word_text,
-            "ocr_selected": data.ocr_selected,
-            "user_selected": data.user_selected,
-            "page": data.word_page,
-            "box_midX": data.word_box_midX,
-            "box_midY": data.word_box_midY,
-            "box_width": data.word_box_width,
-            "box_height": data.word_box_height,
-            "box_angle": data.word_box_angle} for data in self.extract_word_ids]
-
     def get_partner_create_data(self, context):
         default_values = self.extract_prefill_data
         if values := self._fetch_autocomplete_values(context.get('default_vat') or default_values.get('vat')):
@@ -302,12 +266,7 @@ class AccountMove(models.Model):
         """Set the selected box for a feature. The id of the box indicates the concerned feature.
         The method returns the text that can be set in the view (possibly different of the text in the file)"""
         self.ensure_one()
-        word = self.env["account.invoice_extract.words"].browse(int(id))
-        to_unselect = self.env["account.invoice_extract.words"].search([("invoice_id", "=", self.id), ("field", "=", word.field), ("user_selected", "=", True)])
-        for box in to_unselect:
-            box.user_selected = False
-
-        word.user_selected = True
+        word = self._set_user_selected_box(id)
         if word.field == "currency":
             text = word.word_text
             currency = None
@@ -435,18 +394,19 @@ class AccountMove(models.Model):
         if not partner_name:
             return 0
 
+        rank_field = 'supplier_rank' if self.is_purchase_document() else 'customer_rank'
         partner = self.env["res.partner"].search([
             *self.env['res.partner']._check_company_domain(self.company_id),
             ("name", "=", partner_name),
-        ], order='supplier_rank desc', limit=1)
+        ], order=f'{rank_field} desc', limit=1)
         if partner:
             return partner.id if partner.id != self.company_id.partner_id.id else 0
 
-        self.env.cr.execute(*self.env['res.partner']._where_calc([
+        self.env.cr.execute(self.env['res.partner']._where_calc([
             *self.env['res.partner']._check_company_domain(self.company_id),
             ('active', '=', True),
             ('name', '!=', False),
-            ('supplier_rank', '>', 0),
+            (rank_field, '>', 0),
         ]).select('res_partner.id', 'res_partner.name'))
 
         partners_dict = {name.lower().replace('-', ' '): partner_id for partner_id, name in self.env.cr.fetchall()}
@@ -611,10 +571,10 @@ class AccountMove(models.Model):
         if self.company_id.extract_single_line_per_tax:
             merged_lines = {}
             for il in invoice_lines:
-                total = self._get_ocr_selected_value(il, 'total', 0.0)
-                subtotal = self._get_ocr_selected_value(il, 'subtotal', total)
-                taxes_ocr = [value['content'] for value in il.get('taxes', {}).get('selected_values', [])]
-                taxes_type_ocr = [value.get('amount_type', 'percent') for value in il.get('taxes', {}).get('selected_values', [])]
+                total = il.get('total', 0.0)
+                subtotal = il.get('subtotal', total)
+                taxes_ocr = il.get('taxes', [])
+                taxes_type_ocr = ['percent'] * len(il.get('taxes', []))
                 taxes_records = self._get_taxes_record(taxes_ocr, taxes_type_ocr)
 
                 if not taxes_records and taxes_ocr:
@@ -650,13 +610,13 @@ class AccountMove(models.Model):
                 invoice_lines_to_create.append(vals)
         else:
             for il in invoice_lines:
-                description = self._get_ocr_selected_value(il, 'description', "/")
-                total = self._get_ocr_selected_value(il, 'total', 0.0)
-                subtotal = self._get_ocr_selected_value(il, 'subtotal', total)
-                unit_price = self._get_ocr_selected_value(il, 'unit_price', subtotal)
-                quantity = self._get_ocr_selected_value(il, 'quantity', 1.0)
-                taxes_ocr = [value['content'] for value in il.get('taxes', {}).get('selected_values', [])]
-                taxes_type_ocr = [value.get('amount_type', 'percent') for value in il.get('taxes', {}).get('selected_values', [])]
+                description = il.get('description', "/")
+                total = il.get('total', 0.0)
+                subtotal = il.get('subtotal', total)
+                unit_price = il.get('unit_price', subtotal)
+                quantity = il.get('quantity', 1.0)
+                taxes_ocr = il.get('taxes', [])
+                taxes_type_ocr = ['percent'] * len(il.get('taxes', []))
 
                 vals = {
                     'name': description,
@@ -714,7 +674,6 @@ class AccountMove(models.Model):
             'email': get_first_value_without('email', (self.company_id.email,)),
             'website': get_first_value_without('website', (self.company_id.website,)),
             'phone': get_first_value_without('phone', (self.company_id.phone,)),
-            'mobile': get_first_value_without('mobile', (self.company_id.mobile,)),
             'vat': next((
                     candidate['content']
                     for candidate in ocr_results.get('VAT_Number', {}).get('candidates', [])
@@ -724,37 +683,10 @@ class AccountMove(models.Model):
         self.extract_prefill_data = {k: v for k, v in self.extract_prefill_data.items() if v is not None}
 
         self._save_form(ocr_results)
-
-        if self.extract_word_ids:  # We don't want to recreate the boxes when the user clicks on "Reload AI data"
-            return
-
-        fields_with_boxes = ['supplier', 'date', 'due_date', 'invoice_id', 'currency', 'VAT_Number', 'total']
-        for field in filter(ocr_results.get, fields_with_boxes):
-            value = ocr_results[field]
-            selected_value = value.get('selected_value')
-            data = []
-
-            # We need to make sure that only one candidate is selected.
-            # Once this flag is set, the next candidates can't be set as selected.
-            ocr_chosen_candidate_found = False
-            for candidate in value.get('candidates', []):
-                ocr_chosen = selected_value == candidate and not ocr_chosen_candidate_found
-                if ocr_chosen:
-                    ocr_chosen_candidate_found = True
-                data.append((0, 0, {
-                    "field": field,
-                    "ocr_selected": ocr_chosen,
-                    "user_selected": ocr_chosen,
-                    "word_text": candidate['content'],
-                    "word_page": candidate['page'],
-                    "word_box_midX": candidate['coords'][0],
-                    "word_box_midY": candidate['coords'][1],
-                    "word_box_width": candidate['coords'][2],
-                    "word_box_height": candidate['coords'][3],
-                    "word_box_angle": candidate['coords'][4],
-                }))
-            self.write({'extract_word_ids': data})
         self._autopost_bill()
+
+    def _get_fields_with_boxes(self):
+        return ['supplier', 'date', 'due_date', 'invoice_id', 'currency', 'VAT_Number', 'total']
 
     def _save_form(self, ocr_results):
         # Avoid marking is_manually_modified as True when posting an invoice
@@ -939,18 +871,34 @@ class AccountMove(models.Model):
 
     @api.model
     def _import_invoice_ocr(self, invoice, file_data, new=False):
+        if invoice.invoice_line_ids:
+            return invoice._reason_cannot_decode_has_invoice_lines()
+
+        if not invoice._needs_auto_extract(new):
+            return invoice.env._("Automatic OCR does not apply to this document.")
+
         with invoice._get_edi_creation() as invoice:
             invoice._message_set_main_attachment_id(file_data['attachment'], force=True, filter_xml=False)
             invoice._send_batch_for_digitization()
-        return True
+
+    def _get_import_file_type(self, file_data):
+        """ Set priority on PDF, JPG and PNG files (those are the formats supported by the OCR). """
+        # EXTENDS 'account'
+        if 'jpeg' in file_data['mimetype'] or file_data['name'].endswith(('.jpg', '.jpeg')):
+            return 'jpg'
+        if 'png' in file_data['mimetype'] or file_data['name'].endswith('.png'):
+            return 'png'
+
+        return super()._get_import_file_type(file_data)
 
     def _get_edi_decoder(self, file_data, new=False):
         # EXTENDS 'account'
-        self.ensure_one()
-        decoder = super()._get_edi_decoder(file_data, new=new)
-        if not decoder and file_data['type'] in ('pdf', 'binary') and self._needs_auto_extract(new_document=new):
-            return self._import_invoice_ocr
-        return super()._get_edi_decoder(file_data, new=new)
+        if file_data['import_file_type'] in {'pdf', 'jpg', 'png'} and file_data['attachment']:
+            return {
+                'decoder': self._import_invoice_ocr,
+                'priority': 10 if file_data['import_file_type'] == 'pdf' else 5,
+            }
+        return super()._get_edi_decoder(file_data, new)
 
     @api.model
     def _get_view(self, view_id=None, view_type='form', **options):

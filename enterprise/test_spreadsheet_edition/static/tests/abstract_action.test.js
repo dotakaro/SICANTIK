@@ -1,5 +1,5 @@
 import { expect, test } from "@odoo/hoot";
-import { animationFrame, click, waitFor } from "@odoo/hoot-dom";
+import { animationFrame, rightClick, waitFor, runAllTimers } from "@odoo/hoot-dom";
 import { EventBus } from "@odoo/owl";
 
 import { helpers, registries } from "@odoo/o-spreadsheet";
@@ -22,6 +22,7 @@ import {
     getService,
     mockService,
     mountWithCleanup,
+    onRpc,
 } from "@web/../tests/web_test_helpers";
 
 const { cellMenuRegistry } = registries;
@@ -30,21 +31,23 @@ const { toZone } = helpers;
 defineTestSpreadsheetEditionModels();
 
 test("custom colors in color picker", async function () {
-    const { model } = await createSpreadsheetTestAction("spreadsheet_test_action", {
-        mockRPC: async function (route, args) {
-            if (args.method === "join_spreadsheet_session") {
-                return {
-                    data: {},
-                    name: "test",
-                    company_colors: ["#875A7B", "not a valid color"],
-                };
-            }
+    onRpc(
+        "/spreadsheet/data/*",
+        () => {
+            return {
+                data: {},
+                name: "test",
+                company_colors: ["#875A7B", "not a valid color"],
+            };
         },
-    });
+        { pure: true }
+    );
+    const { model } = await createSpreadsheetTestAction("spreadsheet_test_action");
     expect(model.getters.getCustomColors()).toEqual(["#875A7B"]);
 });
 
-test("preserve global filters when navigating through breadcrumb", async function (assert) {
+test.tags("desktop");
+test("preserve global filters when navigating through breadcrumb", async function () {
     const { model, env } = await createSpreadsheetTestAction("spreadsheet_test_action");
     await insertPivot(model);
     setCellContent(model, "A1", '=PIVOT.VALUE(1, "probability")');
@@ -53,7 +56,6 @@ test("preserve global filters when navigating through breadcrumb", async functio
         type: "relation",
         label: "Relation Filter",
         modelName: "product",
-        defaultValue: [],
     });
     await setGlobalFilterValue(model, {
         id: "42",
@@ -66,7 +68,7 @@ test("preserve global filters when navigating through breadcrumb", async functio
     expect(".o_multi_record_selector").toHaveText("xphone");
 });
 
-test("receives collaborative messages when action is restored", async function (assert) {
+test("receives collaborative messages when action is restored", async function () {
     const mockBusService = {
         _bus: new EventBus(),
         subscribe(eventName, handler) {
@@ -86,7 +88,7 @@ test("receives collaborative messages when action is restored", async function (
             {
                 id: "sheet1",
                 cells: {
-                    A1: { content: '=PIVOT.VALUE(1, "probability:sum")' },
+                    A1: '=PIVOT.VALUE(1, "probability:sum")',
                 },
             },
         ],
@@ -119,7 +121,7 @@ test("receives collaborative messages when action is restored", async function (
         },
     });
     await animationFrame();
-    await click(".o-grid-overlay", { button: 2, position: "top-left" });
+    await rightClick(".o-grid-overlay", { position: "top-left" });
     await animationFrame();
     await contains('.o-menu-item[data-name="pivot_see_records"]').click();
     await waitFor(".o_list_renderer");
@@ -149,4 +151,34 @@ test("receives collaborative messages when action is restored", async function (
     await animationFrame();
     await contains(".o_back_button").click();
     expect('.o-menu-item-button[title="Bold (Ctrl+B)"]').toHaveClass("active");
+});
+
+test("The geoJson service is given to the model for geo charts", async function () {
+    const mockGeoJson = {
+        type: "FeatureCollection",
+        features: [{ type: "Feature", id: "BE", properties: { name: "Belgium" }, geometry: {} }],
+    };
+    onRpc("/spreadsheet/static/topojson/world.topo.json", () => mockGeoJson, { pure: true });
+    const { model } = await createSpreadsheetTestAction("spreadsheet_test_action", {});
+
+    expect(model.getters.getGeoChartAvailableRegions().map((r) => r.label)).toEqual([
+        "World",
+        "Africa",
+        "Asia",
+        "Europe",
+        "North America",
+        "United States",
+        "South America",
+    ]);
+
+    expect(model.getters.getGeoJsonFeatures("world")).toEqual(undefined);
+    await runAllTimers();
+    expect(model.getters.getGeoJsonFeatures("world")).toEqual([
+        {
+            type: "Feature",
+            id: "BE",
+            properties: { name: "Belgium" },
+            geometry: {},
+        },
+    ]);
 });

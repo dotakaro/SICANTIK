@@ -6,8 +6,8 @@ from odoo.tools import date_utils, format_list
 from odoo.exceptions import ValidationError
 
 
-class L10nAUPayrollFinalisationWizard(models.TransientModel):
-    _name = "l10n_au.payroll.finalisation.wizard"
+class L10n_AuPayrollFinalisationWizard(models.TransientModel):
+    _name = 'l10n_au.payroll.finalisation.wizard'
     _description = "STP Finalisation"
 
     def _default_fiscal_year(self):
@@ -137,17 +137,17 @@ class L10nAUPayrollFinalisationWizard(models.TransientModel):
         return stp._get_records_action()
 
 
-class L10nAUPayrollFinalisationEmp(models.TransientModel):
-    _name = "l10n_au.payroll.finalisation.wizard.emp"
+class L10n_AuPayrollFinalisationWizardEmp(models.TransientModel):
+    _name = 'l10n_au.payroll.finalisation.wizard.emp'
     _description = "STP Finalisation Employees"
 
     l10n_au_payroll_finalisation_id = fields.Many2one("l10n_au.payroll.finalisation.wizard", string="Finalisation Wizard", required=True, ondelete="cascade")
     company_id = fields.Many2one(related="l10n_au_payroll_finalisation_id.company_id", string="Company", store=True)
     available_employee_ids = fields.Many2many("hr.employee", compute="_compute_available_employees")
     employee_id = fields.Many2one("hr.employee", string="Employee", required=True, domain="[('id', 'in', available_employee_ids)]")
-    contract_id = fields.Many2one("hr.contract", related="employee_id.contract_id", string="Contract", required=True)
-    contract_start_date = fields.Date("Contract Start Date", related="contract_id.date_start", required=True)
-    contract_end_date = fields.Date("Contract End Date", related="contract_id.date_end")
+    version_id = fields.Many2one("hr.version", related="employee_id.version_id", string="Contract", required=True)
+    contract_start_date = fields.Date("Contract Start Date", related="version_id.date_start", required=True)
+    contract_end_date = fields.Date("Contract End Date", related="version_id.date_end")
     contract_active = fields.Boolean("Active", related="employee_id.active")
     ytd_balance_ids = fields.Many2many("l10n_au.payslip.ytd", string="YTD Balances", compute="_compute_amounts_to_report")
     payslip_ids = fields.Many2many("hr.payslip", string="Payslips", compute="_compute_amounts_to_report")

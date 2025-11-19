@@ -1,6 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import Command, fields
+from odoo import fields
+from odoo.fields import Command
 
 from odoo.addons.account_payment.tests.common import AccountPaymentCommon
 from odoo.addons.payment_custom.tests.common import PaymentCustomCommon
@@ -24,7 +25,7 @@ class SepaDirectDebitCommon(AccountPaymentCommon, PaymentCustomCommon):
 
         assert cls.sepa_bank_account.acc_type == 'iban'
 
-        cls.sepa = cls._prepare_provider('sepa_direct_debit')
+        cls.sepa = cls._prepare_provider(code='custom', custom_mode='sepa_direct_debit')
         cls.sepa_journal = cls.sepa.journal_id
         cls.sepa_journal.bank_account_id = cls.sepa_bank_account
 
@@ -36,7 +37,7 @@ class SepaDirectDebitCommon(AccountPaymentCommon, PaymentCustomCommon):
             'partner_id': cls.partner.id,
             'company_id': cls.company.id,
         })
-        cls.user.groups_id = [Command.link(cls.env.ref('account.group_validate_bank_account').id)]  # Required to create a sdd.mandate
+        cls.user.group_ids = [Command.link(cls.env.ref('account.group_validate_bank_account').id)]  # Required to create a sdd.mandate
         cls.mandate = cls.env['sdd.mandate'].create({
             'partner_id': cls.partner.id,
             'company_id': cls.company.id,

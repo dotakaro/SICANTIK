@@ -9,7 +9,6 @@ from odoo.tools import groupby
 
 
 class AppointmentType(models.Model):
-    _name = "appointment.type"
     _inherit = "appointment.type"
 
     work_hours_activated = fields.Boolean('Limit to Work Hours')
@@ -24,7 +23,7 @@ class AppointmentType(models.Model):
             range_values.update(hours_range=((0, 0),))
         return range_values
 
-    def _slot_availability_is_user_available(self, slot, staff_user, availability_values):
+    def _slot_availability_is_user_available(self, slot, staff_user, availability_values, asked_capacity=1):
         """ This method verifies if the employee is available on the given slot.
 
         In addition to checks done in ``super()`` it checks whether the slot has
@@ -34,7 +33,7 @@ class AppointmentType(models.Model):
         working schedule (using a certain tolerance).
         """
         slot_start_dt_utc, slot_end_dt_utc = slot['UTC'][0], slot['UTC'][1]
-        is_available = super()._slot_availability_is_user_available(slot, staff_user, availability_values)
+        is_available = super()._slot_availability_is_user_available(slot, staff_user, availability_values, asked_capacity)
         if not is_available or not self.work_hours_activated:
             return is_available
 
@@ -62,7 +61,8 @@ class AppointmentType(models.Model):
           intervals are given we consider employee does not work during this slot.
           See ``Resource._work_intervals_batch()`` for more details;
 
-        :return bool: whether employee is available for this slot;
+        :returns: whether employee is available for this slot;
+        :rtype: bool
         """
         def find_start_index():
             """ find the highest index of intervals for which the start_date
@@ -107,7 +107,7 @@ class AppointmentType(models.Model):
         """
         values = super()._slot_availability_prepare_users_values(staff_users, start_dt, end_dt)
         values.update(
-            self._slot_availability_prepare_users_values_workhours(staff_users, start_dt, end_dt)
+            self._slot_availability_prepare_users_values_workhours(staff_users, start_dt.astimezone(pytz.UTC), end_dt.astimezone(pytz.UTC))
         )
         return values
 

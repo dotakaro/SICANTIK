@@ -2,7 +2,7 @@
 from odoo import fields, models
 
 
-class L10nMxEdiResLocality(models.Model):
+class L10n_Mx_EdiResLocality(models.Model):
     _name = 'l10n_mx_edi.res.locality'
     _description = 'Locality'
 

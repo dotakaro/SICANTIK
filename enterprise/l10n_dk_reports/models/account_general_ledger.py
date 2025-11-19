@@ -9,7 +9,7 @@ from odoo.tools import street_split
 from odoo import api, models, _
 
 
-class GeneralLedgerCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _customize_warnings(self, report, options, all_column_groups_expression_totals, warnings=None):
@@ -92,6 +92,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             "income": 'Sale',
             "income_other": 'Sale',
             "expense": 'Expense',
+            "expense_other": 'Expense',
             "expense_depreciation": 'Expense',
             "expense_direct_cost": 'Expense',
             "off_balance": 'Other',
@@ -105,10 +106,12 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         # _20230131 is not the export date, but rather the date at which the norm of this csv export was enforced
         csv_lines = [("KONTONUMMER_20230131", "KONTONAVN_20230131", "VAERDI_20230131")]
         # fold all report lines to make sure we only get the account details
+
         new_options = report.get_options(previous_options={**options, 'unfolded_lines': [], 'unfold_all': False})
 
         balance_index = [c['expression_label'] for c in options['columns']].index('balance')
-        for line in filter(lambda line: self.env['account.report']._get_markup(line['id']) != 'total', report._get_lines(new_options)):
+        lines = report._get_lines(new_options)
+        for line in filter(lambda line: self.env['account.report']._get_markup(line['id']) != 'total', lines):
             account_number, account_name = line['name'].split(maxsplit=1)
             account_balance = int(line['columns'][balance_index]['no_format'])  # balance value must be a whole number
             csv_lines.append((account_number, account_name, account_balance))

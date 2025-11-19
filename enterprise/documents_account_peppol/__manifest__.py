@@ -12,4 +12,5 @@ within the Documents app.
     "license": "OEEL-1",
     "depends": ["account_peppol", "documents"],
     "data": ["views/res_config_settings_views.xml"],
+    "auto_install": True,
 }

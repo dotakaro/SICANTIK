@@ -3,26 +3,28 @@
 # 	* approvals
 # 
 # Translators:
-# Martin Trigaux, 2024
-# Wil Odoo, 2024
-# 何彬 <vnsoft.he@gmail.com>, 2024
-# Chloe Wang, 2024
-# Raymond Yu <cl_yu@hotmail.com>, 2024
-# Jeffery CHEN <jeffery9@gmail.com>, 2025
+# Chloe Wang, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Jeffery CHEN <jeffery9@gmail.com>, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+msgid "%s (copy)"
+msgstr "%s（副本）"
 
 #. module: approvals
 #: model:ir.actions.report,print_report_name:approvals.action_report_approval_request
@@ -66,6 +68,7 @@ msgstr "所需操作"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_category__active
+#: model:ir.model.fields,field_description:approvals.field_approval_request__active
 msgid "Active"
 msgstr "有效"
 
@@ -88,6 +91,11 @@ msgstr "活动异常标示"
 #: model:ir.model.fields,field_description:approvals.field_approval_request__activity_state
 msgid "Activity State"
 msgstr "活动状态"
+
+#. module: approvals
+#: model:ir.model,name:approvals.model_mail_activity_type
+msgid "Activity Type"
+msgstr "活动类型"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_request__activity_type_icon
@@ -148,14 +156,33 @@ msgid "Approval"
 msgstr "审批"
 
 #. module: approvals
+#: model:ir.actions.act_window,name:approvals.approval_category_action
+#: model:ir.ui.menu,name:approvals.approvals_category_menu_config
+msgid "Approval Categories"
+msgstr "审批类别"
+
+#. module: approvals
 #: model:ir.model,name:approvals.model_approval_category
+#: model:ir.model.fields,field_description:approvals.field_approval_category_approver__category_id
+#: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
 msgid "Approval Category"
 msgstr "审批类别"
+
+#. module: approvals
+#: model:ir.model,name:approvals.model_approval_category_approver
+msgid "Approval Category Approver"
+msgstr "批准类别批准者"
+
+#. module: approvals
+#: model:ir.model.fields,field_description:approvals.field_approval_category__approval_properties_definition
+msgid "Approval Properties"
+msgstr "审批属性"
 
 #. module: approvals
 #: model:ir.actions.report,name:approvals.action_report_approval_request
 #: model:ir.model,name:approvals.model_approval_request
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__approval_request_id
+#: model:ir.model.fields,field_description:approvals.field_mail_activity__approval_request_id
 msgid "Approval Request"
 msgstr "审批申请"
 
@@ -172,27 +199,15 @@ msgstr "审批主题"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_category__approval_type
-#: model:ir.model.fields,field_description:approvals.field_approval_category_approver__category_id
 #: model:ir.model.fields,field_description:approvals.field_approval_request__approval_type
-#: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
 msgid "Approval Type"
 msgstr "审批类型"
 
 #. module: approvals
-#: model:ir.model,name:approvals.model_approval_category_approver
-msgid "Approval Type Approver"
-msgstr "批准类型 批准者"
-
-#. module: approvals
 #: model:ir.ui.menu,name:approvals.approvals_menu_root
+#: model:res.groups.privilege,name:approvals.res_groups_privilege_approvals
 msgid "Approvals"
 msgstr "审批"
-
-#. module: approvals
-#: model:ir.actions.act_window,name:approvals.approval_category_action
-#: model:ir.ui.menu,name:approvals.approvals_category_menu_config
-msgid "Approvals Types"
-msgstr "审批类型"
 
 #. module: approvals
 #: model:ir.actions.act_window,name:approvals.approval_request_action_to_review
@@ -207,7 +222,7 @@ msgstr "待审批"
 
 #. module: approvals
 #. odoo-javascript
-#: code:addons/approvals/static/src/web/activity/approval.xml:0
+#: code:addons/approvals/static/src/web/approval.xml:0
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_kanban
 msgid "Approve"
@@ -224,6 +239,7 @@ msgstr "已批准"
 
 #. module: approvals
 #: model:ir.model,name:approvals.model_approval_approver
+#: model:ir.model.fields,field_description:approvals.field_mail_activity__approver_id
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 msgid "Approver"
 msgstr "审批人"
@@ -269,12 +285,14 @@ msgstr "审批人："
 #: code:addons/approvals/static/src/views/kanban/approvals_category_kanban_controller.js:0
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_kanban
 msgid "Archive"
-msgstr "归档"
+msgstr "存档"
 
 #. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_kanban
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_search
+#: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
+#: model_terms:ir.ui.view,arch_db:approvals.approval_search_view_search
 msgid "Archived"
 msgstr "已归档"
 
@@ -282,7 +300,7 @@ msgstr "已归档"
 #. odoo-javascript
 #: code:addons/approvals/static/src/views/kanban/approvals_category_kanban_controller.js:0
 msgid "Are you sure that you want to archive this record?"
-msgstr "您确定要归档此记录吗？"
+msgstr "您确定要存档此记录吗？"
 
 #. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
@@ -364,7 +382,6 @@ msgid "Car Rental Application"
 msgstr "租车应用"
 
 #. module: approvals
-#: model:ir.model.fields,field_description:approvals.field_approval_product_line__product_uom_category_id
 #: model:ir.model.fields,field_description:approvals.field_approval_request__category_id
 #: model_terms:ir.ui.view,arch_db:approvals.approval_search_view_search
 msgid "Category"
@@ -414,13 +431,6 @@ msgstr "联系人："
 #: model:approval.category,name:approvals.approval_category_data_contract_approval
 msgid "Contract Approval"
 msgstr "合同审批"
-
-#. module: approvals
-#: model:ir.model.fields,help:approvals.field_approval_product_line__product_uom_category_id
-msgid ""
-"Conversion between Units of Measure can only occur if they belong to the "
-"same category. The conversion will be made based on the ratios."
-msgstr "仅同类别的计量单位可以互相转换。根据比例进行转换。"
 
 #. module: approvals
 #: model_terms:ir.actions.act_window,help:approvals.product_product_action
@@ -506,6 +516,9 @@ msgstr "描述"
 #: model:ir.model.fields,field_description:approvals.field_approval_category_approver__display_name
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__display_name
 #: model:ir.model.fields,field_description:approvals.field_approval_request__display_name
+#: model:ir.model.fields,field_description:approvals.field_ir_attachment__display_name
+#: model:ir.model.fields,field_description:approvals.field_mail_activity__display_name
+#: model:ir.model.fields,field_description:approvals.field_mail_activity_type__display_name
 msgid "Display Name"
 msgstr "显示名称"
 
@@ -575,6 +588,11 @@ msgstr "关注者（合作伙伴）"
 #: model:ir.model.fields,help:approvals.field_approval_request__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
 msgstr "Font Awesome图标，例如：fa-tasks"
+
+#. module: approvals
+#: model:ir.actions.server,name:approvals.model_approval_request_approve_admin
+msgid "Force Approval"
+msgstr "强制审批"
 
 #. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
@@ -678,6 +696,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:approvals.field_approval_category_approver__id
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__id
 #: model:ir.model.fields,field_description:approvals.field_approval_request__id
+#: model:ir.model.fields,field_description:approvals.field_ir_attachment__id
+#: model:ir.model.fields,field_description:approvals.field_mail_activity__id
+#: model:ir.model.fields,field_description:approvals.field_mail_activity_type__id
 msgid "ID"
 msgstr "ID"
 
@@ -1069,6 +1090,11 @@ msgid "Products"
 msgstr "产品"
 
 #. module: approvals
+#: model:ir.model.fields,field_description:approvals.field_approval_request__approval_properties
+msgid "Properties"
+msgstr "权益"
+
+#. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__quantity
 #: model:ir.model.fields,field_description:approvals.field_approval_request__quantity
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
@@ -1099,7 +1125,7 @@ msgstr "参考："
 
 #. module: approvals
 #. odoo-javascript
-#: code:addons/approvals/static/src/web/activity/approval.xml:0
+#: code:addons/approvals/static/src/web/approval.xml:0
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_kanban
 msgid "Refuse"
@@ -1258,8 +1284,8 @@ msgstr "测试参考"
 #. module: approvals
 #. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
-msgid "The request %(request_name)s for %(request_owner)s has been accepted"
-msgstr "%(request_name)s请求（由 %(request_owner)s提出）已获接纳"
+msgid "The request %(request_name)s for %(request_owner)s has been approved"
+msgstr "由 %(request_owner)s 提出的请求 %(request_name)s 已获批准"
 
 #. module: approvals
 #. odoo-python
@@ -1272,8 +1298,8 @@ msgstr "%(request_name)s 请求（由 %(request_owner)s 提出）已被拒绝"
 #: code:addons/approvals/models/approval_request.py:0
 msgid ""
 "The request created on %(create_date)s by %(request_owner)s has been "
-"accepted."
-msgstr "在 %(create_date)s 创建的请求（由 %(request_owner)s 提出）已获接纳。"
+"approved."
+msgstr "由 %(request_owner)s 在 %(create_date)s 提出的请求已获批准"
 
 #. module: approvals
 #. odoo-python
@@ -1282,6 +1308,12 @@ msgid ""
 "The request created on %(create_date)s by %(request_owner)s has been "
 "refused."
 msgstr "在 %(create_date)s 建立的请求（由 %(request_owner)s 提出）已被拒绝。"
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+msgid "The request has been approved by an Approval Officer"
+msgstr "该请求已获审批专员批准"
 
 #. module: approvals
 #: model:res.groups,comment:approvals.group_approval_user
@@ -1318,8 +1350,6 @@ msgid ""
 msgstr "这个请求需要得到你的经理的批准。你的经理不在批准人名单中。"
 
 #. module: approvals
-#. odoo-javascript
-#: code:addons/approvals/static/src/web/activity/approval.xml:0
 #: model:ir.model.fields.selection,name:approvals.selection__approval_approver__status__pending
 #: model:ir.model.fields.selection,name:approvals.selection__approval_request__user_status__pending
 msgid "To Approve"
@@ -1347,18 +1377,14 @@ msgstr "取消归档"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__product_uom_id
-msgid "Unit of Measure"
-msgstr "计量单位"
+#: model_terms:ir.ui.view,arch_db:approvals.report_aprroval_request_document
+msgid "Unit"
+msgstr "单元"
 
 #. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.report_aprroval_request_document
 msgid "Units"
 msgstr "单位"
-
-#. module: approvals
-#: model_terms:ir.ui.view,arch_db:approvals.report_aprroval_request_document
-msgid "UoM"
-msgstr "计量单位"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_approver__user_id
@@ -1401,6 +1427,18 @@ msgstr "撤销"
 #. module: approvals
 #. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
+msgid "You are not allowed to approved or refused your own approval."
+msgstr "您没有权限批准或拒绝您自己的批核申请。"
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+msgid "You can't delete an approved request. Archive it instead."
+msgstr "无法删除已批准的请求，请改为归档处理。"
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
 msgid "You cannot approve before the previous approver."
 msgstr "您不能在上一个审批人之前审批。"
 
@@ -1422,6 +1460,12 @@ msgstr "如果审批申请相关联链接已生效、已拒绝或已取消，则
 #. module: approvals
 #. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
+msgid "You do not have the rights to execute that action."
+msgstr "你无权执行该操作。"
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
 msgid "You have to add at least %s approvers to confirm your request."
 msgstr "你必须添加至少 %s 个审批人来确认你的申请。"
 
@@ -1430,6 +1474,12 @@ msgstr "你必须添加至少 %s 个审批人来确认你的申请。"
 #: code:addons/approvals/models/approval_request.py:0
 msgid "You have to attach at least one document."
 msgstr "您须至少附上一份文件。"
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+msgid "You must cancel and then back to draft the approval first."
+msgstr "您必须先取消，并将该批核设回为草稿。"
 
 #. module: approvals
 #: model_terms:ir.actions.act_window,help:approvals.product_product_action

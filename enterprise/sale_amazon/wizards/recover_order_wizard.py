@@ -6,7 +6,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
-class RecoverOrderWizard(models.TransientModel):
+class AmazonRecoverOrderWizard(models.TransientModel):
     _name = 'amazon.recover.order.wizard'
     _description = "Amazon Recover Order Wizard"
 

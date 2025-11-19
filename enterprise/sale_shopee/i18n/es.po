@@ -8,10 +8,10 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-17 15:23+0000\n"
-"PO-Revision-Date: 2025-01-19 01:20+0000\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Larissa Manderfeld, 2025\n"
 "Language-Team: Spanish (https://app.transifex.com/odoo/teams/41243/es/)\n"
 "MIME-Version: 1.0\n"
@@ -161,12 +161,12 @@ msgstr ""
 "            </style>\n"
 "            <body><div>\n"
 "                <p>Hubo algunos errores en la sincronización de las etiquetas de envío de Shopee y no se completó la sincronziación.</p>\n"
-"                <p>Corrija los problemas antes de sincronizar de los pickings manualmente de nuevo, pues no se intentará otra sincronización.</p>\n"
+"                <p>Corrija los problemas antes de sincronizar de las preparaciones de pedidos manualmente de nuevo, pues no se intentará otra sincronización.</p>\n"
 "                <p>Estos son los errores que envió Shopee: </p>\n"
 "                <table class=\"shopee_table\">\n"
 "                    <thead>\n"
 "                        <tr>\n"
-"                            <th>Referencias del picking por lote</th>\n"
+"                            <th>Referencias de la preparación de pedidos por lote</th>\n"
 "                            <th>Mensaje</th>\n"
 "                        </tr>\n"
 "                    </thead>\n"
@@ -478,6 +478,11 @@ msgid "Create Shopee Accounts"
 msgstr "Crear cuentas de Shopee"
 
 #. module: sale_shopee
+#: model:ir.model,website_form_label:sale_shopee.model_res_partner
+msgid "Create a Customer"
+msgstr "Crear un cliente"
+
+#. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__create_uid
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__create_uid
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__create_uid
@@ -512,11 +517,16 @@ msgid "Default Salesperson"
 msgstr "Comercial por defecto"
 
 #. module: sale_shopee
+#: model:ir.model.fields,field_description:sale_shopee.field_product_product__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_res_partner__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_sale_order__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_move__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_picking__display_name
 msgid "Display Name"
-msgstr "Nombre mostrado"
+msgstr "Nombre para mostrar"
 
 #. module: sale_shopee
 #: model:ir.model.fields.selection,name:sale_shopee.selection__shopee_shop__status__error
@@ -611,9 +621,14 @@ msgid "Fulfillment by Shopee"
 msgstr "Envío por Shopee"
 
 #. module: sale_shopee
+#: model:ir.model.fields,field_description:sale_shopee.field_product_product__id
+#: model:ir.model.fields,field_description:sale_shopee.field_res_partner__id
+#: model:ir.model.fields,field_description:sale_shopee.field_sale_order__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__id
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_move__id
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -663,7 +678,7 @@ msgstr "Fecha de la última sincronización de pedidos"
 #. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_stock_picking__last_picking_sync_date
 msgid "Last Picking Sync Date"
-msgstr "Fecha de la última sincronización de los pickings"
+msgstr "Fecha de la última sincronización de las preparaciones de pedidos"
 
 #. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__last_shop_status_sync_date
@@ -1094,9 +1109,9 @@ msgstr ""
 
 #. module: sale_shopee
 #. odoo-python
-#: code:addons/sale_shopee/models/shopee_shop.py:0
-msgid "Shopee move: %(name)s"
-msgstr "Movimiento de shopee: %(name)s"
+#: code:addons/sale_shopee/models/stock_move.py:0
+msgid "Shopee move: %s"
+msgstr "Movimiento de shopee: %s"
 
 #. module: sale_shopee
 #: model:mail.template,name:sale_shopee.inventory_sync_failure
@@ -1145,6 +1160,11 @@ msgstr "Tiendas"
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__status
 msgid "Status"
 msgstr "Estado"
+
+#. module: sale_shopee
+#: model:ir.model,name:sale_shopee.model_stock_move
+msgid "Stock Move"
+msgstr "Movimiento de stock"
 
 #. module: sale_shopee
 #: model:ir.model.fields.selection,name:sale_shopee.selection__stock_picking__shopee_label_status__stored
@@ -1241,7 +1261,8 @@ msgstr ""
 #. module: sale_shopee
 #: model:ir.model.fields,help:sale_shopee.field_stock_picking__last_picking_sync_date
 msgid "The last time the picking was synchronized with Shopee."
-msgstr "La última vez que los pickings se sincronizaron con Shopee."
+msgstr ""
+"La última vez que las preparaciones de pedidos se sincronizaron con Shopee."
 
 #. module: sale_shopee
 #: model:ir.model.fields,help:sale_shopee.field_shopee_shop__last_shop_status_sync_date
@@ -1392,3 +1413,21 @@ msgstr "p. ej. Mercado americano"
 #: model_terms:ir.ui.view,arch_db:sale_shopee.shopee_shop_view_form
 msgid "e.g. Indonesian Shop"
 msgstr "p. ej. Tienda de Indonesia"
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_account.py:0
+msgid "id"
+msgstr "ID"
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_shop.py:0
+msgid "shop_id"
+msgstr "shop_id"
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_shop.py:0
+msgid "shopee_shop_id"
+msgstr "shopee_shop_id"

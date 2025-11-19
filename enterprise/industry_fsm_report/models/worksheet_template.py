@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 from ast import literal_eval
 
-from odoo import api, models, _
-from odoo.exceptions import UserError
+from odoo import api, models
 
 
 class WorksheetTemplate(models.Model):
@@ -59,7 +58,7 @@ class WorksheetTemplate(models.Model):
 
     @api.model
     def _create_demo_data_fsm(self, model_id=False):
-        # create demo data in batch for performance reasons (avoid multiple calls to setup_models)
+        # create demo data in batch for performance reasons (avoid multiple calls to _setup_models__)
         if not model_id:
             model_id = self.env.ref('industry_fsm_report.fsm_worksheet_template2').model_id.id
         self.env['ir.model.fields'].create([{

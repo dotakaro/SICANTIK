@@ -1,13 +1,14 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import logging
-import threading
 from contextlib import contextmanager, nullcontext
 from unittest import SkipTest
 from unittest.mock import patch
 
+from odoo import modules
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
-from odoo.addons.l10n_br_avatax.models.account_external_tax_mixin import AccountExternalTaxMixinL10nBR
+from odoo.addons.l10n_br_avatax.models.account_external_tax_mixin import AccountExternalTaxMixin
 from odoo.exceptions import UserError
+from odoo.fields import Command
 from odoo.tests.common import tagged
 from .mocked_invoice_response import generate_response
 
@@ -24,7 +25,7 @@ class TestAvalaraBrCommon(AccountTestInvoicingCommon):
     def setUpClass(cls):
         res = super().setUpClass()
         cls._setup_credentials()
-
+        cls.foreign_currency = cls.setup_other_currency('EUR')
         cls.fp_avatax = cls.env['account.fiscal.position'].create({
             'name': 'Avatax Brazil',
             'l10n_br_is_avatax': True,
@@ -139,11 +140,11 @@ class TestAvalaraBrCommon(AccountTestInvoicingCommon):
     @classmethod
     @contextmanager
     def _capture_request_br(cls, return_value=None):
-        with patch(f'{AccountExternalTaxMixinL10nBR.__module__}.AccountExternalTaxMixinL10nBR._l10n_br_iap_request', return_value=return_value) as mocked:
+        with patch(f'{AccountExternalTaxMixin.__module__}.AccountExternalTaxMixin._l10n_br_iap_request', return_value=return_value) as mocked:
             yield mocked
 
     @classmethod
-    def _create_invoice_01_and_expected_response(cls):
+    def _create_invoice_01_and_expected_response(cls, move_type='out_invoice'):
         products = (
             cls.product_user,
             cls.product_accounting,
@@ -151,7 +152,7 @@ class TestAvalaraBrCommon(AccountTestInvoicingCommon):
             cls.product_invoicing,
         )
         invoice = cls.env['account.move'].create({
-            'move_type': 'out_invoice',
+            'move_type': move_type,
             'partner_id': cls.partner.id,
             'fiscal_position_id': cls.fp_avatax.id,
             'invoice_date': '2021-01-01',
@@ -166,6 +167,38 @@ class TestAvalaraBrCommon(AccountTestInvoicingCommon):
         invoice.invoice_line_ids[0].discount = 10
 
         return invoice, generate_response(invoice.invoice_line_ids)
+
+    @classmethod
+    def _create_invoice_02(cls, operation_types=False):
+        products = (
+            cls.product_user,
+            cls.product_accounting,
+            cls.product_expenses,
+            cls.product_invoicing,
+        )
+
+        operation_types = operation_types or (
+            cls.env.ref('l10n_br_avatax.operation_type_1'),
+            cls.env.ref('l10n_br_avatax.operation_type_2'),
+            cls.env.ref('l10n_br_avatax.operation_type_3'),
+            cls.env.ref('l10n_br_avatax.operation_type_60'),
+        )
+        invoice = cls.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': cls.partner.id,
+            'fiscal_position_id': cls.fp_avatax.id,
+            'invoice_date': '2021-01-01',
+            'invoice_line_ids': [
+                Command.create({
+                    'product_id': product.id,
+                    'tax_ids': None,
+                    'price_unit': product.list_price,
+                    'l10n_br_goods_operation_type_id': operation_type and operation_type.id,
+                }) for product, operation_type in zip(products, operation_types)
+            ],
+        })
+
+        return invoice
 
 
 class TestAvalaraBrInvoiceCommon(TestAvalaraBrCommon):
@@ -184,7 +217,7 @@ class TestAvalaraBrInvoiceCommon(TestAvalaraBrCommon):
 
         # When the external tests run this will need to do an IAP request which isn't possible in testing mode, see:
         # 7416acc111793ac1f7fd0dc653bb05cf7af28ebe
-        with patch.object(threading.current_thread(), 'testing', False) if 'external_l10n' in self.test_tags else nullcontext():
+        with patch.object(modules.module, 'current_test', False) if 'external_l10n' in self.test_tags else nullcontext():
             invoice.action_post()
 
         if test_exact_response:
@@ -234,7 +267,7 @@ class TestAvalaraBrInvoice(TestAvalaraBrInvoiceCommon):
         invoice, _ = self._create_invoice_01_and_expected_response()
         invoice.currency_id = self.env.ref('base.USD')
 
-        with self.assertRaisesRegex(UserError, r'.* has to use Brazilian Real to calculate taxes with Avatax.'):
+        with self.assertRaisesRegex(UserError, r'.* Brazilian Real is required to calculate taxes with Avatax.'):
             self.assertInvoice(invoice, test_exact_response=None)
 
     def test_03_transport_cost(self):
@@ -261,18 +294,18 @@ class TestAvalaraBrInvoice(TestAvalaraBrInvoiceCommon):
             })
 
         # (line amount, freight, insurance, other) per line
-        expected = [
+        expecteds = [
             (35.00, 3.68, 7.37, 11.05),
             (30.00, 3.16, 6.32, 9.47),
             (15.00, 1.58, 3.16, 4.74),
             (15.00, 1.58, 3.15, 4.74), # note that the insurance amount is different from the line above to ensure the total adds up to 20
         ]
 
-        api_request = invoice._l10n_br_get_calculate_payload()
+        api_request = invoice._prepare_l10n_br_avatax_document_service_call(invoice._get_l10n_br_avatax_service_params())
         actual_lines = api_request['lines']
-        self.assertEqual(len(expected), len(actual_lines), 'Different amount of expected and actual lines.')
+        self.assertEqual(len(expecteds), len(actual_lines), 'Different amount of expected and actual lines.')
 
-        for expected, line in zip(expected, actual_lines):
+        for expected, line in zip(expecteds, actual_lines):
             amount, freight, insurance, other = expected
             self.assertEqual(amount, line['lineAmount'])
             self.assertEqual(freight, line['freightAmount'])
@@ -292,6 +325,9 @@ class TestAvalaraBrInvoice(TestAvalaraBrInvoiceCommon):
             invoice.action_post()
 
     def test_05_credit_note(self):
+        """Tax calculation without setting operation types on the lines. This should use the default
+            from the parent model instead. (salesReturn)
+        """
         invoice, response = self._create_invoice_01_and_expected_response()
         with self._capture_request_br(return_value=response):
             invoice.action_post()
@@ -304,9 +340,92 @@ class TestAvalaraBrInvoice(TestAvalaraBrInvoiceCommon):
         credit_note = self.env['account.move'].search([('reversed_entry_id', '=', invoice.id)])
         self.assertTrue(credit_note, "A credit note should have been created.")
 
-        payload = credit_note._l10n_br_get_calculate_payload()
-        self.assertEqual(payload['header']['operationType'], 'salesReturn', 'The operationType for credit notes should be returnSales.')
+        payload = credit_note._prepare_l10n_br_avatax_document_service_call(credit_note._get_l10n_br_avatax_service_params())
+        self.assertTrue(all(line['operationType'] == 'salesReturn' for line in payload['lines']), 'The default operationType for credit notes should be salesReturn.')
         self.assertEqual(payload['header']['invoicesRefs'][0]['documentCode'], f'account.move_{invoice.id}', 'The credit note should reference the original invoice.')
+
+    def test_06_unique_operation_types(self):
+        """Tax calculation with unique operation types on each line."""
+        invoice = self._create_invoice_02()
+        self.assertRecordValues(invoice, [{
+            'amount_total': 95.0,
+            'amount_untaxed': 95.0,
+            'amount_tax': 0.0,
+        }])
+
+        payload = invoice._prepare_l10n_br_avatax_document_service_call(invoice._get_l10n_br_avatax_service_params())
+        operation_types = [line['operationType'] for line in payload['lines']]
+        expected_operation_types = ['standardSales', 'complementary', 'amountComplementary', 'salesReturn']
+        self.assertEqual(operation_types, expected_operation_types, 'The expected operation types are not properly set. It should be unique per line.')
+
+    def test_07_override_operation_type(self):
+        """Tax calculation with operation types set only on a single line. The rest should default to standardSales."""
+        operation_types = (
+            False,
+            self.env.ref('l10n_br_avatax.operation_type_2'),
+            False,
+            False,
+        )
+
+        invoice = self._create_invoice_02(operation_types=operation_types)
+        self.assertRecordValues(invoice, [{
+            'amount_total': 95.0,
+            'amount_untaxed': 95.0,
+            'amount_tax': 0.0,
+        }])
+
+        payload = invoice._prepare_l10n_br_avatax_document_service_call(invoice._get_l10n_br_avatax_service_params())
+        operation_types = [line['operationType'] for line in payload['lines']]
+        expected_operation_types = ['standardSales', 'complementary', 'standardSales', 'standardSales']
+        self.assertEqual(operation_types, expected_operation_types, 'The expected operation types are not properly set.')
+
+    def test_08_vendor_bill(self):
+        """ Verify the differences between sending an invoice and a bill. """
+        bill, response = self._create_invoice_01_and_expected_response(move_type='in_invoice')
+        bill.l10n_latam_document_number = '1'
+        self.assertEqual(
+            bill.l10n_br_goods_operation_type_id,
+            self.env.ref('l10n_br_avatax.operation_type_59'),
+            "Default operation type for bills should be standardPurchase."
+        )
+
+        with self._capture_request_br(return_value=response) as patched:
+            bill.action_post()
+
+        payload = patched.call_args.args[2]
+        self.assertEqual(
+            payload['header']['operationType'],
+            'standardPurchase',
+            'The operationType for vendor bills should be standardPurchase.'
+        )
+
+    def test_09_tax_calculation_api_error(self):
+        invoice, _ = self._create_invoice_01_and_expected_response()
+        response = {
+            "error": {
+                "code": "TC000",
+                "message": "Errors: ",
+                "innerError": [
+                    {
+                        "code": "TC001",
+                        "message": "Cannot find TaxCitation based on NCM for PIS",
+                        "lineCode": invoice.invoice_line_ids.ids[0],
+                        "where": {
+                            "type": "PIS",
+                            "hsCodes.codeType": "NCM",
+                            "hsCodes.code": "49011000",
+                            "date": "2025-07-18T00:00:00.000Z",
+                        },
+                        "lineIndex": 0,
+                        "itemCode": "false",
+                    },
+                ],
+            }
+        }
+
+        with self._capture_request_br(return_value=response), \
+             self.assertRaisesRegex(UserError, "Cannot find TaxCitation based on NCM for PIS"):
+            invoice.button_external_tax_calculation()
 
 
 @tagged('post_install_l10n', '-at_install', 'post_install')
@@ -316,6 +435,8 @@ class TestAvalaraBrSettings(TestAvalaraBrInvoiceCommon):
     def setUpClass(cls):
         super().setUpClass()
         cls.settings = cls.env['res.config.settings'].create({})
+        cls.settings.l10n_br_avatax_portal_email = "test@example.com"
+        cls.settings.company_id.vat = "00.623.904/0001-73"
 
     def test_01_create_account_success(self):
         return_value = {
@@ -363,8 +484,17 @@ class TestAvalaraBrSettings(TestAvalaraBrInvoiceCommon):
         with self._capture_request_br(return_value={}) as mocked_request:
             self.settings.create_account()
 
-        for k, v in mocked_request.call_args[0][1].items():
+        for k, v in mocked_request.call_args[0][2].items():
             self.assertNotEqual(v, False, f"{k} was False instead of empty string")
+
+    def test_05_formatted_vat(self):
+        """ Properly format the VAT numbers to CNPJ even in compact form."""
+        with self._capture_request_br(return_value={}) as mocked_request:
+            self.settings.create_account()
+
+        arguments = mocked_request.call_args[0][2]
+        self.assertEqual(self.settings.company_id.vat, '00623904000173', 'CNPJ should be compacted in internal storage')
+        self.assertEqual(arguments['cnpj'], '00.623.904/0001-73', 'CNPJ must be formatted for account creation')
 
 
 @tagged('external_l10n', 'external', '-at_install', 'post_install', '-standard')

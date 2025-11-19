@@ -45,9 +45,10 @@ _grouping_keys = [
     'supplementary_units_code',
 ]
 
-class IntrastatReportCustomHandler(models.AbstractModel):
+
+class AccountIntrastatReportHandler(models.AbstractModel):
     _name = 'account.intrastat.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.report.custom.handler']
     _description = 'Intrastat Report Custom Handler'
 
     def _get_custom_display_config(self):
@@ -55,9 +56,14 @@ class IntrastatReportCustomHandler(models.AbstractModel):
             'templates': {
                 'AccountReportFilters': 'account_intrastat.IntrastatReportFilters',
             },
+            'components': {
+                'AccountReportFilters': 'InstrastReportFilters',
+            },
         }
 
     def _custom_options_initializer(self, report, options, previous_options):
+        super()._custom_options_initializer(report, options, previous_options=previous_options)
+
         # Filter only partners with VAT
         options['intrastat_with_vat'] = previous_options.get('intrastat_with_vat', False)
 
@@ -252,13 +258,17 @@ class IntrastatReportCustomHandler(models.AbstractModel):
 
     def _get_intrastat_report_query(self, report, options, current_groupby, query_params=None, offset=None, limit=None, warnings=None, order_by=True):
         """ Generates query for intrastat report. """
+
+        assert all(key in query_params for key in ('commodity_warning_suffix', 'product_type_condition')), (
+                "This method must be overridden and query_params arg must be a dict passed by child method"
+                "with 'commodity_warning_suffix' and 'product_type_condition' keys at least."
+            )
+
         query_params = {
-            'product_type_condition': SQL("AND (account_move_line.product_id IS NULL OR prodt.type != 'service')"),
-            'commodity_warning_suffix': SQL('comm'),
             'country_table_join': SQL("LEFT JOIN res_country country ON account_move.intrastat_country_id = country.id"),
             'country_condition': SQL("AND country.intrastat = TRUE AND (country.code != 'GB' OR account_move.date < '2021-01-01')"),
             'commodity_code': SQL('code.code'),
-            **(query_params or {}),
+            **query_params,
         }
         report_query = report._get_report_query(options, 'strict_range')
         select_from_groupby = (
@@ -281,21 +291,11 @@ class IntrastatReportCustomHandler(models.AbstractModel):
                 COALESCE(inv_transport.code, comp_transport.code) AS transport_code,
                 %(system)s,
                 SUM(ROUND(
-                    COALESCE(prod.weight, 0) * account_move_line.quantity / (
-                        CASE WHEN inv_line_uom.category_id IS NULL OR inv_line_uom.category_id = prod_uom.category_id
-                        THEN inv_line_uom.factor ELSE 1 END
-                    ) * (
-                        CASE WHEN prod_uom.uom_type <> 'reference'
-                        THEN prod_uom.factor ELSE 1 END
-                    ),
-                    SCALE(ref_weight_uom.rounding)
+                    CAST(COALESCE(prod.weight, 0) * account_move_line.quantity * inv_line_uom.factor / prod_uom.factor AS numeric),
+                    %(weight_rounding)s
                 )) AS weight,
                 CASE WHEN code.supplementary_unit IS NOT NULL and SUM(prod.intrastat_supplementary_unit_amount) != 0
-                    THEN CAST(SUM(prod.intrastat_supplementary_unit_amount * (
-                        account_move_line.quantity / (
-                            CASE WHEN inv_line_uom.category_id IS NULL OR inv_line_uom.category_id = prod_uom.category_id
-                            THEN inv_line_uom.factor ELSE 1 END
-                        ))) AS numeric)
+                    THEN CAST(SUM(prod.intrastat_supplementary_unit_amount * account_move_line.quantity * inv_line_uom.factor / prod_uom.factor) AS numeric)
                     ELSE NULL END AS supplementary_units,
                 code.supplementary_unit AS supplementary_units_code,
                 -- We double sign the balance to make sure that we keep consistency between invoice/bill and the intrastat report
@@ -336,14 +336,12 @@ class IntrastatReportCustomHandler(models.AbstractModel):
                 LEFT JOIN account_intrastat_code comp_transport ON company.intrastat_transport_mode_id = comp_transport.id
                 LEFT JOIN res_country product_country ON product_country.id = account_move_line.intrastat_product_origin_country_id
                 LEFT JOIN res_country partner_country ON partner.country_id = partner_country.id AND partner_country.intrastat IS TRUE
-                LEFT JOIN uom_uom ref_weight_uom on ref_weight_uom.category_id = %(weight_category_id)s and ref_weight_uom.uom_type = 'reference'
                 LEFT JOIN res_currency invoice_currency ON invoice_currency.id = account_move.currency_id
             WHERE
                 %(search_condition)s
                 AND account_move_line.display_type = 'product'
                 AND (account_move_line.price_subtotal != 0 OR account_move_line.price_unit * account_move_line.quantity != 0)
                 AND (company_country.id != country.id OR country.id IS NULL)
-                AND ref_weight_uom.active
                 %(product_type_condition)s
                 %(vat_condition)s
                 %(country_condition)s
@@ -380,7 +378,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
             table_references=report_query.from_clause,
             currency_table_join=report._currency_table_aml_join(options),
             country_table_join=query_params['country_table_join'],
-            weight_category_id=self.env['ir.model.data']._xmlid_to_res_id('uom.product_uom_categ_kgm'),
+            weight_rounding=self.env['decimal.precision'].precision_get('Stock Weight'),
             # where
             search_condition=report_query.where_clause,
             product_type_condition=query_params['product_type_condition'],
@@ -411,9 +409,14 @@ class IntrastatReportCustomHandler(models.AbstractModel):
             }
         }
 
-    def _intrastat_groupby_label_builder(self, grouping_key):
-        parsed_key = loads(grouping_key)
-        return f"{parsed_key['intrastat_type']} - {parsed_key['partner_vat']} - {parsed_key['commodity_code']} - {parsed_key['country_code']}"
+    def _intrastat_groupby_label_builder(self, grouping_keys):
+        keys_names_in_sequence = {}
+
+        for grouping_key in sorted(grouping_keys):
+            parsed_key = loads(grouping_key)
+            keys_names_in_sequence[grouping_key] = f"{parsed_key['intrastat_type']} - {parsed_key['partner_vat']} - {parsed_key['commodity_code']} - {parsed_key['country_code']}"
+
+        return keys_names_in_sequence
 
     def _build_intrastat_custom_domain_blocks(self, grouping_key_dict):
         """
@@ -510,7 +513,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
     def _get_export_groupby_clause(self):
         return SQL("""country.id, transaction.id, company_region.id, code.id, inv_incoterm.id, comp_incoterm.id,
              inv_transport.id, comp_transport.id, product_country.id, account_move_line.id, account_move.id,
-             inv_line_uom.factor, prod_uom.id, ref_weight_uom.rounding, partner.id, prod.id, prodt.id, account_move_line.date, account_move_line.move_name""")
+             inv_line_uom.factor, prod_uom.id, partner.id, prod.id, prodt.id""")
 
     ####################################################
     # ACTIONS
@@ -652,3 +655,35 @@ class IntrastatReportCustomHandler(models.AbstractModel):
             raise UserError(_('The date range must be a full month or a full quarter.'))
 
         return True
+
+
+class AccountIntrastatGoodsReportHandler(models.AbstractModel):
+    _name = 'account.intrastat.goods.report.handler'
+    _inherit = 'account.intrastat.report.handler'
+    _description = 'Intrastat Goods Report Custom Handler'
+
+    def _get_intrastat_report_query(self, report, options, current_groupby, query_params=None, offset=None, limit=None, warnings=None, order_by=True):
+        query_params = {
+            **(query_params or {}),
+            'product_type_condition': (
+                SQL("AND prodt.type != 'service'")
+                if options.get('export_mode') == 'file'
+                else SQL("AND (account_move_line.product_id IS NULL OR prodt.type != 'service')")
+            ),
+            'commodity_warning_suffix': SQL('goods'),
+        }
+        return super()._get_intrastat_report_query(report, options, current_groupby, query_params, offset, limit, warnings, order_by)
+
+
+class AccountIntrastatServicesReportHandler(models.AbstractModel):
+    _name = 'account.intrastat.services.report.handler'
+    _inherit = 'account.intrastat.report.handler'
+    _description = 'Intrastat Services Report Custom Handler'
+
+    def _get_intrastat_report_query(self, report, options, current_groupby, query_params=None, offset=None, limit=None, warnings=None, order_by=True):
+        query_params = {
+            **(query_params or {}),
+            'product_type_condition': SQL("AND prodt.type = 'service'"),
+            'commodity_warning_suffix': SQL('services'),
+        }
+        return super()._get_intrastat_report_query(report, options, current_groupby, query_params, offset, limit, warnings, order_by)

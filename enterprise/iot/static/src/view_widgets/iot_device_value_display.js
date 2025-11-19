@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from '@web/core/registry';
 import { useIotDevice } from '../iot_device_hook';
 import { Component, useState } from "@odoo/owl";
@@ -15,6 +13,7 @@ export class IoTDeviceValueDisplay extends Component {
         useIotDevice({
             getIotIp: () => this.props.record.data.iot_ip,
             getIdentifier: () => this.props.record.data.identifier,
+            getLongpollingHasFallback: () => true, // avoid error notification when the longpolling fails
             onValueChange: (data) => {
                 this.state.value = data.value;
             },

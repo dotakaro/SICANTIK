@@ -7,7 +7,7 @@ from odoo import api, models
 from odoo.tools import float_round, SQL
 
 
-class MrpCostStructure(models.AbstractModel):
+class ReportMrp_Account_EnterpriseMrp_Cost_Structure(models.AbstractModel):
     _name = 'report.mrp_account_enterprise.mrp_cost_structure'
     _description = 'MRP Cost Structure Report'
 
@@ -157,7 +157,7 @@ class MrpCostStructure(models.AbstractModel):
                     currency_table=currency_table,
                     workorder_ids=tuple(Workorders.ids))
         self.env.cr.execute(query)
-        for mo_id, dummy_wo_id, op_id, wo_name, wc_name, duration, cost_hour, currency_rate in self.env.cr.fetchall():
+        for mo_id, _wo_id, op_id, wo_name, wc_name, duration, cost_hour, currency_rate in self.env.cr.fetchall():
             cost = duration / 60.0 * cost_hour * currency_rate
             total_cost_by_mo[mo_id] += cost
             operation_cost_by_mo[mo_id] += cost
@@ -167,7 +167,7 @@ class MrpCostStructure(models.AbstractModel):
         return total_cost_operations
 
 
-class ProductTemplateCostStructure(models.AbstractModel):
+class ReportMrp_Account_EnterpriseProduct_Template_Cost_Structure(models.AbstractModel):
     _name = 'report.mrp_account_enterprise.product_template_cost_structure'
     _description = 'Product Template Cost Structure Report'
 

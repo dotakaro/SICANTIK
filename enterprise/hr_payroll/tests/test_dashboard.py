@@ -27,13 +27,13 @@ class TestDashboardUi(HttpCase):
             groups="base.group_user,hr_payroll.group_hr_payroll_manager",
             company_id=company.id)
         if self.env.ref('sign.group_sign_manager', raise_if_not_found=False):
-            user.groups_id += self.env.ref('sign.group_sign_manager', raise_if_not_found=False)
+            user.group_ids += self.env.ref('sign.group_sign_manager', raise_if_not_found=False)
         department = self.env['hr.department'].create({
             'name': 'Payroll',
             'company_id': company.id,
         })
         # this will make one of the action box non empty
-        employee = self.env['hr.employee'].create({
+        self.env['hr.employee'].create({
             'user_id': user.id,
             'company_id': company.id,
             'department_id': department.id,
@@ -41,7 +41,7 @@ class TestDashboardUi(HttpCase):
         })
         # The test will break if sign is installed
         if self.env['ir.module.module'].search([('name', '=', 'sign'), ('state', '=', 'installed')]):
-            user.groups_id += self.env.ref('sign.group_sign_manager', raise_if_not_found=False)
+            user.group_ids += self.env.ref('sign.group_sign_manager', raise_if_not_found=False)
             with file_open('sign/static/demo/employment.pdf', "rb") as f:
                 pdf_content = base64.b64encode(f.read())
 
@@ -50,44 +50,13 @@ class TestDashboardUi(HttpCase):
                 'datas': pdf_content,
                 'name': 'Employment Contract.pdf',
             })
-            self.env['sign.template'].with_user(user).create({
-                'attachment_id': attachment.id,
-                'sign_item_ids': [(6, 0, [])],
+            template = self.env['sign.template'].with_user(user).create({
+                'name': 'Employment Contract',
             })
-
-        warnings = self.env['hr.payslip'].get_dashboard_warnings()
-        emp_wo_contract_warn = {}
-        for warning in warnings:
-            if warning['string'] == "Employees Without Running Contracts":
-                emp_wo_contract_warn = warning
-                break
-        self.assertTrue(emp_wo_contract_warn, "There should be a warning for employees without contracts")
-        emp_wo_contract = self.env['hr.employee'].search(emp_wo_contract_warn['action']['domain'])
-        self.assertTrue(
-            employee in emp_wo_contract,
-            "Laurie Poiret should appear in the list of employees without contract")
-
-        self.env['hr.contract'].create([{
-            'name': "Laurie's contract",
-            'employee_id': employee.id,
-            'state': 'open',
-            'hr_responsible_id': self.env.user.id,
-            'wage': 2000,
-        }])
-
-        warnings = self.env['hr.payslip'].get_dashboard_warnings()
-        emp_wo_contract_warn = {}
-        for warning in warnings:
-            if warning['string'] == "Employees Without Running Contracts":
-                emp_wo_contract_warn = warning
-                break
-        # Conditional checking as the warning might not be there depending on how other data are handled
-        if warning:
-            emp_wo_contract = self.env['hr.employee'].search(emp_wo_contract_warn['action']['domain'])
-            self.assertFalse(
-                employee in emp_wo_contract,
-                "Laurie Poiret should not appear in the list of employees without contract")
-
+            self.env['sign.document'].with_user(user).create({
+                'attachment_id': attachment.id,
+                'template_id': template.id,
+            })
         self.start_tour("/web", "payroll_dashboard_ui_tour", login='dashboarder', timeout=300)
 
 @tagged('-at_install', 'post_install', 'payroll_dashboard')
@@ -168,40 +137,32 @@ class TestDashboard(TransactionCase):
 
     def _test_dashboard_stats(self):
         # Tests that the result inside of the stats dashboard is somewhat coherent
-        emp_1, emp_2, emp_3 = self.env['hr.employee'].create([
-            {'name': 'Employee 1', 'company_id': self.company.id},
-            {'name': 'Employee 2', 'company_id': self.company.id},
-            {'name': 'Employee 3', 'company_id': self.company.id}
-        ])
         today = date.today()
-        self.env['hr.contract'].create([
-            {
-                'name': 'Contract 1',
-                'employee_id': emp_1.id,
-                'date_start': today - relativedelta(months=1, day=1),
-                'state': 'open',
-                'wage': 1000,
-                'company_id': self.company.id,
-            },
-            {
-                'name': 'Contract 2',
-                'employee_id': emp_2.id,
-                'date_start': today - relativedelta(day=1),
-                'state': 'open',
-                'wage': 2000,
-                'company_id': self.company.id,
-            },
-            {
-                'name': 'Contract 3',
-                'employee_id': emp_3.id,
-                'date_start': today + relativedelta(months=1, day=1),
-                'state': 'open',
-                'wage': 4500,
-                'company_id': self.company.id,
-            }
-        ])
+        self.env['hr.employee'].create([{
+            'name': 'Employee 1',
+            'company_id': self.company.id,
+            'date_version': today - relativedelta(months=1, day=1),
+            'contract_date_start': today - relativedelta(months=1, day=1),
+            'contract_date_end': False,
+            'wage': 1000,
+        }, {
+            'name': 'Employee 2',
+            'company_id': self.company.id,
+            'date_version': today - relativedelta(day=1),
+            'contract_date_start': today - relativedelta(day=1),
+            'contract_date_end': False,
+            'wage': 2000,
+        }, {
+            'name': 'Employee 3',
+            'company_id': self.company.id,
+            'date_version': today + relativedelta(months=1, day=1),
+            'contract_date_start': today + relativedelta(months=1, day=1),
+            'contract_date_end': False,
+            'wage': 4500,
+        }])
+
         self.env['hr.employee'].flush_model()
-        self.env['hr.contract'].flush_model()
+        self.env['hr.version'].flush_model()
 
         dashboard = self.env['hr.payslip'].with_user(self.user).get_payroll_dashboard_data(sections=['stats'])
         # Identify the different sections

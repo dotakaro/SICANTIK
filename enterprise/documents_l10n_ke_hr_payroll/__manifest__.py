@@ -3,6 +3,7 @@
 {
     'name': 'Documents - Kenyan Payroll',
     'version': '1.0',
+    'countries': ['ke'],
     'category': 'Human Resources/Payroll',
     'summary': 'Store employee tax deduction card forms in the Document app',
     'description': """
@@ -15,5 +16,6 @@ Employee Tax Deduction Card forms will be automatically integrated to the Docume
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

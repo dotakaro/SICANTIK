@@ -15,6 +15,7 @@ from odoo.tools.date_utils import end_of
 DAYS_PER_MONTH = 30
 DAYS_PER_YEAR = DAYS_PER_MONTH * 12
 
+
 class AccountAsset(models.Model):
     _name = 'account.asset'
     _description = 'Asset/Revenue Recognition'
@@ -95,14 +96,14 @@ class AccountAsset(models.Model):
         comodel_name='account.account',
         string='Depreciation Account',
         check_company=True,
-        domain="[('account_type', 'not in', ('asset_receivable', 'liability_payable', 'asset_cash', 'liability_credit_card', 'off_balance')), ('deprecated', '=', False)]",
+        domain="[('account_type', 'not in', ('asset_receivable', 'liability_payable', 'asset_cash', 'liability_credit_card', 'off_balance'))]",
         help="Account used in the depreciation entries, to decrease the asset value."
     )
     account_depreciation_expense_id = fields.Many2one(
         comodel_name='account.account',
         string='Expense Account',
         check_company=True,
-        domain="[('account_type', 'not in', ('asset_receivable', 'liability_payable', 'asset_cash', 'liability_credit_card', 'off_balance')), ('deprecated', '=', False)]",
+        domain="[('account_type', 'not in', ('asset_receivable', 'liability_payable', 'asset_cash', 'liability_credit_card', 'off_balance'))]",
         help="Account used in the periodical entries, to record a part of the asset as expense.",
     )
 
@@ -150,7 +151,7 @@ class AccountAsset(models.Model):
     display_account_asset_id = fields.Boolean(compute="_compute_display_account_asset_id")
 
     # Capital gain
-    parent_id = fields.Many2one('account.asset', help="An asset has a parent when it is the result of gaining value")
+    parent_id = fields.Many2one('account.asset', index=True, help="An asset has a parent when it is the result of gaining value")
     children_ids = fields.One2many('account.asset', 'parent_id', help="The children are the gains in value of this asset")
 
     # Adapt for import fields

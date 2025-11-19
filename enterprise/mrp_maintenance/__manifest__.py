@@ -4,7 +4,7 @@
 {
     'name': 'Maintenance - MRP',
     'version': '1.0',
-    'category': 'Manufacturing/Manufacturing',
+    'category': 'Supply Chain/Manufacturing',
     'summary': 'Schedule and manage maintenance on machine and tools.',
     'website': 'https://www.odoo.com/app/maintenance',
     'description': """
@@ -16,7 +16,7 @@ Maintenance in MRP
 * Equipment related to workcenters
 * MTBF, MTTR, ...
 """,
-    'depends': ['mrp_workorder', 'maintenance'],
+    'depends': ['mrp_workorder', 'stock_maintenance'],
     'data': [
         'data/mrp_maintenance_data.xml',
         'views/maintenance_views.xml',
@@ -30,5 +30,6 @@ Maintenance in MRP
         ],
     },
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

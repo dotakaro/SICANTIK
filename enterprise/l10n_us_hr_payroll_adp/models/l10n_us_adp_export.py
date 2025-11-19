@@ -96,12 +96,12 @@ class L10nUsAdpExport(models.Model):
             else:
                 adp.warning_message = False
 
-    def _get_grouped_regular_overtime_hours(self, regular_work_entry_type_ids, overtime_work_entry_type_ids):
+    def _get_grouped_regular_overtime_hours(self, regular_work_entry_type_ids, work_entry_type_overtime_ids):
         self.env.cr.execute(f'''
             SELECT w_e_g.e_id,
             CASE
                WHEN w_e_g.w_e_t_id IN {tuple(regular_work_entry_type_ids)} THEN '_regular'
-               WHEN w_e_g.w_e_t_id = {overtime_work_entry_type_ids} THEN '_overtime'
+               WHEN w_e_g.w_e_t_id = {work_entry_type_overtime_ids} THEN '_overtime'
                ELSE w_e_g.external_code
             END
             AS e_code,
@@ -133,8 +133,8 @@ class L10nUsAdpExport(models.Model):
         batch_description = self.batch_description or ""
 
         regular_work_entries = self.env.ref('hr_work_entry.work_entry_type_attendance')
-        regular_work_entries |= self.env.ref('hr_work_entry_contract.work_entry_type_home_working')
-        overtime_work_entries = self.env.ref('hr_work_entry.overtime_work_entry_type')
+        regular_work_entries |= self.env.ref('hr_work_entry.work_entry_type_home_working')
+        overtime_work_entries = self.env.ref('hr_work_entry.work_entry_type_overtime')
 
         grouped_work_entries = self._get_grouped_regular_overtime_hours(regular_work_entries.ids, overtime_work_entries.id)
 
@@ -153,8 +153,8 @@ class L10nUsAdpExport(models.Model):
         employees = self.work_entry_ids.mapped('employee_id')
 
         for emp in employees:
-            employee_info[emp.id]['Rate'] = emp.contract_id.hourly_wage if emp.contract_id.wage_type == 'hourly' else emp.contract_id.wage
-            employee_info[emp.id]['is_monthly'] = emp.contract_id.wage_type == 'monthly'
+            employee_info[emp.id]['Rate'] = emp.version_id.hourly_wage if emp.version_id.wage_type == 'hourly' else emp.version_id.wage
+            employee_info[emp.id]['is_monthly'] = emp.version_id.wage_type == 'monthly'
             employee_info[emp.id]['Employee Name'] = emp.name
             employee_info[emp.id]['File  #'] = emp.l10n_us_adp_code
 

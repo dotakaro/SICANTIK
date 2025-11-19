@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { CalendarCommonPopover } from "@web/views/calendar/calendar_common/calendar_common_popover";
 import { CalendarCommonRenderer } from "@web/views/calendar/calendar_common/calendar_common_renderer";
@@ -20,6 +18,16 @@ export class KnowledgeArticleItemsCalendarController extends CalendarController 
         if (!("isEmbeddedReadonly" in this.env) || this.env.isEmbeddedReadonly) {
             this.model.meta.canCreate = false;
         }
+        // Set model meta variables to make the model work with the properties
+        if (this.props.itemCalendarProps) {
+            this.updateModel(this.props.itemCalendarProps);
+            this.state.isWeekendVisible =
+                this.props.itemCalendarProps.showWeekEnds ?? this.state.isWeekendVisible;
+        } else {
+            this.state.missingConfiguration = true;
+            this.model.meta.invalid = true;
+        }
+
         onMounted(async () => {
             // Show error message if the start date property is invalid (if it
             // has been deleted or its type changed)
@@ -71,13 +79,13 @@ export class KnowledgeArticleItemsCalendarController extends CalendarController 
                 const rawRecord = this.model.buildRawRecord(record);
                 Object.assign(createValues, rawRecord);
             }
-            const articleId = await this.orm.call(
+            const articleIds = await this.orm.call(
                 "knowledge.article",
                 "article_create",
                 [],
                 createValues
             );
-            this.selectRecord(articleId);
+            this.selectRecord(articleIds[0]);
         }
     }
 
@@ -107,20 +115,6 @@ export class KnowledgeArticleItemsCalendarController extends CalendarController 
      */
     editRecord(record) {
         this.selectRecord(record.id);
-    }
-
-    /**
-     * Set model meta variables to make the model work with the properties
-     */
-    onWillStartModel() {
-        if (this.props.itemCalendarProps) {
-            this.updateModel(this.props.itemCalendarProps);
-            this.state.isWeekendVisible =
-                this.props.itemCalendarProps.showWeekEnds ?? this.state.isWeekendVisible;
-        } else {
-            this.state.missingConfiguration = true;
-            this.model.meta.invalid = true;
-        }
     }
 
     /**

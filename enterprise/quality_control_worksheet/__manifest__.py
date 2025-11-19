@@ -4,7 +4,7 @@
 {
     'name': 'Worksheet for Quality Control',
     'version': '1.0',
-    'category': 'Manufacturing/Quality',
+    'category': 'Supply Chain/Quality',
     'summary': 'Create custom worksheet for quality control',
     'depends': ['quality_control', 'worksheet'],
     'description': """
@@ -21,6 +21,7 @@ Create customizable worksheet for Quality Control.
     "demo": [
         'data/quality_worksheet_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

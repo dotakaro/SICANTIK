@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from "@odoo/hoot";
-import { click, edit, press, queryAll } from "@odoo/hoot-dom";
+import { click, edit, press } from "@odoo/hoot-dom";
+import { animationFrame } from "@odoo/hoot-mock";
 
 import { contains, mailModels } from "@mail/../tests/mail_test_helpers";
 import { ProjectProject, defineProjectModels } from "@project/../tests/project_models";
@@ -25,7 +26,7 @@ beforeEach(() => {
             id: 1,
             name: "Task 1",
             planned_date_begin: "2019-03-12 06:30:00",
-            planned_date_end: "2019-03-12 12:30:00",
+            date_deadline: "2019-03-12 12:30:00",
             project_id: 1,
             user_ids: [1],
             planning_overlap: "Task 1 has 1 tasks at the same time.",
@@ -34,7 +35,7 @@ beforeEach(() => {
             id: 2,
             name: "Task 2",
             planned_date_begin: "2019-03-12 06:30:00",
-            planned_date_end: "2019-03-12 12:30:00",
+            date_deadline: "2019-03-12 12:30:00",
             project_id: 1,
             user_ids: [1],
             planning_overlap: "Task 2 has 1 tasks at the same time.",
@@ -43,7 +44,7 @@ beforeEach(() => {
             id: 3,
             name: "Task 3",
             planned_date_begin: "2019-03-11 10:30:00",
-            planned_date_end: "2019-03-11 12:30:00",
+            date_deadline: "2019-03-11 12:30:00",
             project_id: 1,
             user_ids: [2],
         },
@@ -51,7 +52,7 @@ beforeEach(() => {
             id: 4,
             name: "Task 4",
             planned_date_begin: "2019-03-14 10:30:00",
-            planned_date_end: "2019-03-14 12:30:00",
+            date_deadline: "2019-03-14 12:30:00",
             project_id: 2,
             user_ids: [2],
         },
@@ -59,25 +60,19 @@ beforeEach(() => {
             id: 5,
             name: "Task 5",
             planned_date_begin: "2019-03-13 10:30:00",
-            planned_date_end: "2019-03-13 12:30:00",
+            date_deadline: "2019-03-13 12:30:00",
             project_id: 2,
         },
     ];
 });
 
 test("Unassigned tasks will show when search for assignee", async () => {
-    onRpc(async (args) => {
-        if (args.method === "get_all_deadlines") {
-            return { milestone_id: [], project_id: [1, "Project 1"] };
-        } else if (args.method === "get_gantt_data") {
-            const domain = (args.kwargs.domain || []).map((d) => {
-                if (d instanceof Array && d.length === 3 && d[0] === "user_ids.name") {
-                    return ["user_ids", "=", 1];
-                }
-                return d;
-            });
-            args.kwargs.domain = domain;
-        }
+    onRpc("project.task", "get_gantt_data", ({ kwargs }) => {
+        kwargs.domain = (kwargs.domain || []).map((d) =>
+            Array.isArray(d) && d.length === 3 && d[0] === "user_ids.name"
+                ? ["user_ids", "=", 1]
+                : d
+        );
     });
 
     await mountGanttView({
@@ -87,7 +82,7 @@ test("Unassigned tasks will show when search for assignee", async () => {
             <gantt
                 js_class="task_gantt"
                 date_start="planned_date_begin"
-                date_stop="planned_date_end"
+                date_stop="date_deadline"
                 default_scale="week"
             />
         `,
@@ -102,37 +97,82 @@ test("Unassigned tasks will show when search for assignee", async () => {
     expect(getGridContent().rows).toEqual([
         {
             title: "👤 Unassigned",
-            pills: [{ title: "Task 5", level: 0, colSpan: "13 W11 2019 -> 13 W11 2019" }],
+            pills: [
+                {
+                    title: "Task 5",
+                    level: 0,
+                    colSpan:
+                        "Wednesday 13 Week 11, Mar 10 - Mar 16 -> Wednesday 13 Week 11, Mar 10 - Mar 16",
+                },
+            ],
         },
         {
             title: "User1",
             pills: [
-                { title: "Task 1", level: 0, colSpan: "12 W11 2019 -> 12 W11 2019" },
-                { title: "Task 2", level: 1, colSpan: "12 W11 2019 -> 12 W11 2019" },
+                {
+                    title: "Task 1",
+                    level: 0,
+                    colSpan:
+                        "Tuesday 12 Week 11, Mar 10 - Mar 16 -> Tuesday 12 Week 11, Mar 10 - Mar 16",
+                },
+                {
+                    title: "Task 2",
+                    level: 1,
+                    colSpan:
+                        "Tuesday 12 Week 11, Mar 10 - Mar 16 -> Tuesday 12 Week 11, Mar 10 - Mar 16",
+                },
             ],
         },
         {
             title: "User2",
             pills: [
-                { title: "Task 3", level: 0, colSpan: "11 W11 2019 -> 11 W11 2019" },
-                { title: "Task 4", level: 0, colSpan: "14 W11 2019 -> 14 W11 2019" },
+                {
+                    title: "Task 3",
+                    level: 0,
+                    colSpan:
+                        "Monday 11 Week 11, Mar 10 - Mar 16 -> Monday 11 Week 11, Mar 10 - Mar 16",
+                },
+                {
+                    title: "Task 4",
+                    level: 0,
+                    colSpan:
+                        "Thursday 14 Week 11, Mar 10 - Mar 16 -> Thursday 14 Week 11, Mar 10 - Mar 16",
+                },
             ],
         },
     ]);
     await click(".o_searchview_input");
     await edit("User1");
+    await animationFrame();
     await press("Enter");
     await contains(".o_gantt_row_title", { count: 2 });
     expect(getGridContent().rows).toEqual([
         {
             title: "👤 Unassigned",
-            pills: [{ title: "Task 5", level: 0, colSpan: "13 W11 2019 -> 13 W11 2019" }],
+            pills: [
+                {
+                    title: "Task 5",
+                    level: 0,
+                    colSpan:
+                        "Wednesday 13 Week 11, Mar 10 - Mar 16 -> Wednesday 13 Week 11, Mar 10 - Mar 16",
+                },
+            ],
         },
         {
             title: "User1",
             pills: [
-                { title: "Task 1", level: 0, colSpan: "12 W11 2019 -> 12 W11 2019" },
-                { title: "Task 2", level: 1, colSpan: "12 W11 2019 -> 12 W11 2019" },
+                {
+                    title: "Task 1",
+                    level: 0,
+                    colSpan:
+                        "Tuesday 12 Week 11, Mar 10 - Mar 16 -> Tuesday 12 Week 11, Mar 10 - Mar 16",
+                },
+                {
+                    title: "Task 2",
+                    level: 1,
+                    colSpan:
+                        "Tuesday 12 Week 11, Mar 10 - Mar 16 -> Tuesday 12 Week 11, Mar 10 - Mar 16",
+                },
             ],
         },
     ]);
@@ -149,12 +189,6 @@ test("Tasks in conflicting are highlighted, while non-conflicting tasks are in m
         `,
     };
 
-    onRpc(async (args) => {
-        if (args.method === "get_all_deadlines") {
-            return { milestone_id: [], project_id: [1, "Project 1"] };
-        }
-    });
-
     await mountGanttView({
         resModel: "project.task",
         type: "gantt",
@@ -162,7 +196,7 @@ test("Tasks in conflicting are highlighted, while non-conflicting tasks are in m
             <gantt
                 js_class="task_gantt"
                 date_start="planned_date_begin"
-                date_stop="planned_date_end"
+                date_stop="date_deadline"
                 default_scale="week"
             />
         `,
@@ -177,8 +211,8 @@ test("Tasks in conflicting are highlighted, while non-conflicting tasks are in m
 
     await contains(".o_gantt_pill", { count: 5 });
     await contains(".o_gantt_pill[class*='opacity-25']", { count: 3 });
-    expect(queryAll(".o_gantt_pill.opacity-25")).toHaveText(/Task (5|3|4)/i);
-    expect(queryAll(".o_gantt_pill:not(.opacity-25)")).toHaveText(/Task (1|2)/i);
+    expect(".o_gantt_pill.opacity-25").toHaveText(/Task (5|3|4)/i);
+    expect(".o_gantt_pill:not(.opacity-25)").toHaveText(/Task (1|2)/i);
     removeFacet("Tasks in Conflict");
     await contains(".o_gantt_pill", { count: 5 });
     await contains(".o_gantt_pill[class*='opacity-25']", { count: 0 });

@@ -6,12 +6,12 @@ import { _t } from "@web/core/l10n/translation";
 
 const { toXC, createActions } = helpers;
 const { useStore } = stores;
-const { Menu, Section } = components;
+const { MenuPopover, Section } = components;
 
 export class CommentThreadsSidePanel extends Component {
-    static template = "documents_spreadsheet.CommentThreadsSidePanel";
+    static template = "spreadsheet_edition.CommentThreadsSidePanel";
     static props = { onCloseSidePanel: Function };
-    static components = { CellThread, Menu, Section };
+    static components = { CellThread, MenuPopover, Section };
 
     setup() {
         this.state = useState({
@@ -86,9 +86,8 @@ export class CommentThreadsSidePanel extends Component {
 
     openMenu(ev, threadId) {
         this.selectThread(threadId);
-        const { x, y, height } = ev.target.getBoundingClientRect();
         this.menuState.isOpen = true;
-        this.menuState.position = { x, y: y + height };
+        this.menuState.anchorRect = ev.target.getBoundingClientRect();
         this.menuState.threadId = threadId;
     }
 

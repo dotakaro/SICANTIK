@@ -20,7 +20,7 @@ except ImportError:
     service_account = None
 
 
-class SocialAccountPushNotifications(models.Model):
+class SocialAccount(models.Model):
     _inherit = 'social.account'
 
     website_id = fields.Many2one('website', string="Website",
@@ -28,6 +28,7 @@ class SocialAccountPushNotifications(models.Model):
     firebase_use_own_account = fields.Boolean('Use your own Firebase account', related='website_id.firebase_use_own_account')
     firebase_project_id = fields.Char('Firebase Project ID', related='website_id.firebase_project_id')
     firebase_web_api_key = fields.Char('Firebase Web API Key', related='website_id.firebase_web_api_key')
+    firebase_web_app_id = fields.Char('Firebase Web App ID', related='website_id.firebase_web_app_id')
     firebase_push_certificate_key = fields.Char('Firebase Push Certificate Key', related='website_id.firebase_push_certificate_key')
     firebase_sender_id = fields.Char('Firebase Sender ID', related='website_id.firebase_sender_id')
     firebase_admin_key_file = fields.Binary('Firebase Admin Key File', related='website_id.firebase_admin_key_file')
@@ -37,7 +38,10 @@ class SocialAccountPushNotifications(models.Model):
     notification_request_delay = fields.Integer('Notification Request Delay (seconds)', related='website_id.notification_request_delay')
     notification_request_icon = fields.Binary("Notification Request Icon", related='website_id.notification_request_icon')
 
-    _sql_constraints = [('website_unique', 'unique(website_id)', 'There is already a configuration for this website.')]
+    _website_unique = models.Constraint(
+        'unique(website_id)',
+        "There is already a configuration for this website.",
+    )
 
     @api.ondelete(at_uninstall=False)
     def _unlink_except_push_notification_account(self):

@@ -1,6 +1,6 @@
 {
     'name': 'Stock Barcode - Barcode Lookup',
-    'category': 'Inventory/Inventory',
+    'category': 'Supply Chain/Inventory',
     'description': """
         This module allows you to create products from barcode using Barcode Lookup API Key
         if the product doesn't exists, inside barcode application.
@@ -18,5 +18,6 @@
             'stock_barcode_barcodelookup/static/tests/tours/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

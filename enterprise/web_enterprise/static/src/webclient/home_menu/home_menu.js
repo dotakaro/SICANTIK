@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { hasTouch, isIosApp, isMacOS } from "@web/core/browser/feature_detection";
 import { useHotkey } from "@web/core/hotkeys/hotkey_hook";
 import { user } from "@web/core/user";
@@ -93,7 +91,7 @@ export class HomeMenu extends Component {
         this.command = useService("command");
         this.menus = useService("menu");
         this.homeMenuService = useService("home_menu");
-        this.subscription = useState(useService("enterprise_subscription"));
+        this.subscription = useService("enterprise_subscription");
         this.ui = useService("ui");
         this.state = useState({
             focusedIndex: null,

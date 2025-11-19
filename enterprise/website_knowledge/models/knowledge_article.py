@@ -11,7 +11,7 @@ from odoo.osv import expression
 from odoo.tools import is_html_empty
 
 
-class Article(models.Model):
+class KnowledgeArticle(models.Model):
     _name = 'knowledge.article'
     _inherit = ['knowledge.article', 'website.published.mixin', 'website.searchable.mixin']
 
@@ -109,6 +109,6 @@ class Article(models.Model):
             'search_fields': ['name', 'body'],
             'fetch_fields': ['id', 'name', 'body', 'website_url'],
             'mapping': mapping,
-            'icon': 'fa-comment-o',
+            'icon': 'fa-book',
             'order': order,
         }

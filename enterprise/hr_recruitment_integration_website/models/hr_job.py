@@ -10,7 +10,7 @@ from odoo.addons.iap.tools import iap_tools
 DEFAULT_OLG_ENDPOINT = 'https://olg.api.odoo.com'
 
 
-class Job(models.Model):
+class HrJob(models.Model):
     _inherit = 'hr.job'
 
     def _get_plain_text_description(self):
@@ -38,8 +38,6 @@ It's your last chance to make a good impression and attract the best candidates 
 Here is the data to generate the job description:
 ''')
         prompt = recruiter_ai_prompt + self._get_plain_text_description()
-        if not self.is_published:
-            raise UserError(_('You can only generate a post for a published job offer.'))
         try:
             IrConfigParameter = self.env['ir.config_parameter'].sudo()
             olg_api_endpoint = IrConfigParameter.get_param(

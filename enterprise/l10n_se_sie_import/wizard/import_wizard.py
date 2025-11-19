@@ -57,10 +57,10 @@ def _get_partner_data_from_id(partners_map, partner_id):
     return partners_map["id"].get(partner_id)
 
 
-class SIEExportWizard(models.TransientModel):
+class L10n_SeSieImportWizard(models.TransientModel):
     """ SIE import wizard is the main class to import SIE files. """
 
-    _name = "l10n_se.sie.import.wizard"
+    _name = 'l10n_se.sie.import.wizard'
     _description = "Accounting SIE import wizard"
 
     attachment_id = fields.Binary(string="SIE File", required=True)
@@ -638,7 +638,7 @@ class SIEExportWizard(models.TransientModel):
         :rtype: set
         """
         moves_to_update = self.env['account.move']
-        for move_data, move_id in am_to_update:
+        for _move_data, move_id in am_to_update:
             moves_to_update |= move_id
         # Draft back all moves to update and remove all lines to recreate them properly
         moves_to_update.button_draft()

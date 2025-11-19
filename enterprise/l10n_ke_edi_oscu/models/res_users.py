@@ -4,7 +4,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
-class Users(models.Model):
+class ResUsers(models.Model):
     _inherit = 'res.users'
 
     l10n_ke_oscu_company_ids = fields.One2many('res.company', compute='_compute_l10n_ke_oscu_company_ids')

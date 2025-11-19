@@ -12,7 +12,8 @@ from odoo.tools import file_open
 
 from .easypost_request import EasypostRequest
 
-class DeliverCarrier(models.Model):
+
+class DeliveryCarrier(models.Model):
     _inherit = 'delivery.carrier'
 
     delivery_type = fields.Selection(selection_add=[
@@ -32,13 +33,13 @@ class DeliverCarrier(models.Model):
     easypost_insurance_fee_minimum = fields.Float("Insurance fee minimum (USD)")
 
     def _compute_can_generate_return(self):
-        super(DeliverCarrier, self)._compute_can_generate_return()
+        super()._compute_can_generate_return()
         for carrier in self:
             if carrier.delivery_type == 'easypost':
                 carrier.can_generate_return = True
 
     def _compute_supports_shipping_insurance(self):
-        res = super(DeliverCarrier, self)._compute_supports_shipping_insurance()
+        res = super()._compute_supports_shipping_insurance()
         for carrier in self:
             if carrier.delivery_type == 'easypost':
                 carrier.supports_shipping_insurance = True
@@ -216,8 +217,10 @@ class DeliverCarrier(models.Model):
         json is to replace the static file request by an API request if easypost
         implements a way to do it.
         """
-        packages = json.load(file_open('delivery_easypost/static/data/package_types_by_carriers.json'))
-        services = json.load(file_open('delivery_easypost/static/data/services_by_carriers.json'))
+        with file_open('delivery_easypost/static/data/package_types_by_carriers.json') as f:
+            packages = json.load(f)
+        with file_open('delivery_easypost/static/data/services_by_carriers.json') as f:
+            services = json.load(f)
         return packages, services
 
     @api.onchange('delivery_type')

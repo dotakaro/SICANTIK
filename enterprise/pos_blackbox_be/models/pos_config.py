@@ -5,8 +5,8 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError
 from odoo.exceptions import ValidationError
 from odoo.tools.translate import _
-from odoo.osv.expression import OR
 from odoo.service.common import exp_version
+from uuid import uuid4
 
 
 class PosConfig(models.Model):
@@ -14,7 +14,7 @@ class PosConfig(models.Model):
 
     iface_fiscal_data_module = fields.Many2one(
         "iot.device",
-        domain="[('type', '=', 'fiscal_data_module'), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+        domain=lambda self: ['&', ('type', '=', 'fiscal_data_module'), '|', ('company_id', '=', False), ('company_id', '=', self.env.company.id)],
     )
     certified_blackbox_identifier = fields.Char(
         "Blackbox Identifier",
@@ -54,12 +54,29 @@ class PosConfig(models.Model):
                         'company_id': config.company_id.id,
                     })
 
+    def write(self, vals):
+        if (vals.get('iface_fiscal_data_module') or self.certified_blackbox_identifier):
+            cash_rounding = self._create_default_cashrounding()
+            if cash_rounding:
+                vals['cash_rounding'] = True
+                vals['rounding_method'] = cash_rounding.id
+                vals['only_round_cash_method'] = True
+            vals['iface_print_auto'] = True
+            vals['iface_print_skip_screen'] = True
+        return super().write(vals)
+
     def _check_is_certified_pos(self):
         if self.certified_blackbox_identifier and not self.iface_fiscal_data_module:
             raise UserError(
                 _("Forbidden to start a certified Point of sale without blackbox")
             )
-        config_with_blackbox = self.env['pos.config'].search_count([('certified_blackbox_identifier', '!=', False)], limit=1)
+        config_with_blackbox = self.env['pos.config'].search_count(
+            domain=[
+                    *self.env['account.journal']._check_company_domain(self.company_id),
+                    ('certified_blackbox_identifier', '!=', False),
+                ],
+            limit=1
+        )
         if not self.iface_fiscal_data_module and config_with_blackbox:
             raise UserError(_("You cannot have an uncertified Point of sale with the module pos_blackbox_be installed."))
 
@@ -73,42 +90,26 @@ class PosConfig(models.Model):
     def _action_to_open_ui(self):
         res = super()._action_to_open_ui()
         if self.current_session_id.state == "opened":
-            self.current_session_id._log_ip(None)
+            self.env['pos.blackbox.log.ip']._log_ip(self, None)
         return res
 
     def _check_before_creating_new_session(self):
         self._check_is_certified_pos()
         if self.iface_fiscal_data_module:
-            self._check_self_order()
             self._check_loyalty()
-            self._check_insz_user()
+            res = self._check_insz_user()
+            if res:
+                return res
             self._check_company_address()
             self._check_work_product_taxes_and_categories()
             self._check_employee_insz_or_bis_number()
-            self._check_pos_category()
             self._check_cash_rounding()
             self._check_printer_connected()
-            self._check_floor_plan_ids()
-            self._check_is_table()
         return super()._check_before_creating_new_session()
-
-    def _check_self_order(self):
-        for config in self:
-            if (
-                self.env['ir.module.module'].search([('name', '=', 'pos_self_order'), ('state', '=', 'installed')]) and config.self_ordering_mode not in ['nothing', 'consultation']
-            ):
-                if not config.self_ordering_mode == 'mobile' or (self.env['ir.module.module'].search([('name', '=', 'pos_online_payment_self_order'), ('state', '=', 'installed')]) and config.self_order_online_payment_method_id):
-                    raise UserError(
-                        _(
-                            'Certified blackbox are not compatible with self-ordering with payment ("QR menu + Ordering with Online payment" and "Kiosk") for the moment. Please disable it.'
-                        )
-                    )
 
     def _check_loyalty(self):
         for config in self:
-            if (
-                self.env['ir.module.module'].search([('name', '=', 'pos_loyalty'), ('state', '=', 'installed')]) and config._get_program_ids()
-            ):
+            if self.env['ir.module.module'].search([('name', '=', 'pos_loyalty'), ('state', '=', 'installed')]) and len(config._get_program_ids().filtered(lambda p: p.company_id == config.company_id)) > 0:
                 raise UserError(
                     _(
                         "Loyalty programs and gift card cannot be used on a PoS associated with a blackbox."
@@ -124,7 +125,7 @@ class PosConfig(models.Model):
                 )
             if (
                 not work_product.taxes_id
-                or work_product.taxes_id.amount != 0
+                or any(t.amount != 0 for t in work_product.taxes_id)
             ):
                 raise ValidationError(
                     _("The WORK IN/OUT products must have a taxes with 0%.")
@@ -140,7 +141,15 @@ class PosConfig(models.Model):
 
     def _check_insz_user(self):
         if not self.env.user.insz_or_bis_number:
-            raise ValidationError(_("The user must have a INSZ or BIS number."))
+            action = self.env['ir.actions.actions']._for_xml_id('base.action_res_users')
+            action['res_id'] = self.env.user.id
+            action['views'] = [[self.env.ref('base.view_users_form').id, 'form']]
+            action['target'] = 'new'
+            action['context'] = {
+                'insz_required': True,
+            }
+            return action
+        return False
 
     def _check_company_address(self):
         if not self.company_id.street:
@@ -148,52 +157,21 @@ class PosConfig(models.Model):
         if not self.company_id.company_registry:
             raise ValidationError(_("The VAT number of the company must be filled."))
 
-    def _check_pos_category(self):
-        if self.limit_categories:
-            if (
-                self.env.ref("pos_blackbox_be.pos_category_fdm").id
-                not in self.iface_available_categ_ids.ids
-            ):
-                raise ValidationError(
-                    _(
-                        "You have to add the fiscal category to the limited category in order to use the fiscal data module"
-                    )
-                )
-
-    def _check_is_table(self):
-        if self.iface_fiscal_data_module and self.module_pos_restaurant:
-            if not self.floor_ids:
-                raise ValidationError(_("You must link at least 1 floor to the configuration in order to use the fiscal data module."))
-            for floor in self.floor_ids:
-                if floor.table_ids:
-                    return
-            raise ValidationError(_("You must link at least 1 table to the configuration in order to use the fiscal data module."))
-
     @api.constrains("iface_fiscal_data_module", "fiscal_position_ids")
     def _check_posbox_fp_tax_code(self):
         invalid_tax_lines = [
-            (fp.name, tax_line.tax_dest_id.name)
+            (fp.name, tax.name)
             for config in self
             for fp in config.fiscal_position_ids
-            for tax_line in fp.tax_ids
+            for tax in fp.tax_ids
             if (
-                    tax_line.tax_src_id.tax_group_id.pos_receipt_label
-                    and not tax_line.tax_dest_id.tax_group_id.pos_receipt_label
+                not tax.tax_group_id.pos_receipt_label
+                and any(tax.original_tax_ids.tax_group_id.mapped('pos_receipt_label'))
             )
         ]
 
         if invalid_tax_lines:
-            raise ValidationError(
-                "Fiscal Position %s (tax %s) has an invalid tax amount. Only 21%%, 12%%, 6%% and 0%% are allowed." %
-                invalid_tax_lines[0]
-            )
-
-    @api.constrains('iface_fiscal_data_module', 'floor_ids')
-    def _check_floor_plan_ids(self):
-        if self.iface_fiscal_data_module and self.floor_ids:
-            for floor in self.floor_ids:
-                if len(floor.pos_config_ids) > 1:
-                    raise ValidationError("Floor plans cannot be shared in different POS configurations when using the Blackbox module.")
+            raise ValidationError(_("Fiscal Position %(fp_name)s (tax %(tax_dest_name)s) has an invalid tax amount. Only 21%%, 12%%, 6%% and 0%% are allowed.", fp_name=invalid_tax_lines[0][0], tax_dest_name=invalid_tax_lines[0][1]))
 
     def _check_employee_insz_or_bis_number(self):
         for config in self:
@@ -203,19 +181,20 @@ class PosConfig(models.Model):
 
                 if len(emp_names) > 0:
                     raise ValidationError(
-                        _("%s must have an INSZ or BIS number.", ", ".join(emp_names))
+                        _("%s must have an Social security identification number (INSZ or BIS).", ", ".join(emp_names))
                     )
 
     def _check_cash_rounding(self):
-        if not self.cash_rounding:
-            raise ValidationError(_("Cash rounding must be enabled"))
-        if (
-            self.rounding_method.rounding != 0.05
-            or self.rounding_method.rounding_method != "HALF-UP"
-        ):
-            raise ValidationError(
-                _("The rounding method must be set to 0.5 and HALF-UP")
-            )
+        if self.payment_method_ids.filtered(lambda p: p.is_cash_count):
+            if not self.cash_rounding:
+                raise ValidationError(_("Cash rounding must be enabled"))
+            if (
+                self.rounding_method.rounding != 0.05
+                or self.rounding_method.rounding_method != "HALF-UP"
+            ):
+                raise ValidationError(
+                    _('The rounding method must be set to 0.05 and "Nearest"')
+                )
 
     def _check_printer_connected(self):
         epson_printer = False
@@ -237,14 +216,78 @@ class PosConfig(models.Model):
     def _get_special_products(self):
         return super()._get_special_products() | self._get_work_products()
 
-    def _get_available_product_domain(self):
-        domain = super()._get_available_product_domain()
-        if work_products := self._get_work_products():
-            return OR([domain, [('id', 'in', work_products.ids)]])
-        return domain
-
     def get_NS_sequence_next(self):
         return self.env['ir.sequence'].next_by_code(f'pos_blackbox_be.NS_blackbox_{self.certified_blackbox_identifier}')
 
     def get_PS_sequence_next(self):
         return self.env['ir.sequence'].next_by_code(f'pos_blackbox_be.PS_blackbox_{self.certified_blackbox_identifier}')
+
+    @api.model
+    def _create_default_cashrounding(self):
+        cash_rounding = self.env.ref('pos_blackbox_be.default_l10n_be_cash_rounding', raise_if_not_found=False)
+        if cash_rounding:
+            return cash_rounding
+        if self.env.company.chart_template == "be_comp":
+            profit_account = self.env.ref(f'account.{self.env.company.id}_a743', raise_if_not_found=False)
+            loss_account = self.env.ref(f'account.{self.env.company.id}_a643', raise_if_not_found=False)
+            if profit_account and loss_account:
+                cash_rounding = self.env['account.cash.rounding'].create({
+                    'name': _('Belgian Cash Rounding'),
+                    'rounding_method': 'HALF-UP',
+                    'rounding': 0.05,
+                    'profit_account_id': profit_account.id,
+                    'loss_account_id': loss_account.id,
+                })
+                self.env['ir.model.data']._update_xmlids([
+                    {
+                        'xml_id': 'pos_blackbox_be.default_l10n_be_cash_rounding',
+                        'record': cash_rounding,
+                        'noupdate': True,
+                    }
+                ])
+            return cash_rounding
+        return False
+
+    @api.model
+    def _send_order_to_blackbox(self, order, clock=False, clock_in=True):
+        iface_fiscal_data_module = order.config_id.iface_fiscal_data_module
+        blackbox_data = order._create_order_for_blackbox(clock, clock_in)
+        message = {
+            "iot_identifiers": [iface_fiscal_data_module.iot_id.identifier],
+            "device_identifiers": [iface_fiscal_data_module.identifier],
+            "action": "registerReceiptWeb",
+            "high_level_message": blackbox_data,
+            "id": order.id,
+        }
+        self.env['iot.channel'].send_message(message)
+        return True
+
+    def _clock_kiosk_user(self, clock_in):
+        pos_reference, _, _ = self.current_session_id.get_next_order_refs()
+        clock_order = self.env['pos.order'].create({
+            'session_id': self.current_session_id.id,
+            'company_id': self.company_id.id,
+            'config_id': self.id,
+            'user_id': self.current_user_id.id,
+            'access_token': str(uuid4()),
+            'pos_reference': pos_reference,
+            'amount_tax': 0,
+            'amount_total': 0,
+            'amount_paid': 0,
+            'amount_return': 0,
+            'lines': [(0, 0, {
+                'name': 'Work in' if clock_in else 'Work out',
+                'product_id': self.env.ref('pos_blackbox_be.product_product_work_in').id if clock_in else self.env.ref('pos_blackbox_be.product_product_work_out').id,
+                'price_subtotal': 0,
+                'price_subtotal_incl': 0,
+                'tax_ids': [(6, 0, self.env.ref('pos_blackbox_be.product_product_work_in').taxes_id.ids)],
+                'qty': 1,
+            })]
+        })
+        clock_order.action_pos_order_paid()
+        self._send_order_to_blackbox(clock_order, True, clock_in)
+
+    def action_close_kiosk_session(self):
+        if self.certified_blackbox_identifier:
+            self._clock_kiosk_user(False)
+        return super().action_close_kiosk_session()

@@ -17,6 +17,7 @@ import { getSpreadsheetActionModel } from "@spreadsheet_edition/../tests/helpers
 import {
     contains,
     MockServer,
+    onRpc,
     patchWithCleanup,
     toggleActionMenu,
 } from "@web/../tests/web_test_helpers";
@@ -53,6 +54,7 @@ test("Can save a list in a new spreadsheet", async () => {
 });
 
 test("Can save a list in existing spreadsheet", async () => {
+    onRpc("/spreadsheet/data/*", () => expect.step("/spreadsheet/data/"), { pure: true });
     await spawnListViewForSpreadsheet({
         mockRPC: async function (route, args) {
             if (args.model === "documents.document") {
@@ -86,7 +88,7 @@ test("Can save a list in existing spreadsheet", async () => {
     await contains(".modal button.btn-primary").click();
     await animationFrame();
 
-    expect.verifySteps(["get_spreadsheets", "action_open_spreadsheet", "join_spreadsheet_session"]);
+    expect.verifySteps(["get_spreadsheets", "action_open_spreadsheet", "/spreadsheet/data/"]);
     const model = getSpreadsheetActionModel(spreadsheetAction);
     const sheetId = model.getters.getActiveSheetId();
     expect(model.getters.getSheetName(sheetId)).toBe("Partners (List #1)");

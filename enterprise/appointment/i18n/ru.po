@@ -3,17 +3,16 @@
 # 	* appointment
 # 
 # Translators:
-# Сергей Шебанин <sergey@shebanin.ru>, 2024
+# Anastasiia Koroleva, 2025
 # Wil Odoo, 2025
-# Ilya Rozhkov, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-06 18:47+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Ilya Rozhkov, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Russian (https://app.transifex.com/odoo/teams/41243/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -22,12 +21,16 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
 
 #. module: appointment
+#. odoo-javascript
+#: code:addons/appointment/static/src/xml/appointment_no_slot.xml:0
+msgid "\" on"
+msgstr ""
+
+#. module: appointment
 #. odoo-python
 #: code:addons/appointment/models/appointment_booking_line.py:0
-msgid "\"%(resource_name_list)s\" cannot be used for \"%(appointment_type_name)s\""
-msgstr ""
-"\"%(resource_name_list)s\" не может использоваться для "
-"\"%(appointment_type_name)s\""
+msgid "\"%(name_list)s\" cannot be used for \"%(appointment_type_name)s\""
+msgstr "\"%(name_list)s\" не может использоваться для \"%(appointment_type_name)s\""
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__appointment_count
@@ -37,7 +40,7 @@ msgstr "Кол-во встреч"
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__appointment_count_request
 msgid "# Appointments To Confirm"
-msgstr ""
+msgstr "# Встречи на подтверждение"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_invite__calendar_event_count
@@ -64,12 +67,7 @@ msgstr "# Сотрудники Пользователи"
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__appointment_count_upcoming
 msgid "# Upcoming Appointments"
-msgstr ""
-
-#. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_calendar
-msgid "#{day['today_cls'] and 'Today' or ''}"
-msgstr "#{day['today_cls'] and 'Today' or ''}"
+msgstr "Предстоящие встречи"
 
 #. module: appointment
 #. odoo-python
@@ -87,13 +85,13 @@ msgstr "%(attendee_name)s - %(appointment_name)s Бронирование"
 #. odoo-python
 #: code:addons/appointment/controllers/calendar_view.py:0
 msgid "%(name)s - Let's meet anytime"
-msgstr ""
+msgstr "%(name)s - давай встретимся в любое время"
 
 #. module: appointment
 #. odoo-python
 #: code:addons/appointment/controllers/calendar_view.py:0
 msgid "%(name)s - My availabilities"
-msgstr ""
+msgstr "%(name)s -  Моя доступность"
 
 #. module: appointment
 #. odoo-python
@@ -107,11 +105,6 @@ msgstr "%s (копия)"
 #: code:addons/appointment/models/appointment_type.py:0
 msgid "%s - Let's meet"
 msgstr "%s - Давай встретимся"
-
-#. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
-msgid "(Total:"
-msgstr "(Всего:"
 
 #. module: appointment
 #. odoo-python
@@ -144,6 +137,8 @@ msgid ""
 "<br/>\n"
 "                                <span>To Confirm</span>"
 msgstr ""
+"<br/>\n"
+"                                <span>На подтверждении</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_kanban
@@ -151,6 +146,8 @@ msgid ""
 "<br/>\n"
 "                                <span>Total</span>"
 msgstr ""
+"<br/>\n"
+"                                <span>Всего</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_kanban
@@ -158,6 +155,8 @@ msgid ""
 "<br/>\n"
 "                                <span>Upcoming</span>"
 msgstr ""
+"<br/>\n"
+"                                <span>Предстоящие</span>"
 
 #. module: appointment
 #: model:mail.template,body_html:appointment.attendee_invitation_mail_template
@@ -209,25 +208,26 @@ msgid ""
 "    </p>\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
 "        <t t-if=\"object.state != 'accepted'\">\n"
-"            <a t-attf-href=\"/calendar/meeting/accept?token={{object.access_token}}&amp;id={{object.event_id.id}}\" style=\"padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px\">\n"
+"            <a t-attf-href=\"/calendar/meeting/accept?token={{object.access_token}}&amp;id={{object.event_id.id}}\" t-attf-style=\"padding: 5px 10px; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; text-decoration: none; background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; border-radius: 3px\">\n"
 "                Accept</a>\n"
-"            <a t-attf-href=\"/calendar/meeting/decline?token={{object.access_token}}&amp;id={{object.event_id.id}}\" style=\"padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px\">\n"
+"            <a t-attf-href=\"/calendar/meeting/decline?token={{object.access_token}}&amp;id={{object.event_id.id}}\" t-attf-style=\"padding: 5px 10px; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; text-decoration: none; background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; border-radius: 3px\">\n"
 "                Decline</a>\n"
 "        </t>\n"
-"        <a t-if=\"not target_customer\" t-attf-href=\"/calendar/meeting/view?token={{object.access_token}}&amp;id={{object.event_id.id}}\" style=\"padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px\">View</a>\n"
+"        <a t-if=\"not target_responsible and not target_customer\" t-attf-href=\"/calendar/meeting/view?token={{object.access_token}}&amp;id={{object.event_id.id}}\" style=\"padding: 5px 10px; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; text-decoration: none; background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; border: 1px solid #875A7B; border-radius: 3px\">View</a>\n"
+"        <a t-elif=\"not target_customer\" t-attf-href=\"/mail/view?model=calendar.event&amp;res_id={{object.event_id.id}}\" t-attf-style=\"padding: 5px 10px; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; text-decoration: none; background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; border-radius: 3px\">View</a>\n"
 "    </div>\n"
 "    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
 "        <td width=\"130px;\" style=\"min-width: 130px;\">\n"
-"            <div style=\"border-top-start-radius: 3px; border-top-end-radius: 3px; font-size: 12px; border-collapse: separate; text-align: center; font-weight: bold; color: #ffffff; min-height: 18px; background-color: #875A7B; border: 1px solid #875A7B;\">\n"
+"            <div t-attf-style=\"border-top-start-radius: 3px; border-top-end-radius: 3px; font-size: 12px; border-collapse: separate; text-align: center; font-weight: bold; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; min-height: 18px; background-color: {{user.company_id.email_secondary_color or '#875A7B'}};\">\n"
 "                <t t-out=\"format_datetime(dt=object.event_id.start, tz=object.mail_tz if not object.event_id.allday else None, dt_format='EEEE', lang_code=object.env.lang) or ''\">Tuesday</t>\n"
 "            </div>\n"
-"            <div style=\"font-size: 48px; min-height: auto; font-weight: bold; text-align: center; color: #5F5F5F; background-color: #F8F8F8; border: 1px solid #875A7B;\">\n"
+"            <div t-attf-style=\"font-size: 48px; min-height: auto; font-weight: bold; text-align: center; color: #5F5F5F; background-color: #F8F8F8; border: 1px solid {{user.company_id.email_secondary_color or '#875A7B'}};\">\n"
 "                <t t-out=\"format_datetime(dt=object.event_id.start, tz=object.mail_tz if not object.event_id.allday else None, dt_format='d', lang_code=object.env.lang) or ''\">4</t>\n"
 "            </div>\n"
-"            <div style=\"font-size: 12px; text-align: center; font-weight: bold; color: #ffffff; background-color: #875A7B;\">\n"
+"            <div t-attf-style=\"font-size: 12px; text-align: center; font-weight: bold; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{user.company_id.email_secondary_color or '#875A7B'}};\">\n"
 "                <t t-out=\"format_datetime(dt=object.event_id.start, tz=object.mail_tz if not object.event_id.allday else None, dt_format='MMMM y', lang_code=object.env.lang) or ''\">May 2021</t>\n"
 "            </div>\n"
-"            <div style=\"border-collapse: separate; color: #5F5F5F; text-align: center; font-size: 12px; border-bottom-end-radius: 3px; font-weight: bold ; border: 1px solid #875A7B; border-bottom-start-radius: 3px;\">\n"
+"            <div t-attf-style=\"border-collapse: separate; color: #5F5F5F; text-align: center; font-size: 12px; border-bottom-end-radius: 3px; font-weight: bold ; border: 1px solid {{user.company_id.email_secondary_color or '#875A7B'}}; border-bottom-start-radius: 3px;\">\n"
 "                <t t-if=\"not object.event_id.allday\">\n"
 "                    <div>\n"
 "                        <t t-out=\"format_time(time=object.event_id.start, tz=object.mail_tz, time_format='short', lang_code=object.env.lang) or ''\">11:00 AM</t>\n"
@@ -268,8 +268,8 @@ msgid ""
 "                        </t>\n"
 "                    </li>\n"
 "                </ul></li>\n"
-"                <li t-if=\"object.event_id.appointment_type_id.resource_manage_capacity\">\n"
-"                    For: <t t-out=\"object.event_id.resource_total_capacity_reserved\"/> people\n"
+"                <li t-if=\"object.event_id.appointment_type_id.manage_capacity\">\n"
+"                    For: <t t-out=\"object.event_id.total_capacity_reserved\"/> people\n"
 "                </li>\n"
 "                <li t-if=\"object.event_id.appointment_type_id.assign_method != 'time_auto_assign' and object.event_id.appointment_resource_ids\">\n"
 "                    Resources\n"
@@ -311,7 +311,7 @@ msgid ""
 "    Thank you,\n"
 "    <t t-if=\"object.event_id.user_id.signature\" data-o-mail-quote-container=\"1\">\n"
 "        <br/>\n"
-"        <t t-out=\"object.event_id.user_id.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"        <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"object.event_id.user_id.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "    </t>\n"
 "</div>\n"
 "            "
@@ -330,23 +330,23 @@ msgid ""
 "    <t t-if=\"object.appointment_type_id.category != 'custom' and object.appointment_type_id.schedule_based_on == 'users'\"> with <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t></t>.\n"
 "    </p>\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
-"        <a t-attf-href=\"/calendar/meeting/join?token={{ object.access_token }}\" style=\"padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px\">\n"
+"        <a t-attf-href=\"/calendar/meeting/join?token={{ object.access_token }}\" t-attf-style=\"padding: 5px 10px; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; text-decoration: none; background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; border-radius: 3px\">\n"
 "            Join</a>\n"
-"        <a t-attf-href=\"/odoo/calendar.event/{{ object.id }}\" style=\"padding: 5px 10px; color: #FFFFFF; text-decoration: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius: 3px\">\n"
+"        <a t-attf-href=\"/odoo/calendar.event/{{ object.id }}\" t-attf-style=\"padding: 5px 10px; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; text-decoration: none; background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; border-radius: 3px\">\n"
 "            View</a>\n"
 "    </div>\n"
 "    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
 "            <td width=\"130px;\" style=\"min-width: 130px;\">\n"
-"                <div style=\"border-top-start-radius: 3px; border-top-end-radius: 3px; font-size: 12px; border-collapse: separate; text-align: center; font-weight: bold; color: #ffffff; min-height: 18px; background-color: #875A7B; border: 1px solid #875A7B;\">\n"
+"                <div t-attf-style=\"border-top-start-radius: 3px; border-top-end-radius: 3px; font-size: 12px; border-collapse: separate; text-align: center; font-weight: bold; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; min-height: 18px; background-color: {{user.company_id.email_secondary_color or '#875A7B'}};\">\n"
 "                    <t t-out=\"format_datetime(dt=object.start, tz=mail_tz if not object.allday else None, dt_format=&quot;EEEE&quot;, lang_code=object.env.lang) or ''\">Wednesday</t>\n"
 "                </div>\n"
-"                <div style=\"font-size: 48px; min-height: auto; font-weight: bold; text-align: center; color: #5F5F5F; background-color: #F8F8F8; border: 1px solid #875A7B;\">\n"
+"                <div t-attf-style=\"font-size: 48px; min-height: auto; font-weight: bold; text-align: center; color: #5F5F5F; background-color: #F8F8F8; border: 1px solid {{user.company_id.email_secondary_color or '#875A7B'}};;\">\n"
 "                    <t t-out=\"format_datetime(dt=object.start, tz=mail_tz if not object.allday else None, dt_format=&quot;d&quot;, lang_code=object.env.lang) or ''\">1</t>\n"
 "                </div>\n"
-"                <div style=\"font-size: 12px; text-align: center; font-weight: bold; color: #ffffff; background-color: #875A7B;\">\n"
+"                <div t-attf-style=\"font-size: 12px; text-align: center; font-weight: bold; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{user.company_id.email_secondary_color or '#875A7B'}};\">\n"
 "                    <t t-out=\"format_datetime(dt=object.start, tz=mail_tz if not object.allday else None, dt_format=&quot;MMMM y&quot;, lang_code=object.env.lang) or ''\">January 2020</t>\n"
 "                </div>\n"
-"                <div style=\"border-collapse: separate; color: #5F5F5F; text-align: center; font-size: 12px; border-bottom-end-radius: 3px; font-weight: bold; border: 1px solid #875A7B; border-bottom-start-radius: 3px;\">\n"
+"                <div t-attf-style=\"border-collapse: separate; color: #5F5F5F; text-align: center; font-size: 12px; border-bottom-end-radius: 3px; font-weight: bold; border: 1px solid {{user.company_id.email_secondary_color or '#875A7B'}}; border-bottom-start-radius: 3px;\">\n"
 "                    <t t-if=\"not object.allday\">\n"
 "                        <div>\n"
 "                            <t t-out=\"format_time(time=object.start, tz=mail_tz, time_format=&quot;short&quot;, lang_code=object.env.lang) or ''\">8:00</t>\n"
@@ -380,8 +380,8 @@ msgid ""
 "                            </t>\n"
 "                        </li>\n"
 "                    </ul></li>\n"
-"                    <li t-if=\"object.appointment_type_id.resource_manage_capacity\">\n"
-"                        For: <t t-out=\"object.resource_total_capacity_reserved\"/> people\n"
+"                    <li t-if=\"object.appointment_type_id.manage_capacity\">\n"
+"                        For: <t t-out=\"object.total_capacity_reserved\"/> people\n"
 "                    </li>\n"
 "                    <li t-if=\"object.appointment_type_id.assign_method != 'time_auto_assign' and object.appointment_resource_ids\">\n"
 "                        Resources\n"
@@ -434,16 +434,16 @@ msgid ""
 "    </p>\n"
 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
 "            <td width=\"130px;\" style=\"min-width: 130px;\">\n"
-"                <div style=\"border-top-start-radius: 3px; border-top-end-radius: 3px; font-size: 12px; border-collapse: separate; text-align: center; font-weight: bold; color: #ffffff; min-height: 18px; background-color: #875A7B; border: 1px solid #875A7B;\">\n"
+"                <div t-attf-style=\"border-top-start-radius: 3px; border-top-end-radius: 3px; font-size: 12px; border-collapse: separate; text-align: center; font-weight: bold; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; min-height: 18px; background-color: {{user.company_id.email_secondary_color or '#875A7B'}};\">\n"
 "                    <t t-out=\"format_datetime(dt=object.start, tz=mail_tz, dt_format=&quot;EEEE&quot;, lang_code=object.env.lang) or ''\">Wednesday</t>\n"
 "                </div>\n"
-"                <div style=\"font-size: 48px; min-height: auto; font-weight: bold; text-align: center; color: #5F5F5F; background-color: #F8F8F8; border: 1px solid #875A7B;\">\n"
+"                <div t-attf-style=\"font-size: 48px; min-height: auto; font-weight: bold; text-align: center; color: #5F5F5F; background-color: #F8F8F8; border: 1px solid {{user.company_id.email_secondary_color or '#875A7B'}};\">\n"
 "                    <t t-out=\"str(object.start.day) or ''\">1</t>\n"
 "                </div>\n"
-"                <div style=\"font-size: 12px; text-align: center; font-weight: bold; color: #ffffff; background-color: #875A7B;\">\n"
+"                <div t-attf-style=\"font-size: 12px; text-align: center; font-weight: bold; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{user.company_id.email_secondary_color or '#875A7B'}};\">\n"
 "                    <t t-out=\"format_datetime(dt=object.start, tz=mail_tz, dt_format=&quot;MMMM y&quot;, lang_code=object.env.lang) or ''\">January 2020</t>\n"
 "                </div>\n"
-"                <div style=\"border-collapse: separate; color: #5F5F5F; text-align: center; font-size: 12px; border-bottom-end-radius: 3px; font-weight: bold; border: 1px solid #875A7B; border-bottom-start-radius: 3px;\">\n"
+"                <div t-attf-style=\"border-collapse: separate; color: #5F5F5F; text-align: center; font-size: 12px; border-bottom-end-radius: 3px; font-weight: bold; border: 1px solid {{user.company_id.email_secondary_color or '#875A7B'}}; border-bottom-start-radius: 3px;\">\n"
 "                    <t t-if=\"not object.allday\">\n"
 "                        <div><t t-out=\"format_time(time=object.start, tz=mail_tz, time_format=&quot;short&quot;, lang_code=object.env.lang) or ''\">8:00</t></div>\n"
 "                        <t t-if=\"not object.appointment_type_id.hide_timezone and mail_tz\">\n"
@@ -496,7 +496,7 @@ msgstr ""
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<i class=\"fa fa-check-circle text-success me-3\"/>Appointment Scheduled!"
-msgstr ""
+msgstr "<i class=\"fa fa-check-circle text-success me-3\"/>Встреча запланирована!"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_invite_view_form
@@ -509,6 +509,8 @@ msgid ""
 "<i class=\"fa fa-lg fa-calendar-plus-o me-3 text-primary\"/>Schedule another"
 " meeting"
 msgstr ""
+"<i class=\"fa fa-lg fa-calendar-plus-o me-3 text-primary\"/>Запланировать "
+"другую встречу"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
@@ -516,6 +518,8 @@ msgid ""
 "<i class=\"fa fa-long-arrow-right mx-2\" aria-label=\"Until Icon\" "
 "title=\"Arrow\"/>"
 msgstr ""
+"<i class=\"fa fa-long-arrow-right mx-2\" aria-label=\"Until Icon\" "
+"title=\"Стрелочка\"/>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_form
@@ -539,19 +543,12 @@ msgstr "<i class=\"fa fa-plus me-1\"/>Добавить гостей"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<i class=\"fa fa-thumbs-up me-3 text-info\"/>Appointment Reserved!"
-msgstr ""
-
-#. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_info
-msgid ""
-"<i class=\"fa fa-times text-danger me-2\"/><strong>Appointment cancelled!</strong>\n"
-"                                        You can now choose a different schedule that suits you better."
-msgstr ""
+msgstr "<i class=\"fa fa-thumbs-up me-3 text-info\"/>Встреча забронирована!"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<i class=\"fa fa-times text-danger me-3\"/>Appointment Cancelled"
-msgstr ""
+msgstr "<i class=\"fa fa-times text-danger me-3\"/>Встреча отменена"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_meeting_details
@@ -585,24 +582,24 @@ msgstr ""
 "                    <span invisible=\"schedule_based_on != 'resources'\">Вы не можете создать персональную ссылку для типа встречи, основанного на ресурсах.</span>"
 
 #. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
+msgid "<i class=\"oi oi-fw o_button_icon oi-arrow-right\"/> Manage Resources"
+msgstr ""
+
+#. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_meeting_date
 msgid "<small class=\"text-uppercase text-muted\">Date &amp; time</small>"
 msgstr "<small class=\"text-uppercase text-muted\">Дата и время</small>"
 
 #. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_meeting_details
-msgid "<small class=\"text-uppercase text-muted\">Meeting details</small>"
-msgstr "<small class=\"text-uppercase text-muted\">Подробности встречи</small>"
-
-#. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<small>Add to Google Agenda</small>"
-msgstr ""
+msgstr "<small>Добавить в Google Agenda</small>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<small>Add to iCal/Outlook</small>"
-msgstr ""
+msgstr "<small>Добавить в iCal/Outlook</small>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_kanban
@@ -626,19 +623,31 @@ msgstr "<span class=\"fa fa-trash\"/> Удалить"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
-msgid "<span class=\"me-1\">Attendees marked as busy at the selected time</span>"
-msgstr ""
-
-#. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
 msgid ""
-"<span class=\"me-1\">You are scheduling a booking outside the available "
-"hours of</span>"
+"<span class=\"me-1\">The following\n"
+"                            <span invisible=\"not unavailable_partner_ids\">attendees</span>\n"
+"                            <span invisible=\"not unavailable_partner_ids or not unavailable_resource_ids\">/</span>\n"
+"                            <span invisible=\"not unavailable_resource_ids\">resources</span> are not available at the selected time\n"
+"                        </span>"
 msgstr ""
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_form
 msgid "<span class=\"mx-1\">or</span>"
+msgstr "<span class=\"mx-1\">или</span>"
+
+#. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
+msgid ""
+"<span class=\"text-muted\" invisible=\"category != 'custom'\">Depending on "
+"the Slots</span>"
+msgstr ""
+
+#. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
+msgid ""
+"<span class=\"text-muted\" invisible=\"category != 'custom'\">Schedule "
+"Line</span>"
 msgstr ""
 
 #. module: appointment
@@ -649,42 +658,47 @@ msgstr "<span class=\"text-muted\">Участники</span>"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<span class=\"text-muted\">Details</span>"
-msgstr ""
+msgstr "<span class=\"text-muted\">Детали</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<span class=\"text-muted\">Duration</span>"
-msgstr ""
+msgstr "<span class=\"text-muted\">Длительность</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<span class=\"text-muted\">For</span>"
-msgstr ""
+msgstr "<span class=\"text-muted\">Для</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<span class=\"text-muted\">How to join</span>"
-msgstr ""
+msgstr "<span class=\"text-muted\">Как присоединиться</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<span class=\"text-muted\">Resources</span>"
-msgstr ""
+msgstr "<span class=\"text-muted\">Ресурсы</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<span class=\"text-muted\">When</span>"
-msgstr ""
+msgstr "<span class=\"text-muted\">Когда</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<span class=\"text-muted\">Where</span>"
+msgstr "<span class=\"text-muted\">Где</span>"
+
+#. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
+msgid "<span invisible=\"not manage_capacity\">seats max</span>"
 msgstr ""
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "<span> hours before the meeting</span>"
-msgstr ""
+msgstr "<span> часов до встречи</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
@@ -695,12 +709,12 @@ msgstr "<span> часы</span>"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_form
 msgid "<span>Add more details about you</span>"
-msgstr ""
+msgstr "<span>Добавьте больше информации о себе</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "<span>Not available anymore?</span>"
-msgstr ""
+msgstr "<span>Больше недоступно?</span>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
@@ -711,6 +725,13 @@ msgstr "<span>Онлайн</span>"
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
 msgid "<span>people</span>"
 msgstr "<span>люди</span>"
+
+#. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_info
+msgid ""
+"<strong>Appointment cancelled!</strong>\n"
+"                                        You can now choose a different schedule that suits you better."
+msgstr ""
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_info
@@ -769,7 +790,7 @@ msgstr "<strong>Дата начала: </strong>"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_gantt_booking_resource
 msgid "<strong>Status: </strong>"
-msgstr ""
+msgstr "<strong>Статус: </strong>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_gantt_booking_resource
@@ -801,6 +822,7 @@ msgstr ""
 msgid ""
 "A list of slots information is needed to update this custom appointment type"
 msgstr ""
+"Для обновления этого пользовательского типа встречи требуется список слотов"
 
 #. module: appointment
 #. odoo-python
@@ -828,10 +850,10 @@ msgid "Action Needed"
 msgstr "Требуются действия"
 
 #. module: appointment
-#: model:ir.model.fields,help:appointment.field_appointment_type__resource_manual_confirmation_percentage
+#: model:ir.model.fields,help:appointment.field_appointment_type__manual_confirmation_percentage
 msgid ""
-"Activate manual confirmation only if the resource total capacity reserved "
-"exceeds this percentage."
+"Activate manual confirmation only if the user/resource total capacity "
+"reserved exceeds this percentage."
 msgstr ""
 
 #. module: appointment
@@ -860,12 +882,6 @@ msgstr "Состояние активности"
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__activity_type_icon
 msgid "Activity Type Icon"
 msgstr "Значок типа активности"
-
-#. module: appointment
-#. odoo-javascript
-#: code:addons/appointment/static/src/xml/appointment_no_slot.xml:0
-msgid "Add Another"
-msgstr ""
 
 #. module: appointment
 #. odoo-javascript
@@ -936,6 +952,11 @@ msgstr "Весь день"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
+msgid "Allow"
+msgstr "Разрешить"
+
+#. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "Allow Cancelling"
 msgstr "Разрешить отмену"
 
@@ -1000,9 +1021,14 @@ msgid "Answers"
 msgstr "Ответы"
 
 #. module: appointment
+#: model:ir.model.fields.selection,name:appointment.selection__appointment_invite__resources_resource_choice__all_assigned_resources
+msgid "Any Resource"
+msgstr ""
+
+#. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_invite__resources_choice__all_assigned_resources
-msgid "Any User/Resource"
-msgstr "Любой пользователь/ресурс"
+msgid "Any User"
+msgstr ""
 
 #. module: appointment
 #. odoo-javascript
@@ -1010,6 +1036,7 @@ msgstr "Любой пользователь/ресурс"
 #: code:addons/appointment/static/src/js/wysiwyg.js:0
 #: model:ir.model.fields,field_description:appointment.field_appointment_booking_line__appointment_type_id
 #: model:ir.model.fields,field_description:appointment.field_calendar_event__appointment_type_id
+#: model:res.groups.privilege,name:appointment.res_groups_privilege_appointment
 msgid "Appointment"
 msgstr "Встреча"
 
@@ -1132,6 +1159,7 @@ msgstr "Ресурсы для назначения"
 
 #. module: appointment
 #: model_terms:ir.actions.act_window,help:appointment.appointment_resource_action
+#: model_terms:ir.actions.act_window,help:appointment.appointment_resource_action_stat
 msgid ""
 "Appointment Resources are the places or equipment people can book\n"
 "                (e.g. Tables, Tennis Courts, Meeting Rooms, ...)"
@@ -1142,7 +1170,7 @@ msgstr ""
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_calendar_event__appointment_status
 msgid "Appointment Status"
-msgstr ""
+msgstr "Статус встречи"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__name
@@ -1168,16 +1196,21 @@ msgid "Appointment Types"
 msgstr "Типы встреч"
 
 #. module: appointment
-#. odoo-python
-#: code:addons/appointment/models/calendar_event.py:0
-msgid "Appointment cancelled"
+#: model:ir.model.fields,field_description:appointment.field_appointment_booking_line__appointment_user_id
+msgid "Appointment User"
 msgstr ""
 
 #. module: appointment
 #. odoo-python
 #: code:addons/appointment/models/calendar_event.py:0
+msgid "Appointment cancelled"
+msgstr "Встреча отменена"
+
+#. module: appointment
+#. odoo-python
+#: code:addons/appointment/models/calendar_event.py:0
 msgid "Appointment cancelled by: %(partners)s"
-msgstr ""
+msgstr "Встреча отменена: %(partners)s"
 
 #. module: appointment
 #. odoo-python
@@ -1237,16 +1270,8 @@ msgid "Archived"
 msgstr "Архивировано"
 
 #. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
-msgid ""
-"Are you sure you want to delete this Booking? Once it's gone, it's gone for "
-"good!"
-msgstr ""
-"Вы уверены, что хотите удалить эту бронь? После удаления её невозможно будет"
-" восстановить!"
-
-#. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_invite__resources_choice
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_invite_view_form
 msgid "Assign to"
 msgstr "Назначить на"
 
@@ -1280,13 +1305,6 @@ msgid "Availabilities"
 msgstr "Доступность"
 
 #. module: appointment
-#: model:ir.model.fields,field_description:appointment.field_appointment_slot__schedule_based_on
-#: model:ir.model.fields,field_description:appointment.field_appointment_type__schedule_based_on
-#: model:ir.model.fields,field_description:appointment.field_calendar_event__appointment_type_schedule_based_on
-msgid "Availability on"
-msgstr "Доступность"
-
-#. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_question__answer_ids
 msgid "Available Answers"
 msgstr "Доступные ответы"
@@ -1304,7 +1322,7 @@ msgstr "Доступно в"
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_type__category_time_display__recurring_fields
 msgid "Available now"
-msgstr ""
+msgstr "Доступно сейчас"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_resource__avatar_1920
@@ -1342,16 +1360,25 @@ msgid "Base Link URL"
 msgstr "URL базовой ссылки"
 
 #. module: appointment
+#: model:ir.model.fields,field_description:appointment.field_appointment_slot__schedule_based_on
+#: model:ir.model.fields,field_description:appointment.field_appointment_type__schedule_based_on
+#: model:ir.model.fields,field_description:appointment.field_calendar_event__appointment_type_schedule_based_on
+msgid "Book"
+msgstr ""
+
+#. module: appointment
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Book a Resource"
-msgstr ""
+msgstr "Забронировать ресурс"
 
 #. module: appointment
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Book a resource for a specific time slot (e.g. tennis court, etc.)"
 msgstr ""
+"Забронируйте ресурс на конкретный временной слот (например, теннисный корт "
+"и т. д.)"
 
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__calendar_event__appointment_status__booked
@@ -1384,7 +1411,7 @@ msgstr "Детали бронирования"
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__booked_mail_template_id
 msgid "Booking Email"
-msgstr ""
+msgstr "Письмо о бронировании"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_booking_line__event_stop
@@ -1407,15 +1434,21 @@ msgid "Booking Start"
 msgstr "Начало бронирования"
 
 #. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_meeting_details
+msgid "Booking details"
+msgstr ""
+
+#. module: appointment
+#. odoo-python
+#: code:addons/appointment/models/appointment_booking_line.py:0
+msgid "Booking line must have a user or resource set."
+msgstr ""
+
+#. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_kanban
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
 msgid "Bookings"
 msgstr "Бронирование"
-
-#. module: appointment
-#: model:ir.model.fields,field_description:appointment.field_appointment_type__message_partner_ids
-msgid "CC to"
-msgstr "КК до"
 
 #. module: appointment
 #: model:ir.model,name:appointment.model_calendar_attendee
@@ -1443,12 +1476,12 @@ msgstr "Отмена до (часов)"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "Cancel your appointment"
-msgstr ""
+msgstr "Отменить встречу"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__canceled_mail_template_id
 msgid "Cancellation Email"
-msgstr ""
+msgstr "Письмо об отмене"
 
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__calendar_event__appointment_status__cancelled
@@ -1464,7 +1497,7 @@ msgid "Capacity"
 msgstr "Вместимость"
 
 #. module: appointment
-#: model:ir.model.fields,field_description:appointment.field_appointment_type__resource_manual_confirmation_percentage
+#: model:ir.model.fields,field_description:appointment.field_appointment_type__manual_confirmation_percentage
 msgid "Capacity Percentage"
 msgstr "Мощность в процентах"
 
@@ -1484,11 +1517,15 @@ msgid "Capacity reserved by the user"
 msgstr "Емкость, зарезервированная пользователем"
 
 #. module: appointment
-#: model:ir.model.fields,help:appointment.field_appointment_booking_line__capacity_used
-msgid "Capacity that will be used based on the capacity and resource selected"
+#: model:ir.model.constraint,message:appointment.constraint_appointment_type_check_capacity_positive
+msgid "Capacity should be at least 1."
 msgstr ""
-"Мощность, которая будет использоваться в зависимости от выбранной мощности и"
-" ресурса"
+
+#. module: appointment
+#: model:ir.model.fields,help:appointment.field_appointment_booking_line__capacity_used
+msgid ""
+"Capacity that will be used based on the capacity and user/resource selected"
+msgstr ""
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__category
@@ -1509,7 +1546,7 @@ msgstr "Регистрация"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_search_booking
 msgid "Checked-in"
-msgstr ""
+msgstr "Отметился"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointments_list_layout
@@ -1525,6 +1562,7 @@ msgstr "Нажмите здесь"
 #. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/gantt/gantt_renderer.js:0
+#: code:addons/appointment/static/src/xml/appointment_no_slot.xml:0
 msgid "Close"
 msgstr "Закрыть"
 
@@ -1552,6 +1590,7 @@ msgstr "Настройка"
 
 #. module: appointment
 #: model_terms:ir.actions.act_window,help:appointment.appointment_invite_action
+#: model_terms:ir.actions.act_window,help:appointment.appointment_invite_action_stat
 msgid ""
 "Configure links that allow booking appointments with custom settings<br>\n"
 "                (e.g. a specific user only, a list of appointment types, ...)"
@@ -1589,7 +1628,7 @@ msgstr "Подключить"
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__connectors_displayed
 msgid "Connectors Displayed"
-msgstr ""
+msgstr "Отображаемые коннекторы"
 
 #. module: appointment
 #: model:ir.model,name:appointment.model_res_partner
@@ -1601,14 +1640,6 @@ msgstr "Контакты"
 #: code:addons/appointment/models/calendar_event.py:0
 msgid "Contact Details"
 msgstr "Контактная информация"
-
-#. module: appointment
-#: model:ir.model.fields,help:appointment.field_appointment_type__message_partner_ids
-msgid ""
-"Contacts that need to be notified whenever a new appointment is booked or "
-"cancelled,                                                  regardless of "
-"whether they attend or not"
-msgstr ""
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointments_list_layout
@@ -1623,6 +1654,7 @@ msgstr "Скопировано!"
 
 #. module: appointment
 #. odoo-javascript
+#: code:addons/appointment/static/src/components/appointment_booking_action_helper/appointment_booking_action_helper.xml:0
 #: code:addons/appointment/static/src/views/appointment_calendar/appointment_calendar_controller.xml:0
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "Copy Link"
@@ -1635,15 +1667,26 @@ msgid "Copy Link & Close"
 msgstr "Скопировать ссылку и закрыть"
 
 #. module: appointment
+#. odoo-javascript
+#: code:addons/appointment/static/src/components/appointment_booking_action_helper/appointment_booking_action_helper.xml:0
+msgid "Create Booking"
+msgstr ""
+
+#. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_manage_leaves_view_form
 msgid "Create Closing Day(s)"
 msgstr "Создайте день(ы) закрытия"
 
 #. module: appointment
+#: model:ir.model,website_form_label:appointment.model_res_partner
+msgid "Create a Customer"
+msgstr "Создать клиента"
+
+#. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/components/appointment_type_action_helper/appointment_type_action_helper.xml:0
 msgid "Create a Schedule from scratch or use one of our templates:"
-msgstr ""
+msgstr "Создайте график с нуля или используйте один из наших шаблонов:"
 
 #. module: appointment
 #. odoo-javascript
@@ -1651,10 +1694,16 @@ msgstr ""
 #: code:addons/appointment/models/appointment_type.py:0
 #: code:addons/appointment/static/src/views/appointment_invite/appointment_share_link_list_controller.js:0
 msgid "Create a Share Link"
+msgstr "Создать ссылку на общий доступ"
+
+#. module: appointment
+#: model:ir.model.fields,field_description:appointment.field_appointment_type__slot_creation_interval
+msgid "Create a slot every"
 msgstr ""
 
 #. module: appointment
 #: model_terms:ir.actions.act_window,help:appointment.appointment_resource_action
+#: model_terms:ir.actions.act_window,help:appointment.appointment_resource_action_stat
 msgid "Create an Appointment Resource"
 msgstr "Ресурс \"Создать назначение"
 
@@ -1752,6 +1801,10 @@ msgid ""
 "        The one shot type is only used when an user create a custom appointment type for a client by\n"
 "        defining non-recurring time slot (e.g. 10th of April 2021 from 10 to 11 am) from its calendar."
 msgstr ""
+"Определяет тип слота. Обычный  – тип по умолчанию, используется для \n"
+"        регулярных встреч (например, медицинских приемов).\n"
+"        Одноразовый – используется только в том случае, если пользователь создает пользовательский тип встречи для клиента,\n"
+"        определяя разовое время в своем календаре (например, 10 апреля  2021  г. 10:00–11:00)."
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_appointment_type__event_videocall_source
@@ -1764,11 +1817,6 @@ msgstr ""
 "URL-адреса встреч."
 
 #. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
-msgid "Delete Booking"
-msgstr ""
-
-#. module: appointment
 #: model:appointment.type,name:appointment.appointment_type_dental_care
 msgid "Dental Care"
 msgstr "Уход за зубами"
@@ -1777,7 +1825,7 @@ msgstr "Уход за зубами"
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Describe what you need"
-msgstr ""
+msgstr "Опишите, что вам нужно"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_resource__description
@@ -1814,7 +1862,6 @@ msgstr ""
 #: code:addons/appointment/static/src/views/appointment_calendar/appointment_calendar_controller.xml:0
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_invite_view_form_insert_link
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
-#: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
 msgid "Discard"
 msgstr "Отменить"
 
@@ -1828,6 +1875,11 @@ msgstr "Отменить"
 #: model:ir.model.fields,field_description:appointment.field_appointment_resource__display_name
 #: model:ir.model.fields,field_description:appointment.field_appointment_slot__display_name
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__display_name
+#: model:ir.model.fields,field_description:appointment.field_calendar_alarm__display_name
+#: model:ir.model.fields,field_description:appointment.field_calendar_attendee__display_name
+#: model:ir.model.fields,field_description:appointment.field_calendar_event__display_name
+#: model:ir.model.fields,field_description:appointment.field_ir_http__display_name
+#: model:ir.model.fields,field_description:appointment.field_res_partner__display_name
 msgid "Display Name"
 msgstr "Отображаемое имя"
 
@@ -1839,7 +1891,7 @@ msgstr "Отображать фотографию Пользователя/Ре�
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__category_time_display
 msgid "Displayed category time fields"
-msgstr ""
+msgstr "Отображаемая категория поля времени"
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_appointment_type__appointment_manual_confirmation
@@ -1847,12 +1899,19 @@ msgid ""
 "Do not automatically accept meetings created from the appointment.\n"
 "            The appointment is still considered as reserved for the slots availability."
 msgstr ""
+"Необходимо ручное подтверждение встреч, созданных из этого бронирования.\n"
+"            Слот остается зарезервированным."
 
 #. module: appointment
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Do you have any dietary preferences or restrictions ?"
 msgstr "Есть ли у вас какие-либо диетические предпочтения или ограничения?"
+
+#. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_resource_view_form
+msgid "Does not combine"
+msgstr ""
 
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_question__question_type__select
@@ -1865,6 +1924,12 @@ msgstr "Выпадающий список (один ответ)"
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
 msgid "Duration"
 msgstr "Продолжительность"
+
+#. module: appointment
+#: model_terms:appointment.type,message_intro:appointment.appointment_type_tennis_court
+msgid ""
+"Easily reserve tennis courts for your next match, anytime and anywhere."
+msgstr ""
 
 #. module: appointment
 #. odoo-javascript
@@ -1929,11 +1994,6 @@ msgid "Extra information provided once the appointment is booked."
 msgstr "Дополнительная информация предоставляется после записи на прием."
 
 #. module: appointment
-#: model:ir.model,name:appointment.model_ir_binary
-msgid "File streaming helper model for controllers"
-msgstr "Вспомогательная модель потоковой передачи файлов для контроллеров"
-
-#. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.portal_my_home_appointment
 msgid "Follow, reschedule or cancel your appointments"
 msgstr "Соблюдайте, переносите или отменяйте свои встречи"
@@ -1941,6 +2001,11 @@ msgstr "Соблюдайте, переносите или отменяйте с�
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__message_follower_ids
 msgid "Followers"
+msgstr "Подписчики"
+
+#. module: appointment
+#: model:ir.model.fields,field_description:appointment.field_appointment_type__message_partner_ids
+msgid "Followers (Partners)"
 msgstr "Подписчики"
 
 #. module: appointment
@@ -2020,25 +2085,24 @@ msgid "HTTP Routing"
 msgstr "Маршрутизация HTTP"
 
 #. module: appointment
+#: model:ir.model.fields,field_description:appointment.field_appointment_invite__has_identical_config
+msgid "Has Identical Config"
+msgstr ""
+
+#. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__has_message
 msgid "Has Message"
 msgstr "Есть сообщение"
 
 #. module: appointment
-#. odoo-javascript
-#: code:addons/appointment/static/src/xml/appointment_no_slot.xml:0
-msgid "Heads-up, you already booked an appointment"
-msgstr ""
-
-#. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__hide_duration
 msgid "Hide Duration"
-msgstr ""
+msgstr "Скрыть длительностЬ"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__hide_timezone
 msgid "Hide Time Zone"
-msgstr ""
+msgstr "Скрыть часовой пояс"
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_appointment_type__assign_method
@@ -2059,6 +2123,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:appointment.field_appointment_resource__id
 #: model:ir.model.fields,field_description:appointment.field_appointment_slot__id
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__id
+#: model:ir.model.fields,field_description:appointment.field_calendar_alarm__id
+#: model:ir.model.fields,field_description:appointment.field_calendar_attendee__id
+#: model:ir.model.fields,field_description:appointment.field_calendar_event__id
+#: model:ir.model.fields,field_description:appointment.field_ir_http__id
+#: model:ir.model.fields,field_description:appointment.field_res_partner__id
 msgid "ID"
 msgstr "ID"
 
@@ -2121,13 +2190,14 @@ msgstr ""
 msgid ""
 "If set an email will be sent to the customer when the appointment is booked."
 msgstr ""
+"Если установлено, клиенту будет отправлено письмо при бронировании встречи."
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_appointment_type__canceled_mail_template_id
 msgid ""
 "If set an email will be sent to the customer when the appointment is "
 "cancelled."
-msgstr ""
+msgstr "Если установлено, клиенту будет отправлено письмо при отмене встречи."
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_appointment_resource__active
@@ -2189,6 +2259,11 @@ msgid "Insert link"
 msgstr "Вставить ссылку"
 
 #. module: appointment
+#: model:ir.model.fields,help:appointment.field_appointment_invite__has_identical_config
+msgid "Interface field to try to prevent creating identical links"
+msgstr ""
+
+#. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__message_intro
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form_custom_share
@@ -2197,8 +2272,8 @@ msgstr "Вводное сообщение"
 
 #. module: appointment
 #. odoo-javascript
-#: code:addons/appointment/static/src/js/appointment_form.js:0
-#: code:addons/appointment/static/src/js/appointment_validation.js:0
+#: code:addons/appointment/static/src/interactions/appointment_form.js:0
+#: code:addons/appointment/static/src/interactions/appointment_validation.js:0
 msgid "Invalid Email"
 msgstr "Некорректный Email"
 
@@ -2237,7 +2312,7 @@ msgstr "Опубликовано"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "Join using"
-msgstr ""
+msgstr "Присоединиться через"
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_appointment_type__country_ids
@@ -2284,12 +2359,13 @@ msgstr "Разрешите посетителям приглашать гост�
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Let customers book tables (bars, restaurants, etc.)"
 msgstr ""
+"Откройте клиентам доступ к бронированию столиков (бары, рестораны и т. д.)"
 
 #. module: appointment
 #. odoo-javascript
-#: code:addons/appointment/static/src/js/appointment_validation.js:0
+#: code:addons/appointment/static/src/interactions/appointment_validation.js:0
 msgid "Link Copied!"
-msgstr ""
+msgstr "Ссылка скопирована!"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_invite_view_form
@@ -2303,6 +2379,11 @@ msgid "Link URL"
 msgstr "URL ссылки"
 
 #. module: appointment
+#: model:ir.model.fields,field_description:appointment.field_appointment_invite__book_url_params
+msgid "Link URL params"
+msgstr ""
+
+#. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/components/appointment_invite/appointment_invite_copy_close.js:0
 msgid "Link copied to clipboard!"
@@ -2312,7 +2393,7 @@ msgstr "Ссылка скопирована в буфер обмена!"
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/appointment_calendar/appointment_calendar_controller.xml:0
 msgid "Link copied to your clipboard!"
-msgstr ""
+msgstr "Ссылка скопирована в буфер обмена!"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_resource__linked_resource_ids
@@ -2348,20 +2429,23 @@ msgid "Make your choice"
 msgstr "Сделайте свой выбор"
 
 #. module: appointment
-#: model:ir.model.fields,field_description:appointment.field_appointment_type__resource_manage_capacity
+#: model:ir.model.fields,field_description:appointment.field_appointment_type__manage_capacity
 #: model:ir.model.fields,field_description:appointment.field_calendar_event__appointment_type_manage_capacity
 msgid "Manage Capacities"
 msgstr "Управление мощностями"
 
 #. module: appointment
-#: model:ir.model.fields,help:appointment.field_appointment_type__resource_manage_capacity
+#: model:ir.model.fields,help:appointment.field_appointment_type__manage_capacity
 #: model:ir.model.fields,help:appointment.field_calendar_event__appointment_type_manage_capacity
 msgid ""
-"Manage the maximum amount of people a resource can handle (e.g. Table for 6 "
-"persons, ...)"
+"Manage the maximum amount of people a user/resource can handle (e.g. Table "
+"for 6 persons, ...)"
 msgstr ""
-"Управляйте максимальным количеством людей, которое может обслуживать ресурс "
-"(например, стол на 6 человек, ...)"
+
+#. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
+msgid "Mandatory"
+msgstr "Обязательное"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_question__question_required
@@ -2374,17 +2458,14 @@ msgid "Manual Confirmation"
 msgstr "Подтверждение вручную"
 
 #. module: appointment
-#: model:ir.model.fields,help:appointment.field_appointment_resource__capacity
-msgid ""
-"Maximum amount of people for this resource (e.g. Table for 6 persons, ...)"
-msgstr ""
-"Максимальное количество людей для данного ресурса (например, Стол на 6 "
-"человек, ...)"
+#: model:ir.model.fields.selection,name:appointment.selection__appointment_invite__resources_choice__current_user
+msgid "Me"
+msgstr "Мне"
 
 #. module: appointment
-#: model:ir.model.fields.selection,name:appointment.selection__appointment_invite__resources_choice__current_user
-msgid "Me (only with Users)"
-msgstr "Я (только с пользователями)"
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_meeting_details
+msgid "Meeting details"
+msgstr ""
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_calendar_event__videocall_redirection
@@ -2449,7 +2530,7 @@ msgstr "Навигация"
 #. odoo-python
 #: code:addons/appointment/models/calendar_event.py:0
 msgid "Need to reschedule?"
-msgstr ""
+msgstr "Нужно перенести?"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_calendar_alarm__default_for_new_appointment_type
@@ -2482,10 +2563,18 @@ msgid "No Answers yet!"
 msgstr "Ответов пока нет!"
 
 #. module: appointment
+#. odoo-javascript
+#: code:addons/appointment/static/src/views/gantt/gantt_controller.xml:0
 #: model_terms:ir.actions.act_window,help:appointment.calendar_event_action_view_bookings_resources
 #: model_terms:ir.actions.act_window,help:appointment.calendar_event_action_view_bookings_users
 msgid "No Appointment or Resource were found."
 msgstr "Назначение или ресурс не найдены."
+
+#. module: appointment
+#. odoo-javascript
+#: code:addons/appointment/static/src/components/appointment_booking_action_helper/appointment_booking_action_helper.xml:0
+msgid "No Bookings Found"
+msgstr ""
 
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_type__avatars_display__hide
@@ -2494,6 +2583,7 @@ msgstr "Нет картинки"
 
 #. module: appointment
 #: model_terms:ir.actions.act_window,help:appointment.appointment_invite_action
+#: model_terms:ir.actions.act_window,help:appointment.appointment_invite_action_stat
 msgid "No Shared Links yet!"
 msgstr "Пока нет общих ссылок!"
 
@@ -2502,12 +2592,12 @@ msgstr "Пока нет общих ссылок!"
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_gantt_booking_resource
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_search_booking
 msgid "No Show"
-msgstr ""
+msgstr "Неявка"
 
 #. module: appointment
 #: model_terms:ir.actions.act_window,help:appointment.appointment_type_action_custom
 msgid "No Specific Slots Availabilities Shared!"
-msgstr ""
+msgstr "Не опубликовано ни одного конкретного временного слота!"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_invite__appointment_type_info_msg
@@ -2602,14 +2692,14 @@ msgstr ""
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "Oops! Your appointment is scheduled in less than"
-msgstr ""
+msgstr "Упс! До вашей встречи осталось менее чем"
 
 #. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/appointment_calendar/appointment_calendar_controller.js:0
 #: code:addons/appointment/static/src/views/custom_appointment_form_dialog/custom_appointment_form_dialog.js:0
 msgid "Open Appointment Type Form"
-msgstr ""
+msgstr "Открыть форму типа встречи"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_resource_view_form
@@ -2657,7 +2747,7 @@ msgstr "Лицо, бронирующее встречу"
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Personal Meeting"
-msgstr ""
+msgstr "Личная встреча"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_form
@@ -2698,7 +2788,7 @@ msgstr "Возможные пользователи"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "Pre-Booking Time"
-msgstr ""
+msgstr "Время предварительного бронирования"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
@@ -2709,7 +2799,7 @@ msgstr "Предпросмотр"
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/appointment_calendar/appointment_calendar_controller.xml:0
 msgid "Propose Slots"
-msgstr ""
+msgstr "Предложить слоты"
 
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_type__category__punctual
@@ -2748,7 +2838,7 @@ msgstr "Рейтинги"
 #. odoo-javascript
 #: code:addons/appointment/static/src/components/appointment_type_action_helper/appointment_type_action_helper.xml:0
 msgid "Ready to make scheduling easy?"
-msgstr ""
+msgstr "Готовы упростить планирование?"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_manage_leaves__reason
@@ -2773,11 +2863,6 @@ msgstr "Обычный"
 #: model:ir.ui.menu,name:appointment.menu_appointment_reminders
 msgid "Reminders"
 msgstr "Напоминания"
-
-#. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
-msgid "Remove"
-msgstr "Удалить"
 
 #. module: appointment
 #: model:ir.ui.menu,name:appointment.menu_schedule_report
@@ -2805,7 +2890,7 @@ msgstr "Ресурс"
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Resource %s"
-msgstr ""
+msgstr "Ресурс %s"
 
 #. module: appointment
 #: model:ir.actions.act_window,name:appointment.calendar_event_action_view_bookings_resources
@@ -2820,6 +2905,7 @@ msgstr "Отсутствие ресурсов"
 
 #. module: appointment
 #: model:ir.actions.act_window,name:appointment.appointment_resource_action
+#: model:ir.actions.act_window,name:appointment.appointment_resource_action_stat
 #: model:ir.model.fields,field_description:appointment.field_appointment_invite__resource_ids
 #: model:ir.model.fields,field_description:appointment.field_appointment_manage_leaves__appointment_resource_ids
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__resource_ids
@@ -2836,7 +2922,7 @@ msgstr "Ресурсы"
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_type__schedule_based_on__resources
 msgid "Resources (e.g. Tables, Courts, Rooms, ...)"
-msgstr ""
+msgstr "Ресурсы (например, столы, корты, комнаты и т. д.)"
 
 #. module: appointment
 #: model:ir.ui.menu,name:appointment.menu_appointment_schedule_resource_booking
@@ -2844,7 +2930,12 @@ msgid "Resources Bookings"
 msgstr "Ресурсы Бронирование"
 
 #. module: appointment
-#: model:ir.model.fields,field_description:appointment.field_calendar_event__on_leave_resource_ids
+#: model:ir.model.fields,field_description:appointment.field_appointment_invite__resources_resource_choice
+msgid "Resources Resource Choice"
+msgstr ""
+
+#. module: appointment
+#: model:ir.model.fields,field_description:appointment.field_calendar_event__unavailable_resource_ids
 msgid "Resources intersecting with leave time"
 msgstr "Ресурсы, пересекающиеся с временем отпуска"
 
@@ -2883,12 +2974,7 @@ msgstr "Ограничить для пользователей"
 #. odoo-javascript
 #: code:addons/appointment/static/src/xml/appointment_no_slot.xml:0
 msgid "Review Booking"
-msgstr ""
-
-#. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_kanban
-msgid "SCHEDULED"
-msgstr "ЗАПИСЬ"
+msgstr "Проверить бронирование"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__message_has_sms_error
@@ -2901,11 +2987,6 @@ msgid "Saturday"
 msgstr "Суббота"
 
 #. module: appointment
-#: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
-msgid "Save"
-msgstr "Сохранить"
-
-#. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/gantt/gantt_renderer.js:0
 msgid "Save & Close"
@@ -2915,13 +2996,13 @@ msgstr "Сохранить и закрыть"
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/custom_appointment_form_dialog/custom_appointment_form_dialog.xml:0
 msgid "Save & Copy Link"
-msgstr ""
+msgstr "Сохранить и скопировать ссылку"
 
 #. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/custom_appointment_form_dialog/custom_appointment_form_dialog.xml:0
 msgid "Save and Copy Link"
-msgstr ""
+msgstr "Сохранить и скопировать ссылку"
 
 #. module: appointment
 #: model:ir.ui.menu,name:appointment.menu_appointment_schedule_resources
@@ -2933,7 +3014,7 @@ msgstr "Запланировать встречу"
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Schedule 30-minute calls in virtual rooms"
-msgstr ""
+msgstr "Назначайте 30‑минутные звонки в виртуальных комнатах"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_invite__schedule_based_on
@@ -2958,9 +3039,16 @@ msgid "Schedule not after (days)"
 msgstr "Расписание не позднее (дней)"
 
 #. module: appointment
+#: model_terms:appointment.type,message_intro:appointment.appointment_type_dental_care
+msgid ""
+"Schedule your visit today and experience expert dental care brought right to"
+" your doorstep."
+msgstr ""
+
+#. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "Scheduling Window"
-msgstr ""
+msgstr "Окно планирования"
 
 #. module: appointment
 #. odoo-python
@@ -2989,17 +3077,18 @@ msgstr "Поиск в ответственных"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_invite_view_form
 msgid "Select Appointments to share..."
-msgstr ""
+msgstr "Выберите встречи, которыми хотите поделиться"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_manage_leaves_view_form
+#: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form_gantt_booking
 msgid "Select Resources"
-msgstr ""
+msgstr "Выбрать ресурсы"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "Select Resources..."
-msgstr ""
+msgstr "Выбрать ресурсы..."
 
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_type__assign_method__time_resource
@@ -3014,7 +3103,7 @@ msgstr "Выберите Время, затем автоназначение"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "Select Users..."
-msgstr ""
+msgstr "Выбрать пользователей..."
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_info
@@ -3069,7 +3158,6 @@ msgstr "Последовательность"
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/kanban/kanban_controller.xml:0
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_kanban
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_tree
 msgid "Share"
 msgstr "Поделиться"
@@ -3078,7 +3166,7 @@ msgstr "Поделиться"
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/kanban/kanban_controller.js:0
 msgid "Share Appointment"
-msgstr ""
+msgstr "Поделиться встречей"
 
 #. module: appointment
 #. odoo-javascript
@@ -3098,7 +3186,7 @@ msgstr "Доступность акций"
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/appointment_calendar/appointment_calendar_controller.xml:0
 msgid "Share Calendar"
-msgstr ""
+msgstr "Поделиться календарем"
 
 #. module: appointment
 #. odoo-javascript
@@ -3108,14 +3196,24 @@ msgstr "Поделиться ссылкой"
 
 #. module: appointment
 #: model:ir.actions.act_window,name:appointment.appointment_invite_action
+#: model:ir.actions.act_window,name:appointment.appointment_invite_action_stat
 msgid "Share Links"
 msgstr "Поделиться ссылкой"
+
+#. module: appointment
+#. odoo-javascript
+#: code:addons/appointment/static/src/components/appointment_booking_action_helper/appointment_booking_action_helper.xml:0
+msgid ""
+"Share this appointment type via link or schedule an appointment manually"
+msgstr ""
 
 #. module: appointment
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Share this link to let others book a meeting in your calendar"
 msgstr ""
+"Поделитесь этой ссылкой, чтобы другие могли бронировать время в вашем "
+"расписании"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_resource__shareable
@@ -3126,7 +3224,7 @@ msgstr "Поделиться"
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_type__category__anytime
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_search
 msgid "Shared Calendar"
-msgstr ""
+msgstr "Общий календарь"
 
 #. module: appointment
 #: model:ir.ui.menu,name:appointment.menu_appointment_invite
@@ -3210,14 +3308,19 @@ msgid "Source combination"
 msgstr "Комбинация источников"
 
 #. module: appointment
+#: model:ir.model.fields.selection,name:appointment.selection__appointment_invite__resources_resource_choice__specific_resources
+msgid "Specific Resources"
+msgstr "Специальные ресурсы"
+
+#. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_type__category__custom
 msgid "Specific Slots"
-msgstr ""
+msgstr "Определенные слоты"
 
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_invite__resources_choice__specific_resources
-msgid "Specific Users/Resources"
-msgstr "Конкретные пользователи/ресурсы"
+msgid "Specific Users"
+msgstr "Конкретные пользователи"
 
 #. module: appointment
 #: model:ir.actions.act_window,name:appointment.calendar_event_action_view_bookings_users
@@ -3256,6 +3359,13 @@ msgstr "Время начала управления уникальным тип
 #: model:ir.model.fields,field_description:appointment.field_appointment_slot__start_hour
 msgid "Starting Hour"
 msgstr "Час начала"
+
+#. module: appointment
+#: model:ir.model.fields,help:appointment.field_appointment_type__slot_creation_interval
+msgid ""
+"Starting from the beginning of the time slot, Odoo will create a new slot at"
+" regular intervals based on the time specified here."
+msgstr ""
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form
@@ -3306,7 +3416,7 @@ msgstr "Симптомы"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "Synchronize your Calendar to avoid double-booking"
-msgstr ""
+msgstr "Синхронизируйте календарь, чтобы избежать двойного бронирования"
 
 #. module: appointment
 #. odoo-python
@@ -3318,7 +3428,7 @@ msgstr "Таблица"
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Table %s"
-msgstr ""
+msgstr "Таблица %s"
 
 #. module: appointment
 #. odoo-python
@@ -3348,7 +3458,7 @@ msgid "The URL is already taken, please pick another code."
 msgstr "URL-адрес уже занят, пожалуйста, выберите другой код."
 
 #. module: appointment
-#: model:ir.model.constraint,message:appointment.constraint_appointment_type_check_resource_manual_confirmation_percentage
+#: model:ir.model.constraint,message:appointment.constraint_appointment_type_check_manual_confirmation_percentage
 msgid "The capacity percentage should be between 0 and 100%"
 msgstr "Процентное значение емкости должно быть от 0 до 100%"
 
@@ -3358,17 +3468,14 @@ msgid "The capacity reserved should be positive."
 msgstr "Зарезервированная мощность должна быть положительной."
 
 #. module: appointment
-#: model:ir.model.constraint,message:appointment.constraint_appointment_booking_line_check_capacity_used
-msgid "The capacity used can not be lesser than the capacity reserved"
-msgstr "Используемая емкость не может быть меньше зарезервированной"
-
-#. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/components/appointment_sync_button/appointment_sync_button.js:0
 msgid ""
 "The configuration has changed and synchronization is not possible anymore. "
 "Please reload the page."
 msgstr ""
+"Настройки изменились, синхронизация больше невозможна. Пожалуйста, "
+"перезагрузите страницу."
 
 #. module: appointment
 #: model:ir.model.constraint,message:appointment.constraint_appointment_slot_check_start_and_end_hour
@@ -3387,7 +3494,7 @@ msgstr "Событие %s не может бронировать ресурсы 
 msgid ""
 "The event %s cannot have an appointment status without being linked to an "
 "appointment type."
-msgstr ""
+msgstr "Событие %s не может иметь статус встречи без привязки к типу встречи."
 
 #. module: appointment
 #. odoo-python
@@ -3412,6 +3519,20 @@ msgstr "Для следующих типов назначений не назн�
 #: code:addons/appointment/models/appointment_question.py:0
 msgid "The following question(s) do not have any selectable answers : %s"
 msgstr "На следующий вопрос(ы) нет ответов, которые можно выбрать: %s"
+
+#. module: appointment
+#: model:ir.model.fields,help:appointment.field_appointment_type__max_bookings
+msgid ""
+"The maximum amount of bookings per slot the appointment can handle (e.g. Allow 6 bookings for the given user/resource).\n"
+"            This field is only used if the appointment type is not set to manage capacity."
+msgstr ""
+
+#. module: appointment
+#: model:ir.model.fields,help:appointment.field_appointment_type__user_capacity
+msgid ""
+"The maximum amount of capacity a user can handle when manage capacity is "
+"enabled."
+msgstr ""
 
 #. module: appointment
 #: model:ir.model.constraint,message:appointment.constraint_appointment_resource_check_capacity
@@ -3518,7 +3639,6 @@ msgstr "Четверг"
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_resource__tz
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__appointment_tz
-#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_kanban
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_search
 msgid "Timezone"
 msgstr "Часовой пояс"
@@ -3542,17 +3662,22 @@ msgstr "Кому"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "To make any changes, please contact"
-msgstr ""
+msgstr "Для внесения изменений свяжитесь с"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "To make any changes, please contact us."
-msgstr ""
+msgstr "Чтобы внести изменения, свяжитесь с нами."
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_invite__access_token
 msgid "Token"
 msgstr "Токен"
+
+#. module: appointment
+#: model:ir.model.fields,field_description:appointment.field_appointment_type__max_bookings
+msgid "Total Bookings"
+msgstr ""
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__resource_total_capacity
@@ -3561,14 +3686,14 @@ msgid "Total Capacity"
 msgstr "Вся вместительность"
 
 #. module: appointment
-#: model:ir.model.fields,field_description:appointment.field_calendar_event__resource_total_capacity_reserved
+#: model:ir.model.fields,field_description:appointment.field_calendar_event__total_capacity_reserved
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_tree_booking
 msgid "Total Capacity Reserved"
 msgstr "Общая резервная мощность"
 
 #. module: appointment
-#: model:ir.model.fields,field_description:appointment.field_calendar_event__resource_total_capacity_used
+#: model:ir.model.fields,field_description:appointment.field_calendar_event__total_capacity_used
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_form
 #: model_terms:ir.ui.view,arch_db:appointment.calendar_event_view_tree_booking
 msgid "Total Capacity Used"
@@ -3580,6 +3705,7 @@ msgid "Total Reserved"
 msgstr "Всего зарезервировано"
 
 #. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 #: model_terms:ir.ui.view,arch_db:appointment.portal_my_appointments
 msgid "Total:"
 msgstr "Итого:"
@@ -3599,11 +3725,6 @@ msgstr "Тип"
 #: model:ir.model.fields,help:appointment.field_appointment_type__activity_exception_decoration
 msgid "Type of the exception activity on record."
 msgstr "Тип Дела для исключения в записи."
-
-#. module: appointment
-#: model:ir.model.fields,field_description:appointment.field_calendar_event__on_leave_partner_ids
-msgid "Unavailable Partners"
-msgstr "Недоступные партнеры"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
@@ -3630,13 +3751,13 @@ msgstr "Предстоящие"
 #: model:ir.model.fields,field_description:appointment.field_res_partner__upcoming_appointment_ids
 #: model:ir.model.fields,field_description:appointment.field_res_users__upcoming_appointment_ids
 msgid "Upcoming Appointments"
-msgstr ""
+msgstr "Предстоящие встречи"
 
 #. module: appointment
 #. odoo-javascript
 #: code:addons/appointment/static/src/views/appointment_invite/appointment_share_link_list_controller.js:0
 msgid "Update a Share Link"
-msgstr ""
+msgstr "Обновить ссылку доступа"
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_calendar_alarm__default_for_new_appointment_type
@@ -3649,6 +3770,8 @@ msgstr "Использовать по умолчанию для новых ти�
 msgid ""
 "Use this menu to overview your Appointments once you get some bookings."
 msgstr ""
+"После завершения процесса бронирования здесь будут отображаться ваши "
+"встречи."
 
 #. module: appointment
 #: model:ir.model.fields,help:appointment.field_appointment_type__category
@@ -3665,11 +3788,27 @@ msgid ""
 "\n"
 "            - Shared Calendar: the user will create and share to another user an appointment type covering all their time slots"
 msgstr ""
+"Используется для определения категории данного типа встречи.\n"
+"\n"
+"        Варианты:\n"
+"\n"
+"            ‑ Обычный: еженедельные повторяющиеся слоты, доступны на сайте;\n"
+"\n"
+"            ‑ Ограниченный: регулярные слоты между двумя датами, доступны на сайте;\n"
+"\n"
+"            ‑ Конкретные слоты: пользователь создает индивидуальный тип встречи с выбранными слотами;\n"
+"\n"
+"            ‑ Общий календарь: пользователь делится типом встречи, охватывающим все его слоты."
 
 #. module: appointment
 #: model:res.groups,name:appointment.group_appointment_user
 msgid "User"
 msgstr "Пользователь"
+
+#. module: appointment
+#: model:ir.model.fields,field_description:appointment.field_appointment_type__user_capacity
+msgid "User Capacity"
+msgstr ""
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_invite__staff_user_ids
@@ -3682,7 +3821,7 @@ msgstr "Пользователи"
 #. odoo-python
 #: code:addons/appointment/models/templates/appointment_type.py:0
 msgid "Video Call"
-msgstr ""
+msgstr "Видеозвонок"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__event_videocall_source
@@ -3696,9 +3835,14 @@ msgid "View"
 msgstr "Просмотр"
 
 #. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_info
+msgid "We will book you with"
+msgstr ""
+
+#. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "We will come back to you to confirm it."
-msgstr ""
+msgstr "Мы свяжемся с вами для подтверждения."
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_type__website_message_ids
@@ -3728,7 +3872,7 @@ msgstr "На"
 #. module: appointment
 #: model:ir.model.fields.selection,name:appointment.selection__appointment_type__category_time_display__punctual_fields
 msgid "Within a date range"
-msgstr ""
+msgstr "В пределах диапазона дат"
 
 #. module: appointment
 #: model:ir.model.fields,field_description:appointment.field_appointment_resource__resource_calendar_id
@@ -3737,8 +3881,14 @@ msgstr "Часы работы"
 
 #. module: appointment
 #. odoo-javascript
-#: code:addons/appointment/static/src/js/appointment_form.js:0
-#: code:addons/appointment/static/src/js/appointment_validation.js:0
+#: code:addons/appointment/static/src/xml/appointment_no_slot.xml:0
+msgid "You already booked \""
+msgstr ""
+
+#. module: appointment
+#. odoo-javascript
+#: code:addons/appointment/static/src/interactions/appointment_form.js:0
+#: code:addons/appointment/static/src/interactions/appointment_validation.js:0
 msgid "You cannot invite more than 10 people"
 msgstr "Вы не можете пригласить более 10 человек"
 
@@ -3751,12 +3901,17 @@ msgstr "Ваше назначение"
 #. odoo-javascript
 #: code:addons/appointment/static/src/components/appointment_sync_button/appointment_sync_button.js:0
 msgid "Your calendar is already configured and was successfully synchronized."
-msgstr ""
+msgstr "Ваш календарь уже настроен и успешно синхронизирован."
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_meeting_user
 msgid "Your choice"
 msgstr "Ваш выбор"
+
+#. module: appointment
+#: model_terms:ir.ui.view,arch_db:appointment.appointment_info
+msgid "as you are already in touch with them."
+msgstr ""
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
@@ -3766,7 +3921,7 @@ msgstr "в"
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "days into the future"
-msgstr ""
+msgstr "дней до будущей встречи"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
@@ -3869,18 +4024,12 @@ msgstr "в этом месяце больше нет свободных мест
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "hour(s) and cannot be cancelled at this time.<br/>"
-msgstr ""
+msgstr "часа(ов), поэтому отмена сейчас невозможна.<br/>"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
 msgid "hours before the meeting"
-msgstr ""
-
-#. module: appointment
-#. odoo-javascript
-#: code:addons/appointment/static/src/xml/appointment_no_slot.xml:0
-msgid "on"
-msgstr "вкл"
+msgstr "часов до встречи"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
@@ -3895,8 +4044,11 @@ msgstr "человек"
 
 #. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_type_view_form
-msgid "persons)"
-msgstr "лица)"
+msgid ""
+"simultaneous appointment(s) \n"
+"                                per <span invisible=\"schedule_based_on != 'users'\">user</span>\n"
+"                                <span invisible=\"schedule_based_on != 'resources'\">resource</span>"
+msgstr ""
 
 #. module: appointment
 #. odoo-python
@@ -3905,9 +4057,15 @@ msgid "somebody"
 msgstr "кто-то"
 
 #. module: appointment
+#. odoo-python
+#: code:addons/appointment/controllers/portal.py:0
+msgid "start"
+msgstr "начало"
+
+#. module: appointment
 #: model_terms:ir.ui.view,arch_db:appointment.appointment_validated
 msgid "this link"
-msgstr ""
+msgstr "эта ссылка"
 
 #. module: appointment
 #. odoo-javascript

@@ -32,14 +32,14 @@ ACTIONS_SQL = {
 }
 
 
-class DataCleaningRule(models.Model):
+class Data_CleaningRule(models.Model):
     _name = 'data_cleaning.rule'
     _description = 'Cleaning Rule'
     _order = 'sequence'
 
     name = fields.Char(related='field_id.name')
     cleaning_model_id = fields.Many2one(
-        'data_cleaning.model', string='Cleaning Model', required=True, ondelete='cascade')
+        'data_cleaning.model', string='Cleaning Model', required=True, index=True, ondelete='cascade')
     res_model_id = fields.Many2one(
         related='cleaning_model_id.res_model_id', readonly=True, store=True)
     res_model_name = fields.Char(

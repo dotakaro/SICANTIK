@@ -70,7 +70,7 @@ class L10nLuMonthlyDeclarationWizard(models.TransientModel):
                 ('company_id', '=', wizard.company_id.id),
                 ('date_start', '>=', wizard.date_start),
                 ('date_end', '<=', wizard.date_end),
-                ('state', '!=', 'draft'),
+                ('state', '!=', '01_draft'),
             ])
 
     @api.model
@@ -87,7 +87,7 @@ class L10nLuMonthlyDeclarationWizard(models.TransientModel):
 
     @api.depends('batch_ids')
     def _compute_situational_unemployment_ids(self):
-        situational_unemp = self.env.ref('l10n_lu_hr_payroll.work_entry_type_situational_unemployment')
+        situational_unemp = self.env.ref('hr_work_entry.l10n_lu_work_entry_type_situational_unemployment')
         for wizard in self:
             regular_payslips = wizard.batch_ids.slip_ids.filtered(lambda p: p.struct_id == p.struct_type_id.default_struct_id)
             unemp_payslips = regular_payslips.worked_days_line_ids.filtered(
@@ -154,17 +154,17 @@ class L10nLuMonthlyDeclarationWizard(models.TransientModel):
         for payslip in payslips:
             grouped_payslips[(payslip.employee_id.id, payslip.struct_type_id.id)] |= payslip
 
-        for dummy, payslips in grouped_payslips.items():
+        for payslips in grouped_payslips.values():
             situational_unemployment = self.situational_unemployment_ids.filtered(lambda s: s.payslip_id in payslips)
             regular_payslips = payslips.filtered(lambda p: p.struct_id == p.struct_type_id.default_struct_id)
             gratification_payslips = payslips.filtered(lambda p: p.struct_id.code in ['LUX_GRATIFICATION', 'LUX_13TH_MONTH'])
 
             worked_hours = int(float_round(sum(regular_payslips.worked_days_line_ids.filtered(lambda w: w.is_paid and w.amount).mapped('number_of_hours')), 0))
 
-            contracts_start = payslips.contract_id.mapped('date_start')
+            contracts_start = payslips.version_id.mapped('date_start')
             period_start = max(min(contracts_start), self.date_start)
 
-            all_contracts_end = payslips.contract_id.mapped('date_end')
+            all_contracts_end = payslips.version_id.mapped('date_end')
             if all(d for d in all_contracts_end):
                 max_contract_end = max([d for d in all_contracts_end if d])
                 period_end = max_contract_end

@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { registry } from '@web/core/registry';
 import { user } from "@web/core/user";
@@ -22,12 +20,12 @@ export class KnowledgeArticleController extends ListController {
     getStaticActionMenuItems() {
         const menuItems = super.getStaticActionMenuItems();
         menuItems.duplicate = {
-            isAvailable: () => this.nbSelected && user.isAdmin,
+            isAvailable: () => this.hasSelectedRecords && user.isAdmin,
             sequence: 15,
             icon: "fa fa-clone",
             description: _t("Duplicate"),
             callback: async () => {
-                const selectedResIds = await this.getSelectedResIds();
+                const selectedResIds = await this.model.root.getResIds(true);
                 if (selectedResIds.length === 1) {
                     await this.model.orm.call(this.props.resModel, "copy", [selectedResIds]);
                 } else {

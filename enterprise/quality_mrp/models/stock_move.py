@@ -9,8 +9,8 @@ from odoo import models
 class StockMove(models.Model):
     _inherit = "stock.move"
 
-    def _action_confirm(self, merge=True, merge_into=False):
-        moves = super(StockMove, self)._action_confirm(merge=merge, merge_into=merge_into)
+    def _action_confirm(self, merge=True, merge_into=False, create_proc=True):
+        moves = super()._action_confirm(merge=merge, merge_into=merge_into, create_proc=create_proc)
         moves._create_quality_checks_for_mo()
 
         return moves
@@ -47,7 +47,7 @@ class StockMove(models.Model):
             check_vals_list += mo_check_vals_list
 
         # QC of operation type
-        for production, moves in mo_moves.items():
+        for production in mo_moves:
             quality_points_operation = self._search_quality_points(production.move_finished_ids.product_id, production.picking_type_id, 'operation')
 
             for point in quality_points_operation:

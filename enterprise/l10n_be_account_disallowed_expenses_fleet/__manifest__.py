@@ -8,9 +8,17 @@
     'description': """
 Disallowed Expenses Fleet Data for Belgium
     """,
-    'depends': ['account_disallowed_expenses_fleet', 'l10n_be_hr_payroll_fleet'],
-    'data': ['views/fleet_vehicle_views.xml'],
+    'depends': [
+        'account_disallowed_expenses_fleet',
+        'l10n_be_disallowed_expenses',
+        'l10n_be_hr_payroll_fleet',
+    ],
+    'data': [
+        'data/account_disallowed_expenses.xml',
+        'views/fleet_vehicle_views.xml',
+    ],
     'installable': True,
     'website': 'https://www.odoo.com/app/accounting',
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

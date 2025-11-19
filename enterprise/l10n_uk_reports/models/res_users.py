@@ -4,7 +4,8 @@
 from uuid import uuid4
 from odoo import fields, models, api
 
-class User(models.Model):
+
+class ResUsers(models.Model):
     _inherit = 'res.users'
 
     l10n_uk_user_token = fields.Char('User Token', copy=False, groups='base.group_system',

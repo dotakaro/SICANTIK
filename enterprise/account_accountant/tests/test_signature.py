@@ -23,7 +23,7 @@ class TestInvoiceSignature(AccountTestInvoicingCommon):
             'name': 'another accountant',
             'login': 'another_accountant',
             'password': 'another_accountant',
-            'groups_id': [
+            'group_ids': [
                 Command.set(cls.env.ref('account.group_account_user').ids),
             ],
             'sign_signature': cls.signature_fake_2,

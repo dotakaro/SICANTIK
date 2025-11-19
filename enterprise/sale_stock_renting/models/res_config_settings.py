@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models
@@ -37,7 +36,7 @@ class ResConfigSettings(models.TransientModel):
             )
 
     def set_values(self):
-        rental_group_before = self.env.user.has_group('sale_stock_renting.group_rental_stock_picking')
+        rental_group_before = self.default_get(['group_rental_stock_picking']).get('group_rental_stock_picking')
         super().set_values()
         if rental_group_before and not self.group_rental_stock_picking:
             self.env['stock.warehouse'].update_rental_rules()

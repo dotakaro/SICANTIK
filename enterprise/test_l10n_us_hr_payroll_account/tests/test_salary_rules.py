@@ -77,7 +77,8 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         })
 
         payslip = self._generate_payslip(datetime.date(2023, 1, 1), datetime.date(2023, 1, 15))
-        self._add_other_inputs(payslip, {'l10n_us_hr_payroll.input_commission': 3365.60})
+        self._add_other_input(payslip, self.env.ref('l10n_us_hr_payroll.input_commission'), 3365.60)
+        payslip.compute_sheet()
 
         self.assertEqual(len(payslip.worked_days_line_ids), 1)
         self.assertEqual(len(payslip.input_line_ids), 1)
@@ -94,8 +95,8 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         self.env['hr.work.entry'].create([{
             'name': 'Overtime',
             'employee_id': self.employee.id,
-            'contract_id': self.contract.id,
-            'work_entry_type_id': self.env.ref('hr_work_entry.overtime_work_entry_type').id,
+            'version_id': self.contract.id,
+            'work_entry_type_id': self.env.ref('hr_work_entry.work_entry_type_overtime').id,
             'date_start': datetime.datetime(2023, 1, 1, 9),
             'date_stop': datetime.datetime(2023, 1, 1, 9) + relativedelta(hours=10, minutes=43, seconds=48),
             'company_id': self.env.company.id,
@@ -103,8 +104,8 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         }, {
             'name': 'Double Time',
             'employee_id': self.employee.id,
-            'contract_id': self.contract.id,
-            'work_entry_type_id': self.env.ref('l10n_us_hr_payroll.double_work_entry_type').id,
+            'version_id': self.contract.id,
+            'work_entry_type_id': self.env.ref('hr_work_entry.l10n_us_work_entry_type_double').id,
             'date_start': datetime.datetime(2023, 1, 7, 9),
             'date_stop': datetime.datetime(2023, 1, 7, 9) + relativedelta(hours=1, minutes=10, seconds=12),
             'company_id': self.env.company.id,
@@ -112,8 +113,8 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         }, {
             'name': 'Retro Overtime',
             'employee_id': self.employee.id,
-            'contract_id': self.contract.id,
-            'work_entry_type_id': self.env.ref('l10n_us_hr_payroll.retro_overtime_work_entry_type').id,
+            'version_id': self.contract.id,
+            'work_entry_type_id': self.env.ref('hr_work_entry.l10n_us_work_entry_type_retro_overtime').id,
             'date_start': datetime.datetime(2023, 1, 7, 11),
             'date_stop': datetime.datetime(2023, 1, 7, 11) + relativedelta(hours=2, minutes=59, seconds=24),
             'company_id': self.env.company.id,
@@ -121,8 +122,8 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         }, {
             'name': 'Retro Regular Pay',
             'employee_id': self.employee.id,
-            'contract_id': self.contract.id,
-            'work_entry_type_id': self.env.ref('l10n_us_hr_payroll.retro_regular_work_entry_type').id,
+            'version_id': self.contract.id,
+            'work_entry_type_id': self.env.ref('hr_work_entry.l10n_us_work_entry_type_retro_regular').id,
             'date_start': datetime.datetime(2023, 1, 8, 8),
             'date_stop': datetime.datetime(2023, 1, 9, 0),
             'company_id': self.env.company.id,
@@ -130,8 +131,8 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         }, {
             'name': 'Retro Regular Pay',
             'employee_id': self.employee.id,
-            'contract_id': self.contract.id,
-            'work_entry_type_id': self.env.ref('l10n_us_hr_payroll.retro_regular_work_entry_type').id,
+            'version_id': self.contract.id,
+            'work_entry_type_id': self.env.ref('hr_work_entry.l10n_us_work_entry_type_retro_regular').id,
             'date_start': datetime.datetime(2023, 1, 14, 8),
             'date_stop': datetime.datetime(2023, 1, 15, 0),
             'company_id': self.env.company.id,
@@ -146,7 +147,7 @@ class TestPayslipValidation(TestPayslipValidationCommon):
             'date_from': datetime.datetime(2023, 1, 2, 16, 0, 0),
             'date_to': datetime.datetime(2023, 1, 3, 1, 0, 0),
             'time_type': "leave",
-            'work_entry_type_id': self.env.ref('hr_work_entry_contract.work_entry_type_leave').id
+            'work_entry_type_id': self.env.ref('hr_work_entry.work_entry_type_leave').id
         }])
 
         self.contract.write({
@@ -219,7 +220,8 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         })
 
         payslip = self._generate_payslip(datetime.date(2023, 4, 1), datetime.date(2023, 4, 15))
-        self._add_other_inputs(payslip, {'l10n_us_hr_payroll.input_commission': 864.29})
+        self._add_other_input(payslip, self.env.ref('l10n_us_hr_payroll.input_commission'), 864.29)
+        payslip.compute_sheet()
 
         payslip_results = {'BASIC': 3416.68, 'COMMISSION': 864.29, 'GROSS': 4280.97, '401K': -256.86, 'DENTAL': -2.48, 'MEDICAL': -62.01, 'VISION': -0.49, 'TAXABLE': 3959.13, 'FIT': -548.53, 'MEDICARE': -61.13, 'MEDICAREADD': 0, 'SST': -261.39, 'CAINCOMETAX': -234.0, 'CASDITAX': -37.94, 'COMPANYFUTA': 252.96, 'COMPANYMEDICARE': 61.13, 'COMPANYSOCIAL': 261.39, 'COMPANYSUI': 71.67, 'COMPANYCAETT': 4.22, 'NET': 2816.14}
         self._validate_payslip(payslip, payslip_results)
@@ -237,7 +239,8 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         })
 
         payslip = self._generate_payslip(datetime.date(2023, 4, 1), datetime.date(2023, 4, 15))
-        self._add_other_inputs(payslip, {'l10n_us_hr_payroll.input_commission': 3365.60})
+        self._add_other_input(payslip, self.env.ref('l10n_us_hr_payroll.input_commission'), 3365.60)
+        payslip.compute_sheet()
 
         payslip_results = {'BASIC': 2398.68, 'COMMISSION': 3365.6, 'GROSS': 5764.28, 'DENTAL': -3.69, 'MEDICAL': -42.87, 'VISION': -0.49, 'MEDICALFSA': -22.73, 'TAXABLE': 5694.5, 'FIT': -953.18, 'MEDICARE': -82.57, 'MEDICAREADD': 0, 'SST': -353.06, 'CAINCOMETAX': -411.53, 'CASDITAX': -51.25, 'ROTH401K': -461.14, 'COMPANYFUTA': 341.67, 'COMPANYMEDICARE': 82.57, 'COMPANYSOCIAL': 353.06, 'COMPANYSUI': 96.81, 'COMPANYCAETT': 5.69, 'NET': 3381.77}
         self._validate_payslip(payslip, payslip_results)
@@ -658,10 +661,13 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         })
 
         payslip = self._generate_payslip(datetime.date(2023, 4, 1), datetime.date(2023, 4, 15))
-        self._add_other_inputs(payslip, {
-            'l10n_us_hr_payroll.input_tips': 500,
-            'l10n_us_hr_payroll.input_allocated_tips': 300,
-        })
+        other_inputs_to_add = [
+            (self.env.ref('l10n_us_hr_payroll.input_tips'), 500),
+            (self.env.ref('l10n_us_hr_payroll.input_allocated_tips'), 300),
+        ]
+        for other_input, amount in other_inputs_to_add:
+            self._add_other_input(payslip, other_input, amount)
+        payslip.compute_sheet()
 
         payslip_results = {'BASIC': 3416.68, 'TIPS': 500.0, 'GROSS': 3916.68, 'TAXABLE': 3916.68, 'FIT': -539.19, 'MEDICARE': -56.79, 'MEDICAREADD': 0, 'SST': -242.83, 'CAINCOMETAX': -229.65, 'CASDITAX': -35.25, 'COMPANYFUTA': 235.0, 'COMPANYMEDICARE': 56.79, 'COMPANYSOCIAL': 242.83, 'COMPANYSUI': 66.58, 'COMPANYCAETT': 3.92, 'ALLOCATEDTIPS': 300.0, 'NET': 3112.96}
         self._validate_payslip(payslip, payslip_results)
@@ -857,23 +863,24 @@ class TestPayslipValidation(TestPayslipValidationCommon):
             'children': 2,
         })
 
-        payslip = self._generate_payslip(datetime.date(2023, 4, 1), datetime.date(2023, 4, 7))
+        payslip = self._generate_payslip(datetime.date(2025, 4, 1), datetime.date(2025, 4, 7))
         payslip.compute_sheet()
 
         payslip_results = {
             'BASIC': 850.0,
             'GROSS': 850.0,
             'TAXABLE': 850.0,
-            'FIT': -31.73,
+            'FIT': -27.31,
             'MEDICARE': -12.33,
             'MEDICAREADD': 0,
             'SST': -52.7,
-            'ALINCOMETAX': -29.76,
+            'ALINCOMETAX': -29.98,
             'COMPANYFUTA': 51,
             'COMPANYMEDICARE': 12.33,
             'COMPANYSOCIAL': 52.7,
             'COMPANYSUI': 22.95,
-            'NET': 723.48,
+            'COMPANYALESA': 0.51,
+            'NET': 727.69,
         }
         self._validate_payslip(payslip, payslip_results)
 
@@ -889,25 +896,66 @@ class TestPayslipValidation(TestPayslipValidationCommon):
             'l10n_us_filing_status': 'jointly',
         })
 
-        payslip = self._generate_payslip(datetime.date(2024, 4, 1), datetime.date(2024, 4, 30))
+        payslip = self._generate_payslip(datetime.date(2025, 4, 1), datetime.date(2025, 4, 30))
         payslip.compute_sheet()
 
         payslip_results = {
             'BASIC': 3500.0,
             'GROSS': 3500.0,
             'TAXABLE': 3500.0,
-            'FIT': -106.67,
+            'FIT': -100.00,
             'MEDICARE': -50.75,
             'MEDICAREADD': 0.0,
             'SST': -217.0,
             'WACARESFUND': -20.3,
-            'WAPFMLFAMILY': -12.44,
-            'WAPFMLMEDICAL': -6.06,
+            'WAPFMLFAMILY': -15.53,
+            'WAPFMLMEDICAL': -7.5,
             'COMPANYFUTA': 210.0,
             'COMPANYMEDICARE': 50.75,
             'COMPANYSOCIAL': 217.0,
             'COMPANYSUI': 43.75,
-            'COMPANYWAPFML': 7.4,
-            'NET': 3086.78,
+            'COMPANYWAPFML': 9.17,
+            'COMPANYWAEAF': 1.05,
+            'NET': 3088.92,
+        }
+        self._validate_payslip(payslip, payslip_results)
+
+    def test_068_co_state_example_1(self):
+        self.work_address.state_id = self.env.ref('base.state_us_6')
+        self.contract.write({
+            'wage': 5000,
+            'schedule_pay': 'monthly',
+            'l10n_us_pre_retirement_amount': 500,
+            'l10n_us_pre_retirement_type': 'fixed',
+            'l10n_us_health_benefits_medical': 50,
+        })
+        self.employee.write({
+            'l10n_us_filing_status': 'single',
+            'l10n_us_state_filing_status': 'co_status_1',
+        })
+
+        payslip = self._generate_payslip(datetime.date(2025, 4, 1), datetime.date(2025, 4, 30))
+        payslip.compute_sheet()
+
+        payslip_results = {
+            'BASIC': 5000.0,
+            'GROSS': 5000.0,
+            '401K': -500.0,
+            'MEDICAL': -50.0,
+            'TAXABLE': 4450.0,
+            'FIT': -364.13,
+            'MEDICARE': -71.78,
+            'MEDICAREADD': 0.0,
+            'SST': -306.9,
+            'COINCOMETAX': -177.47,
+            'COFAMLI': -22.5,
+            'COMPANYFUTA': 297.0,
+            'COMPANYCOFAMLI': 22.5,
+            'COMPANYMEDICARE': 71.78,
+            'COMPANYSOCIAL': 306.9,
+            'COMPANYSUI': 84.15,
+            'COMPANYCOSOLVENCY': 6.68,
+            'COMPANYCOSUPPORT': 8.42,
+            'NET': 3507.23,
         }
         self._validate_payslip(payslip, payslip_results)

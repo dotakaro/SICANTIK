@@ -3,6 +3,7 @@
 {
     'name': 'Australia - Payroll with Accounting',
     'category': 'Human Resources',
+    'countries': ['au'],
     'depends': [
         'l10n_au_hr_payroll',
         'hr_payroll_account',
@@ -25,7 +26,7 @@ Accounting Data for Australian Payroll Rules.
         "data/l10n_au_payslip_ytd.xml",
         "views/l10n_au_super_stream_views.xml",
         "views/l10n_au_super_fund_views.xml",
-        "views/hr_contract_views.xml",
+        # "views/hr_contract_views.xml",
         "views/hr_payslip_views.xml",
         "views/res_config_settings_views.xml",
         "views/hr_payslip_run_views.xml",
@@ -46,5 +47,6 @@ Accounting Data for Australian Payroll Rules.
     'demo': [
         "data/l10n_au_hr_payroll_account_demo.xml",
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

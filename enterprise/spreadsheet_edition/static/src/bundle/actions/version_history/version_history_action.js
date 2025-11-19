@@ -1,5 +1,4 @@
-/** @odoo-module **/
-import { onMounted, onPatched, onWillStart, Component, useState } from "@odoo/owl";
+import { onMounted, onWillStart, useState, Component, onPatched } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { standardActionServiceProps } from "@web/webclient/actions/action_service";
 import { _t } from "@web/core/l10n/translation";
@@ -10,7 +9,6 @@ import { UNTITLED_SPREADSHEET_NAME } from "@spreadsheet/helpers/constants";
 import * as spreadsheet from "@odoo/o-spreadsheet";
 import { Model } from "@odoo/o-spreadsheet";
 
-import { loadSpreadsheetDependencies } from "@spreadsheet/assets_backend/helpers";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 
 import { SpreadsheetComponent } from "@spreadsheet/actions/spreadsheet_component";
@@ -26,6 +24,7 @@ import { router } from "@web/core/browser/router";
 import { RestoreVersionConfirmationDialog } from "./restore_version_dialog/restore_version_dialog";
 import { OdooDataProvider } from "@spreadsheet/data_sources/odoo_data_provider";
 import { SpreadsheetNavbar } from "../../components/spreadsheet_navbar/spreadsheet_navbar";
+import { deepCopy } from "@web/core/utils/objects";
 
 
 export class VersionHistoryAction extends Component {
@@ -51,6 +50,7 @@ export class VersionHistoryAction extends Component {
         this.loadLocales = useSpreadsheetLocales();
         this.loadCurrencies = useSpreadsheetCurrencies();
         this.getThumbnail = useSpreadsheetThumbnail();
+        this.geoJsonService = useService("geo_json_service");
 
         this.spreadsheetName = UNTITLED_SPREADSHEET_NAME;
         this.revisions = [];
@@ -135,7 +135,7 @@ export class VersionHistoryAction extends Component {
         if (revisionId === this.state.currentRevisionId) {
             return;
         }
-        const scroll = this.model.getters.getActiveSheetDOMScrollInfo();
+        const scroll = this.model.getters.getActiveSheetScrollInfo();
         const oldPosition = this.model.getters.getActivePosition();
         this.state.currentRevisionId = revisionId;
         this.loadModel();
@@ -196,10 +196,7 @@ export class VersionHistoryAction extends Component {
     }
 
     async fetchData() {
-        const [spreadsheetHistoryData] = await Promise.all([
-            this._fetchData(),
-            loadSpreadsheetDependencies(),
-        ]);
+        const spreadsheetHistoryData = await this._fetchData();
         this.spreadsheetData = spreadsheetHistoryData.data;
         this.spreadsheetDataLastDate = spreadsheetHistoryData.initial_date;
         this.revisions = spreadsheetHistoryData.revisions;
@@ -307,7 +304,7 @@ export class VersionHistoryAction extends Component {
         );
         const revisions = this.revisions.slice(0, revisionIndex + 1);
         this.setDataProvider();
-        const data = this.spreadsheetData;
+        const data = deepCopy(this.spreadsheetData);
         this.model = new Model(
             data,
             {
@@ -319,11 +316,14 @@ export class VersionHistoryAction extends Component {
                 external: {
                     loadCurrencies: this.loadCurrencies,
                     loadLocales: this.loadLocales,
+                    geoJsonService: this.geoJsonService,
                 },
                 mode: "readonly",
             },
             revisions
         );
+        // the migration changes the data in place, so we need to ensure it's only migrated once
+        // this.spreadsheetData.odooVersion = ODOO_VERSION;
         if (this.model.session.serverRevisionId !== this.state.currentRevisionId) {
             if (!this.fromSnapshot) {
                 this.dialog.add(ConfirmationDialog, {

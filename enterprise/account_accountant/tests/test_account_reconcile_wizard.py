@@ -232,7 +232,6 @@ class TestAccountReconcileWizard(AccountTestInvoicingCommon):
 
                 full_reconcile = lines.full_reconcile_id
                 self.assertTrue(full_reconcile)
-                self.assertFalse(full_reconcile.exchange_move_id)
 
     def test_write_off_mixed_foreign_currencies(self):
         """ Write off with multiple currencies should reconcile in company currency."""

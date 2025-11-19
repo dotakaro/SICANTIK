@@ -3,20 +3,15 @@
 from collections import defaultdict
 
 from odoo import _, api, fields, models
-from odoo.tools import float_compare, format_list
+from odoo.tools import float_compare
 
 from ..models.l10n_lu_tax_report_data import MULTI_COLUMN_FIELDS
 
 
-class LuAnnualTaxReportCustomHandler(models.AbstractModel):
+class L10n_LuAnnualTaxReportHandler(models.AbstractModel):
     _name = 'l10n_lu.annual.tax.report.handler'
-    _inherit = 'l10n_lu.tax.report.handler'
+    _inherit = ['l10n_lu.tax.report.handler']
     _description = 'Luxembourgish Annual Tax Report Custom Handler'
-
-    def _custom_options_initializer(self, report, options, previous_options):
-        super()._custom_options_initializer(report, options, previous_options=previous_options)
-        # closing entry button shouldn't be visible in the annual tax report
-        options['buttons'] = [button for button in options['buttons'] if button['action'] != 'action_periodic_vat_entries']
 
     def _get_field_values(self, lines):
         field_types_dict = {
@@ -134,7 +129,7 @@ class LuAnnualTaxReportCustomHandler(models.AbstractModel):
                     errors.add(
                         _("The field %(field)s must be filled in because one of the dependent fields (%(dependent_fields)s) is filled in.",
                         field=check_field,
-                        dependent_fields=format_list(self.env, [related['field_name'] for related in dependent_fields[check_field]])),
+                        dependent_fields=[related['field_name'] for related in dependent_fields[check_field]]),
                     )
 
         return errors
@@ -187,9 +182,9 @@ class LuAnnualTaxReportCustomHandler(models.AbstractModel):
             warnings['l10n_lu_reports.annual_tax_report_warning_checks'] = {'failed_controls': list(failed_controls), 'alert_type': 'danger'}
 
 
-class LuReportAppendixA(models.AbstractModel):
+class L10n_LuAppendixATaxReportHandler(models.AbstractModel):
     _name = 'l10n_lu.appendix.a.tax.report.handler'
-    _inherit = 'l10n_lu.annual.tax.report.handler'
+    _inherit = ['l10n_lu.annual.tax.report.handler']
     _description = 'Custom Handler for the Appendix A of the LU Annual Tax Report'
 
     def _get_account_details(self, ln):
@@ -251,14 +246,14 @@ class LuReportAppendixA(models.AbstractModel):
         return result
 
 
-class LuReportAppendixOpEx(models.AbstractModel):
+class L10n_LuAppendixOpexTaxReportHandler(models.AbstractModel):
     _name = 'l10n_lu.appendix.opex.tax.report.handler'
-    _inherit = 'account.tax.report.handler'
+    _inherit = ['account.tax.report.handler']
     _description = 'Custom Handler for the Appendix to Operational Expenditures of the LU Annual Tax Report'
 
     def _get_custom_display_config(self):
         parent_config = super()._get_custom_display_config()
-        parent_config['components']['AccountReportLineName'] = 'l10n_lu_reports.AppendixLineName'
+        parent_config.setdefault('components', {})['AccountReportLineName'] = 'L10nLUAppendixLineName'
         return parent_config
 
     def action_open_appendix_view(self, options, params=None):
@@ -326,7 +321,7 @@ class LuReportAppendixOpEx(models.AbstractModel):
         for appendix_line in appendix_lines:
             values = {}
             year = appendix_line['year']
-            for column_group_key, column_group_options in grouped_columns[year]:
+            for column_group_key, column_group_options in grouped_columns[year]:  # noqa: B007
                 values[column_group_key] = {
                     'vat_excluded': appendix_line['report_section_412'],
                     'vat_invoiced': appendix_line['report_section_413'],

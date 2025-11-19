@@ -5,27 +5,39 @@ import io
 import logging
 from collections import defaultdict
 
-from odoo import models, api
+from odoo import models, api, fields
 from odoo.tools.pdf import OdooPdfFileReader, OdooPdfFileWriter
 
 _logger = logging.getLogger(__name__)
 
-
 class IrAttachment(models.Model):
-    _inherit = ['ir.attachment']
+    _inherit = 'ir.attachment'
+
+    document_ids = fields.One2many('documents.document', 'attachment_id', export_string_translation=False)
+
+    def add_attachment_to_drive(self):
+        self.ensure_one()
+        copy_attachment = self.copy({'res_model': False, 'res_id': False})
+        self.env['documents.document'].create({
+            'attachment_id': copy_attachment.id,
+            'type': copy_attachment.type,
+            'folder_id': False,
+        })
 
     @api.model
     def _pdf_split(self, new_files=None, open_files=None):
         """Creates and returns new pdf attachments based on existing data.
 
-        :param new_files: the array that represents the new pdf structure:
-            [{
-                'name': 'New File Name',
-                'new_pages': [{
-                    'old_file_index': 7,
-                    'old_page_number': 5,
-                }],
-            }]
+        :param new_files: the array that represents the new pdf
+            structure::
+
+                [{
+                    'name': 'New File Name',
+                    'new_pages': [{
+                        'old_file_index': 7,
+                        'old_page_number': 5,
+                    }],
+                }]
         :param open_files: array of open file objects.
         :returns: the new PDF attachments
         """
@@ -65,7 +77,7 @@ class IrAttachment(models.Model):
         their business models.
 
         :param vals: the create/write dictionary of ir attachment
-        :return True if new documents are created
+        :return: True if new documents are created
         """
         # Special case for documents
         if vals.get('res_model') == 'documents.document' and vals.get('res_id'):

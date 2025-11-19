@@ -3,35 +3,16 @@
 # 	* quality
 # 
 # Translators:
-# Tiffany Chang, 2024
-# Simo Suurla <simo@suurla.fi>, 2024
-# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
-# Jukka Paulin <jukka.paulin@gmail.com>, 2024
-# Miku Laitinen <miku.laitinen@gmail.com>, 2024
-# Sari Mäyrä <sari.mayra@sv-oy.fi>, 2024
-# Johanna Valkonen <miujohanna@gmail.com>, 2024
-# Mikko Virtanen <mikko.virtanen2013@gmail.com>, 2024
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Kimmo Lehtonen <leban@netzionale.com>, 2024
-# Mikko Salmela <salmemik@gmail.com>, 2024
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Jenni Heikkilä <jenni.heikkila@sv-oy.fi>, 2024
-# Timo Koukkari <ti.ko@netikka.fi>, 2024
-# Pekko Tuomisto <pekko.tuomisto@web-veistamo.fi>, 2024
-# Eino Mäkitalo <eino.makitalo@netitbe.fi>, 2024
-# Martin Trigaux, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024
+# Wil Odoo, 2025
+# Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:10+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Jessica Jakara, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -357,6 +338,16 @@ msgid "Failed"
 msgstr "Epäonnistui"
 
 #. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_check__failure_location_id
+msgid "Failure Location"
+msgstr "Vian sijainti"
+
+#. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_point__failure_location_ids
+msgid "Failure Locations"
+msgstr "Vikaantumispaikat"
+
+#. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert_stage__folded
 msgid "Folded"
 msgstr "Laskostettu"
@@ -460,6 +451,19 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Jos valittu, joitakin viestejä ei ole toimitettu."
 
 #. module: quality
+#: model:ir.model.fields,help:quality.field_quality_point__failure_location_ids
+msgid ""
+"If quality check fails, a destination location is chosen from this list for\n"
+"- each failed specific product quantity if control is per quantity\n"
+" /- all quantities of a product if control is per product\n"
+" /- all quantities of products in the operation if control is per operation"
+msgstr ""
+"Jos laaduntarkastus epäonnistuu, kohdesijainti valitaan tältä listalta:\n"
+"- jokaiselle epäonnistuneelle tietylle tuotemäärälle, jos  kontrolli on määräkohtainen\n"
+"/- tuotteen kaikille määrille, jos kontrolli on tuotekohtainen\n"
+"/- kaikille toiminnon tuotteiden määrille, jos kontrolli on toimintokohtainen"
+
+#. module: quality
 #: model:ir.model.fields,help:quality.field_quality_alert_team__alias_bounced_content
 msgid ""
 "If set, this content will automatically be sent out to unauthorized users "
@@ -553,6 +557,11 @@ msgid "Messages"
 msgstr "Viestit"
 
 #. module: quality
+#: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
+msgid "My Activities"
+msgstr "Toimenpiteeni"
+
+#. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert__my_activity_date_deadline
 #: model:ir.model.fields,field_description:quality.field_quality_check__my_activity_date_deadline
 msgid "My Activity Deadline"
@@ -561,7 +570,7 @@ msgstr "Toimenpiteeni määräaika"
 #. module: quality
 #: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
 msgid "My Alerts"
-msgstr "Omat hälytykset"
+msgstr "Omat hälytykseni"
 
 #. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert__name
@@ -607,11 +616,11 @@ msgstr "Seuraavan toimenpiteen tyyppi"
 #. odoo-python
 #: code:addons/quality/models/quality.py:0
 msgid ""
-"No quality team found for this company.\n"
-"Please go to configuration and create one first."
+"No quality teams found for this company! Head over to the configuration menu"
+" to create your first quality team."
 msgstr ""
-"Tälle yritykselle ei löytynyt laatutiimiä.\n"
-"Mene asetuksiin ja luo se ensin."
+"Laatutiimejä ei löytynyt yritykselle! Suuntaa kokoonpanoasetusten valikkoon "
+"luodaksesi ensimmäisen laatutiimin."
 
 #. module: quality
 #: model:ir.model.fields.selection,name:quality.selection__quality_alert__priority__0
@@ -775,7 +784,7 @@ msgstr "Tuote"
 #. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_point__product_category_ids
 msgid "Product Categories"
-msgstr "Tuotekategoriat"
+msgstr "Tuoteryhmät"
 
 #. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert__product_id
@@ -786,6 +795,11 @@ msgstr "Tuotevariaatio"
 #: model:ir.model.fields,field_description:quality.field_quality_point__product_ids
 msgid "Products"
 msgstr "Tuotteet"
+
+#. module: quality
+#: model:res.groups.privilege,name:quality.res_groups_privilege_quality
+msgid "Quality"
+msgstr "Laatu"
 
 #. module: quality
 #: model:ir.model,name:quality.model_quality_alert
@@ -901,9 +915,16 @@ msgid "Sequence"
 msgstr "Järjestys"
 
 #. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_point__show_failure_location
+msgid "Show Failure Location"
+msgstr "Näytä, missä kohtaa epäonnistuminen tapahtui"
+
+#. module: quality
 #: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
-msgid "Show all records which has next action date is before today"
-msgstr "Näytä kaikki tietueet joissa on toimenpide myöhässä"
+msgid "Show all records whose next activity date is past"
+msgstr ""
+"Näytä kaikki kirjaukset, joiden seuraavan toimenpiteen päivä on "
+"menneisyydessä"
 
 #. module: quality
 #: model:quality.alert.stage,name:quality.quality_alert_stage_3

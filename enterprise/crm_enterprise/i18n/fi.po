@@ -3,20 +3,16 @@
 # 	* crm_enterprise
 # 
 # Translators:
-# Johanna Valkonen <miujohanna@gmail.com>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024
-# Martin Trigaux, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
+# Wil Odoo, 2025
+# Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:26+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Kari Lindgren <kari.lindgren@emsystems.fi>, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:10+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Jessica Jakara, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -25,9 +21,21 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: crm_enterprise
-#: model:ir.model,name:crm_enterprise.model_crm_activity_report
-msgid "CRM Activity Analysis"
-msgstr "CRM toimenpiteiden analyysi"
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "%(contact_name)s's opportunity"
+msgstr "%(contact_name)s:n myyntimahdollisuus"
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "Could not extract lead information from this image."
+msgstr "Liidin tietoja ei voitu poimia tästä kuvasta."
+
+#. module: crm_enterprise
+#: model:ir.model,website_form_label:crm_enterprise.model_crm_lead
+msgid "Create an Opportunity"
+msgstr "Luo myyntimahdollisuus"
 
 #. module: crm_enterprise
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_lead_view_map
@@ -40,20 +48,37 @@ msgid "Days To Convert"
 msgstr "Päivää konversioon"
 
 #. module: crm_enterprise
-#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__days_exceeding_closing
-msgid "Exceeded Closing Days"
-msgstr "Päätöspäivä ylitetty"
+#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__display_name
+msgid "Display Name"
+msgstr "Näyttönimi"
 
 #. module: crm_enterprise
-#: model:ir.model.fields,field_description:crm_enterprise.field_crm_activity_report__won_status
-#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__won_status
-msgid "Is Won"
-msgstr "Voitettu"
+#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__days_exceeding_closing
+msgid "Exceeded Closing Days"
+msgstr "Klousauspäivä ylitetty"
+
+#. module: crm_enterprise
+#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__id
+msgid "ID"
+msgstr "Tunnus"
+
+#. module: crm_enterprise
+#. odoo-javascript
+#: code:addons/crm_enterprise/static/src/crm_business_card_scanner.xml:0
+#: code:addons/crm_enterprise/static/src/crm_business_card_scanner_cog_menu.xml:0
+msgid "Import Business Cards"
+msgstr "Tuo käyntikortit"
 
 #. module: crm_enterprise
 #: model:ir.model,name:crm_enterprise.model_crm_lead
-msgid "Lead/Opportunity"
-msgstr "Liidi/mahdollisuus"
+msgid "Lead"
+msgstr "Liidi"
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "Lead generated from this image."
+msgstr "Liidi luotu tästä kuvasta."
 
 #. module: crm_enterprise
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_lead_view_pivot
@@ -61,11 +86,16 @@ msgid "Leads"
 msgstr "Liidit"
 
 #. module: crm_enterprise
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_activity_report__won_status__lost
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_lead__won_status__lost
-#: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_activity_report_view_search
-msgid "Lost"
-msgstr "Hävitty"
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "Network error while processing the business cards."
+msgstr "Verkkovirhe käsiteltäessä käyntikortteja."
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "New Lead Scan"
+msgstr "Uusi liidin skannaus"
 
 #. module: crm_enterprise
 #: model_terms:ir.actions.act_window,help:crm_enterprise.crm_opportunity_action_dashboard
@@ -73,16 +103,20 @@ msgid "No data found!"
 msgstr "Tietoja ei löytynyt!"
 
 #. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid ""
+"Oops, the AI service is not working 🤖. Please contact your administrator to "
+"verify settings."
+msgstr ""
+"Hups, tekoälypalvelu ei toimi 🤖. Ota yhteyttä järjestelmänvalvojaan "
+"asetusten tarkistamiseksi."
+
+#. module: crm_enterprise
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_lead_view_cohort
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_opportunity_view_graph
 msgid "Opportunities"
-msgstr "Mahdollisuudet"
-
-#. module: crm_enterprise
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_activity_report__won_status__pending
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_lead__won_status__pending
-msgid "Pending"
-msgstr "Odottaa"
+msgstr "Myyntimahdollisuudet"
 
 #. module: crm_enterprise
 #: model:ir.actions.act_window,name:crm_enterprise.crm_opportunity_action_dashboard
@@ -90,15 +124,25 @@ msgid "Pipeline Analysis"
 msgstr "Myyntiputken analyysi"
 
 #. module: crm_enterprise
+#. odoo-javascript
+#: code:addons/crm_enterprise/static/src/crm_business_card_scanner.xml:0
+msgid "Scan Business Cards"
+msgstr "Skannaa käyntikortit"
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/models/crm_lead.py:0
+msgid ""
+"The AI agent was not able to generate a lead from the provided image. *sad "
+"robot noises* 🤖"
+msgstr ""
+"Tekoälyagentti ei voinut luoda liidiä annetusta kuvasta. *surullisen robotin"
+" ääniä* 🤖"
+
+#. module: crm_enterprise
 #: model_terms:ir.actions.act_window,help:crm_enterprise.crm_opportunity_action_dashboard
 msgid "Use this menu to have an overview of your Pipeline."
 msgstr "Tämän valikon avulla saat yleiskuvan myyntiputkestasi."
-
-#. module: crm_enterprise
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_activity_report__won_status__won
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_lead__won_status__won
-msgid "Won"
-msgstr "Voitettu"
 
 #. module: crm_enterprise
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_lead_view_graph

@@ -3,15 +3,15 @@
 # 	* hr_appraisal_survey
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Maitê Dietze, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:52+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Maitê Dietze, 2025\n"
 "Language-Team: Portuguese (Brazil) (https://app.transifex.com/odoo/teams/41243/pt_BR/)\n"
 "MIME-Version: 1.0\n"
@@ -66,7 +66,7 @@ msgid ""
 "                        Thank you!\n"
 "                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                Give your feedback\n"
 "                            </a>\n"
 "                        </div>\n"
@@ -81,15 +81,15 @@ msgstr ""
 "                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
 "                        </p><p style=\"margin-left:5px\">Prezado(a) <t t-out=\"object.partner_id.name or 'participant'\">[participante]</t></p>\n"
 "                        <span>\n"
-"                            <t t-out=\"logged_user\">[Usuário atual]</t> lhe enviou um convite para participar de uma pesquisa e oferecer feedback sobre <t t-out=\"employee\">[funcionário]</t>.\n"
+"                            <t t-out=\"logged_user\">[Usuário atual]</t> lhe enviou um convite para participar de uma pesquisa e dar feedback sobre <t t-out=\"employee\">[funcionário]</t>.\n"
 "                            Preencha a pesquisa antes de <t t-out=\"deadline\">[prazo indicado]</t>.\n"
 "                        </span>\n"
 "                        <br/>\n"
 "                        Agradecemos!\n"
 "                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
-"                                Dê seu feedback\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
+"                                Dar feedback\n"
 "                            </a>\n"
 "                        </div>\n"
 "                    \n"
@@ -249,7 +249,9 @@ msgstr "Avaliador"
 #. module: hr_appraisal_survey
 #. odoo-python
 #: code:addons/hr_appraisal_survey/models/hr_appraisal.py:0
+#: model:ir.actions.act_window,name:hr_appraisal_survey.appraisal_ask_feedback_action
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.appraisal_ask_feedback_view_form
+#: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_user_input_view_tree
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_view_form
 msgid "Ask Feedback"
 msgstr "Solicitar feedback"
@@ -414,6 +416,13 @@ msgstr "Abaixo dos padrões e expectativas"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__display_name
 msgid "Display Name"
 msgstr "Nome exibido"
 
@@ -501,6 +510,13 @@ msgstr "Estou me referindo a você."
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__id
 msgid "ID"
 msgstr "ID"
 
@@ -662,6 +678,12 @@ msgid "Personal Performance Objectives"
 msgstr "Objetivos de desempenho pessoal"
 
 #. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
+msgid "Please set an Answer Deadline in the future"
+msgstr "Defina um prazo de resposta futuro"
+
+#. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_1_2
 msgid "Position Title"
 msgstr "Nome do cargo"
@@ -679,7 +701,7 @@ msgstr "Desenvolvimento profissional e plano de desempenho"
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_4_3
 msgid "Project Objectives"
-msgstr "Objetivos de projeto"
+msgstr "Objetivos do projeto"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_12
@@ -848,8 +870,12 @@ msgstr "Opinião do usuário da pesquisa"
 
 #. module: hr_appraisal_survey
 #: model:mail.template,subject:hr_appraisal_survey.mail_template_appraisal_ask_feedback
-msgid "Take part in {{ object.employee_id.name or 'this' }} appraisal"
-msgstr "Colaborar com a avaliação de {{ object.employee_id.name or 'this' }}"
+msgid ""
+"Take part in {{ ctx.get('employee_id') and ctx['employee_id'].name or 'this'"
+" }} appraisal"
+msgstr ""
+"Colaborar com a avaliação de {{ ctx.get('employee_id') and "
+"ctx['employee_id'].name or 'this' }}"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_4
@@ -1042,6 +1068,18 @@ msgid ""
 msgstr ""
 "Você pode criar pesquisas que sirvam para avaliações. Projete facilmente sua avaliação,\n"
 "                envie convites e analise respostas."
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected feedback linked to multiples appraisals."
+msgstr "Não é possível selecionar feedback vinculado a várias avaliações."
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected multiple feedback template."
+msgstr "Não é possível selecionar vários modelos de feedback."
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_button_form_view

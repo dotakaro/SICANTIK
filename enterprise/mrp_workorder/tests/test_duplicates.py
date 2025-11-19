@@ -10,11 +10,10 @@ class TestDuplicateProducts(common.TransactionCase):
         super(TestDuplicateProducts, cls).setUpClass()
 
         grp_workorder = cls.env.ref('mrp.group_mrp_routings')
-        cls.env.user.write({'groups_id': [(4, grp_workorder.id)]})
+        cls.env.user.write({'group_ids': [(4, grp_workorder.id)]})
 
         cls.workcenter_1 = cls.env['mrp.workcenter'].create({
             'name': 'Nuclear Workcenter',
-            'default_capacity': 2,
             'time_start': 10,
             'time_stop': 5,
             'time_efficiency': 80,
@@ -67,6 +66,8 @@ class TestDuplicateProducts(common.TransactionCase):
             'product_id': cls.painting.id,
             'product_qty': 1.0,
             'bom_id': cls.bom_boat.id})
+
+        cls.bom_boat.bom_line_ids.operation_id = cls.bom_boat.operation_ids
 
         # Update quantities
         cls.location_1 = cls.env.ref('stock.stock_location_stock')
@@ -146,7 +147,7 @@ class TestDuplicateProducts(common.TransactionCase):
     def test_byproduct_1(self):
         """ Use the same product as component and as byproduct"""
         # Required for `byproduct_ids` to be visible in the view
-        self.env.user.groups_id += self.env.ref('mrp.group_mrp_byproducts')
+        self.env.user.group_ids += self.env.ref('mrp.group_mrp_byproducts')
         bom_form = Form(self.bom_boat)
         with bom_form.byproduct_ids.new() as bp:
             bp.product_id = self.painting
@@ -177,8 +178,8 @@ class TestDuplicateProducts(common.TransactionCase):
         wo.move_raw_ids[2].move_line_ids[0].lot_id = self.p1
         wo.move_raw_ids[2].move_line_ids[0].quantity = 1
         # Byproduct
-        wo.move_finished_ids[1].move_line_ids[0].lot_id = self.p2
-        wo.move_finished_ids[1].move_line_ids[0].quantity = 1
+        production.move_finished_ids[1].move_line_ids[0].lot_id = self.p2
+        production.move_finished_ids[1].move_line_ids[0].quantity = 1
         wo.move_raw_ids.picked = True
         wo.do_finish()
         production.button_mark_done()

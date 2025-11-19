@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import models
@@ -16,4 +15,4 @@ class SaleOrderLine(models.Model):
         if template:
             return super(SaleOrderLine, self.with_context(default_worksheet_template_id=template.id))._timesheet_create_task(project)
         else:
-            return super(SaleOrderLine, self)._timesheet_create_task(project)
+            return super()._timesheet_create_task(project)

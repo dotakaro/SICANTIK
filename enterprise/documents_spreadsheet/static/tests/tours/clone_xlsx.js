@@ -1,5 +1,3 @@
-/** @odoo-module**/
-
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
@@ -27,7 +25,7 @@ registry.category("web_tour.tours").add("spreadsheet_clone_xlsx", {
         },
         {
             content: "find the right folder",
-            trigger: ".o_searchview_autocomplete li:contains(Test folder)",
+            trigger: ".o_searchview_autocomplete span:contains(Test folder)",
             run: "click",
         },
         {

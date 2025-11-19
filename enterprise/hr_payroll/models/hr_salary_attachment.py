@@ -16,19 +16,22 @@ class HrSalaryAttachment(models.Model):
     _inherit = ['mail.thread']
     _rec_name = 'description'
 
-    _sql_constraints = [
-        (
-            'check_monthly_amount', 'CHECK (monthly_amount > 0)',
-            'Payslip amount must be strictly positive.'
-        ),
-        (
-            'check_total_amount',
-            'CHECK ((total_amount > 0 AND total_amount >= monthly_amount) OR no_end_date = True)',
-            'Total amount must be strictly positive and greater than or equal to the payslip amount.'
-        ),
-        ('check_remaining_amount', 'CHECK (remaining_amount >= 0)', 'Remaining amount must be positive.'),
-        ('check_dates', 'CHECK (date_start <= date_end)', 'End date may not be before the starting date.'),
-    ]
+    _check_monthly_amount = models.Constraint(
+        'CHECK (monthly_amount > 0)',
+        'Oops! Let’s keep the payslip amount strictly positive. We want to deduct money from our employee’s payslip, not add to it!'
+    )
+    _check_total_amount = models.Constraint(
+        'CHECK ((total_amount > 0 AND total_amount >= monthly_amount) OR no_end_date = True)',
+        "Total amount must be strictly positive and greater than or equal to the payslip amount.",
+    )
+    _check_remaining_amount = models.Constraint(
+        'CHECK (remaining_amount >= 0)',
+        "Remaining amount must be positive.",
+    )
+    _check_dates = models.Constraint(
+        'CHECK (date_start <= date_end)',
+        "End date may not be before the starting date.",
+    )
 
     employee_ids = fields.Many2many('hr.employee', string='Employees', required=True,
                                     domain=lambda self: [('company_id', 'in', self.env.companies.ids)])
@@ -251,12 +254,19 @@ class HrSalaryAttachment(models.Model):
     @api.ondelete(at_uninstall=False)
     def _unlink_if_not_running(self):
         if any(assignment.state == 'open' for assignment in self):
-            raise UserError(_('You cannot delete a running salary attachment!'))
+            raise UserError(_(
+                "The salary attachment you're trying to remove is still running. You can’t delete unless you change it to completed or cancelled."
+            ))
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_if_not_linked_in_payslips(self):
+        if any(attachment.payslip_ids for attachment in self):
+            raise UserError(_('You cannot delete a salary attachment that is linked to a payslip!'))
 
     def record_payment(self, total_amount):
         ''' Record a new payment for this attachment, if the total has been reached the attachment will be closed.
 
-        :param amount: amount to register for this payment
+        :param total_amount: amount to register for this payment
             computed using the payslip_amount and the total if not given
 
         Note that paid_amount can never be higher than total_amount

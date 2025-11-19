@@ -6,7 +6,7 @@
     'description': """
 Allows using IoT devices, such as scales and printers, for delivery operations.
 """,
-    'category': 'Manufacturing/Internet of Things (IoT)',
+    'category': 'Supply Chain/Internet of Things (IoT)',
     'version': '1.0',
     'depends': ['iot', 'stock_delivery'],
     'data': [
@@ -15,6 +15,7 @@ Allows using IoT devices, such as scales and printers, for delivery operations.
         'views/iot_views.xml',
         'views/stock_picking_views.xml',
         ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'auto_install': True,
     'assets': {

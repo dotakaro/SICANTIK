@@ -22,17 +22,6 @@ class TestSynchStatementCreation(AccountOnlineSynchronizationCommon):
             'account_type': 'asset_fixed',
         })
 
-    def reconcile_st_lines(self, st_lines):
-        for line in st_lines:
-            wizard = self.env['bank.rec.widget'].with_context(default_st_line_id=line.id).new({})
-            line = wizard.line_ids.filtered(lambda x: x.flag == 'auto_balance')
-            wizard._js_action_mount_line_in_edit(line.index)
-            line.name = "toto"
-            wizard._line_value_changed_name(line)
-            line.account_id = self.account
-            wizard._line_value_changed_account_id(line)
-            wizard._action_validate()
-
     # Tests
     def test_creation_initial_sync_statement(self):
         transactions = self._create_online_transactions(['2016-01-01', '2016-01-03'])
@@ -95,8 +84,8 @@ class TestSynchStatementCreation(AccountOnlineSynchronizationCommon):
         )
 
     @patch('odoo.addons.account_online_synchronization.models.account_online.AccountOnlineLink._fetch_transactions')
-    @patch('odoo.addons.account_online_synchronization.models.account_online.AccountOnlineLink._get_consent_expiring_date')
-    def test_automatic_journal_assignment(self, patched_get_consent, patched_fetch_transactions):
+    @patch('odoo.addons.account_online_synchronization.models.account_online.AccountOnlineLink._update_connection_status')
+    def test_automatic_journal_assignment(self, patched_update_connection_status, patched_fetch_transactions):
         def create_online_account(name, link_id, iban, currency_id):
             return self.env['account.online.account'].create({
                 'name': name,
@@ -131,7 +120,11 @@ class TestSynchStatementCreation(AccountOnlineSynchronizationCommon):
         online_account_3 = create_online_account('OnlineAccount3', self.account_online_link.id, 'BE23798242487495', self.other_currency.id)
 
         patched_fetch_transactions.return_value = True
-        patched_get_consent.return_value = True
+        patched_update_connection_status.return_value = {
+            'consent_expiring_date': None,
+            'is_payment_enabled': False,
+            'is_payment_activated': False,
+        }
 
         account_link_journal_wizard = self.env['account.bank.selection'].create({'account_online_link_id': self.account_online_link.id})
         account_link_journal_wizard.with_context(active_model='account.journal', active_id=bank_journal_with_account_gol.id).sync_now()
@@ -170,16 +163,15 @@ class TestSynchStatementCreation(AccountOnlineSynchronizationCommon):
             'currency_code': 'EUR',
             'provider_data': False,
             'account_data': False,
-            'include_pendings': False,
             'include_foreign_currency': True,
         }
-        patched_fetch.assert_called_with('/proxy/v1/transactions', data=data)
+        patched_fetch.assert_called_with('/proxy/v2/transactions/posted', data=data)
 
         # No transaction exists in db but we have a value for last_sync on the online_account, we should use that date
         self.account_online_account.last_sync = '2020-03-04'
         data['start_date'] = '2020-03-04'
         self.account_online_account._retrieve_transactions()
-        patched_fetch.assert_called_with('/proxy/v1/transactions', data=data)
+        patched_fetch.assert_called_with('/proxy/v2/transactions/posted', data=data)
 
         # We have transactions, we should use the date of the latest one instead of the last_sync date
         transactions = self._create_online_transactions(['2016-01-01', '2016-01-03'])
@@ -188,7 +180,7 @@ class TestSynchStatementCreation(AccountOnlineSynchronizationCommon):
         data['start_date'] = '2016-01-03'
         data['last_transaction_identifier'] = '2'
         self.account_online_account._retrieve_transactions()
-        patched_fetch.assert_called_with('/proxy/v1/transactions', data=data)
+        patched_fetch.assert_called_with('/proxy/v2/transactions/posted', data=data)
 
     def test_multiple_transaction_identifier_fetched(self):
         # Ensure that if we receive twice the same transaction within the same call, it won't be created twice
@@ -301,26 +293,22 @@ If you've already opened a ticket for this issue, don't report it again: a suppo
 
         # flush and clear everything for the new "transaction"
         self.env.invalidate_all()
-        try:
-            self.env.registry.enter_test_mode(self.cr)
-            with self.env.registry.cursor() as test_cr:
-                test_env = self.env(cr=test_cr)
-                test_link_account = self.account_online_link.with_env(test_env)
-                test_link_account.state = 'connected'
+        with self.enter_registry_test_mode(), self.env.registry.cursor() as test_cr:
+            test_env = self.env(cr=test_cr)
+            test_link_account = self.account_online_link.with_env(test_env)
+            test_link_account.state = 'connected'
 
-                # this hand-written self.assertRaises() does not roll back self.cr,
-                # which is necessary below to inspect the message being posted
-                try:
-                    test_link_account._fetch_odoo_fin('/testthisurl')
-                except RedirectWarning as exception:
-                    self.assertEqual(exception.args[0], "This kind of things can happen.\n\nIf you've already opened a ticket for this issue, don't report it again: a support agent will contact you shortly.")
-                    self.assertEqual(exception.args[1], return_act_url)
-                    self.assertEqual(exception.args[2], 'Report issue')
-                else:
-                    self.fail("Expected RedirectWarning not raised")
-                self.assertEqual(test_link_account.message_ids[0].body, message_body)
-        finally:
-            self.env.registry.leave_test_mode()
+            # this hand-written self.assertRaises() does not roll back self.cr,
+            # which is necessary below to inspect the message being posted
+            try:
+                test_link_account._fetch_odoo_fin('/testthisurl')
+            except RedirectWarning as exception:
+                self.assertEqual(exception.args[0], "This kind of things can happen.\n\nIf you've already opened a ticket for this issue, don't report it again: a support agent will contact you shortly.")
+                self.assertEqual(exception.args[1], return_act_url)
+                self.assertEqual(exception.args[2], 'Report issue')
+            else:
+                self.fail("Expected RedirectWarning not raised")
+            self.assertEqual(test_link_account.message_ids[0].body, message_body)
 
     def test_account_online_link_having_journal_ids(self):
         """ This test verifies that the account online link object
@@ -354,16 +342,3 @@ If you've already opened a ticket for this issue, don't report it again: a suppo
         ])
         self.assertEqual(online_link.account_online_account_ids, online_accounts)
         self.assertEqual(len(online_link.journal_ids), 2)  # Our online link connections should have 2 journals.
-
-    def test_transaction_details_json_compatibility_from_html(self):
-        """ This test checks that, after being imported from the transient model
-            the records of account.bank.statement.line will have the
-            'transaction_details' field able to be decoded to a JSON,
-            i.e. it is not encapsulated in <p> </p> tags.
-        """
-        transaction = self._create_one_online_transaction()
-        transaction['transaction_details'] = '{\n    "account_id": "1",\n    "status": "posted"\n}'
-        transient_transaction = self.env['account.bank.statement.line.transient'].create(transaction)
-        transaction_details = transient_transaction.read(fields=['transaction_details'], load=None)[0]['transaction_details']
-        self.assertFalse(transaction_details.startswith('<p>'), 'Transient transaction details should not start with <p> when read.')
-        self.assertFalse(transaction_details.endswith('</p>'), 'Transient transaction details should not end with </p> when read.')

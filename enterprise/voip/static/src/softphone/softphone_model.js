@@ -1,15 +1,17 @@
-import { Correspondence } from "@voip/core/correspondence_model";
+import { InCallViewModel } from "@voip/softphone/in_call_view_model";
+import { KeypadModel } from "@voip/softphone/keypad_model";
 import { isSubstring } from "@voip/utils/utils";
 
+/**
+ * Retains the state of the Softphone that needs to be persisted even if the
+ * corresponding component is unmounted.
+ */
 export class Softphone {
-    activeTabId = "activity";
+    activeTab = "dialer";
+    activeTabSection = "";
+    activeRecord = null;
+    dialer = new KeypadModel();
     isDisplayed = false;
-    isFolded = false;
-    /**
-     * The auto-call mode is turned on when the user clicks on the call button
-     * from the “Next Activities” tab.
-     */
-    isInAutoCallMode = false;
     numpad = {
         isOpen: false,
         value: "",
@@ -18,104 +20,96 @@ export class Softphone {
             end: 0,
             direction: "none",
         },
+        countryCode: {
+            iso: "",
+            itu: "",
+        },
     };
-    searchBarInputValue = "";
-    selectedCorrespondence;
+    addressBook = {
+        searchInputValue: "",
+    };
+    agenda = {
+        searchInputValue: "",
+    };
+    callSummary = {
+        /**
+         * @type {import("@voip/core/call_model").Call}
+         */
+        call: null,
+        isShown: false,
+        hideAfterTimeout: undefined,
+        scrollToActiveRecord: false,
+    };
+    history = {
+        searchInputValue: "",
+    };
+    inCallView = new InCallViewModel();
     shouldFocus = false;
 
     constructor(store, voip) {
         this.store = store;
         this.voip = voip;
+        this.setup();
     }
 
     get activities() {
-        const searchBarInputValue = this.searchBarInputValue.trim();
-        return Object.values(this.store.Activity.records).filter(
+        const searchInputValue = this.agenda.searchInputValue.trim();
+        return Object.values(this.store["mail.activity"].records).filter(
             (activity) =>
                 activity.activity_category === "phonecall" &&
                 ["today", "overdue"].includes(activity.state) &&
-                ["phone", "mobile"].some((field) => activity[field]) &&
-                activity.user_id[0] === this.store.self.userId &&
-                (!searchBarInputValue ||
+                activity.phone &&
+                activity.user_id === this.store.self.main_user_id?.id &&
+                (!searchInputValue ||
                     [
                         activity.partner.name,
                         activity.partner.displayName,
-                        activity.mobile,
                         activity.phone,
                         activity.name,
-                    ].some((x) => isSubstring(x, searchBarInputValue)))
+                    ].some((x) => isSubstring(x, searchInputValue)))
         );
     }
 
     get contacts() {
-        return Object.values(this.store.Persona.records).filter(
-            (contact) =>
-                contact.hasPhoneNumber &&
-                (!this.searchBarInputValue ||
-                    [
-                        contact.name,
-                        contact.displayName,
-                        contact.mobileNumber,
-                        contact.landlineNumber,
-                    ].some((x) => isSubstring(x, this.searchBarInputValue)))
+        return Object.values(this.store.Persona.records).filter((persona) =>
+            Boolean(persona.phone)
         );
     }
 
-    get recentCalls() {
-        const filteredCalls = (() => {
-            if (this.searchBarInputValue) {
-                return Object.values(this.voip.calls).filter(
-                    (call) =>
-                        isSubstring(call.phoneNumber, this.searchBarInputValue) ||
-                        (call.partner && isSubstring(call.partner.name, this.searchBarInputValue))
-                );
-            }
-            return Object.values(this.voip.calls);
-        })();
-        return filteredCalls.sort((a, b) => a.id < b.id);
-    }
-
-    closeNumpad() {
-        this.numpad.isOpen = false;
-    }
-
-    fold() {
-        if (this.store.isSmall) {
-            return;
-        }
-        this.isFolded = true;
-    }
+    /**
+     * Setup method to be overridden by subclasses.
+     * This method exists because the constructor cannot be overridden,
+     * allowing subclasses to perform initialization logic.
+     */
+    setup() {}
 
     hide() {
         this.isDisplayed = false;
     }
 
-    openNumpad() {
-        this.numpad.isOpen = true;
-        this.shouldFocus = true;
-    }
-
-    selectCorrespondence({ activity, partner, call }) {
-        this.selectedCorrespondence = new Correspondence({ activity, partner, call });
-    }
-
-    selectNextActivity() {
-        const nextActivity = this.activities.find((activity) => !activity.postponed);
-        if (nextActivity) {
-            this.selectCorrespondence({ activity: nextActivity });
-        } else {
-            this.isInAutoCallMode = false;
-        }
+    hideCallSummary() {
+        clearTimeout(this.callSummary.hideAfterTimeout);
+        Object.assign(this.callSummary, {
+            call: null,
+            hideAfterTimeout: undefined,
+            isShown: false,
+        });
     }
 
     show() {
         this.isDisplayed = true;
-        this.isFolded = false;
         this.shouldFocus = true;
     }
 
-    unfold() {
-        this.isFolded = false;
-        this.shouldFocus = true;
+    showSummary(call) {
+        clearTimeout(this.callSummary.hideAfterTimeout);
+        Object.assign(this.callSummary, {
+            call,
+            hideAfterTimeout: setTimeout(() => {
+                this.hideCallSummary();
+                this.callSummary.scrollToActiveRecord = true;
+            }, 3000),
+            isShown: true,
+        });
     }
 }

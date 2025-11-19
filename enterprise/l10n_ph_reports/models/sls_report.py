@@ -2,9 +2,9 @@
 from odoo import models
 
 
-class SlsCustomHandler(models.AbstractModel):
+class L10n_PhSlsReportHandler(models.AbstractModel):
     _name = 'l10n_ph.sls.report.handler'
-    _inherit = 'l10n_ph.slsp.report.handler'
+    _inherit = ['l10n_ph.slsp.report.handler']
     _description = 'Summary Lists of Sales Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options):

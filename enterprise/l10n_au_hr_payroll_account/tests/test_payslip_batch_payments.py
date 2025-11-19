@@ -20,19 +20,7 @@ class TestPayslipRun(L10nPayrollAccountCommon):
                 "company_id": self.company.id,
             }
         )
-
-        payslip_employee = (
-            self.env["hr.payslip.employees"]
-            .with_company(self.company)
-            .create(
-                {
-                    "employee_ids": [
-                        Command.set([self.employee_1.id, self.employee_2.id])
-                    ]
-                }
-            )
-        )
-        payslip_employee.with_context(active_id=payslip_run.id).compute_sheet()
+        payslip_run.generate_payslips(employee_ids=[self.employee_1.id, self.employee_2.id])
         payslip_run.action_validate()
         return payslip_run
 
@@ -40,7 +28,7 @@ class TestPayslipRun(L10nPayrollAccountCommon):
     def test_batch_payment(self):
         payslip_run = self._prepare_payslip_run()
         self.assertEqual(
-            payslip_run.state, "close", "Payslip run should be in close state"
+            payslip_run.state, "03_close", "Payslip run should be in close state"
         )
         # Post journal entries
         payslip_run.slip_ids.move_id._post()
@@ -51,7 +39,7 @@ class TestPayslipRun(L10nPayrollAccountCommon):
         self.assertEqual(payslip_run.l10n_au_payment_batch_id.payment_method_id, self.env.ref("l10n_au_aba.account_payment_method_aba_ct"))
 
         self.assertTrue(all(payslip.state == 'paid' for payslip in payslip_run.slip_ids), "All payslips must be marked paid!")
-        self.assertEqual(payslip_run.state, 'paid', "The payslip batch should be marked as paid!")
+        self.assertEqual(payslip_run.state, '04_paid', "The payslip batch should be marked as paid!")
         for payment in payments:
             slip = payslip_run.slip_ids.filtered(lambda p: p.employee_id.work_contact_id == payment.partner_id)
             self.assertEqual(payment.amount, slip.line_ids.filtered(lambda x: x.code == 'NET').total)
@@ -79,9 +67,8 @@ class TestPayslipRun(L10nPayrollAccountCommon):
         for st_line in stmnt.line_ids:
             payment_lines = payments.filtered(lambda x: x.partner_id == st_line.partner_id)\
                 .move_id.line_ids.filtered(lambda line: line.account_id == self.aba_ct.payment_account_id)
-            wizard = self.env['bank.rec.widget'].with_context(default_st_line_id=st_line.id).new({})
-            wizard._action_add_new_amls(payment_lines, allow_partial=False)
-            wizard._action_validate()
+
+            st_line.set_line_bank_statement_line(payment_lines.ids)
         self.assertTrue(all(p.is_matched for p in payments), "All payments should be Matched with bank statements!")
 
         self.assertEqual(payslip_run.l10n_au_payment_batch_id.state, "reconciled", "Batch Should be in reconciled state!")
@@ -89,7 +76,7 @@ class TestPayslipRun(L10nPayrollAccountCommon):
     def test_payslip_aba(self):
         payslip_run = self._prepare_payslip_run()
         self.assertEqual(
-            payslip_run.state, "close", "Payslip run should be in close state"
+            payslip_run.state, "03_close", "Payslip run should be in close state"
         )
         action = payslip_run.action_payment_report('aba')
         self.env["hr.payroll.payment.report.wizard"].with_context(
@@ -109,7 +96,7 @@ class TestPayslipRun(L10nPayrollAccountCommon):
     def test_single_payslip_payment(self):
         payslip_run = self._prepare_payslip_run()
         self.assertEqual(
-            payslip_run.state, "close", "Payslip run should be in close state"
+            payslip_run.state, "03_close", "Payslip run should be in close state"
         )
         payslip_run.slip_ids.move_id._post()
         payslip = payslip_run.slip_ids[0]
@@ -138,7 +125,5 @@ class TestPayslipRun(L10nPayrollAccountCommon):
         })
         for st_line in stmnt.line_ids:
             payment_lines = payment.move_id.line_ids.filtered(lambda line: line.account_id == self.outbound_manual.payment_account_id)
-            wizard = self.env['bank.rec.widget'].with_context(default_st_line_id=st_line.id).new({})
-            wizard._action_add_new_amls(payment_lines, allow_partial=False)
-            wizard._action_validate()
+            st_line.set_line_bank_statement_line(payment_lines.ids)
         self.assertTrue(payment.is_matched, 'Payment should be match with a bank statement line!')

@@ -1,34 +1,38 @@
 import {
     Component,
+    markup,
     onWillRender,
     onWillStart,
     onWillUpdateProps,
+    onWillUnmount,
     reactive,
     useEffect,
     useExternalListener,
     useRef,
-    markup,
+    useState,
 } from "@odoo/owl";
 import { hasTouch, isMobileOS } from "@web/core/browser/feature_detection";
 import { Domain } from "@web/core/domain";
-import {
-    getStartOfLocalWeek,
-    is24HourFormat,
-    serializeDate,
-    serializeDateTime,
-} from "@web/core/l10n/dates";
+import { getCondensedFormat, serializeDate, serializeDateTime } from "@web/core/l10n/dates";
+import { is24HourFormat } from "@web/core/l10n/time";
 import { localization } from "@web/core/l10n/localization";
 import { _t } from "@web/core/l10n/translation";
 import { usePopover } from "@web/core/popover/popover_hook";
 import { evaluateBooleanExpr } from "@web/core/py_js/py";
+import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
+import { zipWith } from "@web/core/utils/arrays";
+import { KeepLast } from "@web/core/utils/concurrency";
 import { useService } from "@web/core/utils/hooks";
 import { omit, pick } from "@web/core/utils/objects";
+import { escape, nbsp } from "@web/core/utils/strings";
 import { debounce, throttleForAnimation } from "@web/core/utils/timing";
 import { url } from "@web/core/utils/urls";
-import { escape } from "@web/core/utils/strings";
+import { parseXML } from "@web/core/utils/xml";
 import { useVirtualGrid } from "@web/core/virtual_grid_hook";
+import { extractFieldsFromArchInfo } from "@web/model/relational_model/utils";
 import { formatFloatTime } from "@web/views/fields/formatters";
+import { KanbanRecord } from "@web/views/kanban/kanban_record";
 import { SelectCreateDialog } from "@web/views/view_dialogs/select_create_dialog";
 import { GanttConnector } from "./gantt_connector";
 import {
@@ -36,6 +40,7 @@ import {
     diffColumn,
     getCellColor,
     getColorIndex,
+    getHoveredCellPart,
     localEndOf,
     localStartOf,
     useGanttConnectorDraggable,
@@ -47,14 +52,14 @@ import {
 } from "./gantt_helpers";
 import { GanttPopover } from "./gantt_popover";
 import { GanttRendererControls } from "./gantt_renderer_controls";
-import { GanttResizeBadge } from "./gantt_resize_badge";
+import { GanttTimeDisplayBadge } from "./gantt_time_display_badge";
 import { GanttRowProgressBar } from "./gantt_row_progress_bar";
-import { clamp } from "@web/core/utils/numbers";
 
-const { DateTime } = luxon;
+const viewRegistry = registry.category("views");
+
+const { DateTime, Interval } = luxon;
 
 /**
- * @typedef {`__column__${number}`} ColumnId
  * @typedef {`__connector__${number | "new"}`} ConnectorId
  * @typedef {import("./gantt_connector").ConnectorProps} ConnectorProps
  * @typedef {luxon.DateTime} DateTime
@@ -64,7 +69,7 @@ const { DateTime } = luxon;
  * @typedef {import("./gantt_model").RowId} RowId
  *
  * @typedef Column
- * @property {ColumnId} id
+ * @property {number} index
  * @property {GridPosition} grid
  * @property {boolean} [isToday]
  * @property {DateTime} start
@@ -102,7 +107,6 @@ const { DateTime } = luxon;
  * @property {PillId} id
  * @property {boolean} disableStartResize
  * @property {boolean} disableStopResize
- * @property {boolean} highlighted
  * @property {number} leftMargin
  * @property {number} level
  * @property {string} name
@@ -133,7 +137,7 @@ const { DateTime } = luxon;
  * }} Row
  *
  * @typedef SubColumn
- * @property {ColumnId} columnId
+ * @property {number} columnIndex
  * @property {boolean} [isToday]
  * @property {DateTime} start
  * @property {DateTime} stop
@@ -158,7 +162,7 @@ export class GanttRenderer extends Component {
     static components = {
         GanttConnector,
         GanttRendererControls,
-        GanttResizeBadge,
+        GanttTimeDisplayBadge,
         GanttRowProgressBar,
         Popover: GanttPopover,
     };
@@ -170,6 +174,7 @@ export class GanttRenderer extends Component {
         "openDialog",
         "scrollPosition?",
         "contentRef?",
+        "context?",
     ];
 
     static template = "web_gantt.GanttRenderer";
@@ -193,6 +198,11 @@ export class GanttRenderer extends Component {
         this.dialogService = useService("dialog");
         this.notificationService = useService("notification");
         this.orm = useService("orm");
+        this.viewService = useService("view");
+
+        this.keepLast = new KeepLast();
+
+        this.defaultkanbanViewParams = null;
 
         this.is24HourFormat = is24HourFormat();
 
@@ -201,6 +211,7 @@ export class GanttRenderer extends Component {
             connector: null,
             hoverable: null,
             pill: null,
+            collapsableColumnHeader: null,
         };
 
         /** @type {Interaction} */
@@ -216,7 +227,8 @@ export class GanttRenderer extends Component {
         this.connectors = reactive({});
         this.progressBarsReactive = reactive({ hoveredRowId: null });
         /** @type {ResizeBadge} */
-        this.resizeBadgeReactive = reactive({});
+        this.timeDisplayBadgeReactiveStart = reactive({});
+        this.timeDisplayBadgeReactiveStop = reactive({});
 
         /** @type {Object[]} */
         this.columnsGroups = [];
@@ -239,35 +251,21 @@ export class GanttRenderer extends Component {
             x: 0,
             y: 0,
         };
-        const position = "bottom";
         this.popover = usePopover(this.constructor.components.Popover, {
-            position,
-            onPositioned: (el, { direction }) => {
-                if (direction !== position) {
-                    return;
-                }
-                const { left, right } = el.getBoundingClientRect();
-                if ((0 <= left && right <= window.innerWidth) || window.innerWidth < right - left) {
-                    return;
-                }
-                const { left: pillLeft, right: pillRight } =
-                    this.popover.target.getBoundingClientRect();
-                const middle =
-                    (clamp(pillLeft, 0, window.innerWidth) +
-                        clamp(pillRight, 0, window.innerWidth)) /
-                    2;
-                el.style.left = `0px`;
-                const { width } = el.getBoundingClientRect();
-                el.style.left = `${middle - width / 2}px`;
-            },
             onClose: () => {
-                delete this.popover.target;
+                if (!this.preventClick) {
+                    this.preventClick = true;
+                    setTimeout(() => (this.preventClick = false), 250);
+                }
+                this.onCloseCurrentPopover?.();
             },
         });
 
         this.throttledComputeHoverParams = throttleForAnimation((ev) =>
             this.computeHoverParams(ev)
         );
+
+        this.offHoursState = useState({});
 
         useExternalListener(window, "keydown", (ev) => this.onWindowKeyDown(ev));
         useExternalListener(window, "keyup", (ev) => this.onWindowKeyUp(ev));
@@ -284,6 +282,7 @@ export class GanttRenderer extends Component {
         useMultiHover({
             ref: this.gridRef,
             selector: ".o_gantt_group",
+            exception: "o_gantt_cell_folded",
             related: ["data-row-id"],
             className: "o_gantt_group_hovered",
         });
@@ -301,6 +300,12 @@ export class GanttRenderer extends Component {
             // Style classes
             cellDragClassName: "o_gantt_cell o_drag_hover",
             ghostClassName: "o_dragged_pill_ghost",
+            rtl: () => localization.direction === "rtl",
+            scale: () => this.model.metaData.scale,
+            getBadgesInitialDates: () => ({
+                start: this.badgeInitialStartDate,
+                stop: this.badgeInitialStopDate,
+            }),
             addStickyCoordinates: (rows, columns) => {
                 this.stickyGridRows = Object.assign({}, ...rows.map((row) => ({ [row]: true })));
                 this.stickyGridColumns = Object.assign(
@@ -311,11 +316,17 @@ export class GanttRenderer extends Component {
             },
             // Handlers
             onDragStart: ({ pill }) => {
+                this.initBadges(pill);
                 this.popover.close();
                 this.setStickyPill(pill);
                 this.interaction.mode = "drag";
             },
+            onDrag: ({ startBadge, stopBadge }) => {
+                Object.assign(this.timeDisplayBadgeReactiveStart, startBadge);
+                Object.assign(this.timeDisplayBadgeReactiveStop, stopBadge);
+            },
             onDragEnd: () => {
+                this.clearBadges();
                 this.setStickyPill();
                 this.interaction.mode = null;
             },
@@ -340,22 +351,32 @@ export class GanttRenderer extends Component {
 
         // Cells selection
         const selectState = useGanttSelectable({
-            enable: () => {
-                const { canCellCreate, canPlan } = this.model.metaData;
-                return Boolean(this.cellForDrag.el) && (canCellCreate || canPlan);
-            },
+            enable: () => Boolean(this.cellForDrag.el) && this.model.metaData.canCellCreate,
             ref: this.gridRef,
             hoveredCell: this.cellForDrag,
             elements: ".o_gantt_cell:not(.o_gantt_group)",
             edgeScrolling: { speed: 40, threshold: 150, direction: "horizontal" },
+            addStickyCoordinates: (columns) => {
+                this.stickyGridColumns = Object.assign(
+                    {},
+                    ...columns.map((column) => ({ [column]: true }))
+                );
+                this.setSomeGridStyleProperties();
+            },
+            scale: () => this.model.metaData.scale,
+            getBadgesInitialDate: () => ({ initialDate: this.badgeInitialStartDate }),
             rtl: () => localization.direction === "rtl",
+            onDragStart: ({ initialCol }) => {
+                const { start } = this.getSubColumnFromColNumber(initialCol);
+                this.badgeInitialStartDate = start;
+            },
+            onDrag: ({ startBadge, stopBadge }) => {
+                Object.assign(this.timeDisplayBadgeReactiveStart, startBadge);
+                Object.assign(this.timeDisplayBadgeReactiveStop, stopBadge);
+            },
             onDrop: ({ rowId, startCol, stopCol }) => {
-                const { canPlan } = this.model.metaData;
-                if (canPlan) {
-                    this.onPlan(rowId, startCol, stopCol);
-                } else {
-                    this.onCreate(rowId, startCol, stopCol);
-                }
+                this.clearBadges();
+                this.onCreate(rowId, startCol, stopCol);
             },
         });
 
@@ -370,6 +391,11 @@ export class GanttRenderer extends Component {
             // Other params
             handles: "o_resize_handle",
             edgeScrolling: { speed: 40, threshold: 150, direction: "horizontal" },
+            scale: () => this.model.metaData.scale,
+            getBadgesInitialDates: () => ({
+                start: this.badgeInitialStartDate,
+                stop: this.badgeInitialStopDate,
+            }),
             showHandles: (pillEl) => {
                 const pill = this.pills[pillEl.dataset.pillId];
                 const hideHandles = this.connectorDragState.dragging;
@@ -379,33 +405,20 @@ export class GanttRenderer extends Component {
                 };
             },
             rtl: () => localization.direction === "rtl",
-            precision: () => this.model.metaData.scale.cellPart,
             // Handlers
             onDragStart: ({ pill, addClass }) => {
+                this.initBadges(pill);
                 this.popover.close();
                 this.setStickyPill(pill);
                 addClass(pill, "o_resized");
                 this.interaction.mode = "resize";
             },
-            onDrag: ({ pill, grabbedHandle, diff }) => {
-                const rect = pill.getBoundingClientRect();
-                const position = { top: rect.y + rect.height };
-                if (grabbedHandle === "left") {
-                    position.left = rect.x;
-                } else {
-                    position.right = document.body.offsetWidth - rect.x - rect.width;
-                }
-                const { cellTime, unitDescription } = this.model.metaData.scale;
-                Object.assign(this.resizeBadgeReactive, {
-                    position,
-                    diff: diff * cellTime,
-                    scale: unitDescription,
-                });
+            onDrag: ({ startBadge, stopBadge }) => {
+                Object.assign(this.timeDisplayBadgeReactiveStart, startBadge);
+                Object.assign(this.timeDisplayBadgeReactiveStop, stopBadge);
             },
             onDragEnd: ({ pill, removeClass }) => {
-                delete this.resizeBadgeReactive.position;
-                delete this.resizeBadgeReactive.diff;
-                delete this.resizeBadgeReactive.scale;
+                this.clearBadges();
                 this.setStickyPill();
                 removeClass(pill, "o_resized");
                 this.interaction.mode = null;
@@ -475,6 +488,7 @@ export class GanttRenderer extends Component {
         });
 
         onWillRender(this.onWillRender);
+        onWillUnmount(this.onWillUnmount);
 
         useEffect(
             (content) => {
@@ -499,6 +513,10 @@ export class GanttRenderer extends Component {
     //-------------------------------------------------------------------------
     // Getters
     //-------------------------------------------------------------------------
+
+    get foldedGridColumnCount() {
+        return this.offHoursState.foldedGridColumnSpans?.length ?? this.columnCount;
+    }
 
     get controlsProps() {
         return {
@@ -527,6 +545,17 @@ export class GanttRenderer extends Component {
      */
     get isTouchDevice() {
         return isMobileOS() || hasTouch();
+    }
+
+    get allColumnsFolded() {
+        if (
+            this.model.metaData.displayUnavailability &&
+            JSON.stringify(this.offHoursState.foldedColumns) ===
+                JSON.stringify(this.foldableColumns)
+        ) {
+            return true;
+        }
+        return false;
     }
 
     //-------------------------------------------------------------------------
@@ -678,7 +707,7 @@ export class GanttRenderer extends Component {
             [this.columnCount * this.model.metaData.scale.cellPart + 1]: true,
         };
 
-        const { globalStart, globalStop, scale } = this.model.metaData;
+        const { displayUnavailability, globalStart, globalStop, scale } = this.model.metaData;
         const { cellPart, interval, unit } = scale;
 
         const now = DateTime.local();
@@ -688,19 +717,30 @@ export class GanttRenderer extends Component {
 
         const groupsLeftBound = DateTime.max(
             globalStart,
-            localStartOf(globalStart.plus({ [interval]: firstIndex }), unit)
+            localStartOf(
+                globalStart.plus({
+                    [interval]: this.getIndexInTotalGrid(firstIndex),
+                }),
+                unit
+            )
         );
         const groupsRightBound = DateTime.min(
-            localEndOf(globalStart.plus({ [interval]: lastIndex }), unit),
+            localEndOf(
+                globalStart.plus({
+                    [interval]: this.getIndexInTotalGrid(lastIndex),
+                }),
+                unit
+            ),
             globalStop
         );
         let currentGroup = null;
         for (let j = firstIndex; j <= lastIndex; j++) {
-            const columnId = `__column__${j + 1}`;
-            const col = j * cellPart + 1;
+            const columnIndex = this.getIndexInTotalGrid(j);
+            const col = columnIndex * cellPart + 1;
             const { start, stop } = this.getColumnFromColNumber(col);
+            const span = this.offHoursState.foldedGridColumnSpans?.[j] || 1;
             const column = {
-                id: columnId,
+                index: columnIndex,
                 grid: { column: [col, col + cellPart] },
                 start,
                 stop,
@@ -709,17 +749,32 @@ export class GanttRenderer extends Component {
             if (isToday) {
                 column.isToday = true;
             }
-            this.columns.push(column);
-
-            for (let i = 0; i < cellPart; i++) {
-                const subColumn = this.getSubColumnFromColNumber(col + i);
-                this.subColumns.push({ ...subColumn, isToday, columnId });
-                this.coarseGridCols[col + i] = true;
+            if (this.offHoursState.foldedColumns?.[columnIndex]) {
+                column.stop = this.getColumnFromColNumber(col + (span - 1) * cellPart).stop;
+                column.isFolded = true;
+                column.grid.column[1] = col + span * cellPart;
             }
+            if (displayUnavailability) {
+                const foldableColumnsGroup = this.foldableColumnsMapping[columnIndex];
+                column.isFoldable = foldableColumnsGroup
+                    ? foldableColumnsGroup.stopIndex === columnIndex + span - 1
+                        ? "stop"
+                        : 1
+                    : 0;
+            }
+            if (column.isFolded) {
+                this.coarseGridCols[col] = true;
+            } else {
+                for (let i = 0; i < cellPart; i++) {
+                    const subColumn = this.getSubColumnFromColNumber(col + i);
+                    this.subColumns.push({ ...subColumn, isToday, columnIndex });
+                    this.coarseGridCols[col + i] = true;
+                }
+            }
+            this.columns.push(column);
 
             const groupStart = localStartOf(start, unit);
             if (!currentGroup || !groupStart.equals(currentGroup.start)) {
-                const groupId = `__group__${this.columnsGroups.length + 1}`;
                 const startingBound = DateTime.max(groupsLeftBound, groupStart);
                 const endingBound = DateTime.min(groupsRightBound, localEndOf(groupStart, unit));
                 const [groupFirstCol, groupLastCol] = this.getGridColumnFromDates(
@@ -727,13 +782,19 @@ export class GanttRenderer extends Component {
                     endingBound
                 );
                 currentGroup = {
-                    id: groupId,
                     grid: { column: [groupFirstCol, groupLastCol] },
                     start: groupStart,
+                    isFolded: columnIndex === 0 && groupLastCol < column.grid.column[1],
                 };
                 this.columnsGroups.push(currentGroup);
                 this.coarseGridCols[groupFirstCol] = true;
                 this.coarseGridCols[groupLastCol] = true;
+            }
+            if (j === lastIndex && currentGroup.grid.column[1] < column.grid.column[1]) {
+                this.columnsGroups.push({
+                    grid: { column: [currentGroup.grid.column[1], column.grid.column[1]] },
+                    isFolded: true,
+                });
             }
         }
     }
@@ -752,6 +813,14 @@ export class GanttRenderer extends Component {
             }
             this.addToRowsToRender(row);
         }
+    }
+
+    getIndexInTotalGrid(index) {
+        return this.offHoursState.mappingFoldedGridToTotalGridColumnIndex?.get(index) || index;
+    }
+
+    getColNumberInFoldedGrid(num) {
+        return this.offHoursState.mappingTotalGridToFoldedGridSubColumns?.get(num) || num;
     }
 
     getFirstGridCol({ grid }) {
@@ -791,10 +860,12 @@ export class GanttRenderer extends Component {
      * give bounds only
      */
     getVisibleCols() {
-        const [columnStart, columnEnd] = this.virtualGrid.columnsIndexes;
+        const [firstIndex, lastIndex] = this.virtualGrid.columnsIndexes;
+        const startIndex = this.getIndexInTotalGrid(firstIndex);
+        const endIndex = this.getIndexInTotalGrid(lastIndex);
         const { cellPart } = this.model.metaData.scale;
-        const firstVisibleCol = 1 + cellPart * columnStart;
-        const lastVisibleCol = 1 + cellPart * (columnEnd + 1);
+        const firstVisibleCol = 1 + cellPart * startIndex;
+        const lastVisibleCol = 1 + cellPart * (endIndex + 1);
         return [firstVisibleCol, lastVisibleCol];
     }
 
@@ -802,9 +873,9 @@ export class GanttRenderer extends Component {
      * give bounds only
      */
     getVisibleRows() {
-        const [rowStart, rowEnd] = this.virtualGrid.rowsIndexes;
-        const firstVisibleRow = rowStart + 1;
-        const lastVisibleRow = rowEnd + 1;
+        const [firstIndex, lastIndex] = this.virtualGrid.rowsIndexes;
+        const firstVisibleRow = firstIndex + 1;
+        const lastVisibleRow = lastIndex + 1;
         return [firstVisibleRow, lastVisibleRow];
     }
 
@@ -892,12 +963,38 @@ export class GanttRenderer extends Component {
         for (let i = 0; i < colInCoarseGridKeys.length - 1; i++) {
             const x = +colInCoarseGridKeys[i];
             const y = +colInCoarseGridKeys[i + 1];
+            const { distance, flexible } = this.getSubColumnsDistance(x, y, this.cellPartWidth);
             const colName = `c${x}`;
-            const width = (y - x) * this.cellPartWidth;
-            colsTemplate.push(`[${colName}]minmax(${width}px,1fr)`);
+            colsTemplate.push(`[${colName}]minmax(${distance}px,${+flexible}fr)`);
         }
         colsTemplate.push(`[c${colInCoarseGridKeys.at(-1)}]`);
         return colsTemplate.join("");
+    }
+
+    getSubColumnsDistance(start, stop, cellPartWidth) {
+        const { cellPart } = this.model.metaData.scale;
+        if (this.offHoursState.foldedGridColumnSpans) {
+            const X = this.getColNumberInFoldedGrid(start);
+            const Y = this.getColNumberInFoldedGrid(stop);
+            let distance = 0;
+            let flexible = true;
+            for (let j = X; j < Y; j++) {
+                if (
+                    this.offHoursState.foldedColumns[
+                        this.getIndexInTotalGrid(Math.floor((j - 1) / cellPart))
+                    ]
+                ) {
+                    distance += 36 / cellPart;
+                    if (this.offHoursState.foldedGridColumnSpans.length > 1) {
+                        flexible = false;
+                    }
+                } else {
+                    distance += cellPartWidth;
+                }
+            }
+            return { distance, flexible };
+        }
+        return { distance: (stop - start) * cellPartWidth, flexible: true };
     }
 
     computeRowsTemplate() {
@@ -923,14 +1020,52 @@ export class GanttRenderer extends Component {
         this.rowHeaderWidth = this.hasRowHeaders
             ? Math.round((rowHeaderWidthPercentage * this.contentRefWidth) / 100)
             : 0;
-        const cellContainerWidth = this.contentRefWidth - this.rowHeaderWidth;
-        const columnWidth = Math.floor(cellContainerWidth / this.columnCount);
+        if (this.foldedGridColumnCount === 1) {
+            this.cellPartWidth = Math.floor(
+                (this.contentRefWidth - this.rowHeaderWidth) / cellPart
+            );
+            this.columnWidth = this.cellPartWidth * cellPart;
+            this.virtualGrid.setColumnsWidths([this.columnWidth]);
+            this.totalWidth = null;
+            return;
+        }
+        const visibleCellContainerWidth = this.contentRefWidth - this.rowHeaderWidth;
+        const hiddenColumnsCount =
+            this.offHoursState.foldedColumns?.reduce(
+                (sum, folded) => (folded ? sum + 1 : sum),
+                0
+            ) || 0;
+        const foldedColumnsCount =
+            this.foldedGridColumnCount + hiddenColumnsCount - this.columnCount;
+        const columnWidth = Math.floor(
+            (visibleCellContainerWidth - 36 * foldedColumnsCount) /
+                (this.foldedGridColumnCount - foldedColumnsCount)
+        );
         const rectifiedColumnWidth = Math.max(columnWidth, minimalColumnWidth);
         this.cellPartWidth = Math.floor(rectifiedColumnWidth / cellPart);
         this.columnWidth = this.cellPartWidth * cellPart;
+        let offPeriod = 0;
+        const columnWidths = this.offHoursState.foldedColumns
+            ? this.offHoursState.foldedColumns?.reduce((res, val, index) => {
+                  if (val === 1) {
+                      offPeriod++;
+                  } else {
+                      if (offPeriod > 0) {
+                          res.push(36);
+                      }
+                      res.push(this.columnWidth);
+                      offPeriod = 0;
+                  }
+                  if (index === this.offHoursState.foldedColumns.length - 1 && offPeriod > 0) {
+                      res.push(36);
+                  }
+                  return res;
+              }, [])
+            : new Array(this.foldedGridColumnCount).fill(this.columnWidth);
+        this.virtualGrid.setColumnsWidths(columnWidths);
         if (columnWidth <= minimalColumnWidth) {
             // overflow
-            this.totalWidth = this.rowHeaderWidth + this.columnWidth * this.columnCount;
+            this.totalWidth = columnWidths.reduce((sum, w) => sum + w, 0) + this.rowHeaderWidth;
         } else {
             this.totalWidth = null;
         }
@@ -950,7 +1085,8 @@ export class GanttRenderer extends Component {
             this.mappingPillToConnectors = {};
         }
 
-        const { globalStart, globalStop, scale, startDate, stopDate } = this.model.metaData;
+        const { displayUnavailability, globalStart, globalStop, scale, startDate, stopDate } =
+            this.model.metaData;
         this.columnCount = diffColumn(globalStart, globalStop, scale.interval);
         if (
             !this.currentStartDate ||
@@ -961,6 +1097,7 @@ export class GanttRenderer extends Component {
             this.useFocusDate = true;
             this.mappingColToColumn = new Map();
             this.mappingColToSubColumn = new Map();
+            delete this.offHoursState.foldedColumns;
         }
         this.currentStartDate = startDate;
         this.currentStopDate = stopDate;
@@ -994,6 +1131,10 @@ export class GanttRenderer extends Component {
             this.generateConnectors();
         }
 
+        if (displayUnavailability) {
+            this.computeUnavailabilityPeriods();
+            this.computeFoldedGrid();
+        }
         this.shouldComputeSomeWidths = true;
         this.shouldComputeGridColumns = true;
         this.shouldComputeGridRows = true;
@@ -1002,22 +1143,19 @@ export class GanttRenderer extends Component {
     computeDerivedParamsFromHover() {
         const { scale } = this.model.metaData;
 
-        const { connector, hoverable, pill } = this.hovered;
+        const { connector, collapsableColumnHeader, hoverable } = this.hovered;
 
         // Update cell in drag
         const isCellHovered = hoverable?.matches(".o_gantt_cell");
         this.cellForDrag.el = isCellHovered ? hoverable : null;
         this.cellForDrag.part = 0;
         if (isCellHovered && scale.cellPart > 1) {
-            const rect = hoverable.getBoundingClientRect();
-            const x = Math.floor(rect.x);
-            const width = Math.floor(rect.width);
-            this.cellForDrag.part = Math.floor(
-                (this.cursorPosition.x - x) / (width / scale.cellPart)
+            this.cellForDrag.part = getHoveredCellPart(
+                hoverable,
+                this.cursorPosition.x,
+                scale.cellPart,
+                localization.direction === "rtl"
             );
-            if (localization.direction === "rtl") {
-                this.cellForDrag.part = scale.cellPart - 1 - this.cellForDrag.part;
-            }
         }
 
         if (this.isDragging) {
@@ -1039,17 +1177,12 @@ export class GanttRenderer extends Component {
             }
         }
 
-        // Highlight pill
-        const hoveredPillId = pill?.dataset.pillId;
-        for (const pillId in this.pills) {
-            if (pillId !== hoveredPillId) {
-                this.togglePillHighlighting(pillId, false);
-            }
-        }
-        this.togglePillHighlighting(hoveredPillId, true);
-
+        this.toggleCollapsableColumnHeaderHighlighting(collapsableColumnHeader);
         // Update progress bars
-        this.progressBarsReactive.hoveredRowId = hoverable ? hoverable.dataset.rowId : null;
+        this.progressBarsReactive.hoveredRowId =
+            hoverable && !hoverable.classList.contains("o_gantt_cell_folded")
+                ? hoverable.dataset.rowId
+                : null;
     }
 
     /**
@@ -1060,37 +1193,142 @@ export class GanttRenderer extends Component {
         delete this.mappingConnectorToPills[connectorId];
     }
 
+    get isAutoPlan() {
+        return ["consumeBuffer", "maintainBuffer"].includes(this.model.metaData.rescheduleMethod);
+    }
+
     /**
      * @param {Object} params
      * @param {Element} params.pill
-     * @param {Element} params.cell
+     * @param {Element} params.cellSrc
+     * @param {Element} params.cellDst
      * @param {number} params.diff
      */
-    async dragPillDrop({ pill, cell, diff }) {
-        const { rowId } = cell.dataset;
+    async dragPillDrop({ pill, cellSrc, cellDst, diff }) {
+        const { rowId } = cellDst.dataset;
         const { dateStartField, dateStopField, scale } = this.model.metaData;
         const { cellTime, time } = scale;
         const { record } = this.pills[pill.dataset.pillId];
         const params = this.getScheduleParams(pill);
+        const isCopyMode = this.interaction.dragAction === "copy";
 
         params.start =
-            diff && dateAddFixedOffset(record[dateStartField], { [time]: cellTime * diff });
+            (diff || isCopyMode) &&
+            dateAddFixedOffset(record[dateStartField], { [time]: cellTime * diff });
         params.stop =
-            diff && dateAddFixedOffset(record[dateStopField], { [time]: cellTime * diff });
+            (diff || isCopyMode) &&
+            dateAddFixedOffset(record[dateStopField], { [time]: cellTime * diff });
         params.rowId = rowId;
 
         const schedule = this.model.getSchedule(params);
 
-        if (this.interaction.dragAction === "copy") {
-            await this.model.copy(record.id, schedule, this.openPlanDialogCallback);
+        let copyResId;
+        let fallbackSchedule;
+        if (isCopyMode) {
+            copyResId = await this.model.copy(record.id, schedule, this.openPlanDialogCallback);
         } else {
-            await this.model.reschedule(record.id, schedule, this.openPlanDialogCallback);
+            const fallbackParams = {
+                ...this.getUndoAfterDragRecordData(record),
+                rowId: cellSrc.dataset.rowId,
+            };
+            fallbackSchedule = this.model.getSchedule(fallbackParams);
+            if (this.isAutoPlan) {
+                await this.model.rescheduleAccordingToDependency(record.id, schedule, this.rescheduleAccordingToDependencyCallback.bind(this));
+            } else {
+                await this.model.reschedule(record.id, schedule, this.openPlanDialogCallback);
+            }
         }
 
         // If the pill lands on a closed group -> open it
-        if (cell.classList.contains("o_gantt_group") && this.model.isClosed(rowId)) {
+        if (cellDst.classList.contains("o_gantt_group") && this.model.isClosed(rowId)) {
             this.model.toggleRow(rowId);
         }
+
+        this.displayUndoNotificationAfterDrag(
+            copyResId || record.id,
+            this.interaction.dragAction,
+            fallbackSchedule
+        );
+    }
+
+    /**
+     * @param {number} resId
+     * @param {string} dragAction
+     * @param {Object} [fallbackData]
+     */
+    displayUndoNotificationAfterDrag(resId, dragAction, fallbackData = {}) {
+        if (!(dragAction === "copy" || dragAction === "reschedule")) {
+            return;
+        }
+        if (dragAction === "reschedule" && this.isAutoPlan) {
+            return;
+        }
+        const messages = this.getUndoAfterDragMessages(dragAction);
+        this.closeNotificationFn?.();
+        this.closeNotificationFn = this.notificationService.add(
+            markup`<i class="fa fa-fw fa-check"></i><span class="ms-1">${messages.success}</span>`,
+            {
+                type: "success",
+                buttons: [
+                    {
+                        name: "Undo",
+                        icon: "fa-undo",
+                        onClick: async () => {
+                            // Undo the last drag & drop action
+                            const result = await this.model.orm.call(
+                                this.model.metaData.resModel,
+                                "gantt_undo_drag_drop",
+                                [resId, dragAction, fallbackData]
+                            );
+                            this.closeNotificationFn?.();
+                            if (result) {
+                                this.closeNotificationFn = this.notificationService.add(
+                                    markup`<i class="fa fa-fw fa-check"></i><span class="ms-1">${messages.undo}</span>`,
+                                    { type: "success" }
+                                );
+                            } else {
+                                this.closeNotificationFn = this.notificationService.add(
+                                    markup`<i class="fa fa-fw fa-check"></i><span class="ms-1">${messages.failure}</span>`,
+                                    { type: "danger" }
+                                );
+                            }
+                            this.model.fetchData();
+                        },
+                    },
+                ],
+            }
+        );
+    }
+
+    /**
+     * @param {string} dragAction
+     * @returns {Object}
+     */
+    getUndoAfterDragMessages(dragAction) {
+        if (dragAction === "copy") {
+            return {
+                success: _t("Record duplicated"),
+                undo: _t("Record removed"),
+                failure: _t("Record could not be removed"),
+            };
+        }
+        return {
+            success: _t("Record rescheduled"),
+            undo: _t("Record reschedule undone"),
+            failure: _t("Failed to undo reschedule"),
+        };
+    }
+
+    /**
+     * @param {Object} record
+     * @returns {Object}
+     */
+    getUndoAfterDragRecordData(record) {
+        const { dateStartField, dateStopField } = this.model.metaData;
+        return {
+            start: record[dateStartField],
+            stop: record[dateStopField],
+        };
     }
 
     /**
@@ -1145,20 +1383,26 @@ export class GanttRenderer extends Component {
         return pill;
     }
 
-    focusDate(date, ifInBounds) {
-        const { globalStart, globalStop } = this.model.metaData;
-        const diff = date.diff(globalStart);
+    focusDate(date, focusGroup = true) {
+        const { globalStart, globalStop, scale } = this.model.metaData;
+        const { cellPart, interval, unit } = scale;
+        const focusedDate = focusGroup ? localStartOf(date, unit) : date;
+        const diff = focusedDate.diff(globalStart);
         const totalDiff = globalStop.diff(globalStart);
         const factor = diff / totalDiff;
-        if (ifInBounds && (factor < 0 || 1 < factor)) {
+        if (!focusGroup && (factor < 0 || 1 < factor)) {
             return false;
         }
         const rtlFactor = localization.direction === "rtl" ? -1 : 1;
-        const scrollLeft =
-            factor * this.cellContainerRef.el.clientWidth +
-            this.rowHeaderWidth -
-            (this.contentRefWidth + this.rowHeaderWidth) / 2;
-        this.props.contentRef.el.scrollLeft = rtlFactor * scrollLeft;
+        if (this.columnCount === this.foldedGridColumnCount) {
+            const scrollLeft = factor * this.cellContainerRef.el.clientWidth;
+            this.props.contentRef.el.scrollLeft = rtlFactor * scrollLeft;
+            return true;
+        }
+        const { column, delta } = this.getSubColumnFromDate(focusedDate);
+        const col = 1 + diffColumn(globalStart, column, interval) * cellPart + delta;
+        const { distance } = this.getSubColumnsDistance(1, col, this.cellPartWidth);
+        this.props.contentRef.el.scrollLeft = rtlFactor * distance;
         return true;
     }
 
@@ -1172,7 +1416,7 @@ export class GanttRenderer extends Component {
     }
 
     focusToday() {
-        return this.focusDate(DateTime.local().startOf("day"), true);
+        return this.focusDate(DateTime.local().startOf("day"), false);
     }
 
     generateConnectors() {
@@ -1209,18 +1453,29 @@ export class GanttRenderer extends Component {
                                     slaveId in this.mappingRowToPillsByRecord[rowId]
                             )
                         ) {
-                            const masterRecord = sourcePill.record;
-                            const slaveRecord = targetPill.record;
-                            this.setConnector(
-                                { alert: this.getConnectorAlert(masterRecord, slaveRecord) },
-                                sourcePill.id,
-                                targetPill.id
-                            );
+                            this.setConnector(...this.getConnecterValues(sourcePill, targetPill));
                         }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * @param {Pill} sourcePill
+     * @param {Pill} targetPill
+     */
+    getConnecterValues(sourcePill, targetPill) {
+        return [
+            { alert: this.getConnectorAlert(sourcePill.record, targetPill.record) },
+            sourcePill.id,
+            targetPill.id,
+            this.shouldConnectorBeDashed(sourcePill),
+        ];
+    }
+
+    shouldConnectorBeDashed(sourcePill) {
+        return false;
     }
 
     /**
@@ -1238,12 +1493,9 @@ export class GanttRenderer extends Component {
      * @param {number} stopCol
      * @param {boolean} [roundUpStop=true]
      */
-    getColumnStartStop(startCol, stopCol, roundUpStop = true) {
+    getColumnStartStop(startCol, stopCol) {
         const { start } = this.getColumnFromColNumber(startCol);
-        let { stop } = this.getColumnFromColNumber(stopCol);
-        if (roundUpStop) {
-            stop = stop.plus({ millisecond: 1 });
-        }
+        const { stop } = this.getColumnFromColNumber(stopCol);
         return { start, stop };
     }
 
@@ -1274,6 +1526,7 @@ export class GanttRenderer extends Component {
         return {
             o_sample_data_disabled: this.isDisabled(row),
             o_gantt_today: column.isToday,
+            o_gantt_cell_folded: column.isFolded,
             o_gantt_group: row.isGroup,
             o_gantt_hoverable: this.isHoverable(row),
             o_group_open: !this.model.isClosed(row.id),
@@ -1286,8 +1539,21 @@ export class GanttRenderer extends Component {
         const cellGridMiddleX =
             rtlFactor * this.props.contentRef.el.scrollLeft +
             (this.contentRefWidth + this.rowHeaderWidth) / 2;
-        const factor =
-            (cellGridMiddleX - this.rowHeaderWidth) / this.cellContainerRef.el.clientWidth;
+        let factor = (cellGridMiddleX - this.rowHeaderWidth) / this.cellContainerRef.el.clientWidth;
+        if (this.columnCount !== this.foldedGridColumnCount) {
+            let columnWidthSum = 0;
+            for (let i = 0; i < this.foldedGridColumnCount; i++) {
+                if (this.offHoursState.foldedColumns[this.getIndexInTotalGrid(i)]) {
+                    columnWidthSum += 36;
+                } else {
+                    columnWidthSum += this.columnWidth;
+                }
+                if (columnWidthSum > cellGridMiddleX - this.rowHeaderWidth) {
+                    factor = (this.getIndexInTotalGrid(i) + 1) / this.columnCount;
+                    break;
+                }
+            }
+        }
         const totalDiff = globalStop.diff(globalStart);
         const diff = factor * totalDiff;
         const focusDate = globalStart.plus(diff);
@@ -1340,43 +1606,50 @@ export class GanttRenderer extends Component {
         const stopDate = record[dateStopField];
         const yearlessDateFormat = omit(DateTime.DATE_SHORT, "year");
 
-        const spanMoreThanOneDay = startDate.startOf("day").diff(stopDate.startOf("day"), "days").days < -1;
+        const daysDelta = Interval.fromDateTimes(
+            startDate.startOf("day"),
+            stopDate.startOf("day")
+        ).toDuration(["day", "hour"]).days;
         const spanAccrossDays =
-            spanMoreThanOneDay ||
-            (stopDate.startOf("day") > startDate.startOf("day") &&
-            startDate.endOf("day").diff(startDate, "hours").toObject().hours >= 3 &&
-            stopDate.diff(stopDate.startOf("day"), "hours").toObject().hours >= 3);
-        const spanAccrossWeeks = getStartOfLocalWeek(stopDate) > getStartOfLocalWeek(startDate);
-        const spanAccrossMonths = stopDate.startOf("month") > startDate.startOf("month");
+            daysDelta &&
+            (daysDelta > 2 ||
+                (startDate.endOf("day").diff(startDate, "hours").toObject().hours >= 3 &&
+                    stopDate.diff(stopDate.startOf("day"), "hours").toObject().hours >= 3));
 
         /** @type {string[]} */
-        const labelElements = [];
+        const labels = [];
 
         // Start & End Dates
         if (scaleId === "year" && !spanAccrossDays) {
-            labelElements.push(startDate.toLocaleString(yearlessDateFormat));
+            labels.push(startDate.toLocaleString(yearlessDateFormat));
         } else if (
-            (scaleId === "day" && spanAccrossDays) ||
-            (scaleId === "week" && spanAccrossWeeks) ||
-            (scaleId === "month" && spanAccrossMonths) ||
-            (scaleId === "year" && spanAccrossDays)
+            scaleId === "year" ||
+            (spanAccrossDays &&
+                (startDate < this.currentStartDate || this.currentStopDate.endOf("day") < stopDate))
         ) {
-            labelElements.push(startDate.toLocaleString(yearlessDateFormat));
-            labelElements.push(stopDate.toLocaleString(yearlessDateFormat));
+            labels.push(startDate.toLocaleString(yearlessDateFormat));
+            labels.push(stopDate.toLocaleString(yearlessDateFormat));
         }
 
         // Start & End Times
         if (record.allocated_hours && !spanAccrossDays && ["week", "month"].includes(scaleId)) {
             const durationStr = this.getDurationStr(record);
-            labelElements.push(startDate.toFormat("t"), `${stopDate.toFormat("t")}${durationStr}`);
+            const timeFormat = getCondensedFormat(localization.shortTimeFormat);
+            labels.push(
+                startDate.toFormat(timeFormat),
+                `${stopDate.toFormat(timeFormat)}${durationStr}`
+            );
         }
+
+        /** @type {string[]} */
+        const labelElements = [labels.join(" - ")];
 
         // Original Display Name
         if (scaleId !== "month" || !record.allocated_hours || spanAccrossDays) {
             labelElements.push(record.display_name);
         }
 
-        return labelElements.filter((el) => !!el).join(" - ");
+        return labelElements.filter((el) => !!el).join(" ");
     }
 
     /**
@@ -1425,7 +1698,7 @@ export class GanttRenderer extends Component {
         const colsTemplate = this.computeColsTemplate();
         const style = {
             "--Gantt__RowHeader-width": `${this.rowHeaderWidth}px`,
-            "--Gantt__Pill-height": "35px",
+            "--Gantt__Pill-height": "25px",
             "--Gantt__Thumbnail-max-height": "16px",
             "--Gantt__GridRows-grid-template-rows": rowsTemplate,
             "--Gantt__GridColumns-grid-template-columns": colsTemplate,
@@ -1664,29 +1937,93 @@ export class GanttRenderer extends Component {
         };
     }
 
+    async _getKanbanViewParams() {
+        const { dateStartField, dateStopField, kanbanViewId, fields, resModel } =
+            this.model.metaData;
+
+        if (kanbanViewId !== undefined) {
+            const result = await this.viewService.loadViews({
+                resModel,
+                views: [[kanbanViewId, "kanban"]],
+            });
+
+            const arch = result.views.kanban.arch;
+            const archXmlDoc = parseXML(arch.replace(/&amp;nbsp;/g, nbsp));
+            // remove some elements/attributes from archXmlDoc
+            archXmlDoc.removeAttribute("highlight_color");
+            const menu = archXmlDoc.querySelector(
+                `templates [t-name=${KanbanRecord.KANBAN_MENU_ATTRIBUTE}]`
+            );
+            menu?.remove();
+
+            const { relatedModels } = result;
+            const { ArchParser } = viewRegistry.get("kanban");
+            const archInfo = new ArchParser().parse(archXmlDoc, relatedModels, resModel);
+            return {
+                archInfo,
+                ...extractFieldsFromArchInfo(archInfo, fields),
+            };
+        }
+        if (!this.defaultkanbanViewParams) {
+            const arch = `
+                <kanban>
+                    <templates>
+                        <field name="${dateStartField}"/>
+                        <field name="${dateStopField}"/>
+                        <t t-name="${KanbanRecord.KANBAN_CARD_ATTRIBUTE}">
+                            <ul class="p-0 mb-0 list-unstyled">
+                                <li class="pe-2">
+                                    <strong>Name</strong>: <field name="display_name"/>
+                                </li>
+                                <li class="pe-2">
+                                    <strong>Start</strong>: <span t-esc="luxon.DateTime.fromISO(record.${dateStartField}.raw_value).toFormat('f')"/>
+                                </li>
+                                <li class="pe-2">
+                                    <strong>Stop</strong>: <span t-esc="luxon.DateTime.fromISO(record.${dateStopField}.raw_value).toFormat('f')"/>
+                                </li>
+                            </ul>
+                        </t>
+                    </templates>
+                </kanban>
+            `;
+            const archXmlDoc = parseXML(arch.replace(/&amp;nbsp;/g, nbsp));
+
+            const relatedModels = { [resModel]: { fields } };
+            const { ArchParser } = viewRegistry.get("kanban");
+            const archInfo = new ArchParser().parse(archXmlDoc, relatedModels, resModel);
+            this.defaultkanbanViewParams = {
+                archInfo,
+                ...extractFieldsFromArchInfo(archInfo, fields),
+            };
+        }
+        return this.defaultkanbanViewParams;
+    }
+
     /**
      * @param {Pill} pill
      */
-    getPopoverProps(pill) {
+    async getPopoverProps(pill) {
         const { record } = pill;
         const { id: resId, display_name: displayName } = record;
-        const { canEdit, dateStartField, dateStopField, popoverArchParams, resModel } =
-            this.model.metaData;
-        const context = popoverArchParams.bodyTemplate
-            ? { ...record }
-            : /* Default context */ {
-                  name: displayName,
-                  start: record[dateStartField].toFormat("f"),
-                  stop: record[dateStopField].toFormat("f"),
-              };
-
+        const { canEdit, popoverArchParams, resModel } = this.model.metaData;
+        const kanbanViewParams = popoverArchParams.bodyTemplate
+            ? {}
+            : await this._getKanbanViewParams();
         return {
             ...popoverArchParams,
+            kanbanViewParams,
+            KanbanRecord,
             title: displayName,
-            context,
+            context: { ...record },
+            actionContext: this.props.context,
             resId,
             resModel,
-            reload: () => this.model.fetchData(),
+            reloadOnClose: () => {
+                this.onCloseCurrentPopover = () => {
+                    delete this.onCloseCurrentPopover;
+                    this.model.fetchData();
+                };
+            },
             buttons: [
                 {
                     id: "open_view_edit_dialog",
@@ -1729,7 +2066,7 @@ export class GanttRenderer extends Component {
         const cellColors = {};
         const subSlotUnavailabilities = [];
         for (const subColumn of this.subColumns) {
-            const { isToday, start, stop, columnId } = subColumn;
+            const { isToday, start, stop, columnIndex } = subColumn;
             if (index < unavailabilities.length) {
                 let subSlotUnavailable = 0;
                 for (let i = index; i < unavailabilities.length; i++) {
@@ -1747,7 +2084,7 @@ export class GanttRenderer extends Component {
                     const style = getCellColor(cellPart, subSlotUnavailabilities, isToday);
                     subSlotUnavailabilities.splice(0, cellPart);
                     if (style) {
-                        cellColors[columnId] = style;
+                        cellColors[columnIndex] = style;
                     }
                 }
                 j++;
@@ -1789,8 +2126,8 @@ export class GanttRenderer extends Component {
     getRowTypeHeight(type) {
         return {
             t0: 24,
-            t1: 36,
-            t2: 16,
+            t1: 25,
+            t2: 10,
         }[type];
     }
 
@@ -1838,20 +2175,6 @@ export class GanttRenderer extends Component {
         totalRow.factor = maxAggregateValue ? 90 / maxAggregateValue : 0;
 
         return totalRow;
-    }
-
-    highlightPill(pillId, highlighted) {
-        const pill = this.pills[pillId];
-        if (!pill) {
-            return;
-        }
-        pill.highlighted = highlighted;
-        const pillWrapper = this.getPillWrapperEl(pillId);
-        pillWrapper?.classList.toggle("highlight", highlighted);
-        pillWrapper?.classList.toggle(
-            "o_connector_creator_highlight",
-            highlighted && this.connectorDragState.dragging
-        );
     }
 
     initializeConnectors() {
@@ -1910,7 +2233,6 @@ export class GanttRenderer extends Component {
         }
 
         if (this.shouldComputeSomeWidths || this.shouldComputeGridColumns) {
-            this.virtualGrid.setColumnsWidths(new Array(this.columnCount).fill(this.columnWidth));
             this.computeVisibleColumns();
         }
 
@@ -1938,6 +2260,10 @@ export class GanttRenderer extends Component {
         delete this.shouldComputeSomeWidths;
         delete this.shouldComputeGridColumns;
         delete this.shouldComputeGridRows;
+    }
+
+    onWillUnmount() {
+        this.closeNotificationFn?.();
     }
 
     pushGridRows(gridRows) {
@@ -2041,7 +2367,7 @@ export class GanttRenderer extends Component {
 
         const isGroup = displayMode === "sparse" ? processAsGroup : Boolean(rows);
 
-        const gridRowTypes = isGroup ? { t0: 1 } : { t1: 1 };
+        const gridRowTypes = isGroup ? { t0: 1 } : { t1: 1, t2: +!this.isTouchDevice };
         if (rowPills.length) {
             if (isGroup) {
                 if (this.shouldComputeAggregateValues(row)) {
@@ -2058,9 +2384,6 @@ export class GanttRenderer extends Component {
             } else {
                 const level = this.calculatePillsLevel(rowPills);
                 gridRowTypes.t1 = level;
-                if (!this.isTouchDevice) {
-                    gridRowTypes.t2 = 1;
-                }
             }
         }
 
@@ -2159,19 +2482,6 @@ export class GanttRenderer extends Component {
     }
 
     /**
-     * @param {string} [groupedByField]
-     * @param {false|number} [resId]
-     * @returns {{ start: DateTime, stop: DateTime }[]}
-     */
-    _getRowUnavailabilities(groupedByField, resId) {
-        const { unavailabilities } = this.model.data;
-        if (groupedByField) {
-            return unavailabilities[groupedByField]?.[resId ?? false] || [];
-        }
-        return unavailabilities.__default?.false || [];
-    }
-
-    /**
      * @param {Object} params
      * @param {Element} params.pill
      * @param {number} params.diff
@@ -2205,8 +2515,15 @@ export class GanttRenderer extends Component {
             }
         }
         const schedule = this.model.getSchedule(params);
+        const fallbackParams = this.getUndoAfterDragRecordData(record);
+        const fallbackSchedule = this.model.getSchedule(fallbackParams);
 
         await this.model.reschedule(record.id, schedule, this.openPlanDialogCallback);
+        this.displayUndoNotificationAfterDrag(
+            record.id,
+            this.interaction.dragAction,
+            fallbackSchedule
+        );
     }
 
     /**
@@ -2214,7 +2531,7 @@ export class GanttRenderer extends Component {
      * @param {PillId | null} [sourceId=null]
      * @param {PillId | null} [targetId=null]
      */
-    setConnector(params, sourceId = null, targetId = null) {
+    setConnector(params, sourceId = null, targetId = null, dashed = null) {
         const connectorParams = { ...params };
         const connectorId = params.id || `__connector__${this.nextConnectorId++}`;
 
@@ -2224,6 +2541,10 @@ export class GanttRenderer extends Component {
 
         if (targetId) {
             connectorParams.targetPoint = () => this.getPoint(targetId, false);
+        }
+
+        if (dashed) {
+            connectorParams.dashed = true;
         }
 
         if (this.connectors[connectorId]) {
@@ -2310,75 +2631,262 @@ export class GanttRenderer extends Component {
 
         connector.highlighted = highlighted;
         connector.displayButtons = highlighted;
-
-        const { sourcePillId, targetPillId } = this.mappingConnectorToPills[connectorId];
-
-        this.highlightPill(sourcePillId, highlighted);
-        this.highlightPill(targetPillId, highlighted);
     }
 
-    /**
-     * @param {PillId} pillId
-     * @param {boolean} highlighted
-     */
-    togglePillHighlighting(pillId, highlighted) {
-        const pill = this.pills[pillId];
-        if (!pill || pill.highlighted === highlighted) {
-            return;
-        }
-
-        const { record } = pill;
-        const pillIdsToHighlight = new Set([pillId]);
-
-        if (record && this.shouldRenderRecordConnectors(record)) {
-            // Find other related pills
-            const { pills: relatedPills } = this.mappingRecordToPillsByRow[record.id];
-            for (const pill of Object.values(relatedPills)) {
-                pillIdsToHighlight.add(pill.id);
+    computeUnavailabilityPeriods() {
+        const { cellPart, unit } = this.model.metaData.scale;
+        const columns = [...Array(this.columnCount).keys()].map((i) =>
+            this.getColumnFromColNumber(i * cellPart + 1)
+        );
+        this.foldableColumns = Array(this.columnCount);
+        let allNull = true;
+        for (const row of this.rows) {
+            if (row.isGroup) {
+                continue;
             }
-
-            // Highlight related connectors
-            for (const [connectorId, connector] of Object.entries(this.connectors)) {
-                const ids = Object.values(this.getRecordIds(connectorId));
-                if (ids.includes(record.id)) {
-                    connector.highlighted = highlighted;
-                    connector.displayButtons = false;
+            const { unavailabilities } = row;
+            // We assume that the unavailabilities have been normalized
+            // (i.e. are naturally ordered and are pairwise disjoint).
+            allNull = true;
+            if (unavailabilities) {
+                let index = 0;
+                for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
+                    if (this.foldableColumns[columnIndex] === 0) {
+                        continue;
+                    }
+                    this.foldableColumns[columnIndex] = 0;
+                    if (index < unavailabilities.length) {
+                        const { start, stop } = columns[columnIndex];
+                        for (let i = index; i < unavailabilities.length; i++) {
+                            const u = unavailabilities[i];
+                            if (stop > u.stop) {
+                                index++;
+                                continue;
+                            } else if (u.start <= start) {
+                                this.foldableColumns[columnIndex] = 1;
+                                allNull = false;
+                            }
+                            break;
+                        }
+                    }
                 }
             }
+            if (allNull) {
+                break;
+            }
+        }
+        if (allNull) {
+            this.foldableColumns.fill(0);
+        } else {
+            for (const pill of Object.values(this.pills)) {
+                this.foldableColumns.fill(
+                    0,
+                    Math.floor((pill.grid.column[0] - 1) / cellPart),
+                    Math.ceil((pill.grid.column[1] - 1) / cellPart)
+                );
+            }
         }
 
-        // Highlight pills from found IDs
-        for (const id of pillIdsToHighlight) {
-            this.highlightPill(id, highlighted);
+        this.foldableColumnsMapping = {};
+        let foldableGroupNum = 0;
+        let foldableSubSet;
+        for (let i = 0; i < this.foldableColumns.length; i++) {
+            if (this.foldableColumns[i]) {
+                const next = this.foldableColumns[i + 1];
+                const previous = this.foldableColumns[i - 1];
+                if (!previous) {
+                    foldableSubSet = { foldableGroupNum };
+                    foldableGroupNum++;
+                    foldableSubSet.startIndex = i;
+                }
+                if (next === 1) {
+                    this.foldableColumnsMapping[i] = foldableSubSet;
+                    continue;
+                }
+                if (!previous && unit !== "week") {
+                    this.foldableColumns[i] = 0;
+                    continue;
+                }
+                foldableSubSet.stopIndex = i;
+                this.foldableColumnsMapping[i] = foldableSubSet;
+            }
         }
+    }
+
+    computeFoldedGrid() {
+        this.shouldComputeSomeWidths = true;
+        if (this.offHoursState.foldedColumns && !this.offHoursState.foldedColumns.includes(1)) {
+            clearObject(this.offHoursState);
+            return;
+        }
+        let foldedColumns = this.foldableColumns;
+        if (this.offHoursState.foldedColumns?.length === this.columnCount) {
+            foldedColumns = zipWith(
+                this.foldableColumns,
+                this.offHoursState.foldedColumns,
+                (a, b) => a & b
+            );
+        }
+
+        // aggregate unavailability columns
+        let offPeriod = 0;
+        this.offHoursState.foldedGridColumnSpans = foldedColumns.reduce((res, val, index) => {
+            if (val === 1) {
+                offPeriod++;
+            } else {
+                if (offPeriod > 0) {
+                    res.push(offPeriod);
+                }
+                res.push(1);
+                offPeriod = 0;
+            }
+            if (index === foldedColumns.length - 1 && offPeriod > 0) {
+                res.push(offPeriod);
+            }
+            return res;
+        }, []);
+        const { cellPart, unit } = this.model.metaData.scale;
+        this.offHoursState.mappingTotalGridToFoldedGridSubColumns = new Map();
+        this.offHoursState.foldedColumns = [];
+        const halfCut = Math.floor(cellPart / 2);
+        let count = 0;
+        for (let index = 0; index < this.offHoursState.foldedGridColumnSpans.length; index++) {
+            const val = this.offHoursState.foldedGridColumnSpans[index];
+            if (val > 1) {
+                for (let j = 0; j < val; j++) {
+                    for (let i = 1; i <= cellPart; i++) {
+                        const targetIndex =
+                            j === 0
+                                ? index * cellPart + (i <= halfCut ? i : halfCut + 1)
+                                : j === val - 1
+                                ? index * cellPart + (i <= halfCut ? halfCut + 1 : i)
+                                : index * cellPart + halfCut + 1;
+                        this.offHoursState.mappingTotalGridToFoldedGridSubColumns.set(
+                            count * cellPart + i,
+                            targetIndex
+                        );
+                    }
+                    count++;
+                    this.offHoursState.foldedColumns.push(1);
+                }
+            } else {
+                for (let i = 1; i <= cellPart; i++) {
+                    this.offHoursState.mappingTotalGridToFoldedGridSubColumns.set(
+                        count * cellPart + i,
+                        index * cellPart + i
+                    );
+                }
+                if (foldedColumns[count] && unit === "week") {
+                    this.offHoursState.foldedColumns.push(1);
+                } else {
+                    this.offHoursState.foldedColumns.push(0);
+                }
+                count++;
+            }
+        }
+        this.offHoursState.mappingTotalGridToFoldedGridSubColumns.set(
+            this.columnCount * cellPart + 1,
+            this.offHoursState.foldedGridColumnSpans.length * cellPart + 1
+        );
+        let colIndex = 0;
+        this.offHoursState.mappingFoldedGridToTotalGridColumnIndex = new Map(
+            this.offHoursState.foldedGridColumnSpans.map((val, gridIndex) => {
+                const res = [gridIndex, colIndex];
+                colIndex += val;
+                return res;
+            })
+        );
+    }
+
+    toggleFoldableColumn(column, fold) {
+        if (!this.offHoursState.foldedColumns) {
+            this.offHoursState.foldedColumns = new Array(this.columnCount).fill(0);
+        }
+        const { startIndex, stopIndex } = this.foldableColumnsMapping[column.index];
+        this.offHoursState.foldedColumns.fill(fold ? 1 : 0, startIndex, stopIndex + 1);
+        this.computeFoldedGrid();
+    }
+
+    toggleCollapsableColumnHeaderHighlighting(collapsableColumnHeader) {
+        if (
+            !collapsableColumnHeader ||
+            collapsableColumnHeader.classList.contains("o_gantt_header_folded")
+        ) {
+            const columnHeaders = this.gridRef.el.querySelectorAll(".o_gantt_foldable_hovered");
+            for (const columnHeader of columnHeaders) {
+                columnHeader.classList.remove("o_gantt_foldable_hovered");
+            }
+            return;
+        }
+        const columnHeaders = this.gridRef.el.querySelectorAll(".o_gantt_foldable");
+        const foldableColumnsGroup =
+            this.foldableColumnsMapping[+collapsableColumnHeader.dataset.columnIndex];
+        for (const columnHeader of columnHeaders) {
+            const columnIndex = +columnHeader.dataset.columnIndex;
+            const currentGroup = this.foldableColumnsMapping[columnIndex];
+            if (foldableColumnsGroup.foldableGroupNum === currentGroup.foldableGroupNum) {
+                columnHeader.classList.add("o_gantt_foldable_hovered");
+            } else {
+                columnHeader.classList.remove("o_gantt_foldable_hovered");
+            }
+        }
+    }
+
+    initBadges(pill) {
+        const { dateStartField, dateStopField } = this.model.metaData;
+        const { record } = this.pills[pill.dataset.pillId];
+        this.badgeInitialStartDate = record[dateStartField];
+        this.badgeInitialStopDate = record[dateStopField];
+    }
+
+    clearBadges() {
+        clearObject(this.timeDisplayBadgeReactiveStart);
+        clearObject(this.timeDisplayBadgeReactiveStop);
+        delete this.badgeInitialStartDate;
+        delete this.badgeInitialStopDate;
     }
 
     //-------------------------------------------------------------------------
     // Handlers
     //-------------------------------------------------------------------------
 
-    onCellClicked(rowId, col) {
+    onCellClicked(rowId, column) {
         if (!this.preventClick) {
             this.preventClick = true;
             setTimeout(() => (this.preventClick = false), 1000);
+            if (column.isFolded) {
+                this.toggleFoldableColumn(column, false);
+                return;
+            }
+            const col = column.grid.column[0];
             const { canCellCreate, canPlan } = this.model.metaData;
             if (canPlan) {
                 this.onPlan(rowId, col, col);
             } else if (canCellCreate) {
-                this.onCreate(rowId, col, col);
+                this.onCreate(rowId, col, col + this.model.metaData.scale.cellPart - 1);
             }
         }
     }
 
-    onCreate(rowId, startCol, stopCol) {
-        const { start, stop } = this.getColumnStartStop(startCol, stopCol);
+    onCreate(rowId, startCol, stopCol, additionalContext = {}) {
+        let { start } = this.getSubColumnFromColNumber(startCol);
+        let { stop } = this.getSubColumnFromColNumber(stopCol);
+        ({ start, stop } = this.normalizeTimeRange(start, stop));
         const context = this.model.getDialogContext({
             rowId,
             start,
             stop,
             withDefault: true,
         });
-        this.props.create(context);
+        this.props.create({
+            ...context,
+            ...additionalContext,
+        });
+    }
+
+    normalizeTimeRange(start, stop) {
+        stop = stop.plus({ second: 1 });
+        return { start, stop };
     }
 
     onInteractionChange() {
@@ -2400,13 +2908,13 @@ export class GanttRenderer extends Component {
             const hoveredConnectorId = this.hovered.connector?.dataset.connectorId;
             this.toggleConnectorHighlighting(hoveredConnectorId, false);
 
-            const hoveredPillId = this.hovered.pill?.dataset.pillId;
-            this.togglePillHighlighting(hoveredPillId, false);
+            this.toggleCollapsableColumnHeaderHighlighting(null);
         }
 
         this.hovered.connector = null;
         this.hovered.pill = null;
         this.hovered.hoverable = null;
+        this.hovered.collapsableColumnHeader = null;
 
         this.computeDerivedParamsFromHover();
     }
@@ -2439,6 +2947,7 @@ export class GanttRenderer extends Component {
         this.hovered.connector = find(".o_gantt_connector");
         this.hovered.hoverable = find(".o_gantt_hoverable");
         this.hovered.pill = find(".o_gantt_pill_wrapper");
+        this.hovered.collapsableColumnHeader = find(".o_gantt_foldable");
 
         this.computeDerivedParamsFromHover();
     }
@@ -2447,16 +2956,18 @@ export class GanttRenderer extends Component {
      * @param {PointerEvent} ev
      * @param {Pill} pill
      */
-    onPillClicked(ev, pill) {
+    async onPillClicked(ev, pill) {
         if (this.popover.isOpen) {
             return;
         }
-        this.popover.target = ev.target.closest(".o_gantt_pill_wrapper");
-        this.popover.open(this.popover.target, this.getPopoverProps(pill));
+        const target = ev.target.closest(".o_gantt_pill_wrapper");
+        const props = await this.keepLast.add(this.getPopoverProps(pill));
+        this.popover.open(target, props);
     }
 
     onPlan(rowId, startCol, stopCol) {
-        const { start, stop } = this.getColumnStartStop(startCol, stopCol);
+        let { start, stop } = this.getColumnStartStop(startCol, stopCol);
+        ({ start, stop } = this.normalizeTimeRange(start, stop));
         this.dialogService.add(
             SelectCreateDialog,
             this.getSelectCreateDialogProps({ rowId, start, stop, withDefault: true })
@@ -2487,9 +2998,9 @@ export class GanttRenderer extends Component {
                 Object.keys(result["old_vals_per_pill_id"]).map(Number)
             );
         }
-        this.notificationFn?.();
+        this.closeNotificationFn?.();
         const icon = isWarning ? "fa-warning" : "fa-check";
-        this.notificationFn = this.notificationService.add(
+        this.closeNotificationFn = this.notificationService.add(
             markup(
                 `<i class="fa ${icon}"></i><span class="ms-1">${escape(result["message"])}</span>`
             ),
@@ -2512,27 +3023,12 @@ export class GanttRenderer extends Component {
                                           "action_rollback_scheduling",
                                           [ids, result["old_vals_per_pill_id"]]
                                       );
-                                      this.notificationFn();
+                                      this.closeNotificationFn();
                                       await this.model.fetchData();
                                   },
                               },
                           ],
             }
-        );
-    }
-
-    /**
-     *
-     * @param {"forward" | "backward"} direction
-     * @param {ConnectorId} connectorId
-     */
-    async onRescheduleButtonClick(direction, connectorId) {
-        const { masterId, slaveId } = this.getRecordIds(connectorId);
-        await this.model.rescheduleAccordingToDependency(
-            direction,
-            masterId,
-            slaveId,
-            this.rescheduleAccordingToDependencyCallback.bind(this)
         );
     }
 
@@ -2554,5 +3050,11 @@ export class GanttRenderer extends Component {
         if (ev.key === "Control") {
             this.interaction.dragAction = this.prevDragAction || "reschedule";
         }
+    }
+}
+
+function clearObject(obj) {
+    for (const key in obj) {
+        delete obj[key];
     }
 }

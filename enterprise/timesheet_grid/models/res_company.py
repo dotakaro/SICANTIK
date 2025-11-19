@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import date, datetime, timedelta, time
@@ -6,10 +5,11 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
 import logging
+
 _logger = logging.getLogger(__name__)
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = 'res.company'
 
     # reminder for employees
@@ -38,7 +38,7 @@ class Company(models.Model):
         return companies
 
     def write(self, values):
-        result = super(Company, self).write(values)
+        result = super().write(values)
         self.with_context(force_nextdates_calculation=False)._timesheet_postprocess(values)
         return result
 
@@ -158,7 +158,7 @@ class Company(models.Model):
                 'date_start': date_start,
                 'date_stop': date_stop,
             }
-            users = self.env['res.users'].search([('groups_id', 'in', [self.env.ref('hr_timesheet.group_hr_timesheet_approver').id])])
+            users = self.env['res.users'].search([('all_group_ids', 'in', [self.env.ref('hr_timesheet.group_hr_timesheet_approver').id])])
             self._cron_timesheet_send_reminder(
                 self.env['hr.employee'].search([('company_id', '=', company.id), ('user_id', 'in', users.ids)]),
                 'timesheet_grid.mail_template_timesheet_reminder',

@@ -46,13 +46,7 @@ class TestCreditTime(AccountTestInvoicingCommon):
             ],
         })
         cls.classic_38h_calendar = cls.env.company.resource_calendar_id
-        cls.env.ref('hr_contract.structure_type_employee_cp200').default_resource_calendar_id = cls.classic_38h_calendar
-
-        cls.employee = cls.env['hr.employee'].create({
-            'name': 'My Credit Time Employee',
-            'company_id': cls.env.company.id,
-            'resource_calendar_id': cls.classic_38h_calendar.id,
-        })
+        cls.env.ref('hr.structure_type_employee_cp200').default_resource_calendar_id = cls.classic_38h_calendar
 
         cls.model_a3 = cls.env["fleet.vehicle.model"].create({
             'name': ' A3',
@@ -70,14 +64,13 @@ class TestCreditTime(AccountTestInvoicingCommon):
             'company_id': cls.env.company.id,
         })
 
-        cls.original_contract = cls.env['hr.contract'].create({
-            'employee_id': cls.employee.id,
+        cls.employee = cls.env['hr.employee'].create({
+            'name': 'My Credit Time Employee',
             'company_id': cls.env.company.id,
-            'name': 'My Original Contract',
-            'state': 'open',
-            'date_start': datetime.date(2015, 1, 1),
             'resource_calendar_id': cls.classic_38h_calendar.id,
-            'structure_type_id': cls.env.ref('hr_contract.structure_type_employee_cp200').id,
+            'contract_date_start': datetime.date(2015, 1, 1),
+            'date_version': datetime.date(2015, 1, 1),
+            'structure_type_id': cls.env.ref('hr.structure_type_employee_cp200').id,
             'wage': 3000,
             'wage_on_signature': 3000,
             'fuel_card': 150,
@@ -90,13 +83,13 @@ class TestCreditTime(AccountTestInvoicingCommon):
             'car_id': cls.car.id,
             'transport_mode_train': True,
             'train_transport_employee_amount': 30,
-            'transport_mode_private_car': True,
+            'transport_mode_private_car': False,
             'distance_home_work': 30,
             'internet': 38,
             'mobile': 30,
             'has_laptop': True,
         })
-
+        cls.original_contract = cls.employee.version_id
 
     def test_full_time_credit_time(self):
         # Test case:369.23
@@ -108,13 +101,13 @@ class TestCreditTime(AccountTestInvoicingCommon):
             'name': 'Credit Time Calendar',
             'company_id': self.env.company.id,
             'hours_per_day': 0,
-            'full_time_required_hours': 0,
+            'full_time_required_hours': 40,
             'attendance_ids': [(5, 0, 0)],
         })
 
         wizard = self.env['l10n_be.hr.payroll.schedule.change.wizard'].with_context(allowed_company_ids=self.env.company.ids).new({
-            'contract_id': self.original_contract.id,
-            'absence_work_entry_type_id': self.env.ref('l10n_be_hr_payroll.work_entry_type_credit_time').id,
+            'version_id': self.original_contract.id,
+            'absence_work_entry_type_id': self.env.ref('hr_work_entry.l10n_be_work_entry_type_credit_time').id,
             'date_start': datetime.date(2020, 3, 5),
             'date_end': datetime.date(2020, 4, 30),
             'resource_calendar_id': new_calendar.id,
@@ -123,14 +116,12 @@ class TestCreditTime(AccountTestInvoicingCommon):
         })
         wizard.action_validate()
 
-        contracts = self.env['hr.contract'].search([('employee_id', '=', self.employee.id)])
+        contracts = self.env['hr.version'].search([('employee_id', '=', self.employee.id)])
         new_contract = contracts[1]
         self.assertEqual(len(contracts), 3)
         self.assertEqual(self.original_contract.date_end, datetime.date(2020, 3, 4))
         self.assertEqual(new_contract.date_start, datetime.date(2020, 3, 5))
         self.assertEqual(new_contract._get_contract_wage(), 0)
-
-        new_contract.state = 'open'
 
         # Generate Work Entries
         date_start = datetime.date(2020, 3, 1)
@@ -139,19 +130,18 @@ class TestCreditTime(AccountTestInvoicingCommon):
         # The work entries are generated until today, so only take those from march
         work_entries = work_entries.filtered(lambda w: w.date_start.month == 3)
 
-        work_entries_1 = work_entries.filtered(lambda w: w.contract_id == self.original_contract)
-        work_entries_2 = work_entries.filtered(lambda w: w.contract_id == new_contract)
+        work_entries_1 = work_entries.filtered(lambda w: w.version_id == self.original_contract)
+        work_entries_2 = work_entries.filtered(lambda w: w.version_id == new_contract)
         self.assertEqual(len(work_entries_1), 6) # 2, 3, 4 March Morning - Afternoon
         self.assertEqual(len(work_entries_2), 38) # 5-6 (2), 9-13 (5), 16-20 (5), 23-27 (5), 30-31 (2) March Morning - Afternoon
 
         # Generate Payslip
-        payslip_run_id = self.env['hr.payslip.employees'].with_context(
-            default_date_start='2020-03-01',
-            default_date_end='2020-03-31',
-            allowed_company_ids=self.env.company.ids,
-        ).create({}).compute_sheet()['res_id']
+        payslip_run = self.env["hr.payslip.run"].create({
+            "date_start": "2020-03-01",
+            "date_end": "2020-03-31",
+        })
 
-        payslip_run = self.env['hr.payslip.run'].browse(payslip_run_id)
+        payslip_run.generate_payslips(payslip_run._get_valid_versions())
 
         self.assertEqual(len(payslip_run.slip_ids), 2)
 
@@ -159,7 +149,7 @@ class TestCreditTime(AccountTestInvoicingCommon):
         payslip_new_contract = payslip_run.slip_ids[1]
 
         # Check Payslip 1
-        self.assertEqual(payslip_original_contract.contract_id, self.original_contract)
+        self.assertEqual(payslip_original_contract.version_id, self.original_contract)
         self.assertEqual(len(payslip_original_contract.worked_days_line_ids), 2) # One attendance line, One out of contract
         attendance_line = payslip_original_contract.worked_days_line_ids[0]
         self.assertAlmostEqual(attendance_line.amount, 415.38, places=2)
@@ -171,7 +161,7 @@ class TestCreditTime(AccountTestInvoicingCommon):
         self.assertEqual(float_compare(out_of_contract_line.number_of_hours, 144.4, 2), 0)
 
         # Check Payslip 2
-        self.assertEqual(payslip_new_contract.contract_id, new_contract)
+        self.assertEqual(payslip_new_contract.version_id, new_contract)
         self.assertEqual(len(payslip_new_contract.worked_days_line_ids), 2) # One credit time, one out of contract
         out_of_contract_line = payslip_new_contract.worked_days_line_ids[0]
         self.assertEqual(out_of_contract_line.amount, 0)
@@ -246,8 +236,8 @@ class TestCreditTime(AccountTestInvoicingCommon):
         })
 
         wizard = self.env['l10n_be.hr.payroll.schedule.change.wizard'].with_context(allowed_company_ids=self.env.company.ids).new({
-            'contract_id': self.original_contract.id,
-            'absence_work_entry_type_id': self.env.ref('l10n_be_hr_payroll.work_entry_type_credit_time').id,
+            'version_id': self.original_contract.id,
+            'absence_work_entry_type_id': self.env.ref('hr_work_entry.l10n_be_work_entry_type_credit_time').id,
             'date_start': datetime.date(2020, 3, 5),
             'date_end': datetime.date(2020, 4, 30),
             'resource_calendar_id': new_calendar.id,
@@ -256,14 +246,12 @@ class TestCreditTime(AccountTestInvoicingCommon):
         })
         wizard.action_validate()
 
-        contracts = self.env['hr.contract'].search([('employee_id', '=', self.employee.id)])
+        contracts = self.env['hr.version'].search([('employee_id', '=', self.employee.id)])
         new_contract = contracts[1]
         self.assertEqual(len(contracts), 3)
         self.assertEqual(self.original_contract.date_end, datetime.date(2020, 3, 4))
         self.assertEqual(new_contract.date_start, datetime.date(2020, 3, 5))
         self.assertEqual(new_contract._get_contract_wage(), 2400)
-
-        new_contract.state = 'open'
 
         # Generate Work Entries
         date_start = datetime.date(2020, 3, 1)
@@ -272,24 +260,22 @@ class TestCreditTime(AccountTestInvoicingCommon):
         # The work entries are generated until today, so only take those from march
         work_entries = work_entries.filtered(lambda w: w.date_start.month == 3)
 
-        work_entries_1 = work_entries.filtered(lambda w: w.contract_id == self.original_contract)
+        work_entries_1 = work_entries.filtered(lambda w: w.version_id == self.original_contract)
         work_entries_2 = work_entries - work_entries_1
         self.assertEqual(len(work_entries_1), 6) # 2, 3, 4 March Morning - Afternoon
         self.assertEqual(work_entries_1.mapped('work_entry_type_id'), self.env.ref('hr_work_entry.work_entry_type_attendance'))
         self.assertEqual(len(work_entries_2), 38) # 5-6 (2), 9-13 (5), 16-20 (5), 23-27 (5), 30-31 (2) March Morning - Afternoon
         attendance_we = work_entries_2.filtered(lambda w: w.work_entry_type_id == self.env.ref('hr_work_entry.work_entry_type_attendance'))
-        credit_time_we = work_entries_2.filtered(lambda w: w.work_entry_type_id == self.env.ref('l10n_be_hr_payroll.work_entry_type_credit_time'))
+        credit_time_we = work_entries_2.filtered(lambda w: w.work_entry_type_id == self.env.ref('hr_work_entry.l10n_be_work_entry_type_credit_time'))
         self.assertEqual(len(credit_time_we), 6) # 11,18,25 Morning - Afternoon
         self.assertEqual(len(attendance_we), 32) # Remaining days
 
-        # Generate Payslip
-        payslip_run_id = self.env['hr.payslip.employees'].with_context(
-            default_date_start='2020-03-01',
-            default_date_end='2020-03-31',
-            allowed_company_ids=self.env.company.ids,
-        ).create({}).compute_sheet()['res_id']
+        payslip_run = self.env["hr.payslip.run"].create({
+            "date_start": "2020-03-01",
+            "date_end": "2020-03-31",
+        })
 
-        payslip_run = self.env['hr.payslip.run'].browse(payslip_run_id)
+        payslip_run.generate_payslips(payslip_run._get_valid_versions())
 
         self.assertEqual(len(payslip_run.slip_ids), 2)
 
@@ -297,7 +283,7 @@ class TestCreditTime(AccountTestInvoicingCommon):
         payslip_new_contract = payslip_run.slip_ids[1]
 
         # Check Payslip 1 - Note: Same as for full time
-        self.assertEqual(payslip_original_contract.contract_id, self.original_contract)
+        self.assertEqual(payslip_original_contract.version_id, self.original_contract)
         self.assertEqual(len(payslip_original_contract.worked_days_line_ids), 2) # One attendance line, One out of contract
         attendance_line = payslip_original_contract.worked_days_line_ids[0]
         self.assertAlmostEqual(attendance_line.amount, 415.38, places=2)
@@ -329,11 +315,10 @@ class TestCreditTime(AccountTestInvoicingCommon):
             'M.ONSS': 0.0,
             'MEAL_V_EMP': -3.27,
             'PUB.TRANS': 24.0,
-            'CAR.PRIV': 7.89,
             'REP.FEES': 18.46,
             'IP': 103.85,
             'IP.DED': -7.79,
-            'NET': 398.42
+            'NET': 390.53
         }
         error = []
         line_values = payslip_original_contract._get_line_values(payslip_results.keys())
@@ -344,7 +329,7 @@ class TestCreditTime(AccountTestInvoicingCommon):
         self.assertEqual(len(error), 0, '\n' + '\n'.join(error))
 
         # Check Payslip 2
-        self.assertEqual(payslip_new_contract.contract_id, new_contract)
+        self.assertEqual(payslip_new_contract.version_id, new_contract)
         self.assertEqual(len(payslip_new_contract.worked_days_line_ids), 3) # Attendance, credit time, out of contract
         attendance_line = payslip_new_contract.worked_days_line_ids[0]
         self.assertAlmostEqual(attendance_line.amount, 2067.69, places=2)
@@ -380,11 +365,10 @@ class TestCreditTime(AccountTestInvoicingCommon):
             'M.ONSS': -9.3,
             'MEAL_V_EMP': -17.44,
             'PUB.TRANS': 0.0,
-            'CAR.PRIV': 42.09,
             'REP.FEES': 98.08,
             'IP': 516.92,
             'IP.DED': -38.77,
-            'NET': 1841.0,
+            'NET': 1798.91,
         }
         error = []
         line_values = payslip_new_contract._get_line_values(payslip_results.keys())

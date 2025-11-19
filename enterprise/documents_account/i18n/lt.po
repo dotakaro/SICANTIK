@@ -3,22 +3,14 @@
 # 	* documents_account
 # 
 # Translators:
-# Audrius Palenskis <audrius.palenskis@gmail.com>, 2024
-# UAB "Draugiški sprendimai" <transifex@draugiskisprendimai.lt>, 2024
-# Linas Versada <linaskrisiukenas@gmail.com>, 2024
-# Jonas Zinkevicius <jozi@odoo.com>, 2024
-# Martin Trigaux, 2024
-# Arunas V. <arunas@devoro.com>, 2024
-# Ramunė ViaLaurea <ramune.vialaurea@gmail.com>, 2024
-# Jessica Jakara, 2025
 # Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-06 18:49+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Lithuanian (https://app.transifex.com/odoo/teams/41243/lt/)\n"
 "MIME-Version: 1.0\n"
@@ -26,6 +18,12 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Language: lt\n"
 "Plural-Forms: nplurals=4; plural=(n % 10 == 1 && (n % 100 > 19 || n % 100 < 11) ? 0 : (n % 10 >= 2 && n % 10 <=9) && (n % 100 > 19 || n % 100 < 11) ? 1 : n % 1 != 0 ? 2: 3);\n"
+
+#. module: documents_account
+#. odoo-python
+#: code:addons/documents_account/models/ir_actions_server.py:0
+msgid "\"New Journal Entry\" can only be applied to Document."
+msgstr ""
 
 #. module: documents_account
 #. odoo-javascript
@@ -57,21 +55,39 @@ msgid "Accounting "
 msgstr "Buhalterinė apskaita"
 
 #. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__company_account_folder_id
+#: model:ir.model.fields,field_description:documents_account.field_res_company__account_folder_id
+msgid "Accounting Folder"
+msgstr ""
+
+#. module: documents_account
 #: model:ir.model,name:documents_account.model_account_report
 msgid "Accounting Report"
 msgstr "Apskaitos ataskaita"
-
-#. module: documents_account
-#: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__company_account_folder_id
-#: model:ir.model.fields,field_description:documents_account.field_res_company__account_folder_id
-msgid "Accounting Workspace"
-msgstr ""
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Action"
 msgstr "Veiksmas"
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_tag_add_bill
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_customer_invoice_tag_add_bill
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_tag_add_bill
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_tag_add_bill
+msgid "Add tag \"Bill\""
+msgstr ""
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_bank_statement_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_customer_invoice_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_misc_entry_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_tag_add_validated
+msgid "Add tag \"Validated\""
+msgstr ""
 
 #. module: documents_account
 #. odoo-javascript
@@ -94,6 +110,11 @@ msgid "Attachment"
 msgstr "Prisegtukas"
 
 #. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_bank_statement
+msgid "Bank Statement"
+msgstr "Banko išrašas"
+
+#. module: documents_account
 #: model_terms:ir.ui.view,arch_db:documents_account.res_config_settings_view_form
 msgid "Centralize accounting files and documents"
 msgstr "Centralizuoti apskaitos failus ir dokumentus"
@@ -102,6 +123,16 @@ msgstr "Centralizuoti apskaitos failus ir dokumentus"
 #: model_terms:ir.ui.view,arch_db:documents_account.view_account_move_form_inherit_documents_account
 msgid "Check them"
 msgstr "Patikrinkite juos"
+
+#. module: documents_account
+#: model_terms:ir.ui.view,arch_db:documents_account.view_server_action_form_template
+msgid "Choose a journal..."
+msgstr ""
+
+#. module: documents_account
+#: model_terms:ir.ui.view,arch_db:documents_account.view_server_action_form_template
+msgid "Choose an accounting document type..."
+msgstr ""
 
 #. module: documents_account
 #. odoo-javascript
@@ -161,8 +192,29 @@ msgid "Copy to Documents"
 msgstr ""
 
 #. module: documents_account
-#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note
+#: model_terms:ir.ui.view,arch_db:documents_account.view_server_action_form_template
+msgid "Create"
+msgstr "Sukurti"
+
+#. module: documents_account
+#. odoo-python
+#: code:addons/documents_account/models/ir_actions_server.py:0
+msgid "Create %(model_name)s"
+msgstr ""
+
+#. module: documents_account
+#. odoo-python
+#: code:addons/documents_account/models/ir_actions_server.py:0
+msgid "Create %(model_name)s (%(journal_name)s)"
+msgstr ""
+
+#. module: documents_account
 #: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_code
+msgid "Create Credit Note"
+msgstr ""
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note
 msgid "Create Customer Credit Note"
 msgstr ""
 
@@ -189,14 +241,14 @@ msgid "Create Vendor Bill"
 msgstr ""
 
 #. module: documents_account
-#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_receipt
-msgid "Create Vendor Receipt"
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_code
+msgid "Create Vendor Credit Note"
 msgstr ""
 
 #. module: documents_account
-#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund
-#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_code
-msgid "Create Vendor Refund"
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_receipt
+msgid "Create Vendor Receipt"
 msgstr ""
 
 #. module: documents_account
@@ -217,7 +269,28 @@ msgid "Created on"
 msgstr "Sukurta"
 
 #. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_out_refund
+msgid "Credit Note"
+msgstr "Kreditinė sąskaita"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_out_invoice
+msgid "Customer Invoice"
+msgstr "Kliento sąskaita-faktūra"
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_account_journal__display_name
+#: model:ir.model.fields,field_description:documents_account.field_account_move__display_name
+#: model:ir.model.fields,field_description:documents_account.field_account_report__display_name
+#: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard__display_name
+#: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard_format__display_name
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__display_name
+#: model:ir.model.fields,field_description:documents_account.field_documents_document__display_name
+#: model:ir.model.fields,field_description:documents_account.field_documents_tag__display_name
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__display_name
+#: model:ir.model.fields,field_description:documents_account.field_ir_attachment__display_name
+#: model:ir.model.fields,field_description:documents_account.field_res_company__display_name
+#: model:ir.model.fields,field_description:documents_account.field_res_config_settings__display_name
 msgid "Display Name"
 msgstr "Rodomas pavadinimas"
 
@@ -227,8 +300,32 @@ msgid "Document"
 msgstr "Dokumentas"
 
 #. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__documents_account_create_model
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__documents_account_create_model
+msgid "Documents Account Create Model"
+msgstr ""
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__documents_account_journal_id
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__documents_account_journal_id
+msgid "Documents Account Journal"
+msgstr ""
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__documents_account_move_type
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__documents_account_move_type
+msgid "Documents Account Move Type"
+msgstr ""
+
+#. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_res_company__documents_account_settings
 msgid "Documents Account Settings"
+msgstr ""
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__documents_account_suitable_journal_ids
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__documents_account_suitable_journal_ids
+msgid "Documents Account Suitable Journal"
 msgstr ""
 
 #. module: documents_account
@@ -254,12 +351,8 @@ msgid "Finance"
 msgstr "Finansai"
 
 #. module: documents_account
-#: model:mail.activity.type,name:documents_account.mail_documents_activity_data_fs
-msgid "Financial Statement"
-msgstr ""
-
-#. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard__folder_id
+#: model_terms:ir.ui.view,arch_db:documents_account.res_config_settings_view_form
 msgid "Folder"
 msgstr "Aplankalas"
 
@@ -292,7 +385,18 @@ msgid "Has Embedded PDF"
 msgstr ""
 
 #. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_account_journal__id
+#: model:ir.model.fields,field_description:documents_account.field_account_move__id
+#: model:ir.model.fields,field_description:documents_account.field_account_report__id
+#: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard__id
+#: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard_format__id
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__id
+#: model:ir.model.fields,field_description:documents_account.field_documents_document__id
+#: model:ir.model.fields,field_description:documents_account.field_documents_tag__id
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__id
+#: model:ir.model.fields,field_description:documents_account.field_ir_attachment__id
+#: model:ir.model.fields,field_description:documents_account.field_res_company__id
+#: model:ir.model.fields,field_description:documents_account.field_res_config_settings__id
 msgid "ID"
 msgstr "ID"
 
@@ -311,6 +415,7 @@ msgstr "Sąskaitos-faktūros"
 #. module: documents_account
 #: model:ir.model,name:documents_account.model_account_journal
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__journal_id
+#: model_terms:ir.ui.view,arch_db:documents_account.view_server_action_form_template
 msgid "Journal"
 msgstr "Žurnalas"
 
@@ -373,9 +478,44 @@ msgid ""
 msgstr ""
 
 #. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_entry
+msgid "Miscellaneous Operations"
+msgstr "Įvairios operacijos"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__state__documents_account_record_create
+msgid "New Journal Entry"
+msgstr ""
+
+#. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Open the actions menu"
+msgstr ""
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_in_receipt
+msgid "Purchase Receipt"
+msgstr "Pirkimo kvitas"
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_bank_statement_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_customer_invoice_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_misc_entry_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_tag_remove_inbox
+msgid "Remove tag \"Inbox\""
+msgstr ""
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_bank_statement_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_customer_invoice_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_misc_entry_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_tag_remove_to_validate
+msgid "Remove tag \"To Validate\""
 msgstr ""
 
 #. module: documents_account
@@ -391,21 +531,26 @@ msgid "Send To Finance"
 msgstr ""
 
 #. module: documents_account
+#: model:ir.model,name:documents_account.model_ir_actions_server
+msgid "Server Action"
+msgstr "Serverio veiksmas"
+
+#. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Split PDF"
 msgstr "Padalinti PDF failą"
 
 #. module: documents_account
+#: model:ir.model,name:documents_account.model_documents_tag
+msgid "Tag"
+msgstr "Žyma"
+
+#. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard__tag_ids
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__tag_ids
 msgid "Tags"
 msgstr "Žymos"
-
-#. module: documents_account
-#: model:mail.activity.type,name:documents_account.mail_documents_activity_data_vat
-msgid "Tax Statement"
-msgstr ""
 
 #. module: documents_account
 #: model_terms:ir.ui.view,arch_db:documents_account.view_account_move_form_inherit_documents_account
@@ -419,6 +564,37 @@ msgid "This should be processed as a misc entry."
 msgstr ""
 
 #. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__state
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__state
+msgid "Type"
+msgstr "Tipas"
+
+#. module: documents_account
+#: model:ir.model.fields,help:documents_account.field_ir_actions_server__state
+#: model:ir.model.fields,help:documents_account.field_ir_cron__state
+msgid ""
+"Type of server action. The following values are available:\n"
+"- 'Update a Record': update the values of a record\n"
+"- 'Create Activity': create an activity (Discuss)\n"
+"- 'Send Email': post a message, a note or send an email (Discuss)\n"
+"- 'Send SMS': send SMS, log them on documents (SMS)- 'Add/Remove Followers': add or remove followers to a record (Discuss)\n"
+"- 'Create Record': create a new record with new values\n"
+"- 'Execute Code': a block of Python code that will be executed\n"
+"- 'Send Webhook Notification': send a POST request to an external system, also known as a Webhook\n"
+"- 'Multi Actions': define an action that triggers several other server actions\n"
+msgstr ""
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_in_invoice
+msgid "Vendor Bill"
+msgstr "Tiekėjo sąskaita"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_in_refund
+msgid "Vendor Credit Note"
+msgstr "Tiekėjo kreditinė sąskaita"
+
+#. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid ""
@@ -427,7 +603,6 @@ msgstr ""
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__folder_id
-#: model_terms:ir.ui.view,arch_db:documents_account.res_config_settings_view_form
 msgid "Workspace"
 msgstr "Darbo erdvė"
 

@@ -4,15 +4,14 @@
 # 
 # Translators:
 # Wil Odoo, 2025
-# Rasareeyar Lappiam, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-17 15:23+0000\n"
-"PO-Revision-Date: 2025-01-19 01:20+0000\n"
-"Last-Translator: Rasareeyar Lappiam, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Thai (https://app.transifex.com/odoo/teams/41243/th/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -162,7 +161,7 @@ msgstr ""
 "            <body><div>\n"
 "                <p>การซิงโครไนซ์ฉลากการจัดส่งของ Shopee พบข้อผิดพลาดบางอย่างและไม่เสร็จสมบูรณ์</p>\n"
 "                <p>โปรดแก้ไขปัญหาก่อนที่จะซิงค์การเลือกด้วยตนเองอีกครั้ง เนื่องจากจะไม่มีการพยายามซิงค์อื่น</p>\n"
-"                <p>นี่คือข้อผิดพลาดที่ส่งโดย Shopee: </p>\n"
+"                <p>นี่คือข้อผิดพลาดที่ Shopee ส่งมา: </p>\n"
 "                <table class=\"shopee_table\">\n"
 "                    <thead>\n"
 "                        <tr>\n"
@@ -472,6 +471,11 @@ msgid "Create Shopee Accounts"
 msgstr ""
 
 #. module: sale_shopee
+#: model:ir.model,website_form_label:sale_shopee.model_res_partner
+msgid "Create a Customer"
+msgstr ""
+
+#. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__create_uid
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__create_uid
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__create_uid
@@ -506,9 +510,14 @@ msgid "Default Salesperson"
 msgstr "ค่าเริ่มต้นพนักงานขาย"
 
 #. module: sale_shopee
+#: model:ir.model.fields,field_description:sale_shopee.field_product_product__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_res_partner__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_sale_order__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_move__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "แสดงชื่อ"
 
@@ -604,9 +613,14 @@ msgid "Fulfillment by Shopee"
 msgstr ""
 
 #. module: sale_shopee
+#: model:ir.model.fields,field_description:sale_shopee.field_product_product__id
+#: model:ir.model.fields,field_description:sale_shopee.field_res_partner__id
+#: model:ir.model.fields,field_description:sale_shopee.field_sale_order__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__id
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_move__id
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_picking__id
 msgid "ID"
 msgstr "ไอดี"
 
@@ -1078,12 +1092,12 @@ msgid ""
 " label again later."
 msgstr ""
 "Shopee กำลังประมวลผลฉลากการจัดส่ง Odoo "
-"จะพยายามเรียกใช้ฉลากการจัดส่งอีกครั้งในภายหลัง"
+"จะพยายามดึงฉลากการจัดส่งอีกครั้งในภายหลัง"
 
 #. module: sale_shopee
 #. odoo-python
-#: code:addons/sale_shopee/models/shopee_shop.py:0
-msgid "Shopee move: %(name)s"
+#: code:addons/sale_shopee/models/stock_move.py:0
+msgid "Shopee move: %s"
 msgstr ""
 
 #. module: sale_shopee
@@ -1133,6 +1147,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__status
 msgid "Status"
 msgstr "สถานะ"
+
+#. module: sale_shopee
+#: model:ir.model,name:sale_shopee.model_stock_move
+msgid "Stock Move"
+msgstr "ย้ายสต็อก"
 
 #. module: sale_shopee
 #: model:ir.model.fields.selection,name:sale_shopee.selection__stock_picking__shopee_label_status__stored
@@ -1372,4 +1391,22 @@ msgstr "เช่น ตลาดอเมริกา"
 #. module: sale_shopee
 #: model_terms:ir.ui.view,arch_db:sale_shopee.shopee_shop_view_form
 msgid "e.g. Indonesian Shop"
+msgstr ""
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_account.py:0
+msgid "id"
+msgstr "ไอดี"
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_shop.py:0
+msgid "shop_id"
+msgstr ""
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_shop.py:0
+msgid "shopee_shop_id"
 msgstr ""

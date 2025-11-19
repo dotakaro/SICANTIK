@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
@@ -14,7 +13,7 @@ class HrRecruitmentStageReport(models.Model):
     name = fields.Char('Applicant Name', readonly=True)
     stage_id = fields.Many2one('hr.recruitment.stage', readonly=True)
     job_id = fields.Many2one('hr.job', readonly=True)
-    days_in_stage = fields.Float(readonly=True, aggregator='avg')
+    days_in_stage = fields.Float(readonly=True, aggregator='avg', string="Average Days in Stage")
 
     state = fields.Selection([
         ('is_hired', 'Hired'),
@@ -33,7 +32,7 @@ class HrRecruitmentStageReport(models.Model):
 WITH application_stage_history AS (
 SELECT
     ha.id AS applicant_id,
-    c.partner_name AS name,
+    ha.partner_name AS name,
     ha.job_id AS job_id,
     ha.company_id AS company_id,
     CASE
@@ -51,10 +50,6 @@ SELECT
     END AS stage_id
 FROM
     hr_applicant ha
-JOIN
-    hr_candidate c
-ON
-    c.id = ha.candidate_id
 JOIN
     mail_message mm
 ON
@@ -74,7 +69,7 @@ ON
 current_application_stage AS (
 SELECT
     ha.id AS applicant_id,
-    c.partner_name AS name,
+    ha.partner_name AS name,
     ha.job_id AS job_id,
     ha.company_id AS company_id,
     CASE
@@ -93,10 +88,6 @@ SELECT
     ha.stage_id
 FROM
     hr_applicant ha
-JOIN
-    hr_candidate c
-ON
-    c.id = ha.candidate_id
 JOIN
     hr_recruitment_stage hrs
 ON
@@ -124,6 +115,7 @@ LEFT JOIN LATERAL (
 ) md ON TRUE
 WHERE
     hrs.hired_stage IS NOT TRUE
+    AND ha.job_id IS NOT NULL
 ),
 global_cte AS(
     SELECT applicant_id, name, job_id, company_id, state, date_begin, date_end, days_in_stage, stage_id FROM application_stage_history

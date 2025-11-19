@@ -8,7 +8,7 @@ from odoo.tests.common import TransactionCase
 from odoo.addons.web_studio.wizard.studio_export_wizard import DEFAULT_MODELS_TO_EXPORT, FIELDS_TO_EXPORT, MODELS_WITH_NOUPDATE, RELATIONS_NOT_TO_EXPORT
 from odoo.addons.web_studio.models.studio_export_model import PRESET_MODELS_DEFAULTS, \
     DEFAULT_FIELDS_TO_EXCLUDE, ABSTRACT_MODEL_FIELDS_TO_EXCLUDE, RELATED_MODELS_TO_EXCLUDE
-from odoo.addons.web_studio.controllers.export import XML_FIELDS
+from odoo.addons.web_studio.controllers.export_utils import XML_FIELDS
 from odoo.addons.web_studio.models.ir_model import OPTIONS_WL
 from odoo.exceptions import ValidationError
 from odoo import Command
@@ -24,8 +24,7 @@ class TestStudioIrModel(TransactionCase):
         # the database before setUpClass(), which is not correct.  Instead, a
         # test cursor will correspond to the state of the database of cls.cr at
         # that point, i.e., before the call to setUp().
-        cls.registry.enter_test_mode(cls.cr)
-        cls.addClassCleanup(cls.registry.leave_test_mode)
+        cls.registry_enter_test_mode_cls()
         cls.partner_elon = cls.env['res.partner'].create({
             'name': 'Elon Tusk',  # 🐗
             'email': 'elon@spacex.com',
@@ -43,6 +42,10 @@ class TestStudioIrModel(TransactionCase):
                 "name": "x_state_ids",
             }
         )
+
+    def setUp(self):
+        self.addCleanup(self.registry.reset_changes)
+        super().setUp()
 
     def test_00_model_creation(self):
         """Test that a model gets created with the selected options."""
@@ -74,14 +77,15 @@ class TestStudioIrModel(TransactionCase):
             'x_studio_partner_id': self.partner_elon.id,
         })
         # ensure the partner is suggested in email and sms communication
-        mail_suggested_recipients = bfr._message_get_suggested_recipients()
-        self.assertItemsEqual(
+        mail_suggested_recipients = bfr._message_get_suggested_recipients(
+            reply_discussion=True, no_create=False,
+        )
+        self.assertDictEqual(
             {
                 'partner_id': self.partner_elon.id,
                 'name': 'Elon Tusk',
                 'email': 'elon@spacex.com',
-                'lang': None,
-                'reason': 'Contact',
+                'create_values': {},
             },
             mail_suggested_recipients[0],
             'custom partner field should be suggested in mail communications',
@@ -435,17 +439,20 @@ class TestStudioIrModel(TransactionCase):
         self.assertEqual(action.name, new_menu.name, 'rename the menu name should rename the window action name')
 
     def test_performance_01_fields_batch(self):
-        """Test number of call to setup_models when creating a model with multiple"""
+        """Test number of call to _setup_models__ when creating a model with multiple"""
         count_setup_models = 0
-        orig_setup_models = odoo.modules.registry.Registry.setup_models
-        def setup_models(registry, cr):
+        orig_setup_models = odoo.modules.registry.Registry._setup_models__
+
+        def _setup_models(registry, cr, *args, **kwargs):
             nonlocal count_setup_models
             count_setup_models += 1
-            orig_setup_models(registry, cr)
-        with patch('odoo.modules.registry.Registry.setup_models', new=setup_models):
+            orig_setup_models(registry, cr, *args, **kwargs)
+
+        with patch('odoo.modules.registry.Registry._setup_models__', new=_setup_models):
             # not: using a specific model (PerformanceIssues and not Rockets) is important since after the rollback of the test,
             # the model will be missing but x_rockets is still in the pool, breaking some optimizations
             self.env['ir.model'].with_context(studio=True).studio_model_create('PerformanceIssues', options=OPTIONS_WL)
+
         self.assertEqual(count_setup_models, 1)
 
     def test_update_xmlid(self):

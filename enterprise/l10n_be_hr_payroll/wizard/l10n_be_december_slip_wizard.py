@@ -13,7 +13,7 @@ class L10nBeDecemberSlipWizard(models.TransientModel):
     @api.model
     def default_get(self, fields_list):
         if self.env.company.country_id.code != "BE":
-            raise UserError(_('You must be logged in a Belgian company to use this feature'))
+            raise UserError(_('This feature seems to be as exclusive as Belgian chocolates. You must be logged in to a Belgian company to use it.'))
         result = super(L10nBeDecemberSlipWizard, self).default_get(fields_list)
         if self.env.context.get('active_id') and self.env.context.get('active_model') == 'hr.payslip':
             payslip_id = self.env.context['active_id']
@@ -22,7 +22,7 @@ class L10nBeDecemberSlipWizard(models.TransientModel):
 
     payslip_id = fields.Many2one('hr.payslip')
     employee_id = fields.Many2one('hr.employee', related="payslip_id.employee_id")
-    contract_id = fields.Many2one('hr.contract', related="payslip_id.contract_id")
+    version_id = fields.Many2one('hr.version', related="payslip_id.version_id")
     company_id = fields.Many2one('res.company', default=lambda self: self.env.user.company_id)
     currency_id = fields.Many2one('res.currency', related="company_id.currency_id")
     remuneration_n1 = fields.Monetary(
@@ -96,7 +96,8 @@ class L10nBeDecemberSlipWizard(models.TransientModel):
             payslips_n -= double_payslip
             wizard.double_holiday_n = double_payslip._origin._get_line_values(
                 ['BASIC'], compute_sum=True)['BASIC']['sum']['total']
-            wizard.simple_holiday_n = payslips_n._get_worked_days_line_amount('LEAVE120')
+            wizard.simple_holiday_n = payslips_n._get_worked_days_line_values(
+                ['LEAVE120'], ['amount'], True)['LEAVE120']['sum']['amount']
 
     def action_validate(self):
         self.ensure_one()

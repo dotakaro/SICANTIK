@@ -1,7 +1,7 @@
 from odoo import models, _
 
 
-class GeneralLedgerCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):

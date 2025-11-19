@@ -4,7 +4,7 @@
 from odoo import models, fields
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = "res.company"
 
     # here, key has to be full xmlID(including the module name) of all the

@@ -10,7 +10,7 @@ from odoo.exceptions import UserError
 
 from odoo.tools.float_utils import float_repr
 from odoo.tools.xml_utils import create_xml_node, create_xml_node_chain
-from odoo.addons.account_batch_payment.models import sepa_mapping
+from odoo.addons.account_batch_payment.models.sepa_mapping import sanitize_communication
 from lxml import etree
 
 
@@ -53,17 +53,14 @@ class AccountPayment(models.Model):
         unpaid = self.filtered(lambda p: p.state == 'draft')
         res = super().write(vals)
         for pay in unpaid.filtered(lambda p: p.state == 'in_process'):
-            if pay.sdd_mandate_id:
-                matched_invoices = pay.move_id._get_reconciled_invoices() + pay.invoice_ids
-                matched_invoices.filtered(lambda m: m.sdd_mandate_id != pay.sdd_mandate_id).sdd_mandate_id = pay.sdd_mandate_id
-                if pay.sdd_mandate_id.one_off:
-                    pay.sdd_mandate_id.sudo().action_close_mandate()
+            if pay.sdd_mandate_id.one_off:
+                pay.sdd_mandate_id.sudo().action_close_mandate()
         return res
 
     @api.model
     def split_node(self, string_node, max_size):
         # Split a string node according to its max_size in byte
-        string_node = self._sanitize_communication(string_node)
+        string_node = sanitize_communication(string_node)
         byte_node = string_node.encode()
         if len(byte_node) <= max_size:
             return string_node, ''
@@ -84,11 +81,6 @@ class AccountPayment(models.Model):
         for pay in self:
             if pay.sdd_mandate_id and pay.sdd_mandate_id.partner_id != pay.partner_id.commercial_partner_id:
                 raise UserError(_("Trying to register a payment on a mandate belonging to a different partner."))
-
-    @api.model
-    def _sanitize_communication(self, communication):
-        # DEPRECATED - to be removed in master
-        return sepa_mapping.sanitize_communication(communication, None)
 
     def generate_xml(self, company_id, required_collection_date, askBatchBooking):
         """ Generates a SDD XML file containing the payments corresponding to this recordset,

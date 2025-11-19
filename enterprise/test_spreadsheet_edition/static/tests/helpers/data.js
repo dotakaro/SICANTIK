@@ -1,8 +1,5 @@
 import { SpreadsheetModels, defineSpreadsheetModels, getBasicServerData } from "@spreadsheet/../tests/helpers/data";
-import {
-    mockFetchSpreadsheetHistory,
-    mockJoinSpreadsheetSession,
-} from "@spreadsheet_edition/../tests/helpers/mock_server";
+import { mockFetchSpreadsheetHistory } from "@spreadsheet_edition/../tests/helpers/mock_server";
 import { fields, models } from "@web/../tests/web_test_helpers";
 
 export class SpreadsheetTest extends models.Model {
@@ -12,15 +9,6 @@ export class SpreadsheetTest extends models.Model {
     thumbnail = fields.Binary({ string: "Thumbnail" });
     display_thumbnail = fields.Binary({ string: "Thumbnail" });
     spreadsheet_data = fields.Text({ string: "Data" });
-
-    join_spreadsheet_session(resId, shareId, accessToken) {
-        return mockJoinSpreadsheetSession("spreadsheet.test").call(
-            this,
-            resId,
-            shareId,
-            accessToken
-        );
-    }
 
     get_spreadsheet_history(resId, fromSnapshot) {
         return mockFetchSpreadsheetHistory("spreadsheet.test").call(this, resId, fromSnapshot);

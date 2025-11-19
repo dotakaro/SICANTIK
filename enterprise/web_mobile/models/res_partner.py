@@ -1,6 +1,7 @@
 from odoo import fields, models
 
-class Partners(models.Model):
+
+class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     # related for backward compatibility with < 13.0

@@ -4,9 +4,8 @@ from itertools import product
 from unittest.mock import patch
 
 
-from odoo.addons.base.models.ir_cron import ir_cron as IrCronModel
+from odoo.addons.base.models.ir_cron import IrCron as IrCronModel
 from odoo.addons.mail.tests.common import mail_new_test_user
-from odoo.addons.whatsapp.models.whatsapp_message import WhatsAppMessage as WhatsappMessageModel
 from odoo.addons.whatsapp.tests.common import MockIncomingWhatsApp
 from odoo.addons.test_whatsapp.tests.common import WhatsAppFullCase
 from odoo.tests import tagged, users
@@ -118,7 +117,6 @@ class WhatsAppMessage(WhatsAppFullCase, MockIncomingWhatsApp):
     def test_assert_initial_values(self):
         """ Ensure base values used in tests """
         self.assertEqual(self.test_partner.country_id, self.env.ref('base.be'))
-        self.assertEqual(self.test_partner.mobile, "0485001122")
         self.assertEqual(self.test_partner.phone, "0485221100")
 
         self.assertEqual(self.company_admin.country_id, self.env.ref('base.us'))
@@ -181,7 +179,7 @@ class WhatsAppMessage(WhatsAppFullCase, MockIncomingWhatsApp):
                     mobile_number,
                     new_partner_values={
                         'country_id': exp_country,
-                        'mobile': exp_mobile_nbr_formatted,
+                        'phone': exp_mobile_nbr_formatted,
                         'name': exp_mobile_nbr_formatted,
                     },
                     channel_values={
@@ -219,7 +217,7 @@ class WhatsAppMessage(WhatsAppFullCase, MockIncomingWhatsApp):
             "32485221100",  # this is normally what we expect from WA
             "+32485221100",  # this is not what we expect but hey, people do stupid things everyday
         ]
-        for (mobile, country_id), incoming_number in product(
+        for (phone, country_id), incoming_number in product(
             [
                 ("0485221100", country_be_id),
                 ("+32485221100", country_be_id),
@@ -229,11 +227,10 @@ class WhatsAppMessage(WhatsAppFullCase, MockIncomingWhatsApp):
                 ("0485221100", country_us_id),
             ], incoming_numbers
         ):
-            with self.subTest(mobile=mobile, country_id=country_id, incoming_number=incoming_number):
+            with self.subTest(phone=phone, country_id=country_id, incoming_number=incoming_number):
                 self.test_partner.write({
                     'country_id': country_id,
-                    'mobile': mobile,
-                    'phone': False,  # just test mobile here
+                    'phone': phone,
                 })
                 with self.mockWhatsappGateway():
                     self._receive_whatsapp_message(
@@ -361,7 +358,7 @@ class WhatsAppMessage(WhatsAppFullCase, MockIncomingWhatsApp):
         })
 
         with self.mockWhatsappGateway(), \
-             patch('odoo.addons.base.models.ir_cron.ir_cron._trigger', patched_cron_trigger):
+             patch('odoo.addons.base.models.ir_cron.IrCron._trigger', patched_cron_trigger):
             self.env['whatsapp.composer'].sudo().create({
                 'wa_template_id': self.whatsapp_template.id,
                 'res_model': test_record._name,

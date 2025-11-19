@@ -29,8 +29,8 @@ def strip_phonenumber(phone: str):
     return ''.join(re.findall(r'(\d+)', phone))
 
 
-class L10nAuSTP(models.Model):
-    _name = "l10n_au.stp"
+class L10n_AuStp(models.Model):
+    _name = 'l10n_au.stp'
     _description = "Single Touch Payroll"
     _order = "create_date desc"
     _inherit = ["mail.thread", "mail.activity.mixin"]
@@ -101,10 +101,14 @@ class L10nAuSTP(models.Model):
     is_not_paid = fields.Boolean(compute="_compute_is_not_paid")
 
     # constraints ffr, cannot be true if type is update
-    _sql_constraints = [
-        ("ffr", "CHECK(ffr = false OR payevent_type = 'submit')", "Full File Replacement cannot be true if type is 'update'."),
-        ("l10n_au_l10n_au_previous_report", "CHECK(previous_report_id != id)", "A report can't update iself.")
-    ]
+    _ffr = models.Constraint(
+        "CHECK(ffr = false OR payevent_type = 'submit')",
+        "Full File Replacement cannot be true if type is 'update'.",
+    )
+    _l10n_au_l10n_au_previous_report = models.Constraint(
+        'CHECK(previous_report_id != id)',
+        "A report can't update iself.",
+    )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -202,6 +206,7 @@ class L10nAuSTP(models.Model):
                 message += "\n  ・ ".join(["Missing required STP Responsible user information:"] + user_warnings)
             report.warning_message = message
 
+    @api.depends("previous_report_id")
     def _compute_file_replacement_message(self):
         for report in self:
             report.file_replacement_message = False
@@ -218,7 +223,7 @@ class L10nAuSTP(models.Model):
     def _compute_is_not_paid(self):
         for report in self:
             if report.payslip_batch_id:
-                report.is_not_paid = report.payslip_batch_id.state != 'paid'
+                report.is_not_paid = report.payslip_batch_id.state != '04_paid'
             else:
                 report.is_not_paid = any(report.payslip_ids.filtered(lambda p: p.state != 'paid'))
 
@@ -342,12 +347,12 @@ class L10nAuSTP(models.Model):
             employee_input_totals = payslips.with_context(group_income_stream_types=True)._l10n_au_get_ytd_inputs(zero_amount=self.is_zeroing, l10n_au_include_current_slip=True, include_ytd_balances=True)
             employee_input_totals_ungrouped = payslips._l10n_au_get_ytd_inputs(zero_amount=self.is_zeroing, l10n_au_include_current_slip=True, include_ytd_balances=True)
 
-            start_date = max(min_date, employee.first_contract_date) or unknown_date
+            start_date = max(min_date, employee._get_first_version_date()) or unknown_date
             remunerations = []
             deductions = []
             for income_stream_type, employee_ytd in employee_ytd_totals.items():
                 Remuneration = defaultdict(lambda: False)
-                contract_id = payslips.contract_id
+                version_id = payslips.version_id
                 # == Gross, income type, paygw ==
                 Remuneration["IncomeStreamTypeC"] = income_stream_type
                 # == Foreign income == (required for FEI, IAA, WHM )
@@ -379,7 +384,7 @@ class L10nAuSTP(models.Model):
                 leave_inputs = filter(lambda item: item[1]["payment_type"] == 'leave', employee_input_totals[income_stream_type].items())
                 for input_type, leave in leave_inputs:
                     Remuneration["PaidLeaveCollection"].append({
-                        "TypeC": input_type.l10n_au_payroll_code,
+                        "TypeC": leave['payroll_code'],
                         "PaymentA": float_round(leave['amount'], precision_rounding=rounding),
                     })
                 # == Allowance ==
@@ -558,7 +563,7 @@ class L10nAuSTP(models.Model):
                 "Deduction": deductions,
                 "contributions": contributions,
                 "benefits": benefits,
-                "contract": contract_id,
+                "contract": version_id,
                 "payslip": payslips,
             }
 
@@ -649,9 +654,9 @@ class L10nAuSTP(models.Model):
                 "ElectronicMailAddressT": employee.private_email,
                 "TelephoneMinimalN": strip_phonenumber(employee.private_phone),
                 "EmploymentStartD": extra_data[employee.id]["EmploymentStartD"],
-                "EmploymentEndD": payslip.contract_id.date_end or False,
+                "EmploymentEndD": payslip.version_id.date_end or False,
                 "PaymentBasisC": employee.l10n_au_employment_basis_code,
-                "CessationTypeC": payslip.contract_id.l10n_au_cessation_type_code,
+                "CessationTypeC": payslip.version_id.l10n_au_cessation_type_code,
                 "TaxTreatmentC": employee.l10n_au_tax_treatment_code,
                 "TaxOffsetClaimTotalA": None if self.is_zeroing else employee.l10n_au_nat_3093_amount,
                 "StartD": start_date,

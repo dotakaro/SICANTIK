@@ -61,4 +61,10 @@ class TestUi(AccountTestMockOnlineSyncCommon):
             'date': fields.Date.today(),
             'payment_ref': 'stl_0002',
         }])
+        # The tour sends an email at some point which requires an email set on the user
+        self.env.ref('base.user_admin').write({
+            'email': 'mitchell.admin@example.com'
+        })
+        # Disable all onboarding tours
+        self.env['web_tour.tour'].search([]).unlink()
         self.start_tour("/odoo", 'account_accountant_tour', login="admin")

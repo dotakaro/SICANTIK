@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-import contextlib
 
+import contextlib
 import psycopg2
 
-from odoo import _, api, fields, models, Command
+from odoo import _, api, fields, models, tools, Command
 from odoo.exceptions import UserError, ValidationError
 from odoo.addons.base_import.models.base_import import FIELDS_RECURSION_LIMIT
 
 
-class AccountBankStmtImportCSV(models.TransientModel):
-
+class Base_ImportImport(models.TransientModel):
     _inherit = 'base_import.import'
 
     @api.model
     def get_fields_tree(self, model, depth=FIELDS_RECURSION_LIMIT):
-        fields_list = super(AccountBankStmtImportCSV, self).get_fields_tree(model, depth=depth)
+        fields_list = super().get_fields_tree(model, depth=depth)
         if self._context.get('bank_stmt_import', False):
             add_fields = [{
                 'id': 'balance',
@@ -127,28 +126,31 @@ class AccountBankStmtImportCSV(models.TransientModel):
     def parse_preview(self, options, count=10):
         if options.get('bank_stmt_import', False):
             self = self.with_context(bank_stmt_import=True)
-        return super(AccountBankStmtImportCSV, self).parse_preview(options, count=count)
+        return super().parse_preview(options, count=count)
 
     def execute_import(self, fields, columns, options, dryrun=False):
         if options.get('bank_stmt_import'):
-            with self.env.cr.savepoint(flush=False) as sp:
-                res = super().execute_import(fields, columns, options, dryrun=dryrun)
+            savepoint = self.env.cr.savepoint()
+            res = super().execute_import(fields, columns, options, dryrun=dryrun)
+            if not 'statement_id' in fields:
+                statement = self.env['account.bank.statement'].create({
+                    'reference': self.file_name,
+                    'line_ids': [Command.set(res.get('ids', []))],
+                    **options.get('statement_vals', {}),
+                })
+                if not dryrun and statement.line_ids:
+                    # 'limit_time_real_cron' defaults to -1.
+                    # Manual fallback applied for non-POSIX systems where this key is disabled (set to None).
+                    cron_limit_time = tools.config['limit_time_real_cron'] or -1
+                    limit_time = cron_limit_time if 0 < cron_limit_time < 180 else 180
+                    statement.line_ids._cron_try_auto_reconcile_statement_lines(limit_time=limit_time)
 
-                if not 'statement_id' in fields:
-                    statement = self.env['account.bank.statement'].create({
-                        'reference': self.file_name,
-                        'line_ids': [Command.set(res.get('ids', []))],
-                        **options.get('statement_vals', {}),
-                    })
-                    if not dryrun:
-                        res['messages'].append({
-                            'statement_id': statement.id,
-                            'type': 'bank_statement'
+                    res['messages'].append({
+                        'statement_id': statement.id,
+                        'type': 'bank_statement'
                         })
-
-                with contextlib.suppress(psycopg2.InternalError):
-                    sp.close(rollback=dryrun)
-
-                return res
+            with contextlib.suppress(psycopg2.InternalError):
+                savepoint.close(rollback=dryrun)
+            return res
         else:
-            return super(AccountBankStmtImportCSV, self).execute_import(fields, columns, options, dryrun=dryrun)
+            return super().execute_import(fields, columns, options, dryrun=dryrun)

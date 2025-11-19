@@ -1,6 +1,7 @@
 <templates>
 
 <t t-name="web_studio.ViewEditor.InteractiveEditorProperties.Field">
+    <div class="d-flex flex-column" t-ref="root">
     <ViewStructureProperties>
         <ClassAttribute
             value="props.node.attrs.class"
@@ -34,6 +35,7 @@
             type="'string'"
             value="props.node.attrs.string || props.node.field.string"
             onChange.bind="onChangeFieldString"
+            autofocus="true"
         >
             Label
         </Property>
@@ -64,7 +66,7 @@
             >
                 Default value
                 <span t-if="multiCompany">
-                for company <b t-esc="companyService.currentCompany.name"/>
+                for company <b t-esc="activeCompany.name"/>
                 </span>
             </Property>
         </t>
@@ -74,7 +76,18 @@
                 <i class="fa fa-pencil"/> Edit Values
             </button>
         </t>
+        <Property
+            t-if="isAttributeSupported('width')"
+            name="'width'"
+            tooltip.translate="If not set, the width is automatically computed to fit optimally"
+            type="'string'"
+            value="props.node.attrs.width || props.node.field.width"
+            onChange.bind="onChangeAttribute"
+        >
+            Column Width (px)
+        </Property>
     </ViewStructureProperties>
+    </div>
 </t>
 
 <t t-name="web_studio.ViewEditor.InteractiveEditorProperties.Field.TechnicalName" >

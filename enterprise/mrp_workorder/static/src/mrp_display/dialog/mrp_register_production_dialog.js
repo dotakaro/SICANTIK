@@ -1,40 +1,48 @@
-/** @odoo-module */
+import { formatFloat } from "@web/views/fields/formatters";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { FloatField } from "@web/views/fields/float/float_field";
+import { Many2OneField } from "@web/views/fields/many2one/many2one_field";
+import { useState } from "@odoo/owl";
 
-import { MrpQualityCheckConfirmationDialog } from "./mrp_quality_check_confirmation_dialog";
-
-export class MrpRegisterProductionDialog extends MrpQualityCheckConfirmationDialog {
+export class MrpRegisterProductionDialog extends ConfirmationDialog {
     static template = "mrp_workorder.MrpRegisterProductionDialog";
     static props = {
-        ...MrpQualityCheckConfirmationDialog.props,
+        ...ConfirmationDialog.props,
         qtyToProduce: { optional: true, type: Number },
-    }
+        record: Object,
+        reload: Function,
+        workorderId: { optional: true, type: Number },
+    };
+    static components = {
+        ...ConfirmationDialog.components,
+        FloatField,
+        Many2OneField,
+    };
 
     setup() {
         super.setup();
-        const { product_qty, product_tracking } = this.recordData;
+        const { product_qty, product_tracking } = this.props.record.data;
         if (this.props.qtyToProduce) {
             this.quantityToProduce = this.props.qtyToProduce;
         } else {
             this.quantityToProduce = product_tracking === "serial" ? 1 : product_qty;
         }
-    }
-
-    async doActionAndClose(action, saveModel = true, reloadChecks = false) {
-        this.state.disabled = true;
-        if (saveModel) {
-            await this.props.record.save();
-            // Calls `set_qty_producing` because the onchange won't be triggered.
-            await this.props.record.model.orm.call("mrp.production", "set_qty_producing", this.props.record.resIds);
+        this.formatFloat = formatFloat;
+        this.state = useState({ disabled: false });
+        if(["lot", "serial"].includes(this.props.record.data.product_tracking) && ! this.props.record.data.lot_producing_id) {
+            this.props.record.load();
         }
-        await this.props.reload(this.props.record);
-        this.props.close();
     }
 
-    get qtyDoneInfo() {
-        return {
-            name: "qty_producing",
-            record: this.props.record,
-        };
+    async validate() {
+        const record = this.props.record;
+        this.state.disabled = true;
+        await record.save();
+        const resModel = this.props.workorderId ? "mrp.workorder" : "mrp.production";
+        const resId = [this.props.workorderId || record.resId];
+        await record.model.orm.call(resModel, "set_qty_producing", [resId]);
+        await this.props.reload(record);
+        this.props.close();
     }
 
     async actionGenerateSerial() {
@@ -47,21 +55,29 @@ export class MrpRegisterProductionDialog extends MrpQualityCheckConfirmationDial
     }
 
     get lotInfo() {
+        const { product_id, company_id } = this.props.record.data;
         return {
             name: "lot_producing_id",
             record: this.props.record,
             canQuickCreate: false,
             context: {
-                default_product_id: this.recordData.product_id[0],
-                default_company_id: this.recordData.company_id[0],
+                default_product_id: product_id.id,
+                default_company_id: company_id.id,
             },
             domain: [
                 "&",
-                ["product_id", "=", this.recordData.product_id[0]],
+                ["product_id", "=", product_id.id],
                 "|",
                 ["company_id", "=", false],
-                ["company_id", "=", this.recordData.company_id[0]],
+                ["company_id", "=", company_id.id],
             ],
+        };
+    }
+
+    get qtyDoneInfo() {
+        return {
+            name: "qty_producing",
+            record: this.props.record,
         };
     }
 }

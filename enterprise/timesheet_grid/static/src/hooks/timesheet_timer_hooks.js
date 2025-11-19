@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { Domain } from "@web/core/domain";
 import { useService } from "@web/core/utils/hooks";
@@ -129,7 +127,6 @@ export class TimesheetTimerRendererHook {
                 resId: values.id || false,
                 resIds: values.id ? [values.id] : [],
                 isMonoRecord: true,
-                currentCompanyId: this.propsList.currentCompanyId,
                 mode: "edit",
             },
             values,

@@ -8,7 +8,7 @@ from odoo.exceptions import ValidationError
 from odoo.osv import expression
 
 
-class L10nHkRental(models.Model):
+class L10n_HkRental(models.Model):
     _name = 'l10n_hk.rental'
     _description = "Hong Kong: Rental"
 

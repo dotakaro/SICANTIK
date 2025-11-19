@@ -2,11 +2,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models, _
-from odoo.tools import format_list
 
 
-class AppointmentType(models.Model):
-    _name = "appointment.invite"
+class AppointmentInvite(models.Model):
+    _name = 'appointment.invite'
     _inherit = ['appointment.invite', 'website.published.multi.mixin']
 
     appointment_type_warning_msg = fields.Char('Different Website Message', compute='_compute_appointment_type_warning_msg')
@@ -26,7 +25,7 @@ class AppointmentType(models.Model):
             if len(appt_with_different_website) > 0:
                 invite.appointment_type_warning_msg = _(
                     "The following appointment type(s) are not compatible with the website chosen: %(appointments)s",
-                    appointments=format_list(self.env, appt_with_different_website.mapped("name")),
+                    appointments=appt_with_different_website.mapped("name"),
                 )
 
     @api.depends('short_code', 'website_id')

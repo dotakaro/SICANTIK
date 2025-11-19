@@ -3,28 +3,22 @@
 # 	* delivery_starshipit
 # 
 # Translators:
-# Wil Odoo, 2024
-# Daye Jeong, 2025
+# Wil Odoo, 2025
+# Sarah Park, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:44+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Daye Jeong, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Sarah Park, 2025\n"
 "Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid " after deleting the order on Starshipit"
-msgstr "Starshipit에서 주문을 삭제한 후"
 
 #. module: delivery_starshipit
 #: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_delivery_carrier_form
@@ -115,7 +109,11 @@ msgid "Delivery Service"
 msgstr "배송 서비스"
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__display_name
 msgid "Display Name"
 msgstr "표시명"
 
@@ -133,7 +131,11 @@ msgid "Error: this delivery method is not available for this order."
 msgstr "오류: 이 주문에는 해당 배송 방법을 사용할 수 없습니다."
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -294,6 +296,14 @@ msgid "Service Name"
 msgstr "서비스 이름"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Shipping Cost has been updated from Starshipit. The Sales Order can now be "
+"invoiced."
+msgstr "Starshipit 배송비 업데이트가 완료되었습니다. 이제 판매주문서와 관련하여 청구서를 발행할 수 있습니다."
+
+#. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_delivery_carrier
 msgid "Shipping Methods"
 msgstr "배송 방법"
@@ -347,6 +357,12 @@ msgid "Starshipit Parcel Reference"
 msgstr "Starshipit 택배 번호"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit Price Update Cron: System Error fetching price: %s"
+msgstr "Starshipit 가격 업데이트 크론: 가격 가져오기 실행 중 시스템 오류 발생: %s"
+
+#. module: delivery_starshipit
 #: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__starshipit_return_parcel_reference
 msgid "Starshipit Return Parcel Reference"
 msgstr "Starshipit 반품 택배 번호"
@@ -377,9 +393,57 @@ msgid "Starshipit returned an error: %(message)s"
 msgstr "Starshipit에서 반품 오류가 발생했습니다: %(message)s"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Delivery cost re-evaluated on Sales Order based on updated exact"
+" price (%(final_carrier_price)s) from transfer %(picking_name)s."
+msgstr ""
+"Starshipit: 판매주문서에서 배송비가 재계산되었으며, %(picking_name)s이체 내역에 있는 정확한 "
+"금액(%(final_carrier_price)s)을 기준으로 하였습니다."
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s, but automatic sale order delivery cost re-"
+"evaluation failed: %(e_so)s"
+msgstr ""
+"Starshipit: %(picking_name)s 배송 시 현재 계산된 배송비는 %(final_carrier_price)s 입니다. "
+"다만, 판매주문서에서 자동으로 배송비  다시 계산하기가 실패했습니다: %(e_so)s"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s. This sale order is already invoiced, please review "
+"if a manual adjustment to the invoice is needed."
+msgstr ""
+"Starshipit: %(picking_name)s 배송 시 최종 배송비는 %(final_carrier_price)s 입니다. 해당 "
+"판매주문서에 대한 청구서 발행이 이미 완료되었습니다. 청구서에 수동으로 조정할 항목이 있는지 확인하세요."
+
+#. module: delivery_starshipit
+#: model:ir.actions.server,name:delivery_starshipit.ir_cron_starshipit_fetch_pending_prices_ir_actions_server
+msgid "Starshipit: Fetch Pending Shipping Prices"
+msgstr "Starshipit: 보류 중인 배송 요금 조회"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit: Shipping Cost updated"
+msgstr "Starshipit: 배송비 업데이트 완료"
+
+#. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_stock_package_type
 msgid "Stock package type"
 msgstr "재고 포장 유형"
+
+#. module: delivery_starshipit
+#: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_picking_form_inherit_stock
+msgid "The Shipping Cost is being fetched in the background."
+msgstr "배송비를 백그라운드에서 가져오고 있습니다."
 
 #. module: delivery_starshipit
 #: model:ir.model.fields,help:delivery_starshipit.field_delivery_carrier__starshipit_carrier_code
@@ -387,6 +451,14 @@ msgid ""
 "The carrier on starshipit used by this carrier. The service code belongs to "
 "it."
 msgstr "Starshipit에서 사용하는 배송 업체가 서비스 코드에 해당합니다."
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"The exact price could not be retrieved. It will be updated by a scheduled "
+"action."
+msgstr "정확한 가격을 확인할 수 없습니다. 가격은 예약된 활동을 통해 업데이트됩니다."
 
 #. module: delivery_starshipit
 #. odoo-python
@@ -440,12 +512,6 @@ msgid ""
 "There are no shipping services available, please verify the shipping address"
 " or activate suitable carriers in your starshipit account."
 msgstr "사용 가능한 배송 서비스가 없습니다. Starshipit 계정에서 배송지 주소를 확인하거나 적절한 배송업체를 활성화하세요."
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid "There was an issue when creating the order, please try again"
-msgstr "주문을 생성하는 동안 문제가 발생했습니다. 다시 시도해 주세요."
 
 #. module: delivery_starshipit
 #. odoo-python

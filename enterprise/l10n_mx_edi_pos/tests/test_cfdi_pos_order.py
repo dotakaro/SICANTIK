@@ -104,7 +104,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                     'payments': [(self.bank_pm1, -2320.0)],
                 })
 
-            orders = order + refund
+            orders = refund
             with self.with_mocked_pac_sign_success():
                 # Calling the global invoice on the order will include the refund automatically.
                 self.env['l10n_mx_edi.global_invoice.create']\
@@ -167,8 +167,8 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
             # Ask for a credit note.
             refund.partner_id = self.customer
             with self.with_pos_session(), self.with_mocked_pac_sign_success():
-                refund.action_pos_order_invoice()
-            self._assert_order_cfdi(refund, 'test_global_invoice_including_complex_partial_refund_chain_4')
+                refund[1].action_pos_order_invoice()
+            self._assert_order_cfdi(refund[1], 'test_global_invoice_including_complex_partial_refund_chain_4')
 
     def test_global_invoice_including_full_refund(self):
         with self.mx_external_setup(self.frozen_today):
@@ -190,7 +190,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                     'payments': [(self.bank_pm1, -11600.0)],
                 })
 
-            orders = order + refund
+            orders = refund
             with self.with_mocked_pac_sign_success():
                 self.env['l10n_mx_edi.global_invoice.create']\
                     .with_context(order.l10n_mx_edi_action_create_global_invoice()['context'])\
@@ -234,7 +234,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                         },
                     ],
                     'payments': [(self.bank_pm1, -3480.0)],
-                })
+                })[1]
             self._assert_order_cfdi(refund, 'test_global_invoice_refund_after')
 
             self.assertRecordValues(refund.l10n_mx_edi_document_ids, [{
@@ -357,7 +357,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                     }],
                     'payments': [(self.bank_pm1, -11600.0)],
                     'customer': self.partner_mx,
-                })
+                })[1]
                 refund_order.l10n_mx_edi_usage = "I01"
                 refund = self.env['account.move'].browse(refund_order.action_pos_order_invoice()['res_id'])
 
@@ -554,7 +554,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                 'customer': self.partner_mx,
                 'is_invoiced': True,
             })
-            order.account_move.l10n_mx_edi_cfdi_uuid = '424242'
+            order.account_move.l10n_mx_edi_cfdi_uuid = 'FBF147BD-D5E6-4C8F-B200-6095F37429F3'
 
         with self.with_pos_session():
             # Invoice the refund order.
@@ -567,8 +567,8 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                 'payments': [(self.bank_pm1, -11600.0)],
                 'customer': self.partner_mx,
                 'is_invoiced': True,
-            })
-        self.assertEqual(refund.account_move.l10n_mx_edi_cfdi_origin, '03|424242')
+            })[1]
+        self.assertEqual(refund.account_move.l10n_mx_edi_cfdi_origin, '03|FBF147BD-D5E6-4C8F-B200-6095F37429F3')
 
     def test_refund_order_mx(self):
         """ Test a pos order completely refunded by the negative lines. """
@@ -594,8 +594,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                 })
                 order.partner_id = self.customer
                 with self.with_mocked_pac_sign_success():
-                    action = order._generate_pos_order_invoice()
-                    invoice = self.env['account.move'].browse(action['res_id'])
+                    invoice = order._generate_pos_order_invoice()
                     self.assertRecordValues(invoice, [{'l10n_mx_edi_cfdi_state': 'sent'}])
 
                 refund = self._create_order({
@@ -615,8 +614,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                 })
                 refund.partner_id = self.customer
                 with self.with_mocked_pac_sign_success():
-                    action = refund._generate_pos_order_invoice()
-                    invoice = self.env['account.move'].browse(action['res_id'])
+                    invoice = refund[0]._generate_pos_order_invoice()
                     self.assertRecordValues(invoice, [{'l10n_mx_edi_cfdi_state': 'sent'}])
 
     def test_refund_order_with_manual_positive_line(self):
@@ -630,8 +628,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                 })
                 order.partner_id = self.customer
                 with self.with_mocked_pac_sign_success():
-                    action = order._generate_pos_order_invoice()
-                    invoice = self.env['account.move'].browse(action['res_id'])
+                    invoice = order._generate_pos_order_invoice()
                     self.assertRecordValues(invoice, [{'l10n_mx_edi_cfdi_state': 'sent'}])
 
                 with self.assertLogs('odoo.addons.point_of_sale.models.pos_order'), self.assertRaises(ValidationError):
@@ -671,6 +668,7 @@ class TestCFDIPosOrder(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
                 'street': "Test street",
                 'city': "Test City",
                 'zipcode': '12345',
+                'state_id': self.env.ref('base.state_mx_ags').id,
                 'country_id': self.env.ref('base.mx').id,
                 'phone': "123456789",
                 'vat': 'XAXX010101000',

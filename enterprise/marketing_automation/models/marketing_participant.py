@@ -31,13 +31,18 @@ class MarketingParticipant(models.Model):
         return [(model.model, model.name) for model in models]
 
     def _search_resource_ref(self, operator, value):
-        ir_models = set([model['model_name'] for model in self.env['marketing.campaign'].search([]).read(['model_name'])])
+        if operator in NEGATIVE_TERM_OPERATORS:
+            return NotImplemented
         ir_model_ids = []
-        for model in ir_models:
-            if model in self.env:
-                ir_model_ids += self.env['marketing.participant'].search(['&', ('model_name', '=', model), ('res_id', 'in', [name[0] for name in self.env[model].name_search(name=value)])]).ids
-        operator = 'not in' if operator in NEGATIVE_TERM_OPERATORS else 'in'
-        return [('id', operator, ir_model_ids)]
+        for [model_name] in self.env['marketing.campaign']._read_group([], ['model_name']):
+            model = self.env.get(model_name)
+            if model is None:
+                continue
+            ir_model_ids += self.env['marketing.participant'].search(
+                ['&', ('model_name', '=', model_name), ('res_id', 'in', [name[0] for name in model.name_search(name=value)])],
+                order='id',
+            ).ids
+        return [('id', 'in', ir_model_ids)]
 
     campaign_id = fields.Many2one(
         'marketing.campaign', string='Campaign',
@@ -113,16 +118,21 @@ class MarketingParticipant(models.Model):
 
     def action_set_completed(self):
         ''' Manually mark as a completed and cancel every scheduled trace '''
+        self._action_set_completed(trace_message=_('Marked as completed'))
+
+    def _action_set_completed(self, trace_message=False):
         # TDE TODO: delegate set Canceled to trace record
         self.write({'state': 'completed'})
+        trace_vals = {
+            'state': 'canceled',
+            'schedule_date': self.env.cr.now(),
+        }
+        if trace_message:
+            trace_vals['state_msg'] = trace_message
         self.env['marketing.trace'].search([
             ('participant_id', 'in', self.ids),
             ('state', '=', 'scheduled')
-        ]).write({
-            'state': 'canceled',
-            'schedule_date': self.env.cr.now(),
-            'state_msg': _('Marked as completed')
-        })
+        ]).write(trace_vals)
 
     def action_set_running(self):
         self.write({'state': 'running'})

@@ -4,7 +4,8 @@ from odoo import api
 from odoo.models import AbstractModel
 from odoo.tools import cloc
 
-class PublisherWarrantyContract(AbstractModel):
+
+class Publisher_WarrantyContract(AbstractModel):
     _inherit = "publisher_warranty.contract"
 
     @api.model

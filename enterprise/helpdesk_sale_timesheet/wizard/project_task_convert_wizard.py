@@ -3,6 +3,7 @@
 
 from odoo import models
 
+
 class ProjectTaskConvertWizard(models.TransientModel):
     _inherit = 'project.task.convert.wizard'
 

@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import base64
 
-from odoo import Command
+from odoo.exceptions import ValidationError
 from odoo.tools import file_open
 from odoo.tests.common import TransactionCase, new_test_user
 
@@ -23,12 +22,15 @@ class TestSignTemplate(TransactionCase):
 
     def test_create_update_copy_unlink_template(self):
         # create
-        sign_template_id = self.env['sign.template'].with_user(self.test_user).create_with_attachment_data(
-            name='sample_contract.pdf', data=self.pdf_data)
+        res = self.env['sign.template'].with_user(self.test_user).create_from_attachment_data(
+            attachment_data_list=[{'name': 'sample_contract.pdf', 'datas': self.pdf_data}])
+        sign_template_id, name = res.get('id', 0), res.get('name', '')
         sign_template = self.env['sign.template'].with_user(self.test_user).browse(sign_template_id)
+        document_id = sign_template.document_ids[0].id
+        document = self.env['sign.document'].browse(document_id)
         self.assertTrue(sign_template.exists(), 'The template should be created')
-        self.assertTrue(sign_template.attachment_id.exists(), 'The template should be created')
-        self.assertEqual(sign_template.name, 'sample_contract.pdf', 'The name of the template should be sample_contract.pdf')
+        self.assertTrue(sign_template.document_ids.exists(), 'The template should be created')
+        self.assertEqual(name, 'sample_contract.pdf', 'The name of the template should be sample_contract.pdf')
 
         # update
         result = sign_template.update_from_pdfviewer(sign_items={'-1': {
@@ -40,6 +42,7 @@ class TestSignTemplate(TransactionCase):
                 'posX': 0.273,
                 'posY': 0.158,
                 'template_id': sign_template_id,
+                'document_id': document_id,
                 'width': 0.150,
                 'height': 0.015,
                 'transaction_id': -1,
@@ -52,6 +55,7 @@ class TestSignTemplate(TransactionCase):
                 'posX': 0.273,
                 'posY': 0.158,
                 'template_id': sign_template_id,
+                'document_id': document_id,
                 'width': 0.150,
                 'height': 0.015,
                 'transaction_id': -2,
@@ -59,10 +63,10 @@ class TestSignTemplate(TransactionCase):
         self.assertEqual(len(sign_template.sign_item_ids), 2, 'The template should have 2 sign.item')
         self.assertTrue(result.get('-1', 0) > 0 and result.get('-2', 0) > 0, 'An id mapping should be returned')
         self.assertEqual(set(sign_template.sign_item_ids.ids), set(result.values()), 'An id mapping should be returned')
-        self.assertEqual(sign_template.name, 'sample_contract.pdf', 'The name of the template should be sample_contract.pdf')
-        sign_template.update_from_pdfviewer(deleted_sign_item_ids=[sign_template.sign_item_ids[0].id], name='sample_contract2.pdf')
+        self.assertEqual(document.name, 'sample_contract.pdf', 'The name of the document should be sample_contract.pdf')
+        sign_template.update_from_pdfviewer(deleted_sign_item_ids=[sign_template.sign_item_ids[0].id], name='sample_contract2.pdf', document_id=document_id)
         self.assertEqual(len(sign_template.sign_item_ids), 1, 'The template should have 1 sign.item')
-        self.assertEqual(sign_template.name, 'sample_contract2.pdf', 'The name of the template should be sample_contract2.pdf')
+        self.assertEqual(document.name, 'sample_contract2.pdf', 'The name of the document should be sample_contract2.pdf')
 
         # copy
         copy_name = sign_template._get_copy_name(sign_template.name)
@@ -73,17 +77,18 @@ class TestSignTemplate(TransactionCase):
 
         # unlink
         sign_item = sign_template.sign_item_ids[0]
-        sign_attachment = sign_template.attachment_id
+        sign_document = sign_template.document_ids[0]
         sign_template.unlink()
         self.assertFalse(sign_item.exists(), 'The sign_item should be deleted')
-        self.assertFalse(sign_attachment.exists(), 'The attachment should be deleted')
+        self.assertFalse(sign_document.exists(), 'The document should be deleted')
 
     def test_update_from_pdfviewer_bad_internet(self):
         # create
-        sign_template_id = self.env['sign.template'].with_user(self.test_user).create_with_attachment_data(
-            name='sample_contract.pdf', data=self.pdf_data)
+        res = self.env['sign.template'].with_user(self.test_user).create_from_attachment_data(
+            attachment_data_list=[{'name': 'sample_contract.pdf', 'datas': self.pdf_data}])
+        sign_template_id = res.get('id', 0)
         sign_template = self.env['sign.template'].with_user(self.test_user).browse(sign_template_id)
-
+        document_id = sign_template.document_ids[0].id
         # add new sign items
         # A client creates a new item1(-1)
         result1 = sign_template.update_from_pdfviewer(sign_items={'-1': {
@@ -97,6 +102,7 @@ class TestSignTemplate(TransactionCase):
             'width': 0.150,
             'height': 0.015,
             'transaction_id': -1,
+            'document_id': document_id,
         }})
         item1_id = result1.get('-1', 0)
         self.assertEqual(len(sign_template.sign_item_ids), 1, 'The template should have 1 sign.item')
@@ -117,6 +123,7 @@ class TestSignTemplate(TransactionCase):
             'width': 0.150,
             'height': 0.015,
             'transaction_id': 0,
+            'document_id': document_id,
         }, '-2': {
             'type_id': self.env.ref('sign.sign_item_type_text').id,
             'name': 'employee_id.name',
@@ -128,6 +135,7 @@ class TestSignTemplate(TransactionCase):
             'width': 0.150,
             'height': 0.015,
             'transaction_id': -2,
+            'document_id': document_id,
         }, '-3': {
             'type_id': self.env.ref('sign.sign_item_type_text').id,
             'name': 'employee_id.name',
@@ -139,6 +147,7 @@ class TestSignTemplate(TransactionCase):
             'width': 0.150,
             'height': 0.015,
             'transaction_id': -3,
+            'document_id': document_id,
         }})
         self.assertEqual(set(result2.keys()), set(['-2', '-3']), 'An id mapping should be returned')
         self.assertEqual(set(sign_template.sign_item_ids.ids), set(list(result2.values()) + [item1_id]), 'An id mapping should be returned')
@@ -157,6 +166,7 @@ class TestSignTemplate(TransactionCase):
             'width': 0.150,
             'height': 0.015,
             'transaction_id': 0,
+            'document_id': document_id,
         }, '-2': {
             'type_id': self.env.ref('sign.sign_item_type_text').id,
             'name': 'employee_id.name',
@@ -168,6 +178,7 @@ class TestSignTemplate(TransactionCase):
             'width': 0.150,
             'height': 0.015,
             'transaction_id': -2,
+            'document_id': document_id,
         }, '-4': {
             'type_id': self.env.ref('sign.sign_item_type_text').id,
             'name': 'employee_id.name',
@@ -179,6 +190,7 @@ class TestSignTemplate(TransactionCase):
             'width': 0.150,
             'height': 0.015,
             'transaction_id': -4,
+            'document_id': document_id,
         }}, deleted_sign_item_ids=[-3])
         item2_id = result3.get('-2', 0)
         self.assertEqual(set(result3.keys()), set(['-2', '-4']), 'An id mapping should be returned')
@@ -186,29 +198,32 @@ class TestSignTemplate(TransactionCase):
         self.assertEqual(self.env['sign.item'].browse(item1_id).posY, 0.158, 'The poxY of item1 should be 0.158')
         self.assertEqual(self.env['sign.item'].browse(item2_id).posY, 0.298, 'The poxY of item2 should be 0.298')
 
-    def test_sign_selection_option_archived(self):
-        sign_template_id = self.env['sign.template'].with_user(self.test_user).create_with_attachment_data(
-            name='sample_contract.pdf', data=self.pdf_data)
+    def test_sign_item_has_proper_type(self):
+        """Tests that a sign item can only be set as read-only if it has certain types."""
+        res = self.env['sign.template'].with_user(self.test_user).create_from_attachment_data(
+            attachment_data_list=[{'name': 'sample_contract.pdf', 'datas': self.pdf_data}])
+        sign_template_id = res.get('id', 0)
         sign_template = self.env['sign.template'].with_user(self.test_user).browse(sign_template_id)
-        option1 = self.env['sign.item.option'].create({'value': 'abc'})
-        option2 = self.env['sign.item.option'].create({'value': 'def'})
-        options = option1 | option2
-        sign_template.update_from_pdfviewer(sign_items={'-1': {
-            'type_id': self.env.ref('sign.sign_item_type_selection').id,
-            'name': 'selection',
-            'required': True,
-            'responsible_id': self.env.ref('sign.sign_item_role_employee').id,
-            'page': 1,
-            'posX': 0.273,
-            'posY': 0.158,
-            'template_id': sign_template_id,
-            'width': 0.150,
-            'height': 0.015,
-            'transaction_id': -1,
-            'option_ids': [Command.set(options.ids)]
-        }}, name='')
-        self.assertEqual(len(sign_template.sign_item_ids.option_ids), 2)
-        option2.available = False
-        duplicate_template = sign_template.copy()
-        self.assertEqual(duplicate_template.sign_item_ids.option_ids.id, option1.id)
-        self.assertEqual(len(duplicate_template.sign_item_ids.option_ids), 1)
+        document_id = sign_template.document_ids[0].id
+        for item_type in ('signature', 'initial', 'radio', 'checkbox', 'selection'):
+            with self.subTest(f'Create sign item of type {item_type}'):
+                with self.assertRaisesRegex(ValidationError, "Read-only can only be applied to items of the following types: 'Text', 'Name', 'Email', 'Phone', 'Company', 'Multiline', 'Date', 'Strikethrough'"):
+                    type_id = self.env["sign.item.type"].create({
+                        'name': item_type,
+                        'item_type': item_type
+                    })
+                    self.env["sign.item"].create({
+                        'template_id': sign_template_id,
+                        'document_id': document_id,
+                        'type_id': type_id.id,
+                        'name': 'employee_id.name',
+                        'required': False,
+                        'constant': True,
+                        'responsible_id': self.env.ref('sign.sign_item_role_employee').id,
+                        'page': 1,
+                        'posX': 0.273,
+                        'posY': 0.458,
+                        'width': 0.150,
+                        'height': 0.015,
+                        'transaction_id': -4,
+                    })

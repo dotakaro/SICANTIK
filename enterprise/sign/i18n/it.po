@@ -3,16 +3,17 @@
 # 	* sign
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Marianna Ciofani, 2025
+# Sergio Zanchetta <primes2h@gmail.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Marianna Ciofani, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:07+0000\n"
+"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>, 2025\n"
 "Language-Team: Italian (https://app.transifex.com/odoo/teams/41243/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -43,6 +44,12 @@ msgstr ""
 
 #. module: sign
 #. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "%s Company"
+msgstr "Azienda %s"
+
+#. module: sign
+#. odoo-python
 #: code:addons/sign/controllers/main.py:0
 msgid "%s couldn't sign the document due to an insufficient credit error."
 msgstr "%s non può firmare il documento, errore di credito non sufficiente."
@@ -67,9 +74,25 @@ msgstr "%s è stato firmato"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_document.py:0
+msgid "%s's name"
+msgstr "Nome di %s"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "%s: missing credits for extra-authentication"
 msgstr "%s: crediti mancanti per autenticazione extra"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
+msgid "&gt;"
+msgstr "&gt;"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
+msgid "&lt;"
+msgstr "&lt;"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -80,10 +103,10 @@ msgstr "(UTC)"
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_refused
 msgid ""
 ")\n"
-"            has refused the document"
+"            has refused to sign the document"
 msgstr ""
 ")\n"
-"            ha rifiutato il documento"
+"            ha rifiutato di firmare il documento"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_request
@@ -92,7 +115,7 @@ msgid ""
 "        has requested your signature on the document"
 msgstr ""
 ")\n"
-"       ha richiesto la tua firma sul documento"
+"       ha richiesto la firma sul documento"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -102,23 +125,29 @@ msgstr "******1234"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 msgid ""
-"- <em>\n"
-"                                            Waiting Signature\n"
-"                                        </em>"
+"-\n"
+"                                            <em>\n"
+"                                                Waiting Signature\n"
+"                                            </em>"
 msgstr ""
-"- <em>\n"
-"                                            In attesa di firma\n"
-"                                        </em>"
+"-\n"
+"                                            <em>\n"
+"                                                In attesa di firma\n"
+"                                            </em>"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
-msgid "- <em>Cancelled</em>"
-msgstr "- <em>Annullata</em>"
+msgid ""
+"-\n"
+"                                            <em>Cancelled</em>"
+msgstr ""
+"-\n"
+"                                            <em>Annullata</em>"
 
 #. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_template_action
 msgid "- or -"
-msgstr "- o -"
+msgstr "- oppure -"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -164,6 +193,11 @@ msgstr "<b>Indirizzo IP di creazione:</b>"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "<b>Document ID:</b>"
 msgstr "<b>ID documento:</b>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
+msgid "<b>Documents:</b>"
+msgstr "<b>Documenti:</b>"
 
 #. module: sign
 #. odoo-javascript
@@ -212,7 +246,7 @@ msgstr ""
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 msgid "<br/>(the email access has not been sent)"
-msgstr "<br/>(the email access has not been sent)"
+msgstr "<br/>(l'accesso e-mail non è stato inviato)"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_expired
@@ -232,8 +266,8 @@ msgid ""
 "<i class=\"fa fa-exclamation-circle\"/> The document's integrity could not "
 "be verified."
 msgstr ""
-"<i class=\"fa fa-exclamation-circle\"/> Non è stato possibile verificare "
-"l'integrità del documento."
+"<i class=\"fa fa-exclamation-circle\"/> Impossibile verificare l'integrità "
+"del documento."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -292,6 +326,34 @@ msgstr ""
 "tramite un codice univoco inviato via SMS</small>"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
+msgid ""
+"<span class=\"badge rounded-pill text-bg-success ms-2 mb-1\" title=\"Shared\" invisible=\"state != 'shared'\">\n"
+"                                    Shared\n"
+"                                </span>"
+msgstr ""
+"<span class=\"badge rounded-pill text-bg-success ms-2 mb-1\" title=\"Shared\" invisible=\"state != 'shared'\">\n"
+"                                    Condiviso\n"
+"                                </span>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid ""
+"<span class=\"badge rounded-pill text-bg-success\" title=\"Shared\" invisible=\"not is_sharing\">\n"
+"                                    Shared\n"
+"                                </span>"
+msgstr ""
+"<span class=\"badge rounded-pill text-bg-success\" title=\"Shared\" invisible=\"not is_sharing\">\n"
+"                                    Condiviso\n"
+"                                </span>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
+msgid "<span class=\"ms-1 text-nowrap\">Add certificate on each page</span>"
+msgstr ""
+"<span class=\"ms-1 text-nowrap\">Aggiungi certificato su ogni pagina</span>"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_partner_view_form
 msgid "<span class=\"o_stat_text\">Signature Requested</span>"
 msgstr "<span class=\"o_stat_text\">Firma richiesta</span>"
@@ -302,21 +364,6 @@ msgid "<span class=\"o_stat_text\">Signed Document</span>"
 msgstr "<span class=\"o_stat_text\">Documento firmato</span>"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
-msgid ""
-"<span class=\"text-muted\" invisible=\"not share_link\">Sharing will create "
-"a copy of the file to sign. That file can be reached by the link below. "
-"Every public user using the link will generate a document when the Signature"
-" is complete. The link is private, only those that receive the link will be "
-"able to sign it.</span>"
-msgstr ""
-"<span class=\"text-muted\" invisible=\"not share_link\">La condivisione "
-"porterà alla creazione di una copia del file da firmare. Il file può essere "
-"raggiunto attraverso il link in basso. Ogni utente pubblico che utilizza il "
-"link creerà un documento quando la firma è completa. Il link è privato, solo"
-" coloro che ricevono il link potranno firmare.</span>"
-
-#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "<span class=\"text-muted\">Not available</span>"
 msgstr "<span class=\"text-muted\">Non disponibile</span>"
@@ -324,7 +371,17 @@ msgstr "<span class=\"text-muted\">Non disponibile</span>"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_item_type_view_form
 msgid "<span>(1.0 = full page size)</span>"
-msgstr "<span>(1.0 = larghezza pagina)</span>"
+msgstr "<span>(1,0 = dimensione pagina intera)</span>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "<span>In Progress</span>"
+msgstr "<span>In corso</span>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "<span>Signed</span>"
+msgstr "<span>Firmato</span>"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_terms_conditions_setting_banner
@@ -333,17 +390,24 @@ msgstr ""
 "<span>Questo è una anteprima dei tuoi termini &amp; condizioni.</span>"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.cancel_sign_request_item_with_confirmation
-msgid ""
-"<span>You won't receive any notification for this signature request "
-"anymore.</span>"
-msgstr ""
-"<span>Non riceverai più notifiche per questa richiesta di firma.</span>"
-
-#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 msgid "<strong>Creation Date:</strong>"
 msgstr "<strong>Data creazione:</strong>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
+msgid "<strong>Expiry Date: </strong>"
+msgstr "<strong>Data di scadenza:</strong>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
+msgid "<strong>Sent by: </strong>"
+msgstr "<strong>Inviato da:</strong>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
+msgid "<strong>Signed on: </strong>"
+msgstr "<strong>Firmato il:</strong>"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_refused
@@ -359,9 +423,9 @@ msgid ""
 "            They will be able to access this document and sign it as yourself.<br/>\n"
 "            <span>Your IP address and localization are associated to your signature to ensure traceability.</span>"
 msgstr ""
-"<strong>Attenzione</strong>, non inoltrare questa e-mail ad altre persone!<br/>\n"
-"Potranno accedere a questo documento e firmarlo al posto tuo.<br/>\n"
-"<span>Il tuo indirizzo IP e la tua localizzazione sono associati alla tua firma per garantire la tracciabilità.</span>"
+"<strong>Attenzione</strong>, non inoltrare l'e-mail ad altre persone!<br/>\n"
+"            Saranno in grado di accedere al documento sostituendosi nella firma.<br/>\n"
+"            <span>Per garantire la tracciabilità l'indirizzo IP e la localizzazione vengono associate alla propria firma.</span>"
 
 #. module: sign
 #. odoo-javascript
@@ -370,8 +434,8 @@ msgid ""
 "A SMS will be sent to the following phone number. Please update it if it's "
 "not relevant."
 msgstr ""
-"Un SMS sarà inviato al seguente numero di telefono. Si prega di aggiornarlo "
-"se non è pertinente."
+"Verrà inviato un SMS al seguente numero di telefono, aggiornarlo se non "
+"pertinente."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.message_signature_link
@@ -386,15 +450,6 @@ msgid ""
 msgstr ""
 "Una richiesta di firma non condivisa non dovrebbe avere nessun firmatario "
 "con un partner vuoto"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid ""
-"A shared sign request should only have one signer with an empty partner"
-msgstr ""
-"Una richiesta di firma condivisa dovrebbe avere solo un firmatario con un "
-"partner vuoto"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -423,7 +478,14 @@ msgstr "ABCD1234"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "Access Logs"
-msgstr "Accedere registri"
+msgstr "Registri di accesso"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_access_rights.xml:0
+msgid "Access Rights"
+msgstr "Diritti di accesso"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__access_warning
@@ -443,7 +505,6 @@ msgstr "Accesso tramite token"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_mail_activity_type__category
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Action"
 msgstr "Azione"
 
@@ -455,7 +516,7 @@ msgstr "Azione richiesta"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_log__action
 msgid "Action Performed"
-msgstr "Azione Eseguita"
+msgstr "Azione eseguita"
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_mail_activity_type__category
@@ -484,12 +545,10 @@ msgid "Activity Exception Decoration"
 msgstr "Decorazione eccezione attività"
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
 #: model:ir.actions.report,name:sign.action_sign_request_print_logs
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 msgid "Activity Logs"
-msgstr "Registro delle attività"
+msgstr "Registri attività"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__activity_state
@@ -509,19 +568,20 @@ msgstr "Icona tipo di attività"
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_request__sign_log_ids
 msgid "Activity logs linked to this request"
-msgstr "Registri di attività collegati a questa richiesta"
+msgstr "Registri attività collegati alla richiesta"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/initials_all_pages_dialog.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+#: code:addons/sign/static/src/views/common.xml:0
+msgid "Add"
+msgstr "Aggiungi"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
 msgid "Add Initials"
 msgstr "Aggiungi iniziali"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/initial_all_pages_dialog.xml:0
-msgid "Add Once"
-msgstr "Aggiungi una volta"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
@@ -529,10 +589,9 @@ msgid "Add document tags here"
 msgstr "Aggiungi tag documento qui"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/initial_all_pages_dialog.xml:0
-msgid "Add to all pages"
-msgstr "Aggiungi a tutte le pagine"
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid "Add terms & conditions to the signature request email"
+msgstr "Aggiungi termini e condizioni all'e-mail per la richiesta di firma"
 
 #. module: sign
 #: model:res.groups,name:sign.group_sign_manager
@@ -543,7 +602,7 @@ msgstr "Amministratore"
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/sign_name_and_signature_dialog.js:0
 msgid "Adopt Your Signature"
-msgstr "Aggiungi la tua firma"
+msgstr "Accetta la firma"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__request_state__signed
@@ -570,27 +629,44 @@ msgid "All Documents"
 msgstr "Tutti i documenti"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/sign_request_documents_dropdown.xml:0
+msgid "All Documents (zip)"
+msgstr "Tutti i documenti (zip)"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_status_indicator/sign_status_indicator.xml:0
+msgid "All changes saved"
+msgstr "Modifiche salvate"
+
+#. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "All signers must have valid email addresses"
 msgstr "Tutti i firmatarti devono avere indirizzi e-mail validi"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid ""
-"Allow signatories to provide their identity using itsme® (available in "
-"Belgium and the Netherlands)."
-msgstr ""
-"Permetti ai signatari di identificarsi attraverso itsme® (disponibile in "
-"Belgio e Paesi Bassi)"
+msgid "Allow signatories to provide their identity using itsme®"
+msgstr "Permetti ai firmatari di identificarsi usando itsme®"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid ""
-"Allow users to define the users or groups which have access to the template."
+"Allow users to define the users or groups which have access to the template"
 msgstr ""
 "Permetti agli utenti di definire i gruppi o gli utenti stessi che possono "
-"accedere ai modelli."
+"accedere ai modelli"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid ""
+"Allow users to provide the files used in the cryptographic signature "
+"process."
+msgstr ""
+"Consenti agli utenti di fornire i file utilizzati nel processo di firma "
+"digitale."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -612,26 +688,23 @@ msgstr "Archivia"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_search
 msgid "Archived"
 msgstr "In archivio"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.cancel_sign_request_item_with_confirmation
-msgid "Are you sure you want to cancel the sign request?"
-msgstr "Sei sicuro di voler annullare la richiesta di firma?"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.js:0
+msgid "Are you sure you want to cancel this sign request?"
+msgstr "Sei sicuro di voler annullare questa richiesta di firma?"
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_request__start_sign
 msgid "At least one signer has signed the document."
-msgstr "Almeno un firmatario ha firmato il documento."
+msgstr "Documento firmato da almeno un firmatario."
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
-msgid "Attach a file"
-msgstr "Allega un file"
-
-#. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_template__attachment_id
+#: model:ir.model.fields,field_description:sign.field_sign_document__attachment_id
 msgid "Attachment"
 msgstr "Allegato"
 
@@ -639,6 +712,12 @@ msgstr "Allegato"
 #: model:ir.model.fields,field_description:sign.field_sign_request__message_attachment_count
 msgid "Attachment Count"
 msgstr "Numero allegati"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "Attachment not found."
+msgstr "Allegato non trovato."
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__attachment_ids
@@ -652,13 +731,18 @@ msgid "Authenticate by SMS"
 msgstr "Autenticazione via SMS"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_form
+msgid "Authentication"
+msgstr "Autenticazione"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__group_ids
 msgid "Authorized Groups"
 msgstr "Gruppi autorizzati"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_access_rights.xml:0
 msgid "Authorized Groups:"
 msgstr "Gruppi autorizzati:"
 
@@ -669,19 +753,19 @@ msgstr "Utenti autorizzati"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_access_rights.xml:0
 msgid "Authorized Users:"
 msgstr "Utenti autorizzati:"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_type__auto_field
-msgid "Auto-fill Partner Field"
-msgstr "Campo partner a riempimento automatico"
+msgid "Auto-fill Field"
+msgstr "Compila campo automaticamente"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_item_option__available
-msgid "Available in new templates"
-msgstr "Disponibile in nuovi modelli"
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid "Available in supported countries"
+msgstr "Disponibile nei Paesi supportati"
 
 #. module: sign
 #. odoo-python
@@ -707,7 +791,12 @@ msgstr "Prima della firma"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "By"
-msgstr "Da"
+msgstr "Di"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_form
+msgid "By Email"
+msgstr "Via e-mail"
 
 #. module: sign
 #. odoo-javascript
@@ -718,10 +807,10 @@ msgid ""
 " all purposes when it is used on documents, including legally binding "
 "contracts."
 msgstr ""
-"Facendo clic su Accetta e Firma, acconsento che la firma/sigla scelta sia "
-"una rappresentazione digitale valida della mia firma/sigla scritta a mano, "
-"per tutti gli scopi quando utilizzata nei documenti, inclusi i contratti "
-"legalmente vincolanti."
+"Con un clic su \"Accetta e firma\" acconsento che la firma/sigla scelta sia,"
+" a tutti gli effetti, una valida rappresentazione elettronica della mia "
+"firma/sigla olografa quando viene utilizzata nei documenti, inclusi i "
+"contratti legalmente vincolanti."
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__message_cc
@@ -729,13 +818,16 @@ msgid "CC Message"
 msgstr "Messaggio CC"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_form
+msgid "Can delegate"
+msgstr "Può delegare"
+
+#. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
 #: code:addons/sign/static/src/dialogs/public_signer_dialog.xml:0
 #: code:addons/sign/static/src/dialogs/sign_name_and_signature_dialog.xml:0
 #: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__cancel
-#: model_terms:ir.ui.view,arch_db:sign.sign_duplicate_template_with_pdf_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
 #: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
@@ -743,14 +835,15 @@ msgid "Cancel"
 msgstr "Annulla"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.cancel_sign_request_item_with_confirmation
-msgid "Cancel Sign Request"
-msgstr "Annulla richiesta firma"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
+msgid "Cancel request"
+msgstr "Annulla richiesta"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
 msgid "Canceled"
-msgstr "Annullata"
+msgstr "Annullato"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__request_state__canceled
@@ -760,6 +853,12 @@ msgstr "Annullata"
 #: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
 msgid "Cancelled"
 msgstr "Annullato"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request_item_value.py:0
+msgid "Cannot update the value of a read-only sign item"
+msgstr "Impossibile aggiornare il valore di un elemento firma di sola lettura"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_container
@@ -779,9 +878,21 @@ msgid "Certificate <i class=\"fa fa-download\"/>"
 msgstr "Certificato <i class=\"fa fa-download\"/>"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_request__certificate_reference
+#: model:ir.model.fields,field_description:sign.field_sign_send_request__certificate_reference
+msgid "Certificate Reference"
+msgstr "Riferimento certificato"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "Certificate of Completion<br/>"
 msgstr "Certificato di completamento<br/>"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request.py:0
+msgid "Certificate of completion - %s.pdf"
+msgstr "Certificato di completamento - %s.pdf"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_role__change_authorized
@@ -793,7 +904,7 @@ msgstr "Modifica autorizzata"
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__checkbox
 #: model:sign.item.type,name:sign.sign_item_type_checkbox
 msgid "Checkbox"
-msgstr "Casella di controllo"
+msgstr "Casella di selezione"
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_template__is_sharing
@@ -804,13 +915,14 @@ msgstr "Spuntato se questo modello ha creato un documento condiviso per te"
 #. odoo-javascript
 #: code:addons/sign/static/src/components/sign_request/sign_item_navigator.js:0
 msgid "Click to start"
-msgstr "Clicca per iniziare"
+msgstr "Fai clic per iniziare"
 
 #. module: sign
 #. odoo-javascript
 #. odoo-python
 #: code:addons/sign/models/sign_request.py:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_access_rights.xml:0
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.js:0
 #: code:addons/sign/static/src/js/tours/sign.js:0
 #: model:sign.template,redirect_url_text:sign.template_sign_1
@@ -818,17 +930,20 @@ msgstr "Clicca per iniziare"
 #: model:sign.template,redirect_url_text:sign.template_sign_3
 #: model:sign.template,redirect_url_text:sign.template_sign_4
 #: model:sign.template,redirect_url_text:sign.template_sign_5
+#: model:sign.template,redirect_url_text:sign.template_sign_6
 #: model:sign.template,redirect_url_text:sign.template_sign_tour
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_preview_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_terms_conditions_setting_banner
 msgid "Close"
 msgstr "Chiudi"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_item_role__color
 #: model:ir.model.fields,field_description:sign.field_sign_request__color
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__color
 #: model:ir.model.fields,field_description:sign.field_sign_template__color
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Color"
 msgstr "Colore"
 
@@ -867,7 +982,8 @@ msgid "Completed"
 msgstr "Completato"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_request__completed_document
+#: model:ir.model,name:sign.model_sign_completed_document
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__file
 msgid "Completed Document"
 msgstr "Documento completato"
 
@@ -877,14 +993,19 @@ msgid "Completed Documents"
 msgstr "Documenti completati"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_request__completed_document_ids
+msgid "Completed Documents Binaries"
+msgstr "File binari dei documenti completati"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__nb_closed
 msgid "Completed Signatures"
-msgstr "Firma completata"
+msgstr "Firme completate"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__completion_date
 msgid "Completion Date"
-msgstr "Data di compimento"
+msgstr "Data di completamento"
 
 #. module: sign
 #: model:ir.model,name:sign.model_res_config_settings
@@ -892,24 +1013,17 @@ msgid "Config Settings"
 msgstr "Impostazioni di configurazione"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
 #: model:ir.ui.menu,name:sign.menu_sign_configuration
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Configuration"
 msgstr "Configurazione"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid ""
-"Configure the field types that can be used to sign documents (placeholder, "
-"auto-completion, ...), as well as the values for selection fields in "
-"signable documents."
-msgstr ""
-"Configura i tipi di campo che possono essere utilizzati per firmare i "
-"documenti (segnaposto, completamento automatico...) così come i valori per i"
-" campi selezione nei documenti che possono essere firmati."
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_duplicate_template_with_pdf_view_form
-msgid "Confirm"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+msgid "Confirmation"
 msgstr "Conferma"
 
 #. module: sign
@@ -926,13 +1040,11 @@ msgstr "Congratulazioni, hai firmato il tuo primo documento!"
 #. module: sign
 #: model:ir.model,name:sign.model_res_partner
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__partner_id
-#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 msgid "Contact"
 msgstr "Contatto"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 #: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 msgid "Contacts"
 msgstr "Contatti"
@@ -964,12 +1076,25 @@ msgid "Create Sign Tags"
 msgstr "Crea tag firma"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
-msgid "Create date"
-msgstr "Data creazione"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_save_template_dialog.xml:0
+msgid "Create Template!"
+msgstr "Crea un modello!"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__create_uid
+#: model:ir.model,website_form_label:sign.model_res_partner
+msgid "Create a Customer"
+msgstr "Crea cliente"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "Create a new signer for signing the fields"
+msgstr "Crea un nuovo firmatario per firmare i campi"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__create_uid
+#: model:ir.model.fields,field_description:sign.field_sign_document__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__create_uid
@@ -979,15 +1104,18 @@ msgstr "Data creazione"
 #: model:ir.model.fields,field_description:sign.field_sign_request__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__create_uid
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_template__create_uid
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__create_uid
 msgid "Created by"
 msgstr "Creato da"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__create_date
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__create_date
+#: model:ir.model.fields,field_description:sign.field_sign_document__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_item__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__create_date
@@ -997,9 +1125,11 @@ msgstr "Creato da"
 #: model:ir.model.fields,field_description:sign.field_sign_request__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__create_date
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_template__create_date
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__create_date
 msgid "Created on"
 msgstr "Data creazione"
@@ -1010,9 +1140,20 @@ msgid "Creation"
 msgstr "Creazione"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid "Cryptographic signature"
+msgstr "Firma digitale"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 msgid "Current status of the signature request"
 msgstr "Stato attuale della richiesta di firma"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "Currently in"
+msgstr "Attualmente in"
 
 #. module: sign
 #: model:sign.item.role,name:sign.sign_item_role_customer
@@ -1029,6 +1170,7 @@ msgstr "URL del portale clienti"
 #: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
 #: model:sign.item.type,name:sign.sign_item_type_date
 #: model:sign.item.type,placeholder:sign.sign_item_type_date
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Date"
 msgstr "Data"
 
@@ -1036,6 +1178,25 @@ msgstr "Data"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "Date (UTC)"
 msgstr "Data (UTC)"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+msgid "Decline"
+msgstr "Rifiuta"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.doc_sign
+msgid "Decline To Sign"
+msgstr "Rifiuta di firmare"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/signable_sign_request_control_panel.xml:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
+#: model_terms:ir.ui.view,arch_db:sign.doc_sign
+msgid "Decline to sign"
+msgstr "Rifiuta di firmare"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_role__default
@@ -1063,7 +1224,10 @@ msgid "Default order"
 msgstr "Ordine predefinito"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.xml:0
 msgid "Delete"
 msgstr "Elimina"
 
@@ -1080,13 +1244,19 @@ msgid "Delete sign item"
 msgstr "Elimina elemento firma"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.js:0
+msgid "Delete signer \"%s\""
+msgstr "Elimina firmatario \"%s\""
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid ""
 "Deliver one-time codes by SMS to identify signatories when signing a "
-"document."
+"document"
 msgstr ""
 "Invia codici unici tramite SMS per identificare i firmatari al momento della"
-" firma di un documento."
+" firma di un documento"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -1116,6 +1286,7 @@ msgstr "Partner demo"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.doc_sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Details"
 msgstr "Dettagli"
 
@@ -1132,7 +1303,7 @@ msgstr "Cornice iniziali digitali"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_res_users__sign_signature
 msgid "Digital Signature"
-msgstr "Firma Digitale"
+msgstr "Firma digitale"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_res_users__sign_signature_frame
@@ -1146,12 +1317,33 @@ msgid "Digital Signatures"
 msgstr "Firme digitali"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_item_view_form
-msgid "Display"
-msgstr "Mostra"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+#: model_terms:ir.ui.view,arch_db:sign.res_company_view_form_sign_terms
+msgid "Discard"
+msgstr "Abbandona"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__display_name
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_status_indicator/sign_status_indicator.xml:0
+msgid "Discard all changes"
+msgstr "Rimuovi tutte le modifiche"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_item_view_form
+msgid "Display"
+msgstr "Visualizzazione"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_ir_http__display_name
+#: model:ir.model.fields,field_description:sign.field_mail_activity_type__display_name
+#: model:ir.model.fields,field_description:sign.field_report_sign_green_savings_report__display_name
+#: model:ir.model.fields,field_description:sign.field_res_company__display_name
+#: model:ir.model.fields,field_description:sign.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:sign.field_res_partner__display_name
+#: model:ir.model.fields,field_description:sign.field_res_users__display_name
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__display_name
+#: model:ir.model.fields,field_description:sign.field_sign_document__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_item__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__display_name
@@ -1161,9 +1353,11 @@ msgstr "Mostra"
 #: model:ir.model.fields,field_description:sign.field_sign_request__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__display_name
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_template__display_name
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__display_name
 msgid "Display Name"
 msgstr "Nome visualizzato"
@@ -1174,8 +1368,21 @@ msgid "Display sign preview button"
 msgstr "Mostra pulsante di anteprima firma"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.js:0
+msgid "Do you really want to delete this signer?"
+msgstr "Vuoi davvero eliminare questo firmatario?"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "Do you want to add initials to all pages?"
+msgstr "Vuoi siglare tutte le pagine?"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__document_id
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__document_id
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
 msgid "Document"
 msgstr "Documento"
 
@@ -1187,13 +1394,11 @@ msgstr "Documento <i class=\"fa fa-download\"/>"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "Document Details"
-msgstr "Dettagli del Documento"
+msgstr "Dettagli documento"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__reference
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__reference
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_search
 msgid "Document Name"
 msgstr "Nome documento"
 
@@ -1203,13 +1408,19 @@ msgid "Document Page"
 msgstr "Pagina documento"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_item__template_id
+#: model:ir.model.fields,field_description:sign.field_sign_item__document_id
 msgid "Document Template"
 msgstr "Modello documento"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.js:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
+msgid "Document refusal submitted."
+msgstr "Rifiuto documento inviato."
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
 msgid "Document saved as Template."
 msgstr "Documento salvato come modello."
 
@@ -1230,36 +1441,37 @@ msgid "Document/Signer"
 msgstr "Documento/Firmatario"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
 #: model:ir.actions.act_window,name:sign.sign_request_action
+#: model:ir.model.fields,field_description:sign.field_sign_request__template_document_ids
+#: model:ir.model.fields,field_description:sign.field_sign_template__document_ids
 #: model:ir.ui.menu,name:sign.sign_request_menu
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_graph
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_pivot
 msgid "Documents"
 msgstr "Documenti"
 
 #. module: sign
+#. odoo-python
+#: code:addons/sign/controllers/main.py:0
+msgid "Documents of Request %s"
+msgstr "Documenti della richiesta %s"
+
+#. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/sign_request_documents_dropdown.xml:0
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Download"
 msgstr "Scarica"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
-msgid "Download Certificate"
-msgstr "Scarica certificato"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-msgid "Download Document"
-msgstr "Scarica documento"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_type_buttons.xml:0
-msgid "Drag & Drop a field in the PDF"
-msgstr "Trascina e rilascia il campo nel PDF"
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.xml:0
+msgid "Drag and Drop a field in the PDF"
+msgstr "Trascina e rilascia un campo nel PDF"
 
 #. module: sign
 #. odoo-javascript
@@ -1278,15 +1490,28 @@ msgstr ""
 " o caricarla dal computer."
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/signable_sign_request_control_panel.xml:0
 #: model_terms:ir.ui.view,arch_db:sign.doc_sign
 msgid "Dropdown menu"
 msgstr "Menù a discesa"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "Duplicate"
+msgstr "Duplica"
+
+#. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_document.py:0
 msgid "ERROR: Invalid PDF file!"
 msgstr "ERRORE: file PDF non valido."
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "Each item must contain 'name' and 'datas' keys."
+msgstr "Ogni elemento dovrebbe contenere le chiavi 'nome' e 'dati'."
 
 #. module: sign
 #: model:ir.actions.report,name:sign.sign_report_green_savings_action
@@ -1295,34 +1520,22 @@ msgstr "Risparmio ecologico grazie alla firma elettronica"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/signable_sign_request_control_panel.xml:0
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.xml:0
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Edit"
 msgstr "Modifica"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
 msgid "Edit Template"
 msgstr "Modifica modello"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid "Edit field types"
-msgstr "Modifica tipi di campo"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid "Edit selection values"
-msgstr "Modifica i valori di selezione"
-
-#. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
-msgid "Edit template name"
-msgstr "Modifica nome template"
-
-#. module: sign
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__signer_email
 #: model:sign.item.type,name:sign.sign_item_type_email
 #: model:sign.item.type,placeholder:sign.sign_item_type_email
@@ -1353,13 +1566,19 @@ msgstr "Energia"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sms_signer_dialog.xml:0
-msgid "Enter the code received through SMS to complete your signature"
-msgstr "Inserisci il codice ricevuto via SMS per completare la tua firma"
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
+msgid "Enter options separated by Enter."
+msgstr "Inserisci le opzioni separate da Invio."
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
+#: code:addons/sign/static/src/dialogs/sms_signer_dialog.xml:0
+msgid "Enter the code received through SMS to complete your signature"
+msgstr "Per completare la firma inserisci il codice ricevuto via SMS"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/components/sign_request/document_signable.js:0
 #: code:addons/sign/static/src/dialogs/sms_signer_dialog.js:0
 msgid "Error"
 msgstr "Errore"
@@ -1368,12 +1587,6 @@ msgstr "Errore"
 #: model_terms:ir.ui.view,arch_db:sign.deleted_sign_request
 msgid "Error 404"
 msgstr "Errore 404"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "Existing sign items are not allowed to be changed"
-msgstr "Gli elementi di firma esistenti non possono essere modificati"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__request_state__expired
@@ -1394,7 +1607,7 @@ msgstr "Step di autenticazione extra"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__favorited_ids
 msgid "Favorite of"
-msgstr "Favoriti di"
+msgstr "Preferito di"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__favorited_ids
@@ -1409,13 +1622,10 @@ msgstr "Nome campo"
 
 #. module: sign
 #: model:ir.ui.menu,name:sign.sign_item_type_menu
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid "Field Types"
-msgstr "Tipo di campo"
+msgstr "Tipi di campo"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_type_buttons.xml:0
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
 msgid "Fields"
 msgstr "Campi"
@@ -1423,10 +1633,10 @@ msgstr "Campi"
 #. module: sign
 #: model:ir.model,name:sign.model_sign_item
 msgid "Fields to be sign on Document"
-msgstr "Campi da firmare nel Documento"
+msgstr "Campi da firmare nel documento"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_template__datas
+#: model:ir.model.fields,field_description:sign.field_sign_document__datas
 msgid "File Content (base64)"
 msgstr "Contenuto del file (base64)"
 
@@ -1437,20 +1647,9 @@ msgid "File Error"
 msgstr "Errore file"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__new_pdf
-msgid "File name"
-msgstr "Nome file"
-
-#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__filename
 msgid "Filename"
 msgstr "Nome file"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
-msgid "Filled by"
-msgstr "Compilato da"
 
 #. module: sign
 #. odoo-javascript
@@ -1521,22 +1720,13 @@ msgstr "Valore cornice"
 #. module: sign
 #. odoo-python
 #: code:addons/sign/controllers/portal.py:0
-#: model:ir.model.fields.selection,name:sign.selection__sign_request__state__signed
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "Fully Signed"
-msgstr "Firma completa"
+msgstr "Interamente firmato"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "Future Activities"
 msgstr "Attività future"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/encrypted_dialog.xml:0
-msgid "Generate PDF"
-msgstr "Genera PDF"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -1632,7 +1822,15 @@ msgid "I've got a total weight, and now?"
 msgstr "Ho un peso totale e ora?"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__id
+#: model:ir.model.fields,field_description:sign.field_ir_http__id
+#: model:ir.model.fields,field_description:sign.field_mail_activity_type__id
+#: model:ir.model.fields,field_description:sign.field_report_sign_green_savings_report__id
+#: model:ir.model.fields,field_description:sign.field_res_company__id
+#: model:ir.model.fields,field_description:sign.field_res_config_settings__id
+#: model:ir.model.fields,field_description:sign.field_res_partner__id
+#: model:ir.model.fields,field_description:sign.field_res_users__id
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__id
+#: model:ir.model.fields,field_description:sign.field_sign_document__id
 #: model:ir.model.fields,field_description:sign.field_sign_item__id
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__id
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__id
@@ -1642,9 +1840,11 @@ msgstr "Ho un peso totale e ora?"
 #: model:ir.model.fields,field_description:sign.field_sign_request__id
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__id
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__id
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__id
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__id
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__id
 #: model:ir.model.fields,field_description:sign.field_sign_template__id
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__id
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__id
 msgid "ID"
 msgstr "ID"
@@ -1704,6 +1904,15 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Se selezionata, alcuni messaggi presentano un errore di consegna."
 
 #. module: sign
+#: model:ir.model.fields,help:sign.field_sign_send_request__certificate_reference
+msgid ""
+"If checked, the unique certificate reference will be added on the final "
+"signed document."
+msgstr ""
+"Se selezionata, il riferimento univoco del certificato sarà aggiunto al "
+"documento finale firmato."
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_not_enough_credits
 msgid ""
 "If you do not want to receive these notifications anymore, you can disable the extra-authentication step in the\n"
@@ -1738,10 +1947,10 @@ msgid "In Progress Count"
 msgstr "Numero in lavorazione"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "In favorites, remove it"
-msgstr "Nei preferiti, rimuoverla"
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "In Progress Requests"
+msgstr "Richieste in corso"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_log__log_hash
@@ -1762,7 +1971,7 @@ msgstr "Informazioni"
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__initial
 msgid "Initial"
-msgstr "Iniziali"
+msgstr "Iniziale"
 
 #. module: sign
 #: model:sign.item.type,name:sign.sign_item_type_initial
@@ -1773,7 +1982,7 @@ msgstr "Iniziali"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid "Insert your terms & conditions here..."
-msgstr "Scrivi termini e condizioni qui..."
+msgstr "Inserisci qui termini e condizioni..."
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__integrity
@@ -1789,6 +1998,11 @@ msgstr "Sta seguendo"
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__is_mail_sent
 msgid "Is Mail Sent"
 msgstr "L'e-mail è inviata"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__is_shared
+msgid "Is Shared"
+msgstr "È condiviso"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__is_sharing
@@ -1830,10 +2044,11 @@ msgstr "Litri acqua risparmiata"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__last_action_date
 msgid "Last Action Date"
-msgstr "Data Ultima Azione"
+msgstr "Data ultima azione"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__write_uid
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__write_uid
+#: model:ir.model.fields,field_description:sign.field_sign_document__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__write_uid
@@ -1843,15 +2058,18 @@ msgstr "Data Ultima Azione"
 #: model:ir.model.fields,field_description:sign.field_sign_request__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__write_uid
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_template__write_uid
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__write_uid
 msgid "Last Updated by"
 msgstr "Ultimo aggiornamento di"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__write_date
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__write_date
+#: model:ir.model.fields,field_description:sign.field_sign_document__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_item__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__write_date
@@ -1861,9 +2079,11 @@ msgstr "Ultimo aggiornamento di"
 #: model:ir.model.fields,field_description:sign.field_sign_request__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__write_date
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_template__write_date
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__write_date
 msgid "Last Updated on"
 msgstr "Ultimo aggiornamento il"
@@ -1910,7 +2130,7 @@ msgstr "Inviamo la richiesta via e-mail."
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__redirect_url_text
 msgid "Link Label"
-msgstr "Etichetta collegamento"
+msgstr "Etichetta link"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__activity_id
@@ -1953,7 +2173,7 @@ msgstr "Logo"
 #: model:ir.model.fields,field_description:sign.field_sign_request__sign_log_ids
 #: model_terms:ir.ui.view,arch_db:sign.sign_log_view_tree
 msgid "Logs"
-msgstr "Log"
+msgstr "Registri"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_log__longitude
@@ -1973,7 +2193,7 @@ msgstr "Aggiornamento mail"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/models/sign_item_type.py:0
 msgid "Malformed expression: %(exp)s"
 msgstr "Espressione non valida: %(exp)s"
 
@@ -1988,11 +2208,6 @@ msgstr "Gestisci l'accesso ai modelli"
 #: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
 msgid "Mandatory field"
 msgstr "Campo obbligatorio"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
-msgid "Marc Demo"
-msgstr "Marc Demo"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__message
@@ -2020,31 +2235,42 @@ msgid "Messages"
 msgstr "Messaggi"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.encrypted_ask_password
-msgid "Missing Password"
-msgstr "Password mancante"
+#: model:ir.model.fields,field_description:sign.field_sign_item_type__model_name
+msgid "Model"
+msgstr "Modello"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_request_item__sms_number
-msgid "Mobile"
-msgstr "Dispositivo mobile"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "Move Down"
+msgstr "Sposta giù"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Modify Template"
-msgstr "Modifica template"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "Move Up"
+msgstr "Sposta su"
+
+#. module: sign
+#: model:sign.item.type,name:sign.sign_item_type_multiline_text
+#: model:sign.item.type,placeholder:sign.sign_item_type_multiline_text
+msgid "Multiline"
+msgstr "Multiriga"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__textarea
-#: model:sign.item.type,name:sign.sign_item_type_multiline_text
-#: model:sign.item.type,placeholder:sign.sign_item_type_multiline_text
 msgid "Multiline Text"
-msgstr "Testo multilinea"
+msgstr "Testo multiriga"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
 msgid "Multiple Signature Requests"
-msgstr "Richiesta firma multipla"
+msgstr "Richieste di firma multiple"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
+msgid "My Activities"
+msgstr "Le mie attività"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__my_activity_date_deadline
@@ -2055,7 +2281,7 @@ msgstr "Scadenza mie attività"
 #: model:ir.ui.menu,name:sign.sign_request_my_documents
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "My Documents"
-msgstr "Documenti"
+msgstr "I miei documenti"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
@@ -2076,37 +2302,24 @@ msgstr "I miei modelli"
 #. module: sign
 #: model:sign.template.tag,name:sign.sign_template_tag_2
 msgid "NDA"
-msgstr "Accordo di non divulgazione"
+msgstr "AdR"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+#: model:ir.model.fields,field_description:sign.field_sign_document__name
 #: model:ir.model.fields,field_description:sign.field_sign_item_role__name
 #: model:ir.model.fields,field_description:sign.field_sign_template__name
 #: model:sign.item.type,name:sign.sign_item_type_name
 #: model:sign.item.type,placeholder:sign.sign_item_type_name
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Name"
 msgstr "Nome"
-
-#. module: sign
-#: model:ir.model.constraint,message:sign.constraint_sign_item_role_name_uniq
-msgid "Name already exists!"
-msgstr "Nome già esistente."
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
-msgid "Name for the file"
-msgstr "Nome per il file"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
 msgid "Name of the file"
 msgstr "Nome del file"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/js/tours/sign.js:0
-msgid "Nearly there, keep going!"
-msgstr "Ci siamo quasi, continua così!"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__need_my_signature
@@ -2131,9 +2344,10 @@ msgid "New Signature Request"
 msgstr "Nuova richiesta di firma"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__new_template
-msgid "New Template Name"
-msgstr "Nuovo nome di template"
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "New Template"
+msgstr "Nuovo modello"
 
 #. module: sign
 #. odoo-python
@@ -2165,6 +2379,7 @@ msgstr "Tipologia prossima attività"
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.xml:0
+#: model_terms:ir.ui.view,arch_db:sign._doc_sign
 msgid "Next Document"
 msgstr "Documento successivo"
 
@@ -2175,12 +2390,6 @@ msgid "Next signatory ("
 msgstr "Firmatario successivo ("
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_template.py:0
-msgid "No attachment was provided"
-msgstr "Non è stato fornito alcun allegato"
-
-#. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_all_request_action
 #: model_terms:ir.actions.act_window,help:sign.sign_request_action
 msgid "No document yet"
@@ -2188,7 +2397,7 @@ msgstr "Ancora nessun documento"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "No specified reason"
 msgstr "Nessun motivo specifico"
 
@@ -2198,21 +2407,16 @@ msgid "No template yet"
 msgstr "Ancora nessun modello"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "No, add only once"
+msgstr "No, aggiungi solo una volta"
+
+#. module: sign
 #. odoo-python
 #: code:addons/sign/controllers/portal.py:0
 msgid "None"
 msgstr "Nessuno"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Not in favorites, add it"
-msgstr "Non tra i favoriti, aggiungilo"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Not in favorites, set it"
-msgstr "Non nei preferiti, impostarla"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__message_needaction_counter
@@ -2251,7 +2455,7 @@ msgid "Number of messages with delivery error"
 msgstr "Numero di messaggi con errore di consegna"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_template__num_pages
+#: model:ir.model.fields,field_description:sign.field_sign_document__num_pages
 msgid "Number of pages"
 msgstr "Numero di pagine"
 
@@ -2260,6 +2464,22 @@ msgstr "Numero di pagine"
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
 msgid "Odoo Sign"
 msgstr "Odoo Firma"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid ""
+"Odoo is a suite of open source business apps\n"
+"that cover all your company needs:\n"
+"CRM, eCommerce, accounting, inventory, point of sale,\n"
+"project management, etc.\n"
+"            "
+msgstr ""
+"Odoo è una suite di applicazioni aziendali open-source\n"
+"in grado di soddisfare tutti i bisogni della tua azienda:\n"
+"CRM, E-commerce, Contabilità, Magazzino, Punto vendita,\n"
+"gestione progetti, ecc.\n"
+"            "
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -2273,16 +2493,16 @@ msgstr "Un litro di carburante produce 8,9 kg di CO²"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
-msgid "One or more selection items have no associated options"
-msgstr "Uno o più elementi selezionati non hanno opzioni associate"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/models/sign_document.py:0
 msgid "One uploaded file cannot be read. Is it a valid PDF?"
 msgstr ""
 "Non è possibile leggere uno dei file caricati. Si tratta di un PDF valido?"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/views/hooks.js:0
+msgid "Only PDF files are allowed."
+msgstr "Solo file PDF disponibili"
 
 #. module: sign
 #. odoo-python
@@ -2292,9 +2512,15 @@ msgid "Oops"
 msgstr "Oh!"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
-msgid "Operation successful"
-msgstr "Operazione riuscita"
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid ""
+"Oops! You can’t delete a template that has signature requests. It would be "
+"like asking your users to autograph air! How about archiving it instead?"
+msgstr ""
+"Ops! Non puoi eliminare un modello che presenta richieste di firma. Sarebbe "
+"come chiedere agli utenti di autografare l'aria! Perché non provi ad "
+"archiviarlo?"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__value
@@ -2309,12 +2535,12 @@ msgstr "Opzione di un campo selezione"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 msgid "Optional Message..."
-msgstr "Messaggio Opzionale ... "
+msgstr "Messaggio facoltativo... "
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_template__redirect_url
 msgid "Optional link for redirection after signature"
-msgstr "Link opzionale per redirezionamento dopo la firma"
+msgstr "Link opzionale per il reindirizzamento dopo la firma"
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_template__redirect_url_text
@@ -2329,16 +2555,10 @@ msgid "Options"
 msgstr "Opzioni"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__original_template_id
-msgid "Original File"
-msgstr "File originale"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/encrypted_dialog.js:0
-#: model_terms:ir.ui.view,arch_db:sign.encrypted_ask_password
-msgid "PDF is encrypted"
-msgstr "Il PDF è cifrato"
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "PDF File is corrupted. Please try with another file."
+msgstr "File PDF corrotto. Prova con un altro file."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_container
@@ -2357,12 +2577,12 @@ msgid "Partner"
 msgstr "Partner"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/encrypted_dialog.js:0
-msgid "Password is incorrect."
-msgstr "La password è incorretta."
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__pdf_data
+msgid "Pdf Data"
+msgstr "Dati PDF"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_request_item__sms_number
 #: model:sign.item.type,name:sign.sign_item_type_phone
 #: model:sign.item.type,placeholder:sign.sign_item_type_phone
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -2389,8 +2609,14 @@ msgid "Please configure senders'(%s) email addresses"
 msgstr "Configura gli indirizzi e-mail dei mittenti (%s)"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+msgid "Please provide a reason for refusal"
+msgstr "Fornisci un motivo di rifiuto"
+
+#. module: sign
 #. odoo-python
-#: code:addons/sign/wizard/sign_send_request.py:0
+#: code:addons/sign/wizard/sign_send_request_signer.py:0
 msgid "Please select recipients for the following roles: %(roles)s"
 msgstr "Seleziona i destinatari per i ruoli seguenti: %(roles)s"
 
@@ -2410,6 +2636,8 @@ msgid "Position Y"
 msgstr "Posizione Y"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 msgid "Preview"
 msgstr "Anteprima"
@@ -2426,15 +2654,15 @@ msgstr "Avanzamento"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "Public User"
 msgstr "Utente pubblico"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__radio
 #: model:sign.item.type,name:sign.sign_item_type_radio
-msgid "Radio Buttons"
-msgstr "Pulsanti a selezione singola"
+msgid "Radio"
+msgstr "Selezione singola"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__radio_items
@@ -2462,7 +2690,31 @@ msgstr "Valutazioni"
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/sms_signer_dialog.xml:0
 msgid "Re-send SMS"
-msgstr "Reinviare SMS"
+msgstr "Reinvia SMS"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
+#: model:ir.model.fields,field_description:sign.field_sign_item__constant
+msgid "Read-only"
+msgstr "Sola lettura"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_item.py:0
+msgid ""
+"Read-only can only be applied to items of the following types: 'Text', "
+"'Name', 'Email', 'Phone', 'Company', 'Multiline', 'Date', 'Strikethrough'"
+msgstr ""
+"La sola lettura può essere applicata solo agli elementi dei seguenti tipi: "
+"'Testo', 'Nome', 'E-mail', 'Telefono', 'Azienda', 'Multiriga', 'Data', "
+"'Barrato'"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+msgid "Reason"
+msgstr "Motivo"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__redirect_url
@@ -2471,7 +2723,6 @@ msgstr "Link di reindirizzamento"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__refuse
 msgid "Refuse"
@@ -2479,16 +2730,9 @@ msgstr "Respingi"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/signable_sign_request_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:sign.doc_sign
-msgid "Refuse Document"
-msgstr "Rifiutare Documento"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
-msgid "Refuse to sign"
-msgstr "Rifiuta firma"
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+msgid "Refused"
+msgstr "Non accettata"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__request_state__refused
@@ -2499,7 +2743,6 @@ msgstr "Firma rifiutata"
 #: model:ir.model.fields,field_description:sign.field_sign_request__reminder
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__reminder
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 msgid "Reminder"
 msgstr "Promemoria"
 
@@ -2510,6 +2753,22 @@ msgid "Reminder Enabled"
 msgstr "Promemoria abilitato"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
+msgid "Reminders"
+msgstr "Promemoria"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "Remove from favorites"
+msgstr "Elimina dai preferiti"
+
+#. module: sign
+#: model:sign.template.tag,name:sign.sign_template_tag_4
+msgid "Rental"
+msgstr "Noleggi"
+
+#. module: sign
 #: model:ir.ui.menu,name:sign.sign_reports
 msgid "Reports"
 msgstr "Resoconti"
@@ -2517,14 +2776,12 @@ msgstr "Resoconti"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__request_item_infos
 msgid "Request Item Infos"
-msgstr "Richiedi informazioni sull'elemento "
+msgstr "Richiedi informazioni elemento "
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/activity/activity_patch.xml:0
 #: code:addons/sign/static/src/backend_components/cog_menu/sign_request_cog_menu.xml:0
-#: model:ir.model.fields.selection,name:sign.selection__mail_activity_type__category__sign_request
-#: model:mail.activity.type,name:sign.mail_activity_data_signature_request
 msgid "Request Signature"
 msgstr "Richiedere Firma"
 
@@ -2533,6 +2790,12 @@ msgstr "Richiedere Firma"
 #: code:addons/sign/wizard/sign_send_request.py:0
 msgid "Request expiration date must be set in the future."
 msgstr "La data di scadenza della richiesta deve essere futura."
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/wizard/sign_send_request.py:0
+msgid "Request sent successfully"
+msgstr "Richiesta inviata con successo"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__nb_total
@@ -2550,13 +2813,13 @@ msgstr "Obbligatorio"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_item_view_tree
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Resend"
-msgstr "Reinviare"
+msgstr "Reinvia"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.js:0
 msgid "Resend the invitation"
-msgstr "Re-invia l'invito"
+msgstr "Reinvia l'invito"
 
 #. module: sign
 #. odoo-javascript
@@ -2565,8 +2828,6 @@ msgid "Resent!"
 msgstr "Reinviato!"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/initial_all_pages_dialog.xml:0
 #: model:ir.model.fields,field_description:sign.field_sign_item__responsible_id
 #: model:ir.model.fields,field_description:sign.field_sign_template__user_id
 msgid "Responsible"
@@ -2601,16 +2862,6 @@ msgid "Role"
 msgstr "Ruolo"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_tree
-msgid "Role Name"
-msgstr "Nome ruolo"
-
-#. module: sign
-#: model:ir.ui.menu,name:sign.sign_item_role_menu
-msgid "Roles"
-msgstr "Ruoli"
-
-#. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_iframe.js:0
 msgid "Rotate Clockwise"
@@ -2638,21 +2889,41 @@ msgid "Sales"
 msgstr "Vendite"
 
 #. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "Sample generated by Odoo for %s."
+msgstr "Campione generato da Odoo per %s."
+
+#. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.xml:0
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__save
+#: model_terms:ir.ui.view,arch_db:sign.res_company_view_form_sign_terms
 msgid "Save"
 msgstr "Salva"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+msgid "Save & close"
+msgstr "Salva e chiudi"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
 msgid "Save as Template"
 msgstr "Salva come modello"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_body.js:0
+#: code:addons/sign/static/src/backend_components/sign_status_indicator/sign_status_indicator.xml:0
+msgid "Save manually"
+msgstr "Salva manualmente"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
 msgid "Saved"
 msgstr "Salvato"
 
@@ -2691,6 +2962,14 @@ msgid "Selection"
 msgstr "Selezione"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_iframe.js:0
+msgid "Selection field cannot be empty. Please add at least one option."
+msgstr ""
+"Il campo di selezione non può essere vuoto. Aggiungi almeno un'opzione."
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item__option_ids
 msgid "Selection options"
 msgstr "Opzioni di selezione"
@@ -2715,7 +2994,7 @@ msgstr "Invia SMS"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__signer_id
 msgid "Send To"
-msgstr "Invia A"
+msgstr "Invia a"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_expired
@@ -2724,7 +3003,6 @@ msgstr "Invia un nuovo link"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 msgid "Send a reminder"
 msgstr "Invia un promemoria"
 
@@ -2742,13 +3020,25 @@ msgstr "Inviato"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__nb_wait
 msgid "Sent Requests"
-msgstr "Invia richieste"
+msgstr "Richieste inviate"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Sent by"
 msgstr "Inviata da"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_document__sequence
+msgid "Sequence"
+msgstr "Sequenza"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "Set as favorite"
+msgstr "Imposta come preferito"
 
 #. module: sign
 #: model:ir.actions.act_window,name:sign.sign_settings_action
@@ -2759,36 +3049,38 @@ msgstr "Impostazioni"
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.xml:0
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
 msgid "Share"
 msgstr "Condividi"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
-msgid "Share & Close"
-msgstr "Condividi e chiudi"
-
-#. module: sign
 #. odoo-python
 #: code:addons/sign/models/sign_template.py:0
-msgid "Share Document by Link"
-msgstr "Condividi il Documento via Link"
+msgid "Share Document"
+msgstr "Condividi documento"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__share_link
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__share_link
 msgid "Share Link"
-msgstr "Condividi Link"
+msgstr "Condividi link"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
-msgid "Shareable"
-msgstr "Condivisibile"
+#: model:ir.model.fields,field_description:sign.field_sign_request__is_shared
+msgid "Share Request Button"
+msgstr "Pulsante condividi richiesta"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/js/sign_share_button_action.js:0
+msgid "Share link copied to clipboard"
+msgstr "Condividi link copiato negli appunti"
 
 #. module: sign
 #. odoo-python
 #: code:addons/sign/controllers/main.py:0
-#: code:addons/sign/models/sign_template.py:0
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__request_state__shared
 #: model:ir.model.fields.selection,name:sign.selection__sign_request__state__shared
 msgid "Shared"
@@ -2796,24 +3088,28 @@ msgstr "Condiviso"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
-msgid "Show all records which has next action date is before today"
-msgstr "Mostra tutti i record con data prossima azione precedente a oggi"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid "Show standard terms & conditions on signature requests"
-msgstr "Mostra i termini e condizioni predefiniti sulle richieste di firma"
+msgid "Show all records whose next activity date is past"
+msgstr "Mostra tutti i record con data prossima azione nel passato"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.js:0
 #: code:addons/sign/static/src/dialogs/next_direct_sign_dialog.js:0
 #: code:addons/sign/static/src/dialogs/sign_name_and_signature_dialog.xml:0
+#: code:addons/sign/static/src/file_viewer/file_viewer.xml:0
 #: model:ir.ui.menu,name:sign.menu_document
+#: model:res.groups.privilege,name:sign.res_groups_privilege_sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Sign"
 msgstr "Firma"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_activity
+msgid "Sign Activity"
+msgstr "Firma attività"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_res_config_settings__use_sign_terms
@@ -2831,26 +3127,26 @@ msgid "Sign Default Terms and Conditions as a Web page"
 msgstr "Termini e condizioni sulla pagina web"
 
 #. module: sign
-#: model:ir.model,name:sign.model_sign_duplicate_template_pdf
-msgid "Sign Duplicate Template with new PDF"
-msgstr "Firmare il template duplicato con un nuovo PDF"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "Sign Items Copied"
+msgstr "Elementi firma copiati"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.js:0
 msgid "Sign Next Document"
-msgstr "Firma il documento successivo"
+msgstr "Firma documento successivo"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
 msgid "Sign Now"
-msgstr "Firma Ora"
+msgstr "Firma ora"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__mail_sent_order
@@ -2858,14 +3154,16 @@ msgid "Sign Order"
 msgstr "Firma ordine"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__sign_request_id
 #: model:ir.model.fields,field_description:sign.field_sign_log__sign_request_id
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__sign_request_id
 msgid "Sign Request"
-msgstr "Richiesta Firma"
+msgstr "Richiesta di firma"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_log__sign_request_item_id
 msgid "Sign Request Item"
-msgstr "Oggetto Richiesta Firma"
+msgstr "Elemento con richiesta di firma"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__sign_send_request_id
@@ -2876,6 +3174,11 @@ msgstr "Richiesta invio firma"
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid "Sign Settings"
 msgstr "Impostazioni Firma"
+
+#. module: sign
+#: model:ir.model,name:sign.model_sign_template_preview
+msgid "Sign Tempate Preview"
+msgstr "Anteprima modello firma"
 
 #. module: sign
 #: model:ir.model,name:sign.model_sign_template_tag
@@ -2900,6 +3203,12 @@ msgstr "Formato termini e condizioni"
 
 #. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/dialogs/thank_you_dialog.js:0
+msgid "Sign Up for free"
+msgstr "Inscriviti gratuitamente"
+
+#. module: sign
+#. odoo-javascript
 #: code:addons/sign/static/src/dialogs/sign_name_and_signature_dialog.xml:0
 msgid "Sign all"
 msgstr "Firma tutto"
@@ -2916,10 +3225,15 @@ msgid "Sign now"
 msgstr "Firma ora"
 
 #. module: sign
+#: model:ir.model,name:sign.model_sign_request_share
+msgid "Sign request share wizard"
+msgstr "Procedura guidata condivisione richiesta firma"
+
+#. module: sign
 #. odoo-python
 #: code:addons/sign/models/sign_template.py:0
 msgid "Sign requests"
-msgstr "Firma richieste"
+msgstr "Richieste di firma"
 
 #. module: sign
 #: model:ir.model,name:sign.model_sign_log
@@ -2937,7 +3251,6 @@ msgid "Sign send request signer"
 msgstr "Firmatario richiesta invio firma"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
 #: model_terms:ir.ui.view,arch_db:sign.deleted_sign_request
 msgid ""
 "Sign up for Odoo Sign to manage your own documents and signature requests!"
@@ -2962,14 +3275,17 @@ msgstr "Hash firmatario:"
 #. odoo-javascript
 #. odoo-python
 #: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 #: code:addons/sign/static/src/components/sign_request/sign_items.xml:0
 #: code:addons/sign/static/src/js/tours/sign.js:0
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__signature
+#: model:ir.model.fields.selection,name:sign.selection__mail_activity_type__category__sign_request
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__signature
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__sign
+#: model:mail.activity.type,name:sign.mail_activity_data_signature_request
+#: model:mail.activity.type,summary:sign.mail_activity_data_signature_request
 #: model:sign.item.type,name:sign.sign_item_type_signature
 #: model:sign.item.type,placeholder:sign.sign_item_type_signature
-#: model_terms:ir.ui.view,arch_db:sign._doc_sign
 #: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
 msgid "Signature"
 msgstr "Firma"
@@ -2980,9 +3296,14 @@ msgid "Signature Date"
 msgstr "Data firma"
 
 #. module: sign
+#: model:ir.model,name:sign.model_sign_document
+msgid "Signature Document"
+msgstr "Firma documento"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__sign_item_id
 msgid "Signature Item"
-msgstr "Oggetti firma"
+msgstr "Elemento di firma"
 
 #. module: sign
 #: model:ir.actions.act_window,name:sign.sign_item_option_action
@@ -2991,11 +3312,6 @@ msgstr "Opzioni elemento firma"
 
 #. module: sign
 #: model:ir.model,name:sign.model_sign_item_role
-msgid "Signature Item Party"
-msgstr "Voce di firma"
-
-#. module: sign
-#: model:ir.actions.act_window,name:sign.sign_item_role_action
 msgid "Signature Item Role"
 msgstr "Ruolo elemento di firma"
 
@@ -3003,7 +3319,7 @@ msgstr "Ruolo elemento di firma"
 #: model:ir.actions.act_window,name:sign.sign_item_type_action
 #: model:ir.model,name:sign.model_sign_item_type
 msgid "Signature Item Type"
-msgstr "Tipo di oggetto di firma"
+msgstr "Tipologia elemento di firma"
 
 #. module: sign
 #: model:ir.model,name:sign.model_sign_request_item_value
@@ -3011,9 +3327,10 @@ msgid "Signature Item Value"
 msgstr "Valore elemento di firma"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_document__sign_item_ids
 #: model:ir.model.fields,field_description:sign.field_sign_template__sign_item_ids
 msgid "Signature Items"
-msgstr "Oggetti firma"
+msgstr "Elementi di firma"
 
 #. module: sign
 #. odoo-javascript
@@ -3036,7 +3353,7 @@ msgstr "Richiesta di firma - %(file_name)s"
 #. odoo-python
 #: code:addons/sign/wizard/sign_send_request.py:0
 msgid "Signature Request - %s"
-msgstr "Richiesta firma - %s"
+msgstr "Richiesta di firma - %s"
 
 #. module: sign
 #: model:ir.model,name:sign.model_sign_request_item
@@ -3069,10 +3386,9 @@ msgid "Signature Template"
 msgstr "Modello firma"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/sign_items.xml:0
-msgid "Signature configuration"
-msgstr "Configurazione firma"
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+msgid "Signature fields"
+msgstr "Campi firma"
 
 #. module: sign
 #. odoo-python
@@ -3083,6 +3399,12 @@ msgid ""
 msgstr ""
 "Firma richiesta per il modello: %(template)s\n"
 "Firmatari: %(signatories)s"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.portal_my_home_menu_sign
+#: model_terms:ir.ui.view,arch_db:sign.portal_my_home_sign
+msgid "Signature requests"
+msgstr "Richieste di firma"
 
 #. module: sign
 #. odoo-python
@@ -3096,26 +3418,28 @@ msgid "Signature:"
 msgstr "Firma:"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.portal_my_home_menu_sign
-#: model_terms:ir.ui.view,arch_db:sign.portal_my_home_sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
 msgid "Signatures"
 msgstr "Firme"
 
 #. module: sign
+#: model:ir.model.fields.selection,name:sign.selection__sign_request__state__signed
 #: model_terms:ir.ui.view,arch_db:sign.doc_sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "Signed"
 msgstr "Firmato"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__signed_count
 msgid "Signed Count"
-msgstr "Conteggio Firme"
+msgstr "Numero firmati"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Signed Documents"
-msgstr "Documenti firmati"
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "Signed Requests"
+msgstr "Richieste firmate"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__signed_without_extra_auth
@@ -3128,11 +3452,21 @@ msgid "Signed document"
 msgstr "Documento firmato"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+msgid "Signed documents"
+msgstr "Documenti firmati"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__signing_date
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 #: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
 msgid "Signed on"
-msgstr "Firmato il "
+msgstr "Firmato il"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+msgid "Signees"
+msgstr "Firmatari"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__partner_id
@@ -3141,21 +3475,35 @@ msgstr "Firmatario"
 
 #. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.js:0
+msgid "Signer Edition"
+msgstr "Edizione firmatario"
+
+#. module: sign
+#. odoo-javascript
 #: code:addons/sign/static/src/fields/signer_x2many.js:0
 msgid "Signer One 2 Many"
 msgstr "Firmatario uno a molti"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
 #: model:ir.model.fields,field_description:sign.field_sign_request__request_item_ids
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__signer_ids
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Signers"
 msgstr "Firmatari"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__signers_count
 msgid "Signers Count"
-msgstr "Conto Firmatari"
+msgstr "Numero firmatari"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_res_company__signing_certificate_id
+msgid "Signing Certificate"
+msgstr "Certificato di firma"
 
 #. module: sign
 #. odoo-python
@@ -3174,6 +3522,11 @@ msgid "Signing Order"
 msgstr "Ordine di firma"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_res_config_settings__signing_certificate_id
+msgid "Signing certificate"
+msgstr "Certificato di firma"
+
+#. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/js/tours/sign.js:0
 msgid ""
@@ -3185,34 +3538,33 @@ msgstr ""
 "fornito via e-mail."
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
-msgid "Some fields have still to be completed"
-msgstr "Alcuni campi devono ancora essere completati"
-
-#. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "Some required items are not filled"
 msgstr "Alcuni elementi richiesti non sono completi"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
+msgid "Some signers have no related sign items."
+msgstr "Alcuni firmatari non presentano elementi correlati."
+
+#. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "Some unauthorised items are filled"
 msgstr "Alcuni elementi non autorizzati sono stati compilati"
 
 #. module: sign
 #. odoo-javascript
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/models/sign_document.py:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_body.js:0
 msgid "Somebody is already filling a document which uses this template"
-msgstr "Qualcuno sta già riempiendo un documento che usa questo template"
+msgstr "Qualcuno sta già compilando un documento che utilizza il modello"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
+#: code:addons/sign/static/src/components/sign_request/document_signable.js:0
 msgid "Sorry, an error occurred, please try to fill the document again."
 msgstr ""
 "Oops, si è verificato un errore, prova a compilare di nuovo il documento."
@@ -3222,6 +3574,11 @@ msgstr ""
 #: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
 msgid "Sorry, you cannot refuse this document"
 msgstr "Siamo spiacenti, non è possibile rifiutare questo documento"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_item_type__model_id
+msgid "Specific Model Linked"
+msgstr "Modello specifico collegato"
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_send_request__set_sign_order
@@ -3254,6 +3611,7 @@ msgstr "Stato della richiesta nel registro azioni"
 #. odoo-python
 #: code:addons/sign/controllers/portal.py:0
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Status"
 msgstr "Stato"
 
@@ -3272,10 +3630,27 @@ msgstr ""
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Stop Sharing"
 msgstr "Interrompi condivisione"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+msgid "Stop sharing"
+msgstr "Interrompi condivisione"
+
+#. module: sign
+#: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__strikethrough
+#: model:sign.item.type,name:sign.sign_item_type_strikethrough
+#: model:sign.item.type,placeholder:sign.sign_item_type_strikethrough
+msgid "Strikethrough"
+msgstr "Barrato"
+
+#. module: sign
+#: model:sign.item.type,tip:sign.sign_item_type_strikethrough
+msgid "Strikethrough the highlighted area"
+msgstr "Barra l'area evidenziata"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__subject
@@ -3306,12 +3681,13 @@ msgstr "Nome etichetta già esistente."
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_tag_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_tag_view_tree
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
 msgid "Tags"
 msgstr "Etichette"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_header_tags.xml:0
 msgid "Tags:"
 msgstr "Etichette:"
 
@@ -3325,8 +3701,13 @@ msgstr ""
 "automaticamente questo campo al momento della firma."
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_document__template_id
+#: model:ir.model.fields,field_description:sign.field_sign_item__template_id
 #: model:ir.model.fields,field_description:sign.field_sign_request__template_id
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__template_id
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__template_id
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__template_id
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "Template"
@@ -3335,16 +3716,22 @@ msgstr "Modello"
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_body.js:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.js:0
 #: code:addons/sign/static/src/views/hooks.js:0
 msgid "Template %s"
 msgstr "Modello %s"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
-msgid "Template Properties"
-msgstr "Proprietà modello"
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_search
+msgid "Template Name"
+msgstr "Nome modello"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "Template Preview"
+msgstr "Anteprima modello"
 
 #. module: sign
 #: model:ir.actions.server,name:sign.sign_template_tour_trigger_action
@@ -3357,8 +3744,6 @@ msgid "Template or Tag"
 msgstr "Modello o etichetta"
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
 #: model:ir.actions.act_window,name:sign.sign_template_action
 #: model:ir.ui.menu,name:sign.sign_template_menu
 msgid "Templates"
@@ -3425,9 +3810,10 @@ msgstr ""
 "richiesta di firma deve essere stata eliminata o modificata."
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.encrypted_ask_password
-msgid "The PDF's password is required to generate the final document."
-msgstr "Per generare il documento finale è richiesta la password del PDF."
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "The attachment data list cannot be empty."
+msgstr "L'elenco dei dati dell'allegato non può essere vuoto."
 
 #. module: sign
 #. odoo-python
@@ -3446,7 +3832,7 @@ msgstr "Il calcolo si basa sul sito web"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid ""
 "The contact of %(role)s has been changed from %(old_partner)s to "
 "%(new_partner)s."
@@ -3463,27 +3849,14 @@ msgstr "Il documento"
 #. module: sign
 #. odoo-python
 #: code:addons/sign/models/sign_request.py:0
+msgid "The document %(template_name)s has been rejected by %(partner_name)s"
+msgstr "Il documento %(template_name)s è stato rifiutato da %(partner_name)s"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request.py:0
 msgid "The document %s has been fully signed."
 msgstr "Il documento %s è stato completamente firmato."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "The document (%s) has been rejected by one of the signers"
-msgstr "Il documento (%s) è stato rifiutato da uno dei firmatari"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
-msgid "The document has been refused"
-msgstr "Il documento è stato rifiutato"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "The document has been signed by a signer and cannot be edited"
-msgstr ""
-"Il documento è stato firmata dal firmatario e non può essere modificato"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -3501,9 +3874,9 @@ msgid ""
 "that signature values or the underlying PDF document may have been modified "
 "after the fact."
 msgstr ""
-"L'integrità della cronologia del documento non può essere verificata. Questo"
-" potrebbe significare che i valori della firma o il documento PDF "
-"sottostante potrebbero essere stati modificati a posteriori."
+"Impossibile verificare l'integrità della cronologia del documento. Ciò può "
+"significare che i valori di firma o il documento PDF sottostante potrebbero "
+"essere stati modificati a posteriori."
 
 #. module: sign
 #. odoo-python
@@ -3523,13 +3896,19 @@ msgstr "L'e-mail è stata inviata ai contatti in copia: %(contacts)s"
 
 #. module: sign
 #. odoo-python
+#: code:addons/sign/models/sign_request_item.py:0
+msgid "The public user must identify itself for the refusal."
+msgstr "L'utente pubblico deve autenticarsi per rifiutare."
+
+#. module: sign
+#. odoo-python
 #: code:addons/sign/controllers/terms.py:0
 msgid "The requested page is invalid, or doesn't exist anymore."
 msgstr "La pagina richiesta non è valida o non esiste più."
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/models/sign_item_role.py:0
 msgid "The role %s is required by the Sign application and cannot be deleted."
 msgstr "Il ruolo %s è richiestoo dall'app Firma e non può essere eliminato."
 
@@ -3541,19 +3920,44 @@ msgstr "La richiesta di firma non è stata firmata completamente"
 
 #. module: sign
 #. odoo-python
+#: code:addons/sign/wizard/sign_request_share.py:0
+msgid "The sign request validity cannot be set in the past."
+msgstr ""
+"La validità della richiesta di firma non può essere impostata nel passato."
+
+#. module: sign
+#. odoo-python
 #: code:addons/sign/controllers/main.py:0
-msgid "The signature has been canceled by %(partner)s(%(role)s)"
-msgstr "La firma è stata annullata da %(partner)s(%(role)s)"
+msgid "The signature has been canceled by %(partner)s (%(role)s)"
+msgstr "La firma è stata annullata da %(partner)s (%(role)s)"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "The signature has been refused by %(partner)s(%(role)s)"
-msgstr "La firma è stata rifiutata da %(partner)s(%(role)s)"
+#: code:addons/sign/controllers/main.py:0
+msgid "The signature has been canceled by %(partner)s with email (%(email)s)"
+msgstr ""
+"La firma è stata annullata da %(partner)s con indirizzo e-mail (%(email)s)"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
+msgid ""
+"The signature has been refused by %(name)s with email (%(email)s), refusal "
+"reason:"
+msgstr ""
+"La firma è stata rifiutata da %(name)s con indirizzo e-mail (%(email)s), "
+"motivo rifiuto:"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request_item.py:0
+msgid ""
+"The signature has been refused by %(partner)s (%(role)s), refusal reason:"
+msgstr "La firma è stata rifiutata da %(partner)s (%(role)s), motivo rifiuto:"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "The signature mail has been sent to: "
 msgstr "L'e-mail di firma è stata inviata a:"
 
@@ -3563,30 +3967,10 @@ msgid "The signature mail has been sent."
 msgstr "La mail di firma è stata inviata."
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
-msgid "The signature request has been cancelled"
-msgstr "La richiesta di firma è stata annullata"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "The signature request has been edited by: %s."
-msgstr "La firma richiesta è stata appena modificata da: %s."
-
-#. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
 msgid "The template doesn't exist anymore."
 msgstr "Il modello non esiste più."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/wizard/sign_duplicate_template_with_pdf.py:0
-msgid ""
-"The template has more pages than the current file, it can't be applied."
-msgstr ""
-"Il modello presenta più pagine rispetto al file attuale, non può essere "
-"applicato."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -3602,15 +3986,23 @@ msgstr ""
 "firmata) = totale pagine. Presumiamo che una pagina pesi 0,005 kilogrammi."
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/wizard/sign_duplicate_template_with_pdf.py:0
-msgid "The uploaded file is not a valid PDF. Please upload a valid PDF file."
-msgstr "Il file caricato non è un PDF valido. Carica un file PDF valido,"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/template_alert_dialog/template_alert_dialog.xml:0
+msgid "The uploaded files cannot be read, they may be corrupted or encrypted."
+msgstr ""
+"I file caricati non possono essere letti, potrebbero essere corrotti o "
+"crittografati."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
 msgid "There are no signatures request."
 msgstr "Non sono presenti richieste di firma."
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "There are no values in selection field."
+msgstr "Non ci sono valori nel campo di selezione."
 
 #. module: sign
 #. odoo-javascript
@@ -3620,7 +4012,7 @@ msgstr "Ci sono altri documenti in attesa della tua firma:"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_document.py:0
 msgid ""
 "There was an issue downloading your document. Please contact an "
 "administrator."
@@ -3639,20 +4031,13 @@ msgstr ""
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/template_alert_dialog/template_alert_dialog.xml:0
-msgid "These files cannot be read, they may be corrupted or encrypted."
-msgstr ""
-"I file non possono essere letti, potrebbero essere corrotti o crittografati."
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/template_alert_dialog/template_alert_dialog.xml:0
-msgid "They will be removed from the uploaded files"
-msgstr "Verrano eliminati dai file caricati"
+#: code:addons/sign/static/src/backend_components/sign_template/sign_save_template_dialog.xml:0
+msgid "This document has been used"
+msgstr "Il documento è stato utilizzato"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This function can only be called with sudo."
 msgstr "Questa funzione può essere richiamata solo con sudo."
 
@@ -3660,7 +4045,7 @@ msgstr "Questa funzione può essere richiamata solo con sudo."
 #: model:ir.model.fields,help:sign.field_sign_request__reference
 #: model:ir.model.fields,help:sign.field_sign_request_item__reference
 msgid "This is how the document will be named in the mail"
-msgstr "Questo è il nome che il documento avrà nella mail"
+msgstr "Come verrà nominato il documento nella e-mail"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_expired
@@ -3681,25 +4066,25 @@ msgstr "La richiesta di firma non può essere firmata"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This sign request is not valid anymore"
 msgstr "La richiesta di firma non è più valida"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This sign request item cannot be filled"
 msgstr "L'elemento della richiesta di firma non può essere completato"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This sign request item cannot be refused"
 msgstr "L'elemento della richiesta di firma non può essere rifiutato"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This sign request item cannot be signed"
 msgstr "L'elemento della richiesta di firma non può essere firmato"
 
@@ -3715,13 +4100,13 @@ msgstr ""
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_type__tip
 msgid "Tip"
-msgstr "Consiglio"
+msgstr "Suggerimento"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_request__state__sent
 #: model:ir.model.fields.selection,name:sign.selection__sign_request_item__state__sent
 msgid "To Sign"
-msgstr "Da Firmare"
+msgstr "Da firmare"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -3745,7 +4130,6 @@ msgid "Transaction"
 msgstr "Operazione"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
 #: model_terms:ir.ui.view,arch_db:sign.deleted_sign_request
 msgid "Try Odoo Sign"
 msgstr "Prova Odoo Firma"
@@ -3818,9 +4202,25 @@ msgid "Unique Code via SMS"
 msgstr "Codice unico via SMS"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
+msgid "Unknown Partner"
+msgstr "Partner sconosciuto"
+
+#. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__update
 msgid "Update"
 msgstr "Aggiorna"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid "Update Terms"
+msgstr "Aggiorna termini"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/res_config_settings.py:0
+msgid "Update Terms & Conditions"
+msgstr "Aggiorna Termini & Condizioni"
 
 #. module: sign
 #. odoo-javascript
@@ -3835,16 +4235,12 @@ msgid "Upload PDF"
 msgstr "Carica PDF"
 
 #. module: sign
+#. odoo-javascript
 #. odoo-python
 #: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/static/src/views/common.xml:0
 msgid "Upload a PDF"
 msgstr "Carica un PDF"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/views/common.xml:0
-msgid "Upload a PDF & Sign"
-msgstr "Carica PDF e firma"
 
 #. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_all_request_action
@@ -3870,19 +4266,15 @@ msgid "Upload a pdf that you want to sign directly"
 msgstr "Carica un pdf che vuoi firmare direttamente"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Use Layout"
-msgstr "Usa layout"
+#. odoo-javascript
+#: code:addons/sign/static/src/views/common.xml:0
+msgid "Upload documents"
+msgstr "Carica documenti"
 
 #. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_template_tag_action
 msgid "Use Tags to manage your Sign Templates and Sign Requests"
 msgstr "Utilizza i tag per gestire i modelli dell'app Firma e le richieste"
-
-#. module: sign
-#: model:ir.actions.act_window,name:sign.action_sign_duplicate_template_with_pdf
-msgid "Use the layout of fields on a new PDF"
-msgstr "Utilizza il layout dei campi in un nuovo PDF"
 
 #. module: sign
 #: model:ir.model,name:sign.model_res_users
@@ -3903,32 +4295,25 @@ msgstr "Utente: modelli privati"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__validity
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__validity
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__validity
 msgid "Valid Until"
 msgstr "Valido fino al"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
-msgid "Validate"
-msgstr "Valida"
-
-#. module: sign
-#. odoo-javascript
 #: code:addons/sign/static/src/dialogs/public_signer_dialog.xml:0
 msgid "Validate & Send"
-msgstr "Valida e invia"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/edit_while_signing_signable_pdf_iframe.js:0
-msgid "Validate & the next signatory is “%s”"
-msgstr "Convalida e il prossimo firmatario è “%s”"
+msgstr "Convalida e invia"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign._doc_sign
-msgid "Validate &amp; Send Completed Document"
-msgstr "Valida &amp; invia il documento completato"
+msgid ""
+"Validate <span class=\"o_sign_validate_text\"> &amp; Send Completed "
+"Document</span>"
+msgstr ""
+"Convalida <span class=\"o_sign_validate_text\">e invia documento "
+"completo</span>"
 
 #. module: sign
 #. odoo-javascript
@@ -3937,6 +4322,8 @@ msgid "Validation Code"
 msgstr "Codice di convalida"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__sign_item_value_ids
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__value
 msgid "Value"
@@ -3954,9 +4341,14 @@ msgid "Verify"
 msgstr "Verifica"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
+msgid "View"
+msgstr "Visualizza"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 msgid "View Document"
-msgstr "Visualizza il documento"
+msgstr "Vedi documento"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_refused
@@ -3986,9 +4378,8 @@ msgstr "In attesa di altre persone"
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
 msgid "Warning"
-msgstr "Attenzione"
+msgstr "Avviso"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_container
@@ -4030,17 +4421,17 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/next_direct_sign_dialog.xml:0
 msgid "We will send you this document by email once everyone has signed."
-msgstr "Ti manderemo questo documento via email una volta firmato da tutti."
+msgstr "Quando tutti avranno firmato invieremo il documento via e-mail."
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 msgid ""
-"We'll send an email to warn other contacts in copy & signers with the reason"
-" you provided."
+"We'll notify the sender, signer and copied contacts by email.\n"
+"                Your refusal reason will be included to keep things clear and transparent for everyone."
 msgstr ""
-"Invieremo un'e-mail con le ragioni che hai fornito per avvertire gli altri "
-"contatti in copia e i firmatari."
+"Invieremo una notifica via e-mail al mittente, al firmatario e ai contatti in copia.\n"
+"                La motivazione del rifiuto sarà inclusa per mantenere le cose chiare e trasparenti per tutti."
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__website_message_ids
@@ -4068,12 +4459,6 @@ msgid "What about those conversions I see?"
 msgstr "E le conversioni che vedo?"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
-msgid "Why do you refuse to sign this document?"
-msgstr "Perché rifiuta di firmare questo documento?"
-
-#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item__width
 msgid "Width"
 msgstr "Larghezza"
@@ -4087,18 +4472,18 @@ msgstr "Legno"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 msgid "Write email or search contact..."
-msgstr "Inserisci l'indirizzo mail o cerca tra i contatti..."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/controllers/main.py:0
-msgid "Wrong password"
-msgstr "Password sbagliata"
+msgstr "Scrivi e-mail o cerca contatto..."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "XYZ123456"
 msgstr "XYZ123456"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "Yes"
+msgstr "Sì"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.deleted_sign_request
@@ -4108,12 +4493,6 @@ msgid ""
 msgstr ""
 "Puoi contattare la persona che ti ha invitato a firmare il documento via "
 "e-mail, per chiedere aiuto."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "You can only add new items for the current role"
-msgstr "È possibile aggiunger nuovi elementi solo per il ruolo attuale"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_expired
@@ -4126,23 +4505,13 @@ msgstr ""
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
-msgid ""
-"You can't delete a template for which signature requests exist but you can "
-"archive it instead."
-msgstr ""
-"Non puoi cancellare un template per cui esistono richieste di firma, ma "
-"piuttosto puoi archiviarlo."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "You cannot reassign this signatory"
 msgstr "Non è possibile riassegnare questo firmatario"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/wizard/sign_request_share.py:0
 msgid ""
 "You cannot share this document by link, because it has fields to be filled "
 "by different roles. Use Send button instead."
@@ -4180,7 +4549,7 @@ msgstr ""
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "You need to define a signatory"
 msgstr "È necessario definire un firmatario"
 
@@ -4197,11 +4566,6 @@ msgid "You will get the signed document by email."
 msgstr "Riceverai il documento firmato via e-mail."
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
-msgid "You won't receive any notification for this signature request anymore."
-msgstr "Non riceverai più notifiche per questa richiesta di firma."
-
-#. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_all_request_action
 #: model_terms:ir.actions.act_window,help:sign.sign_request_action
 #: model_terms:ir.actions.act_window,help:sign.sign_template_action
@@ -4210,37 +4574,31 @@ msgstr ""
 "Con un clic in più è possibile automatizzare il tuo processo di firma!"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
-msgid "Your Information"
-msgstr "Le tue informazioni"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+msgid ""
+"Your changes will be discarded. Would you like to save them as a template?"
+msgstr "Le modifiche verranno annullate. Vuoi comunque salvarle come modello?"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "Your confirmation code is %s"
-msgstr "Il tuo codice di conferma è %s"
+msgstr "Il codice di conferma è %s"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/public_signer_dialog.xml:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 msgid "Your email"
-msgstr "La tua mail"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/encrypted_dialog.xml:0
-msgid ""
-"Your file is encrypted, PDF's password is required to generate final "
-"document. The final document will be encrypted with the same password."
-msgstr ""
-"Il tuo file è criptato, la password del PDF è necessaria per generare il "
-"documento finale. Il documento finale sarà criptato con la stessa password."
+msgstr "E-mail"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/public_signer_dialog.xml:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 msgid "Your name"
-msgstr "Il tuo nome"
+msgstr "Nome"
 
 #. module: sign
 #. odoo-javascript
@@ -4250,7 +4608,7 @@ msgstr "La firma è stata salvata. Il firmatario successivo è"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
+#: code:addons/sign/static/src/components/sign_request/document_signable.js:0
 msgid ""
 "Your signature was not submitted. Ensure the SMS validation code is correct."
 msgstr ""
@@ -4258,15 +4616,15 @@ msgstr ""
 "SMS sia corretto."
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/views/helper/sign_action_helper.xml:0
+msgid "a file"
+msgstr "un file"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_completed
 msgid "and"
 msgstr "e"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/template_alert_dialog/template_alert_dialog.xml:0
-msgid "and the process will continue"
-msgstr "e il processo continuerà"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -4311,6 +4669,11 @@ msgid "demo@email.com"
 msgstr "demo@email.com"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
+msgid "document1.pdf, document2.pdf"
+msgstr "document1.pdf, document2.pdf"
+
+#. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/sms_signer_dialog.xml:0
 msgid "e.g. +1 415 555 0100"
@@ -4325,7 +4688,7 @@ msgstr "es. 314159"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_form
 msgid "e.g. Employee"
-msgstr "es. dipendente"
+msgstr "es. Dipendente"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
@@ -4349,7 +4712,7 @@ msgstr "ogni"
 #: model:sign.item.type,tip:sign.sign_item_type_radio
 #: model:sign.item.type,tip:sign.sign_item_type_text
 msgid "fill in"
-msgstr "Inserisci"
+msgstr "compila"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_completed
@@ -4384,9 +4747,15 @@ msgid "https://c.environmentalpaper.org/"
 msgstr "https://c.environmentalpaper.org/"
 
 #. module: sign
+#. odoo-python
+#: code:addons/sign/models/res_partner.py:0
+msgid "id"
+msgstr "ID"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "ip"
-msgstr "ip"
+msgstr "IP"
 
 #. module: sign
 #. odoo-javascript
@@ -4439,13 +4808,19 @@ msgstr "litri di carburante auto"
 #. module: sign
 #: model:sign.item.type,tip:sign.sign_item_type_initial
 msgid "mark it"
-msgstr "segnalo"
+msgstr "contrassegna"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "mode."
+msgstr "."
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
 msgid "next"
-msgstr "prossimo"
+msgstr "successivo"
 
 #. module: sign
 #. odoo-javascript
@@ -4478,14 +4853,9 @@ msgid "showers"
 msgstr "docce"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
-msgid "sign"
-msgstr "sign"
-
-#. module: sign
 #: model:sign.item.type,tip:sign.sign_item_type_signature
 msgid "sign it"
-msgstr "firmalo"
+msgstr "firma"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__message
@@ -4498,15 +4868,16 @@ msgid "sign.message_cc"
 msgstr "sign.message_cc"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
-msgid "tags"
-msgstr "etichette"
-
-#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_el
 #: model_terms:ir.ui.view,arch_db:sign.green_report_el_pdf
 msgid "that's"
 msgstr "Equivalente a"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_save_template_dialog.xml:0
+msgid "times."
+msgstr "volte."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_request
@@ -4531,9 +4902,20 @@ msgid "trees"
 msgstr "alberi"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "visualization"
+msgstr "visualizzazione"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
 msgid "we've got a list of consumption for 1000 kg of paper usage."
 msgstr "abbiamo un elenco di consumi per 1000 kg di carta utilizzata."
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_refused
+msgid "with the following reason"
+msgstr "con il seguente motivo"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_not_enough_credits
@@ -4548,11 +4930,5 @@ msgstr "te"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_el
 #: model_terms:ir.ui.view,arch_db:sign.green_report_el_pdf
-msgid "{{green_report_el_title}}"
-msgstr "{{green_report_el_title}}"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.green_report_el
-#: model_terms:ir.ui.view,arch_db:sign.green_report_el_pdf
-msgid "{{green_report_el_title}} Summary"
-msgstr "{{green_report_el_title}} Indice"
+msgid "{{0}} Summary"
+msgstr "{{0}} Riassunto"

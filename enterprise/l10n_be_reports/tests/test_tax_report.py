@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import Command
+from odoo import Command, fields
 from odoo.addons.account_reports.tests.account_sales_report_common import AccountSalesReportCommon
 from odoo.tests import tagged
 from freezegun import freeze_time
+from unittest.mock import patch
 
 
 @tagged('post_install_l10n', 'post_install', '-at_install')
@@ -120,7 +121,7 @@ class BelgiumTaxReportTest(AccountSalesReportCommon):
             'zip': '1000',
             'country_id': self.env.ref('base.be').id,
             'vat': 'BE0477472701',
-            'mobile': '+32470123456',
+            'phone': '+32470123456',
             'email': 'info@fidu.be',
         })
         company.account_representative_id = representative.id

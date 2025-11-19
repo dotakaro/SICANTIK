@@ -1,20 +1,18 @@
-/** @odoo-module **/
-
-import { KanbanRenderer } from '@web/views/kanban/kanban_renderer';
-import { ManualBarcodeScanner } from "../components/manual_barcode";
+import { KanbanRenderer } from "@web/views/kanban/kanban_renderer";
+import { ManualBarcodeScanner } from "@barcodes/components/manual_barcode";
 import { _t } from "@web/core/l10n/translation";
 import { user } from "@web/core/user";
-import { useService } from '@web/core/utils/hooks';
+import { useService } from "@web/core/utils/hooks";
 import { markup, onWillStart } from "@odoo/owl";
 
 export class StockBarcodeKanbanRenderer extends KanbanRenderer {
     static template = "stock_barcode.KanbanRenderer";
     setup() {
         super.setup(...arguments);
-        this.barcodeService = useService('barcode');
+        this.barcodeService = useService("barcode");
         this.dialogService = useService("dialog");
         this.resModel = this.props.list.model.config.resModel;
-        this.displayTransferProtip = this.resModel === 'stock.picking';
+        this.displayTransferProtip = this.resModel === "stock.picking";
         onWillStart(this.onWillStart);
     }
 
@@ -29,8 +27,10 @@ export class StockBarcodeKanbanRenderer extends KanbanRenderer {
     }
 
     async onWillStart() {
-        this.packageEnabled = await user.hasGroup('stock.group_tracking_lot');
-        this.trackingEnabled = await user.hasGroup('stock.group_production_lot');
+        const groups = ["stock.group_tracking_lot", "stock.group_production_lot"];
+        const hasGroups = await Promise.all(groups.map((g) => user.hasGroup(g)));
+        this.packageEnabled = hasGroups[0];
+        this.trackingEnabled = hasGroups[1];
     }
 
     get transferTip() {

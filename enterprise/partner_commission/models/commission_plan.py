@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import _, api, fields, models, tools
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
@@ -22,10 +22,12 @@ class CommissionPlan(models.Model):
 
     def _match_rules(self, product, template, pricelist):
         self.ensure_one()
-
-        rule = self.env['commission.rule'].search([
+        parent_path = product.categ_id.parent_path
+        ancestor_ids = parent_path and parent_path.split('/') or []
+        ancestor_ids = [int(cat_id) for cat_id in ancestor_ids if cat_id]
+        rules = self.env['commission.rule'].search([
             ('plan_id', '=', self.id),
-            ('category_id', '=', product.categ_id.id),
+            ('category_id', 'in', ancestor_ids),
             '|',
             ('product_id', '=', product.id),
             ('product_id', '=', False),
@@ -35,16 +37,20 @@ class CommissionPlan(models.Model):
             '|',
             ('pricelist_id', '=', pricelist),
             ('pricelist_id', '=', False),
-        ], limit=1, order='sequence')
+        ], order='sequence')
 
-        return rule
+        for cat_id in reversed(ancestor_ids):
+            rule = rules.filtered(lambda r: r.category_id.id == cat_id)
+            if rule:
+                return rule[0]
+        return self.env['commission.rule']
 
 
 class CommissionRule(models.Model):
     _name = 'commission.rule'
     _description = 'Commission rules management.'
 
-    plan_id = fields.Many2one('commission.plan', 'Commission Plan', required=True, ondelete='cascade')
+    plan_id = fields.Many2one('commission.plan', 'Commission Plan', required=True, index=True, ondelete='cascade')
     category_id = fields.Many2one('product.category', 'Product Category', required=True, ondelete='cascade')
     product_id = fields.Many2one(
         'product.product',
@@ -60,9 +66,13 @@ class CommissionRule(models.Model):
     max_commission = fields.Float('Max Commission', help="Maximum amount, specified in the currency of the pricelist, if given.")
     sequence = fields.Integer(string='Sequence')
 
-    _sql_constraints = [
-        ('check_rate', 'CHECK(rate >= 0 AND rate <= 100)', 'Rate should be between 0 and 100.'),
-    ]
+    _check_rate = models.Constraint(
+        'CHECK(rate >= 0 AND rate <= 100)',
+        'Rate should be between 0 and 100.',
+    )
+    _check_combination_unique_index = models.UniqueIndex(
+        "(plan_id, category_id, COALESCE(product_id, -1), COALESCE(template_id, -1), COALESCE(pricelist_id, -1))"
+    )
 
     @api.constrains('product_id', 'category_id')
     def _check_product_category(self):
@@ -74,14 +84,3 @@ class CommissionRule(models.Model):
     def _onchange_is_capped(self):
         if not self.is_capped:
             self.max_commission = 0
-
-    def _auto_init(self):
-        result = super(CommissionRule, self)._auto_init()
-        # Unique index to handle product_id, template_id, pricelist_id even if those are null (not possible using a constraint).
-        tools.create_unique_index(
-            self._cr,
-            'commission_rule_check_combination_unique_index',
-            self._table,
-            ['plan_id', 'category_id', 'COALESCE(product_id, -1)', 'COALESCE(template_id, -1)', 'COALESCE(pricelist_id, -1)']
-        )
-        return result

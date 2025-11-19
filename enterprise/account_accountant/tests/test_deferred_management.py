@@ -203,20 +203,24 @@ class TestDeferredManagement(AccountTestInvoicingCommon):
     @freeze_time('2023-03-15')
     def test_deferred_invoice_reset_to_draft_with_audit_trail(self):
         """
-        Test that the deferred entries are deleted when the invoice is reset to draft.
+        Test that the deferred entries in draft are deleted when the invoice is reset to draft
+        and the posted deferred entries are cancelled.
         """
-        invoice = self.create_invoice('out_invoice', [(self.revenue_accounts[0], 1680, '2023-03-1', '2023-04-30')], date='2023-03-15')
+        invoice = self.create_invoice('out_invoice', [(self.revenue_accounts[0], 1680, '2023-02-01', '2023-04-30')], date='2023-03-15')
+        posted_deferred_entries = invoice.deferred_move_ids.filtered(lambda move: move.state == 'posted')
         draft_deferred_move_ids = invoice.deferred_move_ids.filtered(lambda move: move.state =="draft")
+        self.assertEqual(len(posted_deferred_entries), 2)
         self.assertEqual(len(draft_deferred_move_ids), 2)
 
-        # Set the company's audit trail to True
-        self.env.company.check_account_audit_trail = True
-
+        # Try with restricted mode
+        self.env.company.restrictive_audit_trail = True
         invoice.button_draft()
 
         # Assert that the draft moves no longer exist
         remaining_draft_moves = self.env['account.move'].search([('id', 'in', draft_deferred_move_ids.ids)])
         self.assertFalse(remaining_draft_moves)
+        # The posted deferred entries should be cancelled
+        self.assertEqual(len(posted_deferred_entries.filtered(lambda move: move.state == 'cancel')), 2)
 
     def assert_invoice_lines(self, move, expected_values, source_account, deferred_account):
         deferred_moves = move.deferred_move_ids.sorted('date')
@@ -518,7 +522,7 @@ class TestDeferredManagement(AccountTestInvoicingCommon):
         move._post()
         self.assertFalse(move.deferred_move_ids)
 
-        with freeze_time(tomorrow):
+        with freeze_time(tomorrow), self.enter_registry_test_mode():
             self.env.ref('account.ir_cron_auto_post_draft_entry').method_direct_trigger()
             self.assertEqual(move.state, 'posted')
             self.assertTrue(move.deferred_move_ids)
@@ -655,3 +659,98 @@ class TestDeferredManagement(AccountTestInvoicingCommon):
             (self.expense_accounts[0], 1000, '2025-05-10', '2025-05-25')
         ], date='2025-04-11')
         self.assertEqual(len(move.deferred_move_ids), 4)
+
+    def test_case_1_deferred_entries_computations_period_across_months(self):
+        """
+        Tests deferred expense recognition when the invoice is dated in a month
+        after the service period has already begun.
+        Corresponds to Case from Row 6 of the user's image.
+
+        - Service Period: June 25, 2024 -> July 7, 2024 (13 days)
+        - Invoice Date: July 1, 2024
+        - Expected: The system should correctly create a back-dated expense entry for
+          the 6 days in June (dated June 30) and an entry for the 7 days in July
+          (dated July 7).
+        """
+        invoice_date = '2024-07-01'
+        invoice_line_data = [self.expense_accounts[0], 1300, '2024-06-25', '2024-07-07']
+
+        expected_line_values = [
+            ('2024-06-30',       600,     0,      0,      600),
+            (invoice_date,         0,  1300,   1300,        0),
+            ('2024-07-07',       700,     0,      0,      700),
+        ]
+
+        move = self.create_invoice(
+            'in_invoice', [invoice_line_data], date=invoice_date
+        )
+
+        self.assert_invoice_lines(
+            move,
+            expected_line_values,
+            self.expense_accounts[0],
+            self.company_data['default_account_deferred_expense']
+        )
+
+    def test_case_2_deferred_entries_computations_period_across_months(self):
+        """
+           Tests deferred expense recognition when the invoice is dated within the
+           service period, which spans across two months.
+           Corresponds to Case from Row 7 of the user's image.
+
+           - Service Period: June 25, 2024 -> July 7, 2024 (13 days)
+           - Invoice Date: June 29, 2024
+           - Expected: The system should correctly prorate the expense with 6 days
+             in June and 7 days in July.
+        """
+        invoice_date = '2024-06-29'
+        invoice_line_data = [self.expense_accounts[0], 1300, '2024-06-25', '2024-07-07']
+
+        expected_line_values = [
+            (invoice_date,         0,  1300,   1300,        0),
+            ('2024-06-30',       600,     0,      0,      600),
+            ('2024-07-07',       700,     0,      0,     700),
+        ]
+
+        move = self.create_invoice(
+            'in_invoice', [invoice_line_data], date=invoice_date
+        )
+
+        self.assert_invoice_lines(
+            move,
+            expected_line_values,
+            self.expense_accounts[0],
+            self.company_data['default_account_deferred_expense']
+        )
+
+    def test_case_3_deferred_entries_computations_period_across_months(self):
+        """
+        Tests deferred expense recognition for a longer service period that spans
+        across two months, with the invoice dated within the first month.
+        Corresponds to Case from Row 8 in the user's image.
+
+        - Service Period: June 25, 2024 -> July 23, 2024 (29 days)
+        - Invoice Date: June 29, 2024
+        - Expected: The system should correctly split the expense between June
+          (6/29 of total) and July (23/29 of total).
+        """
+        invoice_date = '2024-06-29'
+        # Using 2900 for the amount to keep the numbers clean
+        invoice_line_data = [self.expense_accounts[0], 2900, '2024-06-25', '2024-07-23']
+
+        expected_line_values = [
+            (invoice_date,         0,  2900,   2900,        0),
+            ('2024-06-30',       600,     0,      0,      600),
+            ('2024-07-23',      2300,     0,      0,     2300),
+        ]
+
+        move = self.create_invoice(
+            'in_invoice', [invoice_line_data], date=invoice_date
+        )
+
+        self.assert_invoice_lines(
+            move,
+            expected_line_values,
+            self.expense_accounts[0],
+            self.company_data['default_account_deferred_expense']
+        )

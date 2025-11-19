@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { renderToString } from "@web/core/utils/render";
@@ -52,14 +50,13 @@ export class PDFIframe {
         }
     }
 
-    start() {
+    async start() {
         this.signItems = this.getSignItems();
-        this.loadCustomCSS().then(() => {
+        await this.loadCustomCSS().then(() => {
             this.pageCount = this.root.querySelectorAll(".page").length;
             this.clearNativePDFViewerButtons();
             this.startPinchService();
             this.preRender();
-            this.renderSidebar();
             this.addCanvasLayer();
             this.renderSignItems();
             this.postRender();
@@ -78,24 +75,6 @@ export class PDFIframe {
     }
 
     clearNativePDFViewerButtons() {
-        const selectors = [
-            "#pageRotateCw",
-            "#pageRotateCcw",
-            "#openFile",
-            "#presentationMode",
-            "#viewBookmark",
-            "#print",
-            "#download",
-            "#secondaryOpenFile",
-            "#secondaryPresentationMode",
-            "#secondaryViewBookmark",
-            "#secondaryPrint",
-            "#secondaryDownload",
-        ];
-        const elements = this.root.querySelectorAll(selectors.join(", "));
-        elements.forEach((element) => {
-            element.style.display = "none";
-        });
         this.root.querySelector("#lastPage").nextElementSibling.style.display = "none";
         // prevent password from being autocompleted in search input
         this.root.querySelector("#findInput").value = "";
@@ -123,12 +102,19 @@ export class PDFIframe {
         layer.width = viewer.offsetWidth / scale;
         layer.height = viewer.offsetHeight / scale;
         viewer.appendChild(layer);
-    }
 
-    /**
-     * Used when signing a sign request
-     */
-    renderSidebar() {}
+        // Add ResizeObserver to update canvas dimensions when the viewer is resized
+        const resizeObserver = new ResizeObserver(() => {
+            const newScale = this.getCanvasScale();
+            layer.style.width = viewer.offsetWidth + "px";
+            layer.style.height = viewer.offsetHeight + "px";
+            layer.width = viewer.offsetWidth / newScale;
+            layer.height = viewer.offsetHeight / newScale;
+            this.renderAllConnectingLines();
+        });
+        resizeObserver.observe(viewer);
+        this.cleanupFns.push(() => resizeObserver.disconnect());
+    }
 
     renderSignItems() {
         for (const page in this.signItems) {
@@ -177,6 +163,7 @@ export class PDFIframe {
         target.insertAdjacentHTML("beforeend", signItemElement);
         const signItem = target.lastChild;
         signItem.classList.add("d-none");
+        signItem.setAttribute("tabindex", "0");
         this.enableCustom({ el: signItem, data: signItemData });
         return signItem;
     }
@@ -212,6 +199,7 @@ export class PDFIframe {
             (this.readonly && `${signItem.name}\n${signItem.responsible_name}`) ||
             "";
         return Object.assign(signItem, {
+            constant: signItem.constant ?? false,
             readonly: signItem.readonly ?? readonly,
             editMode: signItem.editMode ?? false,
             required: Boolean(signItem.required),
@@ -220,6 +208,7 @@ export class PDFIframe {
             placeholder: placeholder,
             classes: `
                 ${isCurrentRole ? "o_sign_sign_item_default" : ""}
+                ${signItem.constant ? "o_sign_sign_item_constant": ""}
                 ${signItem.required && isCurrentRole ? "o_sign_sign_item_required" : ""}
                 ${readonly && isCurrentRole ? "o_readonly_mode" : ""}
                 ${this.readonly ? "o_sign_sign_item_pdfview" : ""}`,
@@ -303,9 +292,9 @@ export class PDFIframe {
     }
 
     setInitialZoom() {
-        let button = this.root.querySelector("button#zoomIn");
+        let button = this.root.querySelector("button#zoomInButton");
         if (!this.env.isSmall) {
-            button = this.root.querySelector("button#zoomOut");
+            button = this.root.querySelector("button#zoomOutButton");
             button.click();
         }
         button.click();
@@ -318,29 +307,50 @@ export class PDFIframe {
 
     /**
      * Creates rendering context for the sign item based on the sign item type
-     * @param {number} typeId
+     * @param {number, number} {itemTypeId, roleId}
      * @returns {Object} context
      */
-    createSignItemDataFromType(typeId) {
-        const type = this.signItemTypesById[typeId];
+    createSignItemDataFromType({ itemTypeId, roleId, roleName }) {
+        const type = this.signItemTypesById[itemTypeId];
+        const alignment = this.getAlignmentByItemType(type.item_type);
         return {
+            constant: false,
             required: true,
             editMode: true,
             readonly: true,
             updated: true,
-            responsible: this.currentRole,
+            responsible: Number(roleId),
+            roleName: roleName,
             option_ids: [],
             options: [],
             name: type.name,
             width: type.default_width,
             height: type.default_height,
-            alignment: "center",
+            alignment: alignment,
             type: type.item_type,
             placeholder: type.placeholder,
-            classes: `o_color_responsible_${this.signRolesById[this.currentRole].color}`,
-            style: `width: ${type.default_width * 100}%; height: ${type.default_height * 100}%;`,
+            classes: `o_color_responsible_${this.roleColors[roleId]}`,
+            style: `
+                width: ${type.default_width * 100}%;
+                height: ${type.default_height * 100}%;
+                text-align: ${alignment};
+            `,
             type_id: [type.id],
+            icon: type.icon || "",
+            document_id: this.documentId,
+            just_dropped: true,
         };
+    }
+
+    /**
+     * Returns specific alignment according to the sign item type.
+     * @param {String} type: sign item type.
+     * @returns {String}: alignment for the sign item.
+     */
+    getAlignmentByItemType(type) {
+        if (type == "radio")
+            return "center";
+        return "left";
     }
 
     /**
@@ -359,10 +369,12 @@ export class PDFIframe {
             signItems[currentPage] = {};
         }
         for (const signItem of this.props.signItems) {
-            signItems[signItem.page][signItem.id] = {
-                data: signItem,
-                el: null,
-            };
+            if (signItems[signItem.page]) {
+                signItems[signItem.page][signItem.id] = {
+                    data: signItem,
+                    el: null,
+                };
+            }
         }
         return signItems;
     }
@@ -392,5 +404,79 @@ export class PDFIframe {
         const MAX_CANVAS_HEIGHT = 16384;
         const viewer_height = this.root.querySelector("#viewer").offsetHeight;
         return Math.ceil(viewer_height / MAX_CANVAS_HEIGHT);
+    }
+
+    /**
+     * Adjusts signature/initial size to fill the dimensions of the sign item box
+     * @param { String } data base64 image
+     * @param { HTMLElement } signatureItem
+     * @returns { Promise }
+     */
+    adjustSignatureSize(data, signatureItem) {
+        if (!data) {
+            return Promise.resolve(false);
+        }
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement("canvas");
+                if (
+                    !signatureItem.parentElement ||
+                    !signatureItem.parentElement.classList.contains("page")
+                ) {
+                    // checks if element is detached from pdf js
+                    this.refreshSignItems();
+                }
+                const { width: boxWidth, height: boxHeight } =
+                    signatureItem.getBoundingClientRect();
+                const imgHeight = img.height;
+                const imgWidth = img.width;
+                const ratioBoxWidthHeight = boxWidth / boxHeight;
+                const ratioImageWidthHeight = imgWidth / imgHeight;
+
+                const [canvasHeight, canvasWidth] =
+                    ratioBoxWidthHeight > ratioImageWidthHeight
+                        ? [imgHeight, imgHeight * ratioBoxWidthHeight]
+                        : [imgWidth / ratioBoxWidthHeight, imgWidth];
+
+                c.height = canvasHeight;
+                c.width = canvasWidth;
+
+                const ctx = c.getContext("2d");
+                const oldShadowColor = ctx.shadowColor;
+                ctx.shadowColor = "transparent";
+                ctx.drawImage(
+                    img,
+                    c.width / 2 - img.width / 2,
+                    c.height / 2 - img.height / 2,
+                    img.width,
+                    img.height
+                );
+                ctx.shadowColor = oldShadowColor;
+                resolve(c.toDataURL());
+            };
+            img.src = data;
+        });
+    }
+
+    fillItemWithSignature(signatureItem, image, frameData = false) {
+        signatureItem.dataset.signature = image;
+        signatureItem.replaceChildren();
+        const signHelperSpan = document.createElement("span");
+        signHelperSpan.classList.add("o_sign_helper");
+        signatureItem.append(signHelperSpan);
+        if (frameData && frameData.frame) {
+            signatureItem.dataset.frameHash = frameData.hash;
+            signatureItem.dataset.frame = frameData.frame;
+            const frameImage = document.createElement("img");
+            frameImage.src = frameData.frame;
+            frameImage.classList.add("o_sign_frame");
+            signatureItem.append(frameImage);
+        } else {
+            delete signatureItem.dataset.frame;
+        }
+        const signatureImage = document.createElement("img");
+        signatureImage.src = image;
+        signatureItem.append(signatureImage);
     }
 }

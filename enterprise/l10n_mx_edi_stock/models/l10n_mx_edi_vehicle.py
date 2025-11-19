@@ -3,7 +3,8 @@
 from odoo import api, models, fields, _
 from odoo.exceptions import ValidationError
 
-class Vehicle(models.Model):
+
+class L10n_Mx_EdiVehicle(models.Model):
     _name = 'l10n_mx_edi.vehicle'
     _description = 'MX EDI Vehicle'
     _rec_names_search = ['name', 'vehicle_licence']
@@ -133,7 +134,8 @@ class Vehicle(models.Model):
             if len(vehicle.trailer_ids) > 2:
                 raise ValidationError(_("A maximum of 2 trailers are allowed per vehicle"))
 
-class Figure(models.Model):
+
+class L10n_Mx_EdiFigure(models.Model):
     _name = 'l10n_mx_edi.figure'
     _description = 'MX EDI Vehicle Intermediary Figure'
 
@@ -153,14 +155,16 @@ class Figure(models.Model):
              "Propietario, Arrendador, Notificado)")
     part_ids = fields.Many2many('l10n_mx_edi.part', string='Parts')
 
-class Part(models.Model):
+
+class L10n_Mx_EdiPart(models.Model):
     _name = 'l10n_mx_edi.part'
     _description = 'MX EDI Intermediary Part'
 
     code = fields.Char(required=True)
     name = fields.Char(required=True)
 
-class Trailer(models.Model):
+
+class L10n_Mx_EdiTrailer(models.Model):
     _name = 'l10n_mx_edi.trailer'
     _description = 'MX EDI Vehicle Trailer'
 

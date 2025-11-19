@@ -3,15 +3,15 @@
 # 	* delivery_starshipit
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Junko Augias, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:44+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Junko Augias, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
@@ -19,12 +19,6 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid " after deleting the order on Starshipit"
-msgstr " Starshipitでオーダを削除後"
 
 #. module: delivery_starshipit
 #: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_delivery_carrier_form
@@ -56,7 +50,7 @@ msgstr ""
 #. module: delivery_starshipit
 #: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_shipping_method_starshipit
 msgid "Cancel"
-msgstr "取消"
+msgstr "キャンセル"
 
 #. module: delivery_starshipit
 #: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__package_carrier_type
@@ -117,7 +111,11 @@ msgid "Delivery Service"
 msgstr "配送サービス"
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -135,7 +133,11 @@ msgid "Error: this delivery method is not available for this order."
 msgstr "エラー:このオーダ用に配送方法は利用できません。"
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -188,7 +190,7 @@ msgid ""
 "Order %(order)s was sent to the carrier during label creation.As you are in a test environment, please make sure to cancel the order with your carrier directly.\n"
 "Manifest number: %(manifest_number)s"
 msgstr ""
-"ラベル作成時に配送業者にオーダ%(order)sが送信されました。テスト環境であるため、必ず配送業者に対して直接オーダを取消して下さい。\n"
+"ラベル作成時に配送業者にオーダ%(order)sが送信されました。テスト環境であるため、必ず配送業者に対して直接オーダをキャンセルして下さい。\n"
 "伝票番号 :%(manifest_number)s"
 
 #. module: delivery_starshipit
@@ -260,7 +262,7 @@ msgid ""
 "Return order %(order)s was sent to the carrier during label creation.As you are in a test environment, please make sure to cancel the order with your carrier directly.\n"
 "Manifest number: %(manifest_number)s"
 msgstr ""
-"ラベル作成時に配送業者に返品オーダ%(order)sが送信されました。テスト環境であるため、必ず配送業者に対して直接オーダを取消して下さい。\n"
+"ラベル作成時に配送業者に返品オーダ%(order)sが送信されました。テスト環境であるため、必ず配送業者に対して直接オーダをキャンセルして下さい。\n"
 "伝票番号 :%(manifest_number)s"
 
 #. module: delivery_starshipit
@@ -294,6 +296,14 @@ msgstr "サービスコード"
 #: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__starshipit_service_name
 msgid "Service Name"
 msgstr "サービス名"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Shipping Cost has been updated from Starshipit. The Sales Order can now be "
+"invoiced."
+msgstr "送料が Starshipit から更新されました。販売オーダは請求可能です。"
 
 #. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_delivery_carrier
@@ -349,6 +359,12 @@ msgid "Starshipit Parcel Reference"
 msgstr "Starshipit荷物番号"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit Price Update Cron: System Error fetching price: %s"
+msgstr "Starshipit 料金更新定期処理：価格取得中にシステムエラーが発生しました"
+
+#. module: delivery_starshipit
 #: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__starshipit_return_parcel_reference
 msgid "Starshipit Return Parcel Reference"
 msgstr "Starshipit返品荷物番号"
@@ -379,9 +395,57 @@ msgid "Starshipit returned an error: %(message)s"
 msgstr "Starshipitがエラーを返信しました: %(message)s"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Delivery cost re-evaluated on Sales Order based on updated exact"
+" price (%(final_carrier_price)s) from transfer %(picking_name)s."
+msgstr ""
+"Starshipit: 配送の最新価格  (%(final_carrier_price)s) "
+"に基づき、販売オーダの配送料%(picking_name)sが更新されました。"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s, but automatic sale order delivery cost re-"
+"evaluation failed: %(e_so)s"
+msgstr ""
+"Starshipit: 配送 %(picking_name)s の正確な送料は %(final_carrier_price)s "
+"になりましたが、販売オーダの配送料の自動再評価に失敗しました: %(e_so)s"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s. This sale order is already invoiced, please review "
+"if a manual adjustment to the invoice is needed."
+msgstr ""
+"Starshipit: "
+"配送%(picking_name)sの正確な送料が%(final_carrier_price)sに更新されました。この販売オーダはすでに請求済みのため、請求書に手動で修正が必要かご確認ください。"
+
+#. module: delivery_starshipit
+#: model:ir.actions.server,name:delivery_starshipit.ir_cron_starshipit_fetch_pending_prices_ir_actions_server
+msgid "Starshipit: Fetch Pending Shipping Prices"
+msgstr "Starshipit: 保留中の送料を取得"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit: Shipping Cost updated"
+msgstr "Starshipit: 送料が更新されました"
+
+#. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_stock_package_type
 msgid "Stock package type"
 msgstr "在庫梱包タイプ"
+
+#. module: delivery_starshipit
+#: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_picking_form_inherit_stock
+msgid "The Shipping Cost is being fetched in the background."
+msgstr "送料はバックグラウンドで取得されています。"
 
 #. module: delivery_starshipit
 #: model:ir.model.fields,help:delivery_starshipit.field_delivery_carrier__starshipit_carrier_code
@@ -389,6 +453,14 @@ msgid ""
 "The carrier on starshipit used by this carrier. The service code belongs to "
 "it."
 msgstr "この配送業者が使用するスStarshipitの配送業者。サービスコードはそれに属しています。"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"The exact price could not be retrieved. It will be updated by a scheduled "
+"action."
+msgstr "正確な価格を取得できませんでした。スケジュールされたアクションによって後で更新されます。"
 
 #. module: delivery_starshipit
 #. odoo-python
@@ -443,12 +515,6 @@ msgstr "利用可能な配送サービスはありません。配送先住所を
 #. module: delivery_starshipit
 #. odoo-python
 #: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid "There was an issue when creating the order, please try again"
-msgstr "オーダ作成時に問題が発生しました。再試行して下さい。"
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
 msgid "This action requires a Starshipit carrier."
 msgstr "このアクションにはStarshipit配送業者が必要です。"
 
@@ -462,4 +528,4 @@ msgstr "このアドレスは、Starshipitから利用可能なサービスを�
 #. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_stock_picking
 msgid "Transfer"
-msgstr "転送"
+msgstr "移動"

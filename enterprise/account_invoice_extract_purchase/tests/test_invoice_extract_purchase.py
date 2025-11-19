@@ -13,7 +13,7 @@ class TestInvoiceExtractPurchase(AccountTestInvoicingCommon, TestExtractMixin):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.env.user.groups_id |= cls.env.ref('base.group_system')
+        cls.env.user.group_ids |= cls.env.ref('base.group_system')
         cls.env.company.write({'account_purchase_tax_id': None})
 
         # Required for `price_total` to be visible in the view
@@ -64,28 +64,28 @@ class TestInvoiceExtractPurchase(AccountTestInvoicingCommon, TestExtractMixin):
                 'purchase_order': {'selected_values': [{'content': self.purchase_order.name}], 'candidates': []},
                 'invoice_lines': [
                     {
-                        'description': {'selected_value': {'content': 'Test 1'}},
-                        'unit_price': {'selected_value': {'content': 50}},
-                        'quantity': {'selected_value': {'content': 1}},
-                        'taxes': {'selected_values': [{'content': 0, 'amount_type': 'percent'}]},
-                        'subtotal': {'selected_value': {'content': 50}},
-                        'total': {'selected_value': {'content': 50}},
+                        'description': 'Test 1',
+                        'unit_price': 50,
+                        'quantity': 1,
+                        'taxes': [0],
+                        'subtotal': 50,
+                        'total': 50,
                     },
                     {
-                        'description': {'selected_value': {'content': 'Test 2'}},
-                        'unit_price': {'selected_value': {'content': 75}},
-                        'quantity': {'selected_value': {'content': 2}},
-                        'taxes': {'selected_values': [{'content': 0, 'amount_type': 'percent'}]},
-                        'subtotal': {'selected_value': {'content': 150}},
-                        'total': {'selected_value': {'content': 150}},
+                        'description': 'Test 2',
+                        'unit_price': 75,
+                        'quantity': 2,
+                        'taxes': [0],
+                        'subtotal': 150,
+                        'total': 150,
                     },
                     {
-                        'description': {'selected_value': {'content': 'Test 3'}},
-                        'unit_price': {'selected_value': {'content': 20}},
-                        'quantity': {'selected_value': {'content': 5}},
-                        'taxes': {'selected_values': [{'content': 0, 'amount_type': 'percent'}]},
-                        'subtotal': {'selected_value': {'content': 100}},
-                        'total': {'selected_value': {'content': 100}},
+                        'description': 'Test 3',
+                        'unit_price': 20,
+                        'quantity': 5,
+                        'taxes': [0],
+                        'subtotal': 100,
+                        'total': 100,
                     },
                 ],
             }],
@@ -178,7 +178,7 @@ class TestInvoiceExtractPurchase(AccountTestInvoicingCommon, TestExtractMixin):
         self.assertEqual(invoice.amount_untaxed, 300)
         self.assertEqual(invoice.amount_tax, 0)
         self.assertEqual(invoice.partner_id, self.vendor)
-        self.assertEqual(invoice.ref, 'INV1234')
+        self.assertEqual(invoice.ref, 'INV0001')
         self.assertEqual(invoice.invoice_line_ids.mapped('product_id'), self.product1 | self.product2 | self.product3)
 
     def test_no_purchase_extraction_when_bill_lines(self):
@@ -193,7 +193,7 @@ class TestInvoiceExtractPurchase(AccountTestInvoicingCommon, TestExtractMixin):
                 'name': self.product_a.name,
                 'product_qty': 1.0,
                 'price_unit': 100,
-                'taxes_id': False,
+                'tax_ids': False,
             })],
         })
         po2 = po1.copy()

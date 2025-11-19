@@ -16,8 +16,8 @@ a periodic and automatic synchronization of their bank statements.
     'data': [
         'data/config_parameter.xml',
         'data/ir_cron.xml',
-        'data/mail_activity_type_data.xml',
-        'data/sync_reminder_email_template.xml',
+        'data/mail_subtype_data.xml',
+        'data/mail_template.xml',
 
         'security/ir.model.access.csv',
         'security/account_online_sync_security.xml',
@@ -33,19 +33,20 @@ a periodic and automatic synchronization of their bank statements.
         'wizard/account_journal_duplicate_transactions.xml',
         'wizard/account_bank_statement_line.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'auto_install': True,
     'assets': {
         'web.assets_backend': [
             'account_online_synchronization/static/src/components/**/*',
+            'account_online_synchronization/static/src/hooks/**/*',
             'account_online_synchronization/static/src/js/odoo_fin_connector.js',
         ],
         'web.assets_frontend': [
-            'account_online_synchronization/static/src/js/online_sync_portal.js',
+            'account_online_synchronization/static/src/interactions/*',
         ],
-        'web.qunit_suite_tests': [
-            'account_online_synchronization/static/tests/helpers/*.js',
-            'account_online_synchronization/static/tests/*.js',
+        'web.assets_unit_tests': [
+            'account_online_synchronization/static/tests/**/*',
         ],
     }
 }

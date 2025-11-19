@@ -13,10 +13,11 @@ It gives the Administrator user access to all accounting features such as journa
 It assigns manager and user access rights to the Administrator for the accounting application and only user rights to the Demo user.
 """,
     'website': 'https://www.odoo.com/app/accounting',
-    'depends': ['account_accountant'],
+    'depends': ['account_reports'],
     'data': [
         'data/account_accountant_data.xml',
         'security/accounting_security.xml',
+        'views/accountant_menuitem.xml',
         'views/res_config_settings.xml',
         'views/partner_views.xml',
     ],
@@ -25,6 +26,7 @@ It assigns manager and user access rights to the Administrator for the accountin
     'application': True,
     'post_init_hook': '_accounting_post_init',
     'uninstall_hook': "uninstall_hook",
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

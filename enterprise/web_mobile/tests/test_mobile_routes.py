@@ -2,14 +2,13 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
-import re
 
 from PIL import Image
 from io import BytesIO
 from uuid import uuid4
 from unittest.mock import patch
 
-from odoo.tests.common import HttpCase, tagged, get_db_name
+from odoo.tests.common import tagged, get_db_name
 from odoo.addons.base.tests.common import HttpCaseWithUserDemo
 from odoo.tools import config, mute_logger
 
@@ -30,7 +29,7 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         """
         This request is used to check for a compatible Odoo server
         """
-        payload = self._build_payload()
+        payload = self.build_rpc_payload()
         response = self.url_open(
             "/web/webclient/version_info",
             data=json.dumps(payload),
@@ -51,7 +50,7 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         This request is used to retrieve the databases' list
         NB: this route has a different behavior depending on the ability to list databases or not.
         """
-        payload = self._build_payload()
+        payload = self.build_rpc_payload()
         response = self.url_open("/web/database/list", data=json.dumps(payload), headers=self.headers)
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -64,8 +63,6 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         else:
             self._is_error_json_response(data)
             error = data["error"]
-            self.assertEqual(error["code"], 200)
-            self.assertEqual(error["message"], "Odoo Server Error")
             self.assertEqual(error["data"]["name"], "odoo.exceptions.AccessDenied")
 
     def test_authenticate(self):
@@ -73,7 +70,7 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         This request is used to authenticate a user using its username/password
         and retrieve its details & session's id
         """
-        payload = self._build_payload({
+        payload = self.build_rpc_payload({
             "db": get_db_name(),
             "login": "demo",
             "password": "demo",
@@ -96,7 +93,7 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         This request is used to attempt to authenticate a user using the wrong credentials
         (username/password) and check the returned error
         """
-        payload = self._build_payload({
+        payload = self.build_rpc_payload({
             "db": self.env.cr.dbname,
             "login": "demo",
             "password": "admin",
@@ -106,8 +103,6 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         data = response.json()
         self._is_error_json_response(data)
         error = data["error"]
-        self.assertEqual(error["code"], 200)
-        self.assertEqual(error["message"], "Odoo Server Error")
         self.assertEqual(error["data"]["name"], "odoo.exceptions.AccessDenied")
 
     @mute_logger("odoo.http")
@@ -117,7 +112,7 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         check the returned error
         """
         db_name = "dummydb-%s" % str(uuid4())
-        payload = self._build_payload({
+        payload = self.build_rpc_payload({
             "db": db_name,
             "login": "demo",
             "password": "admin",
@@ -127,8 +122,6 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         data = response.json()
         self._is_error_json_response(data)
         error = data["error"]
-        self.assertEqual(error["code"], 200)
-        self.assertEqual(error["message"], "Odoo Server Error")
         self.assertEqual(error["data"]["name"], "odoo.exceptions.AccessError")
 
     def test_avatar(self):
@@ -146,7 +139,7 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         """
         This request is used to authenticate a user using its session id
         """
-        payload = self._build_payload()
+        payload = self.build_rpc_payload()
         self.authenticate("demo", "demo")
         response = self.url_open("/web/session/get_session_info", data=json.dumps(payload), headers=self.headers)
         self.assertEqual(response.status_code, 200)
@@ -156,17 +149,6 @@ class MobileRoutesTest(HttpCaseWithUserDemo):
         self.assertEqual(result["username"], "demo")
         self.assertEqual(result["db"], self.env.cr.dbname)
         self.assertEqual(result["uid"], self.session.uid)
-
-    def _build_payload(self, params={}):
-        """
-        Helper to properly build jsonrpc payload
-        """
-        return {
-            "jsonrpc": "2.0",
-            "method": "call",
-            "id": str(uuid4()),
-            "params": params,
-        }
 
     def _is_success_json_response(self, data):
         """"

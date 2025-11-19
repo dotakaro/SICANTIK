@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from . import controllers
 from . import models
+from . import wizard
+
 
 def uninstall_hook(env):
     env.cr.execute("SELECT 1 FROM ir_module_module WHERE name = 'pos_enterprise' AND state = 'installed'")

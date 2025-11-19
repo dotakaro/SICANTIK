@@ -5,9 +5,12 @@
     'version': '1.0',
     'depends': ['product'],
     'data': [
-        'data/product_data.xml',
+        'security/ir.model.access.csv',
+        'security/product_security.xml',
+        'data/ir_cron_data.xml',
         'views/product_product_views.xml',
         'views/res_config_settings_views.xml',
+        'wizard/product_fetch_image_wizard_views.xml',
     ],
     'assets': {
         'web.assets_backend': [
@@ -15,5 +18,6 @@
         ],
     },
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

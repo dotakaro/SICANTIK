@@ -3,7 +3,7 @@
 from odoo import api, fields, models
 
 
-class WhatsAppPreview(models.TransientModel):
+class WhatsappPreview(models.TransientModel):
     _name = 'whatsapp.preview'
     _description = 'Preview template'
 

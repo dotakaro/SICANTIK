@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 import datetime
 from dateutil.relativedelta import relativedelta
 from unittest.mock import patch
@@ -72,7 +73,7 @@ class TestSubscriptionPayments(PaymentCommon, TestSubscriptionCommon, MockEmail)
                 'payment_token_id': None})
 
             failing_subs |= subscription_mail_fail
-            for dummy in range(5):
+            for _i in range(5):
                 failing_subs |= subscription_mail_fail.copy({'is_batch': True})
             failing_subs.action_confirm()
             # issue: two problems:
@@ -137,8 +138,8 @@ class TestSubscriptionPayments(PaymentCommon, TestSubscriptionCommon, MockEmail)
                 # Two products are invoiced
                 self.assertEqual(len(invoice.invoice_line_ids), 2, 'Two lines are invoiced')
                 self.assertEqual(self.subscription.next_invoice_date, datetime.date(2021, 2, 3), 'the next invoice date should be updated')
-                self.assertEqual(invoice.invoice_line_ids[0].name, 'BaseTestProduct month cheap\n1 Months 01/03/2021 to 02/02/2021', 'Invoice line description must be based on order line description')
-                self.assertEqual(invoice.invoice_line_ids[1].name, 'TestProduct2 month expensive\n1 Months 01/03/2021 to 02/02/2021', 'Invoice line description must be based on order line description')
+                self.assertEqual(invoice.invoice_line_ids[0].name, 'BaseTestProduct month cheap\n1 Month 01/03/2021 to 02/02/2021', 'Invoice line description must be based on order line description')
+                self.assertEqual(invoice.invoice_line_ids[1].name, 'TestProduct2 month expensive\n1 Month 01/03/2021 to 02/02/2021', 'Invoice line description must be based on order line description')
 
             with freeze_time("2021-02-03"):
                 self.env.invalidate_all()
@@ -343,19 +344,16 @@ class TestSubscriptionPayments(PaymentCommon, TestSubscriptionCommon, MockEmail)
                 'is_subscription': True,
                 'plan_id': self.plan_year.id,
                 'partner_id': self.user_portal.partner_id.id,
-                'pricelist_id': self.company_data['default_pricelist'].id,
                 'order_line': [
                     (0, 0, {
                         'name': self.product.name,
                         'product_id': self.product.id,
                         'product_uom_qty': 1.0,
-                        'product_uom': self.product.uom_id.id,
                     }),
                     (0, 0, {
                         'name': self.product2.name,
                         'product_id': self.product2.id,
                         'product_uom_qty': 1.0,
-                        'product_uom': self.product.uom_id.id,
                     })
                 ]
             })
@@ -486,7 +484,6 @@ class TestSubscriptionPayments(PaymentCommon, TestSubscriptionCommon, MockEmail)
                         'name': self.product.name,
                         'product_id': self.product.id,
                         'product_uom_qty': 3.0,
-                        'product_uom': self.product.uom_id.id,
                         'price_unit': 12,
                     })],
             })
@@ -917,3 +914,46 @@ class TestSubscriptionPayments(PaymentCommon, TestSubscriptionCommon, MockEmail)
             subscription.write({'transaction_ids': [Command.set(tx.ids)]})
             tx._set_done()
             tx.with_user(public_user).sudo()._post_process()
+
+    def test_subscription_invoice_after_second_period_payment(self):
+        """
+        Ensure the second invoice is generated correctly when a non-recurring product was included in the order lines.
+        When first time create invoice without payment then ensure that second time payment not considered down payment.
+        """
+        sub = self.subscription
+        self.product5.recurring_invoice = False
+        sub.order_line = [
+            Command.create(
+                {
+                    "name": "non recurring product",
+                    "product_id": self.product5.id,  # non recurring product
+                    "product_uom_qty": 1,
+                }
+            )
+        ]
+        sub.action_confirm()
+        # Create first period invoice for both recurring and non-recurring products
+        sub._create_invoices().action_post()
+        invoice_1 = sub.invoice_ids
+        # check subscription should be not be paid
+        self.assertNotEqual(sub.amount_total, invoice_1.amount_paid, 'Subscription should not be paid')
+
+        self.assertEqual(sub.state, "sale")
+        self.assertEqual(len(sub.invoice_ids), 1)
+        self.assertEqual(sub.invoice_ids.state, "posted")
+
+        # Now, pay for the second period with only the recurring product
+        self.reference = "SECOND PERIOD"
+        self.amount = sub._next_billing_details()["next_invoice_amount"]
+        tx = self._create_transaction(
+            flow="redirect", sale_order_ids=[sub.id], state="done"
+        )
+        with mute_logger("odoo.addons.sale.models.payment_transaction"):
+            tx._post_process()
+        invoice_2 = sub.invoice_ids - invoice_1
+        # check subscription should be fully paid
+        self.assertEqual(self.amount, invoice_2.amount_paid, 'Subscription should not be paid')
+
+        self.assertEqual(sub.state, "sale")
+        self.assertEqual(len(sub.invoice_ids), 2)
+        self.assertEqual(sub.invoice_ids[1].state, "posted")

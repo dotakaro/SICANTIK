@@ -1,6 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import models, api
+from odoo import api, models
 
 
 class StockMove(models.Model):
@@ -15,9 +15,13 @@ class StockMove(models.Model):
         """
         domain = super()._search_picking_for_assignation_domain()
         rental_loc = self.company_id.rental_loc_id
-        if (self.env.user.has_group('sale_stock_renting.group_rental_stock_picking') and rental_loc
-                and self.sale_line_id and self.sale_line_id.order_id.is_rental_order
-                and self.location_dest_id.id in (rental_loc.id, rental_loc.location_id.id)):
+        if (
+            self.env['res.groups']._is_feature_enabled('sale_stock_renting.group_rental_stock_picking')
+            and rental_loc
+            and self.sale_line_id
+            and self.sale_line_id.order_id.is_rental_order
+            and self.location_dest_id.id in (rental_loc.id, rental_loc.location_id.id)
+        ):
             index_to_insert = domain.index(('location_dest_id', '=', self.location_dest_id.id))
             domain.pop(index_to_insert)
             domain.insert(index_to_insert, ('location_dest_id', '=', rental_loc.id))
@@ -61,14 +65,14 @@ class StockMove(models.Model):
     def _action_done(self, cancel_backorder=False):
         """ Correctly set the qty_delivered and qty_returned of rental order lines when using pickings."""
         res = super()._action_done(cancel_backorder=cancel_backorder)
-        if self.env.user.has_group('sale_stock_renting.group_rental_stock_picking'):
+        if self.env['res.groups']._is_feature_enabled('sale_stock_renting.group_rental_stock_picking'):
             for move in self:
                 if move.state != "done":
                     continue
                 if not move.sale_line_id.is_rental or move.product_id != move.sale_line_id.product_id:
                     continue
                 if move.location_id == move.company_id.rental_loc_id:
-                    current_qty_returned = move.product_uom._compute_quantity(move.quantity, move.sale_line_id.product_uom, rounding_method='HALF-UP')
+                    current_qty_returned = move.product_uom._compute_quantity(move.quantity, move.sale_line_id.product_uom_id, rounding_method='HALF-UP')
                     if move.sale_line_id.order_id.is_late:
                         move.sale_line_id._generate_delay_line(current_qty_returned)
                     move.sale_line_id.qty_returned += current_qty_returned

@@ -156,9 +156,9 @@ class UPSRequest:
             return _("UPS address lines can only contain a maximum of 35 characters. You can split the contacts addresses on multiple lines to try to avoid this limitation.")
         if picking and not order:
             order = picking.sale_id
-        phone = ship_to.mobile or ship_to.phone
+        phone = ship_to.phone
         if order and not phone:
-            phone = order.partner_id.mobile or order.partner_id.phone
+            phone = order.partner_id.phone
         if order:
             if not order.order_line:
                 return _("Please provide at least one item to ship.")
@@ -183,11 +183,18 @@ class UPSRequest:
         package_type_key = 'Packaging' if ship else 'PackagingType'
         res_packages = []
         for p in packages:
+            # merchandise description: product names (len: [1-35]), strip non-alphanumeric chars
+            desc = ','.join(['%s' % re.sub(r'[\W_]+', ' ', c.product_id.name) for c in p.commodities])
+            if is_return:
+                desc = 'return ' + desc
+            if len(desc) > 35:
+                desc = desc[:32] + '...'
+
             package = {
                 package_type_key: {
                     'Code': p.packaging_type or '00',
                 },
-                'Description': 'Return of package' if is_return else None,
+                'Description': desc or 'UPS shipment',
                 'PackageWeight': {
                     'UnitOfMeasurement': {
                         'Code': carrier.ups_package_weight_unit,
@@ -243,7 +250,7 @@ class UPSRequest:
             'EMailAddress': partner.email or '',
             'ShipperNumber': shipper_no or '',
             'Phone': {
-                'Number': (partner.phone or partner.mobile or '').replace(' ', ''),
+                'Number': (partner.phone or '').replace(' ', ''),
             },
             'Address': {
                 'AddressLine': [partner.street or '', partner.street2 or ''],
@@ -258,6 +265,13 @@ class UPSRequest:
         service_type = carrier.ups_default_service_type
         saturday_delivery = carrier.ups_saturday_delivery
         url = f'/api/rating/{API_VERSION}/Rate'
+
+        shipment_service_options = {}
+        if saturday_delivery:
+            shipment_service_options['SaturdayDeliveryIndicator'] = saturday_delivery
+        if carrier.ups_require_signature:
+            shipment_service_options['DeliveryConfirmation'] = {'DCISType': '1'}
+
         data = {
             'RateRequest': {
                 'Request': {
@@ -272,7 +286,7 @@ class UPSRequest:
                         'Code': service_type,
                     },
                     'NumOfPieces': str(int(total_qty)) if service_type == '96' else None,
-                    'ShipmentServiceOptions': {'SaturdayDeliveryIndicator': saturday_delivery} if saturday_delivery else None,
+                    'ShipmentServiceOptions': shipment_service_options if shipment_service_options else None,
                     'ShipmentRatingOptions': {
                         'NegotiatedRatesIndicator': "1",
                     }
@@ -371,6 +385,8 @@ class UPSRequest:
             shipment_service_options['InternationalForms']['TermsOfShipment'] = shipment_info.get('terms_of_shipment')
         if saturday_delivery:
             shipment_service_options['SaturdayDeliveryIndicator'] = saturday_delivery
+        if carrier.ups_require_signature:
+            shipment_service_options['DeliveryConfirmation'] = {'DCISType': '1'}
 
         request = {
             'ShipmentRequest': {

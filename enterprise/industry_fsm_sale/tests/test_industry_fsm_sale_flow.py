@@ -192,22 +192,25 @@ class TestFsmFlowSale(TestFsmFlowSaleCommon):
         with so_form.order_line.edit(0) as line:
             line.price_unit = 0.0
         so_form.save()
-        self.assertEqual(sol.qty_to_invoice, 0.0)
+        self.assertEqual(sol.qty_to_invoice, 2.0, "Anglo Saxon Accounting should be enable")
 
         with so_form.order_line.edit(0) as line:
             line.price_unit = 0.01
         so_form.save()
         self.assertEqual(sol.qty_to_invoice, 2.0, "$0.01 shouldn't count as free")
+        self.env.company.anglo_saxon_accounting = False
+        with so_form.order_line.edit(0) as line:
+            line.price_unit = 0.00
+        so_form.save()
+        self.assertEqual(sol.qty_to_invoice, 0.0, "Anglo Saxon Accounting should be disable")
 
     def test_uom_conversion_fsm_task_to_so(self):
         """Checks that the hours recorded on Timesheets are converted to the correct UOM on the Sales Order"""
 
-        working_time = self.env['uom.category'].search([('name', '=', 'Working Time')])
         quarter_hour = self.env['uom.uom'].create({
             'name': 'Quarter-Hours',
-            'category_id': working_time.id,
-            'ratio': 32.0,
-            'uom_type': 'smaller',
+            'relative_factor': 0.25,
+            'relative_uom_id': self.env.ref('uom.product_uom_hour').id,
         })
         self.service_timesheet._inverse_service_policy()  # trigger value changes for invoice policy and service_type
         self.service_timesheet.uom_id = quarter_hour
@@ -331,35 +334,99 @@ class TestFsmFlowSale(TestFsmFlowSaleCommon):
             'project_id': self.fsm_project.id,
             'partner_id': self.partner_1.id,
         })
+        fsm_task_with_recurrence = self.env['project.task'].create({
+            'name': 'Original Task for Copy Test 2',
+            'project_id': self.fsm_project.id,
+            'partner_id': self.partner_1.id,
+            'recurring_task': True,
+        })
         
         fsm_product.with_context({'fsm_task_id': fsm_task.id}).set_fsm_quantity(10.0)
         fsm_product.with_context({'fsm_task_id': normal_task.id}).set_fsm_quantity(10.0)
-        
+        fsm_product.with_context({'fsm_task_id': fsm_task_with_recurrence.id}).set_fsm_quantity(10.0)
+
         self.assertTrue(fsm_task.sale_order_id)
         self.assertEqual(len(fsm_task.sale_order_id.order_line), 1)
-    
+
         self.assertTrue(normal_task.sale_order_id)
         self.assertEqual(len(normal_task.sale_order_id.order_line), 1)
         
+        self.assertTrue(fsm_task_with_recurrence.sale_order_id)
+        self.assertEqual(len(fsm_task_with_recurrence.sale_order_id.order_line), 1)
+
         fsm_task.action_fsm_validate()
         fsm_task.sale_order_id._create_invoices()
         
         normal_task.action_fsm_validate()
         normal_task.sale_order_id._create_invoices()
         
+        fsm_task_with_recurrence.action_fsm_validate()
+        fsm_task_with_recurrence.sale_order_id._create_invoices()
+
         self.assertTrue(fsm_task.sale_order_id.invoice_ids)
         self.assertTrue(normal_task.sale_order_id.invoice_ids)
-        
+        self.assertTrue(fsm_task_with_recurrence.sale_order_id.invoice_ids)
+
         fsm_task.update(fsm_task.copy_data()[0])
         normal_task.update(normal_task.copy_data()[0])
+        fsm_task_with_recurrence.update(fsm_task_with_recurrence.copy_data()[0])
 
         self.assertFalse(fsm_task.sale_order_id)
         self.assertFalse(fsm_task.sale_order_id.invoice_ids)
-        
+
         self.assertTrue(normal_task.sale_order_id)
         self.assertTrue(normal_task.sale_order_id.invoice_ids)
+
+        self.assertTrue(fsm_task_with_recurrence.sale_order_id)
+        self.assertTrue(fsm_task_with_recurrence.sale_order_id.invoice_ids)
 
     def test_invoice_without_sale_order(self):
         """Should return a red toast notification if no sale order is linked."""
         res = self.task.action_create_invoice()
         self.assertEqual(res['params']['type'], 'danger', "Expected a red toast notification")
+
+    def test_invoice_status_in_anglo_saxon(self):
+        self.task.partner_id = self.partner_1.id
+        # Case 1: Product price is zero and Anglo-Saxon accounting is enabled.
+        self.service_product_delivered.list_price = 0.0
+        self.service_product_delivered.with_user(self.project_user).with_context({'fsm_task_id': self.task.id}).fsm_add_quantity()
+        sol = self.task.sale_order_id.order_line[0]
+        self.assertEqual(
+            sol.invoice_status,
+            'to invoice',
+            "Invoice status should be 'to invoice' when Anglo-Saxon accounting is enabled and the price is zero."
+        )
+        # Case 2: Product price is greater than zero and Anglo-Saxon accounting is enabled.
+        self.service_product_ordered.with_user(self.project_user).with_context({'fsm_task_id': self.task.id}).fsm_add_quantity()
+        self.assertEqual(
+            sol.invoice_status,
+            'to invoice',
+            "Invoice status should be 'to invoice' when the price is greater than zero."
+        )
+        # Case 3: Product price is zero and Anglo-Saxon accounting is disabled.
+        self.env.company.anglo_saxon_accounting = False
+        self.service_product_delivered.with_user(self.project_user).with_context({'fsm_task_id': self.task.id}).fsm_add_quantity()
+        self.assertEqual(
+            sol.invoice_status,
+            'no',
+            "Invoice status should be 'no' when Anglo-Saxon accounting is disabled and the price is zero."
+        )
+        # Case 4: create SO in self env company which has anglo saxon true and task company is different where anglo saxon is false
+        self.env.company.anglo_saxon_accounting = True
+        fsm_project_second = self.env['project.project'].create({
+            'name': 'Field Service second',
+            'is_fsm': True,
+            'company_id': self.company_data_2['company'].id,
+        })
+        task_second = self.env['project.task'].create({
+            'name': 'Fsm task second',
+            'project_id': fsm_project_second.id,
+            'partner_id': self.partner_1.id})
+        self.company_data_2['company'].anglo_saxon_accounting = False
+        self.service_product_delivered.list_price = 0.0
+        self.service_product_delivered.with_context({'fsm_task_id': task_second.id}).fsm_add_quantity()
+        self.assertEqual(
+            task_second.sale_order_id.invoice_status,
+            'no',
+            "Invoice status should be 'no' when the task's company has Anglo-Saxon accounting disabled and the price is zero."
+        )

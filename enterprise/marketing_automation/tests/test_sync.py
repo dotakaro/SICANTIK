@@ -37,7 +37,7 @@ class SyncingCase(MarketingAutomationCommon):
         cls.env.flush_all()
 
 
-@tagged('marketing_automation')
+@tagged('marketing_automation', 'ma_sync')
 class TestDuplicate(SyncingCase):
     """ Test workflow when having duplicate participants or traces. This may
     happen in several occasions, and we should be defensive with duplicates. """

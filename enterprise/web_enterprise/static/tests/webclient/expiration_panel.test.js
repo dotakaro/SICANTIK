@@ -27,7 +27,7 @@ test("Expiration Panel one app installed", async () => {
     await animationFrame();
     await getService("action").doAction("menu");
 
-    expect(".oe_instance_register").toHaveText("This database will expire in 1 month.");
+    expect(".oe_instance_register").toHaveText("Your subscription expires in 15 days.");
 
     // Color should be grey
     expect(".database_expiration_panel").toHaveClass("alert-info");
@@ -49,7 +49,7 @@ test("Expiration Panel one app installed, buy subscription", async () => {
         storeData: true, // used by subscription service to know whether mail is installed
         warning: "admin",
     });
-    onRpc("/web/dataset/call_kw/res.users/search_count", () => 7);
+    onRpc("res.users", "search_count", () => 7);
     await mountWithCleanup(WebClientEnterprise);
     await animationFrame();
     await runAllTimers();
@@ -93,7 +93,7 @@ test("Expiration Panel one app installed, try several times to register subscrip
 
     mockService("notification", {
         add: (message, options) => {
-            expect.step(JSON.stringify({ message, options }));
+            expect.step({ message, options });
         },
     });
     onRpc("get_param", ({ args }) => {
@@ -128,12 +128,12 @@ test("Expiration Panel one app installed, try several times to register subscrip
         expect(args[0]).toHaveLength(0);
         return true;
     });
-    onRpc("/web/dataset/call_kw/res.users/search_count", () => 7);
+    onRpc("res.users", "search_count", () => 7);
     await mountWithCleanup(WebClientEnterprise);
     await animationFrame();
 
     expect(".oe_instance_register").toHaveText(
-        "This database will expire in 5 days. Register your subscription or buy a subscription."
+        "Your subscription expired 4 days ago. This database will be blocked soon. Register your subscription or buy a subscription."
     );
 
     expect(".database_expiration_panel").toHaveClass("alert-danger", {
@@ -225,7 +225,11 @@ test("Expiration Panel one app installed, try several times to register subscrip
         "get_param",
         "get_param",
         "get_param",
-        `{"message":"Thank you, your registration was successful! Your database is valid until November 15, 2019.","options":{"type":"success"}}`,
+        {
+            message:
+                "Thank you, your registration was successful! Your database is valid until November 15, 2019.",
+            options: { type: "success" },
+        },
     ]);
 });
 
@@ -278,7 +282,7 @@ test("Expiration Panel one app installed, subscription already linked", async ()
     await animationFrame();
 
     expect(".oe_instance_register").toHaveText(
-        "This database will expire in 5 days. Register your subscription or buy a subscription."
+        "Your subscription expired 4 days ago. This database will be blocked soon. Register your subscription or buy a subscription."
     );
     // Click on 'register your subscription'
     await click(".oe_instance_register_show");
@@ -395,8 +399,8 @@ test("One app installed, renew", async () => {
     await animationFrame();
 
     expect(".oe_instance_register").toHaveText(
-        "This database will expire in 10 days.\n" +
-            "Renew your subscription\n" +
+        "Your subscription expired 9 days ago. This database will be blocked soon.\n" +
+            "Renew now\n" +
             "I paid, please recheck!"
     );
 
@@ -508,7 +512,7 @@ test("One app installed, upgrade database", async () => {
     await runAllTimers();
 
     expect(".oe_instance_register").toHaveText(
-        "This database will expire in 10 days. You have more users or more apps installed than your subscription allows.\n\n" +
+        "Your subscription expired 9 days ago. This database will be blocked soon. You have more users or more apps installed than your subscription allows.\n\n" +
             "Upgrade your subscription\n" +
             "I paid, please recheck!"
     );
@@ -538,7 +542,7 @@ test("One app installed, message for non admin user", async () => {
     await animationFrame();
 
     expect(".oe_instance_register").toHaveText(
-        "This database will expire in 29 days. Log in as an administrator to correct the issue."
+        "Your subscription expires in 14 days. Log in as an administrator to correct the issue."
     );
 
     expect(".database_expiration_panel").toHaveClass("alert-info", {
@@ -571,7 +575,7 @@ test("One app installed, navigation to renewal page", async () => {
     await runAllTimers();
 
     expect(".oe_instance_register").toHaveText(
-        "This database has expired.\nRenew your subscription\nI paid, please recheck!"
+        "This database has expired.\nRenew now\nI paid, please recheck!"
     );
 
     expect(".database_expiration_panel").toHaveClass("alert-danger");
@@ -603,9 +607,7 @@ test("One app installed, different locale (arabic)", async () => {
         warning: "admin",
     });
     serverState.lang = "ar-001";
-    onRpc("get_param", () => {
-        return "2019-11-09 12:00:00";
-    });
+    onRpc("get_param", () => "2019-11-09 12:00:00");
     onRpc("update_notification", () => true);
     await mountWithCleanup(WebClientEnterprise);
     await animationFrame();

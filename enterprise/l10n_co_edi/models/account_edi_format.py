@@ -261,17 +261,17 @@ class AccountEdiFormat(models.Model):
                                         invoice_partner.email or '',
                                     ])),
                 ]
-            lines = invoice.invoice_line_ids.filtered(lambda line: line.product_uom_id.category_id == self.env.ref('uom.product_uom_categ_vol'))
+            lines = invoice.invoice_line_ids.filtered(lambda line: line.product_uom_id and line.product_uom_id._has_common_reference(self.env.ref('uom.product_uom_litre')))
             liters = sum(line.product_uom_id._compute_quantity(line.quantity, self.env.ref('uom.product_uom_litre')) for line in lines)
             total_volume = int(liters)
 
             # Weight has to be reported in kg (not e.g. g).
-            lines = invoice.invoice_line_ids.filtered(lambda line: line.product_uom_id.category_id == self.env.ref('uom.product_uom_categ_kgm'))
+            lines = invoice.invoice_line_ids.filtered(lambda line: line.product_uom_id and line.product_uom_id._has_common_reference(self.env.ref('uom.product_uom_gram')))
             kg = sum(line.product_uom_id._compute_quantity(line.quantity, self.env.ref('uom.product_uom_kgm')) for line in lines)
             total_weight = int(kg)
 
             # Units have to be reported as units (not e.g. boxes of 12).
-            lines = invoice.invoice_line_ids.filtered(lambda line: line.product_uom_id.category_id == self.env.ref('uom.product_uom_categ_unit'))
+            lines = invoice.invoice_line_ids.filtered(lambda line: line.product_uom_id and line.product_uom_id._has_common_reference(self.env.ref('uom.product_uom_unit')))
             units = sum(line.product_uom_id._compute_quantity(line.quantity, self.env.ref('uom.product_uom_unit')) for line in lines)
             total_units = int(units)
 
@@ -314,7 +314,7 @@ class AccountEdiFormat(models.Model):
         AccountTax = self.env['account.tax']
         base_amls = invoice.line_ids.filtered(lambda x: x.display_type == 'product')
         base_lines = [invoice._prepare_product_base_line_for_taxes_computation(x) for x in base_amls]
-        tax_amls = invoice.line_ids.filtered(lambda x: x.display_type == 'tax')
+        tax_amls = invoice.line_ids.filtered('tax_repartition_line_id')
         tax_lines = [invoice._prepare_tax_line_for_taxes_computation(x) for x in tax_amls]
         AccountTax._add_tax_details_in_base_lines(base_lines, invoice.company_id)
         AccountTax._round_base_lines_tax_details(base_lines, invoice.company_id, tax_lines=tax_lines)
@@ -487,7 +487,7 @@ class AccountEdiFormat(models.Model):
             invoice.l10n_co_edi_transaction = response['transactionId']
 
             # == Chatter ==
-            invoice.with_context(no_new_invoice=True).message_post(
+            invoice.message_post(
                 body=_('Electronic invoice submission succeeded. Message from Carvajal:') + Markup('<br/>)' + response['message']),
                 attachment_ids=attachment.ids,
             )
@@ -523,7 +523,7 @@ class AccountEdiFormat(models.Model):
                 })
 
             # == Chatter ==
-            invoice.with_context(no_new_invoice=True).message_post(body=response['message'], attachments=response['attachments'])
+            invoice.message_post(body=response['message'], attachments=response['attachments'])
         elif response.get('blocking_level') == 'error':
             invoice.l10n_co_edi_transaction = False
 

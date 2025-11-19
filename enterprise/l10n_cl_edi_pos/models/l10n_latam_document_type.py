@@ -3,7 +3,7 @@
 from odoo import models, api
 
 
-class L10nLatamDocumentType(models.Model):
+class L10n_LatamDocumentType(models.Model):
     _name = 'l10n_latam.document.type'
     _inherit = ['l10n_latam.document.type', 'pos.load.mixin']
 

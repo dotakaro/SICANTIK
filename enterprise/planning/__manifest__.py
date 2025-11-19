@@ -33,6 +33,7 @@ Schedule your teams and employees with shift.
         'data/planning_demo.xml',
     ],
     'application': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [
@@ -44,11 +45,14 @@ Schedule your teams and employees with shift.
             ('remove', 'planning/static/src/views/planning_graph/**'),
             ('remove', 'planning/static/src/views/planning_pivot/**'),
             ('remove', 'planning/static/src/views/planning_gantt/**'),
+            ('remove', 'planning/static/src/views/planning_contract_gantt/**'),
         ],
         'web.assets_backend_lazy': [
             'planning/static/src/views/planning_graph/**',
             'planning/static/src/views/planning_pivot/**',
             'planning/static/src/views/planning_gantt/**',
+            'planning/static/src/views/planning_contract_gantt/**',
+            'planning/static/src/scss/planning_contract_gantt.scss',
         ],
         'web.assets_frontend': [
             'planning/static/src/scss/planning_calendar_report.scss',
@@ -56,10 +60,6 @@ Schedule your teams and employees with shift.
         ],
         'web.assets_unit_tests': [
             'planning/static/tests/**/*',
-            ('remove', 'planning/static/tests/legacy/**/*'),  # to remove when all legacy tests are ported
-        ],
-        'web.qunit_suite_tests': [
-            'planning/static/tests/legacy/**/*',
         ],
         'web.assets_tests': [
             'planning/static/tests/tours/*',

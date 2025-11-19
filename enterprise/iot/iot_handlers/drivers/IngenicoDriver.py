@@ -7,9 +7,9 @@ from traceback import format_exc
 from zlib import crc32
 import socket
 
-from odoo.addons.hw_drivers.driver import Driver
-from odoo.addons.hw_drivers.event_manager import event_manager
-from odoo.addons.hw_drivers.iot_handlers.interfaces.SocketInterface import socket_devices
+from odoo.addons.iot_drivers.driver import Driver
+from odoo.addons.iot_drivers.event_manager import event_manager
+from odoo.addons.iot_drivers.iot_handlers.interfaces.SocketInterface import socket_devices
 
 _logger = logging.getLogger(__name__)
 
@@ -818,7 +818,7 @@ class IngenicoDriver(Driver):
         """
         try:
             self.data = {'value': '', 'Stage': False, 'Response': False, 'Ticket': False, 'Error': False}
-            while not self._stopped.isSet():
+            while not self._stopped.is_set():
                 sleep(1)
                 _logger.debug("Waiting for incoming message")
                 msg = IncomingIngenicoMessage(self)

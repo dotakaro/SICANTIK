@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
-from datetime import timedelta
-from markupsafe import Markup
-
-from odoo import fields
 from odoo.addons.sms.tests.common import SMSCommon
 from odoo.addons.test_mail_sms.tests.common import TestSMSRecipients
 from odoo.tests.common import users
@@ -41,7 +34,7 @@ class TestActivity(SMSCommon, TestSMSRecipients):
 
     def test_activity_data(self):
         """ Ensure initial data for tests """
-        self.assertEqual(self.partner_1.mobile, '0456001122')
+        self.assertEqual(self.partner_1.phone, '0456001122')
         self.assertTrue(self.phonecall_activity)
         self.assertEqual(self.phonecall_activity.category, 'phonecall')
 
@@ -52,8 +45,7 @@ class TestActivity(SMSCommon, TestSMSRecipients):
 
         activity = record.create_call_activity()
         self.assertEqual(activity.activity_type_id, self.phonecall_activity)
-        self.assertFalse(activity.phone)
-        self.assertEqual(activity.mobile, self.partner_1.mobile)
+        self.assertEqual(activity.phone, self.partner_1.phone)
         self.assertFalse(activity.note)
         self.assertFalse(activity.summary)
 
@@ -61,10 +53,32 @@ class TestActivity(SMSCommon, TestSMSRecipients):
             ('activity_type_id', '=', self.phonecall_activity.id),
         ])
         phonecall_activities.write({'activity_type_id': False})
-        self.phonecall_activity.unlink()
+        phonecall_activities.flush_recordset()
+        # it is now protected, but before protection it was possible to have removed
+        # 'Call' activity type (aka you can't do self.phonecall_activity.unlink()
+        # but you may have already removed it)
+        self.env.cr.execute("DELETE FROM mail_activity_type WHERE id IN %s", (tuple(self.phonecall_activity.ids),))
+        self.env['ir.model.data'].sudo().search([('name', '=', 'mail_activity_data_call'), ('module', '=', 'mail')]).unlink()
 
         # no more phonecall activity -> will be dynamically created
         self.assertFalse(self.env['mail.activity.type'].search([('category', '=', 'phonecall')]))
         activity = record.create_call_activity()
         new_activity_type = self.env['mail.activity.type'].search([('category', '=', 'phonecall')])
         self.assertTrue(bool(new_activity_type))
+
+    @users('employee')
+    def test_type_phonecall(self):
+        activities = self.env['mail.activity'].create([
+            {
+                'activity_type_id': self.phonecall_activity.id,
+                'phone': '+32455001122',
+                'user_id': self.user_employee.id,
+            },
+            {
+                'activity_type_id': self.phonecall_activity.id,
+                'phone': '+32455334455',
+                'user_id': self.user_employee.id,
+            },
+        ])
+        stored_free = self.env['mail.activity'].get_today_call_activities().get('mail.activity')
+        self.assertEqual(len(stored_free), len(activities), 'Should have one entry / activity')

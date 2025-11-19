@@ -3,15 +3,15 @@
 # 	* delivery_ups_rest
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:24+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -53,11 +53,6 @@ msgid "Check, Cashier's Check or MoneyOrder"
 msgstr "شيك بنكي، أو شيك مقبول الدفع أو حوالة نقدية"
 
 #. module: delivery_ups_rest
-#: model:ir.model.fields,field_description:delivery_ups_rest.field_delivery_carrier__ups_cod
-msgid "Collect on Delivery"
-msgstr "الدفع عند الاستلام"
-
-#. module: delivery_ups_rest
 #: model:ir.model,name:delivery_ups_rest.model_res_partner
 msgid "Contact"
 msgstr "جهة الاتصال"
@@ -69,6 +64,11 @@ msgid "Could not decode response"
 msgstr "لم نتمكن من فك تشفير الرد "
 
 #. module: delivery_ups_rest
+#: model:ir.model,website_form_label:delivery_ups_rest.model_res_partner
+msgid "Create a Customer"
+msgstr "Create a Customer"
+
+#. module: delivery_ups_rest
 #: model_terms:ir.ui.view,arch_db:delivery_ups_rest.view_delivery_carrier_form
 msgid "Create an account on"
 msgstr "إنشاء حساب في "
@@ -77,6 +77,15 @@ msgstr "إنشاء حساب في "
 #: model_terms:ir.ui.view,arch_db:delivery_ups_rest.view_delivery_carrier_form
 msgid "Create an app"
 msgstr "إنشاء تطبيق "
+
+#. module: delivery_ups_rest
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_delivery_carrier__display_name
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_payment_provider__display_name
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_res_partner__display_name
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_sale_order__display_name
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_stock_package_type__display_name
+msgid "Display Name"
+msgstr "اسم العرض "
 
 #. module: delivery_ups_rest
 #: model_terms:ir.ui.view,arch_db:delivery_ups_rest.view_delivery_carrier_form
@@ -112,6 +121,15 @@ msgstr "احصل على <b>رقم حسابك</b> من هنا "
 #: model_terms:ir.ui.view,arch_db:delivery_ups_rest.view_delivery_carrier_form
 msgid "How to setup UPS?"
 msgstr "كيف تقوم بإعداد UPS؟ "
+
+#. module: delivery_ups_rest
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_delivery_carrier__id
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_payment_provider__id
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_res_partner__id
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_sale_order__id
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_stock_package_type__id
+msgid "ID"
+msgstr "المُعرف"
 
 #. module: delivery_ups_rest
 #: model:ir.model.fields,help:delivery_ups_rest.field_delivery_carrier__ups_bill_my_account
@@ -207,6 +225,11 @@ msgid "Packages %s do not have a positive shipping weight."
 msgstr "وزن الحزم %s ليس رقماً موجباً. "
 
 #. module: delivery_ups_rest
+#: model:ir.model,name:delivery_ups_rest.model_payment_provider
+msgid "Payment Provider"
+msgstr "مزود الدفع "
+
+#. module: delivery_ups_rest
 #. odoo-python
 #: code:addons/delivery_ups_rest/models/ups_request.py:0
 msgid "Please provide at least one item to ship."
@@ -233,6 +256,11 @@ msgstr "المستلم"
 msgid "Recipient Phone must be at least 10 alphanumeric characters."
 msgstr ""
 "يجب أن يتكون رقم هاتف المستلم من 10 خانات على الأقل منها أحرف وأرقام. "
+
+#. module: delivery_ups_rest
+#: model:ir.model.fields,field_description:delivery_ups_rest.field_delivery_carrier__ups_require_signature
+msgid "Require Signature"
+msgstr "قم بطلب توقيع "
 
 #. module: delivery_ups_rest
 #. odoo-python
@@ -361,7 +389,7 @@ msgstr ""
 "(الحقل (الحقول) المفقودة: %s)"
 
 #. module: delivery_ups_rest
-#: model:ir.model.fields,help:delivery_ups_rest.field_delivery_carrier__ups_cod
+#: model_terms:ir.ui.view,arch_db:delivery_ups_rest.view_delivery_carrier_form
 msgid ""
 "This value added service enables UPS to collect the payment of the shipment "
 "from your customer."
@@ -508,6 +536,12 @@ msgid ""
 msgstr ""
 "يمكن أن تحتوي بنود عنوان UPS على 35 خانة كحد أقصى. بإمكانك تجزئة عناوين جهات"
 " الاتصال لعدة بنود لتجنب تلك المحدودية. "
+
+#. module: delivery_ups_rest
+#. odoo-python
+#: code:addons/delivery_ups_rest/models/payment_provider.py:0
+msgid "UPS provider is configured to use only Collect on Delivery."
+msgstr "تمت تهيئة مزود UPS لاستخدام خدمة الاستلام عند التوصيل فقط. "
 
 #. module: delivery_ups_rest
 #: model:ir.model.fields,field_description:delivery_ups_rest.field_delivery_carrier__ups_duty_payment

@@ -10,17 +10,17 @@ from odoo.tests import tagged
 from odoo.tools import mute_logger
 
 
-@tagged('mail_performance', 'post_install', '-at_install')
+@tagged('mail_performance', 'mail_activity', 'post_install', '-at_install')
 class TestActivityPerformance(BaseMailPerformance):
 
     @classmethod
     def setUpClass(cls):
-        super(TestActivityPerformance, cls).setUpClass()
+        super().setUpClass()
 
         cls.customer = cls.env['res.partner'].with_context(cls._test_context).create({
             'country_id': cls.env.ref('base.be').id,
             'email': '"Super Customer" <customer.test@example.com>',
-            'mobile': '0456123456',
+            'phone': '0456123456',
             'name': 'Super Customer',
         })
         cls.test_record = cls.env['mail.test.sms.bl.activity'].with_context(cls._test_context).create({
@@ -77,7 +77,7 @@ class TestActivityPerformance(BaseMailPerformance):
         enabled. No computed fields are involved. """
         ActivityModel = self.env['mail.test.sms.bl.activity']
 
-        with self.assertQueryCount(employee=9):
+        with self.assertQueryCount(employee=8):
             record = ActivityModel.create({
                 'name': 'Test',
             })
@@ -94,7 +94,7 @@ class TestActivityPerformance(BaseMailPerformance):
         enabled. No computed fields are involved. """
         test_record = self.test_record.with_env(self.env)
 
-        with self.assertQueryCount(employee=29):
+        with self.assertQueryCount(employee=27):
             activity = test_record.activity_schedule(
                 'mail.mail_activity_data_call',
                 summary='Call Activity',
@@ -112,7 +112,7 @@ class TestActivityPerformance(BaseMailPerformance):
         enabled. No computed fields are involved. """
         test_records = self.test_records_voip.with_env(self.env)
 
-        with self.assertQueryCount(employee=137):
+        with self.assertQueryCount(employee=117):
             activities = test_records.activity_schedule(
                 'mail.mail_activity_data_call',
                 summary='Call Activity',
@@ -131,7 +131,7 @@ class TestActivityPerformance(BaseMailPerformance):
         enabled. No computed fields are involved. """
         test_record_voip = self.test_record_voip.with_env(self.env)
 
-        with self.assertQueryCount(employee=50):
+        with self.assertQueryCount(employee=41):
             activity = test_record_voip.activity_schedule(
                 'mail.mail_activity_data_upload_document',
                 summary='Upload Activity',
@@ -167,7 +167,7 @@ class TestActivityPerformance(BaseMailPerformance):
         in order to see difference with other activities (generic type). """
         test_records = self.test_records_voip.with_env(self.env)
 
-        with self.assertQueryCount(employee=127):
+        with self.assertQueryCount(employee=117):  # tme: 107
             activities = test_records.activity_schedule(
                 activity_type_id=self.generic_activity.id,
                 automated=False,
@@ -176,7 +176,7 @@ class TestActivityPerformance(BaseMailPerformance):
             self.env.flush_all()
         self.assertEqual(len(activities), 10)
 
-        with self.assertQueryCount(employee=32):
+        with self.assertQueryCount(employee=32):  # tme: 31
             activities[:3].write({'user_id': self.user_root.id})
             activities[3:6].write({'user_id': self.env.uid})
             activities[6:].write({'user_id': self.user_admin.id})
@@ -190,7 +190,7 @@ class TestActivityPerformance(BaseMailPerformance):
         ])
         self.env.flush_all()
 
-        with self.assertQueryCount(employee=58):
+        with self.assertQueryCount(employee=64):
             activities.action_feedback(
                 feedback='Intense feedback',
                 attachment_ids=attachments.ids,
@@ -217,7 +217,7 @@ class TestActivityPerformance(BaseMailPerformance):
         # check business information (to benefits from this test)
         self.assertEqual(activities.activity_type_id, self.phonecall_activity)
 
-        with self.assertQueryCount(employee=89):
+        with self.assertQueryCount(employee=81):
             activities[:3].write({'user_id': self.user_root.id})
             activities[3:6].write({'user_id': self.env.uid})
             activities[6:].write({'user_id': self.user_admin.id})
@@ -232,7 +232,7 @@ class TestActivityPerformance(BaseMailPerformance):
         ])
         self.env.flush_all()
 
-        with self.assertQueryCount(employee=59):
+        with self.assertQueryCount(employee=65):
             activities.action_feedback(
                 feedback='Intense feedback',
                 attachment_ids=attachments.ids,

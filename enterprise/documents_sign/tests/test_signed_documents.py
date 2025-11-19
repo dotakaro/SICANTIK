@@ -9,8 +9,15 @@ from odoo.tools import mute_logger
 class TestSignedDocument(TestCaseDocumentsBridgeSign):
     def setUp(cls):
         super().setUp()
-
-        sign_request = cls.create_sign_request_1_role(cls.env.user, cls.env.user)
+        partner = cls.env["res.partner"]
+        user = cls.env["res.users"].create(
+            {
+                "name": "test_sign_owner_",
+                "login": "test_sign_owner@ex.com",
+                "email": "test_sign_owner@ex.com",
+            }
+        )
+        sign_request = cls.create_sign_request_1_role(user.partner_id, partner)
         sign_request.completed_document_attachment_ids = [(4, cls.attachment.id)]
 
         cls.trash_doc, cls.signed_document_pdf = cls.env["documents.document"].create([
@@ -50,5 +57,5 @@ class TestSignedDocument(TestCaseDocumentsBridgeSign):
         """
         self.assertFalse(self.signed_document_pdf.active)
 
-        with (self.assertRaises(ForeignKeyViolation), self.cr.savepoint(), mute_logger("odoo.sql_db")):
+        with (self.assertRaises(ForeignKeyViolation), mute_logger("odoo.sql_db")):
             self.signed_document_pdf.unlink()

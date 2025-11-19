@@ -1,9 +1,8 @@
 import json
 from psycopg2.extras import Json
 from lxml import etree
-from psycopg2 import DataError
 
-from odoo import Command
+from odoo import Command, api
 from odoo.addons.base.models.ir_actions_report import IrActionsReport
 from odoo.addons.web_studio.controllers.main import WebStudioController
 from odoo.addons.web_studio.controllers.report import WebStudioReportController, get_report_view_copy, _get_and_write_studio_view
@@ -197,7 +196,7 @@ class TestReportEditor(TransactionCase):
             view.update_field_translations('arch_db', {'fr_FR': {term: '%s in fr' % term for term in terms}})
 
         combined_arch = '<div>a_<div>ab</div><div>a_</div>aba<div>ab</div></div>'
-        self.assertEqual(target._read_template(target.id), combined_arch)
+        self.assertEqual(etree.tostring(target._get_view_etrees()[0], encoding='unicode'), combined_arch)
 
         # duplicate original report, views will be combined into one
         report.copy_report_and_template()
@@ -297,7 +296,7 @@ class TestReportEditorUIUnit(HttpCase):
 
     @property
     def tour_url(self):
-        return f"/odoo/action-studio?mode=editor&_action={self.testAction.id}&_tab=reports&_report_id={self.report.id}&menu_id={self.testMenu.id}"
+        return f"/odoo/action-{self.testAction.id}/studio?mode=editor&_tab=reports&_report_id={self.report.id}&menu_id={self.testMenu.id}"
 
     def _clear_routing(self):
         self.env.registry.clear_cache('routing')
@@ -472,7 +471,8 @@ class TestReportEditorUIUnit(HttpCase):
         self.addCleanup(self._clear_routing)
 
         error = None
-        @route('/web_studio/save_report', type='json', auth='user')
+
+        @route('/web_studio/save_report', type='jsonrpc', auth='user')
         def save_report_mocked(*args, **kwargs):
             try:
                 return save_report(*args, **kwargs)
@@ -503,7 +503,8 @@ class TestReportEditorUIUnit(HttpCase):
         self.addCleanup(self._clear_routing)
 
         error = None
-        @route('/web_studio/save_report', type='json', auth='user')
+
+        @route('/web_studio/save_report', type='jsonrpc', auth='user')
         def save_report_mocked(*args, **kwargs):
             try:
                 return save_report(*args, **kwargs)
@@ -780,14 +781,14 @@ class TestReportEditorUIUnit(HttpCase):
         p1 = ResPartner.create({'name': "partner_1"})
         p2 = ResPartner.create({'name': "partner_2"})
 
-        original_search = ResPartner.search
+        super_studio_model_infos = self.env.registry.get("ir.model").studio_model_infos
+        @api.model
+        def studio_model_infos(self, *args, **kwargs):
+            sup = super_studio_model_infos(self, *args, **kwargs)
+            sup["record_ids"] = (p1 | p2).ids
+            return sup
 
-        def mock_search(self, *args, **kwargs):
-            if not args and not kwargs:
-                return (p1 | p2).ids
-            return original_search(*args, **kwargs)
-
-        self.patch(type(ResPartner), "search", mock_search)
+        self.patch(self.env.registry.get("ir.model"), "studio_model_infos", studio_model_infos)
 
         self.start_tour(self.tour_url, "web_studio.test_report_xml_other_record", login="admin")
 
@@ -921,21 +922,6 @@ class TestReportEditorUIUnit(HttpCase):
     def test_xml_and_form_diff(self):
         self.start_tour(self.tour_url + "&debug=1", "web_studio.test_xml_and_form_diff", login="admin")
 
-    def test_record_model_differs_from_action(self):
-        dummy = self.env["ir.model"].create({
-            "name": "dummy.test",
-            "model": "x_dummy.test"
-        })
-        self.env['ir.model.access'].create({
-            "name": "dummy",
-            "perm_read": True,
-            "model_id": dummy.id,
-        })
-
-        self.report.model = dummy.model
-        self.report.name = "dummy test"
-        self.start_tour(f"/odoo/action-studio?mode=editor&_action={self.testAction.id}&_tab=reports&menu_id={self.testMenu.id}", "web_studio.test_record_model_differs_from_action", login="admin")
-
     def test_recursive_t_calls(self):
         self.authenticate("admin", "admin")
         self.main_view_document.arch = """
@@ -1032,7 +1018,7 @@ class TestReportEditorUIUnit(HttpCase):
 
     def test_formalize_qweb_client_t_call_structure(self):
         self.authenticate("admin", "admin")
-        html_container = self.env["ir.ui.view"]._get("web.html_container")
+        html_container = self.env["ir.ui.view"]._get_template_view("web.html_container")
 
         tcalled_0 = self.env["ir.ui.view"].create({
             'type': 'qweb',
@@ -1407,7 +1393,7 @@ class TestReportEditorUIUnit(HttpCase):
             )
         self.assertEqual(len(errors), 2)
         for e in errors:
-            self.assertTrue(isinstance(e, DataError))
+            self.assertTrue(isinstance(e, ValueError))
 
         qweb_html = response.json()["result"]
         tree = html_to_xml_tree(qweb_html)
@@ -1439,7 +1425,7 @@ class TestReportEditorUIUnit(HttpCase):
         """)
 
     def test_edit_header_only_company(self):
-        external_layout = self.env["ir.ui.view"]._get("web.external_layout_standard")
+        external_layout = self.env["ir.ui.view"]._get_template_view("web.external_layout_standard")
         with self.with_user("admin"):
             self.env.user.company_id.external_report_layout_id = external_layout
         self.main_view_document.arch = '''

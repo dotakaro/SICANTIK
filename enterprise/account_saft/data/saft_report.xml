@@ -24,11 +24,10 @@
         </Address>
         <Contact t-foreach="partner_info['contacts']" t-as="partner_contact">
             <ContactPerson>
-                <Title t-if="partner_contact.title" t-out="partner_contact.title.name"/>
                 <FirstName t-out="'NotUsed'"/>
                 <LastName t-out="partner_contact.name[:35]"/>
             </ContactPerson>
-            <Telephone t-if="partner_contact.phone or partner_contact.mobile" t-out="(partner_contact.phone or partner_contact.mobile)[:18]"/>
+            <Telephone t-if="partner_contact.phone" t-out="(partner_contact.phone)[:18]"/>
             <Email t-if="partner_contact.email" t-out="partner_contact.email[:70]"/>
             <Website t-if="partner_contact.website" t-out="partner_contact.website"/>
         </Contact>
@@ -83,7 +82,7 @@
                 <ExchangeRate t-out="format_float(line_vals['rate'], digits=8)"/>
             </t>
         </DebitAmount>
-        <CreditAmount t-if="not line_vals.get('debit') and not line_vals.get('credit') and line_vals.get('move_type', '') in ('out_invoice', 'in_refund')">
+        <CreditAmount t-if="not line_vals.get('debit') and not line_vals.get('credit') and line_vals.get('move_type', '') in ('out_invoice', 'in_refund', 'entry')">
             <Amount t-out="format_float(line_vals['credit'])"/>
             <t t-if="line_vals['currency_id'] != company.currency_id.id">
                 <CurrencyCode t-out="line_vals['currency_code']"/>

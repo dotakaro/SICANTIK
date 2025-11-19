@@ -8,7 +8,7 @@ from odoo import _, models, fields
 from odoo.exceptions import UserError
 
 
-class SocialMediaLinkedin(models.Model):
+class SocialMedia(models.Model):
     _inherit = 'social.media'
 
     _LINKEDIN_ENDPOINT = 'https://api.linkedin.com/rest/'
@@ -20,7 +20,7 @@ class SocialMediaLinkedin(models.Model):
         self.ensure_one()
 
         if self.media_type != 'linkedin':
-            return super(SocialMediaLinkedin, self)._action_add_account()
+            return super()._action_add_account()
 
         linkedin_use_own_account = self.env['ir.config_parameter'].sudo().get_param('social.linkedin_use_own_account')
         linkedin_app_id = self.env['ir.config_parameter'].sudo().get_param('social.linkedin_app_id')
@@ -62,7 +62,10 @@ class SocialMediaLinkedin(models.Model):
         }, timeout=5).text
 
         if iap_add_accounts_url == 'unauthorized':
-            raise UserError(_("Please activate developer mode, add the credentials to the configurations, then go to social media to link your account"))
+            raise UserError(_(
+                "Oops! You currently don't have an active subscription. No worries, though! "
+                "You can easily get one here: %s.\n"
+                "Grab a subscription and unlock a world of amazing features!", 'https://www.odoo.com/buy'))
         elif iap_add_accounts_url == 'linkedin_missing_configuration' or iap_add_accounts_url == 'missing_parameters':
             raise UserError(_("The url that this service requested returned an error. Please contact the author of the app."))
 

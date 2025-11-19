@@ -19,6 +19,8 @@ NS_MAP = {'ds': "http://www.w3.org/2000/09/xmldsig#"}
 TEST_ENDPOINT = "https://vpfe-hab.dian.gov.co/WcfDianCustomerServices.svc?wsdl"
 ENDPOINT = "https://vpfe.dian.gov.co/WcfDianCustomerServices.svc?wsdl"
 
+FORCED_PROD_SERVICES = {'GetAcquirer'}
+
 
 def _canonicalize_node(node, **kwargs):
     """
@@ -68,9 +70,11 @@ def _get_uri(uri, reference, base_uri=""):
         if len(results) == 1:
             return _canonicalize_node(results[0], exclusive=exc_c14n, inclusive_ns_prefixes=prefix_list)
         if len(results) > 1:
-            raise UserError(f"Ambiguous reference URI {uri} resolved to {len(results)} nodes")
+            raise UserError(
+                _("Ambiguous reference URI %(uri)s resolved to %(count)d nodes", uri=uri, count=len(results))
+            )
 
-    raise UserError(f'URI {uri} not found')
+    raise UserError(_("URI %(uri)s not found", uri=uri))
 
 
 def _reference_digests(node, base_uri=""):
@@ -123,7 +127,7 @@ def _build_and_send_request(self, payload, service, company):
     cert_sudo = company.sudo().l10n_co_dian_certificate_ids[-1:]
     if not cert_sudo:
         raise ValidationError(_('Certificate is not available'))
-    dt_now = fields.datetime.utcnow()
+    dt_now = fields.Datetime.now()
     vals = {
         'creation_time': dt_now.isoformat(timespec='milliseconds') + "Z",
         'expiration_time': (dt_now + timedelta(seconds=60000)).isoformat(timespec='milliseconds') + "Z",
@@ -141,7 +145,7 @@ def _build_and_send_request(self, payload, service, company):
     # Send the request
     try:
         response = requests.post(
-            url=TEST_ENDPOINT if company.l10n_co_dian_test_environment else ENDPOINT,
+            url=TEST_ENDPOINT if company.l10n_co_dian_test_environment and service not in FORCED_PROD_SERVICES else ENDPOINT,
             data=etree.tostring(envelope),
             timeout=3,
             headers={"Content-Type": f'application/soap+xml;charset=UTF-8;action="http://wcf.dian.colombia/IWcfDianCustomerServices/{service}"'},

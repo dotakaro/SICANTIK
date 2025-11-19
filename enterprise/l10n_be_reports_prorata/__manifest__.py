@@ -6,14 +6,15 @@
         Provides the option to add the prorata deduction to the VAT export
     """,
     'depends': [
-        'l10n_be_reports_post_wizard'
+        'l10n_be_reports'
     ],
     'data': [
-        'views/l10n_be_wizard_xml_export_options_views.xml',
+        'wizard/vat_report_export.xml',
         'data/prorata_template.xml',
     ],
     'installable': True,
     'auto_install': True,
     'website': 'https://www.odoo.com/page/accounting',
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

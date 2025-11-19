@@ -6,12 +6,17 @@ import base64
 import psycopg2
 import uuid
 
+from collections import defaultdict
 from datetime import timedelta
 from typing import Dict, Any, List, Optional
 
 from odoo import _, fields, models, api
 from odoo.exceptions import AccessError, UserError
-from odoo.tools import mute_logger, OrderedSet, image_process
+from odoo.tools import mute_logger, OrderedSet
+from odoo.tools.image import image_process
+
+from odoo.addons.spreadsheet.utils.json import extend_serialized_json
+
 
 _logger = logging.getLogger(__name__)
 
@@ -19,7 +24,7 @@ CollaborationMessage = Dict[str, Any]
 
 
 class SpreadsheetMixin(models.AbstractModel):
-    _name = "spreadsheet.mixin"
+    _name = 'spreadsheet.mixin'
     _inherit = ["spreadsheet.mixin", "bus.listener.mixin"]
 
     spreadsheet_snapshot = fields.Binary()
@@ -43,11 +48,11 @@ class SpreadsheetMixin(models.AbstractModel):
                 revisions.fetch(["revision_uuid"])
                 spreadsheet.current_revision_uuid = revisions[-1].revision_uuid
             else:
-                snapshot = spreadsheet._get_spreadsheet_snapshot()
+                snapshot = spreadsheet._get_spreadsheet_serialized_snapshot()
                 if snapshot is False:
                     spreadsheet.current_revision_uuid = False
                 else:
-                    spreadsheet.current_revision_uuid = snapshot.get("revisionId", "START_REVISION")
+                    spreadsheet.current_revision_uuid = json.loads(snapshot).get("revisionId", "START_REVISION")
 
     def write(self, vals):
         if "spreadsheet_binary_data" in vals and not self.env.context.get("preserve_spreadsheet_revisions"):
@@ -75,15 +80,7 @@ class SpreadsheetMixin(models.AbstractModel):
         spreadsheets._copy_spreadsheet_image_attachments()
         return spreadsheets
 
-    def join_spreadsheet_session(self, access_token=None):
-        """Join a spreadsheet session.
-        Returns the following data::
-        - the last snapshot
-        - pending revisions since the last snapshot
-        - the spreadsheet name
-        - whether the user favorited the spreadsheet or not
-        - whether the user can edit the content of the spreadsheet or not
-        """
+    def _get_spreadsheet_metadata(self, access_token=None):
         self.ensure_one()
         self._check_collaborative_spreadsheet_access("read", access_token)
         can_write = self._check_collaborative_spreadsheet_access(
@@ -93,8 +90,6 @@ class SpreadsheetMixin(models.AbstractModel):
         return {
             "id": spreadsheet_sudo.id,
             "name": spreadsheet_sudo.display_name or "",
-            "data": spreadsheet_sudo._get_spreadsheet_snapshot(),
-            "revisions": spreadsheet_sudo._build_spreadsheet_messages(),
             "snapshot_requested": can_write and spreadsheet_sudo._should_be_snapshotted(),
             "isReadonly": not can_write,
             "default_currency": self.env["res.currency"].get_company_currency_for_spreadsheet(),
@@ -229,17 +224,33 @@ class SpreadsheetMixin(models.AbstractModel):
             )
         return is_accepted
 
-    def _get_spreadsheet_snapshot(self):
+    def _get_serialized_spreadsheet_data_body(self, access_token=None):
+        # handcraft the json response body, avoiding the need for parsing and re-serializing
+        # the spreadsheet file and the revisions, which can be expensive for large files.
+        metadata = self._get_spreadsheet_metadata(access_token)
+
+        self._check_collaborative_spreadsheet_access('read', access_token)
+        spreadsheet_sudo = self.sudo()
+
+        serialized_metadata = json.dumps(metadata, ensure_ascii=False)
+        serialized_snapshot = spreadsheet_sudo._get_spreadsheet_serialized_snapshot()
+        revisions = spreadsheet_sudo._get_spreadsheet_serialized_revisions()
+        serialized_revisions = '[%s]' % ','.join(revisions)
+        body = extend_serialized_json(
+            serialized_metadata,
+            [('data', serialized_snapshot), ('revisions', serialized_revisions)]
+        )
+        return body
+
+    def _get_spreadsheet_serialized_snapshot(self):
         snapshot_attachment = self.env['ir.attachment'].with_context(bin_size=False).search([
             ('res_model', '=', self._name),
             ('res_field', '=', 'spreadsheet_snapshot'),
-            ('res_id', '=', self.id),
+            ('res_id', 'in', self.ids),
         ])
-        if not snapshot_attachment and self.spreadsheet_data is False:
-            return False
-        elif not snapshot_attachment:
-            return json.loads(self.spreadsheet_data or '{}')
-        return json.loads(snapshot_attachment.raw or '{}')
+        if snapshot_attachment:
+            return snapshot_attachment.raw.decode() or '{}'
+        return self.spreadsheet_data or '{}'
 
     def _should_be_snapshotted(self):
         if not self.spreadsheet_revision_ids:
@@ -289,18 +300,19 @@ class SpreadsheetMixin(models.AbstractModel):
         message.pop("clientId", None)
         return message
 
-    def _build_spreadsheet_messages(self) -> List[CollaborationMessage]:
+    def _get_spreadsheet_serialized_revisions(self) -> List[str]:
         """Build spreadsheet collaboration messages from the saved
         revision data"""
         self.ensure_one()
-        return [
-            dict(
-                json.loads(rev.commands),
-                serverRevisionId=rev.parent_revision_id.revision_uuid or self._get_initial_revision_uuid(),
-                nextRevisionId=rev.revision_uuid,
+        result = []
+        for revision in self.spreadsheet_revision_ids:
+            server_revision_id = revision.parent_revision_id.revision_uuid or self._get_initial_revision_uuid()
+            serialized = extend_serialized_json(
+                revision.commands,
+                [("serverRevisionId", f'"{server_revision_id}"'), ("nextRevisionId", f'"{revision.revision_uuid}"')]
             )
-            for rev in self.spreadsheet_revision_ids
-        ]
+            result.append(serialized)
+        return result
 
     def _check_collaborative_spreadsheet_access(
         self, operation: str, access_token=None, *, raise_exception=True
@@ -349,11 +361,16 @@ class SpreadsheetMixin(models.AbstractModel):
         spreadsheet = self.create(vals or {})
         return spreadsheet.action_open_spreadsheet()
 
+    @api.readonly
     @api.model
     def get_selector_spreadsheet_models(self):
         selectable_models = []
         for model in self.env:
-            if issubclass(self.pool[model], self.pool['spreadsheet.mixin']):
+            if (
+                issubclass(self.pool[model], self.pool['spreadsheet.mixin']) and
+                self.env[model].has_access('write') and
+                self.env[model].has_access('create')
+            ):
                 selector = self.env[model]._get_spreadsheet_selector()
                 if selector:
                     selectable_models.append(selector)
@@ -364,17 +381,15 @@ class SpreadsheetMixin(models.AbstractModel):
     def _get_spreadsheet_selector(self):
         return None
 
-    @api.model
-    def _creation_msg(self):
-        return self.env._("New spreadsheet created")
-
+    @api.readonly
     @api.model
     def get_spreadsheets(self, domain=(), offset=0, limit=None):
         return {
             "total": self.search_count(domain),
-            "records": self.search_read(domain, ["display_name", "thumbnail"], offset=offset, limit=limit)
+            "records": self.search_read(domain, ["display_name", "display_thumbnail"], offset=offset, limit=limit)
         }
 
+    @api.readonly
     def get_spreadsheet_history(self, from_snapshot=False):
         """Fetch the spreadsheet history.
          - if from_snapshot is provided, then provides the last snapshot and the revisions since then
@@ -386,7 +401,7 @@ class SpreadsheetMixin(models.AbstractModel):
         initial_date = spreadsheet_sudo.create_date
 
         if from_snapshot:
-            data = spreadsheet_sudo._get_spreadsheet_snapshot()
+            data = spreadsheet_sudo._get_spreadsheet_serialized_snapshot()
             revisions = spreadsheet_sudo.spreadsheet_revision_ids
             snapshot = spreadsheet_sudo.env["ir.attachment"].search([
                 ("res_model", "=", self._name),
@@ -406,7 +421,7 @@ class SpreadsheetMixin(models.AbstractModel):
                     json.loads(rev.commands),
                     id=rev.id,
                     name=rev.name,
-                    user=(rev.create_uid.id, rev.create_uid.name),
+                    user=(rev.author_id.id, rev.author_id.name),
                     serverRevisionId=rev.parent_revision_id.revision_uuid or self._get_initial_revision_uuid(),
                     nextRevisionId=rev.revision_uuid,
                     timestamp=rev.create_date,
@@ -431,15 +446,7 @@ class SpreadsheetMixin(models.AbstractModel):
         new_spreadsheet.spreadsheet_snapshot = base64.b64encode(json.dumps(spreadsheet_snapshot).encode())
         new_spreadsheet.spreadsheet_revision_ids.active = False
         new_spreadsheet._delete_comments_from_data()
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'type': 'info',
-                'message': self._creation_msg(),
-                'next': new_spreadsheet.action_open_spreadsheet(),
-            }
-        }
+        return new_spreadsheet.action_open_spreadsheet()
 
     def restore_spreadsheet_version(self, revision_id: int, spreadsheet_snapshot: dict):
         self.ensure_one()
@@ -471,6 +478,22 @@ class SpreadsheetMixin(models.AbstractModel):
                 'next': self.action_open_spreadsheet(),
             }
         }
+
+    @api.model
+    def get_search_view_archs(self, action_xml_ids: List[str]):
+        records = [self.env.ref(xml_id, raise_if_not_found=False) for xml_id in action_xml_ids]
+        actions_data = [
+            record._get_action_dict()
+            for record in records
+            if record and record._name == 'ir.actions.act_window'
+        ]
+        search_views = defaultdict(list)
+        for action in actions_data:
+            res_model = action['res_model']
+            search_view_id = action['search_view_id'][0] if action['search_view_id'] else False
+            views = self.env[res_model].get_views(views=[(search_view_id, 'search')])
+            search_views[res_model].append(views['views']['search']['arch'])
+        return dict(search_views)
 
     def _get_context_company_colors(self):
         companies = self.env.companies
@@ -573,7 +596,7 @@ class SpreadsheetMixin(models.AbstractModel):
             data = json.loads(spreadsheet.spreadsheet_data) if spreadsheet.spreadsheet_data else {}
             spreadsheet._copy_spreadsheet_images_data(data, mapping)
             if spreadsheet.spreadsheet_snapshot:
-                snapshot = spreadsheet._get_spreadsheet_snapshot()
+                snapshot = json.loads(spreadsheet._get_spreadsheet_serialized_snapshot())
                 spreadsheet._copy_spreadsheet_images_data(snapshot, mapping)
             if mapping:
                 spreadsheet.with_context(preserve_spreadsheet_revisions=True).spreadsheet_data = json.dumps(data)

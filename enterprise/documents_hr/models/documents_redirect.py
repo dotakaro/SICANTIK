@@ -1,7 +1,7 @@
 from odoo import fields, models
 
 
-class DocumentRedirect(models.Model):
+class DocumentsRedirect(models.Model):
     _inherit = "documents.redirect"
 
     # Add the employee for URLs already sent

@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
-    'name': 'POS Pricer',
+    'name': 'PoS Pricer',
     'version': '1.0',
     'category': 'Sales/Point of Sale',
     'sequence': 6,
@@ -16,7 +16,9 @@
         'data/pricer_ir_cron.xml',
         'data/pos_pricer_data.xml',
         'data/pos_config_data.xml',
-        'data/pricelist_data.xml',
+    ],
+    'demo': [
+        'demo/pricelist_data.xml', 
     ],
     'depends': ['product', 'point_of_sale'],
     'installable': True,
@@ -25,5 +27,6 @@
             'pos_pricer/static/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

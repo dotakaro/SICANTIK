@@ -1,13 +1,15 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import datetime
-
 from unittest.mock import patch
 
 from odoo.tests.common import tagged
 from odoo.tools import mute_logger
 
-from odoo.addons.sale_amazon.tests.common import OPERATIONS_RESPONSES_MAP, TestAmazonCommon
+from odoo.addons.sale_amazon.tests.common import (
+    OPERATIONS_RESPONSES_MAP,
+    TestAmazonCommon,
+)
 
 
 @tagged('post_install', '-at_install')
@@ -88,14 +90,14 @@ class TestAmazonMultiCompany(TestAmazonCommon):
                 msg="The unitary price should be the quotient of the item price (tax excluded)"
                     " divided by the quantity.",
             )
-            self.assertEqual(product_line.tax_id, self.parent_tax)
+            self.assertEqual(product_line.tax_ids, self.parent_tax)
 
             shipping_line = order_lines.filtered(
                 lambda l: l.product_id.default_code == 'SHIPPING-CODE'
             )
-            self.assertEqual(shipping_line.tax_id, self.parent_tax)
+            self.assertEqual(shipping_line.tax_ids, self.parent_tax)
 
             gift_wrapping_line = order_lines.filtered(
                 lambda l: l.product_id.default_code == 'WRAP-CODE'
             )
-            self.assertEqual(gift_wrapping_line.tax_id, self.parent_tax)
+            self.assertEqual(gift_wrapping_line.tax_ids, self.parent_tax)

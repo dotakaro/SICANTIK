@@ -22,12 +22,12 @@
                     )"
                 />
                 <t t-if="displayNoContent">
-                    <t t-if="props.info.noContentHelp" t-call="web.ActionHelper">
-                        <t t-set="noContentHelp" t-value="props.info.noContentHelp"/>
+					<t t-if="props.info.noContentHelp">
+						<ActionHelper noContentHelp="props.info.noContentHelp" showRibbon="model.useSampleModel"/>
                     </t>
                     <t t-else="" t-call="web.NoContentHelper"/>
                 </t>
-                <t t-component="props.Renderer" class="'o_renderer'" model="model" onRowClicked="(row) => this.onRowClicked(row)"/>
+                <t t-component="props.Renderer" class="'o_renderer'" model="model" onRowClicked="(row, middleClick) => this.onRowClicked(row, middleClick)"/>
             </Layout>
         </div>
     </t>

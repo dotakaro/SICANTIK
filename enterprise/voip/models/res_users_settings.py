@@ -1,13 +1,11 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResUsersSettings(models.Model):
     _inherit = "res.users.settings"
 
     def _get_default_voip_provider(self):
-        return self.env['voip.provider'].search([
-            ('company_id', 'in', [self.env.company.id, False])
-        ], limit=1)
+        return self.env["voip.provider"].search([("company_id", "in", [self.env.company.id, False])], limit=1)
 
     voip_provider_id = fields.Many2one(
         "voip.provider", string="VoIP Provider",
@@ -47,3 +45,15 @@ class ResUsersSettings(models.Model):
         """,
         required=True,
     )
+
+    do_not_disturb_until_dt = fields.Datetime(
+        string="Do Not Disturb until",
+        help="If set, VoIP will be in Do Not Disturb mode until this time."
+    )
+
+    @api.model
+    def _format_settings(self, fields_to_format):
+        res = super()._format_settings(fields_to_format)
+        if "do_not_disturb_until_dt" in fields_to_format:
+            res["do_not_disturb_until_dt"] = fields.Datetime.to_string(self.do_not_disturb_until_dt)
+        return res

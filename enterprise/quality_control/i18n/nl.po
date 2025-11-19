@@ -3,17 +3,16 @@
 # 	* quality_control
 # 
 # Translators:
-# Manon Rondou, 2025
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2025
 # Wil Odoo, 2025
+# Manon Rondou, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-07 20:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Manon Rondou, 2025\n"
 "Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -313,6 +312,7 @@ msgid "Control Point"
 msgstr "Controlepunt"
 
 #. module: quality_control
+#: model:ir.actions.act_window,name:quality_control.quality_point_action
 #: model:ir.ui.menu,name:quality_control.menu_quality_control_points
 msgid "Control Points"
 msgstr "Controlepunten"
@@ -448,10 +448,21 @@ msgid "Discard"
 msgstr "Negeren"
 
 #. module: quality_control
+#: model:ir.model.fields,field_description:quality_control.field_product_product__display_name
+#: model:ir.model.fields,field_description:quality_control.field_product_template__display_name
+#: model:ir.model.fields,field_description:quality_control.field_quality_alert__display_name
+#: model:ir.model.fields,field_description:quality_control.field_quality_check__display_name
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_on_demand__display_name
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_spreadsheet__display_name
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__display_name
+#: model:ir.model.fields,field_description:quality_control.field_quality_point__display_name
 #: model:ir.model.fields,field_description:quality_control.field_quality_spreadsheet_template__display_name
+#: model:ir.model.fields,field_description:quality_control.field_report_quality_control_quality_worksheet__display_name
+#: model:ir.model.fields,field_description:quality_control.field_report_quality_control_quality_worksheet_internal__display_name
+#: model:ir.model.fields,field_description:quality_control.field_stock_lot__display_name
+#: model:ir.model.fields,field_description:quality_control.field_stock_move__display_name
+#: model:ir.model.fields,field_description:quality_control.field_stock_move_line__display_name
+#: model:ir.model.fields,field_description:quality_control.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "Schermnaam"
 
@@ -497,14 +508,12 @@ msgid "Failed Quantity"
 msgstr "Mislukte aantal"
 
 #. module: quality_control
-#: model:ir.model.fields,field_description:quality_control.field_quality_check__failure_location_id
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__failure_location_id
 msgid "Failure Location"
 msgstr "Mislukte locatie"
 
 #. module: quality_control
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__potential_failure_location_ids
-#: model:ir.model.fields,field_description:quality_control.field_quality_point__failure_location_ids
 msgid "Failure Locations"
 msgstr "Mislukte locaties"
 
@@ -537,22 +546,36 @@ msgid "Group By"
 msgstr "Groeperen op"
 
 #. module: quality_control
+#: model:ir.model.fields,field_description:quality_control.field_product_product__id
+#: model:ir.model.fields,field_description:quality_control.field_product_template__id
+#: model:ir.model.fields,field_description:quality_control.field_quality_alert__id
+#: model:ir.model.fields,field_description:quality_control.field_quality_check__id
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_on_demand__id
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_spreadsheet__id
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__id
+#: model:ir.model.fields,field_description:quality_control.field_quality_point__id
 #: model:ir.model.fields,field_description:quality_control.field_quality_spreadsheet_template__id
+#: model:ir.model.fields,field_description:quality_control.field_report_quality_control_quality_worksheet__id
+#: model:ir.model.fields,field_description:quality_control.field_report_quality_control_quality_worksheet_internal__id
+#: model:ir.model.fields,field_description:quality_control.field_stock_lot__id
+#: model:ir.model.fields,field_description:quality_control.field_stock_move__id
+#: model:ir.model.fields,field_description:quality_control.field_stock_move_line__id
+#: model:ir.model.fields,field_description:quality_control.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
 #. module: quality_control
 #: model:ir.model.fields,help:quality_control.field_quality_check_wizard__potential_failure_location_ids
-#: model:ir.model.fields,help:quality_control.field_quality_point__failure_location_ids
 msgid ""
-"If a quality check fails, a location is chosen from this list for each "
-"failed quantity."
+"If quality check fails, a destination location is chosen from this list for\n"
+"- each failed specific product quantity if control is per quantity\n"
+" /- all quantities of a product if control is per product\n"
+" /- all quantities of products in the operation if control is per operation"
 msgstr ""
-"Als een kwaliteitscontrole mislukt, wordt voor elke mislukte aantal een "
-"locatie uit deze lijst gekozen."
+"Als de kwaliteitscontrole faalt, wordt een bestemmingslocatie gekozen uit deze lijst voor\n"
+"- elke mislukte specifieke producthoeveelheid als de controle per hoeveelheid is\n"
+" /- alle hoeveelheden van een product als de controle per product is\n"
+" /- alle hoeveelheden van producten in de operatie als de controle per operatie is"
 
 #. module: quality_control
 #: model:ir.model.fields,help:quality_control.field_quality_check_on_demand__lot_id
@@ -731,12 +754,6 @@ msgid "New"
 msgstr "Nieuw"
 
 #. module: quality_control
-#. odoo-javascript
-#: code:addons/quality_control/static/src/spreadsheet_bundle/quality_spreadsheet_template_action/quality_spreadsheet_template_action.js:0
-msgid "New quality spreadsheet template created"
-msgstr "Nieuw sjabloon voor kwaliteitsspreadsheet gemaakt"
-
-#. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.view_quality_check_wizard
 msgid "Next"
 msgstr "Volgende"
@@ -800,11 +817,6 @@ msgid "Notes"
 msgstr "Notities"
 
 #. module: quality_control
-#: model_terms:ir.ui.view,arch_db:quality_control.quality_check_wizard_form_failure
-msgid "OK"
-msgstr "OK"
-
-#. module: quality_control
 #. odoo-python
 #: code:addons/quality_control/models/stock_picking.py:0
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_on_demand_view_form
@@ -840,12 +852,6 @@ msgstr ""
 "Bewerking = Er wordt één kwaliteitscontrole gevraagd op operationeel niveau. \n"
 "Product = Per product wordt een kwaliteitscontrole gevraagd. \n"
 "Aantal = Er wordt een kwaliteitscontrole gevraagd voor elke nieuw geregistreerde productaantal, waarbij ook gedeeltelijke aantalcontroles mogelijk zijn."
-
-#. module: quality_control
-#. odoo-python
-#: code:addons/quality_control/models/stock_picking.py:0
-msgid "Operation not supported"
-msgstr "Bewerking niet ondersteund"
 
 #. module: quality_control
 #: model:ir.ui.menu,name:quality_control.menu_quality_dashboard
@@ -942,12 +948,6 @@ msgid "Product Moves (Stock Move Line)"
 msgstr "Productverplaatstingen (voorraadverplaatsingsregels)"
 
 #. module: quality_control
-#: model:ir.model.fields,field_description:quality_control.field_quality_check__uom_id
-#: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__uom_id
-msgid "Product Unit of Measure"
-msgstr "Maateenheid product"
-
-#. module: quality_control
 #: model:ir.model,name:quality_control.model_product_product
 msgid "Product Variant"
 msgstr "Productvariant"
@@ -1022,13 +1022,17 @@ msgstr ""
 
 #. module: quality_control
 #: model:ir.actions.act_window,name:quality_control.quality_alert_action_check
-#: model:ir.actions.act_window,name:quality_control.quality_alert_action_report
 #: model:ir.actions.act_window,name:quality_control.quality_alert_action_team
 #: model:ir.ui.menu,name:quality_control.menu_quality_alert
-#: model:ir.ui.menu,name:quality_control.menu_quality_alert_report
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_alert_team_dashboard_view_kanban
 msgid "Quality Alerts"
 msgstr "Kwaliteitswaarschuwingen"
+
+#. module: quality_control
+#: model:ir.actions.act_window,name:quality_control.quality_alert_action_report
+#: model:ir.ui.menu,name:quality_control.menu_quality_alert_report
+msgid "Quality Alerts Analysis"
+msgstr "Analyse Kwaliteitswaarschuwingen"
 
 #. module: quality_control
 #. odoo-python
@@ -1041,6 +1045,8 @@ msgid "Quality Check"
 msgstr "Kwaliteitscontrole"
 
 #. module: quality_control
+#: model:ir.actions.act_window,name:quality_control.quality_check_action_report
+#: model:ir.ui.menu,name:quality_control.menu_quality_check_report
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_view_graph
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_view_pivot
 msgid "Quality Check Analysis"
@@ -1052,6 +1058,8 @@ msgid "Quality Check Fail"
 msgstr "Kwaliteitscontrole mislukt"
 
 #. module: quality_control
+#. odoo-python
+#: code:addons/quality_control/wizard/quality_check_wizard.py:0
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_wizard_form_failure
 msgid "Quality Check Failed"
 msgstr "Kwaliteitscontrole mislukt"
@@ -1086,9 +1094,7 @@ msgstr "Kwaliteitscontrole:"
 #: model:ir.actions.act_window,name:quality_control.quality_check_action_main
 #: model:ir.actions.act_window,name:quality_control.quality_check_action_picking
 #: model:ir.actions.act_window,name:quality_control.quality_check_action_production_lot
-#: model:ir.actions.act_window,name:quality_control.quality_check_action_report
 #: model:ir.actions.act_window,name:quality_control.quality_check_action_team
-#: model:ir.ui.menu,name:quality_control.menu_quality_check_report
 #: model:ir.ui.menu,name:quality_control.menu_quality_checks
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_point_view_form_inherit_quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.stock_picking_view_form_inherit_quality
@@ -1118,11 +1124,6 @@ msgstr "Kwaliteit controlepunt"
 #: model:ir.model.fields,field_description:quality_control.field_product_template__quality_control_point_qty
 msgid "Quality Control Point Qty"
 msgstr "Aantal kwaliteitscontrolepunten"
-
-#. module: quality_control
-#: model:ir.actions.act_window,name:quality_control.quality_point_action
-msgid "Quality Control Points"
-msgstr "Kwaliteitscontrolepunten"
 
 #. module: quality_control
 #: model:ir.model.fields,field_description:quality_control.field_product_product__quality_fail_qty
@@ -1504,6 +1505,12 @@ msgid "Type:"
 msgstr "Soort:"
 
 #. module: quality_control
+#: model:ir.model.fields,field_description:quality_control.field_quality_check__uom_id
+#: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__uom_id
+msgid "Unit"
+msgstr "Eenheid"
+
+#. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_point_view_form_inherit_quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.view_quality_check_wizard
 msgid "Unit of Measure"
@@ -1518,6 +1525,11 @@ msgstr "Bevestigen"
 #: model_terms:ir.ui.view,arch_db:quality_control.worksheet_page
 msgid "Value near threshold."
 msgstr "Waarde dichtbij drempel."
+
+#. module: quality_control
+#: model_terms:ir.ui.view,arch_db:quality_control.quality_spreadsheet_template_view_list
+msgid "Visible to all"
+msgstr "Voor iedereen zichtbaar"
 
 #. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.worksheet_page

@@ -67,7 +67,11 @@ class LuxembourgElectronicReportTest(TestAccountReportsCommon):
 
     def _get_xml_declaration(self, report_xmlid, yearly=False):
         report = self.env.ref(report_xmlid)
-        options = report.get_options({})
+        options = report.get_options({
+            'date': {
+                'filter': 'previous_month',
+            }
+        })
 
         # Add the filename in the options, which is initially done by the get_report_filename() method
         now_datetime = datetime.now()
@@ -646,7 +650,7 @@ class LuxembourgElectronicReportTest(TestAccountReportsCommon):
                                     <NumericField id="1115">800,00</NumericField>
                                     <NumericField id="1852">1000,00</NumericField>
                                     <NumericField id="1862">1000,00</NumericField>
-                                    <NumericField id="1112">-0,00</NumericField>
+                                    <NumericField id="1112">0,00</NumericField>
                                     <NumericField id="2258">200,00</NumericField>
                                     <NumericField id="0162">200,00</NumericField>
                                     <NumericField id="0158">200,00</NumericField>

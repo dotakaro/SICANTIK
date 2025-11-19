@@ -4,13 +4,13 @@ from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
 
-class HelpdeskTicketConvert2Lead(models.TransientModel):
-    _name = "helpdesk.ticket.to.lead"
+class HelpdeskTicketToLead(models.TransientModel):
+    _name = 'helpdesk.ticket.to.lead'
     _description = "Convert Ticket to Lead"
 
     @api.model
     def default_get(self, fields):
-        res = super(HelpdeskTicketConvert2Lead, self).default_get(fields)
+        res = super().default_get(fields)
 
         if not res.get('ticket_id') and self.env.context.get('active_id'):
             res['ticket_id'] = self.env.context['active_id']

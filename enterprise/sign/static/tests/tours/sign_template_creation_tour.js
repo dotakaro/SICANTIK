@@ -1,8 +1,7 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 import { queryFirst } from "@odoo/hoot-dom";
+import { _t } from "@web/core/l10n/translation";
 
 function triggerDragEvent(element, type, data = {}) {
     const event = new DragEvent(type, { bubbles: true });
@@ -14,7 +13,7 @@ function triggerDragEvent(element, type, data = {}) {
     element.dispatchEvent(event);
 }
 
-function dragAndDropSignItemAtHeight(from, height = 0.5, width = 0.5) {
+export function dragAndDropSignItemAtHeight(from, height = 0.5, width = 0.5) {
     const iframe = document.querySelector("iframe");
     const to = queryFirst(`:iframe .page[data-page-number="1"]`);
     const toPosition = to.getBoundingClientRect();
@@ -26,10 +25,9 @@ function dragAndDropSignItemAtHeight(from, height = 0.5, width = 0.5) {
         setData: (key, value) => {
             dataTransferObject[key] = value;
         },
-        getData: (key) => {
-            return dataTransferObject[key];
-        },
+        getData: (key) => dataTransferObject[key],
         setDragImage: () => {},
+        items: [],
     };
 
     triggerDragEvent(from, "dragstart", {
@@ -43,6 +41,45 @@ function dragAndDropSignItemAtHeight(from, height = 0.5, width = 0.5) {
     });
 
     triggerDragEvent(from, "dragend");
+}
+
+export function createSelectionRectangle(startPos=0.25, endPos=0.75) {
+    const viewerContainer = queryFirst(`:iframe #viewerContainer`);
+    const page = queryFirst(`:iframe .page[data-page-number="1"]`);
+    const pageRect = page.getBoundingClientRect();
+
+    const startX = pageRect.width * startPos;
+    const startY = pageRect.height * startPos;
+    const endX = pageRect.width * endPos;
+    const endY = pageRect.height * endPos;
+    const mousemoveEvent = new MouseEvent('mousemove', {
+        bubbles: true,
+        clientX: startX,
+        clientY: startY
+    });
+    viewerContainer.dispatchEvent(mousemoveEvent);
+
+    const mousedownEvent = new MouseEvent('mousedown', {
+        bubbles: true,
+        clientX: startX,
+        clientY: startY,
+        button: 0
+    });
+    viewerContainer.dispatchEvent(mousedownEvent);
+
+    const mousemoveEvent2 = new MouseEvent('mousemove', {
+        bubbles: true,
+        clientX: endX,
+        clientY: endY
+    });
+    viewerContainer.dispatchEvent(mousemoveEvent2);
+
+    const mouseupEvent = new MouseEvent('mouseup', {
+        bubbles: true,
+        clientX: endX,
+        clientY: endY
+    });
+    viewerContainer.dispatchEvent(mouseupEvent);
 }
 
 registry.category("web_tour.tours").add("sign_template_creation_tour", {
@@ -75,7 +112,7 @@ registry.category("web_tour.tours").add("sign_template_creation_tour", {
         },
         {
             content: "Search Document Name",
-            trigger: ".o_searchview_autocomplete .o_menu_item:first",
+            trigger: ".o_searchview_autocomplete .o-dropdown-item:first",
             run: "click",
         },
         {
@@ -94,96 +131,94 @@ registry.category("web_tour.tours").add("sign_template_creation_tour", {
         },
         {
             content: "Drop Signature Item",
-            trigger: ":iframe .o_sign_field_type_button:contains(Signature)",
+            trigger: ".o_sign_field_type_button:contains(" + _t("Signature") +")",
             run() {
                 dragAndDropSignItemAtHeight(this.anchor, 0.5, 0.25);
             },
         },
         {
             content: "Drop Name Sign Item",
-            trigger: ":iframe .o_sign_field_type_button:contains(Name)",
+            trigger: ".o_sign_field_type_button:contains(" + _t("Name") +")",
             run() {
                 dragAndDropSignItemAtHeight(this.anchor, 0.25, 0.25);
             },
         },
         {
             content: "Drop Text Sign Item",
-            trigger: ":iframe .o_sign_field_type_button:contains(Text)",
+            trigger: ".o_sign_field_type_button:contains(" + _t("Text") +")",
             run() {
                 dragAndDropSignItemAtHeight(this.anchor, 0.15, 0.25);
             },
         },
         {
-            content: "Open popover on name sign item",
-            trigger: ':iframe .o_sign_sign_item:contains("Name") .o_sign_item_display',
-            run: "click",
-        },
-        {
-            content: "Change responsible",
-            trigger: ".o_popover .o_input_dropdown input",
-            run: "edit employee",
-        },
-        {
-            content: "select employee",
-            trigger: '.o_popover .o_input_dropdown .dropdown .dropdown-item:contains("Employee")',
-            run: "click",
-        },
-        {
-            content: "Validate changes",
-            trigger: ".o_popover .o_sign_validate_field_button",
-            run: "click",
-        },
-        {
-            content: "Drop Selection Sign Item",
-            trigger: ":iframe .o_sign_field_type_button:contains(Selection)",
+            content: "Test multi-select by creating a selection rectangle",
+            trigger: ":iframe .page[data-page-number='1']",
             run() {
-                dragAndDropSignItemAtHeight(this.anchor, 0.75, 0.25);
-            },
+                createSelectionRectangle(0.25, 0.75);
+            }
         },
         {
-            content: "Open popover on Selection sign item",
-            trigger: ':iframe .o_sign_sign_item:contains("Selection") .o_sign_item_display',
+            content: "Verify items are selected",
+            trigger: ":iframe .o_sign_sign_item.multi_selected",
+        },
+        {
+            content: "Test copy functionality with Ctrl+C",
+            trigger: ":iframe .o_sign_sign_item.multi_selected",
+            run() {
+                const keyEvent = new KeyboardEvent('keydown', {
+                    key: 'c',
+                    code: 'KeyC',
+                    ctrlKey: true,
+                    bubbles: true
+                });
+                document.querySelector("iframe").contentDocument.dispatchEvent(keyEvent);
+            }
+        },
+        {
+            content: "Click elsewhere to prepare for paste",
+            trigger: ":iframe .page[data-page-number='1']",
+            run(actions) {
+                const page = queryFirst(`:iframe .page[data-page-number="1"]`);
+                const pageRect = page.getBoundingClientRect();
+                actions.click({
+                    x: pageRect.left + pageRect.width * 0.8,
+                    y: pageRect.top + pageRect.height * 0.8
+                });
+            }
+        },
+        {
+            content: "Test paste functionality with Ctrl+V",
+            trigger: ":iframe .page[data-page-number='1']",
+            run() {
+                const keyEvent = new KeyboardEvent('keydown', {
+                    key: 'v',
+                    code: 'KeyV',
+                    ctrlKey: true,
+                    bubbles: true
+                });
+                document.querySelector("iframe").contentDocument.dispatchEvent(keyEvent);
+            }
+        },
+        {
+            content: "Test multi-select by creating a selection rectangle",
+            trigger: ":iframe .page[data-page-number='1']",
+            run() {
+                createSelectionRectangle(0.25, 0.75);
+            }
+        },
+        {
+            content: "Verify items are selected",
+            trigger: ":iframe .o_sign_sign_item.multi_selected",
+        },
+        {
+            content: "Click on document name text to make it editable",
+            trigger: ".o_sign_sidebar_document_name_text",
             run: "click",
         },
         {
-            content: "Write new selection option name",
-            trigger: ".o_popover .o_input_dropdown input",
-            run: "edit option",
-        },
-        {
-            content: "Create new selection option",
-            trigger: '.o_popover .o_input_dropdown .dropdown a:contains("Create")',
-            run: "click",
-        },
-        {
-            content: "Check option is added",
-            trigger: '.o_popover #o_sign_select_options_input .o_tag_badge_text:contains("option")',
-            run: "click",
-        },
-        {
-            content: "Validate changes",
-            trigger: ".o_popover .o_sign_validate_field_button",
-            run: "click",
-        },
-        {
-            content: "Open popover on text sign item",
-            trigger: ":iframe .o_sign_sign_item:contains('Text') .o_sign_item_display",
-            run: "click",
-        },
-        {
-            content: "Change text placeholder",
-            trigger: ".o_popover .o_popover_placeholder input",
-            run: "edit placeholder && click .o_popover",
-        },
-        {
-            content: "Validate changes",
-            trigger: ".o_popover .o_sign_validate_field_button",
-            run: "click",
-        },
-        {
-            content: "Change template name",
-            trigger: ".o_sign_template_name_input",
-            run: "edit filled_template && click body",
+            content: "Change document name",
+            trigger: ".o_sign_document_name_input",
+            run: "edit new-document-name && click body",
         },
         {
             trigger: ".breadcrumb .o_back_button",

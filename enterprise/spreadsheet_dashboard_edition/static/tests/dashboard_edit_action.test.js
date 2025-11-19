@@ -1,5 +1,6 @@
-import { expect, test } from "@odoo/hoot";
-import { animationFrame, queryText } from "@odoo/hoot-dom";
+import { describe, expect, test } from "@odoo/hoot";
+import { queryText } from "@odoo/hoot-dom";
+import { animationFrame } from "@odoo/hoot-mock";
 import { registries } from "@odoo/o-spreadsheet";
 import { getCellContent } from "@spreadsheet/../tests/helpers/getters";
 import { doMenuAction } from "@spreadsheet/../tests/helpers/ui";
@@ -16,6 +17,8 @@ import { createDashboardEditAction, createNewDashboard } from "./helpers/test_he
 
 defineSpreadsheetDashboardEditionModels();
 
+describe.current.tags("desktop");
+
 const { topbarMenuRegistry } = registries;
 
 test("open dashboard with existing data", async function () {
@@ -24,7 +27,7 @@ test("open dashboard with existing data", async function () {
         sheets: [
             {
                 cells: {
-                    A1: { content: "Hello" },
+                    A1: "Hello",
                 },
             },
         ],
@@ -73,7 +76,7 @@ test("share dashboard from control panel", async function () {
         sheets: [
             {
                 cells: {
-                    A1: { content: "Hello" },
+                    A1: "Hello",
                 },
             },
         ],
@@ -108,7 +111,7 @@ test("share dashboard from control panel", async function () {
     await animationFrame();
     expect.verifySteps(["dashboard_shared", "share url copied"]);
     expect(".o_field_CopyClipboardChar").toHaveText("localhost:8069/share/url/132465");
-    await contains(".fa-clone").click();
+    await contains(".fa-clipboard").click();
     expect.verifySteps(["share url copied"]);
 });
 
@@ -127,14 +130,21 @@ test("publish dashboard from control panel", async function () {
 });
 
 test("unpublish dashboard from control panel", async function () {
+    onRpc(
+        "/spreadsheet/data/spreadsheet.dashboard/*",
+        () => ({
+            data: {},
+            revisions: [],
+            name: "Dashboard",
+            isReadonly: false,
+            is_published: true,
+        }),
+        { pure: true }
+    );
     onRpc("spreadsheet.dashboard", "write", ({ args }) => {
         expect.step("dashboard_unpublished");
         expect(args[1]).toEqual({ is_published: false });
     });
-    onRpc("spreadsheet.dashboard", "join_spreadsheet_session", ({ parent }) => ({
-        ...parent(),
-        is_published: true,
-    }));
     await createDashboardEditAction();
     expect(queryText(".o_sp_publish_dashboard")).toInclude("Published");
     expect(".o_sp_publish_dashboard .o-checkbox input").toBeChecked();

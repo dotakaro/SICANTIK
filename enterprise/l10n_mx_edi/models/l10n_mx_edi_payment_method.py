@@ -4,7 +4,7 @@
 from odoo import fields, models
 
 
-class PaymentMethod(models.Model):
+class L10n_Mx_EdiPaymentMethod(models.Model):
     """Payment Method for Mexico from SAT Data.
     Electronic documents need this information from such data.
     Here the `xsd <goo.gl/Vk3IF1>`_

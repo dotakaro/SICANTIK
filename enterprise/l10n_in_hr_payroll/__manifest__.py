@@ -39,7 +39,7 @@ Indian Payroll Salary Rules.
         'data/ir_sequence_data.xml',
         'data/hr_payroll_dashboard_warning_data.xml',
         'wizard/hr_tds_calculation.xml',
-        'views/hr_contract_views.xml',
+        'views/hr_contract_template_views.xml',
         'views/res_users_views.xml',
         'views/hr_employee_views.xml',
         'views/res_config_settings_views.xml',
@@ -47,8 +47,10 @@ Indian Payroll Salary Rules.
         'views/report_payslip_details_template.xml',
         'wizard/hr_salary_register.xml',
         'views/report_hr_epf_views.xml',
+        'views/report_hr_esic_views.xml',
         'wizard/hr_yearly_salary_detail_view.xml',
         'wizard/hr_payroll_payment_report.xml',
+        'wizard/l10n_in_labour_welfare_fund_wizard_views.xml',
         'views/report_hr_yearly_salary_detail_template.xml',
         'views/report_payroll_advice_template.xml',
         'views/l10n_in_salary_statement.xml',
@@ -57,5 +59,6 @@ Indian Payroll Salary Rules.
     'demo': [
         'data/l10n_in_hr_payroll_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

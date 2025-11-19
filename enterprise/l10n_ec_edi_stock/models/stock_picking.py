@@ -4,11 +4,9 @@ from markupsafe import escape, Markup
 from base64 import b64encode, b64decode
 from pytz import timezone
 from time import sleep
-import psycopg2
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
-from odoo.tools import SQL
+from odoo.exceptions import LockError, UserError
 
 
 class StockPicking(models.Model):
@@ -231,13 +229,8 @@ class StockPicking(models.Model):
 
         """
         try:
-            with self.env.cr.savepoint(flush=False):
-                self.env.cr.execute(SQL(
-                    'SELECT 1 FROM %s WHERE id IN %s FOR UPDATE NOWAIT',
-                    SQL.identifier(self._table),
-                    tuple(self.ids),
-                ))
-        except psycopg2.errors.LockNotAvailable:
+            self.lock_for_update()
+        except LockError:
             if not self.env.context.get('cron_skip_connection_errs'):
                 raise UserError(_('Some of these electronic documents are already being processed.')) from None
             return
@@ -407,13 +400,8 @@ class StockPicking(models.Model):
         Send the delivery guide for the stock picking records that are pending to be cancelled.
         '''
         try:
-            with self.env.cr.savepoint(flush=False):
-                self.env.cr.execute(SQL(
-                    'SELECT 1 FROM %s WHERE id IN %s FOR UPDATE NOWAIT',
-                    SQL.identifier(self._table),
-                    tuple(self.ids),
-                ))
-        except psycopg2.errors.LockNotAvailable:
+            self.lock_for_update()
+        except LockError:
             if not self.env.context.get('cron_skip_connection_errs'):
                 raise UserError(_('Some of these electronic documents are already being processed.')) from None
             return
@@ -458,7 +446,7 @@ class StockPicking(models.Model):
                 'mimetype': 'application/xml',
                 'description': f"Ecuadorian electronic document generated for document {picking.display_name}."
             })
-            picking.with_context(no_new_invoice=True).message_post(
+            picking.message_post(
                 body=escape(
                     _(
                         "Electronic document authorized.{}Authorization num:{}%(authorization_num)s{}Authorization date:{}%(authorization_date)s",
@@ -486,7 +474,7 @@ class StockPicking(models.Model):
             'mimetype': 'application/xml',
             'description': f"Ecuadorian electronic document generated for document {picking.display_name}."
         })
-        picking.with_context(no_new_invoice=True).message_post(
+        picking.message_post(
             body=escape(
                 _(
                     "{}This is a DEMO response, which means this document was not sent to the SRI.{}If you want your document to be processed by the SRI, please set an {}Electronic Certificate File{} in the settings.{}Demo electronic document.{}Authorization num:{}%(authorization_num)s{}Authorization date:{}%(authorization_date)s",

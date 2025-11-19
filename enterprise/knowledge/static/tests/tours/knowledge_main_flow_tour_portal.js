@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 /**
  * Global Knowledge flow tour - Adapter for portal user
  * Features tested:
@@ -30,8 +28,7 @@ function extractURLResID(url) {
 registry.category("web_tour.tours").add('knowledge_main_flow_tour_portal', {
     url: '/knowledge/home',
     steps: () => [{
-    // click on the main "New" action
-    trigger: '.o_knowledge_header .btn:contains("New")',
+    trigger: 'button.o_section_create:not(:visible)',
     run: (actionHelper) => {
         const url = new URL(browser.location);
         workspaceArticleResId = extractURLResID(url);
@@ -66,14 +63,14 @@ registry.category("web_tour.tours").add('knowledge_main_flow_tour_portal', {
         }
     }
 }, {
-    trigger: '#knowledge_search_bar', // make sure the search article feature works
+    trigger: '.o_knowledge_search', // make sure the search article feature works
     run: "click",
 }, {
-    trigger: '.o_select_menu_item:contains("Workspace Article")',
-    run: "click",
+    trigger: ".o_article_search_dialog input",
+    run: "edit Workspace Article",
 }, {
-    trigger: 'button:contains("Open")',
-    run: "click",
+    trigger: `.o_article_search_item:contains(Workspace Article)`,
+    run: 'click',
 }, {
     trigger: '.o_knowledge_editor:contains("Content of Workspace Article")',
   // wait for article to be correctly loaded

@@ -14,6 +14,7 @@ class TestAccountDisallowedExpensesFleetReport(TestAccountReportsCommon):
     def setUpClass(cls):
         super().setUpClass()
 
+        cls.env.user.group_ids |= cls.env.ref("fleet.fleet_group_manager")
         cls.dna_category = cls.env['account.disallowed.expenses.category'].create({
             'code': '2345',
             'name': 'DNA category',
@@ -174,7 +175,7 @@ class TestAccountDisallowedExpensesFleetReport(TestAccountReportsCommon):
         self.assertLinesValues(
             # pylint: disable=C0326
             lines,
-            #   Name                                          Total Amount     Rate          Disallowed Amount    Level
+            #   Name                                          Total Amount     Rate          Deuctible Amount      Level
             [   0,                                            1,               2,            3,                   4],
             [
                 ('2345 DNA category',                         3200.0,          '',          1088.0,               1),
@@ -201,7 +202,7 @@ class TestAccountDisallowedExpensesFleetReport(TestAccountReportsCommon):
         self.assertLinesValues(
             # pylint: disable=C0326
             lines,
-            #   Name                                          Total Amount     Rate          Disallowed Amount    Level
+            #   Name                                          Total Amount     Rate          Deuctible Amount      Level
             [   0,                                            1,               2,            3,                   4],
             [
                 ('2345 DNA category',                         3200.0,          '',          1088.0,               1),
@@ -248,7 +249,7 @@ class TestAccountDisallowedExpensesFleetReport(TestAccountReportsCommon):
             ],
         })
 
-        # Create journal entries, using a DNA category without a rate to test totals with blank 'Disallowed Amount'
+        # Create journal entries, using a DNA category without a rate to test totals with blank 'Deuctible Amount  '
         entry_data = [
             ('2022-08-15', 21.0),
             ('2022-07-15', 25.0),
@@ -277,7 +278,7 @@ class TestAccountDisallowedExpensesFleetReport(TestAccountReportsCommon):
             # pylint: disable=C0326
             lines,
             #                                    [                    2022                      ]    [                           2021               ]
-            #   Name                             Total Amount     Rate          Disallowed Amount    Total Amount     Rate          Disallowed Amount    Level
+            #   Name                             Total Amount     Rate          Deuctible Amount      Total Amount     Rate          Deuctible Amount      Level
             [   0,                               1,               2,            3,                   4,               5,            6,                   7],
             [
                 ('2345 DNA category',            3200.0,          '',          1088.0,               '',              '',           '',                  1),
@@ -394,7 +395,7 @@ class TestAccountDisallowedExpensesFleetReport(TestAccountReportsCommon):
         self.assertLinesValues(
             # pylint: disable=C0326
             lines,
-            #   Name                                         Total Amount     Rate            Disallowed Amount     Level
+            #   Name                                         Total Amount     Rate            Deuctible Amount       Level
             [   0,                                           1,                2,             3,                    4],
             [
                 ('bob DNA category',                         1_100.0,          '',            425.0,                1),
@@ -500,8 +501,8 @@ class TestAccountDisallowedExpensesFleetReport(TestAccountReportsCommon):
         self.assertLinesValues(
             # pylint: disable=C0326
             lines,
-            #   Name                                          Total Amount        Rate         Disallowed Amount   Level
-            [   0,                                            1,                  2,           3,                  4],
+            #   Name                                          Base Amount       Rate         Fiscal Amount       Level
+            [   0,                                            1,                2,           3,                  4],
             expected_lines,
             options,
         )

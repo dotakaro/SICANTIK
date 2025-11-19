@@ -13,7 +13,7 @@ from odoo.tests import tagged, users
 from odoo.tools import mute_logger
 
 
-@tagged('mail_performance', 'post_install', '-at_install')
+@tagged('mail_performance', 'marketing_automation', 'post_install', '-at_install')
 class MAPerformanceCommon(BaseMailPerformance, TestMACommon):
 
     @classmethod
@@ -303,10 +303,10 @@ class TestMAPerformance(MAPerformanceCommon):
         based on DB state. """
         campaign = self.test_campaign
 
-        # local: 15222
-        # runbot: 15247, taking 100 more to avoid runbot issues in stable
+        # local: 15461
+        # runbot: 15492, taking 100 more to avoid runbot issues in stable
         # hours+4 -> is going to trigger all 4 begin activities
-        with self.assertQueryCount(15347), \
+        with self.assertQueryCount(15492 + 100), \
              self.mock_datetime_and_now(self.date_reference + timedelta(hours=4)), \
              self.mock_mail_gateway(), self.mockSMSGateway(), \
              self.mockWhatsappGateway(), self.patchWhatsappCronTrigger(), \
@@ -315,12 +315,14 @@ class TestMAPerformance(MAPerformanceCommon):
 
         # produced side records check
         self.assertEqual(
-            len(self._new_mails), len(self.test_records),
-            "Should have sent one email / campaign record, aka 1000",
+            len(self._new_mails), len(self.test_records) - 200,
+            "Should have sent one email / campaign record, minus canceled ones "
+            "(no valid email -> no email created), aka 1000 - 200",
         )
         self.assertEqual(
-            len(self._new_sms), len(self.test_records),
-            "Should have sent one SMS / campaign record, aka 1000",
+            len(self._new_sms), len(self.test_records) - 200,
+            "Should have sent one SMS / campaign record, minus canceled ones "
+            "(no valid number -> no sms created), aka 1000 - 200",
         )
         self.assertEqual(
             len(self._new_wa_msg), len(self.test_records),
@@ -359,7 +361,7 @@ class TestMAPerformance(MAPerformanceCommon):
 
         # local: 74
         # runbot: 75, taking 10 more to avoid runbot issues in stable
-        with self.assertQueryCount(85), \
+        with self.assertQueryCount(75 + 10), \
              self.mock_datetime_and_now(self.date_reference + timedelta(hours=24)), \
              self.mockMACalls():
             campaign.sync_participants()
@@ -419,7 +421,7 @@ class TestMAPerformance(MAPerformanceCommon):
 
         # local: 1055
         # runbot: 1055, taking 100 more to avoid runbot issues in stable
-        with self.assertQueryCount(1155), \
+        with self.assertQueryCount(1055 + 100), \
              self.mockMACalls(), \
              self.mock_datetime_and_now(self.date_reference + timedelta(hours=2)):
             campaign.action_update_participants()

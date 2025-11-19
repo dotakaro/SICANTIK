@@ -24,7 +24,6 @@ registry.category("web_tour.tours").add('account_accountant_bank_rec_widget_save
         {
             content: "The 'line1' should be selected by default",
             trigger: "div[name='line_ids'] td[field='name']:contains('line1')",
-            run: function() {},
         },
         {
             content: "Click on first line",
@@ -34,7 +33,6 @@ registry.category("web_tour.tours").add('account_accountant_bank_rec_widget_save
         {
             content: "The 'manual_operations_tab' should be active now and the auto_balance line mounted in edit",
             trigger: "a.active[name='manual_operations_tab']",
-            run: function() {},
         },
         {
             content: "Enter an analytic distribution",
@@ -63,7 +61,7 @@ registry.category("web_tour.tours").add('account_accountant_bank_rec_widget_save
         ...accountTourSteps.goToAccountMenu("Reset back to accounting module"),
         {
             content: "check that we're back on the dashboard",
-            trigger: 'a:contains("Customer Invoices")',
+            trigger: 'a:contains("Sales")',
         },
     ]
 });

@@ -2,6 +2,7 @@ import re
 
 from odoo import _, api, models
 from odoo.tools.float_utils import float_round
+from odoo.addons.base_iban.models.res_partner_bank import get_iban_part
 
 
 def spaced_join(*args):
@@ -70,11 +71,11 @@ class AccountPayment(models.Model):
                     'section_number': section_number,
                     'payment_date': payment.date,
                     'amount': int(float_round(rounded_amount * 100, 0)),
-                    'creditor_abi': creditor_bank_account.get_iban_part("bank"),
-                    'creditor_cab': creditor_bank_account.get_iban_part("branch"),
-                    'creditor_ccn': creditor_bank_account.get_iban_part("account"),
-                    'debitor_abi': debitor_bank_account.get_iban_part("bank"),
-                    'debitor_cab': debitor_bank_account.get_iban_part("branch"),
+                    'creditor_abi': get_iban_part(creditor_bank_account.acc_number, "bank"),
+                    'creditor_cab': get_iban_part(creditor_bank_account.acc_number, "branch"),
+                    'creditor_ccn': get_iban_part(creditor_bank_account.acc_number, "account"),
+                    'debitor_abi': get_iban_part(debitor_bank_account.acc_number, "bank"),
+                    'debitor_cab': get_iban_part(debitor_bank_account.acc_number, "branch"),
                     'creditor_sia_code': payment.company_id.l10n_it_sia_code,
                     'debitor_code': partner.ref or partner.name,
                 }, {
@@ -83,7 +84,7 @@ class AccountPayment(models.Model):
                     'segment_1': accents_to_apostrophes(company_partner.display_name),
                     'segment_2': spaced_join(company_partner.street, company_partner.street2),
                     'segment_3': company_partner.city,
-                    'segment_4': spaced_join(company_partner.ref, company_partner.phone or company_partner.mobile or company_partner.email),
+                    'segment_4': spaced_join(company_partner.ref, company_partner.phone or company_partner.email),
                 }, {
                     'record_type': '30',  # Debitor description
                     'section_number': section_number,

@@ -3,18 +3,16 @@
 # 	* planning
 # 
 # Translators:
-# Wil Odoo, 2024
-# 何彬 <vnsoft.he@gmail.com>, 2024
+# Wil Odoo, 2025
 # Chloe Wang, 2025
-# Jeffery CHEN <jeffery9@gmail.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-16 20:43+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Jeffery CHEN <jeffery9@gmail.com>, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Chloe Wang, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -336,19 +334,14 @@ msgid "<i class=\"fa fa-long-arrow-right\" aria-label=\"Arrow icon\" title=\"Arr
 msgstr "<i class=\"fa fa-long-arrow-right\" aria-label=\"Arrow icon\" title=\"Arrow\"/>"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
-msgid "<i class=\"fa fa-long-arrow-right\" title=\"Arrow\"/>"
-msgstr "<i class=\"fa fa-long-arrow-right\" title=\"Arrow\"/>"
-
-#. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_assignee_contact_popover
 msgid "<i class=\"fa fa-phone\" title=\"Phone\" role=\"img\" style=\"padding-right: 2px\"/>"
 msgstr "<i class=\"fa fa-phone\" title=\"Phone\" role=\"img\" style=\"padding-right: 2px\"/>"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
-msgid "<i class=\"mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
-msgstr "<i class=\"mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"日期\" title=\"日期\"/>"
+msgid "<i class=\"me-1 mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
+msgstr "<i class=\"me-1 mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"日期\" title=\"日期\"/>"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
@@ -367,11 +360,6 @@ msgid ""
 msgstr ""
 "<i class=\"o_group_caret fa fa-fw me-1 fa-caret-down\"></i> <span "
 "class=\"text-truncate w-0 flex-grow-1 text-start\">服务员</span>"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_form
-msgid "<span class=\"ms-0 me-4\">Edit</span>"
-msgstr "<span class=\"ms-0 me-4\">编辑</span>"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
@@ -528,7 +516,7 @@ msgstr "<span>允许员工：</span>"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_form
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid ""
 "<span>The employee assigned would like to switch shifts with someone "
 "else.</span>"
@@ -538,11 +526,6 @@ msgstr "<span>原分配的员工希望与其他员工换班。</span>"
 #: model_terms:ir.ui.view,arch_db:planning.res_config_settings_view_form
 msgid "<span>months ahead</span>"
 msgstr "<span>未来几个月</span>"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
-msgid "<strong>Allocated Time — </strong>"
-msgstr "<strong>分配时间 — </strong>"
 
 #. module: planning
 #: model:mail.template,body_html:planning.email_template_slot_single
@@ -694,8 +677,8 @@ msgstr ""
 "                    <br/>\n"
 "                    <p t-if=\"ctx.get('open_shift_available')\">如果您有兴趣并有空上班，请将这个空缺轮班指派给自己。</p>\n"
 "                    <p t-else=\"\">如果目前的轮班不适合，我们鼓励您联络同事，看看能否调班。 他们可能也想与您调换轮班。</p>\n"
-"                <div>\n"
-"<body>\n"
+"                </div>\n"
+"</body>\n"
 "            "
 
 #. module: planning
@@ -722,7 +705,7 @@ msgid ""
 "                    </p>\n"
 "                    <div style=\"display: flex; margin: 15px;\">\n"
 "                        <div t-if=\"ctx.get('planning_url')\" style=\"margin-right: 15px;\">\n"
-"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #FFFFFF; background-color: #875A7B; border: solid #875A7B;\">View Your Planning</a>\n"
+"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" t-attf-style=\"color: {{object.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{object.company_id.email_secondary_color or '#875A7B'}};\">View Your Planning</a>\n"
 "                        </div>\n"
 "                        <div t-if=\"ctx.get('planning_url_ics')\">\n"
 "                            <a t-att-href=\"ctx['planning_url_ics']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #374151; background-color: #E7E9ED; border: solid #E7E9ED;\">Add to Calendar</a>\n"
@@ -754,16 +737,16 @@ msgstr ""
 "                }\n"
 "                </style>\n"
 "                <body><div>\n"
-"                    <p t-if=\"ctx.get('employee')\"><t t-out=\"ctx['employee'].name or ''\">Anita Oliver</t> 您好！</p>\n"
+"                    <p t-if=\"ctx.get('employee')\"><t t-out=\"ctx['employee'].name or ''\">Anita Oliver</t></p>\n"
 "                    <p t-else=\"\">您好！</p>\n"
 "                    <br/>\n"
 "                    <p t-if=\"ctx.get('start_datetime') and ctx.get('end_datetime')\">\n"
-"                        您由 <t t-out=\"format_date(ctx['start_datetime'])\">05-05-2021</t>\n"
+"                        您由<t t-out=\"format_date(ctx['start_datetime'])\">05-05-2021</t>\n"
 "                        至 <t t-out=\"format_date(ctx['end_datetime'])\">05-11-2021</t> 的工作轮班，已获編排发布。\n"
 "                    </p>\n"
 "                    <div style=\"display: flex; margin: 15px;\">\n"
 "                        <div t-if=\"ctx.get('planning_url')\" style=\"margin-right: 15px;\">\n"
-"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #FFFFFF; background-color: #875A7B; border: solid #875A7B;\">查看工作规划</a>\n"
+"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" t-attf-style=\"color: {{object.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{object.company_id.email_secondary_color or '#875A7B'}};\">查看工作规划</a>\n"
 "                        </div>\n"
 "                        <div t-if=\"ctx.get('planning_url_ics')\">\n"
 "                            <a t-att-href=\"ctx['planning_url_ics']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #374151; background-color: #E7E9ED; border: solid #E7E9ED;\">加入至日历</a>\n"
@@ -775,14 +758,13 @@ msgstr ""
 "                            顺道一提，现在仍有一些轮班空缺，如果您有兴趣并有空上班，请将这些轮班指派给您自己。\n"
 "                        </t>\n"
 "                        <t t-if=\"object.allow_self_unassign and object.self_unassign_days_before\">\n"
-"                            若未能在已分配给您的轮班时间上班，请在轮班时间开始前<t t-out=\"object.self_unassign_days_before or ''\">5</t> 天内，取消有关指派。\n"
+"                            若未能在已分配给您的轮班时间上班，请在轮班时间开始前 <t t-out=\"object.self_unassign_days_before or ''\">5</t> 天内，取消有关指派。\n"
 "                        </t>\n"
 "                    </p>\n"
 "                    <p t-if=\"ctx.get('message')\" t-out=\"ctx['message']\"/>\n"
 "                    <p t-if=\"object.allow_self_unassign\">如果目前的工作日程安排不适合，我们鼓励您联络同事，看看能否调班。 他们可能也想与你调换轮班。</p>\n"
 "                </div>\n"
-"</body>\n"
-"            "
+"            </body>"
 
 #. module: planning
 #: model:ir.model.constraint,message:planning.constraint_planning_recurrency_check_until_limit
@@ -851,11 +833,6 @@ msgstr "所有后续的轮班都将被删除。你确定要继续吗？"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
-msgid "Allocated Hours"
-msgstr "分配时间"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
 msgid "Allocated Percentage"
 msgstr "分配的百分比"
 
@@ -913,7 +890,7 @@ msgstr "已归档"
 msgid ""
 "Archiving this resource will transform all of its future shifts into open "
 "shifts. Are you sure you want to continue?"
-msgstr "归档此资源将会将所有未来班次转换为开放班次。您确定要继续吗？"
+msgstr "存档此资源将会将所有未来班次转换为开放班次。您确定要继续吗？"
 
 #. module: planning
 #. odoo-javascript
@@ -979,7 +956,7 @@ msgstr "自动安排开放班次和销售订单"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_filter_panel/planning_calendar_filter_panel.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_filter_section/planning_calendar_filter_section.xml:0
 msgid "Avatar"
 msgstr "头像"
 
@@ -987,11 +964,6 @@ msgstr "头像"
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 msgid "Bartender"
 msgstr "调酒师"
-
-#. module: planning
-#: model:ir.model,name:planning.model_hr_employee_base
-msgid "Basic Employee"
-msgstr "基本员工"
 
 #. module: planning
 #: model:ir.ui.menu,name:planning.planning_menu_schedule_by_resource
@@ -1020,6 +992,22 @@ msgstr "取消换班"
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Chat"
 msgstr "聊天"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid ""
+"Click on a day or select a range of days to create shifts for the selected "
+"resources using the shift template"
+msgstr "点击单日或选择日期范围，将使用班次模板为选定资源创建班次"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid ""
+"Clicking on a day or selecting a range of days will permanently delete its "
+"contents"
+msgstr "点击单日或选择日期范围将永久删除其内容。"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_role__color
@@ -1088,6 +1076,16 @@ msgid "Crane"
 msgstr "起重机"
 
 #. module: planning
+#: model_terms:ir.actions.act_window,help:planning.planning_action_open_shifts
+msgid ""
+"Create open shifts for the roles you will be needing to complete a mission.<br>\n"
+"                Allocate open shifts to resources based on their roles."
+msgstr ""
+"为完成任务所需的角色创建开放班次。<br>\n"
+"                根据资源的作用为其分配空闲班次。"
+
+#. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_planning__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_role__create_uid
@@ -1098,6 +1096,7 @@ msgid "Created by"
 msgstr "创建人"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_planning__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_role__create_date
@@ -1190,7 +1189,6 @@ msgstr ""
 #: code:addons/planning/static/src/views/planning_form/planning_form_view.js:0
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
 #: model_terms:ir.ui.view,arch_db:planning.planning_role_view_kanban
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
 msgid "Delete"
 msgstr "删除"
@@ -1226,13 +1224,20 @@ msgid "Discard"
 msgstr "丢弃"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_hr_departure_wizard__display_name
+#: model:ir.model.fields,field_description:planning.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:planning.field_hr_employee_public__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__display_name
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_planning__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_role__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_send__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_slot__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__display_name
+#: model:ir.model.fields,field_description:planning.field_res_company__display_name
+#: model:ir.model.fields,field_description:planning.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:planning.field_resource_resource__display_name
 msgid "Display Name"
 msgstr "显示名称"
 
@@ -1248,7 +1253,7 @@ msgstr "Doris Cole (调酒师)"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__state__draft
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__state__draft
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
@@ -1269,6 +1274,7 @@ msgid "Duration"
 msgstr "时长"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_slot__template_duration_days
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__duration_days
 msgid "Duration Days"
 msgstr "持续时间"
@@ -1375,6 +1381,18 @@ msgid "Extra Message"
 msgstr "额外菜单"
 
 #. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Failed to undo reschedule"
+msgstr "撤销重新排班失败"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid "Filter by specific resources to show only their shifts"
+msgstr "按特定资源筛选，仅显示其班次"
+
+#. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_my_calendar
 msgid ""
 "Find here your planning. Assign yourself open shifts that match your roles, "
@@ -1443,7 +1461,6 @@ msgstr "分组方式"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_hr_employee__has_slots
-#: model:ir.model.fields,field_description:planning.field_hr_employee_base__has_slots
 #: model:ir.model.fields,field_description:planning.field_hr_employee_public__has_slots
 msgid "Has Slots"
 msgstr "有时段"
@@ -1459,8 +1476,6 @@ msgid "Hours"
 msgstr "小时"
 
 #. module: planning
-#. odoo-javascript
-#: code:addons/planning/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__resource_type__user
 msgid "Human"
 msgstr "人员"
@@ -1486,13 +1501,20 @@ msgid "I am unavailable"
 msgstr "我没有时间"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_hr_departure_wizard__id
+#: model:ir.model.fields,field_description:planning.field_hr_employee__id
+#: model:ir.model.fields,field_description:planning.field_hr_employee_public__id
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__id
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__id
 #: model:ir.model.fields,field_description:planning.field_planning_planning__id
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__id
 #: model:ir.model.fields,field_description:planning.field_planning_role__id
 #: model:ir.model.fields,field_description:planning.field_planning_send__id
 #: model:ir.model.fields,field_description:planning.field_planning_slot__id
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__id
+#: model:ir.model.fields,field_description:planning.field_res_company__id
+#: model:ir.model.fields,field_description:planning.field_res_config_settings__id
+#: model:ir.model.fields,field_description:planning.field_resource_resource__id
 msgid "ID"
 msgstr "ID"
 
@@ -1514,6 +1536,7 @@ msgstr "如果你对你的规划感到满意，你现在可以<b>把</b>它发�
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_send__include_unassigned
+#: model_terms:ir.ui.view,arch_db:planning.planning_send_view_form
 msgid "Include Open Shifts"
 msgstr "包括开放的班次"
 
@@ -1528,13 +1551,18 @@ msgid "Jeffrey Kelly (Bartender)"
 msgstr "Jeffrey Kelly (调酒师)"
 
 #. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
+msgid "Job Position"
+msgstr "工作岗位"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__job_title
 #: model:ir.model.fields,field_description:planning.field_planning_slot__job_title
-#: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Job Title"
 msgstr "工作头衔"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_planning__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_role__write_uid
@@ -1545,6 +1573,7 @@ msgid "Last Updated by"
 msgstr "最后更新人"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_planning__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_role__write_date
@@ -1556,7 +1585,7 @@ msgstr "上次更新日期"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 msgid "Legend"
 msgstr "图例"
 
@@ -1639,8 +1668,6 @@ msgid "Marc Demo"
 msgstr "马克-迪莫"
 
 #. module: planning
-#. odoo-javascript
-#: code:addons/planning/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__resource_type__material
 msgid "Material"
 msgstr "物料"
@@ -1770,6 +1797,7 @@ msgstr "没有找到班次模板。让我们创建一个!"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_my_calendar
+#: model_terms:ir.actions.act_window,help:planning.planning_action_open_shifts
 #: model_terms:ir.actions.act_window,help:planning.planning_action_schedule_by_resource
 #: model_terms:ir.actions.act_window,help:planning.planning_action_schedule_by_role
 msgid "No shifts found. Let's create one!"
@@ -1817,6 +1845,8 @@ msgstr "开放班次"
 #. odoo-javascript
 #: code:addons/planning/static/src/views/planning_calendar/planning_calendar_model.js:0
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_model.js:0
+#: model:ir.actions.act_window,name:planning.planning_action_open_shifts
+#: model:ir.ui.menu,name:planning.planning_menu_open_shifts
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
 #: model_terms:ir.ui.view,arch_db:planning.slot_report
@@ -1884,6 +1914,11 @@ msgid ""
 msgstr "只需<b>复制上周的工作时间表</b>，即可一键规划您的轮班安排。要获取此选项，请开启菜单。"
 
 #. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
+msgid "Planned Date"
+msgstr "安排的日期"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__start_time
 msgid "Planned Hours"
 msgstr "已计划的时数"
@@ -1894,7 +1929,9 @@ msgstr "已计划的时数"
 #: model:ir.actions.report,name:planning.report_planning_slot
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__allocation_type__planning
 #: model:ir.ui.menu,name:planning.planning_menu_root
+#: model:res.groups.privilege,name:planning.res_groups_privilege_planning
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_inherit
+#: model_terms:ir.ui.view,arch_db:planning.open_shifts_pivot_view
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_calendar
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_graph
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_my_calendar
@@ -1930,6 +1967,7 @@ msgstr "计划重复"
 #. module: planning
 #: model:ir.model,name:planning.model_planning_role
 #: model_terms:ir.ui.view,arch_db:planning.planning_role_view_form
+#: model_terms:ir.ui.view,arch_db:planning.shifts_template_for_multi_create_in_calendar_view
 msgid "Planning Role"
 msgstr "计划角色<br>"
 
@@ -2015,6 +2053,18 @@ msgid "Press Ctrl to duplicate the shift"
 msgstr "按 Ctrl 键复制轮班"
 
 #. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_hooks.js:0
+msgid "Previous week's copied shifts removed"
+msgstr "复制的上周轮班已移除"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_hooks.js:0
+msgid "Previous week's shifts copied"
+msgstr "已复制上周轮班"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_res_config_settings__module_project_forecast
 msgid "Project Planning"
 msgstr "项目计划"
@@ -2029,6 +2079,11 @@ msgstr "投影仪"
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search
 msgid "Properties"
 msgstr "属性"
+
+#. module: planning
+#: model:ir.model,name:planning.model_hr_employee_public
+msgid "Public Employee"
+msgstr "公共员工"
 
 #. module: planning
 #. odoo-javascript
@@ -2053,7 +2108,7 @@ msgstr "通过电子邮件发布和发送工作安排"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__state__published
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__state__published
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
@@ -2306,12 +2361,6 @@ msgid ""
 msgstr "在角色、项目和销售订单之间安排你的人力和物力资源。"
 
 #. module: planning
-#. odoo-python
-#: code:addons/planning/models/planning.py:0
-msgid "Search operation not supported"
-msgstr "不支持搜索操作"
-
-#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_planning__access_token
 msgid "Security Token"
 msgstr "安全令牌"
@@ -2390,6 +2439,36 @@ msgstr "班次模板"
 
 #. module: planning
 #. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift could not be removed"
+msgstr "班次删除失败"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift duplicated"
+msgstr "班次已复制"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift removed"
+msgstr "班次已删除"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift reschedule undone"
+msgstr "班次重新排班已撤销"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift rescheduled"
+msgstr "班次已重新排班"
+
+#. module: planning
+#. odoo-javascript
 #: code:addons/planning/static/src/views/planning_form/planning_form_view.js:0
 msgid "Shift saved as template"
 msgstr "班次另存为模板"
@@ -2439,7 +2518,7 @@ msgid "Shipping Associate"
 msgstr "发货助理"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid "Some changes were made since this shift was published."
 msgstr "自本班次发布以来，进行了一些修改。"
 
@@ -2516,12 +2595,6 @@ msgstr "重复次数不能为负数。"
 #: model:ir.model.constraint,message:planning.constraint_planning_recurrency_check_repeat_interval_positive
 msgid "The recurrence should be greater than 0."
 msgstr "重复率应大于 0。"
-
-#. module: planning
-#. odoo-python
-#: code:addons/planning/models/planning.py:0
-msgid "The recurrence's end date should fall after the shift's start date."
-msgstr "重复的结束日期应晚于班次的开始日期。"
 
 #. module: planning
 #. odoo-javascript
@@ -2695,6 +2768,15 @@ msgstr "总计"
 #: model:ir.model.fields,field_description:planning.field_planning_slot__resource_type
 msgid "Type"
 msgstr "类型"
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/planning.py:0
+msgid ""
+"Uh-oh! Let's keep things in the right order: the recurrence end date should "
+"always come after the shift start date. It's like trying to eat your "
+"breakfast before waking up – not possible!"
+msgstr "错误！循环结束日期必须晚于班次开始日期。就像不可能在睡醒前吃早餐一样！"
 
 #. module: planning
 #: model:ir.model.fields.selection,name:planning.selection__res_company__planning_employee_unavailabilities__unassign
@@ -2936,9 +3018,20 @@ msgid "e.g. John Doe"
 msgstr "例如：John Doe"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid "other shift(s) in conflict."
 msgstr "与之发生冲突的其他班次。"
+
+#. module: planning
+#: model:ir.model,name:planning.model_planning_calendar_resource
+msgid "planning calendar resource"
+msgstr "计划日历资源"
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/hr.py:0
+msgid "resource_id"
+msgstr "resource_id"
 
 #. module: planning
 #. odoo-javascript

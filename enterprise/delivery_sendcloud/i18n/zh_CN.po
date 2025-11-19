@@ -3,17 +3,15 @@
 # 	* delivery_sendcloud
 # 
 # Translators:
-# Wil Odoo, 2024
-# 何彬 <vnsoft.he@gmail.com>, 2024
-# Chloe Wang, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-10 15:41+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Chloe Wang, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -193,8 +191,11 @@ msgstr ""
 "规则可覆盖在 Odoo 中选择的发货产品"
 
 #. module: delivery_sendcloud
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_product__display_name
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "显示名称"
 
@@ -249,8 +250,11 @@ msgid "Has Multicollo"
 msgstr "拥有 Multicollo"
 
 #. module: delivery_sendcloud
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_product__id
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -544,6 +548,24 @@ msgstr "%s 地址需要包含街道、城市、邮政编码和国家/地区"
 
 #. module: delivery_sendcloud
 #. odoo-python
+#: code:addons/delivery_sendcloud/models/delivery_carrier.py:0
+msgid ""
+"The cancellation was rejected for the parcel(s) with the following id:\n"
+"%(details)s\n"
+"Either:\n"
+"\t - The parcel is already cancelled\n"
+"\t - The parcel has been announced more than 42 days ago\n"
+"\t - The parcel has already been delivered"
+msgstr ""
+"下列包裹的取消请求被拒绝：\n"
+"%(details)s\n"
+"可能的原因：\n"
+"\t - 该包裹已被取消\n"
+"\t - 该包裹已在多于 42 天前公布\n"
+"\t - 包裹已送达"
+
+#. module: delivery_sendcloud
+#. odoo-python
 #: code:addons/delivery_sendcloud/models/sendcloud_service.py:0
 msgid ""
 "The delivery address of the customer has been removed from the pickup "
@@ -597,6 +619,7 @@ msgstr "对于所选运输产品，此订单没有可用的费率。"
 #. module: delivery_sendcloud
 #. odoo-python
 #: code:addons/delivery_sendcloud/models/sendcloud_service.py:0
+#: code:addons/delivery_sendcloud/tests/test_delivery_sendcloud.py:0
 msgid ""
 "There is no shipping method available for this order with the selected "
 "carrier"

@@ -5,7 +5,6 @@ from odoo import Command, models, api, _
 
 
 class ResCompany(models.Model):
-    _name = 'res.company'
     _inherit = 'res.company'
 
     def _get_field_service_project_values(self):

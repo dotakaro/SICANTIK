@@ -8,14 +8,12 @@ class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
     urbanpiper_username = fields.Char(
-        string='UrbanPiper Username',
-        config_parameter='pos_urban_piper.urbanpiper_username',
-        help='The username for the UrbanPiper account.'
+        related="company_id.pos_urbanpiper_username",
+        readonly=False
     )
     urbanpiper_apikey = fields.Char(
-        string='UrbanPiper API Key',
-        config_parameter='pos_urban_piper.urbanpiper_apikey',
-        help='The API key for accessing the UrbanPiper services.'
+        related="company_id.pos_urbanpiper_apikey",
+        readonly=False
     )
     pos_urbanpiper_store_identifier = fields.Char(
         string='UrbanPiper Store Identifier',
@@ -96,11 +94,40 @@ class ResConfigSettings(models.TransientModel):
                 )
         up = UrbanPiperClient(self.pos_config_id)
         up.configure_webhook()
-        response_json = up.request_sync_menu()
-        return self.pos_config_id._urbanpiper_handle_response(response_json)
+        menu_response = up.request_sync_menu()
+        categ_response = up.request_category_timing()
+        combined_response = {
+            "status": "success",
+            "message": ""
+        }
+        for response in [menu_response, categ_response]:
+            if response.get('status') == 'error':
+                combined_response['status'] = "error"
+                combined_response['message'] = response.get('message', '') or response.get('error_message', '')
+                break
+            else:
+                combined_response['message'] += response.get('message', '') + ' '
+        return self.pos_config_id._urbanpiper_handle_response(combined_response)
 
     def action_refresh_webhooks(self):
         self.pos_config_id._check_required_request_params()
         up = UrbanPiperClient(self.pos_config_id)
         response_json = up.request_refresh_webhooks()
         return self.pos_config_id._urbanpiper_handle_response(response_json)
+
+    def open_test_order_wizard(self):
+        """
+        Open the test order wizard to create test orders.
+        """
+        return {
+            'name': _('Test Food Delivery Order'),
+            'views': [(self.env.ref('pos_urban_piper.pos_urban_piper_test_order_wizard_view_form').id, 'form')],
+            'res_model': 'pos.urbanpiper.test.order.wizard',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': {
+                'dialog_size': 'medium',
+                'delivery_provider_ids': self.pos_urbanpiper_delivery_provider_ids.ids,
+                'config_id': self.pos_config_id.id
+            }
+        }

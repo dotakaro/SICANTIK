@@ -24,6 +24,7 @@
             'social_facebook/static/src/js/stream_post_comment_list.js',
             'social_facebook/static/src/js/stream_post_comments.js',
             'social_facebook/static/src/js/stream_post_comments_reply.js',
+            'social_facebook/static/src/js/stream_post_kanban_dashboard.js',
             'social_facebook/static/src/js/stream_post_kanban_record.js',
             ('after', 'social/static/src/js/social_post_formatter_mixin.js', 'social_facebook/static/src/js/social_post_formatter_mixin.js'),
             'social_facebook/static/src/scss/social_facebook.scss',
@@ -36,5 +37,6 @@
             'social_facebook/static/src/js/tests/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

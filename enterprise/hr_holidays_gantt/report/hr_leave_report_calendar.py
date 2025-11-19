@@ -4,7 +4,7 @@
 from odoo import api, models
 
 
-class LeaveReportCalendar(models.Model):
+class HrLeaveReportCalendar(models.Model):
     _inherit = "hr.leave.report.calendar"
 
     @api.model

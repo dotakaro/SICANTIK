@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 /**
  * Global Knowledge flow tour.
  * Features tested:
@@ -24,8 +22,8 @@ registry.category("web_tour.tours").add('knowledge_main_flow_tour', {
     trigger: '.o_app[data-menu-xmlid="knowledge.knowledge_menu_root"]',
     run: "click",
 }, {
-    // click on the main "New" action
-    trigger: '.o_knowledge_header .btn:contains("New")',
+    // click on the "New Article" action
+    trigger: '.o_knowledge_create_article',
     run: "click",
 }, {
     // check that the article is correctly created (private section)
@@ -140,7 +138,7 @@ registry.category("web_tour.tours").add('knowledge_main_flow_tour', {
         },
         {
             content: "click on 'Invite'",
-            trigger: '.o_knowledge_share_panel .btn:contains("Invite")',
+            trigger: '.o_knowledge_permission_panel .btn:contains("Invite")',
             run: "click",
         },
         {
@@ -160,7 +158,7 @@ registry.category("web_tour.tours").add('knowledge_main_flow_tour', {
         },
         {
             content: "Save the new partner",
-            trigger: ".modal .o_form_button_save:contains(save & close)",
+            trigger: ".modal .o_form_button_save:contains(save)",
             run: "click",
         },
         {
@@ -178,19 +176,15 @@ registry.category("web_tour.tours").add('knowledge_main_flow_tour', {
             trigger: "body:not(:has(.modal:contains(invite people)))",
         },
         {
+            trigger: ".o_knowledge_permission_panel_members span:contains('micheline@knowledge.com')",
+        },
+        {
     // add to favorite
     trigger: '.o_knowledge_toggle_favorite',
     run: "click",
 }, {
     // check article was correctly added into favorites
     trigger: 'section[data-section="favorites"] .o_article .o_article_name:contains("My Workspace Article")',
-}, {
-    // open the share dropdown
-    trigger: '.o_knowledge_header .btn:contains("Share")',
-    run: "click",
-}, {
-    // open the share dropdown
-    trigger: '.o_member_email:contains("micheline@knowledge.com")',
 }, {
     // go back to private article
     trigger: 'section[data-section="private"] .o_article .o_article_name:contains("My Private Article")',
@@ -242,8 +236,8 @@ registry.category("web_tour.tours").add('knowledge_main_flow_tour', {
         }
     }
 }, {
-    // click on the main "New" action
-    trigger: '.o_knowledge_header .btn:contains("New")',
+    // click on the "New Article" action
+    trigger: '.o_knowledge_create_article',
     run: "click",
 }, {
     trigger: 'section[data-section="private"] .o_article .o_article_name:contains("Untitled")',
@@ -261,10 +255,10 @@ registry.category("web_tour.tours").add('knowledge_main_flow_tour', {
     trigger: '.o_hierarchy_article_name > input',
     run: "edit Article to be moved && click body",  // modify the article name
 }, {// move article
-    trigger: 'a#dropdown_tools_panel',
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: 'click'
 }, {
-    trigger: '.btn-move',
+    trigger: '.dropdown-item:contains("Move To")',
     run: "click",
 }, {
     trigger: '.o_select_menu_item:contains("Article 3")',
@@ -279,7 +273,7 @@ registry.category("web_tour.tours").add('knowledge_main_flow_tour', {
     run: 'click'
 }, {
     // open the trash
-    trigger: '.o_knowledge_sidebar_trash div[role="button"]',
+    trigger: '.o_knowledge_sidebar_trash a:contains("Open the Trash")',
     run: "click",
 },
 {

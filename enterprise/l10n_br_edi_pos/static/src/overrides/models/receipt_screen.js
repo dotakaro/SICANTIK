@@ -9,7 +9,7 @@ patch(ReceiptScreen.prototype, {
     setup() {
         super.setup();
         onMounted(() => {
-            const error = this.pos.get_order().l10n_br_avatax_error;
+            const error = this.currentOrder.l10n_br_avatax_error;
             if (error) {
                 this.dialog.add(
                     AlertDialog,

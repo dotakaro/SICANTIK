@@ -1,6 +1,4 @@
-/** @odoo-module */
-
-import { Component, onWillUnmount, useState } from "@odoo/owl";
+import { Component, useState, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useRecordObserver } from "@web/model/relational_model/utils";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
@@ -9,6 +7,7 @@ import { useTimer } from "../../hooks/use_timer";
 export class TimerStartField extends Component {
     static props = {
         ...standardFieldProps,
+        valueFieldName: { type: String, optional: true },
     };
     static template = "timer.TimerStartField";
 
@@ -20,6 +19,10 @@ export class TimerStartField extends Component {
         onWillUnmount(() => {
             clearInterval(this.timer);
         });
+    }
+
+    get value() {
+        return this.props.record.data[this.props.valueFieldName] || 0;
     }
 
     onRecordChange(record) {
@@ -36,11 +39,10 @@ export class TimerStartField extends Component {
             let currentTime;
             if (timerPause) {
                 currentTime = timerPause;
-                this.timerReactive.computeOffset(currentTime);
             } else {
                 currentTime = this.timerReactive.getCurrentTime();
             }
-            this.timerReactive.setTimer(0, timerStart, currentTime);
+            this.timerReactive.setTimer(this.value, timerStart, currentTime);
             this.timerReactive.formatTime();
             clearInterval(this.timer);
             this.timer = setInterval(() => {
@@ -60,7 +62,16 @@ export class TimerStartField extends Component {
 
 export const timerStartField = {
     component: TimerStartField,
-    fieldDependencies: [ { name: "timer_pause", type: "datetime" } ],
+    fieldDependencies: ({ type, attrs, options }) => {
+        const deps = [{ name: "timer_pause", type: "datetime" }];
+        if (options["unit_amount_field"]) {
+            deps.push({ name: options["unit_amount_field"], type, ...attrs });
+        }
+        return deps;
+    },
+    extractProps: ({ options }, dynamicInfo) => ({
+        valueFieldName: options["unit_amount_field"],
+    }),
 };
 
 registry.category("fields").add("timer_start_field", timerStartField);

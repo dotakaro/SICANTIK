@@ -3,17 +3,19 @@
 
 import base64
 
-from lxml import etree
+from lxml import html
 from collections import defaultdict
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import format_date
 
+etree = html.etree
 
-class L10nHkIr56b(models.Model):
+
+class L10n_HkIr56b(models.Model):
     _name = 'l10n_hk.ir56b'
-    _inherit = 'l10n_hk.ird'
+    _inherit = ['l10n_hk.ird']
     _description = 'IR56B Sheet'
     _order = 'start_period'
 
@@ -52,7 +54,7 @@ class L10nHkIr56b(models.Model):
                 ('date_from', '>=', sheet.start_period),
                 ('date_to', '<=', sheet.end_period),
             ])
-            valid_employees = all_payslips.employee_id.filtered(lambda e: not e.contract_warning)
+            valid_employees = all_payslips.employee_id.filtered(lambda e: e.is_in_contract)
 
             line_item_values = []
             for employee in valid_employees:
@@ -67,10 +69,14 @@ class L10nHkIr56b(models.Model):
 
     @api.depends('start_period', 'end_period')
     def _compute_display_name(self):
+        lang_code = self.env.user.lang or 'en_US'
         for sheet in self:
-            sheet.display_name = _("From %(start_period)s to %(end_period)s",
-                                   start_period=format_date(self.env, sheet.start_period, date_format="MMMM y", lang_code=self.env.user.lang),
-                                   end_period=format_date(self.env, sheet.end_period, date_format="MMMM y", lang_code=self.env.user.lang))
+            if sheet.start_period and sheet.end_period:
+                sheet.display_name = _("From %(start_period)s to %(end_period)s",
+                                       start_period=format_date(self.env, sheet.start_period, date_format="MMMM y", lang_code=lang_code),
+                                       end_period=format_date(self.env, sheet.end_period, date_format="MMMM y", lang_code=lang_code))
+            else:
+                sheet.display_name = _("IR56B Sheet")
 
     def _get_rendering_data(self, employees):
         self.ensure_one()
@@ -81,9 +87,12 @@ class L10nHkIr56b(models.Model):
 
         report_info = self._get_report_info_data()
 
-        payslip_info = self._get_employees_payslip_data(employees)
-        if 'error' in payslip_info:
-            return {'error': payslip_info['error']}
+        payslip_info = False
+        try:
+            payslip_info = self._get_employees_payslip_data(employees)
+        except UserError as e:
+            return {'error': str(e)}
+
         all_payslips = payslip_info['all_payslips']
 
         employee_payslips = defaultdict(lambda: self.env['hr.payslip'])
@@ -103,7 +112,7 @@ class L10nHkIr56b(models.Model):
                 code: sum(all_line_values[code][p.id]['total'] for p in payslips)
                 for code in line_codes}
 
-            start_date = self.start_period if self.start_period > employee.first_contract_date else employee.first_contract_date
+            start_date = self.start_period if self.start_period > employee.contract_date_start else employee.contract_date_start
 
             rental_ids = employee.l10n_hk_rental_ids.filtered_domain([
                 ('state', 'in', ['open', 'close']),
@@ -151,8 +160,10 @@ class L10nHkIr56b(models.Model):
                     ('date_to', '<=', rental.date_end or self.end_period),
                 ])
                 date_start_rental = rental.date_start if rental.date_start > start_date else start_date
-                date_start_rental_str = date_start_rental.strftime('%Y%m%d')
-                date_end_rental_str = (rental.date_end or self.end_period).strftime('%Y%m%d')
+                date_end_rental = rental.date_end or self.end_period
+
+                date_start_rental_str = date_start_rental.strftime('%Y%m%d') if date_start_rental else ''
+                date_end_rental_str = date_end_rental.strftime('%Y%m%d') if date_end_rental else ''
                 period_rental_str = '{} - {}'.format(date_start_rental_str, date_end_rental_str)
 
                 amount_rental = sum(all_line_values['HRA'][p.id]['total'] for p in payslips_rental)

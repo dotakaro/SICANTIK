@@ -1,12 +1,14 @@
 import logging
 import uuid
+import random
+import json
 
 from odoo import http, Command
 from odoo.http import request
 from odoo.tools import consteq
 from odoo.tools.json import scriptsafe as json
 from odoo.addons.pos_urban_piper import const
-from .data_validator import object_of, list_of
+from ...pos_enterprise.models.data_validator import object_of, list_of
 
 from werkzeug import exceptions
 
@@ -70,7 +72,7 @@ store_action_schema = object_of({
 
 class PosUrbanPiperController(http.Controller):
 
-    @http.route('/urbanpiper/webhook/<string:event_type>', type='json', methods=['POST'], auth='public')
+    @http.route('/urbanpiper/webhook/<string:event_type>', type='jsonrpc', methods=['POST'], auth='public')
     def webhook(self, event_type):
         if not consteq(request.httprequest.headers.get('X-Urbanpiper-Uuid'), request.env['ir.config_parameter'].sudo().get_param('pos_urban_piper.uuid')):
             # Ignore request if it's not from the same database
@@ -106,6 +108,14 @@ class PosUrbanPiperController(http.Controller):
             pos_config.log_xml("Payload - %s. Error - %s" % (data, error), 'urbanpiper_webhook_%s' % (event_type))
             _logger.warning("UrbanPiper: %r", error)
 
+    def reframe_notes(self, notes):
+        notes_array = []
+        for note_name in notes.split("\n"):
+            if note_name := note_name.strip():
+                default_note = request.env['pos.note'].sudo().search([('name', '=', note_name)])
+                notes_array.append({"text": note_name, "colorIndex": default_note["color"] if default_note else 0})
+        return json.dumps(notes_array)
+
     def _create_order(self, data):
         order = data['order']
         customer = data['customer']
@@ -123,14 +133,13 @@ class PosUrbanPiperController(http.Controller):
         ])
         # Check the customer exists with the same name and phone number
         customer_sudo = request.env['res.partner'].sudo().search(
-            [('name', '=', customer['name']), '|', ('phone', '=', customer['phone']), ('mobile', '=', customer['phone'])]
+            [('name', '=', customer['name']), ('phone', '=', customer['phone'])], limit=1
         )
         if not customer_sudo:
             customer_sudo = request.env['res.partner'].sudo().create({
                 'name': customer['name'],
                 'phone': customer['phone'],
                 'email': customer['email'],
-                'mobile': customer['phone'],
                 'street': customer_address.get('line_1'),
                 'street2': customer_address.get('line_2'),
                 'city': customer_address.get('city'),
@@ -144,12 +153,6 @@ class PosUrbanPiperController(http.Controller):
                 'zip': customer_address.get('pin'),
                 'city': customer_address.get('city'),
             })
-        order_reference = PosOrder._generate_unique_reference(
-            pos_config_sudo.current_session_id.id,
-            pos_config_sudo.id,
-            pos_config_sudo.current_session_id.sequence_number,
-            order['details']['channel'].capitalize()
-        )
 
         def get_prep_time(details):
             data = details.get('prep_time')
@@ -202,9 +205,10 @@ class PosUrbanPiperController(http.Controller):
                 'tax_ids': [Command.set(total_tax.ids)],
                 'price_subtotal': taxes['total_excluded'],
                 'price_subtotal_incl': taxes['total_included'],
-                'note': charge.get('title'),
+                'note': self.reframe_notes(charge.get('title')),
                 'uuid': str(uuid.uuid4())
             }))
+        pos_reference, order_sequence_number, tracking_number = pos_config_sudo.current_session_id.get_next_order_refs(ref_prefix=pos_delivery_provider.name)
         discounts = details.get('ext_platforms', [{}])[0].get('discounts', [])
         general_note = "\n".join([
             f"{pos_delivery_provider.name} Discount: {pos_config_sudo.company_id.currency_id.symbol} {discount.get('value')}"
@@ -212,18 +216,15 @@ class PosUrbanPiperController(http.Controller):
         ])
         for discount in discounts:
             if discount.get('is_merchant_discount'):
-                discount_product = request.env['product.product'].sudo().search([
-                    ('name', '=', 'Merchant Discount'),
-                    ('default_code', '=', 'MRDT')
-                ], limit=1)
+                discount_product = pos_config_sudo.discount_product_id or request.env.ref('pos_discount.product_product_consumable', False)
                 if not discount_product:
                     discount_product = request.env['product.product'].sudo().create({
-                        'name': 'Merchant Discount',
+                        'name': 'Discount',
                         'type': 'service',
                         'list_price': 0,
                         'available_in_pos': True,
                         'taxes_id': [(5, 0, 0)],
-                        'default_code': 'MRDT'
+                        'default_code': 'DISC'
                     })
                 lines.append(Command.create({
                     'product_id': discount_product.sudo().id,
@@ -231,16 +232,14 @@ class PosUrbanPiperController(http.Controller):
                     'price_unit': -discount.get('value'),
                     'price_subtotal': -discount.get('value'),
                     'price_subtotal_incl': -discount.get('value'),
-                    'note': discount.get('code'),
+                    'note': self.reframe_notes('\n'.join([discount.get('code', ''), discount.get('title', '')])),
                     'uuid': str(uuid.uuid4()),
                 }))
-        number = str((pos_config_sudo.current_session_id.id % 10) * 100 + pos_config_sudo.current_session_id.sequence_number % 100).zfill(3)
         delivery_order = PosOrder.create({
-            'name': order_reference,
             'partner_id': customer_sudo.id,
-            'pos_reference': order_reference,
-            'sequence_number': number,
-            'tracking_number': number,
+            'pos_reference': pos_reference,
+            'sequence_number': order_sequence_number,
+            'tracking_number': tracking_number,
             'config_id': pos_config_sudo.id,
             'session_id': pos_config_sudo.current_session_id.id,
             'company_id': pos_config_sudo.company_id.id,
@@ -252,7 +251,7 @@ class PosUrbanPiperController(http.Controller):
             'amount_return': 0.0,
             'delivery_identifier': details['id'],
             'delivery_status': details['order_state'].lower(),
-            'general_note': "\n".join(
+            'general_customer_note': "\n".join(
                 x for x in [details.get('instructions'), general_note] if x and x.strip()
             ),
             'delivery_provider_id': pos_delivery_provider.id,
@@ -262,7 +261,6 @@ class PosUrbanPiperController(http.Controller):
             'uuid': str(uuid.uuid4()),
         })
         delivery_order._compute_prices()
-        pos_config_sudo.current_session_id.sequence_number += 1
         self.after_delivery_order_create(delivery_order, details, pos_config_sudo)
         pos_config_sudo._send_delivery_order_count(delivery_order.id)
 
@@ -288,7 +286,11 @@ class PosUrbanPiperController(http.Controller):
         value_ids_lst = []
         note = ''
         if line_data.get('options_to_add'):
-            note = '\n'.join([f"{option.get('title')} X {option.get('quantity')}" for option in line_data['options_to_add']])
+            note = '\n'.join([
+                f"{option.get('title')} X {option.get('quantity')}"
+                for option in line_data['options_to_add']
+                if int(option.get('quantity', 0)) > 1
+            ])
             merchant_value_lst = [option.get('merchant_id') for option in line_data['options_to_add']]
             value_ids_lst = [int(vid.split('-')[1]) for vid in merchant_value_lst]
         price_extra = sum(option.get('total_price', 0) for option in line_data.get('options_to_add', []))
@@ -306,9 +308,29 @@ class PosUrbanPiperController(http.Controller):
                         attribute_value_ids.append(product_option.id)
                     values_to_remove.append(value)
         variant_value_lst = [value for value in value_ids_lst if value not in values_to_remove]
-        line_taxes = self._get_tax_value(line_data.get('taxes', []), pos_config_sudo)
+        line_taxes = request.env['account.tax']
         main_product = self._product_template_to_product_variant(int(line_data['merchant_id'].split('-')[0]), variant_value_lst)
         price_unit = float(line_data['price'] + price_extra)
+        tax_ids = main_product.taxes_id.filtered(lambda tax: tax.company_id == pos_config_sudo.company_id)
+        if line_data.get('taxes'):
+            line_taxes = self._get_tax_value(line_data.get('taxes'), pos_config_sudo)
+        elif tax_ids:
+            base_line = line_taxes._prepare_base_line_for_taxes_computation(
+                request.env['pos.order.line'],
+                currency_id=pos_config_sudo.company_id.currency_id,
+                tax_ids=tax_ids,
+                price_unit=price_unit,
+                quantity=1,
+                special_mode="total_included",
+                product_id=main_product
+            )
+            line_taxes._add_tax_details_in_base_line(base_line, pos_config_sudo.company_id)
+            line_taxes._round_base_lines_tax_details([base_line], pos_config_sudo.company_id)
+            tax_types = tax_ids.mapped('price_include')
+            if len(set(tax_types)) > 1:
+                _logger.warning("UrbanPiper: Multiple tax types found for product %s. Using the first one.", main_product.name)
+            price_unit = base_line['tax_details']['total_included'] if tax_types[0] else base_line['tax_details']['total_excluded']
+            line_taxes = tax_ids
         tax_ids_after_fiscal_position = pos_config_sudo.urbanpiper_fiscal_position_id.map_tax(line_taxes)
         taxes = tax_ids_after_fiscal_position.compute_all(price_unit, pos_config_sudo.company_id.currency_id, int(line_data['quantity']), product=main_product)
         lines = Command.create({
@@ -321,9 +343,9 @@ class PosUrbanPiperController(http.Controller):
             'price_subtotal': taxes['total_excluded'],
             'price_subtotal_incl': taxes['total_included'],
             'tax_ids': [Command.set(line_taxes.ids)] if line_taxes else None,
-            'note': "\n".join(
+            'note': self.reframe_notes("\n".join(
                 x for x in [line_data.get('instructions'), note] if x and x.strip()
-            ),
+            )),
             'uuid': str(uuid.uuid4()),
         })
         return lines

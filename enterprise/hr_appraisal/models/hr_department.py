@@ -6,7 +6,7 @@ import ast
 from odoo import api, fields, models, _
 
 
-class hr_department(models.Model):
+class HrDepartment(models.Model):
     _inherit = 'hr.department'
 
     appraisals_to_process_count = fields.Integer(compute='_compute_appraisals_to_process', string='Appraisals to Process')
@@ -15,7 +15,7 @@ class hr_department(models.Model):
 
     def _compute_appraisals_to_process(self):
         appraisals = self.env['hr.appraisal']._read_group(
-            [('department_id', 'in', self.ids), ('state', 'in', ['new', 'pending'])], ['department_id'], ['__count'])
+            [('department_id', 'in', self.ids), ('state', 'in', ['1_new', '2_pending'])], ['department_id'], ['__count'])
         result = {department.id: count for department, count in appraisals}
         for department in self:
             department.appraisals_to_process_count = result.get(department.id, 0)

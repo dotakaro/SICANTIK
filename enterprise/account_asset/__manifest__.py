@@ -12,7 +12,7 @@ Keeps track of depreciations, and creates corresponding journal entries.
     """,
     'category': 'Accounting/Accounting',
     'sequence': 32,
-    'depends': ['account_reports'],
+    'depends': ['accountant'],
     'data': [
         'security/account_asset_security.xml',
         'security/ir.model.access.csv',
@@ -28,8 +28,10 @@ Keeps track of depreciations, and creates corresponding journal entries.
     'demo': [
         'demo/account_asset_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'auto_install': True,
+    'post_init_hook': 'post_init_hook',
     'assets': {
         'account_reports.assets_financial_report': [
             'account_asset/static/src/scss/account_asset.scss',

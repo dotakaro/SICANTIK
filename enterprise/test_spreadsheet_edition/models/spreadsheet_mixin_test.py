@@ -1,8 +1,8 @@
-from odoo import models, tools
+from odoo import models, modules
 
 
-class SpreadsheetDummy(models.Model):
-    _inherit = ['spreadsheet.test']
+class SpreadsheetTest(models.Model):
+    _inherit = 'spreadsheet.test'
 
     def action_open_spreadsheet(self):
         self.ensure_one()
@@ -15,7 +15,7 @@ class SpreadsheetDummy(models.Model):
         }
 
     def _get_spreadsheet_selector(self):
-        if not tools.config['test_enable']:
+        if not modules.module.current_test:
             return None
         return {
             "model": self._name,

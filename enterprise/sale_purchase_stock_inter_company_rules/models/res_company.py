@@ -2,7 +2,7 @@
 from odoo import api, fields, models
 
 
-class res_company(models.Model):
+class ResCompany(models.Model):
     _inherit = 'res.company'
 
     intercompany_warehouse_id = fields.Many2one(
@@ -15,7 +15,7 @@ class res_company(models.Model):
     )
     intercompany_sync_delivery_receipt = fields.Boolean(
         string="Synchronize Deliveries to your Receipts",
-        default=lambda self: self.env.user.has_group('stock.group_production_lot'),
+        default=lambda self: self.env['res.groups']._is_feature_enabled('stock.group_production_lot'),
     )
     intercompany_receipt_type_id = fields.Many2one(
         comodel_name='stock.picking.type',

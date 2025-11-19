@@ -3,8 +3,8 @@ from odoo import api, models, fields, _
 from odoo.exceptions import ValidationError, UserError
 
 
-class L10nBrEDIInvoiceUpdate(models.TransientModel):
-    _name = "l10n_br_edi.invoice.update"
+class L10n_Br_EdiInvoiceUpdate(models.TransientModel):
+    _name = 'l10n_br_edi.invoice.update'
     _description = "Implements both correcting and cancelling an invoice."
 
     move_id = fields.Many2one("account.move", string="Move To Cancel", required=True, help="The move to be cancelled.")
@@ -44,12 +44,12 @@ class L10nBrEDIInvoiceUpdate(models.TransientModel):
     def _log_update(self, success_message, attachments):
         move = self.move_id
         if self.send_email:
-            move.with_context(force_send=True, no_new_invoice=True, wizard_mode=self.mode).message_post_with_source(
+            move.with_context(force_send=True, wizard_mode=self.mode).message_post_with_source(
                 "l10n_br_edi.mail_template_move_update",
                 attachment_ids=attachments.ids,
             )
         else:
-            move.with_context(no_new_invoice=True).message_post(
+            move.message_post(
                 body=success_message,
                 attachment_ids=attachments.ids,
             )
@@ -100,7 +100,7 @@ class L10nBrEDIInvoiceUpdate(models.TransientModel):
 
         # Cancel without an API request. Avalara's cancellation API only supports
         # select cities. Customers will instead cancel through their city's portal.
-        move.with_context(no_new_invoice=True).message_post(
+        move.message_post(
             body=_("E-invoice cancelled in Odoo, make sure to also cancel it in your city's portal."),
         )
         move.l10n_br_last_edi_status = "cancelled"

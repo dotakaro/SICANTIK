@@ -1,9 +1,9 @@
-import { _t } from "@web/core/l10n/translation";
 import { deserializeDate, deserializeDateTime, serializeDateTime } from "@web/core/l10n/dates";
 import { GanttModel } from "@web_gantt/gantt_model";
 import { sortBy } from "@web/core/utils/arrays";
 import { Domain } from "@web/core/domain";
 import { useProjectModelActions } from "../project_highlight_tasks";
+import { ProjectTaskModelMixin } from "@project/views/project_task_model_mixin";
 
 const MAP_MANY_2_MANY_FIELDS = [
     {
@@ -12,7 +12,7 @@ const MAP_MANY_2_MANY_FIELDS = [
     },
 ];
 
-export class TaskGanttModel extends GanttModel {
+export class TaskGanttModel extends ProjectTaskModelMixin(GanttModel) {
     //-------------------------------------------------------------------------
     // Public
     //-------------------------------------------------------------------------
@@ -31,7 +31,7 @@ export class TaskGanttModel extends GanttModel {
         if ("user_ids" in context && !context.user_ids) {
             delete context.user_ids;
         }
-        return context;
+        return { ...context, search_default_open_tasks: true };
     }
 
     toggleHighlightPlannedFilter(ids) {
@@ -162,7 +162,7 @@ export class TaskGanttModel extends GanttModel {
                 // We make sure that a row with resId = false for "user_id"
                 // ('Unassigned Tasks') and same "parent" will be added by adding
                 // a suitable fake group to groups (a subset of the groups returned
-                // by read_group).
+                // by formatted_read_group).
                 const fakeGroup = Object.assign({}, ...parentGroup);
                 groups.push(fakeGroup);
             }
@@ -183,20 +183,6 @@ export class TaskGanttModel extends GanttModel {
             });
         }
         return rows;
-    }
-
-    /**
-     * @override
-     */
-    _getRowName(_, groupedByField, value) {
-        if (!value) {
-            if (groupedByField === "user_ids") {
-                return _t("👤 Unassigned");
-            } else if (groupedByField === "project_id") {
-                return _t("🔒 Private");
-            }
-        }
-        return super._getRowName(...arguments);
     }
 
     /**
@@ -243,7 +229,8 @@ export class TaskGanttModel extends GanttModel {
      * @override
      */
     load(searchParams) {
-        const { context, domain, groupBy } = searchParams;
+        let domain = searchParams?.domain || [];
+        const { context, groupBy } = searchParams;
         let displayUnassigned = false;
         if (groupBy.length === 0 || groupBy[groupBy.length - 1] === "user_ids") {
             for (const node of domain) {
@@ -253,8 +240,16 @@ export class TaskGanttModel extends GanttModel {
             }
         }
         if (displayUnassigned) {
-            searchParams.domain = Domain.or([domain, "[('user_ids', '=', false)]"]).toList();
+            domain = Domain.or([domain, "[('user_ids', '=', false)]"]).toList();
         }
+        searchParams.domain = this._processSearchDomain(domain);
         return super.load({ ...searchParams, context: { ...context }, displayUnassigned });
     }
+
+    _getFields(metaData) {
+        const result = super._getFields(...arguments);
+        // Field data required for muted gantt dependencies
+        result.push("is_closed");
+        return result;
+     }
 }

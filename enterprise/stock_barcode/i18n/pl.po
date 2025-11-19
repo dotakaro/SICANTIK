@@ -3,16 +3,14 @@
 # 	* stock_barcode
 # 
 # Translators:
-# Tadeusz Karpiński <tadeuszkarpinski@gmail.com>, 2024
-# Marta Wacławek, 2025
 # Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-07 20:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 10:48+0000\n"
+"PO-Revision-Date: 2025-07-01 13:07+0000\n"
 "Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Polish (https://app.transifex.com/odoo/teams/41243/pl/)\n"
 "MIME-Version: 1.0\n"
@@ -50,9 +48,7 @@ msgstr ""
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.scrap_product_selector
-msgid ""
-"<i class=\"fa fa-fw fa-lg fa-solid fa-map-marker me-3\" title=\"Source "
-"Location\"/>"
+msgid "<i class=\"fa fa-fw fa-lg fa-map-marker me-3\" title=\"Source Location\"/>"
 msgstr ""
 
 #. module: stock_barcode
@@ -62,13 +58,13 @@ msgstr "<i class=\"fa fa-fw fa-lg fa-tags me-3\" title=\"Product\"/>"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_quant_barcode_kanban_2
-msgid "<i class=\"fa fa-lg fa-archive\" title=\"Package\"/>"
-msgstr "<i class=\"fa fa-lg fa-archive\" title=\"Package\"/>"
+msgid "<i class=\"fa fa-lg fa-archive me-2\" title=\"Package\"/>"
+msgstr "<i class=\"fa fa-lg fa-archive me-2\" title=\"Opakowanie\"/>"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_quant_barcode_kanban_2
-msgid "<i class=\"fa fa-lg fa-user-o\" title=\"Owner\"/>"
-msgstr "<i class=\"fa fa-lg fa-user-o\" title=\"Owner\"/>"
+msgid "<i class=\"fa fa-lg fa-user-o me-2\" title=\"Owner\"/>"
+msgstr "<i class=\"fa fa-lg fa-user-o me-2\" title=\"Właściciel\"/>"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.res_config_settings_view_form
@@ -98,6 +94,17 @@ msgid "<span>Replenish Quantities</span>"
 msgstr "<span>Uzupełnij zasoby</span>"
 
 #. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/controllers/stock_barcode.py:0
+msgid "A GTIN can only contains digits"
+msgstr "GTIN może zawierać jedynie cyfry"
+
+#. module: stock_barcode
+#: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__restrict_scan_product
+msgid "A line's product must be scanned before the line can be edited"
+msgstr "Produkt linii musi zostać zeskanowany przed edycją linii"
+
+#. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/models/barcode_model.js:0
 msgid ""
@@ -114,6 +121,11 @@ msgid "Add Product"
 msgstr "Dodaj Produkt"
 
 #. module: stock_barcode
+#: model_terms:ir.ui.view,arch_db:stock_barcode.stock_barcode_view_picking_type_form
+msgid "Add colors to operation cards to help users differentiate them."
+msgstr "Dodaj kolory do kart operacji, aby pomóc użytkownikom je rozróżnić."
+
+#. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
 msgid "Add extra product?"
@@ -128,7 +140,7 @@ msgstr "Po każdym produkcie"
 #. module: stock_barcode
 #: model:ir.model.fields.selection,name:stock_barcode.selection__stock_picking_type__restrict_put_in_pack__optional
 #: model:ir.model.fields.selection,name:stock_barcode.selection__stock_picking_type__restrict_scan_dest_location__optional
-msgid "After group of Products"
+msgid "After group of products"
 msgstr "Po grupie produktów"
 
 #. module: stock_barcode
@@ -153,15 +165,6 @@ msgid "Allow full picking validation"
 msgstr "Zezwalaj na pełną walidację kompletacji"
 
 #. module: stock_barcode
-#: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__barcode_validation_full
-msgid ""
-"Allow to validate a picking even if nothing was scanned yet (and so, do an "
-"immediate transfert)"
-msgstr ""
-"Zezwalaj na walidację kompletacji, nawet jeśli nic nie zostało jeszcze "
-"zeskanowane (a więc wykonaj natychmiastowy transfer)."
-
-#. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.res_config_settings_view_form
 msgid ""
 "Allow users to see the expected quantity of a product to count in a location"
@@ -170,11 +173,65 @@ msgstr ""
 "lokacji"
 
 #. module: stock_barcode
-#: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__show_reserved_sns
+#: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__barcode_validation_full
 msgid ""
-"Allows to display reserved lots/serial numbers. When non active, it is clear"
-" for the picker that they can pick the lots/serials they want."
+"Allow validating a picking even if nothing has been scanned yet, i.e. do an "
+"immediate transfer"
 msgstr ""
+"Zezwalaj na walidację kompletacji, nawet jeśli nic nie zostało jeszcze "
+"zeskanowane, np. wykonaj natychmiastowy transfer"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid ""
+"An error occured during parsing of element_string: AI code %(ai_code)s is "
+"missing for scheme %(scheme_name)s"
+msgstr ""
+"Podczas analizowania element_string wystąpił błąd: brakuje kodu AI "
+"%(ai_code)s dla schematu %(scheme_name)s"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid ""
+"An error occured with field '%(field_name)s': the corresponding AI "
+"'%(ai_code)s' was not found in the element_string"
+msgstr ""
+"Wystąpił błąd z polem '%(field_name)s': odpowiednie AI '%(ai_code)s' nie "
+"zostało znalezione w element_string"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid ""
+"An error occured: value of company_prefix_length (%(company_prefix_length)s)"
+" must be between 6 and 12 inclusive."
+msgstr ""
+"Wystąpił błąd: wartość  company_prefix_length (%(company_prefix_length)s) "
+"musi być pomiędzy 6 a 12 włącznie."
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "An error occurred with field '%(field_name)s': %(error_message)s"
+msgstr "Wystąpił błąd z polem '%(field_name)s': %(error_message)s"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid ""
+"An error occurred with field 'partition': no partition value can be found "
+"for the given company_prefix_length"
+msgstr ""
+"Wystąpił błąd z polem 'partycja': nie znaleziono wartości dla danego "
+"company_prefix_length"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "An error occurred with method '%(method_name)s': %(error_message)s"
+msgstr "Wystąpił błąd z metodą '%(method_name)s': %(error_message)s"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -189,7 +246,6 @@ msgstr ""
 #. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/components/main.xml:0
-#: code:addons/stock_barcode/static/src/components/manual_barcode.xml:0
 msgid "Apply"
 msgstr "Zastosuj"
 
@@ -197,6 +253,11 @@ msgstr "Zastosuj"
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_barcode_cancel_operation_view
 msgid "Are you sure you want to cancel this operation?"
 msgstr "Czy na pewno chcesz anulować tę operację?"
+
+#. module: stock_barcode
+#: model_terms:ir.ui.view,arch_db:stock_barcode.stock_quant_barcode_kanban_2
+msgid "Available:"
+msgstr "Dostępne:"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -265,6 +326,15 @@ msgid "Barcodes are not available."
 msgstr "Kody kreskowe nie są dostępne."
 
 #. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid ""
+"Binary value %(word)s cannot be represented with %(word_size_write)s bits"
+msgstr ""
+"Wartość binarna %(word)s nie może być reprezentowana przez "
+"%(word_size_write)s bity"
+
+#. module: stock_barcode
 #: model:product.template,name:stock_barcode.product_cable_management_box_2_product_template
 msgid "Cable Management Box"
 msgstr "Organizer na przewody"
@@ -299,6 +369,11 @@ msgid "Cancel this operation?"
 msgstr "Anulować tę operację?"
 
 #. module: stock_barcode
+#: model_terms:ir.ui.view,arch_db:stock_barcode.stock_barcode_view_picking_type_form
+msgid "Card Color"
+msgstr "Kolor karty"
+
+#. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/components/count_screen_rfid.xml:0
 #: code:addons/stock_barcode/static/src/components/main.xml:0
@@ -318,6 +393,8 @@ msgid "Configure Product Barcodes"
 msgstr "Konfiguracja kodów kreskowych produktów"
 
 #. module: stock_barcode
+#. odoo-javascript
+#: code:addons/stock_barcode/static/src/js/stock_barcode_sml_form.js:0
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_move_line_product_selector
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_picking_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_quant_barcode
@@ -336,9 +413,20 @@ msgid "Count Entire Locations"
 msgstr "Policz całe lokalizacje"
 
 #. module: stock_barcode
+#. odoo-javascript
+#: code:addons/stock_barcode/static/src/main_menu/main_menu.xml:0
+msgid "Count Inventory"
+msgstr ""
+
+#. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_quant_barcode
 msgid "Counted Quantity"
 msgstr "Zliczona ilość"
+
+#. module: stock_barcode
+#: model:ir.model,website_form_label:stock_barcode.model_res_partner
+msgid "Create a Customer"
+msgstr "Utwórz klienta"
 
 #. module: stock_barcode
 #: model_terms:ir.actions.act_window,help:stock_barcode.stock_picking_action_kanban
@@ -403,6 +491,7 @@ msgstr "Wyłącz efekty dźwiękowe podczas skanowania kodu kreskowego."
 #. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/components/apply_quant_dialog.xml:0
+#: code:addons/stock_barcode/static/src/js/stock_barcode_sml_form.js:0
 #: model_terms:ir.ui.view,arch_db:stock_barcode.scrap_product_selector
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_move_line_product_selector
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_picking_barcode
@@ -411,9 +500,36 @@ msgid "Discard"
 msgstr "Odrzuć"
 
 #. module: stock_barcode
+#: model:ir.model.fields,field_description:stock_barcode.field_product_product__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_product_uom__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_res_partner__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_backorder_confirmation__display_name
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_barcode_cancel_operation__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_location__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_lot__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_move__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_picking_type__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_quant__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_quant_package__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_request_count__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_scrap__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_warehouse__display_name
+#: model:ir.model.fields,field_description:stock_barcode.field_uom_uom__display_name
 msgid "Display Name"
 msgstr "Nazwa wyświetlana"
+
+#. module: stock_barcode
+#: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__show_reserved_sns
+msgid ""
+"Display reserved lots/serial numbers. When not active, the picker can pick "
+"lots/serials as they want."
+msgstr ""
+"Wyświetlaj zarezerwowane partie/numery seryjne. Gdy nieaktywne, osoba "
+"kompletująca może wybrać partie/numery seryjne, które woli."
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -428,18 +544,16 @@ msgstr ""
 #. module: stock_barcode
 #: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__restrict_put_in_pack
 msgid ""
-"Does the picker have to put in a package the scanned products? If yes, at "
-"which rate?"
+"Does the picker have to put the scanned products in a package? If yes, when?"
 msgstr ""
-"Czy osoba kompletująca musi pakować zeskanowane produkty? Jeśli tak, to w "
-"jakim tempie?"
+"Czy osoba kompletująca musi pakować zeskanowane produkty? Jeśli tak, to "
+"kiedy?"
 
 #. module: stock_barcode
 #: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__restrict_scan_dest_location
-msgid "Does the picker have to scan the destination? If yes, at which rate?"
+msgid "Does the picker have to scan the destination? If yes, when?"
 msgstr ""
-"Czy osoba kompletująca musi skanować miejsce docelowe? Jeśli tak, to w jakim"
-" tempie?"
+"Czy osoba kompletująca musi skanować miejsce docelowe? Jeśli tak, to kiedy?"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_barcode_cancel_operation_view
@@ -455,8 +569,8 @@ msgstr "Nie pokazuj więcej tego komunikatu"
 #. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/components/backorder_dialog.xml:0
-msgid "Done /"
-msgstr "Gotowe /"
+msgid "Done / To do"
+msgstr ""
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -477,15 +591,60 @@ msgid "Dummy"
 msgstr "Bezczynny"
 
 #. module: stock_barcode
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__electronic_product_code
+msgid "Electronic Product Code"
+msgstr "Elektroniczny kod produktu"
+
+#. module: stock_barcode
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_backorder_confirmation__empty_move_count
 msgid "Empty Move Count"
 msgstr "Liczba pustych ruchów"
 
 #. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/components/manual_barcode.xml:0
-msgid "Enter a barcode..."
-msgstr "Wprowadź kod kreskowy..."
+#. odoo-python
+#: code:addons/stock_barcode/models/stock_move_line.py:0
+msgid ""
+"Error: The product barcode is not a valid Global Trade Item Number, we can't"
+" generate an Electronic Product Code for it."
+msgstr ""
+"Błąd: Kod kreskowy produktu nie jest ważnym numerem GTIN (Global Trade Item "
+"Number), nie możemy wygenerować dla niego elektronicznego kodu produktu."
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/stock_move_line.py:0
+msgid ""
+"Error: We can't generate an Electronic Product Code for a product without a "
+"barcode."
+msgstr ""
+"Błąd: Nie można wygenerować elektronicznego kodu produktu dla produktu bez "
+"kodu kreskowego."
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/stock_move_line.py:0
+msgid ""
+"Error: We can't generate an Electronic Product Code for a tracked product "
+"without a tracking number."
+msgstr ""
+"Błąd: Nie można wygenerować elektronicznego kodu produktu dla śledzonego "
+"produktu bez numeru śledzenia."
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid ""
+"Field '%(field_name)s' is a reserved field, you can't manually update its "
+"value with this method"
+msgstr ""
+"Pole '%(field_name)s' jest zarezerwowanym pole, nie możesz ręcznie "
+"zaktualizować jego wartości z tą metodą"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Field '%(field_name)s' not found"
+msgstr "Nie znaleziono pola '%(field_name)s'"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_barcode_view_picking_type_form
@@ -506,8 +665,9 @@ msgstr "Utworzono następujące zamówienia oczekujące:"
 
 #. module: stock_barcode
 #: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__barcode_allow_extra_product
-msgid "For planned transfers, allow to add non-reserved products"
+msgid "For planned transfers, allow adding non-reserved products"
 msgstr ""
+"Zezwól na dodawanie niezarezerwowanych produktów do planowanych transferów"
 
 #. module: stock_barcode
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_picking_type__restrict_scan_dest_location
@@ -531,8 +691,8 @@ msgstr "Wymusić skanowanie lokalizacji źródła?"
 
 #. module: stock_barcode
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_picking_type__barcode_validation_after_dest_location
-msgid "Force a destination on all products"
-msgstr "Wymuś miejsce docelowe na wszystkich produktach"
+msgid "Force a destination for all products"
+msgstr "Wymuś miejsce docelowa dla wszystkich produktów"
 
 #. module: stock_barcode
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_picking_type__barcode_validation_all_product_packed
@@ -565,7 +725,25 @@ msgid "Hide Lot Name"
 msgstr "Ukryj nazwę partii"
 
 #. module: stock_barcode
+#: model:ir.model.fields,field_description:stock_barcode.field_product_product__id
+#: model:ir.model.fields,field_description:stock_barcode.field_product_uom__id
+#: model:ir.model.fields,field_description:stock_barcode.field_res_config_settings__id
+#: model:ir.model.fields,field_description:stock_barcode.field_res_partner__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_backorder_confirmation__id
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_barcode_cancel_operation__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_location__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_lot__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_move__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_package_type__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_picking__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_picking_type__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_quant__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_quant_package__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_request_count__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_scrap__id
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_warehouse__id
+#: model:ir.model.fields,field_description:stock_barcode.field_uom_uom__id
 msgid "ID"
 msgstr "ID"
 
@@ -613,21 +791,34 @@ msgid "International Article Number used for product identification."
 msgstr "Międzynarodowy numer artykułu stosowany do identyfikacji"
 
 #. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
-msgid "Inventory Count"
-msgstr "Liczba zapasów"
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Invalid pad_char '%(pad_char)s'. Use '0' or '1'."
+msgstr "Nieprawidłowy pad_char '%(pad_char)s'. Użyj '0' lub '1'."
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Invalid pad_side '%(pad_side)s'. Use 'left' or 'right'."
+msgstr "Nieprawidłowy pad_side '%(pad_side)s'. Użyj 'lewy' lub 'prawy'."
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Invalid word_pad_char '%(word_pad_char)s'. Use '0' or '1'."
+msgstr "Nieprawidłowy word_pad_char '%(word_pad_char)s'. Użyj '0' lub '1'."
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Invalid word_pad_side '%(word_pad_side)s'. Use 'left' or 'right'."
+msgstr ""
+"Nieprawidłowy word_pad_side '%(word_pad_side)s'. Użyj 'lewy' lub 'prawy'."
 
 #. module: stock_barcode
 #: model:ir.model,name:stock_barcode.model_stock_location
 msgid "Inventory Locations"
 msgstr "Strefy Magazynowe"
-
-#. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/main_menu/main_menu.xml:0
-msgid "Inventory count"
-msgstr "Liczba zapasów"
 
 #. module: stock_barcode
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_picking_type__is_barcode_picking_type
@@ -651,9 +842,15 @@ msgid "Leave it"
 msgstr "Zostaw to"
 
 #. module: stock_barcode
-#: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__restrict_scan_product
-msgid "Line's product must be scanned before the line can be edited"
-msgstr "Produkt linii musi zostać zeskanowany przed edycją linii."
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Length must be a positive integer"
+msgstr "Długość musi być dodatnią liczbą całkowitą"
+
+#. module: stock_barcode
+#: model:ir.model,name:stock_barcode.model_product_uom
+msgid "Link between products and their UoMs"
+msgstr "Link pomiędzy produktami a ich JM"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -793,6 +990,16 @@ msgid "Not the expected scan"
 msgstr "Nie jest to oczekiwany skan"
 
 #. module: stock_barcode
+#. odoo-javascript
+#: code:addons/stock_barcode/static/src/js/stock_barcode_sml_form.js:0
+msgid ""
+"Oops! It seems that this product is not located in %(location)s.\n"
+"Do you confirm you picked from there?"
+msgstr ""
+"Ups! Wygląda na to, że ten produkt nie jest zlokalizowany w %(location)s.\n"
+"Czy potwierdzasz, że stamtąd go wziąłeś?"
+
+#. module: stock_barcode
 #. odoo-python
 #: code:addons/stock_barcode/models/stock_picking.py:0
 #: model:ir.actions.act_window,name:stock_barcode.open_picking
@@ -842,14 +1049,25 @@ msgid "Packages"
 msgstr "Paczki"
 
 #. module: stock_barcode
-#: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__product_packaging_id
-msgid "Packaging"
-msgstr "Opakowania"
-
-#. module: stock_barcode
-#: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__product_packaging_uom_qty
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__packaging_uom_qty
 msgid "Packaging Quantity"
 msgstr "Ilość w opakowaniu"
+
+#. module: stock_barcode
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__packaging_uom_id
+msgid "Packaging Unit of Measure"
+msgstr "Jednostka miary paczki"
+
+#. module: stock_barcode
+#: model:ir.model.fields,help:stock_barcode.field_stock_move_line__packaging_uom_id
+msgid "Packaging unit from sale or purchase orders"
+msgstr "Jednostka opakowania z zamówień sprzedaży lub zakupu"
+
+#. module: stock_barcode
+#. odoo-javascript
+#: code:addons/stock_barcode/static/src/components/line.xml:0
+msgid "Packaging:"
+msgstr "Paczka:"
 
 #. module: stock_barcode
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__parent_location_id
@@ -865,6 +1083,22 @@ msgstr "Docelowa lok. narzędna"
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_backorder_confirmation__partial_move_count
 msgid "Partial Move Count"
 msgstr "Częściowa liczba ruchów"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid ""
+"Partition table %(table_name)s not found, available tables are : "
+"%(table_list)s)"
+msgstr ""
+"Tabela partycji %(table_name)s nie została znaleziona, dostępne tabele to: "
+"%(table_list)s)"
+
+#. module: stock_barcode
+#. odoo-javascript
+#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
+msgid "Physical Inventory"
+msgstr "Inwentarz fizyczny"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_picking_barcode
@@ -966,11 +1200,6 @@ msgid "Product Moves (Stock Move Line)"
 msgstr "Przesunięcia produktu (pozycja przesunięcia zasobów)"
 
 #. module: stock_barcode
-#: model:ir.model,name:stock_barcode.model_product_packaging
-msgid "Product Packaging"
-msgstr "Opakowanie produktu"
-
-#. module: stock_barcode
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__product_reference_code
 #: model:ir.model.fields,field_description:stock_barcode.field_stock_quant__product_reference_code
 msgid "Product Reference Code"
@@ -990,6 +1219,13 @@ msgstr "Jednostka miary produktu"
 #: model:ir.model,name:stock_barcode.model_product_product
 msgid "Product Variant"
 msgstr "Wariant produktu"
+
+#. module: stock_barcode
+#: model:ir.model.fields,field_description:stock_barcode.field_stock_move_line__lot_properties
+#: model_terms:ir.ui.view,arch_db:stock_barcode.stock_move_line_product_selector
+#: model_terms:ir.ui.view,arch_db:stock_barcode.stock_quant_barcode
+msgid "Properties"
+msgstr "Właściwości"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -1024,9 +1260,9 @@ msgid "Quantity in stock"
 msgstr "Ilość w magazynie"
 
 #. module: stock_barcode
-#: model:ir.model.fields,help:stock_barcode.field_stock_move_line__product_packaging_uom_qty
-msgid "Quantity of the Packaging in the UoM of the Stock Move Line."
-msgstr "Ilość opakowań w JM linii ruchu zapasów."
+#: model:ir.model.fields,help:stock_barcode.field_stock_move_line__packaging_uom_qty
+msgid "Quantity in the packaging unit"
+msgstr "Ilość w jednostce opakowania"
 
 #. module: stock_barcode
 #: model:ir.model,name:stock_barcode.model_stock_quant
@@ -1116,12 +1352,6 @@ msgstr ""
 
 #. module: stock_barcode
 #. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
-msgid "Scan a location"
-msgstr "Skanowanie lokalizacji"
-
-#. module: stock_barcode
-#. odoo-javascript
 #: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
 msgid "Scan a lot number"
 msgstr "Skanowanie numeru partii"
@@ -1165,7 +1395,6 @@ msgstr "Skanowanie paczki, lokalizacji docelowej lub innego produktu"
 #. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
 msgid "Scan a product"
 msgstr "Skanowanie produktu"
 
@@ -1180,12 +1409,6 @@ msgstr "Skanowanie produktu przed zeskanowaniem numeru śledzenia"
 #: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
 msgid "Scan a product from %s"
 msgstr "Zeskanuj produkt z %s"
-
-#. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
-msgid "Scan a product in %s or scan another location"
-msgstr "Zeskanuj produkt w %s lub zeskanuj inną lokalizację"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -1269,12 +1492,6 @@ msgstr "Zeskanuj inny numer seryjny"
 
 #. module: stock_barcode
 #. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
-msgid "Scan lot numbers for product %s to change their quantity"
-msgstr "Skanowanie numerów partii produktów %s w celu zmiany ich ilości"
-
-#. module: stock_barcode
-#. odoo-javascript
 #: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
 msgid "Scan more lot numbers"
 msgstr "Zeskanuj więcej numerów partii"
@@ -1284,12 +1501,6 @@ msgstr "Zeskanuj więcej numerów partii"
 #: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
 msgid "Scan more lot numbers or a package"
 msgstr "Skanowanie większej liczby numerów partii lub opakowań"
-
-#. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
-msgid "Scan more products in %s or scan another location"
-msgstr "Zeskanuj więcej produktów w %s lub zeskanuj inną lokalizację"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -1310,13 +1521,6 @@ msgstr ""
 #: code:addons/stock_barcode/static/src/main_menu/main_menu.xml:0
 msgid "Scan or tap"
 msgstr "Zeskanuj lub dotknij"
-
-#. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
-msgid "Scan serial numbers for product %s to change their quantity"
-msgstr ""
-"Skanowanie numerów seryjnych dla produktów %s w celu zmiany ich ilości"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -1355,23 +1559,6 @@ msgstr ""
 #. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
-msgid ""
-"Scanned quantity uses %(unit)s as its Unit of Measure (UoM), but it is not "
-"compatible with the line's UoM (%(lineUnit)s)."
-msgstr ""
-
-#. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_model.js:0
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
-msgid ""
-"Scanned quantity uses %(unit)s as its Unit of Measure (UoM), but it is not "
-"compatible with the product's UoM (%(productUnit)s)."
-msgstr ""
-
-#. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
 msgid "Scanning package"
 msgstr "Skanowanie paczki"
 
@@ -1392,6 +1579,11 @@ msgstr "Strefa odpadów"
 #: model_terms:ir.ui.view,arch_db:stock_barcode.stock_move_line_product_selector
 msgid "Select a Product"
 msgstr "Wybierz produkt"
+
+#. module: stock_barcode
+#: model_terms:ir.ui.view,arch_db:stock_barcode.stock_move_line_product_selector
+msgid "Select where else to pick the product from"
+msgstr "Wybierz, skąd jeszcze możesz wybrać produkt"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.scrap_product_selector
@@ -1477,19 +1669,27 @@ msgstr "Typ pakietu magazynowego"
 #. module: stock_barcode
 #: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__is_barcode_picking_type
 msgid ""
-"Technical field indicating if should be used in barcode app and used to "
-"control visibility in the related UI."
+"Technical field indicating if type should be used in barcode app and used to"
+" control visibility in the related UI."
 msgstr ""
+"Pole techniczne oznaczające, czy typ powinien być używany w aplikacji Kody "
+"Kreskowe i używany do kontrolowania widoczności w powiązanym interfejsie."
 
 #. module: stock_barcode
 #: model:ir.model.fields,help:stock_barcode.field_stock_picking_type__show_barcode_validation
 msgid ""
 "Technical field used to compute whether the \"Final Validation\" group "
-"should be displayed, solving combined groups/invisible complexity."
+"should be displayed, to support combined groups/invisible complexity."
 msgstr ""
-"Pole techniczne używane do obliczenia, czy grupa \"Ostateczna walidacja\" "
-"powinna być wyświetlana, rozwiązując połączone grupy / niewidoczną "
-"złożoność."
+"Pole techniczne używane do określania, czy grupa \"Ostateczna weryfikacja\" "
+"powinna być wyświetlana, w celu wspierania łączonych grup/niewidocznej "
+"złożoności."
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "The encoding '%(encoding_name)s' is not supported."
+msgstr "Kodowanie '%(encoding_name)s' nie jest obsługiwane."
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -1600,12 +1800,6 @@ msgstr ""
 
 #. module: stock_barcode
 #. odoo-javascript
-#: code:addons/stock_barcode/static/src/components/backorder_dialog.xml:0
-msgid "To do"
-msgstr "Do zrobienia"
-
-#. module: stock_barcode
-#. odoo-javascript
 #: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
 msgid "To use packages, enable 'Packages' in the settings"
 msgstr "Aby korzystać z pakietów, włącz opcję \"Pakiety\" w ustawieniach."
@@ -1642,9 +1836,8 @@ msgstr "Unikalne znaczniki"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.scrap_product_selector
-#: model_terms:ir.ui.view,arch_db:stock_barcode.stock_quant_barcode_kanban
-msgid "Unit of Measure"
-msgstr "Jednostka miary"
+msgid "Unit"
+msgstr "Jednostka"
 
 #. module: stock_barcode
 #: model_terms:ir.ui.view,arch_db:stock_barcode.view_stock_quant_tree
@@ -1659,9 +1852,27 @@ msgid "Validate"
 msgstr "Zatwierdź"
 
 #. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Value %(value)s cannot be represented with %(length)s bits"
+msgstr "Wartość %(value)s nie może być reprezentowana przez %(length)s bity"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Value '%(value)s' must be an integer"
+msgstr "Wartość \"%(value)s\" musi być liczbą całkowitą"
+
+#. module: stock_barcode
 #: model:ir.model.fields,help:stock_barcode.field_stock_scrap___barcode_scanned
 msgid "Value of the last barcode scanned."
 msgstr "Wartość ostaniego zeskanowanego kodu kreskowego"
+
+#. module: stock_barcode
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Value to encode contains invalid character(s): %(invalid_chars)s"
+msgstr "Wartość do zakodowania zawiera nieprawidłowe znaki: %(invalid_chars)s"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -1684,12 +1895,10 @@ msgstr ""
 "przypisany do zliczenia wszystkich produktów z tej lokalizacji."
 
 #. module: stock_barcode
-#. odoo-javascript
-#: code:addons/stock_barcode/static/src/models/barcode_model.js:0
-#: code:addons/stock_barcode/static/src/models/barcode_picking_model.js:0
-#: code:addons/stock_barcode/static/src/models/barcode_quant_model.js:0
-msgid "Wrong Unit of Measure"
-msgstr "Nieprawidłowa jednostka miary (UoM)"
+#. odoo-python
+#: code:addons/stock_barcode/models/epc_encoder.py:0
+msgid "Word size must be a positive integer"
+msgstr "Wielkość słowa musi być dodatnią liczbą całkowitą"
 
 #. module: stock_barcode
 #. odoo-javascript
@@ -1802,8 +2011,20 @@ msgstr "lub"
 #. module: stock_barcode
 #. odoo-javascript
 #: code:addons/stock_barcode/static/src/main_menu/main_menu.xml:0
+msgid "or its"
+msgstr "lub jego/jej"
+
+#. module: stock_barcode
+#. odoo-javascript
+#: code:addons/stock_barcode/static/src/main_menu/main_menu.xml:0
 msgid "package"
 msgstr "pakiet"
+
+#. module: stock_barcode
+#. odoo-javascript
+#: code:addons/stock_barcode/static/src/main_menu/main_menu.xml:0
+msgid "packaging"
+msgstr "opakowanie"
 
 #. module: stock_barcode
 #. odoo-javascript

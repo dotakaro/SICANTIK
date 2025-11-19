@@ -39,7 +39,7 @@ test(`empty grouped gantt with sample="1"`, async () => {
     await animationFrame();
 
     expect(SELECTORS.viewContent).toHaveClass("o_view_sample_data");
-    expect(queryAll(SELECTORS.pill).length).toBeWithin(0, 16);
+    expect(queryAll(SELECTORS.pill)).toHaveLength(0);
     expect(SELECTORS.noContentHelper).toHaveCount(1);
 
     const content = queryFirst(SELECTORS.viewContent).innerHTML;
@@ -68,7 +68,7 @@ test("empty gantt with sample data and default_group_by", async () => {
     await animationFrame();
 
     expect(SELECTORS.viewContent).toHaveClass("o_view_sample_data");
-    expect(queryAll(SELECTORS.pill).length).toBeWithin(0, 16);
+    expect(queryAll(SELECTORS.pill)).toHaveLength(0);
     expect(SELECTORS.noContentHelper).toHaveCount(1);
 
     const content = queryFirst(SELECTORS.viewContent).innerHTML;
@@ -99,19 +99,24 @@ test("empty gantt with sample data and default_group_by (switch view)", async ()
 
     // the gantt view should be in sample mode
     expect(SELECTORS.viewContent).toHaveClass("o_view_sample_data");
-    expect(queryAll(SELECTORS.pill).length).toBeWithin(0, 16);
+    expect(queryAll(SELECTORS.pill)).toHaveLength(0);
     expect(SELECTORS.noContentHelper).toHaveCount(1);
+    expect(`.o_searchview_facet`).toHaveCount(1);
+    expect(`.o_searchview_facet`).toHaveText("Project");
     const content = queryFirst(SELECTORS.viewContent).innerHTML;
 
     // switch to list view
     await switchView("list");
     expect(SELECTORS.view).toHaveCount(0);
+    expect(`.o_searchview_facet`).toHaveCount(0);
 
     // go back to gantt view
     await switchView("gantt");
     await animationFrame();
 
     expect(SELECTORS.view).toHaveCount(1);
+    expect(`.o_searchview_facet`).toHaveCount(1);
+    expect(`.o_searchview_facet`).toHaveText("Project");
 
     // the gantt view should be still in sample mode
     expect(SELECTORS.viewContent).toHaveClass("o_view_sample_data");
@@ -136,7 +141,7 @@ test(`empty gantt with sample="1"`, async () => {
     });
     await animationFrame();
     expect(SELECTORS.viewContent).toHaveClass("o_view_sample_data");
-    expect(queryAll(SELECTORS.pill).length).toBeWithin(0, 16);
+    expect(queryAll(SELECTORS.pill)).toHaveLength(0);
     expect(SELECTORS.noContentHelper).toHaveCount(1);
 
     const content = queryFirst(SELECTORS.viewContent).innerHTML;
@@ -151,7 +156,7 @@ test(`empty gantt with sample="1"`, async () => {
 test(`non empty gantt with sample="1"`, async () => {
     await mountGanttView({
         resModel: "tasks",
-        arch: `<gantt date_start="start" date_stop="stop" default_scale="year" sample="1"/>`,
+        arch: `<gantt date_start="start" date_stop="stop" default_range="year" sample="1"/>`,
         searchViewArch: `
             <search>
                 <filter name="filter" string="False Domain" domain="[(0, '=', 1)]"/>
@@ -159,7 +164,7 @@ test(`non empty gantt with sample="1"`, async () => {
         `,
     });
     expect(SELECTORS.viewContent).not.toHaveClass("o_view_sample_data");
-    expect(SELECTORS.cell).toHaveCount(12);
+    expect(SELECTORS.cell).toHaveCount(18);
     expect(SELECTORS.pill).toHaveCount(7);
     expect(SELECTORS.noContentHelper).toHaveCount(0);
 
@@ -168,13 +173,13 @@ test(`non empty gantt with sample="1"`, async () => {
     expect(SELECTORS.viewContent).not.toHaveClass("o_view_sample_data");
     expect(SELECTORS.pill).toHaveCount(0);
     expect(SELECTORS.noContentHelper).toHaveCount(0);
-    expect(SELECTORS.cell).toHaveCount(12);
+    expect(SELECTORS.cell).toHaveCount(18);
 });
 
 test(`non empty grouped gantt with sample="1"`, async () => {
     await mountGanttView({
         resModel: "tasks",
-        arch: `<gantt date_start="start" date_stop="stop" default_scale="year" sample="1"/>`,
+        arch: `<gantt date_start="start" date_stop="stop" default_range="year" sample="1"/>`,
         groupBy: ["project_id"],
         searchViewArch: `
             <search>
@@ -183,7 +188,7 @@ test(`non empty grouped gantt with sample="1"`, async () => {
         `,
     });
     expect(SELECTORS.viewContent).not.toHaveClass("o_view_sample_data");
-    expect(SELECTORS.cell).toHaveCount(24);
+    expect(SELECTORS.cell).toHaveCount(36);
     expect(SELECTORS.pill).toHaveCount(7);
 
     await toggleSearchBarMenu();
@@ -191,7 +196,7 @@ test(`non empty grouped gantt with sample="1"`, async () => {
     expect(SELECTORS.viewContent).not.toHaveClass("o_view_sample_data");
     expect(SELECTORS.pill).toHaveCount(0);
     expect(SELECTORS.noContentHelper).toHaveCount(0);
-    expect(SELECTORS.cell).toHaveCount(12);
+    expect(SELECTORS.cell).toHaveCount(18);
 });
 
 test("no content helper from action when no data and sample mode", async () => {

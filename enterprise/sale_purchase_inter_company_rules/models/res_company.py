@@ -1,6 +1,7 @@
 from odoo import fields, models
 
-class res_company(models.Model):
+
+class ResCompany(models.Model):
     _inherit = 'res.company'
 
     intercompany_generate_sales_orders = fields.Boolean(string="Generate Sales order")

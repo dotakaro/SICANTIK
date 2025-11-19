@@ -1,6 +1,7 @@
 import { serializeDateTime } from "@web/core/l10n/dates";
 import { GanttModel, parseServerValues } from "@web_gantt/gantt_model";
 import { Domain } from "@web/core/domain";
+import {localStartOf} from "@web_gantt/gantt_helpers";
 
 export class AttendanceGanttModel extends GanttModel {
     //-------------------------------------------------------------------------
@@ -54,11 +55,17 @@ export class AttendanceGanttModel extends GanttModel {
             const parsedRecord = parseServerValues(fields, record);
             const dateStart = parsedRecord[dateStartField];
             const dateStop = parsedRecord[dateStopField];
-            if (!this.orm.isSample && dateStart && !dateStop) {
+            if (dateStart && !dateStop) {
                 parsedRecord[dateStopField] = luxon.DateTime.now();
                 parsedRecords.push(parsedRecord);
             }
         }
         return parsedRecords;
+    }
+
+    getRangeFromDate(rangeId, date) {
+        const startDate = localStartOf(date, rangeId);
+        const stopDate = startDate.plus({ [rangeId]: 1 }).minus({ day: 1 });
+        return { focusDate: date, startDate, stopDate, rangeId };
     }
 }

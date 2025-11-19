@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
@@ -6,7 +5,7 @@
     'version': '1.0',
     'category': 'Human Resources/Recruitment',
     'summary': 'Manage the signatures to send to your applicants',
-    'depends': ['hr_recruitment', 'hr_contract_sign'],
+    'depends': ['hr_recruitment', 'hr_sign'],
     'data': [
         'security/ir.model.access.csv',
         'data/mail_templates_chatter.xml',
@@ -20,5 +19,6 @@
     },
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

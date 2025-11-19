@@ -1,4 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 from ast import literal_eval
 
 from odoo import api, fields, models, _
@@ -17,8 +18,8 @@ class ProjectTask(models.Model):
     worksheet_count = fields.Integer(compute='_compute_worksheet_count', compute_sudo=True, export_string_translation=False)
 
     @property
-    def SELF_READABLE_FIELDS(self):
-        return super().SELF_READABLE_FIELDS | {
+    def TASK_PORTAL_READABLE_FIELDS(self):
+        return super().TASK_PORTAL_READABLE_FIELDS | {
             'allow_worksheets',
             'worksheet_count',
             'worksheet_template_id',
@@ -46,7 +47,7 @@ class ProjectTask(models.Model):
             sign_p, sign_s = True, True
             if (
                 not task.allow_worksheets
-                or task.timer_start
+                or task.sudo().timer_start
                 or task.worksheet_signature
                 or not task.display_satisfied_conditions_count
             ):
@@ -70,7 +71,7 @@ class ProjectTask(models.Model):
             send_p, send_s = True, True
             if (
                 not task.allow_worksheets
-                or task.timer_start
+                or task.sudo().timer_start
                 or not task.display_satisfied_conditions_count
                 or task.fsm_is_sent
             ):
@@ -153,10 +154,6 @@ class ProjectTask(models.Model):
         action = super()._get_action_fsm_task_mobile_view()
         action['context']['industry_fsm_has_same_worksheet_template'] = self.worksheet_template_id == self.project_id.sudo().worksheet_template_id
         return action
-
-    def _get_report_base_filename(self):
-        self.ensure_one()
-        return 'Worksheet %s - %s' % (self.name, self.partner_id.name)
 
     def _is_fsm_report_available(self):
         self.ensure_one()

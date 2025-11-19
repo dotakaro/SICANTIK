@@ -31,6 +31,7 @@ import { doMenuAction, getActionMenu } from "@spreadsheet/../tests/helpers/ui";
 import { waitForDataLoaded } from "@spreadsheet/helpers/model";
 import { getSpreadsheetActionModel } from "@spreadsheet_edition/../tests/helpers/webclient_helpers";
 import { InsertListSpreadsheetMenu } from "@spreadsheet_edition/assets/list_view/insert_list_spreadsheet_menu_owl";
+import { SpreadsheetSelectorDialog } from "@spreadsheet_edition/assets/components/spreadsheet_selector_dialog/spreadsheet_selector_dialog";
 import { insertList } from "@spreadsheet_edition/bundle/list/list_init_callback";
 import * as dsHelpers from "@web/../tests/core/tree_editor/condition_tree_editor_test_helpers";
 import {
@@ -42,12 +43,12 @@ import {
     patchWithCleanup,
     toggleActionMenu,
     makeServerError,
+    serverState,
+    mockService,
 } from "@web/../tests/web_test_helpers";
 import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
 import { Deferred } from "@web/core/utils/concurrency";
-import { session } from "@web/session";
-import { ListRenderer } from "@web/views/list/list_renderer";
 import { mockActionService } from "../helpers/spreadsheet_test_utils";
 
 defineDocumentSpreadsheetModels();
@@ -202,14 +203,14 @@ test("Open list properties", async function () {
     await animationFrame();
     const target = getFixture();
     const title = target.querySelector(".o-sidePanelTitle").innerText;
-    expect(title).toBe("List properties");
+    expect(title).toBe("List #1");
 
     const sections = target.querySelectorAll(".o-section");
     expect(sections.length).toBe(6, { message: "it should have 6 sections" });
     const [listName, listModel, columns, domain] = sections;
 
     expect(listName.children[0]).toHaveText("List Name");
-    expect(listName.children[1]).toHaveText("(#1) Partners");
+    expect(listName.children[1].querySelector("input").value).toBe("Partners");
 
     expect(listModel.children[0]).toHaveText("Model");
     expect(listModel.children[1]).toHaveText("Partner (partner)");
@@ -271,7 +272,7 @@ test("Deleting the list closes the side panel", async function () {
     env.openSidePanel("LIST_PROPERTIES_PANEL", { listId });
     await animationFrame();
     const titleSelector = ".o-sidePanelTitle";
-    expect(titleSelector).toHaveText("List properties");
+    expect(titleSelector).toHaveText("List #1");
 
     model.dispatch("REMOVE_ODOO_LIST", { listId });
     await animationFrame();
@@ -284,7 +285,7 @@ test("Undo a list insertion closes the side panel", async function () {
     env.openSidePanel("LIST_PROPERTIES_PANEL", { listId });
     await animationFrame();
     const titleSelector = ".o-sidePanelTitle";
-    expect(titleSelector).toHaveText("List properties");
+    expect(titleSelector).toHaveText("List #1");
 
     model.dispatch("REQUEST_UNDO");
     model.dispatch("REQUEST_UNDO");
@@ -397,7 +398,7 @@ test("Re-insert a list also applies a table", async function () {
 test("user related context is not saved in the spreadsheet", async function () {
     ResUsers._records = getDocumentBasicData().models["res.users"].records;
     registry.category("favoriteMenu").add(
-        "insert-list-spreadsheet-menu",
+        "insert-in-spreadsheet-menu",
         {
             Component: InsertListSpreadsheetMenu,
             groupNumber: 4,
@@ -405,28 +406,19 @@ test("user related context is not saved in the spreadsheet", async function () {
         { sequence: 5 }
     );
 
-    patchWithCleanup(ListRenderer.prototype, {
-        async getListForSpreadsheet() {
-            const result = await super.getListForSpreadsheet(...arguments);
-            expect(result.list.context).toEqual(
+    patchWithCleanup(SpreadsheetSelectorDialog.prototype, {
+        setup() {
+            super.setup();
+            expect(this.props.actionOptions.preProcessingAsyncActionData.list.context).toEqual(
                 {
                     default_stage_id: 5,
                 },
                 { message: "user related context is not stored in context" }
             );
-            return result;
         },
     });
+    serverState.companies = [{ id: 15, name: "Hermit" }];
 
-    const testSession = {
-        user_companies: {
-            allowed_companies: {
-                15: { id: 15, name: "Hermit" },
-            },
-            current_company: 15,
-        },
-    };
-    patchWithCleanup(session, testSession);
     const userCtx = user.context;
     patchWithCleanup(user, {
         get context() {
@@ -538,7 +530,7 @@ test("Selected all records from current page are inserted correctly", async func
     const target = getFixture();
     await contains(target.querySelectorAll("td.o_list_record_selector input")[1]).click();
     await contains(target.querySelectorAll("td.o_list_record_selector input")[0]).click();
-    await contains(".o_list_select_domain").click();
+    await contains(".o_select_domain").click();
     await toggleActionMenu();
     const insertMenuItem = [...target.querySelectorAll(".o-dropdown--menu .o_menu_item")].filter(
         (el) => el.innerText === "Insert in spreadsheet"
@@ -716,9 +708,9 @@ test("Update the list title from the side panel", async function () {
     const [listId] = model.getters.getListIds();
     env.openSidePanel("LIST_PROPERTIES_PANEL", { listId });
     await animationFrame();
-    await contains(".o_sp_en_rename").click();
-    await contains(".o_sp_en_name").edit("new name");
-    await contains(".o_sp_en_save").click();
+    const target = await contains(".os-input");
+    await target.click();
+    await target.edit("new name");
     expect(model.getters.getListName(listId)).toBe("new name");
 });
 
@@ -1057,11 +1049,11 @@ test("Duplicate a list from the side panel", async function () {
     await animationFrame();
 
     expect(model.getters.getListIds().length).toBe(1);
-    expect(".o_sp_en_display_name").toHaveText("(#1) Partners by Foo");
+    expect(".o-sidePanelTitle").toHaveText("List #1");
     await contains(".os-cog-wheel-menu-icon").click();
     await contains(".o-popover .fa-clone").click();
     expect(model.getters.getListIds().length).toBe(2);
-    expect(".o_sp_en_display_name").toHaveText("(#2) Partners by Foo");
+    expect(".o-sidePanelTitle").toHaveText("List #2");
 });
 
 test("List export from an action with an xml ID", async function () {
@@ -1076,8 +1068,11 @@ test("List cells are highlighted when their side panel is open", async function 
     env.openSidePanel("LIST_PROPERTIES_PANEL", { listId: "1" });
     await animationFrame();
 
-    const zone = getZoneOfInsertedDataSource(model, "list", "1");
-    expect(getHighlightsFromStore(env)).toEqual([{ sheetId, zone, noFill: true }]);
+    const range = model.getters.getRangeFromZone(
+        sheetId,
+        getZoneOfInsertedDataSource(model, "list", "1")
+    );
+    expect(getHighlightsFromStore(env)).toEqual([{ range, noFill: true }]);
     await contains(".o-sidePanelClose").click();
     expect(getHighlightsFromStore(env)).toEqual([]);
 });
@@ -1089,8 +1084,11 @@ test("List cells are highlighted when hovering the list menu item", async functi
     await contains(".o-topbar-top div[data-id='data']").click();
 
     await hover("div[data-name='item_list_1']");
-    const zone = getZoneOfInsertedDataSource(model, "list", "1");
-    expect(getHighlightsFromStore(env)).toEqual([{ sheetId, zone, noFill: true }]);
+    const range = model.getters.getRangeFromZone(
+        sheetId,
+        getZoneOfInsertedDataSource(model, "list", "1")
+    );
+    expect(getHighlightsFromStore(env)).toEqual([{ range, noFill: true }]);
 
     await leave("div[data-name='item_list_1']");
     expect(getHighlightsFromStore(env)).toEqual([]);
@@ -1099,12 +1097,11 @@ test("List cells are highlighted when hovering the list menu item", async functi
 test("Inserting a grouped list ignore groups", async function () {
     const serverData = getBasicServerData();
     Partner._fields.foo.sortable = true;
-    onRpc("partner", "web_read_group", async ({ kwargs, parent }) => {
+    onRpc("partner", "web_read_group", ({ kwargs }) => {
         if (kwargs.groupby) {
             // The mock server cannot handle orderby count
-            kwargs.orderby = "";
+            kwargs.order = "";
         }
-        return parent();
     });
     const { model } = await createSpreadsheetFromListView({
         actions: async (fixture) => {
@@ -1119,4 +1116,47 @@ test("Inserting a grouped list ignore groups", async function () {
     expect(getEvaluatedCell(model, "A2").value <= getEvaluatedCell(model, "A3").value).not.toBe(
         undefined
     );
+});
+
+test("Middle-click on 'See record' opens the record in a new tab", async function () {
+    const { model, env } = await createSpreadsheetFromListView({
+        serverData: {
+            models: getBasicData(),
+            views: {
+                "partner,false,list": `
+                    <list string="Partners">
+                        <field name="foo"/>
+                        <field name="bar"/>
+                    </list>`,
+                "partner,false,search": "<search/>",
+            },
+        },
+    });
+
+    mockService("action", {
+        doAction(_, options) {
+            expect.step("doAction");
+            expect(options).toEqual({
+                newWindow: true,
+                viewType: "form",
+            });
+            return Promise.resolve(true);
+        },
+    });
+
+    selectCell(model, "A2");
+    const root = cellMenuRegistry.getAll().find((item) => item.id === "list_see_record");
+    await root.execute(env, true);
+    expect.verifySteps(["doAction"]);
+});
+
+test("readonly list side panel", async function () {
+    const { model, env } = await createSpreadsheetFromListView();
+    await doMenuAction(topbarMenuRegistry, ["data", "item_list_1"], env);
+    await animationFrame();
+    expect(".o-sidePanelBody > div.pe-none.opacity-50").toHaveCount(0);
+    model.updateMode("readonly");
+    await animationFrame();
+    expect(".o-sidePanelBody > div.pe-none.opacity-50").toHaveCount(1);
+    expect(".o-sidePanelBody > div.pe-none.opacity-50").toHaveAttribute("inert");
 });

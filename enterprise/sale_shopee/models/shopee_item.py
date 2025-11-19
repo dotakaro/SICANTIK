@@ -13,7 +13,7 @@ class ShopeeItem(models.Model):
     _check_company_auto = True
 
     shop_id = fields.Many2one(
-        string="Shop", comodel_name='shopee.shop', ondelete='cascade', required=True
+        string="Shop", comodel_name='shopee.shop', ondelete='cascade', required=True, index=True,
     )
     product_id = fields.Many2one(
         string="Product",
@@ -30,11 +30,10 @@ class ShopeeItem(models.Model):
         string="Last Sync Date", readonly=True, default=fields.Datetime.now
     )
 
-    _sql_constraints = [(
-        'unique_shopee_item_and_model_identifiers',
+    _unique_shopee_item_and_model_identifiers = models.Constraint(
         'UNIQUE(shop_id, shopee_item_identifier, shopee_model_identifier)',
         "Item and Model Identifiers must be unique for a given shop.",
-    )]
+    )
 
     # === ACTION METHODS === #
 

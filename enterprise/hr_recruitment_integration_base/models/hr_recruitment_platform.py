@@ -3,7 +3,7 @@
 from odoo import fields, models, _
 
 
-class RecruitmentPlatform(models.Model):
+class HrRecruitmentPlatform(models.Model):
     _name = 'hr.recruitment.platform'
     _description = 'Recruitment Platform'
     _inherit = ['avatar.mixin']

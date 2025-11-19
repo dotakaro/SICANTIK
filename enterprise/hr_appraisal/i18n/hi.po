@@ -3,19 +3,16 @@
 # 	* hr_appraisal
 # 
 # Translators:
-# Martin Trigaux, 2024
-# Gautam Hingrajiya, 2024
-# Wil Odoo, 2024
-# Ronald Kung, 2025
-# Manav Shah, 2025
+# Wil Odoo, 2025
+# Ujjawal Pathak, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Manav Shah, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Ujjawal Pathak, 2025\n"
 "Language-Team: Hindi (https://app.transifex.com/odoo/teams/41243/hi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -31,9 +28,10 @@ msgstr ""
 
 #. module: hr_appraisal
 #. odoo-python
+#: code:addons/hr_appraisal/models/hr_appraisal_goal.py:0
 #: code:addons/hr_appraisal/models/hr_appraisal_template.py:0
 msgid "%s (copy)"
-msgstr ""
+msgstr "%s (कॉपी)"
 
 #. module: hr_appraisal
 #. odoo-python
@@ -42,9 +40,10 @@ msgid "%s's Goals"
 msgstr ""
 
 #. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "1 Meeting"
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_campaign_wizard__manager
+msgid ""
+"'Employee's Manager': Each appraisal will be conducted by the direct manager of the employee\n"
+"'Specific Person': All appraisals will be conducted by the specified employees"
 msgstr ""
 
 #. module: hr_appraisal
@@ -84,7 +83,7 @@ msgid ""
 "                        <br/><br/>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\"background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                    View Appraisal\n"
 "                                </a>\n"
 "                            </p>\n"
@@ -109,7 +108,7 @@ msgid ""
 "                        </t>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; padding: 8px 16px 8px 16px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\" margin: auto; background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\" margin: auto; background-color: {{object.employee_id.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.employee_id.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                    View Appraisal\n"
 "                                </a>\n"
 "                            </p>\n"
@@ -136,7 +135,7 @@ msgid ""
 "                        </t>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; padding: 8px 16px 8px 16px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\" margin: auto; background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\" margin: auto; background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                    View Appraisal\n"
 "                                </a>\n"
 "                            </p>\n"
@@ -296,36 +295,12 @@ msgid ""
 msgstr ""
 
 #. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_employee_base.py:0
-msgid ""
-"<p class=\"o_view_nocontent_smiling_face\">\n"
-"                            Schedule an appraisal\n"
-"                        </p><p>\n"
-"                            Plan appraisals with your colleagues, collect and discuss feedback.\n"
-"                        </p>"
-msgstr ""
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
-msgid ""
-"<small role=\"img\" class=\"fa fa-circle text-success\" invisible=\"state !="
-" 'pending' or waiting_feedback\" aria-label=\"Ready\" title=\"Ready\"/>"
-msgstr ""
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
-msgid "<span class=\"fw-bold\">Meeting: </span>"
-msgstr ""
-
-#. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_view_form
 msgid ""
-"<span class=\"o_stat_text\" invisible=\"last_appraisal_state == 'done'\">\n"
+"<span class=\"o_stat_text\" invisible=\"last_appraisal_state == '3_done'\">\n"
 "                            Ongoing\n"
 "                        </span>\n"
-"                        <span class=\"o_stat_text\" invisible=\"last_appraisal_state != 'done'\">\n"
+"                        <span class=\"o_stat_text\" invisible=\"last_appraisal_state != '3_done'\">\n"
 "                            Latest\n"
 "                        </span>\n"
 "                        <span class=\"o_stat_text\">\n"
@@ -350,29 +325,6 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "<span class=\"o_stat_text\">Goals</span>"
-msgstr ""
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
-msgid ""
-"<span class=\"text-end\" invisible=\"employee_feedback_published\">Not Visible to Manager</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not employee_feedback_published or state == 'new'\">Visible to Manager</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not employee_feedback_published or state != 'new'\">Visible &amp; Editable by Manager</span>"
-msgstr ""
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
-msgid ""
-"<span class=\"text-end\" invisible=\"manager_feedback_published or not can_see_manager_publish\">Not Visible to Employee</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not manager_feedback_published or not can_see_manager_publish\">Visible to Employee</span>"
-msgstr ""
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_public_view_form
-msgid ""
-"<span invisible=\"not is_manager or (next_appraisal_date or not ongoing_appraisal_count)\">\n"
-"                    Ongoing\n"
-"                </span>"
 msgstr ""
 
 #. module: hr_appraisal
@@ -803,7 +755,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_needaction
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_needaction
 msgid "Action Needed"
-msgstr ""
+msgstr "कार्रवाई की ज़रूरत है"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__active
@@ -817,22 +769,32 @@ msgid "Activities"
 msgstr "गतिविधियाँ"
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
+msgid "Activities of"
+msgstr "गतिविधियां"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_exception_decoration
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr ""
+msgstr "ऐक्टिविटी एक्सेप्शन डेकोरेशन"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_state
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_state
 msgid "Activity State"
-msgstr ""
+msgstr "ऐक्टिविटी स्टेट"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_type_icon
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_type_icon
 msgid "Activity Type Icon"
-msgstr ""
+msgstr "ऐक्टिविटी टाइप आइकॉन"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
+msgid "Activity type"
+msgstr "ऐक्टिविटी टाइप"
 
 #. module: hr_appraisal
 #: model_terms:ir.actions.act_window,help:hr_appraisal.hr_appraisal_config_templates_action
@@ -847,6 +809,21 @@ msgstr ""
 #. module: hr_appraisal
 #: model:res.groups,name:hr_appraisal.group_hr_appraisal_manager
 msgid "Administrator"
+msgstr "एडमिन"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "All Employees"
+msgstr ""
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_campaign_wizard__mode
+msgid ""
+"Allow to create appraisals in batches:\n"
+"- By Employee: for specific employees\n"
+"- By Company: all employees of the specified company\n"
+"- By Department: all employees of the specified department\n"
+"- By Employee Tag: all employees of the specific employee group category"
 msgstr ""
 
 #. module: hr_appraisal
@@ -860,6 +837,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__appraisal_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__appraisal_id
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_view_activity
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.res_config_settings_view_employee_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_tree
@@ -884,6 +862,20 @@ msgid "Appraisal Assessment Note"
 msgstr ""
 
 #. module: hr_appraisal
+#. odoo-javascript
+#. odoo-python
+#: code:addons/hr_appraisal/models/hr_appraisal.py:0
+#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.js:0
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Appraisal Campaign"
+msgstr ""
+
+#. module: hr_appraisal
+#: model:ir.model,name:hr_appraisal.model_hr_appraisal_campaign_wizard
+msgid "Appraisal Campaign Wizard"
+msgstr ""
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_company__appraisal_confirm_mail_template
 msgid "Appraisal Confirm Mail Template"
 msgstr ""
@@ -896,6 +888,7 @@ msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__date_close
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__appraisal_date
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Appraisal Date"
 msgstr ""
@@ -962,6 +955,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model:ir.actions.act_window,name:hr_appraisal.hr_appraisal_config_templates_action
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__appraisal_template_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__appraisal_template_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_company__appraisal_template_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_config_settings__appraisal_template_id
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_template_view_tree
@@ -1022,9 +1016,11 @@ msgstr ""
 #. module: hr_appraisal
 #. odoo-javascript
 #: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.js:0
+#: model:ir.actions.act_window,name:hr_appraisal.hr_appraisal_action_multiple_appraisals
 #: model:ir.actions.act_window,name:hr_appraisal.open_view_hr_appraisal_tree
 #: model:ir.ui.menu,name:hr_appraisal.menu_hr_appraisal_root
 #: model:ir.ui.menu,name:hr_appraisal.menu_open_view_hr_appraisal_tree
+#: model:res.groups.privilege,name:hr_appraisal.res_groups_privilege_appraisals
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_department_view_kanban
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_departure_wizard_view_form
 msgid "Appraisals"
@@ -1046,10 +1042,18 @@ msgid "Appraisals to Process"
 msgstr ""
 
 #. module: hr_appraisal
+#. odoo-python
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid ""
+"Appraisals won't be created for the following employees because they don't "
+"have a manager: %(employees)s"
+msgstr ""
+
+#. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Archived"
-msgstr ""
+msgstr "संग्रहीत किया गया"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.res_config_settings_view_employee_form
@@ -1072,7 +1076,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_attachment_count
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_attachment_count
 msgid "Attachment Count"
-msgstr ""
+msgstr "अटैचमेंट काउंट"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__author_id
@@ -1103,24 +1107,34 @@ msgid "Avatar 128"
 msgstr ""
 
 #. module: hr_appraisal
-#: model:ir.model,name:hr_appraisal.model_hr_employee_base
-msgid "Basic Employee"
-msgstr ""
-
-#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__body_has_template_value
 msgid "Body content is the same as the template"
+msgstr "बॉडी कॉन्टेंट बिलकुल टेंप्लेट की तरह है"
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__mode__company
+msgid "By Company"
 msgstr ""
 
 #. module: hr_appraisal
-#: model:ir.model,name:hr_appraisal.model_calendar_event
-msgid "Calendar Event"
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__mode__department
+msgid "By Department"
+msgstr ""
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__mode__employee
+msgid "By Employee"
+msgstr ""
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__mode__category
+msgid "By Employee Tag"
 msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__can_edit_body
 msgid "Can Edit Body"
-msgstr ""
+msgstr "बॉडी में बदलाव किया जा सकता है"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__can_request_appraisal
@@ -1140,26 +1154,8 @@ msgstr ""
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.request_appraisal_view_form
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Cancel"
 msgstr "रद्द"
-
-#. module: hr_appraisal
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_departure_wizard__cancel_appraisal
-msgid "Cancel Future Appraisals"
-msgstr ""
-
-#. module: hr_appraisal
-#: model:ir.model.fields,help:hr_appraisal.field_hr_departure_wizard__cancel_appraisal
-msgid "Cancel all appraisal after contract end date."
-msgstr ""
-
-#. module: hr_appraisal
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__cancel
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_report__state__cancel
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
-msgid "Cancelled"
-msgstr "निरस्त"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__date_close
@@ -1175,15 +1171,16 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__color
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__color
 msgid "Color"
-msgstr ""
+msgstr "कलर"
 
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_res_company
 msgid "Companies"
-msgstr ""
+msgstr "कंपनियां"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__company_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__company_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__company_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__company_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__company_id
@@ -1198,7 +1195,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_res_config_settings
 msgid "Config Settings"
-msgstr ""
+msgstr "कॉन्फ़िगरेशन सेटिंग"
 
 #. module: hr_appraisal
 #: model:ir.ui.menu,name:hr_appraisal.menu_hr_appraisal_configuration
@@ -1211,14 +1208,17 @@ msgid "Confirm"
 msgstr "पुष्टि करें"
 
 #. module: hr_appraisal
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__pending
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__2_pending
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_employee_public__last_appraisal_state__2_pending
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Confirmed"
 msgstr "पुष्टि"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__body
 msgid "Contents"
-msgstr ""
+msgstr "कॉन्टेंट"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__create_date
@@ -1267,15 +1267,16 @@ msgstr ""
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 msgid "Created By"
-msgstr ""
+msgstr "इन्होंने बनाया"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 msgid "Created On"
-msgstr ""
+msgstr "इस तारीख को बनाया गया"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__create_uid
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__create_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__create_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__create_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__create_uid
@@ -1286,13 +1287,14 @@ msgstr "द्वारा निर्मित"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__create_date
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__create_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__create_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__create_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__create_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__create_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__create_date
 msgid "Created on"
-msgstr ""
+msgstr "इस तारीख को बनाया गया"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
@@ -1310,7 +1312,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__deadline
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 msgid "Deadline"
-msgstr ""
+msgstr "डेडलाइन"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
@@ -1340,13 +1342,19 @@ msgid ""
 msgstr ""
 
 #. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_kanban
-msgid "Delete"
-msgstr "हटाएं"
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_departure_wizard__delete_appraisal
+msgid "Delete Future Appraisals"
+msgstr ""
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_departure_wizard__delete_appraisal
+msgid "Delete all appraisal after contract end date."
+msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_hr_department
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__department_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__department_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__department_id
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
@@ -1367,25 +1375,34 @@ msgid "Description"
 msgstr "विवरण"
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Discard"
+msgstr "खारिज करें"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_department__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_departure_wizard__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_mail_template__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_users__display_name
 msgid "Display Name"
-msgstr ""
+msgstr "डिस्प्ले नाम"
 
 #. module: hr_appraisal
-#. odoo-javascript
-#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
-msgid "Do you want to"
-msgstr ""
-
-#. module: hr_appraisal
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__done
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__3_done
 #: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_report__state__done
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_employee_public__last_appraisal_state__3_done
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_kanban
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
@@ -1398,12 +1415,12 @@ msgstr "हो गया"
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_mail_template
 msgid "Email Templates"
-msgstr ""
+msgstr "ईमेल टेंप्लेट"
 
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_hr_employee
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__employee_id
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__employee_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__employee_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__employee_id
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
@@ -1450,6 +1467,11 @@ msgid "Employee Name"
 msgstr ""
 
 #. module: hr_appraisal
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__category_id
+msgid "Employee Tag"
+msgstr ""
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__employee_user_id
 msgid "Employee User"
 msgstr ""
@@ -1460,10 +1482,16 @@ msgid "Employee's Feedback"
 msgstr ""
 
 #. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__manager__employee_manager
+msgid "Employee's Manager"
+msgstr ""
+
+#. module: hr_appraisal
 #. odoo-javascript
 #: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.js:0
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__employee_ids
 msgid "Employees"
-msgstr ""
+msgstr "कर्मचारी"
 
 #. module: hr_appraisal
 #: model:ir.actions.act_window,name:hr_appraisal.action_hr_appraisal_note
@@ -1495,11 +1523,6 @@ msgid "Fill appraisal for %s"
 msgstr ""
 
 #. module: hr_appraisal
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__date_final_interview
-msgid "Final Interview"
-msgstr ""
-
-#. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "Final Interview Date"
 msgstr ""
@@ -1513,24 +1536,24 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_follower_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_follower_ids
 msgid "Followers"
-msgstr ""
+msgstr "फ़ॉलोवर"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_partner_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_partner_ids
 msgid "Followers (Partners)"
-msgstr ""
+msgstr "फ़ॉलोवर (पार्टनर)"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__activity_type_icon
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr ""
+msgstr "फॉन्ट के बेहतरीन आइकॉन जैसे, फा-टॉस्क"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Future Activities"
-msgstr ""
+msgstr "फ्यूचर ऐक्टिविटी"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_default_template
@@ -1540,7 +1563,6 @@ msgid ""
 msgstr ""
 
 #. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 msgid "Goal"
 msgstr ""
@@ -1565,7 +1587,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "Group By"
-msgstr ""
+msgstr "इन्होंने ग्रुप किया"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
@@ -1601,7 +1623,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__has_message
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__has_message
 msgid "Has Message"
-msgstr ""
+msgstr "मैसेज है"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_default_template
@@ -1620,32 +1642,41 @@ msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_department__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_departure_wizard__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_mail_template__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_company__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_users__id
 msgid "ID"
-msgstr ""
+msgstr "आईडी"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_exception_icon
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_exception_icon
 msgid "Icon"
-msgstr ""
+msgstr "आइकॉन"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__activity_exception_icon
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__activity_exception_icon
 msgid "Icon to indicate an exception activity."
-msgstr ""
+msgstr "एक छोटा निशान जो बताता है कि कुछ अलग या असामान्य हुआ है."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__message_needaction
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__message_needaction
 msgid "If checked, new messages require your attention."
-msgstr ""
+msgstr "अगर यह बॉक्स चेक है, तो नए मैसेज देखने ज़रूरी हैं."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__message_has_error
@@ -1653,12 +1684,26 @@ msgstr ""
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__message_has_error
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
+msgstr "अगर बॉक्स पर टिक है, तो कुछ मैसेज भेजने में गलती हुई है."
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__manager_feedback_published
+msgid ""
+"If greened, the employee will be able to see your feedback. Otherwise, your "
+"feedback is blurred and visible only to you."
+msgstr ""
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__employee_feedback_published
+msgid ""
+"If greened, the manager will be able to see and edit your feedback. "
+"Otherwise, your feedback is blurred and visible only to you."
 msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__image_1920
 msgid "Image"
-msgstr ""
+msgstr "इमेज"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__image_128
@@ -1678,7 +1723,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model:hr.appraisal.goal.tag,name:hr_appraisal.hr_appraisal_goal_tag_internal
 msgid "Internal"
-msgstr ""
+msgstr "इंटरनल"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__final_interview
@@ -1688,13 +1733,13 @@ msgstr ""
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__is_mail_template_editor
 msgid "Is Editor"
-msgstr ""
+msgstr "एडिटर है"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_is_follower
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_is_follower
 msgid "Is Follower"
-msgstr ""
+msgstr "फ़ॉलोवर है"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__is_manager
@@ -1704,18 +1749,23 @@ msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__job_id
-msgid "Job Position"
+msgid "Job"
+msgstr "कार्य"
+
+#. module: hr_appraisal
+#. odoo-javascript
+#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
+msgid "Keep track of how your employees are doing..."
 msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__lang
 msgid "Language"
-msgstr ""
+msgstr "भाषा"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__last_appraisal_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__last_appraisal_id
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_base__last_appraisal_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__last_appraisal_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_users__last_appraisal_id
 msgid "Last Appraisal"
@@ -1729,40 +1779,49 @@ msgid "Last Appraisal Date"
 msgstr ""
 
 #. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "Last Meeting"
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__last_appraisal_state
+msgid "Last Appraisal State"
 msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__write_uid
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__write_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__write_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__write_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__write_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__write_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__write_uid
 msgid "Last Updated by"
-msgstr ""
+msgstr "इन्होंने आखिरी बार अपडेट किया"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__write_date
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__write_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__write_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__write_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__write_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__write_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__write_date
 msgid "Last Updated on"
-msgstr ""
+msgstr "आखिरी बार अपडेट हुआ"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Late"
-msgstr ""
+msgstr "देर"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Late Activities"
+msgstr "लेट एक्टिविटी"
+
+#. module: hr_appraisal
+#: model:ir.actions.server,name:hr_appraisal.action_open_appraisal_campaign_wizard
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_employee_tree
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_tree
+msgid "Launch Campaign"
 msgstr ""
 
 #. module: hr_appraisal
@@ -1786,13 +1845,15 @@ msgstr ""
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__template_id
 msgid "Mail Template"
-msgstr ""
+msgstr "मेल टेंप्लेट"
 
 #. module: hr_appraisal
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__manager_ids
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__manager_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__manager
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__manager_ids
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 msgid "Manager"
 msgstr ""
@@ -1830,21 +1891,15 @@ msgid "Manager's Feedback"
 msgstr ""
 
 #. module: hr_appraisal
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__manager_ids
+msgid "Managers"
+msgstr ""
+
+#. module: hr_appraisal
 #: model:ir.actions.server,name:hr_appraisal.action_mark_as_done
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_form
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_kanban
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Mark as Done"
-msgstr ""
-
-#. module: hr_appraisal
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__meeting_count_display
-msgid "Meeting Count"
-msgstr ""
-
-#. module: hr_appraisal
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__meeting_ids
-msgid "Meetings"
 msgstr ""
 
 #. module: hr_appraisal
@@ -1857,7 +1912,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_has_error
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_has_error
 msgid "Message Delivery error"
-msgstr ""
+msgstr "मैसेज डिलीवरी में गड़बड़ी"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_ids
@@ -1866,10 +1921,26 @@ msgid "Messages"
 msgstr "संदेश"
 
 #. module: hr_appraisal
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__mode
+msgid "Mode"
+msgstr "मोड"
+
+#. module: hr_appraisal
+#. odoo-javascript
+#: code:addons/hr_appraisal/static/src/components/multiple_appraisals_cog_menu.xml:0
+msgid "Multiple Appraisals"
+msgstr ""
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
+msgid "My Activities"
+msgstr "मेरी गतिविधि"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__my_activity_date_deadline
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__my_activity_date_deadline
 msgid "My Activity Deadline"
-msgstr ""
+msgstr "मेरी गतिविधि की डेडलाइन"
 
 #. module: hr_appraisal
 #: model:ir.actions.act_window,name:hr_appraisal.hr_appraisal_action_my
@@ -1898,7 +1969,7 @@ msgstr ""
 
 #. module: hr_appraisal
 #. odoo-python
-#: code:addons/hr_appraisal/models/hr_employee_base.py:0
+#: code:addons/hr_appraisal/models/hr_employee.py:0
 msgid "New and Pending Appraisals"
 msgstr ""
 
@@ -1906,25 +1977,25 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_calendar_event_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_calendar_event_id
 msgid "Next Activity Calendar Event"
-msgstr ""
+msgstr "अगली गतिविधि कैलेंडर इवेंट"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_date_deadline
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr ""
+msgstr "अगली गतिविधि की डेडलाइन"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_summary
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_summary
 msgid "Next Activity Summary"
-msgstr ""
+msgstr "अगली गतिविधी की जानकारी"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_type_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_type_id
 msgid "Next Activity Type"
-msgstr ""
+msgstr "अगली गतिविधि का प्रकार"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_view_search
@@ -1940,52 +2011,56 @@ msgid "Next Appraisal Date"
 msgstr ""
 
 #. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "Next Meeting"
-msgstr ""
-
-#. module: hr_appraisal
 #. odoo-javascript
 #: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
-msgid "No Appraisals yet ..."
+msgid "No Appraisals found!"
 msgstr ""
 
 #. module: hr_appraisal
 #. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "No Meeting"
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid "No employees have the tag %(category_name)s"
+msgstr ""
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Not Visible to Employee"
+msgstr ""
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Not Visible to Manager"
 msgstr ""
 
 #. module: hr_appraisal
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "Note"
-msgstr ""
+msgstr "ध्यान दें"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_needaction_counter
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_needaction_counter
 msgid "Number of Actions"
-msgstr ""
+msgstr "कार्रवाई की संख्या"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_has_error_counter
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_has_error_counter
 msgid "Number of errors"
-msgstr ""
+msgstr "गलतियों की संख्या"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__message_needaction_counter
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__message_needaction_counter
 msgid "Number of messages requiring action"
-msgstr ""
+msgstr "ऐसे मैसेज की संख्या जिनपर कार्रवाई करना ज़रूरी है"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__message_has_error_counter
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__message_has_error_counter
 msgid "Number of messages with delivery error"
-msgstr ""
+msgstr "ऐसे मैसेज की संख्या जिनमें डिलीवरी की गड़बड़ी है"
 
 #. module: hr_appraisal
 #: model:res.groups,name:hr_appraisal.group_hr_appraisal_user
@@ -2007,8 +2082,8 @@ msgstr ""
 
 #. module: hr_appraisal
 #. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal_goal.py:0
-msgid "Operation not supported"
+#: code:addons/hr_appraisal/models/hr_appraisal.py:0
+msgid "Oops! You can only delete draft appraisals."
 msgstr ""
 
 #. module: hr_appraisal
@@ -2025,6 +2100,16 @@ msgid ""
 "a placeholder expression that provides the appropriate language, e.g. {{ "
 "object.partner_id.lang }}."
 msgstr ""
+"यह एक वैकल्पिक भाषा (ISO कोड) है जिसे आप ईमेल भेजते समय चुन सकते हैं, ताकि "
+"ईमेल उस भाषा में अनुवादित हो. अगर आप इसे सेट नहीं करते हैं, तो ईमेल अंग्रेजी"
+" में जाएगा. इसे आमतौर पर एक प्लेसहोल्डर (जैसे {{ object.partner_id.lang }}) "
+"के रूप में सेट करना चाहिए, जो अपने-आप सही भाषा कोड ले लेगा."
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__manager__person
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Other"
+msgstr "अन्य"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
@@ -2033,7 +2118,6 @@ msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__parent_user_id
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_base__parent_user_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__parent_user_id
 msgid "Parent User"
 msgstr ""
@@ -2042,6 +2126,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "People I Manage"
+msgstr ""
+
+#. module: hr_appraisal
+#: model_terms:ir.actions.act_window,help:hr_appraisal.hr_appraisal_action_multiple_appraisals
+msgid "Plan appraisals with your colleagues, collect and discuss feedback."
 msgstr ""
 
 #. module: hr_appraisal
@@ -2054,6 +2143,12 @@ msgstr ""
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "Previous Appraisals"
 msgstr ""
+
+#. module: hr_appraisal
+#. odoo-javascript
+#: code:addons/hr_appraisal/static/src/component/print_menu.xml:0
+msgid "Print"
+msgstr "प्रिंट"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__note
@@ -2077,8 +2172,22 @@ msgid "Progress"
 msgstr ""
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_kanban
+msgid "Progress:"
+msgstr ""
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__appraisal_properties
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Properties"
+msgstr "प्रॉपर्टीज़"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_form
+msgid ""
+"Provide visible information on the goal, how the employee can achieve it. "
+"Which benefit he will get from it.                             Maybe some "
+"process or steps to help her/him along the way."
 msgstr ""
 
 #. module: hr_appraisal
@@ -2090,21 +2199,22 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__rating_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__rating_ids
 msgid "Ratings"
-msgstr ""
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
-msgid "Ready"
-msgstr "तैयार"
+msgstr "रेटिंग"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__recipient_ids
 msgid "Recipients"
-msgstr ""
+msgstr "रसीद"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__related_partner_id
 msgid "Related Partner"
+msgstr ""
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__employee_user_id
+#: model:ir.model.fields,help:hr_appraisal.field_hr_employee__parent_user_id
+msgid "Related user name for the resource to manage its access."
 msgstr ""
 
 #. module: hr_appraisal
@@ -2116,7 +2226,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__render_model
 msgid "Rendering Model"
-msgstr ""
+msgstr "रेंडरिंग मॉडल"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
@@ -2126,7 +2236,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model:ir.ui.menu,name:hr_appraisal.menu_hr_appraisal_report
 msgid "Reporting"
-msgstr ""
+msgstr "रिपोर्टिंग"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_public_view_form
@@ -2137,7 +2247,6 @@ msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.actions.server,name:hr_appraisal.action_create_multi_appraisals
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_employee_tree
 msgid "Request Appraisals"
 msgstr ""
 
@@ -2150,12 +2259,28 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_user_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_user_id
 msgid "Responsible User"
-msgstr ""
+msgstr "जिम्मेदार उपयोगकर्ता"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_has_sms_error
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_has_sms_error
 msgid "SMS Delivery error"
+msgstr "एसएमएस डिलीवरी में गड़बड़ी"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Schedule"
+msgstr ""
+
+#. module: hr_appraisal
+#. odoo-javascript
+#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
+msgid "Schedule Appraisals"
+msgstr ""
+
+#. module: hr_appraisal
+#: model_terms:ir.actions.act_window,help:hr_appraisal.hr_appraisal_action_multiple_appraisals
+msgid "Schedule an appraisal"
 msgstr ""
 
 #. module: hr_appraisal
@@ -2171,7 +2296,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.request_appraisal_view_form
 msgid "Send"
-msgstr ""
+msgstr "भेजें"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
@@ -2228,8 +2353,8 @@ msgstr ""
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
-msgid "Show all records which has next action date is before today"
-msgstr ""
+msgid "Show all records whose next activity date is past"
+msgstr "वह सारी जानकारी दिखाएं जिसकी अगली गतिविधि की तारीख निकल चुकी है"
 
 #. module: hr_appraisal
 #: model:hr.appraisal.goal.tag,name:hr_appraisal.hr_appraisal_goal_tag_softskills
@@ -2240,8 +2365,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__state
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__state
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__last_appraisal_state
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_base__last_appraisal_state
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__last_appraisal_state
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "Status"
 msgstr "स्थिति"
@@ -2255,6 +2378,10 @@ msgid ""
 "Today: Activity date is today\n"
 "Planned: Future activities."
 msgstr ""
+"ऐक्टिविटी के हिसाब से स्टेटस\n"
+"ओवरड्यू: जिस काम की आखिरी तारीख निकल गई हो\n"
+"टुडे: जो काम आज करना है\n"
+"प्लान्ड: जो काम भविष्य में करने हैं."
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -2276,7 +2403,7 @@ msgstr "विषय"
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.request_appraisal_view_form
 msgid "Subject..."
-msgstr ""
+msgstr "सब्जेक्ट..."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__tag_ids
@@ -2314,6 +2441,12 @@ msgid "The appraisal's status has been set to Done by %s"
 msgstr ""
 
 #. module: hr_appraisal
+#. odoo-python
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid "The company %(company_name)s doesn't have employees"
+msgstr ""
+
+#. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__last_appraisal_date
 #: model:ir.model.fields,help:hr_appraisal.field_hr_employee__last_appraisal_date
 #: model:ir.model.fields,help:hr_appraisal.field_res_users__last_appraisal_date
@@ -2326,6 +2459,12 @@ msgstr ""
 msgid ""
 "The date of the next appraisal is computed by the appraisal plan's dates "
 "(first appraisal + periodicity)."
+msgstr ""
+
+#. module: hr_appraisal
+#. odoo-python
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid "The department %(department_name)s doesn't have employees"
 msgstr ""
 
 #. module: hr_appraisal
@@ -2357,6 +2496,15 @@ msgstr ""
 
 #. module: hr_appraisal
 #. odoo-python
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid ""
+"The following employees already have appraisals on %(appraisal_date)s: "
+"%(employees)s. The existing appraisals will be used instead of creating new "
+"ones."
+msgstr ""
+
+#. module: hr_appraisal
+#. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid ""
 "The last appraisal of %(employee)s was %(months)s months ago. The appraisal "
@@ -2381,13 +2529,10 @@ msgid "Threats"
 msgstr ""
 
 #. module: hr_appraisal
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__new
-msgid "To Confirm"
-msgstr ""
-
-#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__1_new
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_employee_public__last_appraisal_state__1_new
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
-msgid "To Do"
+msgid "To Confirm"
 msgstr ""
 
 #. module: hr_appraisal
@@ -2405,7 +2550,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Today Activities"
-msgstr ""
+msgstr "आज की गतिविधियां"
 
 #. module: hr_appraisal
 #: model:hr.appraisal.goal.tag,name:hr_appraisal.hr_appraisal_goal_tag_training
@@ -2419,10 +2564,15 @@ msgid "Try the backend and reporting:"
 msgstr ""
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Type Employee's Name"
+msgstr ""
+
+#. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__activity_exception_decoration
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr ""
+msgstr "रिकॉर्ड में जो अलग तरह की गतिविधि हुई है, वह किस तरह की है."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__uncomplete_goals_count
@@ -2459,7 +2609,6 @@ msgstr ""
 
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_res_users
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__manager_user_id
 msgid "User"
 msgstr "उपयोगकर्ता"
 
@@ -2469,9 +2618,34 @@ msgid "User Contents"
 msgstr ""
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Visible & Editable by Manager"
+msgstr ""
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Visible to Employee"
+msgstr ""
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Visible to Manager"
+msgstr ""
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_template_form
+msgid "Visible to all"
+msgstr "सभी को दिखेगा"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__waiting_feedback
 msgid "Waiting Feedback from Employee/Managers"
 msgstr ""
+
+#. module: hr_appraisal
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__warning
+msgid "Warning"
+msgstr "चेतावनी"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -2483,13 +2657,13 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__website_message_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__website_message_ids
 msgid "Website Messages"
-msgstr ""
+msgstr "वेबसाइट मैसेज"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__website_message_ids
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__website_message_ids
 msgid "Website communication history"
-msgstr ""
+msgstr "वेबसाइट कम्यूनिकेशन हिस्ट्री"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
@@ -2544,12 +2718,6 @@ msgstr ""
 
 #. module: hr_appraisal
 #. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "You cannot delete appraisal which is not in draft or cancelled state"
-msgstr ""
-
-#. module: hr_appraisal
-#. odoo-python
 #: code:addons/hr_appraisal/models/hr_employee.py:0
 msgid "You cannot set 'Next Appraisal Date' in the past."
 msgstr ""
@@ -2566,12 +2734,6 @@ msgstr ""
 msgid ""
 "Your last appraisal was %s months ago. Your appraisal is created and you can"
 " fill it here."
-msgstr ""
-
-#. module: hr_appraisal
-#. odoo-javascript
-#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
-msgid "create a new one"
 msgstr ""
 
 #. module: hr_appraisal
@@ -2618,7 +2780,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
 msgid "or"
-msgstr ""
+msgstr " "
 
 #. module: hr_appraisal
 #: model:mail.template,subject:hr_appraisal.mail_template_appraisal_request_from_employee

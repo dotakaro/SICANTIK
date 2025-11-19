@@ -1,7 +1,7 @@
-/** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
 import { useService } from "@web/core/utils/hooks";
+import "@web_enterprise/webclient/promote_studio/promote_studio_systray_item";
 
 import { Component, useRef } from "@odoo/owl";
 
@@ -42,4 +42,5 @@ export const systrayItem = {
     isDisplayed: () => user.isSystem,
 };
 
+registry.category("systray").remove("PromoteStudioSystrayItem");
 registry.category("systray").add("StudioSystrayItem", systrayItem, { sequence: 1 });

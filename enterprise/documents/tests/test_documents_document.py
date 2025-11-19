@@ -6,12 +6,13 @@ from datetime import datetime, timedelta
 from unittest import skip
 from unittest.mock import patch
 
-from odoo import Command, http
+from odoo import http
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests.common import new_test_user
 from odoo.tests import users
+from odoo.tools import mute_logger
 
-from .test_documents_common import TransactionCaseDocuments, GIF, TEXT
+from .test_documents_common import TransactionCaseDocuments, GIF, TEXT, WEBP
 
 DATA = "data:application/zip;base64,R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs="
 file_a = {'name': 'doc.zip', 'datas': 'data:application/zip;base64,R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs='}
@@ -47,8 +48,8 @@ class TestCaseDocuments(TransactionCaseDocuments):
                 self.assertEqual(shortcut[field_name], self.document_gif[field_name])
         attachment = self.env['ir.attachment'].create({
             **file_a,
-            'res_model': 'documents.document',
-            'res_id': 0,
+            'res_model': False,
+            'res_id': False,
         })
         self.document_gif.attachment_id = attachment
         self.assertNotEqual(self.document_gif.file_size, original_file_size)
@@ -106,10 +107,50 @@ class TestCaseDocuments(TransactionCaseDocuments):
                          'the attachment should be the attachment given in the create values')
         self.assertEqual(document_a.name, 'new name',
                          'the name given should be used')
-        self.assertEqual(document_a.res_model, 'documents.document',
-                         'the res_model should be set as document by default')
-        self.assertEqual(document_a.res_id, document_a.id,
-                         'the res_id should be set as its own id by default to allow access right inheritance')
+        self.assertFalse(document_a.res_model)
+        self.assertFalse(document_a.res_id)
+
+    def test_documents_create_res_model(self):
+        """Test the model set on a document and its attachment."""
+        attachment = self.env['ir.attachment'].create({'name': 'test', 'res_model': 'documents.document'})
+        doc = self.env['documents.document'].create({'attachment_id': attachment.id})
+        self.assertEqual(attachment.res_model, 'documents.document')
+        self.assertEqual(attachment.res_id, doc.id)
+
+        attachment = self.env['ir.attachment'].create({'name': 'test', 'res_model': 'documents.document'})
+        partner = self.env['res.partner'].create({'name': 'partner'})
+        doc = self.env['documents.document'].create({'attachment_id': attachment.id, 'res_model': 'res.partner', 'res_id': partner.id})
+        self.assertEqual(attachment.res_model, 'res.partner')
+        self.assertEqual(attachment.res_id, partner.id)
+        self.assertEqual(doc.res_model, 'res.partner')
+        self.assertEqual(doc.res_id, partner.id)
+
+        user = self.portal_user
+        attachment = self.env['ir.attachment'].create({'name': 'test', 'res_model': 'res.users', 'res_id': user.id})
+        doc = self.env['documents.document'].create({'attachment_id': attachment.id})
+        self.assertEqual(attachment.res_model, 'res.users')
+        self.assertEqual(attachment.res_id, user.id)
+        self.assertEqual(doc.res_model, 'res.users')
+        self.assertEqual(doc.res_id, user.id)
+
+        doc.attachment_id = False
+        doc.name = 'test'
+        doc.datas = 'ZGF0YQ=='
+        self.assertEqual(doc.attachment_id.res_model, 'res.users')
+        self.assertEqual(doc.attachment_id.res_id, user.id)
+        self.assertEqual(doc.attachment_id.name, 'test')
+
+        doc.write({'attachment_id': False, 'res_model': False, 'res_id': False})
+        doc.datas = 'ZGF0YQ=='
+        self.assertEqual(doc.attachment_id.res_model, 'documents.document')
+        self.assertEqual(doc.attachment_id.res_id, doc.id)
+        self.assertEqual(doc.attachment_id.name, 'test')
+
+        doc = self.env['documents.document'].create({'datas': 'ZGF0YQ=='})
+        self.assertFalse(doc.res_model)
+        self.assertFalse(doc.res_id)
+        self.assertEqual(doc.attachment_id.res_model, 'documents.document')
+        self.assertEqual(doc.attachment_id.res_id, doc.id)
 
     @users('documents@example.com')
     def test_documents_create_write(self):
@@ -122,10 +163,12 @@ class TestCaseDocuments(TransactionCaseDocuments):
             'datas': GIF,
             'folder_id': self.folder_b.id,
         })
-        self.assertEqual(document_a.res_model, 'documents.document',
+        self.assertFalse(document_a.res_model)
+        self.assertFalse(document_a.res_id)
+        self.assertEqual(document_a.attachment_id.res_model, 'documents.document',
                          'the res_model should be set as document by default')
-        self.assertEqual(document_a.res_id, document_a.id,
-                         'the res_id should be set as its own id by default to allow access right inheritance')
+        self.assertEqual(document_a.attachment_id.res_id, document_a.id,
+                         'the res_id should be set as the document id by default to allow access right inheritance')
         self.assertEqual(document_a.attachment_id.datas, GIF, 'the document should have a GIF data')
         document_no_attachment = self.env['documents.document'].create({
             'name': 'Test mimetype gif',
@@ -312,7 +355,7 @@ class TestCaseDocuments(TransactionCaseDocuments):
         user_b = self.env['res.users'].create({
             'name': 'User of company B',
             'login': 'user_b',
-            'groups_id': [(6, 0, [self.ref('documents.group_documents_manager')])],
+            'group_ids': [(6, 0, [self.ref('documents.group_documents_manager')])],
             'company_id': company_b.id,
             'company_ids': [(6, 0, [company_b.id])]
         })
@@ -349,9 +392,11 @@ class TestCaseDocuments(TransactionCaseDocuments):
                 'datas': GIF,
                 'folder_id': self.folder_b.id,
                 'res_model': res_model,
-            } for res_model in ('res.partner', 'documents.document', False)
+                'res_id': res_id,
+            } for res_model, res_id in (('res.partner', self.internal_user.partner_id.id), (False, False))
         ])
-        documents[2].res_model = False
+        self.assertFalse(documents[1].res_model)
+        self.assertEqual(documents[1].attachment_id.res_model, 'documents.document')
         for document in documents:
             with self.subTest(res_model=document.res_model):
                 self.assertTrue(document.attachment_id.exists())
@@ -403,7 +448,8 @@ class TestCaseDocuments(TransactionCaseDocuments):
                 "after a copy upon flushing, its value should be just copied."
             ),
         ):
-            copy = self.document_txt.copy()
+            with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+                copy = self.document_txt.copy()
             self.assertEqual(copy.name, "file.txt (copy)")
             self.assertNotEqual(
                 copy.attachment_id.ensure_one().id,
@@ -416,7 +462,8 @@ class TestCaseDocuments(TransactionCaseDocuments):
 
             self.assertEqual(copy.is_multipage, self.document_txt.is_multipage)
 
-        copy_with_default = self.document_txt.copy({"name": "test"})
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            copy_with_default = self.document_txt.copy({"name": "test"})
         self.assertEqual(copy_with_default.name, "test")
         self.assertNotEqual(
             copy.attachment_id.ensure_one().id,
@@ -427,7 +474,7 @@ class TestCaseDocuments(TransactionCaseDocuments):
 
         # check that we can copy in a folder inside the company folder
         self.assertFalse(self.folder_a.folder_id)
-        self.folder_a.owner_id = self.env.ref("base.user_root")
+        self.folder_a.owner_id = False
         self.folder_a.access_internal = 'edit'
 
         # Special case where we can not write, but `user_permission == edit` because
@@ -450,17 +497,22 @@ class TestCaseDocuments(TransactionCaseDocuments):
         copied_documents = (self.document_txt | document_txt_copy).with_user(self.internal_user).copy()
         self.document_txt.unlink()
         for copied_document in copied_documents:
-            self.assertEqual(copied_document.res_id, copied_document.id)
-            self.assertEqual(copied_document.res_model, "documents.document")
+            self.assertFalse(copied_document.res_id)
+            self.assertFalse(copied_document.res_model)
+            self.assertEqual(copied_document.attachment_id.res_id, copied_document.id)
+            self.assertEqual(copied_document.attachment_id.res_model, "documents.document")
             self.assertTrue(copied_document.exists())
 
         self.document_gif.write({
             "res_model": "res.partner",
             "res_id": self.env.user.partner_id.id,
         })
-        copied_document = self.document_gif.copy()
-        self.assertEqual(copied_document.res_id, copied_document.id)
-        self.assertEqual(copied_document.res_model, "documents.document")
+        with mute_logger('odoo.addons.documents.models.documents_document'):
+            copied_document = self.document_gif.copy()
+        self.assertFalse(copied_document.res_id, copied_document.id)
+        self.assertFalse(copied_document.res_model)
+        self.assertEqual(copied_document.attachment_id.res_id, copied_document.id)
+        self.assertEqual(copied_document.attachment_id.res_model, "documents.document")
 
     def test_embedding_actions(self):
         """Check that embedded actions name is translated."""
@@ -487,23 +539,49 @@ class TestCaseDocuments(TransactionCaseDocuments):
                 self.assertEqual(pdf_document.thumbnail, False)
                 self.assertEqual(pdf_document.thumbnail_status, 'client_generated')
 
-            word_document = self.env['documents.document'].create({
-                'name': 'Test DOC',
-                'mimetype': 'application/msword',
-                'folder_id': self.folder_b.id,
-            })
-            self.assertEqual(word_document.thumbnail, False)
-            self.assertEqual(word_document.thumbnail_status, False)
-        for mimetype in ['image/bmp', 'image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/tiff', 'image/x-icon', 'image/webp']:
-            with self.subTest(mimetype=mimetype):
-                image_document = self.env['documents.document'].create({
-                    'name': 'Test image doc',
-                    'mimetype': mimetype,
-                    'datas': GIF,
-                    'folder_id': self.folder_b.id,
-                })
+        word_document = self.env['documents.document'].create({
+            'name': 'Test DOC doc',
+            'mimetype': 'application/msword',
+            'folder_id': self.folder_b.id,
+        })
+        self.assertEqual(word_document.thumbnail, False)
+        self.assertEqual(word_document.thumbnail_status, False)
+
+        webp_document = self.env['documents.document'].create({
+            'name': 'Test WEBP doc',
+            'mimetype': 'image/webp',
+            'datas': WEBP,
+            'folder_id': self.folder_b.id,
+        })
+        self.assertEqual(webp_document.thumbnail, False)
+        self.assertEqual(webp_document.thumbnail_status, 'client_generated')
+
+        image_documents = self.env['documents.document'].create([{
+            'name': 'Test image doc',
+            'mimetype': mimetype,
+            'datas': GIF,
+            'folder_id': self.folder_b.id,
+        } for mimetype in [
+            'image/bmp', 'image/gif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/tiff', 'image/x-icon'
+        ]])
+        for image_document in image_documents:
+            with self.subTest(mimetype=image_document.mimetype):
                 self.assertEqual(image_document.thumbnail, GIF)
                 self.assertEqual(image_document.thumbnail_status, 'present')
+
+        text_documents = self.env['documents.document'].create([{
+            'name': 'Test Special Case Text doc',
+            'mimetype': mimetype,
+            'datas': TEXT,
+            'folder_id': self.folder_b.id,
+        } for mimetype in [
+            'text/html', 'text/csv', 'text/plain', 'text/javascript', 'text/css', 'text/markdown', 'text/xml',
+            'application/json', 'application/xml', 'text/calendar',
+        ]])
+        for text_document in text_documents:
+            with self.subTest(mimetype=text_document.mimetype):
+                self.assertEqual(text_document.thumbnail, False)
+                self.assertEqual(text_document.thumbnail_status, False)
 
     def test_document_max_upload_limit(self):
         Doc = self.env['documents.document']
@@ -590,36 +668,36 @@ class TestCaseDocuments(TransactionCaseDocuments):
             'partner_id': self.env.user.partner_id.id,
         }])
 
-        result = Doc. web_read_group(
+        result = Doc.formatted_read_group(
             [('id', 'in', documents.ids)],
-            ['id', 'name'],
             groupby=['last_access_date_group'],
-            orderby='last_access_date_group DESC')['groups']
+            aggregates=['__count'],
+            order='last_access_date_group DESC')
 
         self.assertEqual(len(result), 4)
 
         self.assertEqual(result[0]['last_access_date_group'], '3_day')
-        self.assertEqual(result[0]['last_access_date_group_count'], 2)
-        result_day = Doc.search(result[0]['__domain'])
+        self.assertEqual(result[0]['__count'], 2)
+        result_day = Doc.search(result[0]['__extra_domain'])
         self.assertEqual(result_day[0], documents[4])
         self.assertEqual(result_day[1], documents[0])
         self.assertEqual(result_day.mapped('last_access_date_group'), ['3_day'] * 2)
 
         self.assertEqual(result[1]['last_access_date_group'], '2_week')
-        self.assertEqual(result[1]['last_access_date_group_count'], 2)
-        result_week = Doc.search(result[1]['__domain'])
+        self.assertEqual(result[1]['__count'], 2)
+        result_week = Doc.search(result[1]['__extra_domain'])
         self.assertEqual(result_week[0], documents[5])
         self.assertEqual(result_week[1], documents[1])
         self.assertEqual(result_week.mapped('last_access_date_group'), ['2_week'] * 2)
 
         self.assertEqual(result[2]['last_access_date_group'], '1_month')
-        self.assertEqual(result[2]['last_access_date_group_count'], 1)
-        self.assertEqual(Doc.search(result[2]['__domain']), documents[2])
+        self.assertEqual(result[2]['__count'], 1)
+        self.assertEqual(Doc.search(result[2]['__extra_domain']), documents[2])
         self.assertEqual(documents[2].last_access_date_group, '1_month')
 
         self.assertEqual(result[3]['last_access_date_group'], '0_older')
-        self.assertEqual(result[3]['last_access_date_group_count'], 1)
-        self.assertEqual(Doc.search(result[3]['__domain']), documents[3])
+        self.assertEqual(result[3]['__count'], 1)
+        self.assertEqual(Doc.search(result[3]['__extra_domain']), documents[3])
         self.assertEqual(documents[3].last_access_date_group, '0_older')
 
     def test_link_constrains(self):
@@ -645,34 +723,21 @@ class TestCaseDocuments(TransactionCaseDocuments):
             'datas': GIF,
             'name': 'TestAttachment.gif',
             'res_model': 'documents.document',
-            'res_id':folder.id
+            'res_id': folder.id,
         })
         self.assertNotEqual(attachment.name, folder.name,'the folder name should not change')
 
-    def test_thumbnail_fix(self):
-        """Test the thumbnail fix that force the status to "present" for image when it is False."""
-        read = (self.document_gif | self.document_txt).web_read({'thumbnail_status': {}, 'mimetype': {}})
-        self.assertEqual(self.document_gif.thumbnail_status, 'present')
-        self.assertEqual(self.document_txt.thumbnail_status, False)
-        self.assertEqual(read, [
-            {'id': self.document_gif.id, 'thumbnail_status': 'present', 'mimetype': 'image/gif'},
-            {'id': self.document_txt.id, 'thumbnail_status': False, 'mimetype': 'text/plain'},
-        ])
-        self.document_gif.thumbnail_status = False
-        read = (self.document_gif | self.document_txt).web_read({'thumbnail_status': {}, 'mimetype': {}})
-        self.assertEqual(read, [
-            {'id': self.document_gif.id, 'thumbnail_status': 'present', 'mimetype': 'image/gif'},
-            {'id': self.document_txt.id, 'thumbnail_status': False, 'mimetype': 'text/plain'},
-        ])
-        read = (self.document_gif | self.document_txt).web_read({'thumbnail_status': {}, 'name': {}})
-        self.assertEqual(read, [
-            {'id': self.document_gif.id, 'thumbnail_status': False, 'name': self.document_gif.name},
-            {'id': self.document_txt.id, 'thumbnail_status': False, 'name': self.document_txt.name},
-        ])
-        self.document_gif.thumbnail_status = 'error'
-        self.document_txt.thumbnail_status = 'client_generated'
-        read = (self.document_gif | self.document_txt).web_read({'thumbnail_status': {}, 'name': {}})
-        self.assertEqual(read, [
-            {'id': self.document_gif.id, 'thumbnail_status': 'error', 'name': self.document_gif.name},
-            {'id': self.document_txt.id, 'thumbnail_status': 'client_generated', 'name': self.document_txt.name},
-        ])
+    def test_document_toggle_lock(self):
+        """ Test unlocking of the documents when the user_permission is set to edit. """
+
+        self.document_txt.write({'owner_id': self.document_manager.id})
+        self.document_txt.access_ids.filtered('role').unlink()
+
+        self.document_txt.with_user(self.document_manager).toggle_lock()
+        with self.assertRaises(AccessError):
+            self.document_txt.with_user(self.doc_user).toggle_lock()
+        self.assertEqual(self.document_txt.lock_uid.id, self.document_manager.id, 'viewer should not have unlocked')
+
+        self.document_txt.access_internal = 'edit'
+        self.document_txt.with_user(self.doc_user).toggle_lock()
+        self.assertFalse(self.document_txt.lock_uid, 'editor should have unlocked')

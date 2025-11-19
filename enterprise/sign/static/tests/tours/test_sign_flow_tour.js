@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
@@ -24,17 +22,6 @@ registry.category("web_tour.tours").add("test_sign_flow_tour", {
         {
             content: "Remove My Favorites filter",
             trigger: ".o_cp_searchview .o_facet_remove",
-            run: "click",
-        },
-        {
-            content: 'Search template "template_1_roles"',
-            trigger: ".o_cp_searchview input",
-            tooltipPosition: "bottom",
-            run: "edit template_1_role(2)",
-        },
-        {
-            content: "Search Document Name",
-            trigger: ".o_searchview_autocomplete .o_menu_item:first",
             run: "click",
         },
         {
@@ -101,6 +88,9 @@ registry.category("web_tour.tours").add("test_sign_flow_tour", {
             trigger: ".o_sign_validate_banner",
         },
         {
+            trigger: ":iframe input.o_sign_sign_item_constant[disabled]"
+        },
+        {
             content: "Validate & Send Completed Document",
             trigger: "button:contains('Validate & Send Completed Document')",
             run: "click",
@@ -110,8 +100,8 @@ registry.category("web_tour.tours").add("test_sign_flow_tour", {
                 ".modal-dialog .modal-body:contains(You will get the signed document by email.)",
         },
         {
-            content: "Close modal",
-            trigger: ".modal-footer button.btn-secondary:contains(close)",
+            content: "view",
+            trigger: "h4:contains('It's signed') + button:btn-close",
             run: "click",
         },
     ],

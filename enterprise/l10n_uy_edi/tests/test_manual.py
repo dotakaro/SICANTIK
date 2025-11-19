@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from odoo import Command
+from odoo import Command, fields
 from odoo.tests.common import tagged
 from odoo.tools import misc
 from lxml import etree
@@ -190,6 +190,88 @@ class TestManual(common.TestUyEdi):
         self._send_and_print(invoice)
         self._check_cfe(invoice, "e-TK", "100_e_ticket_disclosures")
 
+    def test_110_account_move_line_nom_and_desc(self):
+        """Test account move with varied products and descriptions"""
+        long_name = "Product name for testing purposes that intentionally contains more than eighty chars"
+
+        products = [
+            self.env["product.product"].create({"name": "Product Without Description"}),
+            self.env["product.product"].create({"name": "Product With Description"}),
+            self.env["product.product"].create({"name": long_name}),
+        ]
+
+        addenda = self.env["l10n_uy_edi.addenda"].create(
+            {
+                "content": "Addenda Content",
+                "is_legend": False,
+            }
+        )
+
+        invoice = self._create_move(
+            partner_id=self.partner_local.id,
+            invoice_line_ids=[
+                Command.create({'product_id': products[0].id}),  # Without description
+                Command.create({'product_id': products[1].id, 'name': 'Custom Description'}),  # With description
+                Command.create({'product_id': products[2].id}),  # +80 chars without description
+                Command.create({'product_id': products[2].id, 'name': 'Custom Description'}),  # +80 chars with description
+                Command.create({'product_id': products[2].id, 'l10n_uy_edi_addenda_ids': [(6, 0, [addenda.id])]}),  # +80 chars with addenda
+                Command.create({'product_id': products[2].id, 'name': 'Custom Description', 'l10n_uy_edi_addenda_ids': [(6, 0, [addenda.id])]}),  # +80 chars with desc and addenda
+                Command.create({'product_id': products[0].id, 'name': False}),  # With description deleted by user
+                Command.create({'product_id': products[0].id, 'name': ''}),  # With a empty string as description
+            ],
+        )
+
+        for idx, line in enumerate(invoice.invoice_line_ids):
+            nom_item, description = invoice._l10n_uy_edi_get_line_nom_and_desc(line)
+            if idx == 0:  # Without description
+                self.assertEqual(
+                    nom_item, "Product Without Description"[:80], "NomItem mismatch for line without description"
+                )
+                self.assertEqual(description, "", "Description mismatch for line without description")
+            elif idx == 1:  # With description
+                self.assertEqual(
+                    nom_item, "Product With Description"[:80], "NomItem mismatch for line with description"
+                )
+                self.assertEqual(description, "Custom Description", "Description mismatch for line with description")
+            elif idx == 2:  # +80 chars without description
+                self.assertEqual(
+                    nom_item, long_name[:80], "NomItem mismatch for line with long name without description"
+                )
+                self.assertEqual(
+                    description, long_name[80:], "Description mismatch for line with long name without description"
+                )
+            elif idx == 3:  # +80 chars with description
+                self.assertEqual(nom_item, long_name[:80], "NomItem mismatch for line with long name and description")
+                self.assertEqual(
+                    description,
+                    f"{long_name[80:]}Custom Description",
+                    "Description mismatch for line with long name and description",
+                )
+            elif idx == 4:  # +80 chars with addenda
+                self.assertEqual(nom_item, long_name[:80], "NomItem mismatch for line with long name and addenda")
+                self.assertIn(
+                    "Addenda Content", description, "Addenda content missing in description for line with addenda"
+                )
+            elif idx == 5:  # +80 chars with desc and addenda
+                self.assertEqual(
+                    nom_item, long_name[:80], "NomItem mismatch for line with long name, description, and addenda"
+                )
+                self.assertIn(
+                    "Custom Description",
+                    description,
+                    "Custom description missing in description for line with desc and addenda",
+                )
+                self.assertIn(
+                    "Addenda Content",
+                    description,
+                    "Addenda content missing in description for line with desc and addenda",
+                )
+            elif idx == 6 or idx == 7:  # With description deleted by user or ""
+                self.assertEqual(
+                    nom_item, "Product Without Description"[:80], "NomItem mismatch for line with deleted description"
+                )
+                self.assertEqual(description, "", "Description mismatch for line with deleted description")
+
     def test_120_e_ticket_final_consumer(self):
         """ Create/post/send an e-ticket and check that the pre-generated XML is the same as the one expected """
         invoice = self._create_move(partner_id=self.env.ref("l10n_uy.partner_cfu").id)
@@ -233,7 +315,7 @@ class TestManual(common.TestUyEdi):
             {"product_id": discount.id, "price_unit": -5.0, "tax_ids": self.tax_22},  # w/product
             {"product_id": discount.id, "name": "", "price_unit": -2.0, "tax_ids": self.tax_22},  # w/product & wo/label
             {"name": "Discount only Label", "price_unit": -20.0, "tax_ids": self.tax_0},  # wo product but w/label
-            {"price_unit": -10.0, "tax_ids": self.tax_10},  # wo product or label
+            {"name": "", "price_unit": -10.0, "tax_ids": self.tax_10},  # wo product or label
         ]
         invoice = self._create_move(
             ref="test_140_global_discount",
@@ -305,7 +387,7 @@ class TestManual(common.TestUyEdi):
     def test_170_uploaded_vendor_bill_with_global_fixed_discount(self):
         """ Simulate upload xml document with global discount fixed line on vendor bill journal and test if it was
         created correctly. """
-        new_bill = self._mock_upload_document_on_journal(
+        new_bill = self._mock_attachment_upload(
             journal=self.company_data['default_journal_purchase'],
             filename='vendor_bill_with_global_fixed_discount',
         )
@@ -320,7 +402,7 @@ class TestManual(common.TestUyEdi):
     def test_180_uploaded_vendor_bill_with_line_fixed_discount(self):
         """ Simulate upload xml document with discount fixed line on vendor bill journal and test if it was created
         correctly. """
-        new_bill = self._mock_upload_document_on_journal(
+        new_bill = self._mock_attachment_upload(
             journal=self.company_data['default_journal_purchase'],
             filename='vendor_bill_with_line_fixed_discount',
         )
@@ -363,3 +445,22 @@ class TestManual(common.TestUyEdi):
         # Test narration exceeding the maximum allowed lines (dedicated page required)
         assert_narration_extra_params(invoice, 'A' * (line_length * max_lines + 10), True)  # 6 lines and 10 chars
         assert_narration_extra_params(invoice, 'A\nA\nA' + 'A' * line_length * 4, True)  # 7 lines
+
+    def test_200_uploaded_vendor_bill_with_two_bills(self):
+        new_bills = self._mock_attachment_upload(
+            journal=self.company_data['default_journal_purchase'],
+            filename='sobre_with_2_vendor_bills',
+        )
+
+        self.assertRecordValues(new_bills, [
+            {
+                'name': 'e-FC A6310618',
+                'invoice_date': fields.Date.to_date('2024-10-03'),
+                'invoice_partner_display_name': 'BANCO ITAU URUGUAY S.A.',
+            },
+            {
+                'name': 'e-FC A6310619',
+                'invoice_date': fields.Date.to_date('2024-10-03'),
+                'invoice_partner_display_name': 'BANCO ITAU URUGUAY S.A.',
+            },
+        ])

@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { markup } from "@odoo/owl";
@@ -17,7 +15,7 @@ registry.category("web_tour.tours").add("helpdesk_tour", {
             trigger: ".o_helpdesk_ticket_btn",
         },
         {
-    trigger: 'button.oe_kanban_action',
+    trigger: 'button.oe_kanban_action, .o_kanban_record',
     content: markup(_t('Let\'s view your <b>team\'s tickets</b>.')),
     tooltipPosition: 'bottom',
             run: "click",
@@ -98,7 +96,7 @@ registry.category("web_tour.tours").add("helpdesk_tour", {
         },
         {
     trigger: "button.o-mail-Chatter-logNote",
-    content: markup(_t("<b>Log notes</b> for internal communications (you will only notify the persons you specifically tag). Use <b>@ mentions</b> to ping a colleague or <b># mentions</b> to contact a group of people.")),
+    content: markup(_t("<b>Log internal notes</b> and use @<b>mentions</b> to notify your colleagues.")),
     tooltipPosition: "bottom",
             run: "click",
         },
@@ -122,7 +120,7 @@ registry.category("web_tour.tours").add("helpdesk_tour", {
         {
     trigger: '.o_back_button',
     content: markup(_t("Let's go back to the <b>kanban view</b> to get an overview of your next tickets.")),
-    tooltipPosition: 'bottom',
+    tooltipPosition: 'right',
     run: "click",
         },
         {
@@ -132,7 +130,7 @@ registry.category("web_tour.tours").add("helpdesk_tour", {
             run: "drag_and_drop(.o_kanban_group:eq(2))",
         },
         {
-    trigger: ".o_column_quick_create .o_quick_create_folded",
+    trigger: ".o_column_quick_create.o_quick_create_folded div",
     content: markup(_t('Adapt your <b>pipeline</b> to your workflow by adding <b>stages</b> <i>(e.g. Awaiting Customer Feedback, etc.).</i>')),
     tooltipPosition: 'bottom',
     run: "click",

@@ -4,6 +4,7 @@ from odoo import models
 from odoo.tools.parse_version import parse_version
 from odoo.tools.pdf import OdooPdfFileReader, OdooPdfFileWriter, to_pdf_stream
 
+
 class IrActionsReport(models.Model):
     _inherit = 'ir.actions.report'
 

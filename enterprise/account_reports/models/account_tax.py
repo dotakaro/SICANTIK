@@ -6,16 +6,17 @@ from odoo.exceptions import ValidationError
 
 
 class AccountTaxUnit(models.Model):
-    _name = "account.tax.unit"
+    _name = 'account.tax.unit'
     _description = "Tax Unit"
 
     name = fields.Char(string="Name", required=True)
-    country_id = fields.Many2one(string="Country", comodel_name='res.country', required=True, help="The country in which this tax unit is used to group your companies' tax reports declaration.")
-    vat = fields.Char(string="Tax ID", required=True, help="The identifier to be used when submitting a report for this unit.")
+    country_id = fields.Many2one(string="Country", comodel_name='res.country', required=True, inverse="_inverse_vat", help="The country in which this tax unit is used to group your companies' tax reports declaration.")
+    vat = fields.Char(string="Tax ID", required=True, inverse="_inverse_vat", help="The identifier to be used when submitting a report for this unit.")
     company_ids = fields.Many2many(string="Companies", comodel_name='res.company', required=True, help="Members of this unit")
     main_company_id = fields.Many2one(string="Main Company", comodel_name='res.company', required=True, help="Main company of this unit; the one actually reporting and paying the taxes.")
     fpos_synced = fields.Boolean(string="Fiscal Positions Synchronised", compute='_compute_fiscal_position_completion', help="Technical field indicating whether Fiscal Positions exist for all companies in the unit")
 
+    @api.model_create_multi
     def create(self, vals_list):
         res = super().create(vals_list)
 
@@ -51,14 +52,22 @@ class AccountTaxUnit(models.Model):
                 }
             )
 
+        self.env['account.return.type']._generate_or_refresh_all_returns(res.company_ids.root_id)
         return res
+
+    def write(self, values):
+        root_companies_before = self.company_ids.root_id
+        result = super().write(values)
+        if any(return_field in values for return_field in ('main_company_id', 'company_ids', 'country_id')):
+            self.env['account.return.type']._generate_or_refresh_all_returns(root_companies_before | self.company_ids.root_id)
+        return result
 
     @api.depends('company_ids')
     def _compute_fiscal_position_completion(self):
         for unit in self:
             synced = True
             for company in unit.company_ids:
-                origin_company = company._origin if isinstance(company.id, models.NewId) else company
+                origin_company = company._origin
                 fp = unit._get_tax_unit_fiscal_positions(companies=origin_company)
                 all_partners_with_fp = self.env['res.company'].search([]).with_company(origin_company).partner_id\
                     .filtered(lambda p: p.property_account_position_id == fp) if fp else self.env['res.partner']
@@ -70,7 +79,7 @@ class AccountTaxUnit(models.Model):
     def _get_tax_unit_fiscal_positions(self, companies, create_or_refresh=False):
         """
         Retrieves or creates fiscal positions for all companies specified.
-        Each Fiscal Position contains all the taxes of the company mapped to no tax
+        These fiscal positions have no taxes, so this could probably be simplified (as refresh makes no sense anymore)
 
         @param {recordset} companies: companies for which to find/create fiscal positions
         @param {boolean} create_or_refresh: a boolean indicating whether the fiscal positions should be created if not found
@@ -82,15 +91,11 @@ class AccountTaxUnit(models.Model):
                 fp_identifier = 'account.tax_unit_%s_fp_%s' % (unit.id, company.id)
                 existing_fp = self.env.ref(fp_identifier, raise_if_not_found=False)
                 if create_or_refresh:
-                    taxes_to_map = self.env['account.tax'].with_context(
-                        allowed_company_ids=self.env.user.company_ids.ids,
-                    ).search(self.env['account.tax']._check_company_domain(company))
                     data = {
                         'xml_id': fp_identifier,
                         'values': {
                             'name': unit.name,
                             'company_id': company.id,
-                            'tax_ids': [Command.clear()] + [Command.create({'tax_src_id': tax.id}) for tax in taxes_to_map]
                         }
                     }
                     existing_fp = fiscal_positions._load_records([data])
@@ -135,21 +140,19 @@ class AccountTaxUnit(models.Model):
             if len(record.company_ids) < 2:
                 raise ValidationError(_("A tax unit must contain a minimum of two companies. You might want to delete the unit."))
 
-    @api.constrains('country_id', 'vat')
-    def _validate_vat(self):
+    @api.onchange('vat', 'country_id')
+    def _onchange_vat(self):
+        self.vat, _country_code = self.env['res.partner']._run_vat_checks(self.country_id, self.vat, validation=False)
+
+    def _inverse_vat(self):
         for record in self:
             if not record.vat:
                 continue
 
-            checked_country_code = self.env['res.partner']._run_vat_test(record.vat, record.country_id)
-
-            if checked_country_code and checked_country_code != record.country_id.code.lower():
+            _vat, checked_country_code = self.env['res.partner']._run_vat_checks(record.country_id, record.vat,
+                                                                                partner_name=_("tax unit [%s]", record.name))
+            if checked_country_code and checked_country_code != record.country_id.code:
                 raise ValidationError(_("The country detected for this VAT number does not match the one set on this Tax Unit."))
-
-            if not checked_country_code:
-                tu_label = _("tax unit [%s]", record.name)
-                error_message = self.env['res.partner']._build_vat_error_message(record.country_id.code.lower(), record.vat, tu_label)
-                raise ValidationError(error_message)
 
     @api.onchange('company_ids')
     def _onchange_company_ids(self):

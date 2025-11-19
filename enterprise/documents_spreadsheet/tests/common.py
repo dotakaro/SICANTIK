@@ -24,8 +24,9 @@ class SpreadsheetTestCommon(SpreadsheetTestCase):
             "type": "folder",
             "access_internal": "view",
             "access_via_link": "none",
-            "owner_id": cls.env.ref('base.user_root').id,
+            "owner_id": False,
             "folder_id": False,
+            "sequence": -10,
         })
         cls.spreadsheet_user = new_test_user(
             cls.env, login="spreadsheetDude", groups="documents.group_documents_user"
@@ -72,4 +73,5 @@ class SpreadsheetTestTourCommon(SpreadsheetTestCommon, HttpCase):
                 "raw": f.read(),
                 "name": "Res Partner Test Spreadsheet",
                 "access_internal": "edit",
+                "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             })

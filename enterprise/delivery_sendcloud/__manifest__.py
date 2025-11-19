@@ -3,7 +3,7 @@
 {
     'name': "Sendcloud Shipping",
     'description': "Shipping Integration with Sendcloud platform",
-    'category': 'Inventory/Delivery',
+    'category': 'Shipping Connectors',
     'sequence': 316,
     'version': '1.0',
     'application': True,
@@ -21,5 +21,6 @@
             'delivery_sendcloud/static/src/**/*.xml',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

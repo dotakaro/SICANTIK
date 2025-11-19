@@ -3,23 +3,16 @@
 # 	* documents_account
 # 
 # Translators:
-# Pernille Kristensen <pernillekristensen1994@gmail.com>, 2024
-# lhmflexerp <lhm@flexerp.dk>, 2024
-# Mads Søndergaard, 2024
-# Martin Trigaux, 2024
-# Sanne Kristensen <sanne@vkdata.dk>, 2024
-# Ejner Sønniksen <ejner@vkdata.dk>, 2024
-# Mads Søndergaard, 2024
-# Sammi Iversen <sammi@vkdata.dk>, 2025
 # Wil Odoo, 2025
+# Kira Petersen, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-06 18:49+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Kira Petersen, 2025\n"
 "Language-Team: Danish (https://app.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -28,11 +21,17 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: documents_account
+#. odoo-python
+#: code:addons/documents_account/models/ir_actions_server.py:0
+msgid "\"New Journal Entry\" can only be applied to Document."
+msgstr "\"Ny journalpost\" kan kun anvendes på Dokumenter."
+
+#. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "<b>Deselect this page</b> as we plan to process all bills first."
 msgstr ""
-"<b>Fravælg denne side</b> eftersom vi planlægger at behandle alle regninger "
+"<b>Fravælg denne side</b>, da vi planlægger at behandle alle regninger "
 "først."
 
 #. module: documents_account
@@ -49,7 +48,7 @@ msgstr "<span class=\"o_stat_text\">Dokumenter</span>"
 #. module: documents_account
 #: model:ir.model.constraint,message:documents_account.constraint_documents_account_folder_setting_journal_unique
 msgid "A setting already exists for this journal"
-msgstr "En indstilling eksisterer allerede for denne journal"
+msgstr "Der findes allerede en indstilling for denne journal"
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_res_config_settings__documents_account_settings
@@ -57,21 +56,39 @@ msgid "Accounting "
 msgstr "Bogføring"
 
 #. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__company_account_folder_id
+#: model:ir.model.fields,field_description:documents_account.field_res_company__account_folder_id
+msgid "Accounting Folder"
+msgstr "Bogføringsmappe"
+
+#. module: documents_account
 #: model:ir.model,name:documents_account.model_account_report
 msgid "Accounting Report"
 msgstr "Regnskabsrapport"
-
-#. module: documents_account
-#: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__company_account_folder_id
-#: model:ir.model.fields,field_description:documents_account.field_res_company__account_folder_id
-msgid "Accounting Workspace"
-msgstr "Bogføring Arbejdsområde"
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Action"
 msgstr "Handling"
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_tag_add_bill
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_customer_invoice_tag_add_bill
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_tag_add_bill
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_tag_add_bill
+msgid "Add tag \"Bill\""
+msgstr "Tilføj tag \"Regninger\""
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_bank_statement_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_customer_invoice_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_misc_entry_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_tag_add_validated
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_tag_add_validated
+msgid "Add tag \"Validated\""
+msgstr "Tilføj tag \"Valideret\""
 
 #. module: documents_account
 #. odoo-javascript
@@ -91,17 +108,32 @@ msgstr ""
 #. module: documents_account
 #: model:ir.model,name:documents_account.model_ir_attachment
 msgid "Attachment"
-msgstr "Vedhæftning"
+msgstr "Vedhæftet fil"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_bank_statement
+msgid "Bank Statement"
+msgstr "Kontoudtog fra bank"
 
 #. module: documents_account
 #: model_terms:ir.ui.view,arch_db:documents_account.res_config_settings_view_form
 msgid "Centralize accounting files and documents"
-msgstr "Centraliser bogførings filer og dokumenter"
+msgstr "Centralisér bogføringsfiler og dokumenter"
 
 #. module: documents_account
 #: model_terms:ir.ui.view,arch_db:documents_account.view_account_move_form_inherit_documents_account
 msgid "Check them"
 msgstr "Tjek dem"
+
+#. module: documents_account
+#: model_terms:ir.ui.view,arch_db:documents_account.view_server_action_form_template
+msgid "Choose a journal..."
+msgstr "Vælg en journal ..."
+
+#. module: documents_account
+#: model_terms:ir.ui.view,arch_db:documents_account.view_server_action_form_template
+msgid "Choose an accounting document type..."
+msgstr "Vælg en regnskabsdokumenttype ..."
 
 #. module: documents_account
 #. odoo-javascript
@@ -113,7 +145,8 @@ msgstr "Klik på et kort for at <b>vælge dokumentet</b>."
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Click on a thumbnail to <b>preview the document</b>."
-msgstr "Klik på miniaturebilledet for at <b>forhåndsvise dokumentet</b>."
+msgstr ""
+"Klik på miniaturebilledet for at se en<b>forhåndsvisning af dokumentet</b>."
 
 #. module: documents_account
 #. odoo-javascript
@@ -122,14 +155,14 @@ msgid ""
 "Click on the <b>page separator</b>: we don't want to split these two pages "
 "as they belong to the same document."
 msgstr ""
-"Klik på <b>side deleren</b>: Vi vil ikke dele disse to sider, eftersom de "
-"tilhører samme dokument."
+"Klik på <b>sidedeleren</b>: De to sider bør ikke deles, da de tilhører samme"
+" dokument."
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Click the cross to <b>exit preview</b>."
-msgstr "Klik på krydset for at <b> afslutte forhåndsvisning</b>."
+msgstr "Klik på krydset for at <b> afslutte forhåndsvisningen</b>."
 
 #. module: documents_account
 #. odoo-javascript
@@ -150,7 +183,7 @@ msgstr "Virksomhed"
 #. module: documents_account
 #: model:ir.model,name:documents_account.model_res_config_settings
 msgid "Config Settings"
-msgstr "Konfigurer opsætning"
+msgstr "Konfigurér indstillinger"
 
 #. module: documents_account
 #. odoo-python
@@ -159,8 +192,29 @@ msgid "Copy to Documents"
 msgstr "Kopiér til dokumenter"
 
 #. module: documents_account
-#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note
+#: model_terms:ir.ui.view,arch_db:documents_account.view_server_action_form_template
+msgid "Create"
+msgstr "Opret"
+
+#. module: documents_account
+#. odoo-python
+#: code:addons/documents_account/models/ir_actions_server.py:0
+msgid "Create %(model_name)s"
+msgstr "Opret %(model_name)s"
+
+#. module: documents_account
+#. odoo-python
+#: code:addons/documents_account/models/ir_actions_server.py:0
+msgid "Create %(model_name)s (%(journal_name)s)"
+msgstr "Opret %(model_name)s (%(journal_name)s)"
+
+#. module: documents_account
 #: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_code
+msgid "Create Credit Note"
+msgstr "Opret kreditnota"
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note
 msgid "Create Customer Credit Note"
 msgstr "Opret kundekreditnota"
 
@@ -176,7 +230,7 @@ msgstr "Opret kundefaktura"
 #: model:ir.actions.server,name:documents_account.ir_actions_server_create_misc_entry
 #: model:ir.actions.server,name:documents_account.ir_actions_server_create_misc_entry_code
 msgid "Create Misc Entry"
-msgstr ""
+msgstr "Opret diverse poster"
 
 #. module: documents_account
 #. odoo-javascript
@@ -184,25 +238,25 @@ msgstr ""
 #: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill
 #: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_code
 msgid "Create Vendor Bill"
-msgstr "Opret leverandørregning"
-
-#. module: documents_account
-#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_receipt
-msgid "Create Vendor Receipt"
-msgstr ""
+msgstr "Opret leverandørfaktura"
 
 #. module: documents_account
 #: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund
 #: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_code
-msgid "Create Vendor Refund"
-msgstr ""
+msgid "Create Vendor Credit Note"
+msgstr "Opret leverandørkreditnota"
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_receipt
+msgid "Create Vendor Receipt"
+msgstr "Opret leverandørkvittering"
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid ""
 "Create a new document for the remaining page, it will be handled later."
-msgstr ""
+msgstr "Opret et ny dokument for den resterende side. Det behandles senere."
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__create_uid
@@ -215,7 +269,28 @@ msgid "Created on"
 msgstr "Oprettet den"
 
 #. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_out_refund
+msgid "Credit Note"
+msgstr "Kreditnota"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_out_invoice
+msgid "Customer Invoice"
+msgstr "Kundefaktura"
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_account_journal__display_name
+#: model:ir.model.fields,field_description:documents_account.field_account_move__display_name
+#: model:ir.model.fields,field_description:documents_account.field_account_report__display_name
+#: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard__display_name
+#: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard_format__display_name
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__display_name
+#: model:ir.model.fields,field_description:documents_account.field_documents_document__display_name
+#: model:ir.model.fields,field_description:documents_account.field_documents_tag__display_name
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__display_name
+#: model:ir.model.fields,field_description:documents_account.field_ir_attachment__display_name
+#: model:ir.model.fields,field_description:documents_account.field_res_company__display_name
+#: model:ir.model.fields,field_description:documents_account.field_res_config_settings__display_name
 msgid "Display Name"
 msgstr "Vis navn"
 
@@ -225,52 +300,72 @@ msgid "Document"
 msgstr "Dokument"
 
 #. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__documents_account_create_model
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__documents_account_create_model
+msgid "Documents Account Create Model"
+msgstr "Regnskabsdokumenter: Opret model"
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__documents_account_journal_id
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__documents_account_journal_id
+msgid "Documents Account Journal"
+msgstr "Regnskabsdokumenter: journal"
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__documents_account_move_type
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__documents_account_move_type
+msgid "Documents Account Move Type"
+msgstr "Regnskabsdokumenter: bogføringstype"
+
+#. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_res_company__documents_account_settings
 msgid "Documents Account Settings"
-msgstr "Dokumenter Konto Indstillinger"
+msgstr "Kontoindstillinger for dokumenter"
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__documents_account_suitable_journal_ids
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__documents_account_suitable_journal_ids
+msgid "Documents Account Suitable Journal"
+msgstr "Regnskabsdokumenter: passende journal"
 
 #. module: documents_account
 #. odoo-python
 #: code:addons/documents_account/models/account_report.py:0
 msgid "Export"
-msgstr "Eksporter"
+msgstr "Eksportér"
 
 #. module: documents_account
 #: model:ir.model,name:documents_account.model_account_reports_export_wizard_format
 msgid "Export format for accounting's reports"
-msgstr "Eksport format for regnskabsrapporter"
+msgstr "Eksportformat for regnskabsrapporter"
 
 #. module: documents_account
 #: model:ir.model,name:documents_account.model_account_reports_export_wizard
 msgid "Export wizard for accounting's reports"
-msgstr "Eksport guide for regnskabsrapporter"
+msgstr "Eksportguide for regnskabsrapporter"
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Finance"
-msgstr "Finans"
-
-#. module: documents_account
-#: model:mail.activity.type,name:documents_account.mail_documents_activity_data_fs
-msgid "Financial Statement"
-msgstr "Finans kontoudtog"
+msgstr "Økonomi"
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard__folder_id
+#: model_terms:ir.ui.view,arch_db:documents_account.res_config_settings_view_form
 msgid "Folder"
 msgstr "Mappe"
 
 #. module: documents_account
 #: model:ir.model.fields,help:documents_account.field_account_reports_export_wizard__folder_id
 msgid "Folder where to save the generated file"
-msgstr "Mappe hvori den genereret fil skal gemmes"
+msgstr "Destinationsmappe for den genererede fil"
 
 #. module: documents_account
 #. odoo-python
 #: code:addons/documents_account/models/account_journal.py:0
 msgid "Generated Bank Statements"
-msgstr ""
+msgstr "Genererede kontoudtog"
 
 #. module: documents_account
 #. odoo-python
@@ -282,15 +377,26 @@ msgstr "Genererede dokumenter"
 #: model:ir.model.fields,field_description:documents_account.field_account_bank_statement_line__has_documents
 #: model:ir.model.fields,field_description:documents_account.field_account_move__has_documents
 msgid "Has Documents"
-msgstr ""
+msgstr "Har dokumenter"
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_documents_document__has_embedded_pdf
 msgid "Has Embedded PDF"
-msgstr ""
+msgstr "Har indlejret PDF"
 
 #. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_account_journal__id
+#: model:ir.model.fields,field_description:documents_account.field_account_move__id
+#: model:ir.model.fields,field_description:documents_account.field_account_report__id
+#: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard__id
+#: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard_format__id
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__id
+#: model:ir.model.fields,field_description:documents_account.field_documents_document__id
+#: model:ir.model.fields,field_description:documents_account.field_documents_tag__id
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__id
+#: model:ir.model.fields,field_description:documents_account.field_ir_attachment__id
+#: model:ir.model.fields,field_description:documents_account.field_res_company__id
+#: model:ir.model.fields,field_description:documents_account.field_res_config_settings__id
 msgid "ID"
 msgstr "ID"
 
@@ -298,7 +404,7 @@ msgstr "ID"
 #: model:ir.actions.server,name:documents_account.ir_actions_server_bank_statement
 #: model:ir.actions.server,name:documents_account.ir_actions_server_bank_statement_code
 msgid "Import Bank Statement"
-msgstr "Importer kontoudtog"
+msgstr "Importér kontoudtog"
 
 #. module: documents_account
 #. odoo-python
@@ -309,6 +415,7 @@ msgstr "Fakturaer"
 #. module: documents_account
 #: model:ir.model,name:documents_account.model_account_journal
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__journal_id
+#: model_terms:ir.ui.view,arch_db:documents_account.view_server_action_form_template
 msgid "Journal"
 msgstr "Journal"
 
@@ -320,7 +427,7 @@ msgstr "Journalbilag"
 #. module: documents_account
 #: model:ir.model,name:documents_account.model_documents_account_folder_setting
 msgid "Journal and Folder settings"
-msgstr "Journal og mappe indstillinger"
+msgstr "Journal- og mappeindstillinger"
 
 #. module: documents_account
 #: model_terms:ir.ui.view,arch_db:documents_account.res_config_settings_view_form
@@ -330,7 +437,7 @@ msgstr "Journaler"
 #. module: documents_account
 #: model:ir.actions.act_window,name:documents_account.action_folder_settings_installer
 msgid "Journals to synchronize"
-msgstr "Journaler der skal synkroniseres"
+msgstr "Journaler, der skal synkroniseres"
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__write_uid
@@ -349,18 +456,20 @@ msgid ""
 "Let's process documents in this folder.<br/> <i>Tip: Use Tags to filter "
 "documents and structure your process.</i>"
 msgstr ""
+"Bearbejd dokumenter i denne mappe.<br/> <i> Tip: Brug tags til at filtrere "
+"dokumenter og strukturere din proces."
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Let's process these bills: turn them into vendor bills."
-msgstr "Lad os behandle disse regninger: omdan dem til leverandørfaktura."
+msgstr "Behandl disse regninger: Omdan dem til leverandørfakturaer."
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Let's process this document now."
-msgstr ""
+msgstr "Bearbejd dokumentet nu."
 
 #. module: documents_account
 #. odoo-javascript
@@ -369,24 +478,66 @@ msgid ""
 "Let's tag this mail as Finance<br/> <i>Tips: actions can be tailored to your"
 " process, according to the folder.</i>"
 msgstr ""
+"Tag denne e-mail som \"Økonomi\"<br/> <i>Tip: Handlinger kan tilpasses din "
+"proces i henhold til mappen.</i>"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_entry
+msgid "Miscellaneous Operations"
+msgstr "Diverse handlinger"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__state__documents_account_record_create
+msgid "New Journal Entry"
+msgstr "Ny journalpost"
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Open the actions menu"
-msgstr ""
+msgstr "Åbn handlingsmenuen"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_in_receipt
+msgid "Purchase Receipt"
+msgstr "Indkøbskvittering"
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_bank_statement_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_customer_invoice_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_misc_entry_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_tag_remove_inbox
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_tag_remove_inbox
+msgid "Remove tag \"Inbox\""
+msgstr "Fjern tagget \"Indbakke\""
+
+#. module: documents_account
+#: model:ir.actions.server,name:documents_account.ir_actions_server_bank_statement_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_credit_note_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_customer_invoice_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_misc_entry_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_bill_tag_remove_to_validate
+#: model:ir.actions.server,name:documents_account.ir_actions_server_create_vendor_refund_tag_remove_to_validate
+msgid "Remove tag \"To Validate\""
+msgstr "Fjern tagget \"Skal valideres\""
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_account_bank_statement_line__suspense_statement_line_id
 #: model:ir.model.fields,field_description:documents_account.field_account_move__suspense_statement_line_id
 msgid "Request document from a bank statement line"
-msgstr ""
+msgstr "Anmod om dokument fra kontoudtogslinjen"
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "Send To Finance"
-msgstr ""
+msgstr "Send til Økonomi"
+
+#. module: documents_account
+#: model:ir.model,name:documents_account.model_ir_actions_server
+msgid "Server Action"
+msgstr "Serverhandling"
 
 #. module: documents_account
 #. odoo-javascript
@@ -395,26 +546,66 @@ msgid "Split PDF"
 msgstr "Del PDF"
 
 #. module: documents_account
+#: model:ir.model,name:documents_account.model_documents_tag
+msgid "Tag"
+msgstr "Tag"
+
+#. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_account_reports_export_wizard__tag_ids
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__tag_ids
 msgid "Tags"
 msgstr "Tags"
 
 #. module: documents_account
-#: model:mail.activity.type,name:documents_account.mail_documents_activity_data_vat
-msgid "Tax Statement"
-msgstr "Moms kontoudtog"
-
-#. module: documents_account
 #: model_terms:ir.ui.view,arch_db:documents_account.view_account_move_form_inherit_documents_account
 msgid "This invoice has been initiated by a bank transaction."
-msgstr ""
+msgstr "Fakturaen er genereret ud fra en banktransaktion."
 
 #. module: documents_account
 #. odoo-javascript
 #: code:addons/documents_account/static/src/js/tour.js:0
 msgid "This should be processed as a misc entry."
+msgstr "Den skal behandles som en diversepost."
+
+#. module: documents_account
+#: model:ir.model.fields,field_description:documents_account.field_ir_actions_server__state
+#: model:ir.model.fields,field_description:documents_account.field_ir_cron__state
+msgid "Type"
+msgstr "Type"
+
+#. module: documents_account
+#: model:ir.model.fields,help:documents_account.field_ir_actions_server__state
+#: model:ir.model.fields,help:documents_account.field_ir_cron__state
+msgid ""
+"Type of server action. The following values are available:\n"
+"- 'Update a Record': update the values of a record\n"
+"- 'Create Activity': create an activity (Discuss)\n"
+"- 'Send Email': post a message, a note or send an email (Discuss)\n"
+"- 'Send SMS': send SMS, log them on documents (SMS)- 'Add/Remove Followers': add or remove followers to a record (Discuss)\n"
+"- 'Create Record': create a new record with new values\n"
+"- 'Execute Code': a block of Python code that will be executed\n"
+"- 'Send Webhook Notification': send a POST request to an external system, also known as a Webhook\n"
+"- 'Multi Actions': define an action that triggers several other server actions\n"
 msgstr ""
+"Type serverhandling. De følgende værdier er tilgængelige:\n"
+"- 'Opdatér en postering': Opdatér en posteringsværdi.\n"
+"- 'Opret aktivitet': Opret en aktivitet (Dialog).\n"
+"- 'Send e-mail': Send en besked, note eller e-mail (Dialog).\n"
+"- 'Send SMS': Send en SMS, registrér dem i dokumenter (SMS). - 'Tilføj/fjern følgere': Tilføj eller fjern følgere fra en datapost (Dialog).\n"
+"- 'Opret en datapost': Opret en ny datapost med nye værdier.\n"
+"- 'Udfør kode': En sektion med Python-kode, der eksekveres.\n"
+"- 'Send Webhook-meddelelse': Send en POST-anmodning til et eksternt system (også kendt som en webhook).\n"
+"- 'Udfør flere handlinger': Fastsæt en handling, der udløser flere andre serverhandlinger.\n"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_in_invoice
+msgid "Vendor Bill"
+msgstr "Leverandørfaktura"
+
+#. module: documents_account
+#: model:ir.model.fields.selection,name:documents_account.selection__ir_actions_server__documents_account_create_model__account_move_in_refund
+msgid "Vendor Credit Note"
+msgstr "Leverandørkreditnota"
 
 #. module: documents_account
 #. odoo-javascript
@@ -422,11 +613,11 @@ msgstr ""
 msgid ""
 "Want to become a <b>paperless company</b>? Let's discover Odoo Documents."
 msgstr ""
-"Vil du blive en <b>papirløs virksomhed</b>? Lad os udforske Odoo Dokumenter."
+"Er du klar til at tage skridtet mod en <b>papirløs virksomhed</b>? Lad os "
+"udforske Odoo Dokumenter."
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_documents_account_folder_setting__folder_id
-#: model_terms:ir.ui.view,arch_db:documents_account.res_config_settings_view_form
 msgid "Workspace"
 msgstr "Arbejdsområde"
 
@@ -436,19 +627,21 @@ msgid ""
 "Wow... 6 documents processed in a few seconds, You're good.<br>The tour is "
 "complete. Try uploading your own documents now."
 msgstr ""
+"Wow ... Seks dokumenter behandlet på få sekunder. Godt "
+"gået.<br>Rundvisningen er slut. Prøv at uploade dine egne dokumenter nu."
 
 #. module: documents_account
 #. odoo-python
 #: code:addons/documents_account/models/documents_document.py:0
 msgid "You can not create account move on folder."
-msgstr ""
+msgstr "Det er ikke muligt at oprette en bogføring i mappen."
 
 #. module: documents_account
 #: model:ir.model.fields,field_description:documents_account.field_res_config_settings__account_folder_id
 msgid "account default folder"
-msgstr "default finans mappe"
+msgstr "standardkontomappe"
 
 #. module: documents_account
 #: model_terms:ir.ui.view,arch_db:documents_account.view_account_move_form_inherit_documents_account
 msgid "to mark this invoice as paid."
-msgstr "Markér faktura som fuldt betalt"
+msgstr "Markér faktura som betalt"

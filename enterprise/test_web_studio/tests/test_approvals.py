@@ -10,27 +10,30 @@ class TestStudioApprovals(TransactionCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.admin_user = cls.env.ref("base.user_admin")
+        cls.admin_user.write({
+            'email': 'mitchell.admin@example.com',
+        })
         cls.demo_user = cls.env["res.users"].search([("login", "=", "demo")], limit=1)
         if not cls.demo_user:
             cls.demo_user = cls.env["res.users"].create({
                 "login": "demo",
                 "name": "demo",
                 "email": "demo@demo",
-                "groups_id": [Command.link(cls.env.ref("base.group_user").id)]
+                "group_ids": [Command.link(cls.env.ref("base.group_user").id)]
             })
 
         cls.other_user = cls.env["res.users"].create({
             "name": "test",
             "login": "test",
             "email": "test@test.test",
-            "groups_id": [Command.link(cls.env.ref("base.group_user").id)]
+            "group_ids": [Command.link(cls.env.ref("base.group_user").id)]
         })
 
         cls.test_user_2 = cls.env["res.users"].create({
             "name": "test_2",
             "login": "test_2",
             "email": "test_2@test_2.test_2",
-            "groups_id": [Command.link(cls.env.ref("base.group_user").id)]
+            "group_ids": [Command.link(cls.env.ref("base.group_user").id)]
         })
 
     def test_approval_method_two_models(self):
@@ -647,7 +650,7 @@ class TestStudioApprovalsUIUnit(HttpCase):
             "users_to_notify": [Command.link(self.admin_user.id)],
         })
 
-        url = f"/odoo/action-studio?mode=editor&_action={self.testAction.id}&_view_type=form&_tab=views&menu_id={self.testMenu.id}"
+        url = f"/odoo/action-{self.testAction.id}/studio?mode=editor&_view_type=form&_tab=views&menu_id={self.testMenu.id}"
         self.start_tour(url, "test_web_studio.test_disable_approvals", login="admin")
         self.assertEqual(rule.active, False)
 
@@ -660,6 +663,6 @@ class TestStudioApprovalsUIUnit(HttpCase):
             "users_to_notify": [Command.link(self.admin_user.id)],
         })
 
-        url = f"/odoo/action-studio?mode=editor&_action={self.testAction.id}&_view_type=form&_tab=views&menu_id={self.testMenu.id}"
+        url = f"/odoo/action-{self.testAction.id}/studio?mode=editor&_view_type=form&_tab=views&menu_id={self.testMenu.id}"
         self.start_tour(url, "test_web_studio.test_disable_approvals_via_kanban", login="admin")
         self.assertEqual(rule.active, False)

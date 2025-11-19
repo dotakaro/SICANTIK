@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import hashlib
 import io
 import itertools
 import json
@@ -11,7 +12,7 @@ import textwrap
 import zipfile
 
 from odoo import http
-from odoo.http import request, Response
+from odoo.http import request, Response, Stream
 from odoo.modules import get_module_path
 from odoo.tools.misc import str2bool
 
@@ -23,30 +24,62 @@ _iot_logger.setLevel(logging.DEBUG)
 
 _logger = logging.getLogger(__name__)
 
+
+def ensure_unique_name(name):
+    existing_names = request.env['iot.box'].sudo().search([('name', 'ilike', name + '%')]).mapped('name')
+    base_name = name
+    suffix = 1
+    while name in existing_names:
+        name = f"{base_name} ({suffix})"
+        suffix += 1
+
+    return name
+
+
 class IoTController(http.Controller):
-    def _search_box(self, mac_address):
-        return request.env['iot.box'].sudo().search([('identifier', '=', mac_address)], limit=1)
+    def _search_box(self, identifier):
+        return request.env['iot.box'].sudo().search([('identifier', '=', identifier)], limit=1)
 
     @http.route('/iot/get_handlers', type='http', auth='public', csrf=False)
-    def download_iot_handlers(self, mac, auto):
-        # Check mac is of one of the IoT Boxes
-        box = self._search_box(mac)
+    def get_handlers(self, identifier, auto):
+        """Return a zip file containing all the IoT handlers for the given IoT Box.
+
+        :param identifier: The identifier of the IoT Box.
+        :param auto: If True, the IoT Box will automatically update its handlers.
+        :return: A zip file containing all the IoT handlers.
+        """
+        # Check if identifier is of one of the IoT Boxes
+        box = self._search_box(identifier)
         if not box or (auto == 'True' and not box.drivers_auto_update):
             return ''
 
+        # '_L.py' files for Linux and '_W.py' for Windows
+        incompatible_filename = "_L.py" if box.version[0] == 'W' else "_W.py"
         module_ids = request.env['ir.module.module'].sudo().search([('state', '=', 'installed')])
         fobj = io.BytesIO()
         with zipfile.ZipFile(fobj, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for module in module_ids.mapped('name') + ['hw_drivers']:
+            for module in module_ids.mapped('name') + ['iot_drivers', 'pos_blackbox_be']:  # add pos_blackbox_be to detect blackbox devices without the module installed
                 module_path = get_module_path(module)
                 if module_path:
                     iot_handlers = pathlib.Path(module_path) / 'iot_handlers'
                     for handler in iot_handlers.glob('*/*'):
-                        if handler.is_file() and not handler.name.startswith(('.', '_')):
-                            # In order to remove the absolute path
-                            zf.write(handler, handler.relative_to(iot_handlers))
+                        if handler.name.startswith(('.', '_')) or handler.name.endswith(incompatible_filename):
+                            continue
+                        zf.write(handler, handler.relative_to(iot_handlers)) # In order to remove the absolute path
 
-        return request.make_response(fobj.getvalue(), headers=[('Content-Type', 'application/zip')])
+        etag = hashlib.sha256(fobj.getvalue()).hexdigest()
+        # If the file has not been modified since the last request, return a 304 (Not Modified)
+        if etag == request.httprequest.headers.get('If-None-Match'):
+            return request.make_response('', headers=[('ETag', etag)], status=304)
+
+        return Stream(
+            type='data',
+            data=fobj.getvalue(),
+            download_name='iot_handlers.zip',
+            etag=etag,
+            size=fobj.tell(),
+            public=True,
+        ).get_response()
 
     @http.route('/iot/keyboard_layouts', type='http', auth='public', csrf=False)
     def load_keyboard_layouts(self, available_layouts):
@@ -64,80 +97,89 @@ class IoTController(http.Controller):
                 urls[device.identifier] = device.display_url
         return json.dumps(urls)
 
-    @http.route('/iot/printer/status', type='json', auth='public')
-    def listen_iot_printer_status(self, print_id, device_identifier, iot_mac):
+    @http.route('/iot/box/send_websocket', type='jsonrpc', auth='public')
+    def iot_box_send_websocket(self, session_id, iot_box_identifier, device_identifier, status, **kwargs):
+        """Called by the IoT Box once an operation is over. We then forward
+        the acknowledgment to the user who made the request to inform him
+        of the success of the operation.
+
+        :param session_id: ID of the operation
+        :param iot_box_identifier: The IP of the IoT box (used to find the box)
+        :param device_identifier: The IoT device identifier
+        :param status: Status of the last action (success, error, ...)
+        :param kwargs:
         """
-        Called by the IoT once the printing operation is over. We then forward
-        the acknowledgment to the user who made the print request to inform him
-        of the sucess of the operation.
-        """
-        if isinstance(device_identifier, str) and isinstance(print_id, str):
-            box = self._search_box(iot_mac)
-            if not box:
-                _logger.warning("No IoT found with mac/identifier '%s'. Request ignored", iot_mac)
-                return
-            iot_device = request.env["iot.device"].sudo().search([
-                    ('identifier', '=', device_identifier),
-                    ('iot_id', '=', box.id)
-                ],
-                limit=1
+        box = self._search_box(iot_box_identifier)
+        if not box:
+            _logger.warning("No IoT Box found with identifier: '%s'. Request ignored", iot_box_identifier)
+            return
+        iot_device = request.env["iot.device"].sudo().search(
+            [('identifier', '=', device_identifier), ('iot_id', '=', box.id)], limit=1
+        )
+
+        if not iot_device:
+            _logger.warning(
+                "No IoT device found with identifier '%s' (iot_box_identifier: %s). Request ignored",
+                device_identifier, iot_box_identifier
             )
+            return
 
-            if not iot_device:
-                _logger.warning("No IoT device found with identifier '%s' (iot_mac: %s). Request ignored", device_identifier, iot_mac)
-                return
+        request.env['iot.channel'].send_message({
+            'session_id': session_id,
+            'iot_box_identifier': iot_box_identifier,
+            'device_identifier': device_identifier,
+            'message': {
+                'status': status,
+                'result': kwargs.get('result', {}),
+                'action_args': kwargs.get('action_args', {})
+            },
+        }, message_type='operation_confirmation')
 
-            iot_channel = request.env['iot.channel'].sudo().get_iot_channel()
-            request.env['bus.bus']._sendone(iot_channel, 'print_confirmation', {
-                'print_id': print_id,
-                'device_identifier': device_identifier
-            })
-
-    @http.route('/iot/setup', type='json', auth='public')
-    def update_box(self, **kwargs):
-        """
-        This function receives a dict from the iot box with information from it 
+    @http.route('/iot/setup', type='jsonrpc', auth='public')
+    def update_box(self, iot_box, devices):
+        """This function receives a dict from the iot box with information from it
         as well as devices connected and supported by this box.
         This function create the box and the devices and set the status (connected / disconnected)
          of devices linked with this box
-        """
-        if kwargs:
-            # Box > V19
-            iot_box = kwargs['iot_box']
-            devices = kwargs['devices']
-        else:
-            # Box < V19
-            data = request.jsonrequest
-            iot_box = data
-            devices = data['devices']
 
+        :param dict iot_box: IoT Box information
+        :param dict devices: IoT devices information
+        :return: IoT websocket channel
+        """
         # Update or create box
         iot_identifier = iot_box['identifier']  # IoT Mac Address
+        new_iot_ip = iot_box['ip']
+        new_iot_version = iot_box['version']
         box = self._search_box(iot_identifier)
         create_update_value = {
-            'name': iot_box['name'],
-            'ip': iot_box['ip'],
-            'version': iot_box['version'],
+            'ip': new_iot_ip,
+            'version': new_iot_version,
         }
         if box:
-            _logger.info('Updating IoT %s with data: %s', box, create_update_value)
-            box.write(create_update_value)
+            if (box.ip, box.version) != (new_iot_ip, new_iot_version):
+                _logger.info('Updating IoT %s with data: %s', box, create_update_value)
+                box.write(create_update_value)
         else:
-            iot_token = request.env['ir.config_parameter'].sudo().search([('key', '=', 'iot_token')], limit=1).value.strip('\n')
+            create_update_value['name'] = ensure_unique_name(iot_box['name'])
+            icp_sudo = request.env['ir.config_parameter'].sudo()
+            iot_token = icp_sudo.get_param('iot.iot_token')
             if iot_token == iot_box['token']:
                 create_update_value['identifier'] = iot_identifier
                 _logger.info('Creating IoT with data: %s', create_update_value)
                 box = request.env['iot.box'].sudo().create(create_update_value)
+
+                # Clear the used token to force creating a new one for next IoT Box
+                icp_sudo.set_param('iot.iot_token', '')
             else:
                 _logger.warning('Token mismatch for IoT %s expected %s got %s', iot_identifier, iot_token, iot_box['token'])
-                return
+                return None
 
         _logger.info('IoT %s devices:\n%s', box, pprint.pformat(devices))
         # Update or create devices
         if box:
             previously_connected_iot_devices = request.env['iot.device'].sudo().search([
                 ('iot_id', '=', box.id),
-                ('connected', '=', True)
+                ('connected_status', '=', 'connected')
             ])
             connected_iot_devices = request.env['iot.device'].sudo()
             for device_identifier in devices:
@@ -158,7 +200,7 @@ class IoTController(http.Controller):
                             'name': data_device['name'],
                             'identifier': device_identifier,
                             'type': data_device['type'],
-                            'manufacturer': data_device['manufacturer'],
+                            'manufacturer': data_device.get('manufacturer'),
                             'connection': data_device['connection'],
                             'subtype': data_device.get('subtype', ''),
                         })
@@ -172,10 +214,11 @@ class IoTController(http.Controller):
 
                     connected_iot_devices |= device
             # Mark the received devices as connected, disconnect the others.
-            connected_iot_devices.write({'connected': True})
-            (previously_connected_iot_devices - connected_iot_devices).write({'connected': False})
-            iot_channel = request.env['iot.channel'].sudo().get_iot_channel(check=True)
+            connected_iot_devices.write({'connected_status': 'connected'})
+            (previously_connected_iot_devices - connected_iot_devices).write({'connected_status': 'disconnected'})
+            iot_channel = request.env['iot.channel'].sudo().get_iot_channel()
             return iot_channel
+        return None
 
     def _is_iot_log_enabled(self):
         return str2bool(request.env['ir.config_parameter'].sudo().get_param('iot.should_log_iot_logs', True))
@@ -184,7 +227,7 @@ class IoTController(http.Controller):
     def receive_iot_log(self):
         IOT_ELEMENT_SEPARATOR = b'<log/>\n'
         IOT_LOG_LINE_SEPARATOR = b','
-        IOT_MAC_PREFIX = b'mac '
+        IOT_IDENTIFIER_PREFIX = b'identifier '
 
         def log_line_transformation(log_line):
             split = log_line.split(IOT_LOG_LINE_SEPARATOR, 1)
@@ -212,20 +255,34 @@ class IoTController(http.Controller):
         if len(request_data_split) < 2:
             return finish_request()
 
-        mac_details = request_data_split.pop(0)
-        if not mac_details.startswith(IOT_MAC_PREFIX):
+        identifier_details = request_data_split.pop(0)
+        if not identifier_details.startswith(IOT_IDENTIFIER_PREFIX):
             return finish_request()
 
-        mac_address = mac_details[len(IOT_MAC_PREFIX):]
-        iot_box = self._search_box(mac_address)
+        identifier = identifier_details[len(IOT_IDENTIFIER_PREFIX):]
+        iot_box = self._search_box(identifier)
         if not iot_box:
             return finish_request()
 
         log_details = map(log_line_transformation, request_data_split)
         init_log_message = "IoT box log '%s' #%d received:" % (iot_box.name, iot_box.id)
 
-        for log_level, log_group in itertools.groupby(log_details, key=lambda log: log['levelno']):
+        for log_level, log_group in itertools.groupby(log_details, key=lambda log: log['levelno']):  # noqa: B007
             log_lines = [log_line['line_formatted'] for log_line in log_group]
             log_current_level()
 
         return finish_request()
+
+    @http.route('/iot/box/update_certificate_status', type='jsonrpc', auth='public')
+    def update_certificate_status(self, identifier, ssl_certificate_end_date):
+        """Update the SSL certificate end date for the IoT Box.
+
+        :param str identifier: IoT Box identifier
+        :param str ssl_certificate_end_date: SSL certificate end date
+        """
+        box = self._search_box(identifier)
+        if not box:
+            _logger.warning("No IoT Box found with identifier '%s'. Request ignored", identifier)
+            return
+
+        box.write({'ssl_certificate_end_date': ssl_certificate_end_date})

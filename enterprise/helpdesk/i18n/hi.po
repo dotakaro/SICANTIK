@@ -3,20 +3,16 @@
 # 	* helpdesk
 # 
 # Translators:
-# Gautam Hingrajiya, 2024
-# Martin Trigaux, 2024
-# Wil Odoo, 2024
-# Hideki Akiyoshi, 2025
-# Ronald Kung, 2025
-# Manav Shah, 2025
+# Wil Odoo, 2025
+# Ujjawal Pathak, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Manav Shah, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Ujjawal Pathak, 2025\n"
 "Language-Team: Hindi (https://app.transifex.com/odoo/teams/41243/hi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -61,7 +57,7 @@ msgstr ""
 #: code:addons/helpdesk/models/helpdesk_team.py:0
 #: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "%s (copy)"
-msgstr ""
+msgstr "%s (कॉपी)"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_sla_view_form
@@ -105,9 +101,8 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/helpdesk/static/src/js/tours/helpdesk.js:0
 msgid ""
-"<b>Log notes</b> for internal communications (you will only notify the "
-"persons you specifically tag). Use <b>@ mentions</b> to ping a colleague or "
-"<b># mentions</b> to contact a group of people."
+"<b>Log internal notes</b> and use @<b>mentions</b> to notify your "
+"colleagues."
 msgstr ""
 
 #. module: helpdesk
@@ -160,17 +155,17 @@ msgid ""
 "                        <tr>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/5\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\"/>\n"
+"                                    <img alt=\"Happy\" src=\"/rating/static/src/img/rating_5.png\" title=\"Happy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/3\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\"/>\n"
+"                                    <img alt=\"Neutral\" src=\"/rating/static/src/img/rating_3.png\" title=\"Neutral\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/1\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\"/>\n"
+"                                    <img alt=\"Unhappy\" src=\"/rating/static/src/img/rating_1.png\" title=\"Unhappy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                        </tr>\n"
@@ -211,19 +206,19 @@ msgid ""
 "\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.use_website_helpdesk_form\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">View Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">View Ticket</a>\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">View Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">View Ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
 "        </t>\n"
 "        <t t-elif=\"object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"object.team_id.use_website_helpdesk_forum or object.team_id.use_website_helpdesk_knowledge or object.team_id.use_website_helpdesk_slides\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visit Help Center</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visit Help Center</a>\n"
 "        </t><br/><br/>\n"
 "    </div>\n"
 "\n"
@@ -244,9 +239,9 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_form
 msgid ""
-"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Satisfied\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Okay\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Dissatisfied\"/>"
+"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Happy\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Neutral\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Unhappy\"/>"
 msgstr ""
 
 #. module: helpdesk
@@ -396,7 +391,7 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 msgid "<span>Reporting</span>"
-msgstr ""
+msgstr "<span>रिपोर्टिंग</span>"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
@@ -411,7 +406,7 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 msgid "<span>View</span>"
-msgstr ""
+msgstr "<span>देखें</span>"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.tickets_followup
@@ -452,6 +447,13 @@ msgid ""
 "A Python dictionary that will be evaluated to provide default values when "
 "creating new records for this alias."
 msgstr ""
+"यह एक पायथन डिक्शनरी है. जब आप इस 'एलियास' के लिए कोई नया डेटा डालेंगे, तो "
+"यह डिक्शनरी अपने-आप कुछ खाली जगहें भर देगी."
+
+#. module: helpdesk
+#: model:ir.model.constraint,message:helpdesk.constraint_helpdesk_tag_assignment_tag_team_unique
+msgid "A tag can only be used once per team."
+msgstr ""
 
 #. module: helpdesk
 #: model:ir.model.constraint,message:helpdesk.constraint_helpdesk_tag_name_uniq
@@ -471,13 +473,13 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__access_warning
 msgid "Access warning"
-msgstr ""
+msgstr "ऐक्सेस वॉर्निंग"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_needaction
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_needaction
 msgid "Action Needed"
-msgstr ""
+msgstr "कार्रवाई की ज़रूरत है"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__active
@@ -497,17 +499,17 @@ msgstr "गतिविधियाँ"
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr ""
+msgstr "ऐक्टिविटी एक्सेप्शन डेकोरेशन"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_state
 msgid "Activity State"
-msgstr ""
+msgstr "ऐक्टिविटी स्टेट"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_type_icon
 msgid "Activity Type Icon"
-msgstr ""
+msgstr "ऐक्टिविटी टाइप आइकॉन"
 
 #. module: helpdesk
 #: model:ir.actions.act_window,name:helpdesk.mail_activity_type_action_config_helpdesk
@@ -544,9 +546,14 @@ msgid ""
 msgstr ""
 
 #. module: helpdesk
+#: model:ir.actions.act_window,name:helpdesk.action_edit_followers_helpdesk_ticket
+msgid "Add/remove followers"
+msgstr ""
+
+#. module: helpdesk
 #: model:res.groups,name:helpdesk.group_helpdesk_manager
 msgid "Administrator"
-msgstr ""
+msgstr "एडमिन"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
@@ -556,7 +563,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_id
 msgid "Alias"
-msgstr ""
+msgstr "एलियास"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_contact
@@ -566,12 +573,12 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_domain_id
 msgid "Alias Domain"
-msgstr ""
+msgstr "एलियास डोमेन"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_domain
 msgid "Alias Domain Name"
-msgstr ""
+msgstr "एलियास डोमेन नाम"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_full_name
@@ -581,7 +588,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_name
 msgid "Alias Name"
-msgstr ""
+msgstr "एलियास नाम"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_status
@@ -602,7 +609,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
 msgid "All"
-msgstr ""
+msgstr "सभी "
 
 #. module: helpdesk
 #: model:ir.actions.act_window,name:helpdesk.helpdesk_ticket_action_main_tree
@@ -644,7 +651,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 msgid "Archived"
-msgstr ""
+msgstr "संग्रहीत किया गया"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_delete_confirmation_wizard
@@ -654,6 +661,13 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_delete_wizard
 msgid "Are you sure you want to delete these stages?"
+msgstr ""
+
+#. module: helpdesk
+#: model_terms:ir.actions.act_window,help:helpdesk.action_helpdesk_tag_assignment
+msgid ""
+"Assign tickets to the appropriate team members by defining who can work on "
+"tickets with certain tags."
 msgstr ""
 
 #. module: helpdesk
@@ -706,7 +720,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_attachment_count
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_attachment_count
 msgid "Attachment Count"
-msgstr ""
+msgstr "अटैचमेंट काउंट"
 
 #. module: helpdesk
 #: model:res.groups,name:helpdesk.group_auto_assignment
@@ -728,11 +742,6 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__auto_close_ticket
 msgid "Automatic Closing"
-msgstr ""
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Average"
 msgstr ""
 
 #. module: helpdesk
@@ -767,19 +776,19 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Dissatisfied"
+msgid "Average Rating: Happy"
 msgstr ""
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Okay"
+msgid "Average Rating: Neutral"
 msgstr ""
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Satisfied"
+msgid "Average Rating: Unhappy"
 msgstr ""
 
 #. module: helpdesk
@@ -806,11 +815,6 @@ msgid "Avg Open Hours"
 msgstr ""
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Bad"
-msgstr ""
-
-#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 msgid "Bill the time spent on your tickets to your customers"
 msgstr ""
@@ -826,7 +830,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_ticket__kanban_state__blocked
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
 msgid "Blocked"
-msgstr ""
+msgstr "ब्लॉक किया गया"
 
 #. module: helpdesk
 #: model:helpdesk.tag,name:helpdesk.tag_crm
@@ -942,14 +946,14 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__color
 msgid "Color"
-msgstr ""
+msgstr "कलर"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__color
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__color
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__color
 msgid "Color Index"
-msgstr ""
+msgstr "कलर इंडेक्स"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.rating_rating_view_search_inherit_helpdesk
@@ -964,7 +968,7 @@ msgstr "व्यावसायिक इकाई"
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.tickets_followup
 msgid "Communication history"
-msgstr ""
+msgstr "कम्यूनिकेशन का इतिहास"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__use_website_helpdesk_forum
@@ -974,7 +978,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_res_company
 msgid "Companies"
-msgstr ""
+msgstr "कंपनियां"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__company_id
@@ -992,6 +996,16 @@ msgstr "संस्था"
 #: model:ir.ui.menu,name:helpdesk.helpdesk_menu_config
 msgid "Configuration"
 msgstr "कॉन्फ़िगरेशन"
+
+#. module: helpdesk
+#: model:ir.actions.act_window,name:helpdesk.action_helpdesk_tag_assignment
+msgid "Configure Tags Handled by Team Members"
+msgstr ""
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
+msgid "Configure tags handled by team members"
+msgstr ""
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_delete_confirmation_wizard
@@ -1024,6 +1038,16 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 msgid "Create Date"
+msgstr ""
+
+#. module: helpdesk
+#: model:ir.model,website_form_label:helpdesk.model_res_partner
+msgid "Create a Customer"
+msgstr "ग्राहक बनाएं"
+
+#. module: helpdesk
+#: model:ir.model,website_form_label:helpdesk.model_helpdesk_ticket
+msgid "Create a Ticket"
 msgstr ""
 
 #. module: helpdesk
@@ -1061,6 +1085,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__create_uid
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__create_uid
 msgid "Created by"
@@ -1072,10 +1097,11 @@ msgstr "द्वारा निर्मित"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__create_date
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__create_date
 msgid "Created on"
-msgstr ""
+msgstr "इस तारीख को बनाया गया"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis
@@ -1102,7 +1128,6 @@ msgstr ""
 #. module: helpdesk
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
-#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_id
@@ -1119,32 +1144,30 @@ msgid "Customer Care"
 msgstr ""
 
 #. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_email
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_email
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_email
 msgid "Customer Email"
-msgstr ""
+msgstr "कस्टमर ईमल"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_name
 msgid "Customer Name"
-msgstr ""
+msgstr "ग्राहक का नाम"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_phone
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_phone
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_phone
 msgid "Customer Phone"
-msgstr ""
+msgstr "ग्राहक का फ़ोन नंबर"
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__access_url
 msgid "Customer Portal URL"
-msgstr ""
+msgstr "कस्टमर पोर्टल यूआरएल"
 
 #. module: helpdesk
 #: model:ir.actions.server,name:helpdesk.action_open_customer_preview
@@ -1190,21 +1213,18 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__deadline
 msgid "Deadline"
-msgstr ""
+msgstr "डेडलाइन"
 
 #. module: helpdesk
-#. odoo-javascript
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_graph/helpdesk_ticket_graph_model.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_kanban/helpdesk_ticket_kanban_header.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_list/helpdesk_ticket_list_renderer.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_pivot/helpdesk_ticket_pivot_model.js:0
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "Deadline reached"
 msgstr ""
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_defaults
 msgid "Default Values"
-msgstr ""
+msgstr "डिफ़ॉल्ट वैल्यू"
 
 #. module: helpdesk
 #: model:ir.actions.server,name:helpdesk.unlink_helpdesk_stage_action
@@ -1243,7 +1263,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_digest_digest
 msgid "Digest"
-msgstr ""
+msgstr "डाइजेस्ट"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.tickets_followup
@@ -1251,32 +1271,41 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_delete_wizard
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_unarchive_wizard
 msgid "Discard"
+msgstr "खारिज करें"
+
+#. module: helpdesk
+#: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_team__assign_method__tags
+msgid "Dispatch tickets based on tags"
 msgstr ""
 
 #. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_digest_digest__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_ir_module_module__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_ir_ui_menu__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_mail_message__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_company__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_partner__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_users__display_name
 msgid "Display Name"
-msgstr ""
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Dissatisfied"
-msgstr ""
+msgstr "डिस्प्ले नाम"
 
 #. module: helpdesk
 #. odoo-python
 #: code:addons/helpdesk/models/digest.py:0
 msgid "Do not have access, skip this data for user's digest email"
 msgstr ""
+"अगर किसी डेटा तक ऐक्सेस नहीं है, तो उस डेटा को उपयोगकर्ता को भेजे जाने वाले "
+"डाइजेस्ट ईमेल में शामिल न करें."
 
 #. module: helpdesk
 #: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_team__assign_method__balanced
@@ -1289,21 +1318,16 @@ msgid "Each user is assigned an equal number of tickets"
 msgstr ""
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Edit"
-msgstr "संपादित"
-
-#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_email
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_tree
 msgid "Email Alias"
-msgstr ""
+msgstr "ईमेल एलियास"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__template_id
 msgid "Email Template"
-msgstr ""
+msgstr "ईमेल टेंप्लेट"
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_stage__template_id
@@ -1321,7 +1345,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_team__alias_domain
 msgid "Email domain e.g. 'example.com' in 'odoo@example.com'"
-msgstr ""
+msgstr "ईमेल डोमेन जैसे, 'odoo@example.com' में 'example.com'"
 
 #. module: helpdesk
 #: model_terms:digest.tip,tip_description:helpdesk.digest_tip_helpdesk_0
@@ -1365,7 +1389,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_sla_status__status__failed
 msgid "Failed"
-msgstr ""
+msgstr "असफल"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__sla_fail
@@ -1424,24 +1448,24 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_follower_ids
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_follower_ids
 msgid "Followers"
-msgstr ""
+msgstr "फ़ॉलोवर"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_partner_ids
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_partner_ids
 msgid "Followers (Partners)"
-msgstr ""
+msgstr "फ़ॉलोवर (पार्टनर)"
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr ""
+msgstr "फॉन्ट के बेहतरीन आइकॉन जैसे, फा-टॉस्क"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
 msgid "Future Activities"
-msgstr ""
+msgstr "फ्यूचर ऐक्टिविटी"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
@@ -1515,9 +1539,10 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 msgid "Group By"
-msgstr ""
+msgstr "इन्होंने ग्रुप किया"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
 msgid "Happy"
 msgstr ""
@@ -1532,7 +1557,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__has_message
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__has_message
 msgid "Has Message"
-msgstr ""
+msgstr "मैसेज है"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__sla_reached
@@ -1556,6 +1581,7 @@ msgstr ""
 
 #. module: helpdesk
 #: model:ir.ui.menu,name:helpdesk.menu_helpdesk_root
+#: model:res.groups.privilege,name:helpdesk.res_groups_privilege_helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.digest_digest_view_form
 msgid "Helpdesk"
 msgstr ""
@@ -1578,6 +1604,11 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_helpdesk_stage_delete_wizard
 msgid "Helpdesk Stage Delete Wizard"
+msgstr ""
+
+#. module: helpdesk
+#: model:ir.model,name:helpdesk.model_helpdesk_tag_assignment
+msgid "Helpdesk Tag Assignment"
 msgstr ""
 
 #. module: helpdesk
@@ -1683,18 +1714,26 @@ msgid "Hours to First Response"
 msgstr ""
 
 #. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_digest_digest__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__id
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__id
+#: model:ir.model.fields,field_description:helpdesk.field_ir_module_module__id
+#: model:ir.model.fields,field_description:helpdesk.field_ir_ui_menu__id
+#: model:ir.model.fields,field_description:helpdesk.field_mail_message__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_company__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_partner__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_users__id
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
 msgid "ID"
-msgstr ""
+msgstr "आईडी"
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_team__alias_parent_thread_id
@@ -1704,20 +1743,25 @@ msgid ""
 msgstr ""
 
 #. module: helpdesk
+#: model:helpdesk.team,name:helpdesk.helpdesk_team2
+msgid "IT Support (Auto Assignment by Tags)"
+msgstr ""
+
+#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_exception_icon
 msgid "Icon"
-msgstr ""
+msgstr "आइकॉन"
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__activity_exception_icon
 msgid "Icon to indicate an exception activity."
-msgstr ""
+msgstr "एक छोटा निशान जो बताता है कि कुछ अलग या असामान्य हुआ है."
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_team__message_needaction
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__message_needaction
 msgid "If checked, new messages require your attention."
-msgstr ""
+msgstr "अगर यह बॉक्स चेक है, तो नए मैसेज देखने ज़रूरी हैं."
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_team__message_has_error
@@ -1725,7 +1769,7 @@ msgstr ""
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__message_has_error
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__message_has_sms_error
 msgid "If checked, some messages have a delivery error."
-msgstr ""
+msgstr "अगर बॉक्स पर टिक है, तो कुछ मैसेज भेजने में गलती हुई है."
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_team__alias_bounced_content
@@ -1755,7 +1799,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_ticket__kanban_state__normal
 msgid "In progress"
-msgstr ""
+msgstr "प्रगति में है"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__auto_close_day
@@ -1776,7 +1820,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_is_follower
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_is_follower
 msgid "Is Follower"
-msgstr ""
+msgstr "फ़ॉलोवर है"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
@@ -1863,10 +1907,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__write_uid
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__write_uid
 msgid "Last Updated by"
-msgstr ""
+msgstr "इन्होंने आखिरी बार अपडेट किया"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__write_date
@@ -1874,16 +1919,17 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__write_date
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__write_date
 msgid "Last Updated on"
-msgstr ""
+msgstr "आखिरी बार अपडेट हुआ"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
 msgid "Late Activities"
-msgstr ""
+msgstr "लेट एक्टिविटी"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_data
@@ -1984,18 +2030,18 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_ir_ui_menu
 msgid "Menu"
-msgstr ""
+msgstr "मेन्यू"
 
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_mail_message
 msgid "Message"
-msgstr ""
+msgstr "मैसेज"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_has_error
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_has_error
 msgid "Message Delivery error"
-msgstr ""
+msgstr "मैसेज डिलीवरी में गड़बड़ी"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_ids
@@ -2018,7 +2064,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_ir_module_module
 msgid "Module"
-msgstr ""
+msgstr "मॉड्यूल"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__to_stage_id
@@ -2026,9 +2072,15 @@ msgid "Move to Stage"
 msgstr ""
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
+msgid "My Activities"
+msgstr "मेरी गतिविधि"
+
+#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__my_activity_date_deadline
 msgid "My Activity Deadline"
-msgstr ""
+msgstr "मेरी गतिविधि की डेडलाइन"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
@@ -2064,6 +2116,12 @@ msgid "Name"
 msgstr "नाम"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
+#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
+msgid "Neutral"
+msgstr ""
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
 msgid "Neutral face"
@@ -2092,22 +2150,22 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_calendar_event_id
 msgid "Next Activity Calendar Event"
-msgstr ""
+msgstr "अगली गतिविधि कैलेंडर इवेंट"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr ""
+msgstr "अगली गतिविधि की डेडलाइन"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_summary
 msgid "Next Activity Summary"
-msgstr ""
+msgstr "अगली गतिविधी की जानकारी"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_type_id
 msgid "Next Activity Type"
-msgstr ""
+msgstr "अगली गतिविधि का प्रकार"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
@@ -2153,6 +2211,11 @@ msgid "No tags found. Let's create one!"
 msgstr ""
 
 #. module: helpdesk
+#: model_terms:ir.actions.act_window,help:helpdesk.action_helpdesk_tag_assignment
+msgid "No tags or team members found. Let's create them!"
+msgstr ""
+
+#. module: helpdesk
 #: model_terms:ir.actions.act_window,help:helpdesk.helpdesk_team_dashboard_action_main
 msgid "No teams found"
 msgstr ""
@@ -2179,13 +2242,13 @@ msgstr ""
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
 msgid "None"
-msgstr ""
+msgstr "कोई नहीं"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_needaction_counter
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_needaction_counter
 msgid "Number of Actions"
-msgstr ""
+msgstr "कार्रवाई की संख्या"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__sla_status_failed
@@ -2201,19 +2264,19 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_has_error_counter
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_has_error_counter
 msgid "Number of errors"
-msgstr ""
+msgstr "गलतियों की संख्या"
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_team__message_needaction_counter
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__message_needaction_counter
 msgid "Number of messages requiring action"
-msgstr ""
+msgstr "ऐसे मैसेज की संख्या जिनपर कार्रवाई करना ज़रूरी है"
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_team__message_has_error_counter
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__message_has_error_counter
 msgid "Number of messages with delivery error"
-msgstr ""
+msgstr "ऐसे मैसेज की संख्या जिनमें डिलीवरी की गड़बड़ी है"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
@@ -2236,15 +2299,9 @@ msgid "Number of tickets closed in the past 7 days."
 msgstr ""
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Okay"
-msgstr ""
-
-#. module: helpdesk
 #: model:helpdesk.stage,name:helpdesk.stage_on_hold
 msgid "On Hold"
-msgstr ""
+msgstr "होल्ड पर"
 
 #. module: helpdesk
 #: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_sla_status__status__ongoing
@@ -2256,7 +2313,7 @@ msgstr ""
 #: code:addons/helpdesk/controllers/portal.py:0
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 msgid "Open"
-msgstr ""
+msgstr "ओपेन"
 
 #. module: helpdesk
 #. odoo-javascript
@@ -2358,7 +2415,7 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 msgid "Performance"
-msgstr ""
+msgstr "पर्फ़ामेंस"
 
 #. module: helpdesk
 #: model:ir.actions.act_window,name:helpdesk.helpdesk_ticket_action_team_performance
@@ -2375,7 +2432,7 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_form
 msgid "Phone"
-msgstr ""
+msgstr "फ़ोन"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
@@ -2418,7 +2475,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__access_url
 msgid "Portal Access URL"
-msgstr ""
+msgstr "पोर्टल ऐक्सेस यूआरएल"
 
 #. module: helpdesk
 #. odoo-python
@@ -2432,13 +2489,13 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__priority
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 msgid "Priority"
-msgstr ""
+msgstr "प्रॉयरिटी"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__properties
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
 msgid "Properties"
-msgstr ""
+msgstr "प्रॉपर्टीज़"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
@@ -2495,7 +2552,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__rating_ids
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__rating_ids
 msgid "Ratings"
-msgstr ""
+msgstr "रेटिंग"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_sla_view_form
@@ -2550,12 +2607,6 @@ msgid "Red Kanban Label"
 msgstr ""
 
 #. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/controllers/portal.py:0
-msgid "Reference"
-msgstr "संदर्भ"
-
-#. module: helpdesk
 #: model:mail.message.subtype,name:helpdesk.mt_ticket_refund_status
 msgid "Refund Status"
 msgstr ""
@@ -2563,7 +2614,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__use_credit_notes
 msgid "Refunds"
-msgstr ""
+msgstr "रिफ़ंड"
 
 #. module: helpdesk
 #: model:helpdesk.tag,name:helpdesk.tag_repair
@@ -2588,17 +2639,17 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.ui.menu,name:helpdesk.helpdesk_ticket_report_menu_main
 msgid "Reporting"
-msgstr ""
+msgstr "रिपोर्टिंग"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_user_id
 msgid "Responsible User"
-msgstr ""
+msgstr "जिम्मेदार उपयोगकर्ता"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
 msgid "Restore"
-msgstr ""
+msgstr "रिस्टोर करें"
 
 #. module: helpdesk
 #: model:mail.message.subtype,name:helpdesk.mt_ticket_return_status
@@ -2613,7 +2664,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__use_product_returns
 msgid "Returns"
-msgstr ""
+msgstr "रिटर्न"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__sla_id
@@ -2734,24 +2785,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__message_has_sms_error
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__message_has_sms_error
 msgid "SMS Delivery error"
-msgstr ""
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Sad face"
-msgstr ""
+msgstr "एसएमएस डिलीवरी में गड़बड़ी"
 
 #. module: helpdesk
 #. odoo-javascript
 #: code:addons/helpdesk/static/src/components/helpdesk_team_dashboard/helpdesk_team_dashboard.xml:0
 msgid "Sample"
-msgstr ""
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Satisfied"
 msgstr ""
 
 #. module: helpdesk
@@ -2804,7 +2843,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__access_token
 msgid "Security Token"
-msgstr ""
+msgstr "सिक्योरिटी टोकन"
 
 #. module: helpdesk
 #. odoo-javascript
@@ -2839,7 +2878,7 @@ msgstr ""
 #. module: helpdesk
 #: model:helpdesk.tag,name:helpdesk.tag_service
 msgid "Service"
-msgstr ""
+msgstr "सर्विस"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
@@ -2884,8 +2923,8 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
-msgid "Show all records which has next action date is before today"
-msgstr ""
+msgid "Show all records whose next activity date is past"
+msgstr "वह सारी जानकारी दिखाएं जिसकी अगली गतिविधि की तारीख निकल चुकी है"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__sla_id
@@ -2961,6 +3000,10 @@ msgid ""
 "Today: Activity date is today\n"
 "Planned: Future activities."
 msgstr ""
+"ऐक्टिविटी के हिसाब से स्टेटस\n"
+"ओवरड्यू: जिस काम की आखिरी तारीख निकल गई हो\n"
+"टुडे: जो काम आज करना है\n"
+"प्लान्ड: जो काम भविष्य में करने हैं."
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__duration_tracking
@@ -3031,6 +3074,12 @@ msgid "Team"
 msgstr ""
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_tag_assignment_search
+msgid "Team Member"
+msgstr ""
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__user_ids
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__member_ids
 msgid "Team Members"
 msgstr ""
@@ -3071,14 +3120,6 @@ msgstr ""
 msgid ""
 "The time spent in these stages won't be taken into account in the "
 "calculation of the SLA."
-msgstr ""
-
-#. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/models/helpdesk_team.py:0
-msgid ""
-"The visibility of the team needs to be set as \"Invited portal users and all"
-" internal users\" in order to use the website form."
 msgstr ""
 
 #. module: helpdesk
@@ -3228,6 +3269,11 @@ msgid "Ticket SLA Status"
 msgstr ""
 
 #. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__tag_id
+msgid "Ticket Tag"
+msgstr ""
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.quick_create_ticket_form
 msgid "Ticket Title"
 msgstr ""
@@ -3341,13 +3387,13 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.rating_rating_view_search_inherit_helpdesk
 msgid "Today"
-msgstr ""
+msgstr "आज"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
 msgid "Today Activities"
-msgstr ""
+msgstr "आज की गतिविधियां"
 
 #. module: helpdesk
 #. odoo-javascript
@@ -3392,7 +3438,7 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr ""
+msgstr "रिकॉर्ड में जो अलग तरह की गतिविधि हुई है, वह किस तरह की है."
 
 #. module: helpdesk
 #. odoo-python
@@ -3401,10 +3447,8 @@ msgid "Unarchive Tickets"
 msgstr ""
 
 #. module: helpdesk
-#. odoo-javascript
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_graph/helpdesk_ticket_graph_model.js:0
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
 msgid "Unassigned"
@@ -3415,6 +3459,18 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 msgid "Unassigned Tickets"
+msgstr ""
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
+#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
+msgid "Unhappy"
+msgstr ""
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
+msgid "Unhappy face"
 msgstr ""
 
 #. module: helpdesk
@@ -3488,6 +3544,14 @@ msgid ""
 msgstr ""
 
 #. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_team.py:0
+msgid ""
+"Want to use the website form? Just adjust your team's visibility to "
+"\"Invited portal users and all internal users\" and watch the magic happen!"
+msgstr ""
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.tickets_followup
 msgid ""
 "We hope to have addressed your request satisfactorily. If you no longer need"
@@ -3496,6 +3560,7 @@ msgstr ""
 
 #. module: helpdesk
 #: model_terms:helpdesk.team,description:helpdesk.helpdesk_team1
+#: model_terms:helpdesk.team,description:helpdesk.helpdesk_team2
 #: model_terms:helpdesk.team,description:helpdesk.helpdesk_team3
 msgid ""
 "We provide 24/7 support, Monday through Friday. Ticket responses are usually provided within 2 working days.<br>\n"
@@ -3505,7 +3570,7 @@ msgstr ""
 #. module: helpdesk
 #: model:helpdesk.tag,name:helpdesk.tag_website
 msgid "Website"
-msgstr ""
+msgstr "वेबसाइट"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__use_website_helpdesk_form
@@ -3515,13 +3580,13 @@ msgstr ""
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__website_message_ids
 msgid "Website Messages"
-msgstr ""
+msgstr "वेबसाइट मैसेज"
 
 #. module: helpdesk
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_team__website_message_ids
 #: model:ir.model.fields,help:helpdesk.field_helpdesk_ticket__website_message_ids
 msgid "Website communication history"
-msgstr ""
+msgstr "वेबसाइट कम्यूनिकेशन हिस्ट्री"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__time
@@ -3615,6 +3680,12 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 msgid "alias"
+msgstr "उपनाम"
+
+#. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/controllers/portal.py:0
+msgid "close_date"
 msgstr ""
 
 #. module: helpdesk
@@ -3630,7 +3701,7 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 msgid "e.g. My Company"
-msgstr ""
+msgstr "जैसे, मेरी कंपनी"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_form
@@ -3641,7 +3712,7 @@ msgstr ""
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 msgid "e.g. mycompany.com"
-msgstr ""
+msgstr "जैसे, mycompany.com"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__use_website_helpdesk_slides
@@ -3670,8 +3741,20 @@ msgstr ""
 
 #. module: helpdesk
 #. odoo-python
+#: code:addons/helpdesk/models/helpdesk_team.py:0
+msgid "team_id"
+msgstr ""
+
+#. module: helpdesk
+#. odoo-python
 #: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "tickets"
+msgstr ""
+
+#. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/controllers/portal.py:0
+msgid "user_id"
 msgstr ""
 
 #. module: helpdesk
@@ -3687,6 +3770,7 @@ msgid "{{ object.name }}"
 msgstr ""
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_data
-msgid "{{rating.res_name if t['is_helpdesk_user'] else ''}}"
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_ticket.py:0
+msgid "👤 Unassigned"
 msgstr ""

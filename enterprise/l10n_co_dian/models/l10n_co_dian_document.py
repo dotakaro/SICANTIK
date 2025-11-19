@@ -1,3 +1,4 @@
+from datetime import datetime
 from lxml import etree
 from lxml.etree import CDATA
 from markupsafe import Markup
@@ -12,7 +13,7 @@ from odoo.addons.l10n_co_dian import xml_utils
 from odoo.exceptions import UserError
 
 
-class L10nCoDianDocument(models.Model):
+class L10n_Co_DianDocument(models.Model):
     _name = 'l10n_co_dian.document'
     _description = "Colombian documents used for each interaction with the DIAN"
     _order = 'datetime DESC, id DESC'
@@ -96,7 +97,7 @@ class L10nCoDianDocument(models.Model):
             'identifier': 'DEMO' if move.company_id.l10n_co_dian_demo_mode else root.find('.//{*}UUID').text,
             'state': state,
             # naive local colombian datetime
-            'datetime': fields.datetime.now() if move.company_id.l10n_co_dian_demo_mode else fields.datetime.fromisoformat(root.find('.//{*}SigningTime').text).replace(tzinfo=None),
+            'datetime': datetime.fromisoformat(root.find('.//{*}SigningTime').text).replace(tzinfo=None) if not move.company_id.l10n_co_dian_demo_mode else datetime.now(),
             'test_environment': move.company_id.l10n_co_dian_test_environment,
             'certification_process': move.company_id.l10n_co_dian_certification_process,
             **kwargs,

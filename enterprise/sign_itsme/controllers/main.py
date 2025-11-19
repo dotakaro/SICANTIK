@@ -16,10 +16,10 @@ IAP_SERVICE_NAME = 'itsme_proxy'
 class SignItsme(SignController):
     def get_document_qweb_context(self, sign_request_id, token, **post):
         res = super().get_document_qweb_context(sign_request_id, token, **post)
-        if isinstance(res, dict):
+        if res.get('rendering_context'):
             # show_thank_you_dialog and error_message come from IAP sign_itsme redirect
-            res['show_thank_you_dialog'] = post.get('show_thank_you_dialog')
-            res['error_message'] = post.get('error_message')
+            res['rendering_context']['show_thank_you_dialog'] = post.get('show_thank_you_dialog')
+            res['rendering_context']['error_message'] = post.get('error_message')
         return res
 
     def _validate_auth_method(self, request_item_sudo, **kwargs):
@@ -50,7 +50,7 @@ class SignItsme(SignController):
         else:
             return super()._validate_auth_method(request_item_sudo, **kwargs)
 
-    @http.route(['/itsme_sign/itsme_successful'], type='json', auth='public', csrf='false')
+    @http.route(['/itsme_sign/itsme_successful'], type='jsonrpc', auth='public', csrf='false')
     def sign_itsme_complete(self, itsme_state, name, birthdate, itsme_hash):
         if not itsme_state:
             return {
@@ -89,7 +89,7 @@ class SignItsme(SignController):
             'success': True
         }
 
-    @http.route(['/itsme/has_itsme_credits'], type="json", auth="public")
+    @http.route(['/itsme/has_itsme_credits'], type="jsonrpc", auth="public")
     def has_itsme_credits(self):
         return request.env['iap.account'].sudo().get_credits(IAP_SERVICE_NAME) >= 1
 

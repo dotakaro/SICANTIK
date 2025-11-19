@@ -4,7 +4,7 @@
 {
     'name': 'MRP II',
     'version': '1.0',
-    'category': 'Manufacturing/Manufacturing',
+    'category': 'Supply Chain/Manufacturing',
     'sequence': 51,
     'summary': """Work Orders, Planning, Stock Reports.""",
     'depends': ['quality', 'mrp', 'barcodes', 'web_gantt', 'web_tour', 'hr_hourly_cost'],
@@ -35,6 +35,7 @@
         'data/mrp_workorder_demo.xml',
         'data/mrp_workorder_demo_stool.xml'
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

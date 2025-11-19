@@ -3,11 +3,11 @@
 import base64
 
 from odoo import _, fields, models, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from .ONSS_country_mapping import ONSS_COUNTRY_CODE_MAPPING
 
 
-class Form28150(models.Model):
+class L10n_BeForm28150(models.Model):
     _name = "l10n_be.form.281.50"
     _description = "Represents a 281.50 form"
     _inherit = ['mail.thread']
@@ -17,6 +17,7 @@ class Form28150(models.Model):
         string='Form 325',
         readonly=True,
         required=True,
+        index=True,
     )
     state = fields.Selection(
         string='State',
@@ -48,6 +49,7 @@ class Form28150(models.Model):
         comodel_name='res.partner',
         string='Partner',
         required=True,
+        index=True,
         help="Partner for which this 281.50 form has been created",
         readonly=True,
     )
@@ -85,7 +87,6 @@ class Form28150(models.Model):
     partner_job_position = fields.Char(
         string='Job position',
         tracking=True,
-        compute='_compute_partner_job_position', store=True, readonly=False,
     )
     partner_citizen_identification = fields.Char(
         string='Citizen identification number',
@@ -194,7 +195,7 @@ class Form28150(models.Model):
     @api.depends('partner_id')
     def _compute_partner_address(self):
         for form in self:
-            form.partner_address = form.partner_id._formated_address()
+            form.partner_address = form.partner_id._formated_address() if form.partner_id else ''
 
     @api.depends('partner_id')
     def _compute_partner_zip(self):
@@ -231,6 +232,17 @@ class Form28150(models.Model):
     def _compute_partner_country(self):
         for form in self:
             form.partner_country = form.partner_id.country_id
+
+    @api.constrains('partner_id')
+    def _check_auto_partner_id_company(self):
+        inconsistencies = {form.partner_id.display_name: form.company_id.display_name for form in self if form.partner_id.company_id and form.partner_id.company_id not in form.company_id._accessible_branches()}
+        if inconsistencies:
+            raise ValidationError(
+                _(
+                    "There are some inconsistencies in the partner-company association. The following partners should be accessible by their paired company: %(inconsistencies)s",
+                    inconsistencies=", ".join([f"{key}: {value}" for key, value in inconsistencies.items()]),
+                )
+            )
 
     @api.ondelete(at_uninstall=False)
     def _unlink_only_if_state_not_generated_and_not_test(self):

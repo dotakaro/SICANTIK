@@ -3,15 +3,15 @@
 # 	* payment_sepa_direct_debit
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Rasareeyar Lappiam, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:55+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:13+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Rasareeyar Lappiam, 2025\n"
 "Language-Team: Thai (https://app.transifex.com/odoo/teams/41243/th/)\n"
 "MIME-Version: 1.0\n"
@@ -21,9 +21,29 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form
+msgid ""
+". As part of your rights, you are entitled to a refund from your\n"
+"                bank under the terms and conditions of your agreement with your bank. Your rights\n"
+"                are explained in a statement that you can obtain from your bank. A refund must be\n"
+"                claimed within 8 weeks starting from the date on which your account was debited."
+msgstr ""
+
+#. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form
 #: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sepa_state_header
 msgid "<strong>Amount: </strong>"
 msgstr "<strong>จำนวน: </strong>"
+
+#. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form
+msgid "<strong>Date: </strong>"
+msgstr "<strong>วันที่: </strong>"
+
+#. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form
+msgid "<strong>Label: </strong>"
+msgstr ""
 
 #. module: payment_sepa_direct_debit
 #: model:mail.template,body_html:payment_sepa_direct_debit.mail_template_sepa_notify_validation
@@ -96,7 +116,7 @@ msgid ""
 "<tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "      <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" style=\"color: #875A7B;\">Odoo</a>\n"
+"        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" t-attf-style=\"color: {{company.email_secondary_color or '#875A7B'}};\">Odoo</a>\n"
 "      </td></tr>\n"
 "    </table>\n"
 "</td></tr>\n"
@@ -111,15 +131,15 @@ msgstr ""
 "        <td align=\"center\" style=\"min-width: 590px;\">\n"
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
 "                <tr><td valign=\"middle\">\n"
-"                    <t t-set=\"company\" t-value=\"object.company_id\"></t>\n"
-"                    <span style=\"font-size: 10px;\">คำสั่งการหักบัญชีธนาคาร SEPA ของคุณ </span><br>\n"
+"                    <t t-set=\"company\" t-value=\"object.company_id\"/>\n"
+"                    <span style=\"font-size: 10px;\">คำสั่งหักบัญชีอัตโนมัติ SEPA ของคุณ</span><br/>\n"
 "                    <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.partner_bank_id.acc_number or ''\">BE15001559627230</span>\n"
 "                </td></tr>\n"
 "                <tr><td valign=\"middle\" align=\"right\" t-if=\"not company.uses_default_logo\">\n"
-"                    <img t-attf-src=\"/logo.png?company={{ company.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"company.name\">\n"
+"                    <img t-attf-src=\"/logo.png?company={{ company.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"company.name\"/>\n"
 "                </td></tr>\n"
 "                <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
-"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin:16px 0px 16px 0px;\">\n"
+"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin:16px 0px 16px 0px;\"/>\n"
 "                </td></tr>\n"
 "            </table>\n"
 "        </td>\n"
@@ -129,16 +149,16 @@ msgstr ""
 "        <td align=\"center\" style=\"min-width: 590px;\">\n"
 "            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
 "                <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
-"                    สวัสดี <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t>,<br><br>\n"
+"                    สวัสดีค่ะ <t t-out=\"object.partner_id.name or ''\">Brandon Freeman</t><br/><br/>\n"
 "\n"
-"                    <p>การอนุมัติคำสั่งการหักบัญชีเงินฝากอัตโนมัติ SEPA เพิ่งได้รับการตรวจสอบเพื่อใช้กับ <t t-out=\"company.name or ''\">YourCompany</t></p>\n"
+"                    <p>เพิ่งได้รับการตรวจสอบการอนุญาตการหักบัญชีโดยตรงของ SEPA เพื่อใช้กับ<t t-out=\"company.name or ''\">YourCompany</t></p>\n"
 "\n"
 "                    <p>คุณจะพบสำเนาของการตรวจสอบคำสั่งที่แนบมากับอีเมลนี้</p>\n"
 "\n"
-"                    <p>โปรดอย่าลังเลที่จะติดต่อเราหากคุณมีคำถาม</p>\n"
+"                    <p>โปรดติดต่อเราหากคุณมีคำถาม</p>\n"
 "                </td></tr>\n"
 "                <tr><td style=\"text-align:center;\">\n"
-"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\">\n"
+"                    <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
 "                </td></tr>\n"
 "            </table>\n"
 "        </td>\n"
@@ -171,7 +191,7 @@ msgstr ""
 "<tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "      <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"        สนับสนุนโดย <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" style=\"color: #875A7B;\">Odoo</a>\n"
+"        สนับสนุนโดย <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=mail\" t-attf-style=\"color: {{company.email_secondary_color or '#875A7B'}};\">Odoo</a>\n"
 "      </td></tr>\n"
 "    </table>\n"
 "</td></tr>\n"
@@ -179,9 +199,21 @@ msgstr ""
 "            "
 
 #. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form
+msgid "Bank Statement"
+msgstr "ใบแจ้งยอดจากธนาคาร"
+
+#. module: payment_sepa_direct_debit
 #: model:ir.model,name:payment_sepa_direct_debit.model_account_bank_statement_line
 msgid "Bank Statement Line"
 msgstr "รายการใบแจ้งยอดจากธนาคาร"
+
+#. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form
+msgid ""
+"By completing the initial bank transfer with the specified amount and label, you\n"
+"                authorize (A)"
+msgstr ""
 
 #. module: payment_sepa_direct_debit
 #: model:ir.model,name:payment_sepa_direct_debit.model_res_partner
@@ -189,14 +221,46 @@ msgid "Contact"
 msgstr "ติดต่อ"
 
 #. module: payment_sepa_direct_debit
+#: model:ir.model,website_form_label:payment_sepa_direct_debit.model_res_partner
+msgid "Create a Customer"
+msgstr ""
+
+#. module: payment_sepa_direct_debit
 #: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_payment_provider__custom_mode
 msgid "Custom Mode"
 msgstr "โหมดกำหนดเอง"
 
 #. module: payment_sepa_direct_debit
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_account_bank_statement_line__display_name
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_account_payment_method__display_name
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_payment_provider__display_name
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_payment_token__display_name
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_payment_transaction__display_name
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_res_partner__display_name
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_sdd_mandate__display_name
+msgid "Display Name"
+msgstr "แสดงชื่อ"
+
+#. module: payment_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.inline_form
 msgid "IBAN"
 msgstr "IBAN"
+
+#. module: payment_sepa_direct_debit
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_account_bank_statement_line__id
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_account_payment_method__id
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_payment_provider__id
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_payment_token__id
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_payment_transaction__id
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_res_partner__id
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_sdd_mandate__id
+msgid "ID"
+msgstr "ไอดี"
+
+#. module: payment_sepa_direct_debit
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_sdd_mandate__is_online_payment
+msgid "Is Online Payment"
+msgstr ""
 
 #. module: payment_sepa_direct_debit
 #: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_payment_transaction__mandate_id
@@ -214,6 +278,16 @@ msgstr "IBAN หายไปหรือไม่ถูกต้อง"
 #: code:addons/payment_sepa_direct_debit/models/payment_transaction.py:0
 msgid "No transaction found matching reference %s."
 msgstr "ไม่พบธุรกรรมที่ตรงกับการอ้างอิง %s"
+
+#. module: payment_sepa_direct_debit
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_sdd_mandate__payment_transaction_count
+msgid "No. of Payment Transactions"
+msgstr ""
+
+#. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form
+msgid "Odoo PVT LTD"
+msgstr "Odoo PVT LTD"
 
 #. module: payment_sepa_direct_debit
 #: model:ir.model,name:payment_sepa_direct_debit.model_account_payment_method
@@ -236,10 +310,21 @@ msgid "Payment Transaction"
 msgstr "ธุรกรรมสำหรับการชำระเงิน"
 
 #. module: payment_sepa_direct_debit
+#: model:ir.model.fields,field_description:payment_sepa_direct_debit.field_sdd_mandate__payment_transaction_ids
+msgid "Payment Transactions"
+msgstr "ธุรกรรมการชำระเงิน"
+
+#. module: payment_sepa_direct_debit
 #. odoo-javascript
 #: code:addons/payment_sepa_direct_debit/static/src/js/payment_form.js:0
 msgid "Payment processing failed"
 msgstr "การประมวลผลการชำระเงินล้มเหลว"
+
+#. module: payment_sepa_direct_debit
+#. odoo-python
+#: code:addons/payment_sepa_direct_debit/models/sdd_mandate.py:0
+msgid "Payments Transactions"
+msgstr ""
 
 #. module: payment_sepa_direct_debit
 #. odoo-python
@@ -314,6 +399,23 @@ msgid "The transaction is not linked to a token."
 msgstr "ธุรกรรมไม่ได้เชื่อมโยงกับโทเค็น"
 
 #. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form_view
+msgid ""
+"This mandate was created from an online payment. Do you want to manually "
+"validate it?"
+msgstr ""
+
+#. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form_view
+msgid "Transactions"
+msgstr "ธุรกรรม"
+
+#. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form_view
+msgid "Validate"
+msgstr "ตรวจสอบ"
+
+#. module: payment_sepa_direct_debit
 #: model:mail.template,subject:payment_sepa_direct_debit.mail_template_sepa_notify_validation
 msgid "Your SEPA Direct Debit Mandate with {{ object.company_id.name }}"
 msgstr "คำสั่งหักบัญชี SEPA ของคุณด้วย {{ object.company_id.name }}"
@@ -327,3 +429,17 @@ msgid ""
 msgstr ""
 "บริษัทของคุณต้องมีตัวระบุเจ้าหนี้ เพื่อออกคำขอชำระเงินแบบหักบัญชีอัตโนมัติ "
 "SEPA สามารถตั้งค่าได้ในการตั้งค่าการบัญชี"
+
+#. module: payment_sepa_direct_debit
+#. odoo-python
+#: code:addons/payment_sepa_direct_debit/models/sdd_mandate.py:0
+msgid "id"
+msgstr "ไอดี"
+
+#. module: payment_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:payment_sepa_direct_debit.sdd_mandate_form
+msgid ""
+"to send\n"
+"                instructions to your bank to debit your account and (B) your bank to debit your\n"
+"                account in accordance with the instructions from"
+msgstr ""

@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
+
 class SaleSubscriptionChangeCustomerWizard(models.TransientModel):
-    _name = "sale.subscription.change.customer.wizard"
+    _name = 'sale.subscription.change.customer.wizard'
     _description = 'Subscription Change Customer Wizard'
 
     partner_id = fields.Many2one("res.partner", string="New Customer")

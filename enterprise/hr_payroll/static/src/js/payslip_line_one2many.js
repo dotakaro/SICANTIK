@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { Field } from "@web/views/fields/field";
@@ -88,7 +86,7 @@ export class PayslipLineField extends Field {
             record.isPayslipLineField = true;
             const oldUpdate = record.update.bind(record);
             record.update = async (changes) => {
-                if ('amount' in changes || 'quantity' in changes) {
+                if ('amount' in changes || 'quantity' in changes  || 'rate' in changes) {
                     oldUpdate(changes, { save: true });
                     await record.save();
                     const wizardId = record.model.config.resId;

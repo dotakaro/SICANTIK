@@ -6,16 +6,15 @@
     'category': 'Productivity/Documents',
     'summary': 'Documents Spreadsheet',
     'description': 'Documents Spreadsheet',
-    'depends': ['documents', 'spreadsheet_edition'],
+    'depends': ['documents', 'spreadsheet_edition', 'base_import'],
     'data': [
-        'data/documents_folder_data.xml',
-        'data/res_company_data.xml',
         'security/ir.model.access.csv',
         'security/security.xml',
         'views/documents_document_views.xml',
         'views/spreadsheet_template_views.xml',
         'views/sharing_templates.xml',
         'views/res_config_settings_views.xml',
+        'wizard/documents_access_invite_views.xml',
         'wizard/save_spreadsheet_template.xml',
     ],
     'demo': [
@@ -24,6 +23,7 @@
 
     'installable': True,
     'auto_install': ['documents'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'spreadsheet.o_spreadsheet': [
@@ -34,12 +34,12 @@
             'documents_spreadsheet/static/src/bundle/**/*.scss',
             'documents_spreadsheet/static/src/documents_view/**/*',
             ('remove', 'documents_spreadsheet/static/src/documents_view/activity/**'),
-            'documents_spreadsheet/static/src/documents_control_panel/*',
             'documents_spreadsheet/static/src/documents_permission_panel/**/*',
             'documents_spreadsheet/static/src/spreadsheet_clone_xlsx_dialog/**/*',
             'documents_spreadsheet/static/src/spreadsheet_template/**/*',
             'documents_spreadsheet/static/src/helpers.js',
             'documents_spreadsheet/static/src/spreadsheet_action_loader.js',
+            'documents_spreadsheet/static/src/mail/**/*',
         ],
         'web.assets_backend_lazy': [
             'documents_spreadsheet/static/src/documents_view/activity/**',

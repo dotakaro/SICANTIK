@@ -1,10 +1,23 @@
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-
-from odoo import models
+from odoo import models, fields
 
 
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
-    def _get_country_codes_with_another_tax_closing_start_date(self):
-        return super()._get_country_codes_with_another_tax_closing_start_date() | {'AE'}
+    l10n_ae_tax_report_liabilities_account = fields.Many2one(
+        comodel_name='account.account',
+        related='company_id.l10n_ae_tax_report_liabilities_account',
+        string="Liability Account",
+        readonly=False,
+    )
+    l10n_ae_tax_report_expenses_account = fields.Many2one(
+        comodel_name='account.account',
+        related='company_id.l10n_ae_tax_report_expenses_account',
+        readonly=False,
+    )
+    l10n_ae_tax_report_asset_account = fields.Many2one(
+        comodel_name='account.account',
+        related='company_id.l10n_ae_tax_report_asset_account',
+        string="Asset Account",
+        readonly=False,
+    )

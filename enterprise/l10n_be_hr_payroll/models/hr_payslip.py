@@ -5,13 +5,13 @@ from dateutil.relativedelta import relativedelta, MO, SU
 from dateutil import rrule
 from collections import defaultdict, Counter
 from datetime import date, datetime, timedelta
+from itertools import chain
 
 from odoo import api, Command, models, fields, _
-from odoo.tools import float_round, float_is_zero, date_utils, ormcache
-from odoo.exceptions import UserError
+from odoo.tools import SQL, float_round, float_is_zero, ormcache
 
 
-class Payslip(models.Model):
+class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
     meal_voucher_count = fields.Integer(
@@ -29,29 +29,15 @@ class Payslip(models.Model):
     l10n_be_is_december = fields.Boolean(compute='_compute_l10n_be_is_december')
     l10n_be_has_eco_vouchers = fields.Boolean(compute='_compute_l10n_be_has_eco_vouchers', search='_search_l10n_be_has_eco_vouchers')
 
-    @api.depends('employee_id', 'contract_id', 'struct_id', 'date_from', 'date_to')
+    @api.depends('employee_id', 'version_id', 'struct_id', 'date_from', 'date_to')
     def _compute_input_line_ids(self):
         res = super()._compute_input_line_ids()
+        balance_by_employee = self._get_salary_advance_balances()
         for slip in self:
             if not slip.employee_id or not slip.date_from or not slip.date_to:
                 continue
-            if slip.struct_id.code == 'CP200WARRANT':
-                months = relativedelta(date_utils.add(slip.date_to, days=1), slip.date_from).months
-                if slip.employee_id.id in self.env.context.get('commission_real_values', {}):
-                    warrant_value = self.env.context['commission_real_values'][slip.employee_id.id]
-                else:
-                    warrant_value = slip.contract_id.commission_on_target * months
-                warrant_type = self.env.ref('l10n_be_hr_payroll.cp200_other_input_warrant')
-                lines_to_remove = slip.input_line_ids.filtered(lambda x: x.input_type_id == warrant_type)
-                to_remove_vals = [(3, line.id, False) for line in lines_to_remove]
-                to_add_vals = [(0, 0, {
-                    'amount': warrant_value,
-                    'input_type_id': self.env.ref('l10n_be_hr_payroll.cp200_other_input_warrant').id
-                })]
-                input_line_vals = to_remove_vals + to_add_vals
-                slip.update({'input_line_ids': input_line_vals})
             # If a double holiday pay should be recovered
-            elif slip.struct_id.code == 'CP200DOUBLE':
+            if slip.struct_id.code == 'CP200DOUBLE':
                 to_recover = slip._get_sum_european_time_off_days()
                 if to_recover:
                     european_type = self.env.ref('l10n_be_hr_payroll.input_double_holiday_european_leave_deduction')
@@ -63,6 +49,33 @@ class Payslip(models.Model):
                         'input_type_id': european_type.id,
                     })]
                     slip.write({'input_line_ids': to_remove_vals + to_add_vals})
+            elif slip.struct_id.code == 'CP200SALARYADV':
+                sal_adv_type = self.env.ref('l10n_be_hr_payroll.input_salary_advance')
+                sal_adv_rec_type = self.env.ref('l10n_be_hr_payroll.cp200_input_advance')
+                lines_to_remove = slip.input_line_ids.filtered(lambda x: x.input_type_id in (sal_adv_type, sal_adv_rec_type))
+                to_remove_vals = [(3, line.id, False) for line in lines_to_remove]
+                to_add_vals = [(0, 0, {
+                    'name': _('Salary Advance'),
+                    'amount': 0,
+                    'input_type_id': sal_adv_type.id,
+                })]
+                slip.write({'input_line_ids': to_remove_vals + to_add_vals})
+            elif slip.struct_id.code == 'CP200MONTHLY':
+                balance = balance_by_employee[slip.employee_id]
+                if balance <= 0:
+                    continue
+                sal_adv_type = self.env.ref('l10n_be_hr_payroll.input_salary_advance')
+                sal_adv_rec_type = self.env.ref('l10n_be_hr_payroll.cp200_input_advance')
+                lines_to_remove = slip.input_line_ids.filtered(
+                    lambda x: x.input_type_id in (sal_adv_rec_type, sal_adv_type)
+                )
+                to_remove_vals = [(3, line.id, False) for line in lines_to_remove]
+                to_add_vals = [(0, 0, {
+                    'name': _('Salary Advance Recovery'),
+                    'amount': balance,
+                    'input_type_id': sal_adv_rec_type.id,
+                })]
+                slip.write({'input_line_ids': to_remove_vals + to_add_vals})
             elif slip.struct_id.code == 'CP200CCT90':
                 cct90_input_type = self.env.ref('l10n_be_hr_payroll.input_cct90_bonus_plan')
                 lines_to_remove = slip.input_line_ids.filtered(lambda x: x.input_type_id == cct90_input_type)
@@ -81,11 +94,10 @@ class Payslip(models.Model):
         # double remunerations for some line codes
         self.ensure_one()
         if self.env.context.get('salary_simulation'):
-            return self.env.context['origin_contract_id']
-        contracts = self.employee_id._get_contracts(
+            return self.env.context['origin_version_id']
+        contracts = self.employee_id._get_versions_with_contract_overlap_with_period(
             self.date_from,
             self.date_to,
-            states=['open', 'close']
         ).sorted('date_start')
         return contracts.ids
 
@@ -94,8 +106,8 @@ class Payslip(models.Model):
         if len(contracts) == 1:
             return contracts
         credit_time_work_entry_type_ids = [
-            self.env['ir.model.data']._xmlid_to_res_model_res_id('l10n_be_hr_payroll.work_entry_type_credit_time')[1],
-            self.env['ir.model.data']._xmlid_to_res_model_res_id('l10n_be_hr_payroll.work_entry_type_parental_time_off')[1],
+            self.env['ir.model.data']._xmlid_to_res_model_res_id('hr_work_entry.l10n_be_work_entry_type_credit_time')[1],
+            self.env['ir.model.data']._xmlid_to_res_model_res_id('hr_work_entry.l10n_be_work_entry_type_parental_time_off')[1],
         ]
         unpaid_work_entry_types = self.struct_id.unpaid_work_entry_type_ids.ids + credit_time_work_entry_type_ids
         for contract in contracts:
@@ -132,9 +144,8 @@ class Payslip(models.Model):
                 ('day', '<=', max(self.mapped('date_to'))),
                 ('day', '>=', min(self.mapped('date_from'))),
             ])
-            query_str, params = query.select('day', 'benefit_name', 'employee_id')
-            self.env.cr.execute(query_str, params)
-            work_entries_benefits_rights = self.env.cr.dictfetchall()
+            work_entries_benefits_rights = self.env.execute_query_dict(
+                query.select('day', 'benefit_name', 'employee_id'))
 
             work_entries_benefits_rights_by_employee = defaultdict(list)
             for work_entries_benefits_right in work_entries_benefits_rights:
@@ -144,7 +155,7 @@ class Payslip(models.Model):
             # {(calendar, date_from, date_to): resources}
             mapped_resources = defaultdict(lambda: self.env['resource.resource'])
             for payslip in self:
-                contract = payslip.contract_id
+                contract = payslip.version_id
                 calendar = contract.resource_calendar_id if not contract.time_credit else contract.standard_calendar_id
                 mapped_resources[(calendar, payslip.date_from, payslip.date_to)] |= contract.employee_id.resource_id
             # {(calendar, date_from, date_to): intervals}}
@@ -157,7 +168,7 @@ class Payslip(models.Model):
                     resources=resources, tz=tz)
 
             for payslip in self:
-                contract = payslip.contract_id
+                contract = payslip.version_id
                 benefits = dict.fromkeys(all_benefits, 0)
                 date_from = max(payslip.date_from, contract.date_start)
                 date_to = min(payslip.date_to, contract.date_end or payslip.date_to)
@@ -171,7 +182,7 @@ class Payslip(models.Model):
                     else:
                         benefits[work_entries_benefits_right['benefit_name']] += 1
 
-                contract = payslip.contract_id
+                contract = payslip.version_id
                 resource = contract.employee_id.resource_id
                 calendar = contract.resource_calendar_id if not contract.time_credit else contract.standard_calendar_id
                 intervals = mapped_intervals[(calendar, payslip.date_from, payslip.date_to)][resource.id]
@@ -192,11 +203,9 @@ class Payslip(models.Model):
             slip.l10n_be_has_eco_vouchers = any(input_line.code == 'ECOVOUCHERS' for input_line in slip.input_line_ids)
 
     def _search_l10n_be_has_eco_vouchers(self, operator, value):
-        if operator not in ['=', '!='] or not isinstance(value, bool):
-            raise UserError(_('Operation not supported'))
-        if operator != '=':
-            value = not value
-        self._cr.execute("""
+        if operator != 'in':
+            return NotImplemented
+        rows = self.env.execute_query(SQL("""
             SELECT id
             FROM hr_payslip payslip
             WHERE EXISTS
@@ -206,18 +215,8 @@ class Payslip(models.Model):
                  ON     hpi.input_type_id = hpit.id AND hpit.code = 'ECOVOUCHERS'
                  WHERE  hpi.payslip_id = payslip.id
                  LIMIT  1)
-        """)
-        return [('id', 'in' if value else 'not in', [r[0] for r in self._cr.fetchall()])]
-
-    @api.depends('struct_id')
-    def _compute_contract_domain_ids(self):
-        reimbursement_payslips = self.filtered(lambda p: p.struct_id.code == "CP200REIMBURSEMENT")
-        for payslip in reimbursement_payslips:
-            payslip.contract_domain_ids = self.env['hr.contract'].search([
-                ('company_id', '=', payslip.company_id.id),
-                ('employee_id', '=', payslip.employee_id.id),
-                ('state', '!=', 'cancel')])
-        super(Payslip, self - reimbursement_payslips)._compute_contract_domain_ids()
+        """))
+        return [('id', 'in', [r[0] for r in rows])]
 
     @api.depends('date_to', 'line_ids.total', 'input_line_ids.code')
     def _compute_l10n_be_max_seizable_amount(self):
@@ -277,10 +276,28 @@ class Payslip(models.Model):
             else:
                 payslip.l10n_be_max_seizable_warning = False
 
+    def _get_salary_advance_balances(self):
+        payslips_by_employee = self._read_group(
+            domain=[
+                ('state', 'in', ('done', 'paid')),
+                ('employee_id', 'in', self.employee_id.ids),
+                ('input_line_ids.code', 'in', ('SALARYADVREC', 'SALARYADV')),
+            ],
+            groupby=['employee_id'],
+            aggregates=['id:recordset']
+        )
+        balance_by_employee = defaultdict(float)
+        for employee_id, payslips in payslips_by_employee:
+            for input_line in chain.from_iterable(payslip.input_line_ids for payslip in payslips):
+                if input_line.code == 'SALARYADV':
+                    balance_by_employee[employee_id] += input_line.amount
+                elif input_line.code == 'SALARYADVREC':
+                    balance_by_employee[employee_id] -= input_line.amount
+        return balance_by_employee
     def _get_worked_day_lines_hours_per_day(self):
         self.ensure_one()
-        if self.contract_id.time_credit:
-            return self.contract_id.standard_calendar_id.hours_per_day
+        if self.version_id.time_credit:
+            return self.version_id.standard_calendar_id.hours_per_day
         return super()._get_worked_day_lines_hours_per_day()
 
     def _get_worked_day_lines_values(self, domain=None):
@@ -290,7 +307,7 @@ class Payslip(models.Model):
             return super()._get_worked_day_lines_values(domain=domain)
         # If a belgian payslip has half-day attendances/time off, it the worked days lines should
         # be separated
-        work_hours = self.contract_id._get_work_hours_split_half(self.date_from, self.date_to, domain=domain)
+        work_hours = self.version_id._get_work_hours_split_half(self.date_from, self.date_to, domain=domain)
         work_hours_ordered = sorted(work_hours.items(), key=lambda x: x[1])
         for worked_days_data, duration_data in work_hours_ordered:
             duration_type, work_entry_type_id = worked_days_data
@@ -305,21 +322,21 @@ class Payslip(models.Model):
             res.append(attendance_line)
         # If there is a public holiday less than 30 days after the end of the contract
         # this public holiday should be taken into account in the worked days lines
-        if self.contract_id.date_end and self.date_from <= self.contract_id.date_end <= self.date_to:
+        if self.version_id.date_end and self.date_from <= self.version_id.date_end <= self.date_to:
             # If the contract is followed by another one (eg. after an appraisal)
-            if self.contract_id.employee_id.contract_ids.filtered(lambda c: c.state in ['open', 'close'] and c.date_start > self.contract_id.date_end):
+            if self.version_id.employee_id.version_ids.filtered(lambda v: v.date_start > self.version_id.date_end):
                 return res
-            public_holiday_type = self.env.ref('l10n_be_hr_payroll.work_entry_type_bank_holiday')
-            public_leaves = self.contract_id.resource_calendar_id.global_leave_ids.filtered(
+            public_holiday_type = self.env.ref('hr_work_entry.l10n_be_work_entry_type_bank_holiday')
+            public_leaves = self.version_id.resource_calendar_id.global_leave_ids.filtered(
                 lambda l: l.work_entry_type_id == public_holiday_type)
             # If less than 15 days under contract, the public holidays is not reimbursed
             public_leaves = public_leaves.filtered(
-                lambda l: (l.date_from.date() - self.employee_id.first_contract_date).days >= 15)
+                lambda l: (l.date_from.date() - self.employee_id.contract_date_start).days >= 15)
             # If less than 15 days of occupation -> no payment of the time off after contract
             # If less than 1 month of occupation -> payment of the time off occurring within 15 days after contract.
             # Occupation = duration since the start of the contract, from date to date
             public_leaves = public_leaves.filtered(
-                lambda l: 0 < (l.date_from.date() - self.contract_id.date_end).days <= (30 if self.employee_id.first_contract_date + relativedelta(months=1) <= self.contract_id.date_end else 15))
+                lambda l: 0 < (l.date_from.date() - self.version_id.date_end).days <= (30 if self.employee_id.contract_date_start + relativedelta(months=1) <= self.version_id.date_end else 15))
             if public_leaves:
                 input_type_id = self.env.ref('l10n_be_hr_payroll.cp200_other_input_after_contract_public_holidays').id
                 if input_type_id not in self.input_line_ids.mapped('input_type_id').ids:
@@ -331,11 +348,11 @@ class Payslip(models.Model):
         # Handle loss on commissions
         if self._get_last_year_average_variable_revenues():
             we_types_ids = (
-                self.env.ref('l10n_be_hr_payroll.work_entry_type_bank_holiday') + self.env.ref('l10n_be_hr_payroll.work_entry_type_small_unemployment')
+                self.env.ref('hr_work_entry.l10n_be_work_entry_type_bank_holiday') + self.env.ref('hr_work_entry.l10n_be_work_entry_type_small_unemployment')
             ).ids
             # if self.worked_days_line_ids.filtered(lambda wd: wd.code in ['LEAVE205', 'LEAVE500']):
             if any(line_vals['work_entry_type_id'] in we_types_ids for line_vals in res):
-                we_type = self.env.ref('l10n_be_hr_payroll.work_entry_type_simple_holiday_pay_variable_salary')
+                we_type = self.env.ref('hr_work_entry.l10n_be_work_entry_type_simple_holiday_pay_variable_salary')
                 res.append({
                     'sequence': we_type.sequence,
                     'work_entry_type_id': we_type.id,
@@ -345,13 +362,13 @@ class Payslip(models.Model):
         return res
 
     def _get_last_year_average_variable_revenues(self):
-        if not self.contract_id.commission_on_target:
+        if not self.version_id.commission_on_target:
             return 0
         date_from = self.env.context.get('variable_revenue_date_from', self.date_from)
-        first_contract_date = self.employee_id.first_contract_date
-        if not first_contract_date:
+        first_version_date = self.employee_id._get_first_version_date()
+        if not first_version_date:
             return 0
-        start = first_contract_date
+        start = first_version_date
         end = date_from + relativedelta(day=31, months=-1)
         number_of_month = (end.year - start.year) * 12 + (end.month - start.month) + 1
         number_of_month = min(12, number_of_month)
@@ -375,14 +392,14 @@ class Payslip(models.Model):
             ('date_from', '<', self.date_from),
         ], order="date_from asc")
         total_amount = warrant_payslips._get_line_values(['BASIC'], compute_sum=True)['BASIC']['sum']['total']
-        first_contract_date = self.employee_id.first_contract_date
-        if not first_contract_date:
+        first_version_date = self.employee_id._get_first_version_date()
+        if not first_version_date:
             return 0
         # Only complete months count
-        if first_contract_date.day != 1:
-            start = first_contract_date + relativedelta(day=1, months=1)
+        if first_version_date.day != 1:
+            start = first_version_date + relativedelta(day=1, months=1)
         else:
-            start = first_contract_date
+            start = first_version_date
         end = self.date_from + relativedelta(day=31, months=-1)
         number_of_month = (end.year - start.year) * 12 + (end.month - start.month) + 1
         number_of_month = min(12, number_of_month)
@@ -413,8 +430,8 @@ class Payslip(models.Model):
                     days_by_contract_by_year[day.year][day.month][day] = 'holiday'
 
         months = 0
-        for year, invalid_days_by_months in days_by_contract_by_year.items():
-            for month, days in invalid_days_by_months.items():
+        for invalid_days_by_months in days_by_contract_by_year.values():
+            for days in invalid_days_by_months.values():
                 counter = Counter(days.values())
                 if None in counter:
                     continue
@@ -459,21 +476,21 @@ class Payslip(models.Model):
         return paid_hours / (paid_hours + unpaid_hours) if paid_hours or unpaid_hours else 0
 
     def _get_paid_amount_13th_month(self):
-        contracts = self.employee_id.contract_ids.filtered(lambda c: c.state not in ['draft', 'cancel'] and c.structure_type_id == self.struct_id.type_id).sorted(key=lambda c: c.date_start)
-        first_contract_date = self.contract_id.employee_id._get_first_contract_date(no_gap=False)
-        if not contracts or not first_contract_date:
+        versions = self.employee_id.version_ids.filtered(lambda v: v.structure_type_id == self.struct_id.type_id).sorted(key=lambda v: v.date_start)
+        first_version_date = self.employee_id._get_first_version_date(no_gap=False)
+        if not versions or not first_version_date:
             return 0.0
 
-        if first_contract_date.year == self.date_from.year and first_contract_date.month > 6:
+        if first_version_date.year == self.date_from.year and first_version_date.month > 6:
             return 0.0
 
-        date_from = max(first_contract_date, self.date_from + relativedelta(day=1, month=1))
+        date_from = max(first_version_date, self.date_from + relativedelta(day=1, month=1))
         date_to = self.date_to + relativedelta(day=31)
 
-        basic = self.contract_id._get_contract_wage()
+        basic = self.version_id._get_contract_wage()
 
         force_months = self.input_line_ids.filtered(lambda l: l.code == 'MONTHS')
-        work_time_rates = [c.resource_calendar_id.work_time_rate for c in contracts if c.resource_calendar_id.work_time_rate]
+        work_time_rates = [c.resource_calendar_id.work_time_rate for c in versions if c.resource_calendar_id.work_time_rate]
         if not work_time_rates:
             return 0.0
         current_work_rate = work_time_rates[-1] / 100.0
@@ -485,14 +502,14 @@ class Payslip(models.Model):
             fixed_salary = basic * n_months / 12
         else:
             # Number of complete months (any work rate)
-            months_worked = self._compute_number_complete_months_of_work(date_from, date_to, contracts)
+            months_worked = self._compute_number_complete_months_of_work(date_from, date_to, versions)
             if months_worked < 6:
                 return 0.0
 
             # Quantity of months worked equivalently in full-time
-            full_time_months = self._compute_number_complete_months_of_work(date_from, date_to, contracts, True)
+            full_time_months = self._compute_number_complete_months_of_work(date_from, date_to, versions, True)
             # Deduct absences
-            presence_prorata = self._compute_presence_prorata(date_from, date_to, contracts)
+            presence_prorata = self._compute_presence_prorata(date_from, date_to, versions)
 
             fixed_salary = basic * full_time_months / 12 * presence_prorata / current_work_rate
 
@@ -512,11 +529,11 @@ class Payslip(models.Model):
 
     def _get_paid_double_holiday(self):
         self.ensure_one()
-        contracts = self.employee_id.contract_ids.filtered(lambda c: c.state not in ['draft', 'cancel'] and c.structure_type_id == self.struct_id.type_id)
+        contracts = self.employee_id.version_ids.filtered(lambda v: v.structure_type_id == self.struct_id.type_id)
         if not contracts:
             return 0.0
 
-        basic = self.contract_id._get_contract_wage()
+        basic = self.version_id._get_contract_wage()
         force_months = self.input_line_ids.filtered(lambda l: l.code == 'MONTHS')
 
         year = self.date_from.year - 1
@@ -584,7 +601,7 @@ class Payslip(models.Model):
             ('date_from', '>=', date(self.date_from.year - 2, 1, 1)),
             ('state', 'in', ['done', 'paid']),
         ])
-        european_time_off_amount = two_years_payslips.filtered(lambda p: p.date_from.year < self.date_from.year)._get_worked_days_line_amount('LEAVE216')
+        european_time_off_amount = two_years_payslips.filtered(lambda p: p.date_from.year < self.date_from.year)._get_worked_days_line_values(['LEAVE216'], ['amount'], True)['LEAVE216']['sum']['amount']
         already_recovered_amount = two_years_payslips._get_line_values(['EU.LEAVE.DEDUC'], compute_sum=True)['EU.LEAVE.DEDUC']['sum']['total']
         return european_time_off_amount + already_recovered_amount
 
@@ -652,6 +669,7 @@ class Payslip(models.Model):
     def _get_be_termination_withholding_rate(self, localdict):
         # See: https://www.securex.eu/lex-go.nsf/vwReferencesByCategory_fr/52DA120D5DCDAE78C12584E000721081?OpenDocument
         self.ensure_one()
+
         def find_rates(x, rates):
             low_bound, high_bound = rates[0][0], rates[-1][1]
             x = min(max(low_bound, x), high_bound)
@@ -695,7 +713,7 @@ class Payslip(models.Model):
         def convert_to_month(value):
             return float_round(value / 12.0, precision_rounding=0.01, rounding_method='DOWN')
 
-        employee = self.contract_id.employee_id
+        version = self.version_id
         # PART 1: Withholding tax amount computation
         withholding_tax_amount = 0.0
 
@@ -716,63 +734,58 @@ class Payslip(models.Model):
             yearly_net_taxable_revenue = yearly_gross_revenue - self._rule_parameter('expense_deduction')
 
         # BAREME III: Non resident
-        if employee.is_non_resident:
+        if version.is_non_resident:
             basic_bareme = compute_basic_bareme(yearly_net_taxable_revenue)
             withholding_tax_amount = convert_to_month(basic_bareme)
         else:
             # BAREME I: Isolated or spouse with income
-            if employee.marital in ['divorced', 'single', 'widower'] or (employee.marital in ['married', 'cohabitant'] and employee.spouse_fiscal_status != 'without_income'):
+            if version.marital in ['divorced', 'single', 'widower'] or (version.marital in ['married', 'cohabitant'] and version.spouse_fiscal_status != 'without_income'):
                 basic_bareme = max(compute_basic_bareme(yearly_net_taxable_revenue) - self._rule_parameter('deduct_single_with_income'), 0.0)
                 withholding_tax_amount = convert_to_month(basic_bareme)
 
             # BAREME II: spouse without income
-            if employee.marital in ['married', 'cohabitant'] and employee.spouse_fiscal_status == 'without_income':
+            if version.marital in ['married', 'cohabitant'] and version.spouse_fiscal_status == 'without_income':
                 yearly_net_taxable_revenue_for_spouse = min(yearly_net_taxable_revenue * 0.3, self._rule_parameter('max_spouse_income'))
                 basic_bareme_1 = compute_basic_bareme(yearly_net_taxable_revenue_for_spouse)
                 basic_bareme_2 = compute_basic_bareme(yearly_net_taxable_revenue - yearly_net_taxable_revenue_for_spouse)
                 withholding_tax_amount = convert_to_month(max(basic_bareme_1 + basic_bareme_2 - 2 * self._rule_parameter('deduct_single_with_income'), 0))
 
         # Reduction for other family charges
-        if (employee.children and employee.dependent_children) or (employee.other_dependent_people and (employee.dependent_seniors or employee.dependent_juniors)):
-            if employee.marital in ['divorced', 'single', 'widower'] or (employee.spouse_fiscal_status != 'without_income'):
+        if (version.children and version.dependent_children) or (version.other_dependent_people and (version.dependent_seniors or version.dependent_juniors)):
+            if version.marital in ['divorced', 'single', 'widower'] or (version.spouse_fiscal_status != 'without_income'):
 
-                # if employee.marital in ['divorced', 'single', 'widower']:
+                # if version.marital in ['divorced', 'single', 'widower']:
                 #     withholding_tax_amount -= self._rule_parameter('isolated_deduction')
-                if employee.marital in ['divorced', 'single', 'widower'] and employee.dependent_children:
+                if version.marital in ['divorced', 'single', 'widower'] and version.dependent_children:
                     withholding_tax_amount -= self._rule_parameter('disabled_dependent_deduction')
-                if employee.disabled:
+                if version.disabled:
                     withholding_tax_amount -= self._rule_parameter('disabled_dependent_deduction')
-                if employee.other_dependent_people and employee.dependent_seniors:
-                    withholding_tax_amount -= self._rule_parameter('dependent_senior_deduction') * employee.dependent_seniors
-                if employee.other_dependent_people and employee.dependent_juniors:
-                    withholding_tax_amount -= self._rule_parameter('disabled_dependent_deduction') * employee.dependent_juniors
-                if employee.marital in ['married', 'cohabitant'] and employee.spouse_fiscal_status == 'low_income':
+                if version.other_dependent_people and version.dependent_seniors:
+                    withholding_tax_amount -= self._rule_parameter('dependent_senior_deduction') * version.dependent_seniors
+                if version.other_dependent_people and version.dependent_juniors:
+                    withholding_tax_amount -= self._rule_parameter('disabled_dependent_deduction') * version.dependent_juniors
+                if version.marital in ['married', 'cohabitant'] and version.spouse_fiscal_status == 'low_income':
                     withholding_tax_amount -= self._rule_parameter('spouse_low_income_deduction')
-                if employee.marital in ['married', 'cohabitant'] and employee.spouse_fiscal_status == 'low_pension':
+                if version.marital in ['married', 'cohabitant'] and version.spouse_fiscal_status == 'low_pension':
                     withholding_tax_amount -= self._rule_parameter('spouse_other_income_deduction')
-            if employee.marital in ['married', 'cohabitant'] and employee.spouse_fiscal_status == 'without_income':
-                if employee.disabled:
+            if version.marital in ['married', 'cohabitant'] and version.spouse_fiscal_status == 'without_income':
+                if version.disabled:
                     withholding_tax_amount -= self._rule_parameter('disabled_dependent_deduction')
-                if employee.disabled_spouse_bool:
+                if version.disabled_spouse_bool:
                     withholding_tax_amount -= self._rule_parameter('disabled_dependent_deduction')
-                if employee.other_dependent_people and employee.dependent_seniors:
-                    withholding_tax_amount -= self._rule_parameter('dependent_senior_deduction') * employee.dependent_seniors
-                if employee.other_dependent_people and employee.dependent_juniors:
-                    withholding_tax_amount -= self._rule_parameter('disabled_dependent_deduction') * employee.dependent_juniors
+                if version.other_dependent_people and version.dependent_seniors:
+                    withholding_tax_amount -= self._rule_parameter('dependent_senior_deduction') * version.dependent_seniors
+                if version.other_dependent_people and version.dependent_juniors:
+                    withholding_tax_amount -= self._rule_parameter('disabled_dependent_deduction') * version.dependent_juniors
 
         # Child Allowances
-        n_children = employee.dependent_children
+        n_children = version.dependent_children
         if n_children > 0:
             children_deduction = self._rule_parameter('dependent_basic_children_deduction')
             if n_children <= 8:
                 withholding_tax_amount -= children_deduction.get(n_children, 0.0)
             if n_children > 8:
                 withholding_tax_amount -= children_deduction.get(8, 0.0) + (n_children - 8) * self._rule_parameter('dependent_children_deduction')
-
-        if self.employee_id.fiscal_voluntary_rate > 0:
-            voluntary_amount = categories['GROSS'] * self.employee_id.fiscal_voluntary_rate / 100
-            if voluntary_amount > withholding_tax_amount:
-                withholding_tax_amount = voluntary_amount
 
         return - max(withholding_tax_amount, 0.0)
 
@@ -786,12 +799,13 @@ class Payslip(models.Model):
             return 0, 0, 0, 0, 0, 0
 
         categories = localdict['categories']
-        employee = self.contract_id.employee_id
+        version = self.version_id
+        employee = version.employee_id
         wage = categories['BASIC']
-        if not wage or employee.is_non_resident:
+        if not wage or version.is_non_resident:
             return 0.0
 
-        if employee.marital in ['divorced', 'single', 'widower'] or (employee.marital in ['married', 'cohabitant'] and employee.spouse_fiscal_status == 'without_income'):
+        if version.marital in ['divorced', 'single', 'widower'] or (version.marital in ['married', 'cohabitant'] and version.spouse_fiscal_status == 'without_income'):
             rates = self._rule_parameter('cp200_monss_isolated')
             if not rates:
                 rates = [
@@ -803,7 +817,7 @@ class Payslip(models.Model):
             low, dummy, rate, basis, min_amount, max_amount = find_rate(wage, rates)
             return -min(max(basis + (wage - low + 0.01) * rate, min_amount), max_amount)
 
-        if employee.marital in ['married', 'cohabitant'] and employee.spouse_fiscal_status != 'without_income':
+        if version.marital in ['married', 'cohabitant'] and version.spouse_fiscal_status != 'without_income':
             rates = self._rule_parameter('cp200_monss_couple')
             if not rates:
                 rates = [
@@ -815,7 +829,7 @@ class Payslip(models.Model):
                 ]
             low, dummy, rate, basis, min_amount, max_amount = find_rate(wage, rates)
             if isinstance(max_amount, tuple):
-                if employee.spouse_fiscal_status in ['high_income', 'low_income']:
+                if version.spouse_fiscal_status in ['high_income', 'low_income']:
                     # conjoint avec revenus professionnels
                     max_amount = max_amount[0]
                 else:
@@ -826,7 +840,7 @@ class Payslip(models.Model):
 
     def _get_be_ip(self, localdict):
         self.ensure_one()
-        contract = self.contract_id
+        contract = self.version_id
         if not contract.ip:
             return 0.0
         return self._get_paid_amount() * contract.ip_wage_rate / 100.0
@@ -999,30 +1013,29 @@ class Payslip(models.Model):
         children_exoneration = self._rule_parameter('holiday_pay_pp_exoneration')
         children_reduction = self._rule_parameter('holiday_pay_pp_rate_reduction')
 
-        employee = self.contract_id.employee_id
+        version = self.version_id
 
-        contract = self.contract_id
-        monthly_revenue = contract._get_contract_wage()
+        monthly_revenue = version._get_contract_wage()
         # Count ANT in yearly remuneration
-        if contract.internet:
+        if version.internet:
             monthly_revenue += 5.0
-        if contract.mobile and not contract.internet:
+        if version.mobile and not version.internet:
             monthly_revenue += 4.0 + 5.0
-        if contract.mobile and contract.internet:
+        if version.mobile and version.internet:
             monthly_revenue += 4.0
-        if contract.has_laptop:
+        if version.has_laptop:
             monthly_revenue += 7.0
 
         yearly_revenue = monthly_revenue * (1 - 0.1307) * 12.0
 
-        if contract.transport_mode_car:
+        if version.transport_mode_car:
             if 'vehicle_id' in self:
                 yearly_revenue += self.vehicle_id._get_car_atn(date=self.date_from) * 12.0
             else:
-                yearly_revenue += contract.car_atn * 12.0
+                yearly_revenue += version.car_atn * 12.0
 
         # Exoneration
-        children = employee.dependent_children
+        children = version.dependent_children
         if children > 0 and yearly_revenue <= children_exoneration.get(children, children_exoneration[12]):
             yearly_revenue -= children_exoneration.get(children, children_exoneration[12]) - yearly_revenue
             yearly_revenue = max(yearly_revenue, 0)
@@ -1090,13 +1103,13 @@ class Payslip(models.Model):
 
     def _get_impulsion_plan_amount(self, localdict):
         self.ensure_one()
-        start = self.employee_id.first_contract_date
+        start = self.employee_id.contract_date_start
         end = self.date_to
         number_of_months = (end.year - start.year) * 12 + (end.month - start.month)
         numerator = sum(wd.number_of_hours for wd in self.worked_days_line_ids if wd.amount > 0)
-        denominator = 4 * self.contract_id.resource_calendar_id.hours_per_week
+        denominator = 4 * self.version_id.resource_calendar_id.hours_per_week
         coefficient = numerator / denominator
-        if self.contract_id.l10n_be_impulsion_plan == '25yo':
+        if self.version_id.l10n_be_impulsion_plan == '25yo':
             if 0 <= number_of_months <= 23:
                 theorical_amount = 500.0
             elif 24 <= number_of_months <= 29:
@@ -1106,7 +1119,7 @@ class Payslip(models.Model):
             else:
                 theorical_amount = 0
             return min(theorical_amount, theorical_amount * coefficient)
-        if self.contract_id.l10n_be_impulsion_plan == '12mo':
+        if self.version_id.l10n_be_impulsion_plan == '12mo':
             if 0 <= number_of_months <= 11:
                 theorical_amount = 500.0
             elif 12 <= number_of_months <= 17:
@@ -1175,10 +1188,10 @@ class Payslip(models.Model):
         if not self.worked_days_line_ids:
             return 0
 
-        employee = self.contract_id.employee_id
-        first_contract_date = employee.first_contract_date
+        employee = self.version_id.employee_id
+        contract_date_start = employee.contract_date_start
         birthdate = employee.birthday
-        age = relativedelta(first_contract_date, birthdate).years
+        age = relativedelta(contract_date_start, birthdate).years
         if age < 30:
             threshold = self._rule_parameter('onss_restructuring_before_30')
         else:
@@ -1194,7 +1207,7 @@ class Payslip(models.Model):
         total_hours = sum(self.worked_days_line_ids.mapped('number_of_hours'))
         ratio = paid_hours / total_hours if total_hours else 0
 
-        start = first_contract_date
+        start = contract_date_start
         end = self.date_to
         number_of_months = (end.year - start.year) * 12 + (end.month - start.month)
         if 0 <= number_of_months <= 6:
@@ -1213,22 +1226,22 @@ class Payslip(models.Model):
             not all(day.work_entry_type_id.is_leave for day in worked_days.values())
             or self.env.context.get('salary_simulation')
         ):
-            contract = self.contract_id
-            calendar = contract.resource_calendar_id
+            version = self.version_id
+            calendar = version.resource_calendar_id
             days_per_week = calendar._get_days_per_week()
             incapacity_attendances = calendar.attendance_ids.filtered(lambda a: a.work_entry_type_id.code == 'LEAVE281')
             if incapacity_attendances:
                 incapacity_hours = sum((attendance.hour_to - attendance.hour_from) for attendance in incapacity_attendances)
                 incapacity_hours = incapacity_hours / 2 if calendar.two_weeks_calendar else incapacity_hours
                 incapacity_rate = (1 - incapacity_hours / calendar.hours_per_week) if calendar.hours_per_week else 0
-                work_time_rate = contract.resource_calendar_id.work_time_rate * incapacity_rate
+                work_time_rate = version.resource_calendar_id.work_time_rate * incapacity_rate
             else:
-                work_time_rate = contract.resource_calendar_id.work_time_rate
+                work_time_rate = version.resource_calendar_id.work_time_rate
 
             threshold = 0 if ('OUT' in worked_days and worked_days['OUT'].number_of_hours) else self._get_representation_fees_threshold(localdict)
             if days_per_week and self.env.context.get('salary_simulation_full_time'):
-                result = contract.representation_fees
-            elif days_per_week and contract.representation_fees > threshold:
+                result = version.representation_fees
+            elif days_per_week and version.representation_fees > threshold:
                 # Only part of the representation costs are pro-rated because certain costs are fully
                 # covered for the company (teleworking costs, mobile phone, internet, etc., namely (for 2021):
                 # - 144.31 € (Tax, since 2021 - coronavirus)
@@ -1243,19 +1256,19 @@ class Payslip(models.Model):
                 # +-120 € of representation expenses which is then subject to prorating.
 
                 # Credit time, but with only half days (otherwise it's taken into account)
-                if contract.time_credit and work_time_rate and work_time_rate < 100 and (days_per_week == 5 or not self.representation_fees_missing_days):
-                    total_amount = threshold + (contract.representation_fees - threshold) * work_time_rate / 100
+                if version.time_credit and work_time_rate and work_time_rate < 100 and (days_per_week == 5 or not self.representation_fees_missing_days):
+                    total_amount = threshold + (version.representation_fees - threshold) * work_time_rate / 100
                 # Contractual part time
-                elif not contract.time_credit and work_time_rate < 100:
-                    total_amount = threshold + (contract.representation_fees - threshold) * work_time_rate / 100
+                elif not version.time_credit and work_time_rate < 100:
+                    total_amount = threshold + (version.representation_fees - threshold) * work_time_rate / 100
                 else:
-                    total_amount = contract.representation_fees
+                    total_amount = version.representation_fees
 
                 if total_amount > threshold:
                     daily_amount = (total_amount - threshold) * 3 / 13 / days_per_week
                     result = max(0, total_amount - daily_amount * self.representation_fees_missing_days)
             elif days_per_week:
-                result = contract.representation_fees
+                result = version.representation_fees
             else:
                 result = 0
         else:
@@ -1316,21 +1329,22 @@ class Payslip(models.Model):
             ('date_to', '<=', date(self.date_from.year, 12, 31)),
             ('state', 'in', ['done', 'paid']),
         ])
-        remaining_day = number_of_days - all_payslips_during_civil_year._get_worked_days_line_number_of_days('LEAVE120')
+        paid_leave_days = all_payslips_during_civil_year._get_worked_days_line_values(['LEAVE120'], ['number_of_days'], True)['LEAVE120']['sum']['number_of_days']
+        remaining_day = number_of_days - paid_leave_days
         if remaining_day <= 0:
             return 0
         if self.wage_type == 'hourly':
-            employee_hourly_cost = self.contract_id.hourly_wage
+            employee_hourly_cost = self.version_id.hourly_wage
         else:
             if self.date_from.year < 2024:
-                employee_hourly_cost = self.contract_id.contract_wage / self.sum_worked_hours
+                employee_hourly_cost = self.version_id.contract_wage / self.sum_worked_hours
             else:
-                employee_hourly_cost = self.contract_id.contract_wage * 3 / 13 / self.contract_id.resource_calendar_id.hours_per_week
+                employee_hourly_cost = self.version_id.contract_wage * 3 / 13 / self.version_id.resource_calendar_id.hours_per_week
         remaining_day_amount = min(remaining_day, number_of_days) * employee_hourly_cost * 7.6
         days_to_recover = employee['l10n_be_holiday_pay_to_recover_' + recovery_type]
         max_amount_to_recover = min(days_to_recover, employee_hourly_cost * number_of_days * 7.6)
-        leave120_amount = self._get_worked_days_line_amount('LEAVE120')
-        holiday_amount = min(leave120_amount, employee_hourly_cost * self._get_worked_days_line_number_of_hours('LEAVE120'))
+        paid_leave_data = self._get_worked_days_line_values(['LEAVE120'], ['amount', 'number_of_hours'], True)['LEAVE120']['sum']
+        holiday_amount = min(paid_leave_data['amount'], employee_hourly_cost * paid_leave_data['number_of_hours'])
         remaining_amount = max(0, max_amount_to_recover - employee['l10n_be_holiday_pay_recovered_' + recovery_type])
         return - min(remaining_amount, remaining_day_amount, holiday_amount)
 

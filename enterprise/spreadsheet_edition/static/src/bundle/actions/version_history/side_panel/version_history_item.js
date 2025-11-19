@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { Component, useRef, useState, useEffect } from "@odoo/owl";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { components } from "@odoo/o-spreadsheet";

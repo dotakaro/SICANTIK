@@ -1,23 +1,72 @@
-.o_knowledge_properties_field {
-    & .o_field_properties {
-        & .o_field_property_label, & .o_property_field_value, & .o_field_property_add {
-            padding-left: 0.5rem !important;
-        }
+.o_widget_knowledge_properties_panel {
+    &:empty {
+        display: none,
+    }
+    min-width: 250px;
+    width: 25%;
+    background: var(--knowledge-properties-bg, $o-gray-100);
 
-        & .o_field_property_label {
-            margin: 5px 5px 5px 0px;
+    .o_properties_helper {
+        background: var(--knowledge-properties-bg, $o-gray-100);
+        .o_view_nocontent_smiling_face:before {
+            @extend %o-nocontent-init-image;
+            width: 120px;
+            height: 140px;
+            background: transparent url(/web/static/img/smiling_face.svg) no-repeat center;
         }
-
-        .o_property_field {
-            margin: 0.5rem;
-
+    }
+    .o_properties_helper + .o_field_properties {
+        .o_field_property_add {
+            text-align: center;
         }
-        .o_property_group {
-            .o_field_property_group_label {
-                box-shadow: 0 $border-width 0 darkgrey;
-                span {
-                    margin-left: 0.5rem;
-                }
+    }
+
+    .o_inner_group {
+        width: 100%;
+        display: block;
+    }
+    .o_input,
+    .o_field_property_tag,
+    .o_field_property_many2one_value:not(:empty),
+    .o_field_property_many2many_value:not(:empty) {
+        border-bottom: $input-border-width solid $o-gray-300;
+    }
+    .o_input:focus,
+    .o_field_property_tag:focus-within,
+    .o_field_property_many2one_value:not(:empty):focus-within,
+    .o_field_property_many2many_value:not(:empty):focus-within {
+        border-bottom: $input-border-width solid $o-brand-primary;
+    }
+    .o_input_dropdown {
+        input {
+            border: 0 !important;
+        }
+    }
+    .o_property_field {
+        display: block !important;
+        &.o_property_folded {
+            display: none !important;
+        }
+    }
+    .o_field_property_add {
+        margin-left: -0.5rem !important;
+        button {
+            --btn-bg: var(--knowledge-properties-btn-bg, $o-gray-200);
+            --btn-border-color: var(--knowledge-properties-btn-bg, $o-gray-200);
+        }
+    }
+    .o_properties_external_button {
+        background: transparent;
+        border: 0;
+    }
+}
+
+@media (hover: hover) { // Devices supporting hover
+    .o_widget_knowledge_properties_panel {
+        .o_field_property_label:not(:hover) {
+            .o_field_property_open_popover,
+            .oi-draggable {
+                opacity: 0;
             }
         }
     }

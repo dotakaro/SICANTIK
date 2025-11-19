@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 /**
  * @typedef {import("@web/core/orm_service").ORM} ORM
  */
@@ -55,5 +53,10 @@ export class RecordFileStore {
             throw new Error("Invalid path: " + path);
         }
         await this.orm.unlink("ir.attachment", [parseInt(attachmentId)]);
+    }
+
+    async getFile(path) {
+        const response = await fetch(path);
+        return await response.blob();
     }
 }

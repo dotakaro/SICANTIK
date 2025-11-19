@@ -3,11 +3,11 @@
 from odoo import fields, models
 
 
-class L10nAuSuperFund(models.Model):
-    _name = "l10n_au.super.fund"
+class L10n_AuSuperFund(models.Model):
+    _name = 'l10n_au.super.fund'
     _description = "Super Fund"
 
-    display_name = fields.Char(string="Name", required=True)
+    display_name = fields.Char(string="Name", required=True, store=True, compute=None)
     abn = fields.Char(string="ABN", required=True)
     address_id = fields.Many2one("res.partner", string="Address", required=True)
     fund_type = fields.Selection([

@@ -2,18 +2,20 @@
 
 import json
 import logging
+from collections import defaultdict
 from datetime import timedelta
 
 import dateutil.parser
 from markupsafe import Markup
 from werkzeug import urls
 
-from odoo import _, api, exceptions, fields, models
+from odoo import _, api, exceptions, fields, models, modules
 from odoo.exceptions import UserError, ValidationError
 from odoo.service.model import PG_CONCURRENCY_EXCEPTIONS_TO_RETRY as CONCURRENCY_ERRORS
 
-from .. import const, utils as amazon_utils
-from ..controllers.onboarding import compute_oauth_signature
+from odoo.addons.sale_amazon import const
+from odoo.addons.sale_amazon import utils as amazon_utils
+from odoo.addons.sale_amazon.controllers.onboarding import compute_oauth_signature
 
 
 _logger = logging.getLogger(__name__)
@@ -24,9 +26,87 @@ class AmazonAccount(models.Model):
     _description = "Amazon Account"
     _check_company_auto = True
 
-    name = fields.Char(string="Name", help="The user-defined name of the account.", required=True)
+    name = fields.Char(
+        string="Name",
+        help="The user-defined name of the account.",
+        compute='_compute_name',
+        store=True,
+        readonly=False,
+        required=True,
+    )
+    company_id = fields.Many2one(
+        string="Company",
+        comodel_name='res.company',
+        default=lambda self: self.env.company,
+        required=True,
+        readonly=True,
+    )
     offer_ids = fields.One2many(
         string="Offers", comodel_name='amazon.offer', inverse_name='account_id', auto_join=True
+    )
+    base_marketplace_id = fields.Many2one(
+        string="Home Marketplace",
+        help="The home marketplace of this account; used for authentication only.",
+        comodel_name='amazon.marketplace',
+        required=True,
+    )
+    available_marketplace_ids = fields.Many2many(
+        string="Available Marketplaces",
+        help="The marketplaces this account has access to.",
+        comodel_name='amazon.marketplace',
+        relation='amazon_account_marketplace_rel',
+        copy=False,
+    )
+    active_marketplace_ids = fields.Many2many(
+        string="Marketplaces",
+        help="The marketplaces this account sells on.",
+        comodel_name='amazon.marketplace',
+        relation='amazon_account_active_marketplace_rel',
+        domain='[("id", "in", available_marketplace_ids)]',
+        copy=False,
+    )
+    default_product_ids = fields.Many2many(
+        string="Default Products",
+        comodel_name='product.product',
+        compute='_compute_default_product_ids',
+        context={'active_test': False},
+    )
+    user_id = fields.Many2one(
+        string="Salesperson",
+        comodel_name='res.users',
+        default=lambda self: self.env.user,
+        check_company=True,
+    )
+    team_id = fields.Many2one(
+        string="Sales Team",
+        help="The Sales Team assigned to Amazon orders for reporting",
+        comodel_name='crm.team',
+        check_company=True,
+    )
+    location_id = fields.Many2one(
+        string="FBA Stock Location",
+        help="The location of the stock managed by Amazon under the Amazon Fulfillment program.",
+        comodel_name='stock.location',
+        domain='[("usage", "=", "internal")]',
+        check_company=True,
+    )
+    synchronize_inventory = fields.Boolean(
+        string="FBM Stock",
+        help="Whether the available quantities of FBM products linked to this account are"
+             " synchronized with Amazon.",
+        default=True,
+    )
+    last_orders_sync = fields.Datetime(
+        help="The last synchronization date for orders placed on this account. Orders whose status"
+             " has not changed since this date will not be created nor updated in Odoo.",
+        default=fields.Datetime.now,
+        required=True,
+    )
+    active = fields.Boolean(
+        string="Active",
+        help="If made inactive, this account will no longer be synchronized with Amazon.",
+        default=True,
+        required=True,
     )
 
     # Credentials fields.
@@ -61,87 +141,40 @@ class AmazonAccount(models.Model):
         store=False,
     )
 
-    # Marketplace fields.
-    base_marketplace_id = fields.Many2one(
-        string="Home Marketplace",
-        help="The home marketplace of this account; used for authentication only.",
-        comodel_name='amazon.marketplace',
-        required=True,
-    )
-    available_marketplace_ids = fields.Many2many(
-        string="Available Marketplaces",
-        help="The marketplaces this account has access to.",
-        comodel_name='amazon.marketplace',
-        relation='amazon_account_marketplace_rel',
-        copy=False,
-    )
-    active_marketplace_ids = fields.Many2many(
-        string="Sync Marketplaces",
-        help="The marketplaces this account sells on.",
-        comodel_name='amazon.marketplace',
-        relation='amazon_account_active_marketplace_rel',
-        domain="[('id', 'in', available_marketplace_ids)]",
-        copy=False,
-    )
-
-    # Follow-up fields.
-    user_id = fields.Many2one(
-        string="Salesperson",
-        comodel_name='res.users',
-        default=lambda self: self.env.user,
-        check_company=True,
-    )
-    team_id = fields.Many2one(
-        string="Sales Team",
-        help="The Sales Team assigned to Amazon orders for reporting",
-        comodel_name='crm.team',
-        check_company=True,
-    )
-    company_id = fields.Many2one(
-        string="Company",
-        comodel_name='res.company',
-        default=lambda self: self.env.company,
-        required=True,
-        readonly=True,
-    )
-    location_id = fields.Many2one(
-        string="Stock Location",
-        help="The location of the stock managed by Amazon under the Amazon Fulfillment program.",
-        comodel_name='stock.location',
-        domain="[('usage', '=', 'internal')]",
-        check_company=True,
-    )
-    active = fields.Boolean(
-        string="Active",
-        help="If made inactive, this account will no longer be synchronized with Amazon.",
-        default=True,
-        required=True,
-    )
-    synchronize_inventory = fields.Boolean(
-        string="Synchronize FBM Inventory",
-        help="Whether the available quantities of FBM products linked to this account are"
-             " synchronized with Amazon.",
-        default=True,
-    )
-    last_orders_sync = fields.Datetime(
-        help="The last synchronization date for orders placed on this account. Orders whose status "
-             "has not changed since this date will not be created nor updated in Odoo.",
-        default=fields.Datetime.now,
-        required=True,
-    )
-
     # Display fields.
-    order_count = fields.Integer(compute='_compute_order_count')
+    state = fields.Selection(
+        string="State",
+        selection=[('disconnected', "Disconnected"), ('connected', "Connected")],
+        compute='_compute_state',
+    )
     offer_count = fields.Integer(compute='_compute_offer_count')
-    is_follow_up_displayed = fields.Boolean(compute='_compute_is_follow_up_displayed')
+    order_count = fields.Integer(compute='_compute_order_count')
 
     #=== COMPUTE METHODS ===#
 
-    def _compute_order_count(self):
+    @api.depends('base_marketplace_id')
+    def _compute_name(self):
         for account in self:
-            account.order_count = self.env['sale.order.line'].search_count(
-                [('amazon_offer_id.account_id', '=', account.id)]
-            )
+            if account.base_marketplace_id:
+                account.name = account.base_marketplace_id.name
+
+    def _compute_default_product_ids(self):
+        ProductProduct = self.env['product.product']
+        default_product = (
+            self.env.ref('sale_amazon.default_product', raise_if_not_found=False)
+            or ProductProduct._restore_data_product("Amazon Sales", 'consu', 'default_product')
+        )
+        shipping_product = (
+            self.env.ref('sale_amazon.shipping_product', raise_if_not_found=False)
+            or ProductProduct._restore_data_product("Amazon Shipping", 'consu', 'shipping_product')
+        )
+        for account in self:
+            account.default_product_ids = default_product + shipping_product
+
+    @api.depends('refresh_token')
+    def _compute_state(self):
+        for account in self:
+            account.state = 'connected' if account.refresh_token else 'disconnected'
 
     def _compute_offer_count(self):
         offers_data = self.env['amazon.offer']._read_group(
@@ -151,15 +184,17 @@ class AmazonAccount(models.Model):
         for account in self:
             account.offer_count = accounts_data.get(account.id, 0)
 
-    @api.depends('company_id')  # Trick to compute the field on new records
-    def _compute_is_follow_up_displayed(self):
-        """ Return True if the page Order Follow-up should be displayed in the view form. """
+    def _compute_order_count(self):
+        orders_per_offer = self.env['sale.order.line']._read_group(
+            [('amazon_offer_id.account_id', 'in', self.ids)],
+            groupby=['amazon_offer_id'],
+            aggregates=['order_id:recordset'],
+        )
+        orders_per_account = defaultdict(lambda: self.env['sale.order'])
+        for offer, orders in orders_per_offer:
+            orders_per_account[offer.account_id] += orders
         for account in self:
-            account.is_follow_up_displayed = (
-                account._origin.id
-                or self.env.user.has_group('base.group_multi_company')
-                or self.env.user.has_group('base.group_no_one')
-            )
+            account.order_count = len(orders_per_account.get(account, []))
 
     #=== ONCHANGE METHODS ===#
 
@@ -230,7 +265,24 @@ class AmazonAccount(models.Model):
 
         return super().create(vals_list)
 
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_linked_to_so(self):
+        has_linked_so_line = self.env['sale.order.line'].search(
+            [('amazon_offer_id.account_id', 'in', self.ids)], limit=1
+        )
+        if has_linked_so_line:
+            raise UserError(_(
+                "You cannot delete an account that is linked to sale orders. Please archive it"
+                " instead."
+            ))
+
     #=== ACTION METHODS ===#
+
+    def action_archive(self):
+        """ Override to disconnect the Amazon account before archiving it. """
+        for account in self:
+            account.action_reset_refresh_token()
+        return super().action_archive()
 
     def action_redirect_to_oauth_url(self):
         """ Build the OAuth redirect URL and redirect the user to it.
@@ -427,6 +479,9 @@ class AmazonAccount(models.Model):
                         except amazon_utils.AmazonRateLimitError:
                             raise  # Don't treat a rate limit error as a business error.
                         except Exception as error:
+                            if modules.module.current_test:
+                                # we are executing during testing, do not try to rollback
+                                raise
                             amazon_order_ref = order_data['AmazonOrderId']
                             if isinstance(error, CONCURRENCY_ERRORS):
                                 _logger.info(
@@ -535,6 +590,8 @@ class AmazonAccount(models.Model):
 
         # Search for the sales order based on its Amazon order reference.
         amazon_order_ref = order_data['AmazonOrderId']
+        if not isinstance(amazon_order_ref, str):
+            raise TypeError(f"Invalid AmazonOrderId, should be a string: {amazon_order_ref!r}")
         order = self.env['sale.order'].search(
             [('amazon_order_ref', '=', amazon_order_ref)], limit=1
         )
@@ -707,7 +764,7 @@ class AmazonAccount(models.Model):
             'phone': phone,
             'customer_rank': 1,
             'company_id': self.company_id.id,
-            'amazon_email': anonymized_email,
+            'email': anonymized_email,
         }
 
         # The contact partner is searched based on all the personal information and only if the
@@ -721,7 +778,7 @@ class AmazonAccount(models.Model):
             *self.env['res.partner']._check_company_domain(self.company_id),
             ('type', '=', 'contact'),
             ('name', '=', buyer_name),
-            ('amazon_email', '=', anonymized_email),
+            ('email', '=', anonymized_email),
         ], limit=1) if anonymized_email else None  # Don't match random partners.
         if not contact:
             contact_name = buyer_name or f"Amazon Customer # {amazon_order_ref}"
@@ -805,8 +862,9 @@ class AmazonAccount(models.Model):
         self.ensure_one()
 
         amazon_order_ref = order_data['AmazonOrderId']
-        order_fulfillment_channel = order_data['FulfillmentChannel']
         marketplace_api_ref = order_data['MarketplaceId']
+        order_fulfillment_channel = order_data['FulfillmentChannel'] == 'MFN' and 'fbm' or 'fba'
+        order_last_update = dateutil.parser.parse(order_data['LastUpdateDate'], ignoretz=True)
 
         items_data = pull_items_data(amazon_order_ref)
 
@@ -818,20 +876,26 @@ class AmazonAccount(models.Model):
                 lambda m: m.api_ref == marketplace_api_ref
             )
             offer = self._find_or_create_offer(sku, marketplace)
-            if offer.amazon_feed_ref and offer.amazon_feed_ref != '{}':
-                try:
-                    feed_data = json.loads(offer.amazon_feed_ref)
-                except json.JSONDecodeError:  # Field is an incorrect JSON
-                    feed_data = None
-                offer_fulfill_channel = None
-                if isinstance(feed_data, dict):  # Filtered out old `amazon_feed_ref` still stored
-                    offer_fulfill_channel = 'MFN' if feed_data.get('is_fbm') else 'AFN'
-                if order_fulfillment_channel != offer_fulfill_channel:  # old feed_ref included
-                    # This discrepancy might happen if the fulfillment channel was changed for an
-                    # offer in Amazon backend. But due to a known problem of ghost listings from
-                    # Amazon side, we can't trust the order either.
-                    offer.update({'amazon_feed_ref': '{}', 'amazon_sync_status': False})
-
+            if (
+                offer.amazon_channel != order_fulfillment_channel
+                and self.last_orders_sync <= order_last_update
+            ):
+                # When an offer goes from FBM to FBA, we need to reset the FBM stock to avoid a
+                # known problem of ghost listings on Amazon side.
+                if (
+                    offer.amazon_channel == 'fbm' and offer.sync_stock
+                    and order_fulfillment_channel == 'fba'
+                ):
+                    offer.amazon_sync_status = 'reset'
+                    _logger.info(
+                        "Amazon fulfillment channel switch detected (FBM -> FBA). Scheduled an"
+                        " inventory reset for offer: %s.",
+                        offer.sku,
+                    )
+                # Resetting the offer channel will force the inventory feed to update the channel
+                # using a trustworthy source `searchListingsItems` as even the order cannot be
+                # trusted.
+                offer.amazon_channel = False
             product_taxes = offer.product_id.taxes_id.filtered_domain(
                 [*self.env['account.tax']._check_company_domain(self.company_id)]
             )
@@ -969,7 +1033,7 @@ class AmazonAccount(models.Model):
             'name': kwargs.get('description', ''),
             'product_id': kwargs.get('product_id'),
             'price_unit': subtotal / quantity if quantity else 0,
-            'tax_id': [(6, 0, kwargs.get('tax_ids', []))],
+            'tax_ids': [(6, 0, kwargs.get('tax_ids', []))],
             'product_uom_qty': quantity,
             'discount': (kwargs.get('discount', 0) / subtotal) * 100 if subtotal else 0,
             'display_type': kwargs.get('display_type', False),
@@ -1115,11 +1179,10 @@ class AmazonAccount(models.Model):
             lambda l: l.product_id.type != 'service' and not l.display_type
         ):
             stock_move = self.env['stock.move'].create({
-                'name': _('Amazon move: %s', order.name),
                 'company_id': self.company_id.id,
                 'product_id': order_line.product_id.id,
                 'product_uom_qty': order_line.product_uom_qty,
-                'product_uom': order_line.product_uom.id,
+                'product_uom': order_line.product_uom_id.id,
                 'location_id': self.location_id.id,
                 'location_dest_id': customers_location.id,
                 'state': 'confirmed',
@@ -1144,12 +1207,15 @@ class AmazonAccount(models.Model):
         if not accounts:
             return
 
+        def to_sync(offer_):
+            return offer_.sync_stock or offer_.amazon_sync_status == 'reset'
+
         # Cache `free_qty` of all products to avoid recomputing it for each offer.
-        accounts.offer_ids.product_id.filtered(lambda p: p.is_storable)._compute_quantities()
+        accounts.offer_ids.filtered(to_sync).product_id._compute_quantities()
 
         for account in accounts:
             amazon_utils.ensure_account_is_set_up(account)
-            offers = account.offer_ids.filtered(lambda o: o.product_id.is_storable)
+            offers = account.offer_ids.filtered(to_sync)
             offers._update_inventory_availability(account)
 
         # As Amazon needs some time to process the feed, we trigger the cron to check the status of

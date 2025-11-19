@@ -2,12 +2,11 @@
 
 import re
 import logging
-import threading
 from markupsafe import Markup, escape
 
 from datetime import timedelta
 
-from odoo import models, fields, api, _
+from odoo import models, modules, fields, api, _
 from odoo.addons.phone_validation.tools import phone_validation
 from odoo.addons.whatsapp.tools import phone_validation as wa_phone_validation
 from odoo.addons.whatsapp.tools.retryable_codes import WHATSAPP_RETRYABLE_ERROR_CODES
@@ -16,11 +15,11 @@ from odoo.addons.whatsapp.tools.whatsapp_api import WhatsAppApi
 from odoo.addons.whatsapp.tools.whatsapp_exception import WhatsAppError
 from odoo.exceptions import ValidationError, UserError
 from odoo.tools import frozendict, groupby, html2plaintext
-from odoo.models import Constraint
 
 _logger = logging.getLogger(__name__)
 
-class WhatsAppMessage(models.Model):
+
+class WhatsappMessage(models.Model):
     _name = 'whatsapp.message'
     _description = 'WhatsApp Messages'
     _order = 'id desc'
@@ -81,9 +80,10 @@ class WhatsAppMessage(models.Model):
     mail_message_id = fields.Many2one(comodel_name='mail.message', index=True)
     body = fields.Html(related='mail_message_id.body', string="Body", related_sudo=False)
 
-    _constraints = [
-        Constraint('unique_msg_uid', 'unique(msg_uid)', "Each whatsapp message should correspond to a single message uuid.")
-    ]
+    _unique_msg_uid = models.Constraint(
+        'unique(msg_uid)',
+        "Each whatsapp message should correspond to a single message uuid.",
+    )
 
     @api.depends('mobile_number')
     def _compute_mobile_number_formatted(self):
@@ -104,9 +104,9 @@ class WhatsAppMessage(models.Model):
     # ------------------------------------------------------------
 
     @api.model_create_multi
-    def create(self, vals):
+    def create(self, vals_list):
         """Override to check blacklist number and also add to blacklist if user has send stop message."""
-        messages = super().create(vals)
+        messages = super().create(vals_list)
         for message in messages:
             body = html2plaintext(message.body)
             if message.message_type == 'inbound' and message.mobile_number_formatted:
@@ -165,8 +165,8 @@ class WhatsAppMessage(models.Model):
     def _get_formatted_number(self, sanitized_number, country_code):
         """ Format a valid mobile number for whatsapp.
 
-        :examples:
-        '+919999912345' -> '919999912345'
+        Examples: ``'+919999912345'`` -> ``'919999912345'``
+
         :return: formatted mobile number
 
         TDE FIXME: remove in master
@@ -226,7 +226,7 @@ class WhatsAppMessage(models.Model):
             ('state', '=', 'outgoing'),
         ], order='wa_template_id', limit=500)
         # should not commit during tests
-        records._send_message(with_commit=not getattr(threading.current_thread(), 'testing', False))
+        records._send_message(with_commit=not modules.module.current_test)
         if len(records) == 500:  # assumes there are more whenever search hits limit
             self.env.ref('whatsapp.ir_cron_send_whatsapp_queue')._trigger()
 
@@ -346,7 +346,8 @@ class WhatsAppMessage(models.Model):
                     if not msg_uid:
                         whatsapp_message._handle_error(failure_type='unknown')
                     else:
-                        if message_type == 'template':
+                        # Message already posted for model 'discuss.channel', post message in active channel for other models
+                        if message_type == 'template' and whatsapp_message.wa_template_id.model != 'discuss.channel':
                             whatsapp_message._post_message_in_active_channel()
                         whatsapp_message.write({
                             'state': 'sent',

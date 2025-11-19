@@ -3,21 +3,16 @@
 # 	* quality
 # 
 # Translators:
-# Ejner Sønniksen <ejner@vkdata.dk>, 2024
-# Pernille Kristensen <pernillekristensen1994@gmail.com>, 2024
-# Mads Søndergaard, 2024
-# Mads Søndergaard, 2024
-# lhmflexerp <lhm@flexerp.dk>, 2024
-# Martin Trigaux, 2024
-# Sanne Kristensen <sanne@vkdata.dk>, 2024
+# Wil Odoo, 2025
+# Kira Petersen, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Sanne Kristensen <sanne@vkdata.dk>, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:10+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Kira Petersen, 2025\n"
 "Language-Team: Danish (https://app.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -79,7 +74,7 @@ msgstr "Aktivitet undtagelse markering"
 #: model:ir.model.fields,field_description:quality.field_quality_alert__activity_state
 #: model:ir.model.fields,field_description:quality.field_quality_check__activity_state
 msgid "Activity State"
-msgstr "Aktivitetstilstand"
+msgstr "Aktivitetsstatus"
 
 #. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert__activity_type_icon
@@ -342,6 +337,16 @@ msgid "Failed"
 msgstr "Fejlet"
 
 #. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_check__failure_location_id
+msgid "Failure Location"
+msgstr ""
+
+#. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_point__failure_location_ids
+msgid "Failure Locations"
+msgstr ""
+
+#. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert_stage__folded
 msgid "Folded"
 msgstr "Foldet"
@@ -366,7 +371,7 @@ msgstr "Følgere (partnere)"
 #: model:ir.model.fields,help:quality.field_quality_alert__activity_type_icon
 #: model:ir.model.fields,help:quality.field_quality_check__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr "Skrifttype awesome icon f.eks. fa-opgaver"
+msgstr "Font Awesome-ikon, f.eks. fa-opgaver"
 
 #. module: quality
 #: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
@@ -445,6 +450,15 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Hvis afkrydset har nogle beskeder en leveringsfejl"
 
 #. module: quality
+#: model:ir.model.fields,help:quality.field_quality_point__failure_location_ids
+msgid ""
+"If quality check fails, a destination location is chosen from this list for\n"
+"- each failed specific product quantity if control is per quantity\n"
+" /- all quantities of a product if control is per product\n"
+" /- all quantities of products in the operation if control is per operation"
+msgstr ""
+
+#. module: quality
 #: model:ir.model.fields,help:quality.field_quality_alert_team__alias_bounced_content
 msgid ""
 "If set, this content will automatically be sent out to unauthorized users "
@@ -499,7 +513,7 @@ msgstr "Sidst opdateret den"
 #. module: quality
 #: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
 msgid "Late Activities"
-msgstr "Overskredet aktiviteter"
+msgstr "Forfaldne aktiviteter"
 
 #. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert_team__alias_incoming_local
@@ -538,6 +552,11 @@ msgid "Messages"
 msgstr "Beskeder"
 
 #. module: quality
+#: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
+msgid "My Activities"
+msgstr "Mine aktiviteter"
+
+#. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert__my_activity_date_deadline
 #: model:ir.model.fields,field_description:quality.field_quality_check__my_activity_date_deadline
 msgid "My Activity Deadline"
@@ -568,7 +587,7 @@ msgstr "Ny"
 #: model:ir.model.fields,field_description:quality.field_quality_alert__activity_calendar_event_id
 #: model:ir.model.fields,field_description:quality.field_quality_check__activity_calendar_event_id
 msgid "Next Activity Calendar Event"
-msgstr "Næste aktivitet for kalenderarrangement"
+msgstr "Næste aktivitet i kalenderen"
 
 #. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert__activity_date_deadline
@@ -592,11 +611,9 @@ msgstr "Næste aktivitetstype"
 #. odoo-python
 #: code:addons/quality/models/quality.py:0
 msgid ""
-"No quality team found for this company.\n"
-"Please go to configuration and create one first."
+"No quality teams found for this company! Head over to the configuration menu"
+" to create your first quality team."
 msgstr ""
-"Ingen kvalitets hold fundet for denne virksomhed.\n"
-"Vær venlig at gå til konfiguration og opret en først."
 
 #. module: quality
 #: model:ir.model.fields.selection,name:quality.selection__quality_alert__priority__0
@@ -691,9 +708,9 @@ msgid ""
 " necessarily the model given by alias_model_id (example: project "
 "(parent_model) and task (model))"
 msgstr ""
-"Overordnet model der holder aliaset. Modellen med aliasreferencen er ikke "
-"nødvendigvis den model, der er givet af alias_model_id (eksempel: projekt "
-"(parent_model) og opgave (model))."
+"Den overordnede model for aliasset. Denne model, som indeholder "
+"aliasreferencen, er ikke nødvendigvis den samme som den model, der er "
+"angivet i alias_model_id (f.eks. projekt (parent_model) og opgave (model))"
 
 #. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_check__partner_id
@@ -771,6 +788,11 @@ msgstr "Varevariant"
 #: model:ir.model.fields,field_description:quality.field_quality_point__product_ids
 msgid "Products"
 msgstr "Produkter"
+
+#. module: quality
+#: model:res.groups.privilege,name:quality.res_groups_privilege_quality
+msgid "Quality"
+msgstr "Kvalitet"
 
 #. module: quality
 #: model:ir.model,name:quality.model_quality_alert
@@ -885,9 +907,14 @@ msgid "Sequence"
 msgstr "Sekvens"
 
 #. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_point__show_failure_location
+msgid "Show Failure Location"
+msgstr ""
+
+#. module: quality
 #: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
-msgid "Show all records which has next action date is before today"
-msgstr "Vis alle poster, hvor den næste aktivitetsdato er før i dag"
+msgid "Show all records whose next activity date is past"
+msgstr "Vis alle poster med en næste aktivitetsdato, der er før i dag"
 
 #. module: quality
 #: model:quality.alert.stage,name:quality.quality_alert_stage_3
@@ -970,7 +997,7 @@ msgid ""
 msgstr ""
 "Modellen (Odoo Document Kind), som dette alias svarer til. Enhver indgående "
 "e-mail, der ikke svarer til en eksisterende post, vil medføre oprettelse af "
-"en ny rekord af denne model (fx en projektopgave)"
+"en ny rekord af denne model (f.eks. en projektopgave)"
 
 #. module: quality
 #: model:ir.model.fields,help:quality.field_quality_alert_team__alias_name
@@ -1017,7 +1044,7 @@ msgstr "Type"
 #: model:ir.model.fields,help:quality.field_quality_alert__activity_exception_decoration
 #: model:ir.model.fields,help:quality.field_quality_check__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr "Type af undtagelsesaktivitet registreret "
+msgstr "Type registreret undtagelsesaktivitet."
 
 #. module: quality
 #: model:ir.model.fields,help:quality.field_quality_tag__color
@@ -1059,7 +1086,7 @@ msgstr "Beskeder fra hjemmesiden"
 #: model:ir.model.fields,help:quality.field_quality_check__website_message_ids
 #: model:ir.model.fields,help:quality.field_quality_point__website_message_ids
 msgid "Website communication history"
-msgstr "Hjemmesidens kommunikations historik"
+msgstr "Hjemmesidens kommunikationshistorik"
 
 #. module: quality
 #: model:quality.reason,name:quality.reason_wo

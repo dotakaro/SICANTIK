@@ -8,6 +8,7 @@ from odoo.tools.sql import column_exists, create_column
 # Available values for the release_to_pay field.
 _release_to_pay_status_list = [('yes', 'Yes'), ('no', 'No'), ('exception', 'Exception')]
 
+
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
@@ -109,7 +110,7 @@ class AccountMoveLine(models.Model):
         between this order and the invoice did not change (otherwise, again,
         the line is put in exception).
         """
-        precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
+        precision = self.env['decimal.precision'].precision_get('Product Unit')
         for invoice_line in self:
             po_line = invoice_line.purchase_line_id
             if po_line:

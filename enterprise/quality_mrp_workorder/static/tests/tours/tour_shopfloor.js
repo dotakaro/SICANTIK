@@ -31,11 +31,6 @@ registry.category("web_tour.tours").add("test_register_sn_production_quality_che
             trigger: ".modal-content .o_workorder_lot input.o_input",
             run() {},
         },
-        // {
-        //     content: "Register a new serial number",
-        //     trigger: ".modal-content .o_workorder_lot input.o_input",
-        //     run: "click",
-        // },
         {
             content: "Register a new serial number",
             trigger: ".modal-content .o_workorder_lot input.o_input",
@@ -43,7 +38,7 @@ registry.category("web_tour.tours").add("test_register_sn_production_quality_che
         },
         {
             trigger:
-                ".modal-content .o_field_widget[name=lot_id] .dropdown-item:contains(Create and edit)",
+                ".modal-content .o_field_widget[name=lot_producing_id] .dropdown-item:contains(Create and edit)",
             run: "click",
         },
         {
@@ -52,22 +47,13 @@ registry.category("web_tour.tours").add("test_register_sn_production_quality_che
             run: "click",
         },
         {
-            trigger: ".modal-header:has(.modal-title:contains(Lovely Production Registering))",
-            run: "click",
-        },
-        {
-            content: "Register a new serial number",
-            trigger: ".modal-content .o_field_widget[name=qty_done] .o_input",
-            run: "edit 1",
-        },
-        {
             trigger:
-                ".modal-content:has(.modal-title:contains(Lovely Production Registering)) button:contains(Validate)",
+                ".modal-content:has(.modal-header:contains(Register Production: Lovely Product)) button:contains(Validate)",
             run: "click",
         },
         {
             trigger:
-                ".o_mrp_display_record:has(.card-header:contains(Lovely Operation)) button:contains(Mark as Done)",
+                ".o_mrp_display_record:has(.card-header:contains(Lovely Operation)) button:contains(Close Production)",
             run() {},
         },
     ],

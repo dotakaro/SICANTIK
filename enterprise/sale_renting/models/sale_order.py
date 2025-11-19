@@ -8,6 +8,7 @@ from odoo import _, api, fields, models
 from odoo.osv import expression
 from odoo.tools import float_compare
 
+
 RENTAL_STATUS = [
     ('draft', "Quotation"),
     ('sent', "Quotation Sent"),
@@ -21,11 +22,10 @@ RENTAL_STATUS = [
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    _sql_constraints = [(
-        'rental_period_coherence',
-        "CHECK(rental_start_date < rental_return_date)",
+    _rental_period_coherence = models.Constraint(
+        'CHECK(rental_start_date < rental_return_date)',
         "The rental start date must be before the rental return date if any.",
-    )]
+    )
 
     #=== FIELDS ===#
 
@@ -192,7 +192,7 @@ class SaleOrder(models.Model):
 
     def action_open_pickup(self):
         self.ensure_one()
-        precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
+        precision = self.env['decimal.precision'].precision_get('Product Unit')
         lines_to_pickup = self.order_line.filtered(
             lambda r:
                 r.is_rental
@@ -202,7 +202,7 @@ class SaleOrder(models.Model):
 
     def action_open_return(self):
         self.ensure_one()
-        precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
+        precision = self.env['decimal.precision'].precision_get('Product Unit')
         lines_to_return = self.order_line.filtered(
             lambda r:
                 r.is_rental

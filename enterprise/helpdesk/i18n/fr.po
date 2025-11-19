@@ -3,17 +3,16 @@
 # 	* helpdesk
 # 
 # Translators:
-# Wil Odoo, 2024
-# Jolien De Paepe, 2024
 # Manon Rondou, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Manon Rondou, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -107,14 +106,11 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/helpdesk/static/src/js/tours/helpdesk.js:0
 msgid ""
-"<b>Log notes</b> for internal communications (you will only notify the "
-"persons you specifically tag). Use <b>@ mentions</b> to ping a colleague or "
-"<b># mentions</b> to contact a group of people."
+"<b>Log internal notes</b> and use @<b>mentions</b> to notify your "
+"colleagues."
 msgstr ""
-"<b>Enregistrez des notes</b> pour les communications internes (vous notifiez"
-" uniquement les personnes que vous mentionnez spécifiquement). Utilisez "
-"<b>@</b> pour envoyer un message à un collègue ou <b>#</b> pour contacter un"
-" groupe de personnes."
+"<b>Enregistrez des notes internes</b> et utilisez les <b>mentions</b>@ pour "
+"notifier vos collègues."
 
 #. module: helpdesk
 #: model:mail.template,body_html:helpdesk.solved_ticket_request_email_template
@@ -177,17 +173,17 @@ msgid ""
 "                        <tr>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/5\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\"/>\n"
+"                                    <img alt=\"Happy\" src=\"/rating/static/src/img/rating_5.png\" title=\"Happy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/3\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\"/>\n"
+"                                    <img alt=\"Neutral\" src=\"/rating/static/src/img/rating_3.png\" title=\"Neutral\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/1\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\"/>\n"
+"                                    <img alt=\"Unhappy\" src=\"/rating/static/src/img/rating_1.png\" title=\"Unhappy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                        </tr>\n"
@@ -235,17 +231,17 @@ msgstr ""
 "                        <tr>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/5\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\"/>\n"
+"                                    <img alt=\"Happy\" src=\"/rating/static/src/img/rating_5.png\" title=\"Happy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/3\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\"/>\n"
+"                                    <img alt=\"Neutral\" src=\"/rating/static/src/img/rating_3.png\" title=\"Neutral\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/1\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\"/>\n"
+"                                    <img alt=\"Unhappy\" src=\"/rating/static/src/img/rating_1.png\" title=\"Unhappy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                        </tr>\n"
@@ -285,19 +281,19 @@ msgid ""
 "\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.use_website_helpdesk_form\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">View Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">View Ticket</a>\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">View Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">View Ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
 "        </t>\n"
 "        <t t-elif=\"object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"object.team_id.use_website_helpdesk_forum or object.team_id.use_website_helpdesk_knowledge or object.team_id.use_website_helpdesk_slides\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visit Help Center</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visit Help Center</a>\n"
 "        </t><br/><br/>\n"
 "    </div>\n"
 "\n"
@@ -307,43 +303,43 @@ msgid ""
 "        "
 msgstr ""
 "<div>\n"
-"    <t t-out=\"object.sudo().partner_id.name or object.sudo().partner_name or 'Madam/Sir'\">Madame/Monsieur</t>,<br/><br/>\n"
-"    Votre demande\n"
+"    <t t-out=\"object.sudo().partner_id.name or object.sudo().partner_name or 'Madam/Sir'\">Madame, Monsieur,</t>,<br/><br/>\n"
+"    Nous avons bien reçu votre demande concernant\n"
 "    <t t-if=\"hasattr(object.team_id, 'website_id') and object.get_portal_url()\">\n"
-"        <a t-attf-href=\"{{ object.team_id.website_id.domain }}/my/ticket/{{ object.id }}/{{ object.access_token }}\" t-out=\"object.name or ''\">Les pieds de table ne sont pas équilibrés</a>\n"
+"        <a t-attf-href=\"{{ object.team_id.website_id.domain }}/my/ticket/{{ object.id }}/{{ object.access_token }}\" t-out=\"object.name or ''\">Les pieds de table sont déséquilibrés</a>\n"
 "    </t>\n"
-"    été reçue et est en cours de révision par notre équipe <t t-out=\"object.team_id.name or ''\">Assistance VIP</t>.<br/><br/>\n"
+"    et elle est actuellement en cours d'examen par notre équipe d'<t t-out=\"object.team_id.name or ''\">Assistance VIP</t>.<br/><br/>\n"
 "    La référence de votre ticket est <strong><t t-out=\"object.ticket_ref or ''\">15</t></strong>.<br/><br/>\n"
 "\n"
-"    Pour fournir des informations supplémentaires, répondez simplement à cet e-mail.<br/><br/>\n"
+"    Si vous souhaitez fournir des informations supplémentaires, il vous suffit de répondre à cet e-mail.<br/><br/>\n"
 "    <t t-if=\"object.team_id.show_knowledge_base\">\n"
-"        N'hésitez pas à visiter notre <a t-attf-href=\"{{ object.team_id.get_knowledge_base_url() }}\">Centre d'assistance</a>. Vous pourriez y trouver la réponse à votre question.\n"
+"        N'hésitez pas à visiter notre <a t-attf-href=\"{{ object.team_id.get_knowledge_base_url() }}\">Centre d'assistance</a>. Vous y trouverez peut-être la réponse à votre question.\n"
 "        <br/><br/>\n"
 "    </t>\n"
 "    <t t-if=\"object.team_id.allow_portal_ticket_closing\">\n"
-"        N'hésitez pas à fermer votre ticket si notre aide n'est plus nécessaire. Merci pour votre coopération.<br/><br/>\n"
+"        Si notre assistance n'est plus nécessaire, vous pouvez fermer votre ticket. Nous vous remercions de votre collaboration.<br/><br/>\n"
 "    </t>\n"
 "\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.use_website_helpdesk_form\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">Voir le ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">Voir le ticket</a>\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">Voir le ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">Voir le ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Fermer le ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Fermer le ticket</a>\n"
 "        </t>\n"
 "        <t t-elif=\"object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Fermer le ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Fermer le ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"object.team_id.use_website_helpdesk_forum or object.team_id.use_website_helpdesk_knowledge or object.team_id.use_website_helpdesk_slides\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visiter le centre d'assistance</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visiter le centre d'assistance</a>\n"
 "        </t><br/><br/>\n"
 "    </div>\n"
 "\n"
 "    Cordialement,<br/><br/>\n"
-"    L'équipe d'<t t-out=\"object.team_id.name or 'Helpdesk'\">Assistance</t> \n"
+"    L'équipe d'<t t-out=\"object.team_id.name or 'Helpdesk'\">Assistance</t>\n"
 "</div>\n"
 "        "
 
@@ -360,12 +356,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_form
 msgid ""
-"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Satisfied\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Okay\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Dissatisfied\"/>"
+"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Happy\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Neutral\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Unhappy\"/>"
 msgstr ""
 "<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg < 3.66\" title=\"Satisfait\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg < 2.33 or rating_avg >= 3.66\" title=\"Oké\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg < 2.33 or rating_avg >= 3.66\" title=\"Neutre\"/>\n"
 "                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg >= 2.33\" title=\"Insatisfait\"/>"
 
 #. module: helpdesk
@@ -599,6 +595,11 @@ msgstr ""
 "défaut lors de la création de nouveaux enregistrements pour cet alias."
 
 #. module: helpdesk
+#: model:ir.model.constraint,message:helpdesk.constraint_helpdesk_tag_assignment_tag_team_unique
+msgid "A tag can only be used once per team."
+msgstr "Un tag ne peut être utilisé qu'une seule fois par équipe."
+
+#. module: helpdesk
 #: model:ir.model.constraint,message:helpdesk.constraint_helpdesk_tag_name_uniq
 msgid "A tag with the same name already exists."
 msgstr "Une étiquette avec le même nom existe déjà."
@@ -693,6 +694,11 @@ msgid ""
 msgstr ""
 "Ajoutez votre étape et placez-la au bon endroit dans votre flux de travail "
 "en la faisant glisser et en la déposant."
+
+#. module: helpdesk
+#: model:ir.actions.act_window,name:helpdesk.action_edit_followers_helpdesk_ticket
+msgid "Add/remove followers"
+msgstr "Ajouter/retirer des abonnés"
 
 #. module: helpdesk
 #: model:res.groups,name:helpdesk.group_helpdesk_manager
@@ -810,6 +816,15 @@ msgid "Are you sure you want to delete these stages?"
 msgstr "Êtes-vous sûr de vouloir supprimer ces étapes ?"
 
 #. module: helpdesk
+#: model_terms:ir.actions.act_window,help:helpdesk.action_helpdesk_tag_assignment
+msgid ""
+"Assign tickets to the appropriate team members by defining who can work on "
+"tickets with certain tags."
+msgstr ""
+"Attribuez des tickets aux membres appropriés de l'équipe en définissant qui "
+"peut travailler sur les tickets avec certains tags."
+
+#. module: helpdesk
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_graph_main
@@ -889,11 +904,6 @@ msgid "Automatic Closing"
 msgstr "Clôture automatique"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Average"
-msgstr "Moyenne"
-
-#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__avg_response_hours
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__avg_response_hours
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__avg_response_hours
@@ -925,20 +935,20 @@ msgstr "Évaluation moyenne des 7 derniers jours"
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Dissatisfied"
-msgstr "Évaluation moyenne : Insatisfait"
+msgid "Average Rating: Happy"
+msgstr "Note moyenne : Satisfait"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Okay"
-msgstr "Évaluation moyenne : Bien"
+msgid "Average Rating: Neutral"
+msgstr "Note moyenne : Neutre"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Satisfied"
-msgstr "Évaluation moyenne : Satisfait"
+msgid "Average Rating: Unhappy"
+msgstr "Note moyenne : Insatisfait"
 
 #. module: helpdesk
 #. odoo-javascript
@@ -962,11 +972,6 @@ msgstr "Moyenne des 7 derniers jours"
 #: code:addons/helpdesk/static/src/components/helpdesk_team_dashboard/helpdesk_team_dashboard.xml:0
 msgid "Avg Open Hours"
 msgstr "Moyenne des heures ouvertes"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Bad"
-msgstr "Mauvais"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
@@ -1156,6 +1161,16 @@ msgid "Configuration"
 msgstr "Configuration"
 
 #. module: helpdesk
+#: model:ir.actions.act_window,name:helpdesk.action_helpdesk_tag_assignment
+msgid "Configure Tags Handled by Team Members"
+msgstr "Configurer les tags gérés par les membres de l'équipe"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
+msgid "Configure tags handled by team members"
+msgstr "Configurer les tags gérés par les membres de l'équipe"
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_delete_confirmation_wizard
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_unarchive_wizard
 msgid "Confirm"
@@ -1187,6 +1202,16 @@ msgstr "Bons de réduction"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 msgid "Create Date"
 msgstr "Date de création"
+
+#. module: helpdesk
+#: model:ir.model,website_form_label:helpdesk.model_res_partner
+msgid "Create a Customer"
+msgstr "Créer un client"
+
+#. module: helpdesk
+#: model:ir.model,website_form_label:helpdesk.model_helpdesk_ticket
+msgid "Create a Ticket"
+msgstr "Créer un ticket"
 
 #. module: helpdesk
 #: model_terms:ir.actions.act_window,help:helpdesk.email_template_action_helpdesk
@@ -1225,6 +1250,7 @@ msgstr "Créez des tickets pour obtenir des statistiques."
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__create_uid
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__create_uid
 msgid "Created by"
@@ -1236,6 +1262,7 @@ msgstr "Créé par"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__create_date
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__create_date
 msgid "Created on"
@@ -1266,7 +1293,6 @@ msgstr "Message de rejet personnalisé"
 #. module: helpdesk
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
-#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_id
@@ -1283,8 +1309,6 @@ msgid "Customer Care"
 msgstr "Service Clientèle"
 
 #. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_email
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_email
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_email
@@ -1359,11 +1383,8 @@ msgid "Deadline"
 msgstr "Date limite"
 
 #. module: helpdesk
-#. odoo-javascript
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_graph/helpdesk_ticket_graph_model.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_kanban/helpdesk_ticket_kanban_header.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_list/helpdesk_ticket_list_renderer.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_pivot/helpdesk_ticket_pivot_model.js:0
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "Deadline reached"
 msgstr "Date limite atteinte"
 
@@ -1420,23 +1441,30 @@ msgid "Discard"
 msgstr "Ignorer"
 
 #. module: helpdesk
+#: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_team__assign_method__tags
+msgid "Dispatch tickets based on tags"
+msgstr "Dispatcher les tickets en fonction des tags"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_digest_digest__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_ir_module_module__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_ir_ui_menu__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_mail_message__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_company__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_partner__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_users__display_name
 msgid "Display Name"
 msgstr "Nom d'affichage"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Dissatisfied"
-msgstr "Insatisfait"
 
 #. module: helpdesk
 #. odoo-python
@@ -1455,11 +1483,6 @@ msgstr "Chaque utilisateur a un nombre égal de tickets ouverts"
 #: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_team__assign_method__randomly
 msgid "Each user is assigned an equal number of tickets"
 msgstr "Chaque utilisateur se voit attribuer un nombre égal de tickets"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Edit"
-msgstr "Modifier"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_email
@@ -1706,6 +1729,7 @@ msgid "Group By"
 msgstr "Regrouper par"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
 msgid "Happy"
 msgstr "Content"
@@ -1744,6 +1768,7 @@ msgstr "Help Center"
 
 #. module: helpdesk
 #: model:ir.ui.menu,name:helpdesk.menu_helpdesk_root
+#: model:res.groups.privilege,name:helpdesk.res_groups_privilege_helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.digest_digest_view_form
 msgid "Helpdesk"
 msgstr "Assistance"
@@ -1767,6 +1792,11 @@ msgstr "Étape d'assistance"
 #: model:ir.model,name:helpdesk.model_helpdesk_stage_delete_wizard
 msgid "Helpdesk Stage Delete Wizard"
 msgstr "Assistant de suppression d'une étape d'assistance"
+
+#. module: helpdesk
+#: model:ir.model,name:helpdesk.model_helpdesk_tag_assignment
+msgid "Helpdesk Tag Assignment"
+msgstr "Attribution de tag au support technique"
 
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_helpdesk_tag
@@ -1871,15 +1901,23 @@ msgid "Hours to First Response"
 msgstr "Heures avant la première réponse"
 
 #. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_digest_digest__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__id
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__id
+#: model:ir.model.fields,field_description:helpdesk.field_ir_module_module__id
+#: model:ir.model.fields,field_description:helpdesk.field_ir_ui_menu__id
+#: model:ir.model.fields,field_description:helpdesk.field_mail_message__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_company__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_partner__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_users__id
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
 msgid "ID"
 msgstr "ID"
@@ -1892,6 +1930,11 @@ msgid ""
 msgstr ""
 "ID de l'enregistrement parent qui définit l'alias (exemple : le projet qui "
 "contient l'alias lié à la tâche)"
+
+#. module: helpdesk
+#: model:helpdesk.team,name:helpdesk.helpdesk_team2
+msgid "IT Support (Auto Assignment by Tags)"
+msgstr "Support informatique (attribution automatique par tags)"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_exception_icon
@@ -2057,6 +2100,7 @@ msgstr "Dernière mise à jour de l'étape"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__write_uid
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__write_uid
 msgid "Last Updated by"
@@ -2068,6 +2112,7 @@ msgstr "Mis à jour par"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__write_date
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__write_date
 msgid "Last Updated on"
@@ -2231,6 +2276,12 @@ msgid "Move to Stage"
 msgstr "Déplacer vers l'étape"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
+msgid "My Activities"
+msgstr "Mes activités"
+
+#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__my_activity_date_deadline
 msgid "My Activity Deadline"
 msgstr "Échéance de mon activité"
@@ -2267,6 +2318,12 @@ msgstr "Mes tickets"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
 msgid "Name"
 msgstr "Nom"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
+#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
+msgid "Neutral"
+msgstr "Neutre"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
@@ -2360,6 +2417,11 @@ msgid "No tags found. Let's create one!"
 msgstr "Aucune étiquette trouvée. Créons-en une !"
 
 #. module: helpdesk
+#: model_terms:ir.actions.act_window,help:helpdesk.action_helpdesk_tag_assignment
+msgid "No tags or team members found. Let's create them!"
+msgstr "Aucun tag ni membre d'équipe trouvé. Créons-les !"
+
+#. module: helpdesk
 #: model_terms:ir.actions.act_window,help:helpdesk.helpdesk_team_dashboard_action_main
 msgid "No teams found"
 msgstr "Aucune équipe trouvée"
@@ -2441,12 +2503,6 @@ msgstr "Nombre d'autres tickets du même partenaire"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 msgid "Number of tickets closed in the past 7 days."
 msgstr "Nombre de tickets clôturés au cours des 7 derniers jours."
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Okay"
-msgstr "Bien"
 
 #. module: helpdesk
 #: model:helpdesk.stage,name:helpdesk.stage_on_hold
@@ -2784,12 +2840,6 @@ msgid "Red Kanban Label"
 msgstr "Indicateur Kanban rouge"
 
 #. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/controllers/portal.py:0
-msgid "Reference"
-msgstr "Référence"
-
-#. module: helpdesk
 #: model:mail.message.subtype,name:helpdesk.mt_ticket_refund_status
 msgid "Refund Status"
 msgstr "Statut du remboursement"
@@ -2973,22 +3023,10 @@ msgid "SMS Delivery error"
 msgstr "Erreur d'envoi SMS"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Sad face"
-msgstr "Visage triste"
-
-#. module: helpdesk
 #. odoo-javascript
 #: code:addons/helpdesk/static/src/components/helpdesk_team_dashboard/helpdesk_team_dashboard.xml:0
 msgid "Sample"
 msgstr "Échantillon"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Satisfied"
-msgstr "Satisfait"
 
 #. module: helpdesk
 #. odoo-javascript
@@ -3130,10 +3168,10 @@ msgstr "Afficher les Politiques SLA"
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
-msgid "Show all records which has next action date is before today"
+msgid "Show all records whose next activity date is past"
 msgstr ""
-"Montrez tous les enregistrements pour lesquels la date des prochaines "
-"actions est pour aujourd'hui ou avant. "
+"Afficher tous les enregistrements dont la date de la prochaine activité est "
+"dépassée"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__sla_id
@@ -3285,6 +3323,12 @@ msgid "Team"
 msgstr "Équipe"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_tag_assignment_search
+msgid "Team Member"
+msgstr "Membre de l'équipe"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__user_ids
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__member_ids
 msgid "Team Members"
 msgstr "Membres de l'équipe"
@@ -3334,17 +3378,6 @@ msgid ""
 msgstr ""
 "Le temps passé dans ces étapes ne sera pas pris en compte dans le calcul du "
 "SLA."
-
-#. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/models/helpdesk_team.py:0
-msgid ""
-"The visibility of the team needs to be set as \"Invited portal users and all"
-" internal users\" in order to use the website form."
-msgstr ""
-"La visibilité de l'équipe doit être définie sur \"Utilisateurs du portail "
-"invités et tous les utilisateurs internes\" afin d'utiliser le formulaire du"
-" site web."
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
@@ -3502,6 +3535,11 @@ msgstr "Ticket noté"
 #: model:ir.model,name:helpdesk.model_helpdesk_sla_status
 msgid "Ticket SLA Status"
 msgstr "Statut SLA du ticket"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__tag_id
+msgid "Ticket Tag"
+msgstr "Tag de ticket"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.quick_create_ticket_form
@@ -3682,10 +3720,8 @@ msgid "Unarchive Tickets"
 msgstr "Désarchiver les tickets"
 
 #. module: helpdesk
-#. odoo-javascript
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_graph/helpdesk_ticket_graph_model.js:0
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
 msgid "Unassigned"
@@ -3697,6 +3733,18 @@ msgstr "Non assigné"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 msgid "Unassigned Tickets"
 msgstr "Tickets non assignés"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
+#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
+msgid "Unhappy"
+msgstr "Insatisfait"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
+msgid "Unhappy face"
+msgstr "Visage insatisfait"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
@@ -3774,6 +3822,14 @@ msgstr ""
 " sur Assistance pour commencer.</i>"
 
 #. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_team.py:0
+msgid ""
+"Want to use the website form? Just adjust your team's visibility to "
+"\"Invited portal users and all internal users\" and watch the magic happen!"
+msgstr ""
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.tickets_followup
 msgid ""
 "We hope to have addressed your request satisfactorily. If you no longer need"
@@ -3785,6 +3841,7 @@ msgstr ""
 
 #. module: helpdesk
 #: model_terms:helpdesk.team,description:helpdesk.helpdesk_team1
+#: model_terms:helpdesk.team,description:helpdesk.helpdesk_team2
 #: model_terms:helpdesk.team,description:helpdesk.helpdesk_team3
 msgid ""
 "We provide 24/7 support, Monday through Friday. Ticket responses are usually provided within 2 working days.<br>\n"
@@ -3796,7 +3853,7 @@ msgstr ""
 #. module: helpdesk
 #: model:helpdesk.tag,name:helpdesk.tag_website
 msgid "Website"
-msgstr "Site Web"
+msgstr "Site web"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__use_website_helpdesk_form
@@ -3919,6 +3976,12 @@ msgid "alias"
 msgstr "alias"
 
 #. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/controllers/portal.py:0
+msgid "close_date"
+msgstr "close_date"
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_sla_view_form
 msgid "e.g. Close urgent tickets within 36 hours"
 msgstr "par ex. Clôturer les tickets urgents dans les 36 heures"
@@ -3971,9 +4034,21 @@ msgstr "recherche d'équipe"
 
 #. module: helpdesk
 #. odoo-python
+#: code:addons/helpdesk/models/helpdesk_team.py:0
+msgid "team_id"
+msgstr "team_id"
+
+#. module: helpdesk
+#. odoo-python
 #: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "tickets"
 msgstr "tickets"
+
+#. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/controllers/portal.py:0
+msgid "user_id"
+msgstr "user_id"
 
 #. module: helpdesk
 #: model:mail.template,subject:helpdesk.rating_ticket_request_email_template
@@ -3990,6 +4065,7 @@ msgid "{{ object.name }}"
 msgstr "{{ object.name }}"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_data
-msgid "{{rating.res_name if t['is_helpdesk_user'] else ''}}"
-msgstr "{{rating.res_name if t['is_helpdesk_user'] else ''}}"
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_ticket.py:0
+msgid "👤 Unassigned"
+msgstr "👤 Non assigné"

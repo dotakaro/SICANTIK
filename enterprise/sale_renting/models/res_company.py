@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
@@ -21,8 +20,7 @@ class ResCompany(models.Model):
         help="The product is used to add the cost to the sales order",
         domain="[('type', '=', 'service')]")
 
-    _sql_constraints = [
-        ('min_extra_hour',
-            "CHECK(min_extra_hour >= 1)",
-            "Minimal delay time before applying fines has to be positive."),
-    ]
+    _min_extra_hour = models.Constraint(
+        'CHECK(min_extra_hour >= 1)',
+        "Minimal delay time before applying fines has to be positive.",
+    )

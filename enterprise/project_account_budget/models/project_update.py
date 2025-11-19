@@ -2,6 +2,7 @@
 
 from odoo import api, models
 
+
 class ProjectUpdate(models.Model):
     _inherit = 'project.update'
 

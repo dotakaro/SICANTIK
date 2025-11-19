@@ -15,18 +15,6 @@
             </field>
         </record>
 
-        <record id="account_report_tree_configure_start_dates" model="ir.ui.view">
-            <field name="name">account.report.tree.configure.start.dates</field>
-            <field name="model">account.report</field>
-            <field name="arch" type="xml">
-                <list edit="True" create="False" editable="bottom">
-                    <field name="sequence" widget="handle"/>
-                    <field name="display_name" readonly="1"/>
-                    <field name="tax_closing_start_date" width="180px"/>
-                </list>
-            </field>
-        </record>
-
         <record id="account_report_add_sections_tree" model="ir.ui.view">
             <field name="name">account.report.add.sections.list</field>
             <field name="model">account.report</field>
@@ -67,9 +55,8 @@
                     <field name="company_ids" column_invisible="True"/>
                     <field name="account_type"/>
                     <field name="current_balance"/>
-                    <field name="tax_ids" optional="hide" widget="many2many_tags"/>
+                    <field name="tax_ids" optional="hide" widget="many2many_tax_tags"/>
                     <field name="tag_ids" optional="hide" widget="many2many_tags"/>
-                    <field name="allowed_journal_ids" optional="hide" widget="many2many_tags"/>
                 </list>
             </field>
         </record>
@@ -336,7 +323,6 @@
                     <field name="target_report_expression_id" optional="hide"/>
                     <field name="target_report_line_id" optional="hide"/>
                     <field name="target_report_expression_label" optional="hide"/>
-                    <field name="foreign_vat_fiscal_position_id" optional="hide"/>
                     <field name="company_id" optional="hide" groups="base.group_multi_company"/>
                 </list>
             </field>
@@ -386,8 +372,8 @@
             <field name="name">Create Composite Report</field>
             <field name="model_id" ref="model_account_report"/>
             <field name="binding_model_id" ref="model_account_report"/>
-            <field name="binding_view_types">list</field>
-            <field name="groups_id" eval="[Command.link(ref('account.group_account_user'))]"/>
+            <field name="binding_view_types">list,kanban</field>
+            <field name="group_ids" eval="[Command.link(ref('account.group_account_user'))]"/>
             <field name="state">code</field>
             <field name="code">
 if records:

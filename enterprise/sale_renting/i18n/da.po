@@ -3,20 +3,16 @@
 # 	* sale_renting
 # 
 # Translators:
-# Pernille Kristensen <pernillekristensen1994@gmail.com>, 2024
-# lhmflexerp <lhm@flexerp.dk>, 2024
-# Martin Trigaux, 2024
-# Mads Søndergaard, 2024
-# Mads Søndergaard, 2024
 # Sanne Kristensen <sanne@vkdata.dk>, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-23 18:44+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Sanne Kristensen <sanne@vkdata.dk>, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Danish (https://app.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -149,8 +145,8 @@ msgstr ""
 
 #. module: sale_renting
 #: model_terms:ir.ui.view,arch_db:sale_renting.report_rental_order_document
-msgid "<strong class=\"d-block mt-3\">Shipping Address:</strong>"
-msgstr ""
+msgid "<strong class=\"d-block mt-3\">Shipping Address</strong>"
+msgstr "<strong class=\"d-block mt-3\">Leveringsadresse</strong>"
 
 #. module: sale_renting
 #: model_terms:ir.ui.view,arch_db:sale_renting.rental_schedule_view_gantt
@@ -209,11 +205,6 @@ msgstr "Tillad leje af dette produkt"
 #: model_terms:ir.ui.view,arch_db:sale_renting.res_config_settings_view_form
 msgid "Apply after"
 msgstr "Anvend efter"
-
-#. module: sale_renting
-#: model_terms:ir.ui.view,arch_db:sale_renting.res_config_settings_view_form
-msgid "Ask customer to sign documents on the spot."
-msgstr "Spørg kunde om at underskrive dokumenterne på stedet."
 
 #. module: sale_renting
 #. odoo-javascript
@@ -287,7 +278,7 @@ msgstr "Virksomhed"
 #. module: sale_renting
 #: model:ir.model,name:sale_renting.model_res_config_settings
 msgid "Config Settings"
-msgstr "Konfigurer opsætning"
+msgstr "Konfigurér indstillinger"
 
 #. module: sale_renting
 #: model:ir.ui.menu,name:sale_renting.menu_rental_config
@@ -304,7 +295,7 @@ msgstr "Bekræft ordren når kunden går med til vilkårene."
 #. odoo-javascript
 #: code:addons/sale_renting/static/src/js/tours/rental.js:0
 msgid "Confirm the returned quantities and hit Validate."
-msgstr "Bekræft den returnerede mængde og klik på Godkend."
+msgstr "Bekræft den returnerede mængde og klik på Validér."
 
 #. module: sale_renting
 #: model_terms:ir.ui.view,arch_db:sale_renting.rental_report_search_view
@@ -350,6 +341,7 @@ msgstr "Opret eller vælg en kunde her."
 
 #. module: sale_renting
 #: model:ir.model.fields,field_description:sale_renting.field_sale_order__is_rental_order
+#: model:ir.model.fields,field_description:sale_renting.field_sale_order_line__order_is_rental
 msgid "Created In App Rental"
 msgstr "Oprettet i app udlejning"
 
@@ -472,14 +464,16 @@ msgid "Description"
 msgstr "Beskrivelse"
 
 #. module: sale_renting
-#: model:ir.model.fields,field_description:sale_renting.field_res_config_settings__module_sale_renting_sign
-msgid "Digital Documents"
-msgstr "Digitale dokumenter"
-
-#. module: sale_renting
+#: model:ir.model.fields,field_description:sale_renting.field_product_pricelist__display_name
 #: model:ir.model.fields,field_description:sale_renting.field_product_pricing__display_name
+#: model:ir.model.fields,field_description:sale_renting.field_product_product__display_name
+#: model:ir.model.fields,field_description:sale_renting.field_product_template__display_name
 #: model:ir.model.fields,field_description:sale_renting.field_rental_order_wizard__display_name
 #: model:ir.model.fields,field_description:sale_renting.field_rental_order_wizard_line__display_name
+#: model:ir.model.fields,field_description:sale_renting.field_res_company__display_name
+#: model:ir.model.fields,field_description:sale_renting.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:sale_renting.field_sale_order__display_name
+#: model:ir.model.fields,field_description:sale_renting.field_sale_order_line__display_name
 #: model:ir.model.fields,field_description:sale_renting.field_sale_rental_report__display_name
 #: model:ir.model.fields,field_description:sale_renting.field_sale_rental_schedule__display_name
 #: model:ir.model.fields,field_description:sale_renting.field_sale_temporal_recurrence__display_name
@@ -592,7 +586,7 @@ msgstr "Time"
 #. module: sale_renting
 #: model:sale.temporal.recurrence,name:sale_renting.recurrence_hourly
 msgid "Hourly"
-msgstr ""
+msgstr "Timebasis"
 
 #. module: sale_renting
 #: model:ir.model.fields.selection,name:sale_renting.selection__sale_temporal_recurrence__unit__hour
@@ -600,9 +594,16 @@ msgid "Hours"
 msgstr "Timer"
 
 #. module: sale_renting
+#: model:ir.model.fields,field_description:sale_renting.field_product_pricelist__id
 #: model:ir.model.fields,field_description:sale_renting.field_product_pricing__id
+#: model:ir.model.fields,field_description:sale_renting.field_product_product__id
+#: model:ir.model.fields,field_description:sale_renting.field_product_template__id
 #: model:ir.model.fields,field_description:sale_renting.field_rental_order_wizard__id
 #: model:ir.model.fields,field_description:sale_renting.field_rental_order_wizard_line__id
+#: model:ir.model.fields,field_description:sale_renting.field_res_company__id
+#: model:ir.model.fields,field_description:sale_renting.field_res_config_settings__id
+#: model:ir.model.fields,field_description:sale_renting.field_sale_order__id
+#: model:ir.model.fields,field_description:sale_renting.field_sale_order_line__id
 #: model:ir.model.fields,field_description:sale_renting.field_sale_rental_report__id
 #: model:ir.model.fields,field_description:sale_renting.field_sale_rental_schedule__id
 #: model:ir.model.fields,field_description:sale_renting.field_sale_temporal_recurrence__id
@@ -1018,6 +1019,7 @@ msgstr "Kvartalvis"
 #: model:ir.model.fields.selection,name:sale_renting.selection__sale_rental_report__state__draft
 #: model:ir.model.fields.selection,name:sale_renting.selection__sale_rental_schedule__rental_status__draft
 #: model:ir.model.fields.selection,name:sale_renting.selection__sale_rental_schedule__state__draft
+#: model_terms:ir.ui.view,arch_db:sale_renting.rental_schedule_view_gantt
 msgid "Quotation"
 msgstr "Tilbud"
 
@@ -1325,7 +1327,7 @@ msgstr "Vælg dit udlejnings produkt."
 #: model:ir.actions.act_window,name:sale_renting.action_rental_config_settings
 #: model:ir.ui.menu,name:sale_renting.menu_rental_settings
 msgid "Settings"
-msgstr "Opsætning"
+msgstr "Indstillinger"
 
 #. module: sale_renting
 #: model_terms:ir.ui.view,arch_db:sale_renting.rental_order_wizard_view_form
@@ -1464,14 +1466,10 @@ msgid "Total Tax Included"
 msgstr "Total inkl. moms"
 
 #. module: sale_renting
+#: model:ir.model.fields,field_description:sale_renting.field_sale_rental_report__product_uom_id
+#: model:ir.model.fields,field_description:sale_renting.field_sale_rental_schedule__product_uom_id
 #: model:ir.model.fields,field_description:sale_renting.field_sale_temporal_recurrence__unit
 msgid "Unit"
-msgstr "Enhed"
-
-#. module: sale_renting
-#: model:ir.model.fields,field_description:sale_renting.field_sale_rental_report__product_uom
-#: model:ir.model.fields,field_description:sale_renting.field_sale_rental_schedule__product_uom
-msgid "Unit of Measure"
 msgstr "Enhed"
 
 #. module: sale_renting
@@ -1506,6 +1504,11 @@ msgstr "Godkend forarbejdningen efter tjek af afhentnings mængderne."
 #: model_terms:ir.ui.view,arch_db:sale_renting.product_pricelist_view
 msgid "Variants"
 msgstr "Varianter"
+
+#. module: sale_renting
+#: model_terms:ir.ui.view,arch_db:sale_renting.rental_schedule_view_form
+msgid "Visible to all"
+msgstr "Kan ses af alle"
 
 #. module: sale_renting
 #. odoo-javascript

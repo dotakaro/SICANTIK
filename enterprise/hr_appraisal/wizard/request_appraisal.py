@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 class RequestAppraisal(models.TransientModel):
     _name = 'request.appraisal'
-    _inherit = 'mail.composer.mixin'
+    _inherit = ['mail.composer.mixin']
     _description = "Request an Appraisal"
     _unrestricted_rendering = True
 
@@ -49,17 +49,14 @@ class RequestAppraisal(models.TransientModel):
 
     @api.model
     def _get_recipients(self, employees):
-        partners = self.env['res.partner']
         employees_with_user = employees.filtered('user_id')
+        partners = employees_with_user.user_id.partner_id
 
-        for employee in employees_with_user:
-            partners |= employee.user_id.partner_id
-
-        for employee in employees - employees_with_user:
-            employee_work_email = tools.email_normalize(employee.work_email)
-            if employee_work_email:
-                name_email = tools.formataddr((employee.name, employee_work_email))
-                partners |= self.env['res.partner'].sudo().find_or_create(name_email)
+        employees_wemail = (employees - employees_with_user).filtered('work_email')
+        for employee_partners in employees_wemail._partner_find_from_emails(
+            {emp: [emp.work_email] for emp in employees_wemail}, no_create=False
+        ).values():
+            partners |= employee_partners
         return partners
 
     appraisal_id = fields.Many2one('hr.appraisal', required=True)
@@ -148,7 +145,7 @@ class RequestAppraisal(models.TransientModel):
         context_self.sudo().body = context_self.body.replace('href', 't-att-href')
         body = context_self._render_field('body', appraisal.ids)[appraisal.id]
 
-        appraisal.with_context(mail_post_autofollow=True).message_post(
+        appraisal.message_post(
             author_id=self.author_id.id,
             body=body,
             email_layout_xmlid='mail.mail_notification_light',

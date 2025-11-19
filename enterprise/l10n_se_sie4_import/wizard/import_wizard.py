@@ -6,6 +6,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, Command, fields, models, modules, tools
+from odoo.exceptions import UserError
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 
 DATEFORMAT_SIE4 = '%Y%m%d'
@@ -236,7 +237,7 @@ class SIE4ImportWizard(models.TransientModel):
         :param str sie4_line: a string of a line in the SIE 4 file
         :rtype: list[str]
         """
-        sie4_line = sie4_line.replace('{', '"').replace('}', '"').strip()
+        sie4_line = sie4_line.replace('{', '"').replace('}', '"').replace('\t', ' ').strip()
         sie4_line = re.sub(r' +', ' ', sie4_line)  # filter double spaces between words
         reader = csv.reader([sie4_line], delimiter=' ')
         return next(reader)
@@ -253,6 +254,13 @@ class SIE4ImportWizard(models.TransientModel):
             case '#ORGNR':
                 return {'org_number': args[0]}
             case '#ADRESS':
+                if len(args) < 4:
+                    raise UserError(_(
+                        'Missing element in #ADRESS line.\n'
+                        'Expected format: "contact" "distribution address" "postal address" "telephone".\n'
+                        'Received data: %(data)s.',
+                        data=" ".join(args),
+                    ))
                 return {'addr_detail': args[1], 'addr_main': args[2], 'telephone': args[3]}
             case '#FNAMN':
                 return {'company_name': args[0]}
@@ -280,7 +288,7 @@ class SIE4ImportWizard(models.TransientModel):
         The dictionary fields other than the label are to be used as the parameter for its respective label methods.
         """
         sie4_bytes = base64.b64decode(self.attachment_file)
-        sie4_lines = sie4_bytes.decode('ISO-8859-1').split('\n')
+        sie4_lines = sie4_bytes.decode('UTF-8').split('\n')
         sie4_data = []
         idx = 0
 
@@ -296,7 +304,9 @@ class SIE4ImportWizard(models.TransientModel):
             if label and label == '#VER':
                 transactions = []
                 idx += 2  # skips `{` line and read the transaction items immediately
-                inner_line_items = self._get_sie4_line_items(sie4_lines[idx])
+                # We don't need the object list for transactions, to keep the same order,
+                # we delete this part which can have more than one element
+                inner_line_items = self._get_sie4_line_items(re.sub(r'\{.*}', ' "" ', sie4_lines[idx]))
 
                 while sie4_lines[idx].strip() != '}':
                     if inner_line_items and inner_line_items[0] == '#TRANS':  # only accept #TRANS key; ignore #RTRANS and #BTRANS if it exists
@@ -305,7 +315,7 @@ class SIE4ImportWizard(models.TransientModel):
                             'balance': float(inner_line_items[3]),
                         })
                     idx += 1
-                    inner_line_items = self._get_sie4_line_items(sie4_lines[idx])
+                    inner_line_items = self._get_sie4_line_items(re.sub(r"\{.*}", ' "" ', sie4_lines[idx]))
 
                 ver_series, ver_nb, ver_date = line_items[1:4]
                 ver_text = line_items[4] if len(line_items) > 4 else ''

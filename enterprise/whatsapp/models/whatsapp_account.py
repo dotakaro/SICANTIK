@@ -2,21 +2,22 @@
 
 import logging
 import mimetypes
+import psycopg2
 import secrets
 import string
 from markupsafe import Markup
 
-from odoo import api, fields, models, _
+from odoo import SUPERUSER_ID, api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.addons.whatsapp.tools.whatsapp_api import WhatsAppApi
 from odoo.addons.whatsapp.tools.whatsapp_exception import WhatsAppError
+from odoo.modules.registry import Registry
 from odoo.tools import plaintext2html
-from odoo.models import Constraint
 
 _logger = logging.getLogger(__name__)
 
 
-class WhatsAppAccount(models.Model):
+class WhatsappAccount(models.Model):
     _name = 'whatsapp.account'
     _inherit = ['mail.thread']
     _description = 'WhatsApp Business Account'
@@ -28,10 +29,13 @@ class WhatsAppAccount(models.Model):
     app_secret = fields.Char(string="App Secret", groups='whatsapp.group_whatsapp_admin', required=True)
     account_uid = fields.Char(string="Account ID", required=True, tracking=3)
     phone_uid = fields.Char(string="Phone Number ID", required=True, tracking=4)
+    phone_number = fields.Char(string="Phone Number", copy=False, readonly=True,
+        help="The phone number used in the Whatsapp Business Account.")
     token = fields.Char(string="Access Token", required=True, groups='whatsapp.group_whatsapp_admin')
     webhook_verify_token = fields.Char(string="Webhook Verify Token", compute='_compute_verify_token',
                                        groups='whatsapp.group_whatsapp_admin', store=True)
     callback_url = fields.Char(string="Callback URL", compute='_compute_callback_url', readonly=True, copy=False)
+    debug_logging = fields.Boolean(string="Debug logging", help="Log requests in order to ease debugging")
 
     allowed_company_ids = fields.Many2many(
         comodel_name='res.company', string="Allowed Company",
@@ -43,9 +47,10 @@ class WhatsAppAccount(models.Model):
 
     templates_count = fields.Integer(string="Message Count", compute='_compute_templates_count')
 
-    _constraints = [
-        Constraint('phone_uid_unique', 'unique(phone_uid)', "The same phone number ID already exists")
-    ]
+    _phone_uid_unique = models.Constraint(
+        'unique(phone_uid)',
+        "The same phone number ID already exists",
+    )
 
     @api.constrains('notify_user_ids')
     def _check_notify_user_ids(self):
@@ -66,7 +71,7 @@ class WhatsAppAccount(models.Model):
 
     def _compute_templates_count(self):
         for tmpl in self:
-            tmpl.templates_count = self.env['whatsapp.template'].search_count([('wa_account_id', '=', tmpl.id)])
+            tmpl.templates_count = self.env['whatsapp.template'].search_count([('wa_account_id', 'in', tmpl.ids)])
 
     def button_sync_whatsapp_account_templates(self):
         """
@@ -76,190 +81,36 @@ class WhatsAppAccount(models.Model):
         self.ensure_one()
         try:
             response = WhatsAppApi(self)._get_all_template(fetch_all=True)
+            wa_phone_number = WhatsAppApi(self)._get_phone_number(self.phone_uid)
+            if wa_phone_number:
+                self.phone_number = wa_phone_number
         except WhatsAppError as err:
             raise ValidationError(str(err)) from err
 
         WhatsappTemplate = self.env['whatsapp.template']
         existing_tmpls = WhatsappTemplate.with_context(active_test=False).search([('wa_account_id', '=', self.id)])
-        
-        # Create lookup dictionaries for both wa_template_uid and (template_name, lang_code)
-        existing_tmpl_by_id = {t.wa_template_uid: t for t in existing_tmpls if t.wa_template_uid}
-        existing_tmpl_by_name_lang = {
-            (t.template_name, t.lang_code): t 
-            for t in existing_tmpls 
-            if t.template_name and t.lang_code
-        }
-        
+        existing_tmpl_by_id = {t.wa_template_uid: t for t in existing_tmpls}
         template_update_count = 0
         template_create_count = 0
-        template_skip_count = 0
-        error_messages = []
-        
         if response.get('data'):
             create_vals = []
             for template in response['data']:
-                # Convert template ID to string for comparison (wa_template_uid is Char field)
-                template_id = str(template['id'])
-                template_name = template.get('name', '')
-                lang_code = template.get('language', '')
-                
-                # First, try to find by wa_template_uid (convert to string for comparison)
-                existing_tmpl = existing_tmpl_by_id.get(template_id)
-                
-                # If not found by ID, try to find by (template_name, lang_code)
-                # This handles cases where template was created in Odoo but wa_template_uid is different
-                if not existing_tmpl and template_name and lang_code:
-                    existing_tmpl = existing_tmpl_by_name_lang.get((template_name, lang_code))
-                
+                existing_tmpl = existing_tmpl_by_id.get(template['id'])
                 if existing_tmpl:
-                    # Update existing template
-                    try:
-                        existing_tmpl._update_template_from_response(template)
-                        template_update_count += 1
-                    except Exception as e:
-                        error_messages.append(f"{template_name or 'Unknown'}: {str(e)}")
-                        template_skip_count += 1
-                        _logger.warning("Error updating template %s: %s", template_name, str(e))
+                    template_update_count += 1
+                    existing_tmpl._update_template_from_response(template)
                 else:
-                    # Create new template
-                    try:
-                        template_vals = WhatsappTemplate._create_template_from_response(template, self)
-                        create_vals.append(template_vals)
-                        template_create_count += 1
-                    except Exception as e:
-                        error_messages.append(f"{template_name or 'Unknown'}: {str(e)}")
-                        template_skip_count += 1
-                        _logger.warning("Error creating template %s: %s", template_name, str(e))
-            
-            # Create templates in batch, handling duplicates gracefully
-            if create_vals:
-                for template_vals in create_vals:
-                    template_name = template_vals.get('template_name', '')
-                    lang_code = template_vals.get('lang_code', '')
-                    wa_account_id = template_vals.get('wa_account_id', self.id)
-                    
-                    # Double-check if template already exists (race condition protection)
-                    existing_duplicate = WhatsappTemplate.with_context(active_test=False).search([
-                        ('template_name', '=', template_name),
-                        ('lang_code', '=', lang_code),
-                        ('wa_account_id', '=', wa_account_id)
-                    ], limit=1)
-                    
-                    if existing_duplicate:
-                        # Template already exists, try to update instead
-                        try:
-                            # Get the template data from response again for update
-                            template_id = template_vals.get('wa_template_uid')
-                            if template_id:
-                                # Find the template in response data
-                                template_data = None
-                                for t in response.get('data', []):
-                                    if str(t.get('id')) == str(template_id):
-                                        template_data = t
-                                        break
-                                
-                                if template_data:
-                                    existing_duplicate._update_template_from_response(template_data)
-                                    template_update_count += 1
-                                    template_create_count -= 1  # Adjust count
-                                    _logger.info(f"Updated existing template {template_name} instead of creating duplicate")
-                                else:
-                                    _logger.warning(f"Template {template_name} already exists but cannot find response data for update")
-                                    template_skip_count += 1
-                                    template_create_count -= 1
-                            else:
-                                _logger.warning(f"Template {template_name} already exists but no wa_template_uid for update")
-                                template_skip_count += 1
-                                template_create_count -= 1
-                        except Exception as e:
-                            error_messages.append(f"{template_name}: {str(e)}")
-                            template_skip_count += 1
-                            template_create_count -= 1
-                            _logger.warning("Error updating existing template %s: %s", template_name, str(e))
-                    else:
-                        # Try to create new template
-                        try:
-                            WhatsappTemplate.create(template_vals)
-                        except Exception as e:
-                            # If constraint error, try to find and update existing template
-                            error_str = str(e)
-                            if 'Duplicate template' in error_str or 'unique_name_account_template' in error_str:
-                                # Constraint violation - template exists but wasn't found in our search
-                                # Try to find it again and update
-                                existing_duplicate = WhatsappTemplate.with_context(active_test=False).search([
-                                    ('template_name', '=', template_name),
-                                    ('lang_code', '=', lang_code),
-                                    ('wa_account_id', '=', wa_account_id)
-                                ], limit=1)
-                                
-                                if existing_duplicate:
-                                    try:
-                                        # Get template data from response
-                                        template_id = template_vals.get('wa_template_uid')
-                                        if template_id:
-                                            template_data = None
-                                            for t in response.get('data', []):
-                                                if str(t.get('id')) == str(template_id):
-                                                    template_data = t
-                                                    break
-                                            
-                                            if template_data:
-                                                existing_duplicate._update_template_from_response(template_data)
-                                                template_update_count += 1
-                                                template_create_count -= 1
-                                                _logger.info(f"Updated existing template {template_name} after constraint error")
-                                            else:
-                                                error_messages.append(f"{template_name}: Template exists but cannot update")
-                                                template_skip_count += 1
-                                                template_create_count -= 1
-                                        else:
-                                            error_messages.append(f"{template_name}: Template exists but no wa_template_uid")
-                                            template_skip_count += 1
-                                            template_create_count -= 1
-                                    except Exception as update_error:
-                                        error_messages.append(f"{template_name}: {str(update_error)}")
-                                        template_skip_count += 1
-                                        template_create_count -= 1
-                                        _logger.warning("Error updating template after constraint error %s: %s", template_name, str(update_error))
-                                else:
-                                    # Real error, not just duplicate
-                                    error_messages.append(f"{template_name}: {str(e)}")
-                                    template_skip_count += 1
-                                    template_create_count -= 1
-                                    _logger.warning("Error creating template %s: %s", template_name, str(e))
-                            else:
-                                # Other error
-                                error_messages.append(f"{template_name}: {str(e)}")
-                                template_skip_count += 1
-                                template_create_count -= 1
-                                _logger.warning("Error creating template %s: %s", template_name, str(e))
-        
-        # Build notification message
-        message_parts = []
-        if template_create_count > 0:
-            message_parts.append(_("%(count)s template(s) created", count=template_create_count))
-        if template_update_count > 0:
-            message_parts.append(_("%(count)s template(s) updated", count=template_update_count))
-        if template_skip_count > 0:
-            message_parts.append(_("%(count)s template(s) skipped", count=template_skip_count))
-        
-        message = ", ".join(message_parts) if message_parts else _("No templates to sync")
-        
-        if error_messages:
-            message += "\n\n" + _("Errors:") + "\n" + "\n".join(error_messages[:5])
-            if len(error_messages) > 5:
-                message += f"\n... and {len(error_messages) - 5} more errors."
-        
-        notification_type = 'success' if template_skip_count == 0 else 'warning'
-        
+                    template_create_count += 1
+                    create_vals.append(WhatsappTemplate._create_template_from_response(template, self))
+            WhatsappTemplate.create(create_vals)
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _("Templates synchronized!"),
-                'type': notification_type,
-                'message': message,
-                'sticky': template_skip_count > 0,
+                'type': 'success',
+                'message': _("%(create_count)s were created, %(update_count)s were updated",
+                    create_count=template_create_count, update_count=template_update_count),
                 'next': {'type': 'ir.actions.act_window_close'},
             }
         }
@@ -271,6 +122,9 @@ class WhatsAppAccount(models.Model):
         wa_api = WhatsAppApi(self)
         try:
             wa_api._test_connection()
+            wa_phone_number = wa_api._get_phone_number(self.phone_uid)
+            if wa_phone_number:
+                self.phone_number = wa_phone_number
         except WhatsAppError as e:
             raise UserError(str(e))
         return {
@@ -279,8 +133,19 @@ class WhatsAppAccount(models.Model):
             'params': {
                 'type': 'success',
                 'message': _("Credentials look good!"),
+                'next': {'type': 'ir.actions.act_window_close'},
             }
         }
+
+    def action_debug(self):
+        """Enable debug logging."""
+        self.ensure_one()
+        self.debug_logging = True
+
+    def action_stop_debug(self):
+        """Disable debug logging."""
+        self.ensure_one()
+        self.debug_logging = False
 
     def action_open_templates(self):
         self.ensure_one()
@@ -292,6 +157,28 @@ class WhatsAppAccount(models.Model):
             'type': 'ir.actions.act_window',
             'context': {'default_wa_account_id': self.id},
         }
+
+    def _add_ir_log(self, name, message, func=''):
+        self.ensure_one()
+        self.env.flush_all()
+        db_name = self._cr.dbname
+        # Use a new cursor to avoid rollback that could be caused by an upper method
+        try:
+            db_registry = Registry(db_name)
+            with db_registry.cursor() as cr:
+                env = api.Environment(cr, SUPERUSER_ID, {})
+                env['ir.logging'].create({
+                    'dbname': db_name,
+                    'func': func,
+                    'level': 'DEBUG',
+                    'line': '',
+                    'message': message,
+                    'name': name,
+                    'path': f'whatsapp.account,id={self.id},name={self.name}',
+                    'type': 'server',
+                })
+        except psycopg2.Error:
+            pass
 
     def _find_active_channel(self, sender_mobile_formatted, sender_name=False, create_if_not_found=False):
         """This method will find the active channel for the given sender mobile number."""

@@ -2,8 +2,8 @@
 from odoo import models, fields, api
 
 
-class L10nBrCNAECode(models.Model):
-    _name = "l10n_br.cnae.code"
+class L10n_BrCnaeCode(models.Model):
+    _name = 'l10n_br.cnae.code'
     _description = "CNAE Code"
     _rec_names_search = ["code", "name"]
 

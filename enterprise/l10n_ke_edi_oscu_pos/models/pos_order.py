@@ -226,7 +226,7 @@ class PosOrder(models.Model):
     def action_post_order(self):
         etims_response = self.post_order_to_etims()
         if etims_response.get('error'):
-            raise UserError(f"{etims_response['error']['code']} : {etims_response['error']['message']}")
+            raise UserError(f"{etims_response['error']['code']} : {etims_response['error']['message']}")  # pylint: disable=missing-gettext
 
     def action_post_selected_orders(self, order_ids):
         orders = self.env['pos.order'].browse(order_ids)
@@ -238,7 +238,7 @@ class PosOrder(models.Model):
                     errors.append(etims_response.get('error'))
 
         if len(errors):
-            raise UserError("One or more order(s) have failed, you might want to check them individually.")
+            raise UserError(_("One or more order(s) have failed, you might want to check them individually."))
 
     ###################################################
     # Helpers                                         #

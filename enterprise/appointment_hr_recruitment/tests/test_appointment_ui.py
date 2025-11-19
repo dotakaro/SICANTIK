@@ -34,7 +34,7 @@ class AppointmentCrmUITest(AppointmentCommon, common.HttpCase):
             'no_of_recruitment': 5,
         })
         applicant = self.env['hr.applicant'].sudo().create({
-            'candidate_id': self.env['hr.candidate'].sudo().create({'partner_name': 'Test Applicant'}).id,
+            'partner_name': 'Test Applicant',
             'job_id': job_developer.id,
         })
         request = self.url_open(
@@ -58,4 +58,3 @@ class AppointmentCrmUITest(AppointmentCommon, common.HttpCase):
         self.assertEqual(appointment_type.assign_method, 'resource_time')
         # The default_opportunity_id should be propagated as the field is whitelisted
         appointment_invite = self.env['appointment.invite'].search([('appointment_type_ids', 'in', appointment_type.ids)])
-        self.assertEqual(appointment_invite.applicant_id, applicant)

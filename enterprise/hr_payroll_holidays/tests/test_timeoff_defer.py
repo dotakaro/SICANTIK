@@ -112,7 +112,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
         payslip.action_payslip_done()
         self.assertEqual(payslip.state, 'done')
 
-        leave_1.sudo().action_validate()
+        leave_1.sudo().action_approve()
         self.assertEqual(leave_1.payslip_state, 'blocked', 'Leave should be to defer')
 
         # A Simple User can request a leave if a payslip is paid
@@ -123,7 +123,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
             'request_date_from': '2022-01-19',
             'request_date_to': '2022-01-19',
         })
-        leave_2.sudo().action_validate()
+        leave_2.sudo().action_approve()
         self.assertEqual(leave_2.payslip_state, 'blocked', 'Leave should be to defer')
 
         # Check overlapping periods with no payslip
@@ -134,7 +134,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
             'request_date_from': '2022-01-31',
             'request_date_to': '2022-02-01',
         })
-        leave_3.sudo().action_validate()
+        leave_3.sudo().action_approve()
         self.assertEqual(leave_3.payslip_state, 'blocked', 'Leave should be to defer')
 
         leave_4 = self.env['hr.leave'].with_user(self.vlad).create({
@@ -144,11 +144,11 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
             'request_date_from': '2021-01-31',
             'request_date_to': '2022-01-03',
         })
-        leave_4.sudo().action_validate()
+        leave_4.sudo().action_approve()
         self.assertEqual(leave_4.payslip_state, 'blocked', 'Leave should be to defer')
 
     def test_report_to_next_month(self):
-        self.emp.contract_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
+        self.emp.version_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
         payslip = self.env['hr.payslip'].create({
             'name': 'toto payslip',
             'employee_id': self.emp.id,
@@ -170,7 +170,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
         })
         leave._compute_date_from_to()
         leave = self.env['hr.leave'].create(leave._convert_to_write(leave._cache))
-        leave.action_validate()
+        leave.action_approve()
         self.assertEqual(leave.payslip_state, 'blocked', 'Leave should be to defer')
 
         leave.action_report_to_next_month()
@@ -192,7 +192,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
         If the time off overlap over 2 months, only report the exceeding part from january
         In case leaves go over two months, only the leaves that are in the first month should be defered
         """
-        self.emp.contract_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
+        self.emp.version_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
         payslip = self.env['hr.payslip'].create({
             'name': 'toto payslip',
             'employee_id': self.emp.id,
@@ -214,7 +214,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
         })
         leave._compute_date_from_to()
         leave = self.env['hr.leave'].create(leave._convert_to_write(leave._cache))
-        leave.action_validate()
+        leave.action_approve()
         self.assertEqual(leave.payslip_state, 'blocked', 'Leave should be to defer')
 
         leave.action_report_to_next_month()
@@ -235,7 +235,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
 
     def test_report_to_next_month_not_enough_days(self):
         # If the time off contains too many days to be reported to next months, raise
-        self.emp.contract_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
+        self.emp.version_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
         payslip = self.env['hr.payslip'].create({
             'name': 'toto payslip',
             'employee_id': self.emp.id,
@@ -257,7 +257,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
         })
         leave._compute_date_from_to()
         leave = self.env['hr.leave'].create(leave._convert_to_write(leave._cache))
-        leave.action_validate()
+        leave.action_approve()
         self.assertEqual(leave.payslip_state, 'blocked', 'Leave should be to defer')
 
         with self.assertRaises(UserError):
@@ -265,7 +265,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
 
     def test_report_to_next_month_long_time_off(self):
         # If the time off overlap over more than 2 months, raise
-        self.emp.contract_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
+        self.emp.version_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
         payslip = self.env['hr.payslip'].create({
             'name': 'toto payslip',
             'employee_id': self.emp.id,
@@ -287,7 +287,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
         })
         leave._compute_date_from_to()
         leave = self.env['hr.leave'].create(leave._convert_to_write(leave._cache))
-        leave.action_validate()
+        leave.action_approve()
         self.assertEqual(leave.payslip_state, 'blocked', 'Leave should be to defer')
 
         with self.assertRaises(UserError):
@@ -295,7 +295,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
 
     def test_report_to_next_month_half_days(self):
         self.leave_type.request_unit = 'half_day'
-        self.emp.contract_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
+        self.emp.version_ids.generate_work_entries(date(2022, 1, 1), date(2022, 2, 28))
         payslip = self.env['hr.payslip'].create({
             'name': 'toto payslip',
             'employee_id': self.emp.id,
@@ -318,7 +318,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
         leave._compute_date_from_to()
         leave = self.env['hr.leave'].create(leave._convert_to_write(leave._cache))
 
-        leave.action_validate()
+        leave.action_approve()
         self.assertEqual(leave.payslip_state, 'blocked', 'Leave should be to defer')
 
         leave.action_report_to_next_month()
@@ -339,7 +339,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
          If you have a time off 5 days on Jun and 3 days on july, when you "defer it to next month"
          it's only the 5 days of Jun that should be postponed to july.
          """
-        self.emp.contract_ids._generate_work_entries(datetime(2023, 6, 1), datetime(2023, 7, 31))
+        self.emp.version_ids._generate_work_entries(datetime(2023, 6, 1), datetime(2023, 7, 31))
         payslip = self.env['hr.payslip'].create({
             'name': 'toto payslip',
             'employee_id': self.emp.id,
@@ -364,7 +364,7 @@ class TestTimeoffDefer(TestPayrollHolidaysBase):
             'request_date_to': '2023-07-05 23:59:59',
             }]
         leaves = self.env['hr.leave'].create(leave_data)
-        leaves.action_validate()
+        leaves.action_approve()
         leaves[0].action_report_to_next_month()
         # reported work entries between the 1st of july 2023 to the 31st of july 2023
         july_work_entries = self.env['hr.work.entry'].search([

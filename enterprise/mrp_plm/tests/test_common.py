@@ -10,7 +10,7 @@ class TestPlmCommon(common.TransactionCase):
         super(TestPlmCommon, cls).setUpClass()
         cls.Bom = cls.env['mrp.bom']
         grp_workorder = cls.env.ref('mrp.group_mrp_routings')
-        cls.env.user.write({'groups_id': [(4, grp_workorder.id)]})
+        cls.env.user.write({'group_ids': [(4, grp_workorder.id)]})
         cls.table = cls.env['product.product'].create({
             'name': 'Table (MTO)',
             'is_storable': True,
@@ -33,7 +33,6 @@ class TestPlmCommon(common.TransactionCase):
 
         cls.workcenter_1 = cls.env['mrp.workcenter'].create({
             'name': 'Workcenter',
-            'default_capacity': 2,
             'time_start': 10,
             'time_stop': 5,
             'time_efficiency': 80,
@@ -41,7 +40,6 @@ class TestPlmCommon(common.TransactionCase):
 
         cls.workcenter_2 = cls.env['mrp.workcenter'].create({
             'name': 'Nuclear Workcenter',
-            'default_capacity': 2,
             'time_start': 10,
             'time_stop': 5,
             'time_efficiency': 80,
@@ -49,7 +47,6 @@ class TestPlmCommon(common.TransactionCase):
 
         cls.workcenter_3 = cls.env['mrp.workcenter'].create({
             'name': 'Nuclear Weapon Workcenter',
-            'default_capacity': 2,
             'time_start': 10,
             'time_stop': 5,
             'time_efficiency': 80,

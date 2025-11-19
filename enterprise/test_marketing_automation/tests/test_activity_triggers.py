@@ -102,7 +102,7 @@ for record in records:
         cls.env.flush_all()
 
 
-@tagged('marketing_automation', 'marketing_activity', 'ma_sync')
+@tagged('marketing_automation', 'ma_sync')
 class TestActivityTriggers(ActivityTriggersCase):
 
     @classmethod
@@ -275,6 +275,7 @@ class TestActivityTriggers(ActivityTriggersCase):
         self.assertMarketAutoTraces(
             [{
                 'records': test_records_ok,
+                'records_to_partner': {r.id: r.customer_id for r in test_records_ok},
                 'status': 'processed',
                 'fields_values': {
                     'schedule_date': self.date_reference + timedelta(hours=1),

@@ -15,7 +15,7 @@ class TestHrAppraisalFeedback(TransactionCase):
         self.user = self.env['res.users'].create({
             'name': 'Test',
             'login': 'test',
-            'groups_id': [(6, 0, [group])],
+            'group_ids': [(6, 0, [group])],
             'notification_type': 'email',
         })
 
@@ -33,7 +33,7 @@ class TestHrAppraisalFeedback(TransactionCase):
         self.appraisal = self.env['hr.appraisal'].create({
             'employee_id': self.test_employee.id,
             'manager_ids': [self.manager.id],
-            'state': 'pending',
+            'state': '2_pending',
         })
 
         self.appraisal_survey = self.env['survey.survey'].create({
@@ -57,3 +57,7 @@ class TestHrAppraisalFeedback(TransactionCase):
 
         survey_input = self.env['survey.user_input'].search([('appraisal_id', '=', self.appraisal.id)])
         self.assertEqual(feedback['deadline'], survey_input['deadline'].date())
+
+        # by the way, check that completed_survey_count is computed correctly
+        survey_input._mark_done()
+        self.assertEqual(self.appraisal.completed_survey_count, 1)

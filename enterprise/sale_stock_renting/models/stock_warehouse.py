@@ -1,6 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import models, api
+from odoo import api, models
 
 
 class StockWarehouse(models.Model):
@@ -8,16 +8,19 @@ class StockWarehouse(models.Model):
 
     @api.model
     def update_rental_rules(self):
+        warehouse_rental_route = self.env.ref('sale_stock_renting.route_rental')
+        if not self.env.user.has_group('sale_stock_renting.group_rental_stock_picking'):
+            warehouse_rental_route.rule_ids.active = False
+            warehouse_rental_route.active = False
         warehouses = self.env['stock.warehouse'].sudo().search([])
         for warehouse in warehouses:
             warehouse._create_or_update_route()
 
     def _create_or_update_route(self):
         warehouse_rental_route = self.env.ref('sale_stock_renting.route_rental')
-        if not self.env.user.has_group('sale_stock_renting.group_rental_stock_picking'):
-            if warehouse_rental_route.active:
-                warehouse_rental_route.rule_ids.active = False
-                warehouse_rental_route.active = False
+        if not self.env['res.groups']._is_feature_enabled(
+            'sale_stock_renting.group_rental_stock_picking'
+        ):
             return super()._create_or_update_route()
         warehouse_rental_route.active = True
         rental_rules = self.env['stock.rule'].with_context(active_test=False).search([

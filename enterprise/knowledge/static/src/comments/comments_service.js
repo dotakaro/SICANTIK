@@ -3,7 +3,7 @@ import { batched, reactive } from "@odoo/owl";
 import { Deferred } from "@web/core/utils/concurrency";
 import { rpc } from "@web/core/network/rpc";
 import { browser } from "@web/core/browser/browser";
-import { uuid } from "@web/views/utils";
+import { uuid } from "@web/core/utils/strings";
 import { effect } from "@web/core/utils/reactive";
 
 const ARTICLE_THREAD_FIELDS = [
@@ -31,6 +31,7 @@ export const knowledgeCommentsService = {
         this.commentsState = reactive({
             articleId: undefined,
             activeThreadId: undefined,
+            shouldOpenActiveThread: false,
             // database records
             threadRecords: {},
             // mail.store instances
@@ -57,6 +58,7 @@ export const knowledgeCommentsService = {
         );
         return {
             createThread: this.createThread.bind(this),
+            createThreadAndPost: this.createThreadAndPost.bind(this),
             createVirtualThread: this.createVirtualThread.bind(this),
             deleteThread: this.deleteThread.bind(this),
             fetchMessages: this.fetchMessages.bind(this),
@@ -67,8 +69,8 @@ export const knowledgeCommentsService = {
             updateResolveState: this.updateResolveState.bind(this),
         };
     },
-    async createThread(value, postData) {
-        if (!value || !("undefined" in this.commentsState.editorThreads)) {
+    async createThread() {
+        if (!("undefined" in this.commentsState.editorThreads)) {
             return;
         }
         const loadingId = this.loadingId;
@@ -84,14 +86,25 @@ export const knowledgeCommentsService = {
         this.commentsState.editorThreads[record.id] = this.commentsState.editorThreads["undefined"];
         delete this.commentsState.editorThreads["undefined"];
         this.commentsState.editorThreads[record.id].setThreadId(record.id);
-        clearThreadComposer(this.commentsState.threads["undefined"].composer);
         const thread = this.services["mail.store"].Thread.insert({
             id: record.id,
             model: "knowledge.article.thread",
             articleId: this.commentsState.articleId,
         });
         this.commentsState.threads[record.id] = thread;
+        const { Composer } = this.commentsState.threads["undefined"].composer.toData();
+        Composer[0].thread = thread;
+        thread.composer = Composer[0];
+        clearThreadComposer(this.commentsState.threads["undefined"].composer);
+        return thread;
+    },
+    async createThreadAndPost(value, postData) {
+        const thread = await this.createThread();
+        if (!thread) {
+            return;
+        }
         thread.post(value, postData);
+        clearThreadComposer(thread.composer);
         return thread;
     },
     createVirtualThread() {
@@ -317,6 +330,7 @@ export const knowledgeCommentsService = {
         this.loadingId = uuid();
         this.commentsState.activeThreadId = undefined;
         this.commentsState.focusedThreads = new Set();
+        this.commentsState.shouldOpenActiveThread = false;
         this.commentsState.threadRecords = {};
         this.commentsState.threads = {};
         this.commentsState.disabledEditorThreads = {};

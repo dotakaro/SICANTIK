@@ -3,37 +3,28 @@
 # 	* frontdesk
 # 
 # Translators:
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Simo Suurla <simo@suurla.fi>, 2024
-# Jessica Jakara, 2024
-# Tommi Rintala <tommi.rintala@gmail.com>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Miku Laitinen <miku.laitinen@gmail.com>, 2024
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
-# Joakim Weckman, 2024
-# Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2024
-# Eino Mäkitalo <eino.makitalo@netitbe.fi>, 2024
-# Martin Trigaux, 2024
-# Mikko Salmela <salmemik@gmail.com>, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Teija Hölttä <teija.holtta@gmail.com>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
 # Wil Odoo, 2025
+# Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Jessica Jakara, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid " - Manager: %(manager_name)s"
+msgstr " - Esihenkilö: %(manager_name)s"
 
 #. module: frontdesk
 #. odoo-python
@@ -55,6 +46,12 @@ msgstr "%(station)s Sisäänkirjautuminen: %(visitor)s tapaamaan %(host)s"
 
 #. module: frontdesk
 #. odoo-python
+#: code:addons/frontdesk/models/frontdesk_frontdesk.py:0
+msgid "%s (copy)"
+msgstr "%s (kopio)"
+
+#. module: frontdesk
+#. odoo-python
 #: code:addons/frontdesk/models/frontdesk_visitor.py:0
 msgid "%s just checked-in."
 msgstr "%s kirjautui juuri sisään."
@@ -65,24 +62,35 @@ msgid "'Badge - %s' % (object.name).replace('/', '')"
 msgstr "'Nimilappu - %s' % (object.name).replace('/', '')"
 
 #. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid ",<br/>I hope this message finds you well. This is to inform you that"
+msgstr ""
+",<br/>Toivottavasti viesti tavoittaa sinut. Haluamme tiedottaa sinulle, että"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid ""
+".\n"
+"                    <br/>Please let us know if you would like us to direct them to a meeting room or if you require any further assistance.\n"
+"                    <br/>After a successful meeting with the visitor, please proceed to check out their login."
+msgstr ""
+".\n"
+"                    <br/>Kerro meille, jos haluat meidän ohjaavan heidät kokoushuoneeseen tai jos tarvitset lisäapua.\n"
+"                    <br/>Onnistuneen kokouksen jälkeen tarkista vierailijan kirjautumistiedot."
+
+#. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.print_visitor_badge
 msgid "22 Oct 24 14:20:10"
 msgstr "22 lokakuu 24 14:20:10"
 
 #. module: frontdesk
-#: model:mail.template,body_html:frontdesk.frontdesk_mail_template
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_check_out
 msgid ""
-"<div>\n"
-"                    <p>Hello <t t-if=\"ctx.get('host_name')\"><t t-out=\"ctx.get('host_name')\"/>, </t><b><t t-out=\"object.name\"/></b> <t t-if=\"object.phone\">(<t t-out=\"object.phone\"/>)</t><t t-if=\"object.company\">, coming from <t t-out=\"object.company\"/></t> is asking to meet you at <t t-out=\"object.station_id.name\"/>. Please let them know you'll be there shortly.\n"
-"                    </p>\n"
-"                </div>\n"
-"            "
+"<i class=\"fa fa-check-circle fa-3x d-block mb-3 text-success\"/>\n"
+"                    The visitor has been successfully <br/> checked out"
 msgstr ""
-"<div>\n"
-"                    <p>Hei <t t-if=\"ctx.get('host_name')\"><t t-out=\"ctx.get('host_name')\"/>, </t><b><t t-out=\"object.name\"/></b> <t t-if=\"object.phone\">(<t t-out=\"object.phone\"/>)</t><t t-if=\"object.company\">, joka on tulossa <t t-out=\"object.company\"/></t>, pyytää tapaamista <t t-out=\"object.station_id.name\"/>. Ilmoita heille, että tulet pian.\n"
-"                    </p>\n"
-"                </div>\n"
-"            "
+"<i class=\"fa fa-check-circle fa-3x d-block mb-3 text-success\"/>\n"
+"                   Vierailija on kirjattu ulos <br/> onnistuneesti"
 
 #. module: frontdesk
 #: model_terms:web_tour.tour,rainbow_man_message:frontdesk.frontdesk_tour
@@ -97,6 +105,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:frontdesk.print_visitor_badge
 msgid "<strong>Visiting:</strong>"
 msgstr "<strong>Vierailevat:</strong>"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_needaction
+msgid "Action Needed"
+msgstr "Vaatii toimenpiteitä"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_drink__active
@@ -142,6 +155,11 @@ msgid "Are you one of these people?"
 msgstr "Oletko sinä yksi näistä?"
 
 #. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_attachment_count
+msgid "Attachment Count"
+msgstr "Liitteiden määrä"
+
+#. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__authenticate_guest
 msgid "Authenticate Guest"
 msgstr "Tunnista vieras"
@@ -151,6 +169,11 @@ msgstr "Tunnista vieras"
 #: code:addons/frontdesk/static/src/navbar/navbar.xml:0
 msgid "Back"
 msgstr "Takaisin"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid "Best regards,<br/>"
+msgstr "Parhain terveisin,<br/>"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_search
@@ -178,6 +201,11 @@ msgstr "Kirjaudu sisään"
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__check_out
 msgid "Check Out"
 msgstr "Kirjaudu ulos"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid "Check Out Visitor"
+msgstr "Kirjaa vierailija ulos"
 
 #. module: frontdesk
 #. odoo-javascript
@@ -228,6 +256,7 @@ msgstr "Maksamaan"
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/end_page/end_page.xml:0
 #: code:addons/frontdesk/static/src/register_page/register_page.xml:0
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_check_out
 msgid "Close"
 msgstr "Sulje"
 
@@ -284,6 +313,17 @@ msgstr "Tumma"
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_search
 msgid "Date"
 msgstr "Päivämäärä"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid "Dear"
+msgstr "Hyvä"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "Dear %(visitor_name)s,"
+msgstr "Hyvä %(visitor_name)s,"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__description
@@ -373,11 +413,6 @@ msgid "Email"
 msgstr "Sähköposti"
 
 #. module: frontdesk
-#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__mail_template_id
-msgid "Email Template"
-msgstr "Sähköpostin mallipohja"
-
-#. module: frontdesk
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/js/tours/frontdesk.js:0
 msgid "Enter the visitor's name."
@@ -389,9 +424,20 @@ msgid "Favorite"
 msgstr "Suosikki"
 
 #. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_follower_ids
+msgid "Followers"
+msgstr "Seuraajat"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "Seuraajat (kumppanit)"
+
+#. module: frontdesk
 #: model:ir.actions.client,name:frontdesk.frontdesk_action_install_kiosk_pwa
 #: model:ir.model,name:frontdesk.model_frontdesk_frontdesk
 #: model:ir.ui.menu,name:frontdesk.frontdesk_menu_root
+#: model:res.groups.privilege,name:frontdesk.res_groups_privilege_frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_form
 msgid "Frontdesk"
 msgstr "Vastaanottotiski"
@@ -400,11 +446,6 @@ msgstr "Vastaanottotiski"
 #: model:ir.model,name:frontdesk.model_frontdesk_drink
 msgid "Frontdesk Drink"
 msgstr "Vastaanottotiskin juoma"
-
-#. module: frontdesk
-#: model:mail.template,name:frontdesk.frontdesk_mail_template
-msgid "Frontdesk Email Template"
-msgstr "Vastaanottotiskin sähköpostimalli"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__name
@@ -436,6 +477,11 @@ msgstr "Vieras paikalla"
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__guest_on_site
 msgid "Guests On Site"
 msgstr "Vieraat paikalla"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__has_message
+msgid "Has Message"
+msgstr "Sisältää viestin"
 
 #. module: frontdesk
 #: model:sms.template,body:frontdesk.frontdesk_sms_template
@@ -490,6 +536,17 @@ msgid "ID"
 msgstr "ID"
 
 #. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "Jos valittu, uudet viestit vaativat huomiotasi."
+
+#. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_has_error
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr "Jos valittu, joitakin viestejä ei ole toimitettu."
+
+#. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__image
 msgid "Image"
 msgstr "Kuva"
@@ -505,6 +562,11 @@ msgid "Is Favorite"
 msgstr "On suosikki"
 
 #. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_is_follower
+msgid "Is Follower"
+msgstr "On seuraaja"
+
+#. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.print_visitor_badge
 msgid "Karen"
 msgstr "Karen"
@@ -512,12 +574,12 @@ msgstr "Karen"
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_kanban
 msgid "Kiosk"
-msgstr "Kioski"
+msgstr "Itsepalvelupääte"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__kiosk_url
 msgid "Kiosk URL"
-msgstr "Kioskin URL-osoite"
+msgstr "Itsepalvelupäätteen URL-osoite"
 
 #. module: frontdesk
 #. odoo-python
@@ -587,6 +649,16 @@ msgstr "MY PVT LTD"
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_form
 msgid "Message"
 msgstr "Viesti"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_has_error
+msgid "Message Delivery error"
+msgstr "Ongelma viestin toimituksessa"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_ids
+msgid "Messages"
+msgstr "Viestit"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_search
@@ -659,6 +731,26 @@ msgid "Notify the host on guest arrival"
 msgstr "Ilmoita isännälle vieraan saapumisesta"
 
 #. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_needaction_counter
+msgid "Number of Actions"
+msgstr "Toimenpiteiden määrä"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_has_error_counter
+msgid "Number of errors"
+msgstr "Virheiden määrä"
+
+#. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "Toimenpiteitä vaativien viestien määrä"
+
+#. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "Toimitusvirheellisten viestien määrä"
+
+#. module: frontdesk
 #: model_terms:ir.actions.act_window,help:frontdesk.action_frontdesk_visitor
 #: model_terms:ir.actions.act_window,help:frontdesk.action_open_drink_to_serve_visitor
 #: model_terms:ir.actions.act_window,help:frontdesk.action_open_guest_on_site_visitor
@@ -685,7 +777,7 @@ msgstr "Avoin työpöytä"
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_form
 msgid "Open Kiosk"
-msgstr "Avoin kioski"
+msgstr "Avoin Itsepalvelupääte"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_form
@@ -757,6 +849,7 @@ msgstr "Tulosta vierailijakyltti"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__visitor_properties
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_search
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_tree
 msgid "Properties"
 msgstr "Ominaisuudet"
@@ -777,6 +870,11 @@ msgstr "QR-koodi on vanhentunut."
 #: code:addons/frontdesk/static/src/quick_check_in/quick_check_in.xml:0
 msgid "Quick Check In"
 msgstr "Nopea sisäänkirjautuminen"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__rating_ids
+msgid "Ratings"
+msgstr "Arviointi"
 
 #. module: frontdesk
 #: model:ir.ui.menu,name:frontdesk.frontdesk_menu_report
@@ -804,6 +902,11 @@ msgstr "Vastuuhenkilö"
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__responsible_ids
 msgid "Responsibles"
 msgstr "Vastuulliset"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr "Tekstiviestin toimitusvirhe"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__sms_template_id
@@ -843,15 +946,15 @@ msgid "Send an SMS to the host on guest arrival"
 msgstr "Lähetä tekstiviesti isännälle vieraan saapuessa"
 
 #. module: frontdesk
-#: model:mail.template,description:frontdesk.frontdesk_mail_template
-msgid "Sent to hosts on guest arrival"
-msgstr "Lähetetään isännille vieraiden saapuessa"
-
-#. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_drink__sequence
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_drink_view_form
 msgid "Sequence"
 msgstr "Järjestys"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_form
+msgid "Set as Planned"
+msgstr "Aseta suunnitelman mukaan"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_form
@@ -917,6 +1020,12 @@ msgid "Thank you for registering!"
 msgstr "Kiitos rekisteröitymisestä!"
 
 #. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "Thanks for your understanding."
+msgstr "Kiitos ymmärryksestäsi."
+
+#. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__theme
 msgid "Theme"
 msgstr "Teema"
@@ -964,6 +1073,26 @@ msgid "Visitors"
 msgstr "Vierailijat"
 
 #. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid ""
+"We regret to inform you that the following %(host_status)s currently "
+"unavailable:"
+msgstr ""
+"Valitettavasti joudumme ilmoittamaan, että seuraavat %(host_status)s eivät "
+"ole tällä hetkellä tavoitettavissa:"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__website_message_ids
+msgid "Website Messages"
+msgstr "Verkkosivun ilmoitukset"
+
+#. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__website_message_ids
+msgid "Website communication history"
+msgstr "Verkkosivun viestihistoria"
+
+#. module: frontdesk
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/welcome_page/welcome_page.xml:0
 msgid "Welcome to"
@@ -991,6 +1120,16 @@ msgstr "Kirjoita viesti..."
 #: code:addons/frontdesk/static/src/register_page/register_page.xml:0
 msgid "Yes, please"
 msgstr "Kyllä, kiitos"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid ""
+"You can contact the host's manager or frontdesk responsible for further "
+"assistance."
+msgstr ""
+"Voit ottaa yhteyttä hostin esihenkilöön tai vastaanottoon saadaksesi "
+"lisäapua."
 
 #. module: frontdesk
 #. odoo-javascript
@@ -1023,15 +1162,31 @@ msgid "Your Phone Number"
 msgstr "Puhelinnumerosi"
 
 #. module: frontdesk
-#: model:mail.template,subject:frontdesk.frontdesk_mail_template
-msgid "Your Visitor {{ object.name }} Requested To Meet You"
-msgstr "Vierailijasi {{ object.name }} pyytää tapaamista kanssasi"
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "Your Visitor %(name)s Requested To Meet You"
+msgstr "Vierailijasi %(name)s pyysi tavata sinut"
 
 #. module: frontdesk
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/end_page/end_page.xml:0
 msgid "Your drink is on the way."
 msgstr "Juomasi on tulossa."
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "Your host isn't available"
+msgstr "Host ei ole tavoitettavissa"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid ""
+"and is here for their scheduled meeting with you.\n"
+"                    They are currently waiting in the"
+msgstr ""
+"ja on saapunut paikalle kokoustanne varten.\n"
+"                        He odottavat parhaillaan"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_drink_view_form
@@ -1057,10 +1212,33 @@ msgid "e.g. john@company.com"
 msgstr "esim. john@company.com"
 
 #. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid "has arrived from"
+msgstr "on saapunut"
+
+#. module: frontdesk
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/end_page/end_page.xml:0
 msgid "has been informed."
 msgstr "on ilmoitettu."
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "host is"
+msgstr "host on"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "hosts are"
+msgstr "hostina ovat"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_frontdesk.py:0
+msgid "station_id.id"
+msgstr "station_id.id"
 
 #. module: frontdesk
 #. odoo-javascript

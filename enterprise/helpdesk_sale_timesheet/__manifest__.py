@@ -3,7 +3,7 @@
 
 {
     'name': 'Sell Helpdesk Timesheet',
-    'category': 'Hidden',
+    'category': 'Services/Helpdesk',
     'summary': 'Project, Helpdesk, Timesheet and Sale Orders',
     'depends': ['helpdesk_timesheet', 'sale_timesheet_enterprise', 'helpdesk_sale'],
     'description': """
@@ -18,16 +18,12 @@
         'views/helpdesk_sla_views.xml',
         'views/helpdesk_portal_templates.xml',
         'views/project_project_views.xml',
-        'views/sale_views.xml',
+        'views/sale_order_views.xml',
         'report/helpdesk_ticket_analysis_views.xml',
         'report/helpdesk_sla_analysis_views.xml',
     ],
     'demo': ['data/helpdesk_sale_timesheet_demo.xml'],
-    'assets': {
-        'web.assets_tests': [
-            'helpdesk_sale_timesheet/static/tests/tours/**/*',
-        ],
-    },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'post_init_hook': '_helpdesk_sale_timesheet_post_init'
 }

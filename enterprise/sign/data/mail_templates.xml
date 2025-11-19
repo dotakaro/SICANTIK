@@ -22,7 +22,7 @@
     <tr><td valign="top">
         <div style="margin:16px auto; text-align:center;">
             <a t-att-href="link"
-                style="padding: 8px 16px 8px 16px; border-radius: 3px; background-color:#875A7B; text-align:center; text-decoration:none; color: #FFFFFF;">
+                t-attf-style="padding: 8px 16px 8px 16px; border-radius: 3px; background-color: {{record.communication_company_id.email_secondary_color or '#875A7B'}}; text-align:center; text-decoration:none; color: {{record.communication_company_id.email_primary_color or '#FFFFFF'}};">
                 Sign document
             </a>
         </div>
@@ -38,10 +38,11 @@
         </div>
         <br/>
         <div style="opacity: 0.7;"><small>If you do not wish to receive future reminders about this document,
-            <a t-att-href="'%s/sign/sign_cancel/%s/%s' % (record.get_base_url(), record.id, record.access_token)"
-            style="color: #000000; text-decoration:none; opacity:0.7;"> click here to cancel it.</a></small></div>
+            <a t-att-href="link_cancel"
+            style="color: #000000; text-decoration:none; opacity:0.7;"> click here to cancel it.</a></small>
+        </div>
     </td></tr>
-    <t t-set="company" t-value="record.create_uid.company_id"/>
+    <t t-set="company" t-value="record.sign_request_id.communication_company_id"/>
     <tr t-if="use_sign_terms">
         <t t-if="company.sign_terms_type == 'html'">
             <td style="margin:16px auto; text-align:center;">
@@ -68,7 +69,7 @@
             (<a t-att-href="record._get_mail_link(refuser.email, subject)"
                 style="color:#428BCA; text-decoration:none;"
                 target="_blank"><t t-out="refuser.email"/></a>)
-            has refused the document <t t-out="record.reference"/>
+            has refused to sign the document <t t-out="record.reference"/> with the following reason
         </t>
     </td></tr>
     <tr t-if="body"><td valign="top">
@@ -81,7 +82,7 @@
     <tr><td valign="top">
         <div style="margin:16px auto; text-align:center;">
             <a t-att-href="link"
-                style="padding: 8px 16px 8px 16px; border-radius: 3px; background-color:#875A7B; text-align:center; text-decoration:none; color: #FFFFFF;">
+                t-attf-style="padding: 8px 16px 8px 16px; border-radius: 3px; background-color: {{record.communication_company_id.email_secondary_color or '#875A7B'}}; text-align:center; text-decoration:none; color: {{record.communication_company_id.email_primary_color or '#FFFFFF'}};">
                 View document
             </a>
         </div>
@@ -120,7 +121,7 @@
     <tr><td valign="top">
         <div style="margin:16px auto; text-align:center">
             <a t-att-href="link"
-                style="padding: 8px 16px 8px 16px; border-radius: 3px; background-color:#875A7B; text-align:center; text-decoration:none; color: #FFFFFF;">
+                t-attf-style="padding: 8px 16px 8px 16px; border-radius: 3px; background-color: {{record.communication_company_id.email_secondary_color or '#875A7B'}}; text-align:center; text-decoration:none; color: {{record.communication_company_id.email_primary_color or '#FFFFFF'}};">
                 Signed document
             </a>
         </div>
@@ -161,7 +162,6 @@
         </p>
     </template>
 
-
     <template id="sign_mail_notification_light" inherit_id="mail.mail_notification_light" primary="True">
         <xpath expr="//table[@role='presentation'][@style]" position="attributes">
             <attribute name="style" add="width: 100%; table-layout: fixed;" separator=" "/>
@@ -170,4 +170,5 @@
             <attribute name="style" add="max-width: 650px; width: 100%; table-layout: fixed;" separator=" "/>
         </xpath>
     </template>
+
 </odoo>

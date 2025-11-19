@@ -37,11 +37,12 @@ class ProjectEnterpriseTestUi(HttpCase):
             'name': 'Test Project',
         })
         # Allocated hours is only computed without _origin
+        first_day_in_current_month = fields.Datetime.now() + relativedelta(day=1, hour=0, minute=0, second=0)
         task = cls.env['project.task'].new({
             'project_id': project.id,
             'name': 'Test Task',
-            'planned_date_begin': fields.Datetime.now() - relativedelta(days=30),
-            'date_deadline': fields.Datetime.now() + relativedelta(days=30),
+            'planned_date_begin': first_day_in_current_month - relativedelta(months=1),
+            'date_deadline': first_day_in_current_month + relativedelta(months=2, days=-1),
             'user_ids': cls.env.ref('base.user_admin'),
         })
         task._compute_allocated_hours()

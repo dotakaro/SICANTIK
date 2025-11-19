@@ -17,12 +17,10 @@ from . import account_move_line
 from . import account_trial_balance_report
 from . import account_aged_partner_balance
 from . import account_partner_ledger
-from . import mail_activity
-from . import mail_activity_type
 from . import res_config_settings
-from . import chart_template
 from . import account_journal_dashboard
 from . import ir_actions
+from . import ir_ui_menu
 from . import account_sales_report
 from . import account_move
 from . import account_tax
@@ -32,3 +30,6 @@ from . import balance_sheet
 from . import account_fiscal_position
 from . import account_customer_statement
 from . import account_followup_report
+from . import account_return
+from . import ir_attachment
+from . import res_users

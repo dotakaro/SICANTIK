@@ -191,6 +191,7 @@
     <record id="mrp_eco_type_action_form" model="ir.actions.act_window">
         <field name="name">ECO Types</field>
         <field name="res_model">mrp.eco.type</field>
+        <field name="path">eco-types</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'list', 'view_id': ref('mrp_eco_type_view_tree')}),
@@ -255,13 +256,16 @@
                     <separator/>
                     <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
                     <separator/>
+                    <filter invisible="1" string="My Activities" name="filter_activities_my"
+                        domain="[('activity_user_id', '=', uid)]"/>
+                    <separator invisible="1"/>
                     <filter invisible="1" string="Late Activities" name="activities_overdue"
-                        domain="[('my_activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"
-                        help="Show all records which has next action date is before today"/>
+                        domain="[('activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"
+                        help="Show all records whose next activity date is past"/>
                     <filter invisible="1" string="Today Activities" name="activities_today"
-                        domain="[('my_activity_date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                        domain="[('activity_date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
                     <filter invisible="1" string="Future Activities" name="activities_upcoming_all"
-                        domain="[('my_activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
+                        domain="[('activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
                 </group>
                 <group expand='0' string='Group by...'>
                     <filter string='Product' name="productgroup" context="{'group_by': 'product_tmpl_id'}"/>
@@ -371,7 +375,7 @@
                             <field name="bom_id" context="{'default_product_tmpl_id': product_tmpl_id}" invisible="type in ('routing', 'product')" readonly="state != 'confirmed'" required="type in ('bom', 'both')"/>
                             <field name="new_bom_id" invisible="1"/>
                             <field name="company_id" invisible="1"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="company_id" groups="base.group_multi_company" placeholder="Visible to all"/>
                         </group>
                         <group>
                             <field name="user_id" readonly="state == 'done'" domain="[('share', '=', False)]"/>
@@ -538,6 +542,7 @@
     <record id="mrp_eco_action_main" model="ir.actions.act_window">
         <field name="name">Engineering Change Orders</field>
         <field name="res_model">mrp.eco</field>
+        <field name="path">ecos</field>
         <field name="view_mode">kanban,list,calendar,pivot,graph,form,activity</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -551,8 +556,9 @@
     </record>
 
     <record id="mrp_eco_action_report" model="ir.actions.act_window">
-        <field name="name">Engineering Change Orders</field>
+        <field name="name">ECOs Analysis</field>
         <field name="res_model">mrp.eco</field>
+        <field name="path">ecos-analysis</field>
         <field name="view_mode">graph,pivot</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -652,6 +658,7 @@
     <record id="mrp_eco_stage_action" model="ir.actions.act_window">
         <field name="name">ECO Stages</field>
         <field name="res_model">mrp.eco.stage</field>
+        <field name="path">eco-stages</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -686,6 +693,7 @@
     <record id="mrp_eco_tag_action" model="ir.actions.act_window">
         <field name="name">ECO Tags</field>
         <field name="res_model">mrp.eco.tag</field>
+        <field name="path">eco-tags</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
           <p class="o_view_nocontent_smiling_face">

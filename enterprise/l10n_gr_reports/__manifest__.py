@@ -15,6 +15,7 @@ Accounting reports for Greece
         'account_reports',
     ],
     'data': [
+        'data/account_return_data.xml',
         'data/balance_sheet-gr.xml',
         'data/profit_and_loss-gr.xml',
         'data/ec_sales_list_report-gr.xml',
@@ -23,5 +24,6 @@ Accounting reports for Greece
     'installable': True,
     'auto_install': ['l10n_gr', 'account_reports'],
     'website': 'https://www.odoo.com/app/accounting',
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

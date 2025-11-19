@@ -2,8 +2,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
-class sale_order(models.Model):
-
+class SaleOrder(models.Model):
     _inherit = "sale.order"
 
     auto_generated = fields.Boolean(string='Auto Generated Sales Order', copy=False)
@@ -11,7 +10,7 @@ class sale_order(models.Model):
 
     def _action_confirm(self):
         """ Generate inter company purchase order based on conditions """
-        res = super(sale_order, self)._action_confirm()
+        res = super()._action_confirm()
         for order in self:
             if not order.company_id: # if company_id not found, return to normal behavior
                 continue
@@ -93,13 +92,13 @@ class sale_order(models.Model):
         """
         # price on PO so_line should be so_line - discount
         price = so_line.price_unit or 0.0
-        quantity = so_line.product_id and so_line.product_uom._compute_quantity(so_line.product_uom_qty, so_line.product_id.uom_po_id) or so_line.product_uom_qty
-        price = so_line.product_id and so_line.product_uom._compute_price(price, so_line.product_id.uom_po_id) or price
+        quantity = so_line.product_id and so_line.product_uom_id._compute_quantity(so_line.product_uom_qty, so_line.product_id.uom_id) or so_line.product_uom_qty
+        price = so_line.product_id and so_line.product_uom_id._compute_price(price, so_line.product_id.uom_id) or price
         return {
             'name': so_line.name,
             'product_qty': quantity,
             'product_id': so_line.product_id and so_line.product_id.id or False,
-            'product_uom': so_line.product_id and so_line.product_id.uom_po_id.id or so_line.product_uom.id,
+            'product_uom_id': so_line.product_id and so_line.product_id.uom_id.id or so_line.product_uom_id.id,
             'price_unit': price or 0.0,
             'discount': so_line.discount or 0.0,
             'company_id': company.id,

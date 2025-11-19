@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models, fields, api
 
 
 class AccountMove(models.Model):
@@ -11,22 +11,25 @@ class AccountMove(models.Model):
              "If not specified it will use the Invoice Date.",
     )
 
+    @api.depends('fiscal_position_id', 'move_type')
+    def _compute_is_tax_computed_externally(self):
+        # EXTENDS 'account_external_tax' to enable external taxes on sale documents.
+        super()._compute_is_tax_computed_externally()
+        for move in self:
+            if move.is_avatax:
+                move.is_tax_computed_externally = move.is_sale_document()
+
     def _post(self, soft=True):
         res = super()._post(soft=soft)
         self.filtered(
-            lambda move: move.is_avatax and move.move_type in ('out_invoice', 'out_refund') and not move._is_downpayment()
+            lambda move: move.is_avatax and move.is_tax_computed_externally and not move._is_downpayment()
         )._commit_avatax_taxes()
         return res
 
-    def _get_avatax_dates(self):
-        external_tax_date = self._get_date_for_external_taxes()
-        if self.reversed_entry_id:
-            reversed_override_date = self.reversed_entry_id.avatax_tax_date or self.reversed_entry_id._get_date_for_external_taxes()
-            return external_tax_date, reversed_override_date
-        return external_tax_date, self.avatax_tax_date
-
-    def _get_avatax_document_type(self):
-        return {
+    def _get_avatax_service_params(self, commit=False):
+        # EXTENDS 'account.external.tax.mixin'
+        res = super()._get_avatax_service_params(commit)
+        document_type = {
             'out_invoice': 'SalesInvoice',
             'out_refund': 'ReturnInvoice',
             'in_invoice': 'PurchaseInvoice',
@@ -34,11 +37,12 @@ class AccountMove(models.Model):
             'entry': 'Any',
         }[self.move_type]
 
-    def _get_avatax_description(self):
-        return 'Journal Entry'
+        res.update({
+            'is_refund': self.move_type == 'out_refund',
+            'document_type': document_type,
+            'document_date': self.invoice_date,
+            'tax_date': (self.reversed_entry_id.avatax_tax_date or self.reversed_entry_id.invoice_date) if self.reversed_entry_id else self.avatax_tax_date,
+            'perform_address_validation': self.fiscal_position_id.is_avatax and self.move_type in ('out_invoice', 'out_refund') and not self.origin_payment_id,
+        })
 
-    def _perform_address_validation(self):
-        # Payments inherit account.move and will end up with a fiscal position.
-        # Even if an auto-applied Avatax fiscal position is set don't validate the address.
-        moves = self.filtered(lambda m: m.move_type in ('out_invoice', 'out_refund'))
-        return super(AccountMove, moves)._perform_address_validation() and not moves.origin_payment_id
+        return res

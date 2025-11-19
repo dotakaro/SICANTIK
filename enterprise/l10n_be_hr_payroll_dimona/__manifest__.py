@@ -7,7 +7,10 @@
     'category': 'Human Resources',
     'depends': ['l10n_be_hr_payroll'],
     'external_dependencies': {
-        'python': ['pyjwt']
+        'python': ['pyjwt'],
+        'apt': {
+            'pyjwt': 'python3-jwt',
+        },
     },
     'description': """
 Automatic DIMONA declarations
@@ -49,8 +52,9 @@ Prerequisites:
     'data':[
         'security/ir.model.access.csv',
         'data/ir_cron_data.xml',
-        'views/hr_contract_views.xml',
+        'views/hr_employee_views.xml',
         'wizard/l10n_be_dimona_wizard_views.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -100,9 +100,9 @@ test("update selected ir menu", async function () {
 test("fetch available menus", async function () {
     const { env } = await openMenuSelector({
         mockRPC: function (route, args) {
-            if (args.method === "name_search" && args.model === "ir.ui.menu") {
+            if (args.method === "web_name_search" && args.model === "ir.ui.menu") {
                 expect.step("fetch_menus");
-                expect(args.kwargs.args).toEqual(
+                expect(args.kwargs.domain).toEqual(
                     [
                         "|",
                         ["id", "in", [1]],

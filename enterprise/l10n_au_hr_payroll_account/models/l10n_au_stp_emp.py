@@ -2,8 +2,8 @@ from odoo import api, Command, fields, models, _
 from odoo.exceptions import ValidationError
 
 
-class L10nAuSTPEmp(models.Model):
-    _name = "l10n_au.stp.emp"
+class L10n_AuStpEmp(models.Model):
+    _name = 'l10n_au.stp.emp'
     _description = "STP Employee"
 
     employee_id = fields.Many2one(

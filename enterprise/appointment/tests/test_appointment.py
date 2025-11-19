@@ -101,7 +101,7 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
                 self.assertEqual(nb_available_slots, len(available_slots))
                 event.unlink()
 
-    @freeze_time('2023-01-6')
+    @freeze_time('2023-01-06')
     @users('apt_manager')
     def test_appointment_availability_with_show_as(self):
         """ Checks that if a normal event and custom event both set at the same time but
@@ -176,6 +176,7 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
                 'name': 'Recurring Meeting 3',
                 'staff_user_ids': [(4, employee.id)],
                 'appointment_duration': hour_fifty_float_repr_A,  # float presenting 1h 50min
+                'slot_creation_interval': hour_fifty_float_repr_A,
                 'appointment_tz': 'UTC',
                 'slot_ids': [
                     (0, False, {
@@ -446,7 +447,30 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
         self.assertEqual(slots[2]['nb_slots_previous_months'], nb_february_slots + nb_march_slots)
         self.assertEqual(slots[2]['nb_slots_next_months'], 0)
 
-    @freeze_time('2023-01-9')
+    def test_appointment_type_upcoming_count(self):
+        """
+        Test upcoming count for appointment type regardless of event status.
+        """
+        apt_type = self.apt_type_bxls_2days
+        self.assertEqual(apt_type.appointment_count_upcoming, 0)
+
+        meeting_1 = self._create_meetings(
+            self.staff_user_bxls,
+            [(datetime.now() + timedelta(days=1), (datetime.now() + timedelta(days=2)), False)],
+            appointment_type_id=apt_type.id,
+        )
+        meeting_1.write({'appointment_status': 'booked'})
+        self.assertEqual(apt_type.appointment_count_upcoming, 1)
+
+        meeting_2 = self._create_meetings(
+            self.staff_user_bxls,
+            [(datetime.now() + timedelta(days=1), (datetime.now() + timedelta(days=2)), False)],
+            appointment_type_id=apt_type.id,
+        )
+        meeting_2.write({'appointment_status': 'no_show'})
+        self.assertEqual(apt_type.appointment_count_upcoming, 2)
+
+    @freeze_time('2023-01-09')
     def test_booking_validity(self):
         """
         When confirming an appointment, we must recheck that it is indeed a valid slot,
@@ -1051,35 +1075,6 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
         self.assertTrue(len(self._filter_appointment_slots(slots_user_bxls_exterior_user)) == 2)
         self.assertTrue(len(self._filter_appointment_slots(slots_user_no_tz)) == 1)
 
-    @users('apt_manager', 'staff_user_bxls')
-    def test_partner_on_leave_with_conflicting_event(self):
-        """Check that conflicting meetings are correctly reflected in the on_leave_partner_ids field.
-
-        Overlapping times between any other meeting of the employee and the meeting should add the partner
-        to the list of unavailable partners.
-        """
-        self.env['calendar.event'].search([('user_id', '=', self.staff_user_bxls.id)]).unlink()
-        self.env['resource.calendar.leaves'].sudo().search([('calendar_id', '=', self.staff_user_bxls.resource_calendar_id.id)]).unlink()
-        [meeting] = self._create_meetings(
-            self.staff_user_bxls,
-            [(self.reference_monday,
-              self.reference_monday + timedelta(hours=3),
-              False,
-              )],
-            self.apt_type_bxls_2days.id
-        )
-        self.assertFalse(meeting.on_leave_partner_ids)
-        [conflicting_meeting] = self._create_meetings(
-            self.staff_user_bxls,
-            [(self.reference_monday,
-              self.reference_monday + timedelta(minutes=5),
-              False,
-              )],
-        )
-        meeting.invalidate_recordset()
-        self.assertEqual(meeting.on_leave_partner_ids, self.staff_user_bxls.partner_id)
-        self.assertFalse(conflicting_meeting.on_leave_partner_ids)
-
     @users('apt_manager')
     def test_slots_for_today(self):
         test_reference_now = datetime(2022, 2, 14, 11, 0, 0)  # is a Monday
@@ -1115,6 +1110,7 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
         appointment = self.env['appointment.type'].create({
             'appointment_tz': 'UTC',
             'appointment_duration': 1.2,  # 1h12
+            'slot_creation_interval': 1.2,
             'min_schedule_hours': 47.0,
             'max_schedule_days': 8,
             'name': 'Test',
@@ -1138,6 +1134,99 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
                 "A slot shouldn't be generated before the first_day datetime")
         self.assertEqual(len(slots), 12)  # 2 days of 5 slots and 2 slots on wednesday
 
+    def test_slot_creation_interval(self):
+        """The slot creation interval is equal to the appointment duration.
+        Regular configuration, leading to 1 slot every 'appointment duration'.
+        """
+        self.apt_type_bxls_2days.write({
+            'appointment_tz': 'UTC',
+            'appointment_duration': 2,
+            'slot_creation_interval': 2,
+            'slot_ids': [(0, 0, {
+                'weekday': str(weekday),
+                'start_hour': 9,
+                'end_hour': 19,
+            }) for weekday in range(1, 8)],
+        })
+        expected_slots = {
+            'enddate': self.global_slots_enddate,
+            'startdate': self.reference_now_monthweekstart,
+            'slots_start_hours': list(range(9, 18, 2)),
+            'slots_startdate': self.reference_monday.date(),
+            'slots_enddate': self.reference_monday.date() + timedelta(days=15),
+        }
+        expected_months = [{
+            'name_formated': 'February 2022',
+            'month_date': datetime(2022, 2, 14),
+            'weeks_count': 5,
+        }]
+        with freeze_time(self.reference_now):
+            slots = self.apt_type_bxls_2days._get_appointment_slots('UTC')
+        self.assertSlots(slots, expected_months, expected_slots)
+
+    def test_slot_creation_interval_shorter(self):
+        """ The slot creation interval is shorter than the appointment duration.
+        This configuration will create *more* slots, typically used for a restaurant to allow people
+        coming every 1 hour but staying for a duration of 2 hours.
+        """
+        self.apt_type_bxls_2days.write({
+            'appointment_tz': 'UTC',
+            'appointment_duration': 2,
+            'slot_creation_interval': 1,
+            'slot_ids': [(0, 0, {
+                'weekday': str(weekday),
+                'start_hour': 9,
+                'end_hour': 19,
+            }) for weekday in range(1, 8)],
+        })
+        expected_slots = {
+            'enddate': self.global_slots_enddate,
+            'startdate': self.reference_now_monthweekstart,
+            'slots_start_hours': list(range(9, 18)),
+            'slots_startdate': self.reference_monday.date(),
+            'slots_enddate': self.reference_monday.date() + timedelta(days=15),
+        }
+        expected_months = [{
+            'name_formated': 'February 2022',
+            'month_date': datetime(2022, 2, 14),
+            'weeks_count': 5,
+        }]
+        with freeze_time(self.reference_now):
+            slots = self.apt_type_bxls_2days._get_appointment_slots('UTC')
+        self.assertSlots(slots, expected_months, expected_slots)
+
+    def test_slot_creation_interval_longer(self):
+        """ The slot creation interval is longer than the appointment duration.
+        This configuration will create *less* slots, allowing for example to leave a buffer after the appointment.
+        For example, people will book a 2h session for an escape game but you need 1h to reset the game before
+        the next slot.
+        """
+        self.apt_type_bxls_2days.write({
+            'appointment_tz': 'UTC',
+            'appointment_duration': 2,
+            'slot_creation_interval': 3,
+            'slot_ids': [(0, 0, {
+                'weekday': str(weekday),
+                'start_hour': 9,
+                'end_hour': 19,
+            }) for weekday in range(1, 8)],
+        })
+        expected_slots = {
+            'enddate': self.global_slots_enddate,
+            'startdate': self.reference_now_monthweekstart,
+            'slots_start_hours': [9, 12, 15],
+            'slots_startdate': self.reference_monday.date(),
+            'slots_enddate': self.reference_monday.date() + timedelta(days=15),
+        }
+        expected_months = [{
+            'name_formated': 'February 2022',
+            'month_date': datetime(2022, 2, 14),
+            'weeks_count': 5,
+        }]
+        with freeze_time(self.reference_now):
+            slots = self.apt_type_bxls_2days._get_appointment_slots('UTC')
+        self.assertSlots(slots, expected_months, expected_slots)
+
     @users('apt_manager')
     def test_slots_days_min_schedule_punctual(self):
         """ Test that slots are generated correctly when min_schedule_hours is 47.0 for punctual appointment.
@@ -1147,6 +1236,7 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
         appointment = self.env['appointment.type'].create({
             'appointment_tz': 'UTC',
             'appointment_duration': 1.2,  # 1h12
+            'slot_creation_interval': 1.2,
             'category': 'punctual',
             'min_schedule_hours': 47.0,
             'max_schedule_days': False,
@@ -1345,6 +1435,7 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
         appointment = self.env['appointment.type'].create({
             'appointment_tz': 'Pacific/Auckland',
             'appointment_duration': 21,
+            'slot_creation_interval': 21,
             'assign_method': 'time_auto_assign',
             'category': 'recurring',
             'location_id': self.staff_user_nz.partner_id.id,
@@ -1411,3 +1502,179 @@ class AppointmentTest(AppointmentCommon, HttpCaseWithUserDemo):
             'stop': datetime(2022, 2, 1, 12, 0, 0),
         })
         self.assertEqual(len(test_record.activity_ids), 1)
+
+    @users('apt_manager')
+    def test_resource_on_leave_with_conflicting_event(self):
+        """
+        Check conflicting event with resources are correctly reflected in the unavailable_resource_ids field.
+        Overlapping times between already booked resources and the event resources should add the resource
+        to the list of unavailable resources.
+        """
+        start = datetime(2022, 2, 14, 15, 0, 0)
+        end = start + timedelta(hours=1)
+        court1, court2, court3 = self.env['appointment.resource'].create([{
+            'appointment_type_ids': self.apt_type_resource.ids,
+            'name': 'Court 1',
+        }, {
+            'appointment_type_ids': self.apt_type_resource.ids,
+            'name': 'Court 2',
+        }, {
+            'appointment_type_ids': self.apt_type_resource.ids,
+            'name': 'Court 3',
+            'shareable': True,
+            'capacity': 3,
+        }])
+        booking_1 = self.env['calendar.event'].create({
+            'appointment_type_id': self.apt_type_resource.id,
+            'booking_line_ids': [(0, 0, {'appointment_resource_id': court1.id})],
+            'name': 'Booking 1',
+            'start': start,
+            'stop': end,
+        })
+        self.assertFalse(booking_1.unavailable_resource_ids)
+        booking_2 = self.env['calendar.event'].create({
+            'appointment_type_id': self.apt_type_resource.id,
+            'booking_line_ids': [(0, 0, {'appointment_resource_id': court1.id}), (0, 0, {'appointment_resource_id': court2.id})],
+            'name': 'Booking 1',
+            'start': start,
+            'stop': end,
+        })
+        (booking_1 + booking_2)._compute_unavailable_resource_ids()
+        self.assertEqual(booking_1.unavailable_resource_ids, court1)
+        self.assertEqual(booking_2.unavailable_resource_ids, court1)
+
+        # Shared resource
+        booking_3 = self.env['calendar.event'].create({
+            'appointment_type_id': self.apt_type_resource.id,
+            'booking_line_ids': [(0, 0, {'appointment_resource_id': court3.id, 'capacity_reserved': 1})],
+            'name': 'Booking 3',
+            'start': start,
+            'stop': end,
+        })
+        booking_4 = self.env['calendar.event'].create({
+            'appointment_type_id': self.apt_type_resource.id,
+            'booking_line_ids': [(0, 0, {'appointment_resource_id': court3.id, 'capacity_reserved': 1})],
+            'name': 'Booking 4',
+            'start': start,
+            'stop': end,
+        })
+        (booking_3 + booking_4)._compute_unavailable_resource_ids()
+        self.assertFalse(booking_3.unavailable_resource_ids)
+        self.assertFalse(booking_4.unavailable_resource_ids)
+
+        # add full capacity
+        booking_4.booking_line_ids = [(0, 0, {'appointment_resource_id': court3.id, 'capacity_reserved': 3})]
+        (booking_3 + booking_4)._compute_unavailable_resource_ids()
+        self.assertEqual(booking_3.unavailable_resource_ids, court3)
+        self.assertEqual(booking_4.unavailable_resource_ids, court3)
+
+    @users('apt_manager')
+    def test_appointment_user_remaining_capacity(self):
+        """ Test that the remaining capacity of users are correctly computed """
+        appointment = self.apt_type_manage_capacity_users
+        user_1 = self.staff_user_aust
+        user_2 = self.staff_user_bxls
+
+        start = datetime(2022, 2, 15, 14, 0, 0)
+        end = start + timedelta(hours=1)
+
+        user_1_remaining_capacity = appointment._get_users_remaining_capacity(user_1, start, end)['total_remaining_capacity']
+        user_2_remaining_capacity = appointment._get_users_remaining_capacity(user_2, start, end)['total_remaining_capacity']
+        self.assertTrue(user_1_remaining_capacity == 5)
+        self.assertTrue(user_2_remaining_capacity == 5)
+
+        # Create bookings for users
+        booking_1, booking_2 = self.env['calendar.event'].with_context(self._test_context).create([{
+            'appointment_type_id': appointment.id,
+            'booking_line_ids': [(0, 0, {'capacity_reserved': 2, 'capacity_used': 2})],
+            'name': 'Booking 1',
+            'start': start,
+            'stop': end,
+            'user_id': user_1.id,
+        }, {
+            'appointment_type_id': appointment.id,
+            'booking_line_ids': [(0, 0, {'capacity_reserved': 1})],
+            'name': 'Booking 2',
+            'start': start,
+            'stop': end,
+            'user_id': user_2.id,
+        }])
+
+        user_1_remaining_capacity = appointment._get_users_remaining_capacity(user_1, start, end)['total_remaining_capacity']
+        user_2_remaining_capacity = appointment._get_users_remaining_capacity(user_2, start, end)['total_remaining_capacity']
+
+        self.assertTrue(user_1_remaining_capacity == 3, 'The user should have 3 availabilities left.')
+        self.assertTrue(user_2_remaining_capacity == 4, 'The user should have 4 availabilities left.')
+
+        (booking_1 + booking_2).unlink()
+
+        self.assertDictEqual(
+            appointment._get_users_remaining_capacity(self.env['res.users'], start, end),
+            {'total_remaining_capacity': 0},
+            'No result should give dict with correct accumulated values.'
+        )
+
+    @users('apt_manager')
+    def test_appointment_users_shareable(self):
+        """ Check a user is shareable across only one appointment type """
+
+        apt_type_manage_capacity_other = self.env['appointment.type'].create([{
+            'appointment_tz': 'Europe/Brussels',
+            'appointment_duration': 1,
+            'assign_method': 'time_resource',
+            'category': 'recurring',
+            'location_id': self.staff_user_bxls.partner_id.id,
+            'name': 'Bxls Appt Type with capacity (Other)',
+            'max_schedule_days': 15,
+            'min_cancellation_hours': 1,
+            'min_schedule_hours': 1,
+            'manage_capacity': True,
+            'staff_user_ids': [(6, 0, [self.staff_user_bxls.id, self.staff_user_aust.id])],
+            'slot_ids': [(0, 0, {
+                'weekday': str(self.reference_monday.isoweekday()),
+                'start_hour': 15,
+                'end_hour': 16,
+            })],
+            'user_capacity': 5,
+        }])
+
+        # User has no bookings
+        with freeze_time(self.reference_now):
+            slots = self.apt_type_manage_capacity_users._get_appointment_slots('UTC', asked_capacity=2)
+            user_slots_1 = self._filter_appointment_slots(slots)
+            slots = apt_type_manage_capacity_other._get_appointment_slots('UTC', asked_capacity=3)
+            user_slots_2 = self._filter_appointment_slots(slots)
+        available_users_1 = [user['id'] for user in user_slots_1[0]['available_staff_users']]
+        available_users_2 = [user['id'] for user in user_slots_2[0]['available_staff_users']]
+
+        self.assertIn(self.staff_user_bxls.id, available_users_1)
+        self.assertIn(self.staff_user_bxls.id, available_users_2)
+
+        # Book a user on monday from 14 to 15 for 3 people
+        start = datetime(2022, 2, 14, 14, 0, 0)
+        end = start + timedelta(hours=1)
+        event = self.env['calendar.event'].create([{
+            'appointment_type_id': self.apt_type_manage_capacity_users.id,
+            'booking_line_ids': [(0, 0, {'appointment_user_id': self.staff_user_bxls.id, 'capacity_reserved': 3, 'capacity_used': 3})],
+            'attendee_ids': [(0, 0, {'partner_id': self.staff_user_bxls.partner_id.id, 'state': 'accepted'})],
+            'name': 'Booking 1',
+            'partner_ids': [(4, self.staff_user_bxls.partner_id.id)],
+            'start': start,
+            'stop': end,
+            'user_id': self.staff_user_bxls.id
+        }])
+        # Check if user is available for 2 people again
+        with freeze_time(self.reference_monday):
+            slots = self.apt_type_manage_capacity_users._get_appointment_slots('UTC', asked_capacity=2)
+            user_slots_1 = self._filter_appointment_slots(slots)
+            slots = apt_type_manage_capacity_other._get_appointment_slots('UTC', asked_capacity=3)
+            user_slots_2 = self._filter_appointment_slots(slots)
+        available_user_1 = [user['id'] for user in user_slots_1[0]['available_staff_users']]
+        available_user_2 = [user['id'] for user in user_slots_2[0]['available_staff_users']]
+
+        event.unlink()
+
+        # User is available on the booked appointment until capacity
+        self.assertIn(self.staff_user_bxls.id, available_user_1)
+        # User is not available for other appointment when booking has been made for them.
+        self.assertNotIn(self.staff_user_bxls.id, available_user_2)

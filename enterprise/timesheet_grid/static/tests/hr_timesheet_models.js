@@ -1,10 +1,8 @@
-import { serializeDateTime } from "@web/core/l10n/dates";
 import { fields, models, onRpc } from "@web/../tests/web_test_helpers";
 
 import { projectModels } from "@project/../tests/project_models";
 import { defineTimesheetModels as defineHRTimesheetModels, hrTimesheetModels } from "@hr_timesheet/../tests/hr_timesheet_models";
-
-const { DateTime } = luxon;
+import { timerModels } from "@timer/../tests/timer_models";
 
 export class ProjectProject extends projectModels.ProjectProject {
     allow_timesheets = fields.Boolean();
@@ -38,29 +36,6 @@ export class HREmployeePublic extends models.Model {
     ];
 }
 
-export class TimerTimer extends models.Model {
-    _name = "timer.timer";
-
-    timer_start = fields.Datetime();
-    timer_pause = fields.Datetime();
-    is_timer_running = fields.Boolean();
-    res_model = fields.Char();
-    res_id = fields.Integer();
-    user_id = fields.Many2one({ relation: "res.users" });
-
-    action_timer_start(resId) {
-        if (!this.read(resId, ["timer_start"])[0].timer_start) {
-            this.write(resId, {
-                timer_start: this.get_server_time(),
-            });
-        }
-    }
-
-    get_server_time() {
-        return serializeDateTime(DateTime.now());
-    }
-}
-
 export class HRTimesheet extends hrTimesheetModels.HRTimesheet {
     timer_start = fields.Datetime();
     timer_pause = fields.Datetime();
@@ -79,7 +54,7 @@ export class HRTimesheet extends hrTimesheetModels.HRTimesheet {
     action_start_new_timesheet_timer() {
         const timesheetId = this.create({ project_id: 2 });
 
-        // Creating a timer to run usually done "timer.mixin"
+        // Creating a timer to run usally done "timer.mixin"
         const timer = this.env["timer.timer"].create({
             timer_start: false,
             timer_pause: false,
@@ -261,7 +236,7 @@ projectModels.ProjectProject = ProjectProject;
 projectModels.ProjectTask = ProjectTask;
 hrTimesheetModels.HRTimesheet = HRTimesheet;
 hrTimesheetModels.HREmployeePublic = HREmployeePublic;
-hrTimesheetModels.TimerTimer = TimerTimer;
+hrTimesheetModels.TimerTimer = timerModels.TimerTimer;
 
 export function defineTimesheetModels() {
     onRpc(({ method, model, args }) => {

@@ -11,5 +11,6 @@
         'reports/sale_order.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

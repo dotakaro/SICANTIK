@@ -80,20 +80,7 @@
                 <attribute name="progress_bar" separator="," add="sale_line_id"/>
             </xpath>
             <xpath expr="//gantt" position="inside">
-                <field name="sale_line_id" />
                 <field name="sale_line_plannable" invisible="1"/>
-            </xpath>
-            <xpath expr="//div[@id='allocated_hours']" position="after">
-                <div t-if="sale_line_id" id="sale_line">
-                    <strong>Sales Order Item  — </strong>
-                    <t t-esc="sale_line_id[1]"/>
-                </div>
-            </xpath>
-            <xpath expr="//footer/button[@name='unlink']" position="before">
-                <t t-if="sale_line_plannable">
-                    <button t-if="0" string="Unschedule" type="object" name="action_unschedule" class="btn btn-secondary"
-                        groups="planning.group_planning_manager"/>
-                </t>
             </xpath>
         </field>
     </record>
@@ -237,7 +224,7 @@
             'planning_groupby_sale_order': True, 'with_price_unit': True, 'planning_expand_resource': 1,
             'planning_expand_employee': 1, 'planning_expand_role': 1, 'planning_expand_sale_line_id': 1,
         }</field>
-        <field name="groups_id" eval="[(4, ref('planning.group_planning_manager'))]"/>
+        <field name="group_ids" eval="[(4, ref('planning.group_planning_manager'))]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No shifts found. Let's create one!

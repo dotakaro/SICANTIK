@@ -15,7 +15,7 @@ from odoo.addons.social_linkedin.utils import urn_to_id, id_to_urn
 _logger = logging.getLogger(__name__)
 
 
-class SocialStreamPostLinkedIn(models.Model):
+class SocialStreamPost(models.Model):
     _inherit = 'social.stream.post'
 
     linkedin_post_urn = fields.Char('LinkedIn post URN')
@@ -33,7 +33,7 @@ class SocialStreamPostLinkedIn(models.Model):
 
     def _compute_author_link(self):
         linkedin_posts = self._filter_by_media_types(['linkedin'])
-        super(SocialStreamPostLinkedIn, (self - linkedin_posts))._compute_author_link()
+        super(SocialStreamPost, (self - linkedin_posts))._compute_author_link()
 
         for post in linkedin_posts:
             if post.linkedin_author_urn:
@@ -43,7 +43,7 @@ class SocialStreamPostLinkedIn(models.Model):
 
     def _compute_post_link(self):
         linkedin_posts = self._filter_by_media_types(['linkedin'])
-        super(SocialStreamPostLinkedIn, (self - linkedin_posts))._compute_post_link()
+        super(SocialStreamPost, (self - linkedin_posts))._compute_post_link()
 
         for post in linkedin_posts:
             if post.linkedin_post_urn:
@@ -53,7 +53,7 @@ class SocialStreamPostLinkedIn(models.Model):
 
     def _compute_is_author(self):
         linkedin_posts = self._filter_by_media_types(['linkedin'])
-        super(SocialStreamPostLinkedIn, (self - linkedin_posts))._compute_is_author()
+        super(SocialStreamPost, (self - linkedin_posts))._compute_is_author()
 
         for post in linkedin_posts:
             post.is_author = post.linkedin_author_urn == post.account_id.linkedin_account_urn
@@ -184,7 +184,7 @@ class SocialStreamPostLinkedIn(models.Model):
     def _linkedin_comment_fetch(self, comment_urn=None, offset=0, count=20):
         """Retrieve comments on a LinkedIn element.
 
-        :param element_urn: URN of the element (UGC Post or Comment) on which we want to retrieve comments
+        :param comment_urn: URN of the element (UGC Post or Comment) on which we want to retrieve comments
             If no specified, retrieve comments on the current post
         :param offset: Used to scroll over the comments, position of the first retrieved comment
         :param count: Number of comments returned
@@ -248,7 +248,7 @@ class SocialStreamPostLinkedIn(models.Model):
                 headers=self.account_id._linkedin_bearer_headers(),
                 timeout=5).json()
 
-            for person_id, person_values in response_json.get('results', {}).items():
+            for person_values in response_json.get('results', {}).values():
                 person_urn = id_to_urn(person_values['id'], "li:person")
                 image_id = urn_to_id(person_values.get('profilePicture', {}).get('displayImage'))
                 images_ids.append(image_id)
@@ -385,4 +385,4 @@ class SocialStreamPostLinkedIn(models.Model):
                 [('linkedin_post_id', '=', self.linkedin_post_urn)], limit=1
             ).post_id
         else:
-            return super(SocialStreamPostLinkedIn, self)._fetch_matching_post()
+            return super()._fetch_matching_post()

@@ -30,9 +30,12 @@ class TestPayrollAccountCommon(odoo.tests.HttpCase):
             'raw': cls.pdf_content,
             'name': 'test_employee_contract.pdf',
         })
-        cls.template = cls.env['sign.template'].create({
+
+        cls.template = cls.env['sign.template'].create({})
+
+        cls.document_id = cls.env['sign.document'].create({
             'attachment_id': attachment.id,
-            'sign_item_ids': [(6, 0, [])],
+            'template_id': cls.template.id,
         })
 
         cls.env['sign.item'].create([
@@ -44,7 +47,7 @@ class TestPayrollAccountCommon(odoo.tests.HttpCase):
                 'page': 1,
                 'posX': 0.273,
                 'posY': 0.158,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.150,
                 'height': 0.015,
             }, {
@@ -55,51 +58,51 @@ class TestPayrollAccountCommon(odoo.tests.HttpCase):
                 'page': 1,
                 'posX': 0.707,
                 'posY': 0.158,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.150,
                 'height': 0.015,
             }, {
                 'type_id': cls.env.ref('sign.sign_item_type_text').id,
-                'name': 'employee_id.private_city',
+                'name': 'private_city',
                 'required': True,
                 'responsible_id': cls.env.ref('sign.sign_item_role_employee').id,
                 'page': 1,
                 'posX': 0.506,
                 'posY': 0.184,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.150,
                 'height': 0.015,
             }, {
                 'type_id': cls.env.ref('sign.sign_item_type_text').id,
-                'name': 'employee_id.private_country_id.name',
+                'name': 'private_country_id.name',
                 'required': True,
                 'responsible_id': cls.env.ref('sign.sign_item_role_employee').id,
                 'page': 1,
                 'posX': 0.663,
                 'posY': 0.184,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.150,
                 'height': 0.015,
             }, {
                 'type_id': cls.env.ref('sign.sign_item_type_text').id,
-                'name': 'employee_id.private_street',
+                'name': 'private_street',
                 'required': True,
                 'responsible_id': cls.env.ref('sign.sign_item_role_employee').id,
                 'page': 1,
                 'posX': 0.349,
                 'posY': 0.184,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.150,
                 'height': 0.015,
             }, {
                 'type_id': cls.env.ref('sign.sign_item_type_signature').id,
                 'name': False,
                 'required': True,
-                'responsible_id': cls.env.ref('hr_contract_sign.sign_item_role_job_responsible').id,
+                'responsible_id': cls.env.ref('hr_sign.sign_item_role_job_responsible').id,
                 'page': 2,
                 'posX': 0.333,
                 'posY': 0.575,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.200,
                 'height': 0.050,
             }, {
@@ -110,7 +113,7 @@ class TestPayrollAccountCommon(odoo.tests.HttpCase):
                 'page': 2,
                 'posX': 0.333,
                 'posY': 0.665,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.200,
                 'height': 0.050,
             }, {
@@ -121,18 +124,18 @@ class TestPayrollAccountCommon(odoo.tests.HttpCase):
                 'page': 2,
                 'posX': 0.665,
                 'posY': 0.694,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.150,
                 'height': 0.015,
             }, {
                 'type_id': cls.env.ref('sign.sign_item_type_text').id,
-                'name': 'employee_id.children',
+                'name': 'children',
                 'required': True,
                 'responsible_id': cls.env.ref('sign.sign_item_role_employee').id,
                 'page': 2,
                 'posX': 0.665,
                 'posY': 0.694,
-                'template_id': cls.template.id,
+                'document_id': cls.document_id.id,
                 'width': 0.150,
                 'height': 0.015,
             }
@@ -278,10 +281,10 @@ class TestPayrollAccountCommon(odoo.tests.HttpCase):
         })
         cls.env.ref('base.main_partner').email = "info@yourcompany.example.com"
 
-        cls.new_dev_contract = cls.env['hr.contract'].create({
+        cls.new_dev_contract = cls.env['hr.version'].create({
             'name': 'New Developer Template Contract',
             'wage': 3000,
-            'structure_type_id': cls.env.ref('hr_contract.structure_type_employee_cp200').id,
+            'structure_type_id': cls.env.ref('hr.structure_type_employee_cp200').id,
             'ip_wage_rate': 25,
             'sign_template_id': cls.template.id,
             'contract_update_template_id': cls.template.id,
@@ -296,10 +299,10 @@ class TestPayrollAccountCommon(odoo.tests.HttpCase):
             'car_id': False
         })
 
-        cls.senior_dev_contract = cls.env['hr.contract'].create({
+        cls.senior_dev_contract = cls.env['hr.version'].create({
             'name': 'Senior Developer Template Contract',
             'wage': 6000,
-            'structure_type_id': cls.env.ref('hr_contract.structure_type_employee_cp200').id,
+            'structure_type_id': cls.env.ref('hr.structure_type_employee_cp200').id,
             'ip': True,
             'ip_wage_rate': 50,
             'sign_template_id': cls.template.id,

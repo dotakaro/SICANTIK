@@ -30,7 +30,6 @@ class ResCompany(models.Model):
         default=lambda self: self._default_l10n_co_dian_provider(),
     )
     l10n_co_dian_demo_mode = fields.Boolean(
-        string="DIAN Demo Mode",
         compute='_compute_l10n_co_dian_demo_mode',
         inverse='_inverse_l10n_co_dian_demo_mode',
     )

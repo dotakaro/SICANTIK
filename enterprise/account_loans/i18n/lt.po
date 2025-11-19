@@ -3,29 +3,15 @@
 # 	* account_loans
 # 
 # Translators:
-# Nerijus, 2024
-# Arunas Vaitekunas <vaitekunas@gmail.com>, 2024
-# digitouch UAB <digitouchagencyeur@gmail.com>, 2024
-# Arunas V. <arunas@devoro.com>, 2024
-# Arminas Grigonis <arminas@versada.lt>, 2024
-# Audrius Palenskis <audrius.palenskis@gmail.com>, 2024
-# grupoda2 <dmitrijus.ivanovas@gmail.com>, 2024
-# UAB "Draugiški sprendimai" <transifex@draugiskisprendimai.lt>, 2024
-# Donatas <donatasvaliulis16@gmail.com>, 2024
-# Monika Raciunaite <monika.raciunaite@gmail.com>, 2024
-# Ramunė ViaLaurea <ramune.vialaurea@gmail.com>, 2024
-# Rolandas <info@paninfo.lt>, 2024
-# Gailius Kazlauskas <gailius@vialaurea.lt>, 2024
-# Martin Trigaux, 2024
-# Linas Versada <linaskrisiukenas@gmail.com>, 2024
+# Ramunė ViaLaurea <ramune.vialaurea@gmail.com>, 2025
 # Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-16 18:42+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Lithuanian (https://app.transifex.com/odoo/teams/41243/lt/)\n"
 "MIME-Version: 1.0\n"
@@ -96,6 +82,11 @@ msgstr ""
 #. module: account_loans
 #: model:ir.model.fields.selection,name:account_loans.selection__account_loan_compute_wizard__compounding_method__a/a_isda
 msgid "A/A ISDA"
+msgstr ""
+
+#. module: account_loans
+#: model:ir.model,name:account_loans.model_account_return
+msgid "Accounting Return"
 msgstr ""
 
 #. module: account_loans
@@ -295,9 +286,14 @@ msgid "Discard"
 msgstr "Atmesti"
 
 #. module: account_loans
+#: model:ir.model.fields,field_description:account_loans.field_account_asset__display_name
+#: model:ir.model.fields,field_description:account_loans.field_account_asset_group__display_name
+#: model:ir.model.fields,field_description:account_loans.field_account_journal__display_name
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_close_wizard__display_name
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_compute_wizard__display_name
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_line__display_name
+#: model:ir.model.fields,field_description:account_loans.field_account_move__display_name
+#: model:ir.model.fields,field_description:account_loans.field_account_return__display_name
 msgid "Display Name"
 msgstr "Rodomas pavadinimas"
 
@@ -367,7 +363,7 @@ msgstr "Sekėjai (partneriai)"
 #. module: account_loans
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_line__generated_move_ids
 msgid "Generated Entries"
-msgstr ""
+msgstr "Sukurti įrašus"
 
 #. module: account_loans
 #: model:ir.model.fields,field_description:account_loans.field_account_bank_statement_line__generating_loan_line_id
@@ -387,10 +383,15 @@ msgid "Has Message"
 msgstr "Turi žinutę"
 
 #. module: account_loans
+#: model:ir.model.fields,field_description:account_loans.field_account_asset__id
+#: model:ir.model.fields,field_description:account_loans.field_account_asset_group__id
+#: model:ir.model.fields,field_description:account_loans.field_account_journal__id
 #: model:ir.model.fields,field_description:account_loans.field_account_loan__id
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_close_wizard__id
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_compute_wizard__id
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_line__id
+#: model:ir.model.fields,field_description:account_loans.field_account_move__id
+#: model:ir.model.fields,field_description:account_loans.field_account_return__id
 msgid "ID"
 msgstr "ID"
 
@@ -597,6 +598,7 @@ msgstr ""
 #. module: account_loans
 #. odoo-python
 #: code:addons/account_loans/models/account_loan.py:0
+#: code:addons/account_loans/models/account_return.py:0
 #: model:ir.actions.act_window,name:account_loans.action_view_account_loans
 #: model:ir.ui.menu,name:account_loans.menu_action_loans
 #: model_terms:ir.ui.view,arch_db:account_loans.account_loan_list_view
@@ -670,6 +672,15 @@ msgstr "Pranešimų, kuriems reikia imtis veiksmų, skaičius"
 #: model:ir.model.fields,help:account_loans.field_account_loan__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "Žinučių su pristatymo klaida skaičius"
+
+#. module: account_loans
+#. odoo-python
+#: code:addons/account_loans/models/account_return.py:0
+msgid ""
+"Odoo manages your amortizations automatically. No loans were found for this "
+"period. Ensure your loans are properly registered for automatic "
+"amortizations calculation."
+msgstr ""
 
 #. module: account_loans
 #. odoo-python
@@ -973,6 +984,19 @@ msgstr "Interneto svetainės žinutės"
 #: model:ir.model.fields,help:account_loans.field_account_loan__website_message_ids
 msgid "Website communication history"
 msgstr "Svetainės komunikacijos istorija"
+
+#. module: account_loans
+#. odoo-python
+#: code:addons/account_loans/models/account_asset.py:0
+#: code:addons/account_loans/models/account_loan.py:0
+msgid "id"
+msgstr ""
+
+#. module: account_loans
+#. odoo-python
+#: code:addons/account_loans/models/account_loan.py:0
+msgid "reversed"
+msgstr ""
 
 #. module: account_loans
 #: model_terms:ir.ui.view,arch_db:account_loans.view_account_loan_close_wizard

@@ -10,7 +10,6 @@
     'data': [
         'security/ir.model.access.csv',
         'data/product.avatax.category.csv',
-        'data/fiscal_position.xml',
         'views/account_fiscal_position_views.xml',
         'views/account_move_views.xml',
         'views/avatax_category_views.xml',
@@ -22,6 +21,7 @@
         'wizard/avatax_connection_test_result_views.xml',
         'reports/account_invoice.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'post_init_hook': '_post_init_hook',
 }

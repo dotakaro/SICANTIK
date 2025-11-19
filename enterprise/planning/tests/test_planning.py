@@ -16,8 +16,8 @@ class TestPlanning(TestCommonPlanning, MockEmail):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.classPatch(cls.env.cr, 'now', fields.datetime.now)
-        with freeze_time('2019-5-1'):
+        cls.classPatch(cls.env.cr, 'now', datetime.now)
+        with freeze_time('2019-05-01'):
             cls.setUpCalendars()
             cls.setUpEmployees()
         calendar_joseph = cls.env['resource.calendar'].create({
@@ -37,28 +37,6 @@ class TestPlanning(TestCommonPlanning, MockEmail):
             'attendance_ids': [
                 (0, 0, {'name': 'Thursday Morning', 'dayofweek': '3', 'hour_from': 13, 'hour_to': 17, 'day_period': 'morning'}),
             ],
-        })
-        cls.company_calendar = cls.env['resource.calendar'].create({
-            'name': 'Classic 40h/week',
-            'tz': 'UTC',
-            'hours_per_day': 8.0,
-            'attendance_ids': [
-                (0, 0, {'name': 'Monday Morning', 'dayofweek': '0', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
-                (0, 0, {'name': 'Monday Lunch', 'dayofweek': '0', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
-                (0, 0, {'name': 'Monday Afternoon', 'dayofweek': '0', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon'}),
-                (0, 0, {'name': 'Tuesday Morning', 'dayofweek': '1', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
-                (0, 0, {'name': 'Tuesday Lunch', 'dayofweek': '1', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
-                (0, 0, {'name': 'Tuesday Afternoon', 'dayofweek': '1', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon'}),
-                (0, 0, {'name': 'Wednesday Morning', 'dayofweek': '2', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
-                (0, 0, {'name': 'Wednesday Lunch', 'dayofweek': '2', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
-                (0, 0, {'name': 'Wednesday Afternoon', 'dayofweek': '2', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon'}),
-                (0, 0, {'name': 'Thursday Morning', 'dayofweek': '3', 'hour_from': 6, 'hour_to': 12, 'day_period': 'morning'}),
-                (0, 0, {'name': 'Thursday Lunch', 'dayofweek': '3', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
-                (0, 0, {'name': 'Thursday Afternoon', 'dayofweek': '3', 'hour_from': 13, 'hour_to': 15, 'day_period': 'afternoon'}),
-                (0, 0, {'name': 'Friday Morning', 'dayofweek': '4', 'hour_from': 8, 'hour_to': 12, 'day_period': 'morning'}),
-                (0, 0, {'name': 'Friday Lunch', 'dayofweek': '4', 'hour_from': 12, 'hour_to': 13, 'day_period': 'lunch'}),
-                (0, 0, {'name': 'Friday Afternoon', 'dayofweek': '4', 'hour_from': 13, 'hour_to': 17, 'day_period': 'afternoon'})
-            ]
         })
         cls.env.user.company_id.resource_calendar_id = cls.company_calendar
         cls.employee_joseph.resource_calendar_id = calendar_joseph
@@ -485,7 +463,7 @@ class TestPlanning(TestCommonPlanning, MockEmail):
             'end_time': 17.996,
             'duration_days': 1,
         })
-        self.assertEqual(shift_template.name, '8:59 AM - 5:59 PM ')
+        self.assertEqual(shift_template.name, '8:59 - 17:59')
 
     def test_copy_planning_shift(self):
         """ Test state of the planning shift is only copied once we are in the planning split tool
@@ -803,6 +781,60 @@ class TestPlanning(TestCommonPlanning, MockEmail):
         slot2 = self.slot.copy({'resource_id': self.resource_bert.id})
         self.assertEqual(slot2.allocated_hours, 4, "The allocated hours should have been recomputed with the new resource after copying the shift.")
 
+    def test_planning_expand_resource(self):
+        """
+            When planning_expand_resource = True and there are slots assigned to the resource in the previous or next period,
+            the resource is also displayed in the gantt view with value = 0.
+        """
+        self.employee_bert.resource_calendar_id = self.flex_50h_calendar
+        self.slot.resource_id = self.employee_bert.resource_id
+        group_by = ['resource_id']
+
+        planned_dates = [
+            ('2019-07-01 00:00:00', '2019-07-31 23:59:59'),
+            ('2019-08-01 00:00:00', '2019-08-31 23:59:59')
+        ]
+        for case, (start_date, stop_date) in enumerate(planned_dates):
+            result = self.env['planning.slot'].with_context(planning_expand_resource=True).get_gantt_data([
+                '&',
+                ['start_datetime', '<', stop_date],
+                ['end_datetime', '>', start_date],
+            ], group_by, {'display_name': {}}, unavailability_fields=group_by, progress_bar_fields=group_by, start_date=start_date, stop_date = stop_date,scale='month')
+
+            if case == 0:
+                self.assertTrue(self.slot.resource_id.id in result['progress_bars']['resource_id'], "Resource has slots in the previous month")
+                self.assertEqual(result['progress_bars']['resource_id'][self.slot.resource_id.id]['value'], 0.0)
+            else:
+                self.assertFalse(self.slot.resource_id.id in result['progress_bars']['resource_id'])
+
+    def test_allocated_hours_open_shift(self):
+        """ Ensure that the allocated hours for an open shift are correctly computed based on the
+        company calendar. """
+        self.employee_joseph.user_id = self.env.user.id
+        PlanningSlot = self.env["planning.slot"]
+
+        # Create a slot NOT during the employee working hours
+        slot = PlanningSlot.create({
+            'start_datetime': datetime(2019, 5, 1, 8, 0),
+            'end_datetime': datetime(2019, 5, 1, 17, 0),
+        })
+        self.assertEqual(
+            slot.allocated_hours,
+            8.0,
+            "The allocated hours should be 8.0 for the open shift based on the company calendar",
+        )
+
+        # Create a slot during the employee working hours
+        slot = PlanningSlot.create({
+            'start_datetime': datetime(2019, 5, 2, 8, 0),
+            'end_datetime': datetime(2019, 5, 2, 17, 0),
+        })
+        self.assertEqual(
+            slot.allocated_hours,
+            8.0,
+            "The allocated hours should be 8.0 for the open shift based on the company calendar",
+        )
+
     def test_planning_slot_default_datetime(self):
         """ This test ensures that when selecting the datetime in Gantt view, the default hours are set correctly """
         self.resource_joseph.tz = 'Europe/Brussels'
@@ -814,3 +846,229 @@ class TestPlanning(TestCommonPlanning, MockEmail):
         slot = PlanningSlot.default_get(['resource_id', 'start_datetime', 'end_datetime'])
         self.assertEqual(slot.get('start_datetime'), datetime(2024, 7, 4, 10, 0, 0), "The slot start datetime should be matched to the resource's timezone")
         self.assertEqual(slot.get('end_datetime'), datetime(2024, 7, 4, 10, 59, 59), "The slot end datetime should be matched to the resource's timezone")
+
+    def test_copy_shift_without_archive_resource(self):
+        self.slot.resource_id = self.resource_joseph
+        self.slot2.resource_id = self.resource_bert
+        self.resource_joseph.action_archive()
+        slots = self.slot + self.slot2
+        slot, slot2 = slots.copy()
+        self.assertFalse(slot.resource_id)
+        self.assertEqual(slot2.resource_id, self.resource_bert)
+
+        # Exception we keep the archived resource if it is given in parameter of copy method
+        slot, slot2 = slots.copy({'resource_id': self.resource_joseph.id})
+        self.assertEqual(slot.resource_id, self.resource_joseph)
+        self.assertEqual(slot2.resource_id, self.resource_joseph)
+
+        # Exception we keep the archived resource if the shift is split
+        slot = self.slot.with_context(planning_split_tool=True).copy()
+        self.assertEqual(slot.resource_id, self.resource_joseph)
+
+    def test_unavailability_open_shift(self):
+        """ Ensure that there is no unavailabilities for open shifts. """
+        gantt_unavailabilities = self.env['planning.slot']._gantt_unavailability(
+            'resource_id',
+            self.resource_bert.ids,
+            datetime(2024, 1, 1),
+            datetime(2024, 1, 7),
+            'month',
+        )
+        self.assertEqual(gantt_unavailabilities[False], [], 'There should be no unavailability for open shifts.')
+        self.assertNotEqual(gantt_unavailabilities[self.resource_bert.id], [], 'There should be unavailabilities for Bert.')
+
+    def test_multi_day_shift_creation(self):
+        self.env.user.tz = 'UTC'
+        template = self.env['planning.slot.template'].create({
+            'start_time': 11,
+            'end_time': 14,
+            'duration_days': 2,
+        })
+
+        PlanningSlot = self.env['planning.slot'].with_context(
+            shifts_multi_day=True,
+            default_start_datetime="2024-07-04 00:00:00",
+            default_end_datetime="2024-07-06 23:59:59"
+        )
+        slot = PlanningSlot.create({
+            'resource_id': self.resource_joseph.id,
+            'template_id': self.template.id,
+        })
+        slots = PlanningSlot.search([
+            ('resource_id', '=', self.resource_joseph.id),
+            ('start_datetime', '>', '2024-07-04 00:00:00'),
+            ('end_datetime', '<', '2024-07-06 23:59:59'),
+            ('id', '!=', slot.id),
+        ], order='start_datetime')
+        self.assertEqual(len(slot), 1)
+        self.assertEqual(len(slots), 2)
+        slot2, slot3 = slots
+        expected_datetime = datetime(2024, 7, 4, 11, 0, 0, 0)
+        self.assertEqual(slot.start_datetime, expected_datetime)
+        self.assertEqual(slot.end_datetime, expected_datetime + relativedelta(hour=14))
+
+        expected_datetime += relativedelta(days=1)
+        self.assertEqual(slot2.start_datetime, expected_datetime)
+        self.assertEqual(slot2.end_datetime, expected_datetime + relativedelta(hour=14))
+
+        expected_datetime += relativedelta(days=1)
+        self.assertEqual(slot3.start_datetime, expected_datetime)
+        self.assertEqual(slot3.end_datetime, expected_datetime + relativedelta(hour=14))
+
+        slot = PlanningSlot.create({
+            'resource_id': self.resource_bert.id,
+            'template_id': template.id,
+        })
+        slots = PlanningSlot.search([
+            ('resource_id', '=', self.resource_bert.id),
+            ('start_datetime', '>', '2024-07-04 00:00:00'),
+            ('end_datetime', '<', '2024-07-06 23:59:59'),
+            ('id', '!=', slot.id),
+        ], order='start_datetime')
+        self.assertFalse(len(slots), "Multi-days feature is not used when the duration days of the template is greater than 1 day.")
+
+        slots_created = PlanningSlot.create([
+            {'resource_id': self.resource_janice.id, 'template_id': template.id},
+            {'template_id': template.id},
+        ])
+        slots = PlanningSlot.search([
+            ('resource_id', '=', self.resource_janice.id),
+            ('start_datetime', '>', '2024-07-04 00:00:00'),
+            ('end_datetime', '<', '2024-07-06 23:59:59'),
+            ('id', 'not in', slots_created.ids),
+        ], order='start_datetime')
+        self.assertFalse(len(slots), "Multi-days feature is not used when the vals_list given to the create method contains more than 1 slot to create.")
+
+    def test_batch_creation_from_calendar(self):
+        """
+        This test ensure that when planning slots are created from the "create multi" of the calendar view inconsistent slot
+        are not created.
+        employee with standard calendar : the slot is valid if it is contained at least partially in the employee's schedule.
+        e.a. employee with 9-17 working schedule. slot 8-12 is valid. slot 18-20 is invalid.
+        employee with flexible working hours : all slots are valid.
+        """
+        template_valid, template_invalid = self.env['planning.slot.template'].create([{
+            'start_time': 8, 'end_time': 12, 'duration_days': 1,
+        }, {
+            'start_time': 18, 'end_time': 20, 'duration_days': 1,
+        }])
+        self.employee_bert.resource_calendar_id = False
+        self.employee_joseph.resource_calendar_id = self.company_calendar
+        slot_joseph, slot_bert = self.env['planning.slot'].create_batch_from_calendar([{
+                'start_datetime': '2025-04-04 08:00:00', 'end_datetime': '2025-04-04 12:00:00',
+                'resource_id': resource.id, 'template_id': template_valid.id,
+            } for resource in (self.resource_joseph, self.resource_bert)
+        ])
+
+        self.assertEqual(slot_joseph.resource_id, self.resource_joseph)
+        self.assertEqual(slot_joseph.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-04 08:00:00')
+        self.assertEqual(slot_joseph.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-04 12:00:00')
+        self.assertEqual(slot_bert.resource_id, self.resource_bert)
+        self.assertEqual(slot_bert.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-04 08:00:00')
+        self.assertEqual(slot_bert.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-04 12:00:00')
+
+        slot_bert = self.env['planning.slot'].create_batch_from_calendar([{
+                'start_datetime': '2025-04-04 18:00:00', 'end_datetime': '2025-04-04 20:00:00',
+                'resource_id': resource.id, 'template_id': template_invalid.id,
+            } for resource in (self.resource_joseph, self.resource_bert)
+        ])
+        self.assertEqual(slot_bert.resource_id, self.resource_bert)
+        self.assertEqual(slot_bert.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-04 18:00:00')
+        self.assertEqual(slot_bert.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-04 20:00:00')
+
+    def test_batch_creation_from_calendar_with_duration_days_template(self):
+        """
+        This test ensure that when planning slots are created from the "create multi" of the calendar view with shift
+        template with duration days > 1, then the unavailable days are skipped.
+        Test case :
+            Create 2 new slots for Bert, flexible employee.
+            - weekend are ignored.
+            - start dates : Monday 07, Tuesday 08
+            - expected end dates : Friday 11, Saturday 12
+            Create 2 new slots for Joseph, fixed schedule 40h
+            - weekend are computed
+            - start dates : Monday 07, Tuesday 08
+            - expected end dates: Friday 11, Monday 14
+        """
+        shift_template = self.env['planning.slot.template'].create({
+            'start_time': 8, 'end_time': 12, 'duration_days': 5
+        })
+        self.employee_bert.resource_calendar_id = False
+        self.employee_joseph.resource_calendar_id = self.company_calendar
+
+        slot_joseph_1, slot_bert_1, slot_joseph_2, slot_bert_2 = self.env['planning.slot'].create_batch_from_calendar([{
+                'start_datetime': f'2025-04-{day[0]} 08:00:00', 'end_datetime': f'2025-04-{day[1]} 12:00:00',
+                'resource_id': resource.id, 'template_id': shift_template.id,
+            } for day in [['07', '11'], ['08', '12']] for resource in (self.resource_joseph, self.resource_bert)
+        ])
+        self.assertEqual(slot_joseph_1.resource_id, self.resource_joseph)
+        self.assertEqual(slot_joseph_2.resource_id, self.resource_joseph)
+        self.assertEqual(slot_bert_1.resource_id, self.resource_bert)
+        self.assertEqual(slot_bert_2.resource_id, self.resource_bert)
+        self.assertEqual(slot_joseph_1.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-07 08:00:00')
+        self.assertEqual(slot_joseph_2.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-08 08:00:00')
+        self.assertEqual(slot_bert_1.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-07 08:00:00')
+        self.assertEqual(slot_bert_2.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-08 08:00:00')
+        self.assertEqual(slot_joseph_1.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-11 12:00:00')
+        self.assertEqual(slot_joseph_2.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-14 12:00:00')
+        self.assertEqual(slot_bert_1.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-11 12:00:00')
+        self.assertEqual(slot_bert_2.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-12 12:00:00')
+
+    def test_copy_slots_when_time_off(self):
+        """
+        week_1: 19-01-2020 -> 25-01-2020
+            original slot: 20-01-2020 08:00 -> 24-01-2020 17:00 (5 days)
+            allocated_hours: 50 hours and allocated_percentage: 125
+        --------------------------------------------------------------------------------------------
+        week_2: 26-01-2020 -> 01-02-2020
+            resource on leave: 28-01-2020 8:00 -> 29-01-2020 17:00 (2 days i.e 16 hours)
+            copy slot: 27-01-2020 08:00 -> 31-01-2020 17:00
+        -------------------------------------------------------------------------------------------
+        Expected result:
+        Total 4 slots will create, 3 slot assigned to resource and 1 open slot
+            1) 27-01-2020 08:00 -> 27-01-2020 12:00 (4 hrs)(assigned slot)
+            2) 27-01-2020 13:00 -> 27-01-2020 19:00 (4 hrs)(assigned slot)
+            3) 28-01-2020 08:00 -> 29-01-2020 19:00 (16 hrs)(open slot)
+            4) 30-01-2020 08:00 -> 31-01-2020 19:00 (16 hrs)(assigned slot)
+        """
+        employee_bert = self.env['hr.employee'].create({
+            'name': 'Test',
+            'work_email': 'test@test.in',
+            'tz': 'UTC',
+            'employee_type': 'freelance',
+            'create_date': '2015-01-01 00:00:00',
+            'resource_calendar_id': self.company_calendar.id,
+        })
+
+        PlanningSlot = self.env['planning.slot']
+        dt = datetime(2020, 1, 20, 0, 0)
+
+        slot = PlanningSlot.create({
+            'resource_id': employee_bert.resource_id.id,
+            'start_datetime': dt + relativedelta(hours=8),
+            'end_datetime': dt + relativedelta(days=4, hours=17),
+        })
+
+        self.env['resource.calendar.leaves'].create({
+            'name': "I go to my father-in-law's",
+            'calendar_id': employee_bert.resource_id.calendar_id.id,
+            'date_from': dt + relativedelta(weeks=1, days=1),
+            'date_to': dt + relativedelta(weeks=1, days=2, hours=17),
+            'resource_id': employee_bert.resource_id.id,
+        })
+
+        copied, _dummy = PlanningSlot.action_copy_previous_week(
+            str(dt + relativedelta(weeks=1)), [
+                ['start_datetime', '<=', dt + relativedelta(weeks=1)],
+                ['end_datetime', '>=', dt],
+                ['resource_id', '=', employee_bert.resource_id.id],
+            ]
+        )
+
+        copied_slot = PlanningSlot.browse(copied)
+        open_slot = copied_slot.filtered(lambda x: not x.resource_id)
+
+        self.assertEqual(len(open_slot), 4, "4 shift should be copied as open, as the employee is on off")
+        self.assertEqual(sum(open_slot.mapped('allocated_hours')), 16, "16 hours should be allocated to open slot")
+        self.assertEqual(slot.allocated_hours, sum(copied_slot.mapped('allocated_hours')),
+            "The allocated hours of slot and allocated hours of copied slots must be same")

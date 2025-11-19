@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { Domain } from "@web/core/domain";
 import { useService } from "@web/core/utils/hooks";
@@ -35,6 +33,9 @@ export class GridTimesheetTimerHeader extends Component {
         this.timesheetUOMService = useService("timesheet_uom");
         this.timerService = useService("timer");
         this.timerReactive = this.timerService.createTimer();
+        this.recordHooks = {
+            onRecordChanged: this.onTimesheetChanged.bind(this),
+        };
         onWillStart(this.onWillStart);
     }
 
@@ -54,18 +55,19 @@ export class GridTimesheetTimerHeader extends Component {
 
     getFieldInfo(fieldName) {
         const field = this.fields[fieldName];
-        let fieldType = field.type;
-        if (fieldName === "task_id") {
-            fieldType = 'task_with_hours';
-        }
         const domain = field.domain || "[]";
-        const fieldInfo = getPropertyFieldInfo({
-            field: field,
+        const propertyField = {
+            field,
             name: fieldName,
-            type: fieldType,
             domain,
             required: "False",
-        });
+        };
+        propertyField.type = field.type;
+        if (fieldName === "task_id") {
+            propertyField.type = "many2one";
+            propertyField.widget = "task_with_hours";
+        }
+        const fieldInfo = getPropertyFieldInfo(propertyField);
         fieldInfo.placeholder = field.string || "";
         if (fieldName === "project_id") {
             fieldInfo.domain = Domain.and([

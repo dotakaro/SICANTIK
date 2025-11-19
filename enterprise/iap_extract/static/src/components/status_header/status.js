@@ -1,6 +1,5 @@
-/** @odoo-module **/
-
 import { Component, onWillDestroy, onWillStart, onWillUpdateProps, useState } from "@odoo/owl";
+import { useRecordObserver } from "@web/model/relational_model/utils";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 import { useService } from "@web/core/utils/hooks";
@@ -22,6 +21,19 @@ export class StatusHeader extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.busService = this.env.services.bus_service;
+
+        useRecordObserver(async (record) => {
+            const extract_status = record.data.extract_state;
+            if (extract_status !== this.state.status) {
+                this.state.status = extract_status;
+                this.state.errorMessage = record.data.extract_error_message;
+            }
+            const extract_document_uuid = record.data.extract_document_uuid;
+            if (extract_document_uuid && !this.channelName) {
+                this.subscribeToChannel(extract_document_uuid);
+                this.enableTimeout();
+            }
+        });
 
         onWillStart(() => {
             // When a new document is uploaded (via the Upload button, or by attaching a file),
@@ -105,10 +117,7 @@ export class StatusHeader extends Component {
     }
 
     async refreshPage() {
-        await this.action.switchView("form", {
-            resId: this.props.record.resId,
-            resIds: this.props.record.resIds
-        });
+        return this.props.record.model.load()
     }
 
     async buyCredits() {

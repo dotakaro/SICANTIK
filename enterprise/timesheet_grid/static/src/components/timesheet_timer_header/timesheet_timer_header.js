@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { Field, getPropertyFieldInfo } from "@web/views/fields/field";
 import { TimesheetDisplayTimer } from "../timesheet_display_timer/timesheet_display_timer";
 import { useService, useAutofocus } from "@web/core/utils/hooks";
@@ -52,15 +50,15 @@ export class TimesheetTimerHeader extends Component {
         this.isProjectManager = await user.hasGroup('project.group_project_manager');
     }
 
-    getIsProjectManager() {
-        return this.isProjectManager;
-    }
-
     // deprecated
     onWillUpdateProps(nextProps) {
         if (nextProps.timesheet && nextProps.timesheet.data.name === "/") {
             this._clearTimesheetName(nextProps.timesheet);
         }
+    }
+
+    getIsProjectManager() {
+        return this.isProjectManager;
     }
 
     //----------------------------------------------------------------------
@@ -88,16 +86,17 @@ export class TimesheetTimerHeader extends Component {
     }
 
     getFieldType(fieldName) {
-        if (fieldName === "task_id") {
-            return "task_with_hours";
-        }
         return this.props.fields[fieldName].type;
     }
 
     get fieldsInfo() {
         return {
             task_id: {
-                ...getPropertyFieldInfo({ name: "task_id", type: this.getFieldType("task_id") }),
+                ...getPropertyFieldInfo({
+                    name: "task_id",
+                    type: this.getFieldType("task_id"),
+                    widget: "task_with_hours",
+                }),
                 viewType: this.viewType,
                 context: this.props.fields.task_id.context,
             },
@@ -109,7 +108,7 @@ export class TimesheetTimerHeader extends Component {
     //--------------------------------------------------------------------------
     // deprecated
     _clearTimesheetName(timesheet = null) {
-            (timesheet || this.props.timesheet).update({ name: "" }, { silent: true });
+        (timesheet || this.props.timesheet).update({ name: "" }, { silent: true });
     }
 
     //--------------------------------------------------------------------------

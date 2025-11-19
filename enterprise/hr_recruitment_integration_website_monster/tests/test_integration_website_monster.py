@@ -1,10 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from contextlib import contextmanager
+from markupsafe import Markup
 from unittest.mock import patch
 
 from odoo.exceptions import RedirectWarning, UserError
-from odoo.fields import Date, Markup
+from odoo.fields import Date
 from odoo.tests.common import TransactionCase, tagged
 from odoo.tools.zeep.exceptions import Fault
 
@@ -51,7 +52,7 @@ class TestWebsiteMonsterIntegration(TransactionCase):
             ('name', '=', 'Monster.com')
         ])
 
-        cls.post_content = "As an employee of our company, you will collaborate with each department to create and deploy disruptive products. Come work at a growing company that offers great benefits with opportunities to moving forward and learn alongside accomplished leaders. We're seeking an experienced and outstanding member of staff. This position is both creative and rigorous by nature you need to think outside the box. We expect the candidate to be proactive and have a 'get it done' spirit."
+        cls.post_content = "As an employee of our company, you will collaborate with each department to create and deploy disruptive products. Come work at a growing company that offers great benefits with opportunities to moving forward and learn alongside accomplished leaders. We are seeking an experienced and outstanding member of staff. This position is both creative and rigorous by nature you need to think outside the box. We expect the candidate to be proactive and have a get it done spirit."
 
         cls.today = Date().today()
     
@@ -72,18 +73,6 @@ class TestWebsiteMonsterIntegration(TransactionCase):
             'apply_method': 'redirect',
             'job_apply_url': False,
             'platform_ids': self.monster_platform.ids,
-            'post_html': 'This is my job description',
-            'campaign_start_date': self.today,
-        })
-        with self.assertRaises(UserError):
-            wiz_job_post.action_post_job()
-
-    def test_create_post_no_published(self):
-        wiz_job_post = self.env['hr.recruitment.post.job.wizard'].with_context({'active_model': 'hr.job', 'active_id': self.job2.id}).create({
-            'job_id': self.job2.id,
-            'platform_ids': self.monster_platform.ids,
-            'apply_method': 'redirect',
-            'job_apply_url': 'https://odoo.com',
             'post_html': 'This is my job description',
             'campaign_start_date': self.today,
         })
@@ -133,7 +122,7 @@ class TestWebsiteMonsterIntegration(TransactionCase):
             'campaign_start_date': self.today,
         })
         wiz_job_post.action_post_job()
-        self.assertEqual(wiz_job_post.post_html, Markup(f"<p>{self.job1.website_description}</p>"))
+        self.assertEqual(wiz_job_post.post_html, Markup("<p>{content}</p>").format(content=self.job1.website_description))
 
     def test_generate_post_warning(self):
         wiz_job_post = self.env['hr.recruitment.post.job.wizard'].with_context({'active_model': 'hr.job', 'active_id': self.job1.id}).create({
@@ -343,10 +332,6 @@ class TestMockupWebsiteMonsterIntegration(TestWebsiteMonsterIntegration):
         with self.patch_monster_requests():
             super().test_create_post_no_apply_url()
 
-    def test_create_post_no_published(self):
-        with self.patch_monster_requests():
-            super().test_create_post_no_published()
-    
     def test_create_post_no_post_html(self):
         with self.patch_monster_requests():
             super().test_create_post_no_post_html()

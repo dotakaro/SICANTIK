@@ -15,7 +15,7 @@ from odoo.addons.l10n_mx_edi.models.l10n_mx_edi_document import (
     USAGE_SELECTION,
 )
 from odoo.exceptions import ValidationError, UserError
-from odoo.tools import format_list, frozendict
+from odoo.tools import frozendict
 from odoo.tools.float_utils import float_round
 from odoo.tools.sql import column_exists, create_column
 from odoo.addons.base.models.ir_qweb import keep_query
@@ -204,6 +204,8 @@ class AccountMove(models.Model):
         string="Payment Policy",
         selection=[('PPD', 'PPD'), ('PUE', 'PUE')],
         compute='_compute_l10n_mx_edi_payment_policy',
+        store=True,
+        readonly=False,
     )
     # Indicate if you send the invoice to the SAT using 'Publico En General' meaning
     # the customer is unknown by the SAT. This is mainly used when the customer doesn't have
@@ -214,11 +216,12 @@ class AccountMove(models.Model):
         store=True,
         readonly=False,
         help="Send the CFDI with recipient 'publico en general'",
+        tracking=True,
     )
-    l10n_mx_edi_addenda_id = fields.Many2one(
+    l10n_mx_edi_addenda_ids = fields.Many2many(
         comodel_name='l10n_mx_edi.addenda',
-        string='Addenda',
-        compute='_compute_l10n_mx_edi_addenda_id',
+        string="Addendas & Complementos",
+        compute='_compute_l10n_mx_edi_addenda_ids',
         store=True,
         readonly=False,
     )
@@ -236,40 +239,98 @@ class AccountMove(models.Model):
     # HELPERS
     # -------------------------------------------------------------------------
 
+    def _l10n_mx_edi_is_cfdi_document(self):
+        """ Helper to know if the current account.move is eligible for the MX CFDI.
+
+        :return: A boolean.
+        """
+        self.ensure_one()
+        return self.country_code == 'MX' and self.company_currency_id.name == 'MXN'
+
+    def _l10n_mx_edi_is_cfdi_invoice(self):
+        """ Helper to know if the current account.move is an invoice or not.
+
+        :return: True if the account.move is an invoice, False otherwise.
+        """
+        self.ensure_one()
+        return self._l10n_mx_edi_is_cfdi_document() and self.is_invoice()
+
     def _l10n_mx_edi_is_cfdi_payment(self):
         """ Helper to know if the current account.move is a payment or not.
 
         :return: True if the account.move is a payment, False otherwise.
         """
         self.ensure_one()
-        return self.origin_payment_id or self.statement_line_id
+        return self._l10n_mx_edi_is_cfdi_document() and (self.origin_payment_id or self.statement_line_id)
 
-    def _l10n_mx_edi_cfdi_invoice_append_addenda(self, cfdi, addenda):
-        ''' Append an additional block to the signed CFDI passed as parameter.
-        :param move:    The account.move record.
-        :param cfdi:    The invoice's CFDI as a string.
-        :param addenda: (ir.ui.view) The addenda to add as a string.
-        :return cfdi:   The cfdi including the addenda.
-        '''
+    def _l10n_mx_edi_cfdi_invoice_append_addendas(self, cfdi_str, addendas):
+        """ Helper to handle appending Complementos/Addenda before/after sending the CFDI string.
+        --- Format of returned dictionary ---
+        {
+            <optional> 'error' : <string>,
+            <required> 'cfdi'  : <bytes>,
+        }
+        :param cfdi_str: the CFDI XML string to be appended to
+        :param l10n_mx_edi.addenda addendas: all the ``l10n_mx_edi.addenda`` records to be appended
+        :return: the new CFDI XML string which have been appended with the addenda_ids
+        :rtype: dict[str, str | bytes]
+        """
         self.ensure_one()
-        addenda_values = {'record': self, 'cfdi': cfdi}
+        decoded_data = addendas._decode_multi_addenda_arch()
+        if decoded_data.get('errors'):
+            return {'errors': decoded_data['errors'], 'cfdi': cfdi_str}
 
-        addenda_arch = self.env['ir.qweb']._render(etree.fromstring(addenda.arch), values=addenda_values).strip()
-        if not addenda_arch:
-            return cfdi
+        xml_node = self.env['l10n_mx_edi.addenda']._get_decoded_xml_node(decoded_data)
+        addition_values = {'record': self}
+        addition_title = 'Complemento' if xml_node == 'complemento' else 'Addenda'
 
-        cfdi_node = etree.fromstring(cfdi)
-        addenda_node = etree.fromstring(addenda_arch)
-        version = cfdi_node.get('Version')
+        # Create new Comprobante node with the new namespaces required for the addendas
+        cfdi_node = etree.fromstring(cfdi_str)
+        new_cfdi_node = etree.Element(
+            _tag=cfdi_node.tag,
+            attrib=cfdi_node.attrib,
+            nsmap=cfdi_node.nsmap | decoded_data['comprobante']['nsmap'],
+        )
+        previous_complemento_node = cfdi_node.find("{*}Complemento")
+        need_update_complemento = xml_node == 'complemento' and previous_complemento_node is not None
 
-        # Add a root node Addenda if not specified explicitly by the user.
-        if addenda_node.tag != '{http://www.sat.gob.mx/cfd/%s}Addenda' % version[0]:
-            node = etree.Element(etree.QName('http://www.sat.gob.mx/cfd/%s' % version[0], 'Addenda'))
-            node.append(addenda_node)
-            addenda_node = node
+        # Copy the Complemento/Addenda node without children; or create new one if it's not created yet
+        if need_update_complemento:  # Complemento node already exist
+            empty_addition_node = etree.Element(
+                _tag=previous_complemento_node.tag,
+                attrib=previous_complemento_node.attrib,
+                nsmap=previous_complemento_node.nsmap | decoded_data[xml_node]['nsmap'],
+            )
+        else:  # Complemento/Addenda node has not been created yet; create a new empty node
+            new_node_tag = etree.QName('http://www.sat.gob.mx/cfd/%s' % cfdi_node.get('Version')[0], addition_title)
+            empty_addition_node = etree.Element(new_node_tag, nsmap={'cfdi': "http://www.sat.gob.mx/cfd/4", **decoded_data[xml_node]['nsmap']})
 
-        cfdi_node.append(addenda_node)
-        return etree.tostring(cfdi_node, pretty_print=True, xml_declaration=True, encoding='UTF-8')
+        # Create the new Complemento/Addenda node XML string
+        empty_addition_str = etree.tostring(empty_addition_node, method='c14n').decode('utf-8')
+        replacer_str_list = ['>', decoded_data[xml_node]['arch']]
+        if need_update_complemento:
+            for previous_child in previous_complemento_node.getchildren():  # collect all original XML Complemento children as a string
+                replacer_str_list.append(etree.tostring(previous_child).decode('utf-8'))
+            cfdi_node.remove(previous_complemento_node)
+        replacer_str = ''.join(replacer_str_list)
+        new_addition_str = empty_addition_str.replace('>', replacer_str, 1)
+
+        for child_node in cfdi_node.getchildren():  # add all previous children to the new empty CFDI root node
+            new_cfdi_node.append(child_node)
+
+        # Create the new CFDI XML node string and manually inject the new Complemento/Addenda XML string
+        new_cfdi_str: str = etree.tostring(new_cfdi_node).decode('utf-8')
+        new_cfdi_str = new_cfdi_str.replace('</cfdi:Comprobante>', new_addition_str + '</cfdi:Comprobante>', 1)
+
+        # Manually inject schema locations
+        if schema_locations_str := decoded_data['comprobante']['schema_locations']:
+            new_cfdi_str = new_cfdi_str.replace('xsi:schemaLocation="', f'xsi:schemaLocation="{schema_locations_str} ', 1)
+
+        # Render the new XML with QWeb and return the new XML string
+        new_cfdi_arch = self.env['ir.qweb']._render(etree.fromstring(new_cfdi_str), values=addition_values).strip()
+        new_cfdi_node = etree.fromstring(new_cfdi_arch)
+        new_cfdi = self.env['l10n_mx_edi.document']._convert_xml_to_attachment_data(new_cfdi_node)
+        return {'cfdi': new_cfdi}
 
     def _l10n_mx_edi_cfdi_amount_to_text(self):
         """Method to transform a float amount to text words
@@ -363,7 +424,7 @@ class AccountMove(models.Model):
         )
         barcode_sello = url_quote_plus(cfdi_infos['sello'][-8:], safe='=/').replace('%2B', '+')
         barcode_value = url_quote_plus(f'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?{barcode_value_params}&fe={barcode_sello}')
-        barcode_src = f'/report/barcode/?barcode_type=QR&value={barcode_value}&width=180&height=180'
+        barcode_src = f'/report/barcode/?barcode_type=QR&value={barcode_value}&width=180&height=180&quiet=0'
 
         return {
             **cfdi_infos,
@@ -434,9 +495,9 @@ class AccountMove(models.Model):
         for move in self.filtered(lambda x: x.move_type == 'out_refund'):
             cfdi_values = {}
             self.env['l10n_mx_edi.document']._add_document_origin_cfdi_values(cfdi_values, move.l10n_mx_edi_cfdi_origin)
-            if cfdi_values['tipo_relacion'] in ('01', '03'):
-                for uuid in cfdi_values['cfdi_relationado_list']:
-                    origin_uuids.add(uuid)
+            relationado_data = cfdi_values['cfdi_relationado_data']
+            if '01' in relationado_data or '03' in relationado_data:
+                origin_uuids.update(relationado_data.get('01', []) + relationado_data['03', []])
         if origin_uuids:
             return self.env['account.move'].search([('l10n_mx_edi_cfdi_uuid', 'in', list(origin_uuids))])
         return self.env['account.move']
@@ -463,10 +524,10 @@ class AccountMove(models.Model):
         """ Check whatever or not the CFDI is needed on this invoice.
         """
         for move in self:
-            move.l10n_mx_edi_is_cfdi_needed = \
-                move.country_code == 'MX' \
-                and move.company_currency_id.name == 'MXN' \
-                and (move.move_type in ('out_invoice', 'out_refund') or move._l10n_mx_edi_is_cfdi_payment())
+            move.l10n_mx_edi_is_cfdi_needed = (
+                move._l10n_mx_edi_is_cfdi_payment()
+                or (move._l10n_mx_edi_is_cfdi_invoice() and move.move_type in ('out_invoice', 'out_refund'))
+            )
 
     @api.depends('l10n_mx_edi_invoice_document_ids.state', 'l10n_mx_edi_invoice_document_ids.sat_state',
                  'l10n_mx_edi_payment_document_ids.state', 'l10n_mx_edi_payment_document_ids.sat_state')
@@ -610,32 +671,41 @@ class AccountMove(models.Model):
             move.l10n_mx_edi_cfdi_customer_rfc = cfdi_infos.get('customer_rfc')
             move.l10n_mx_edi_cfdi_amount = cfdi_infos.get('amount_total')
 
-    @api.depends('move_type', 'invoice_date_due', 'invoice_date', 'invoice_payment_term_id')
+    @api.depends('partner_id', 'move_type', 'invoice_date_due', 'invoice_date', 'invoice_payment_term_id')
     def _compute_l10n_mx_edi_payment_policy(self):
         for move in self:
-            move.l10n_mx_edi_payment_policy = False
-
-            if move.is_invoice(include_receipts=True) \
-                and move.l10n_mx_edi_is_cfdi_needed \
-                and move.invoice_date_due \
-                and move.invoice_date:
-
-                # By default PUE means immediate payment and then, no need to send the payments to
-                # the SAT except if you explicitely send them.
-                move.l10n_mx_edi_payment_policy = 'PUE'
-
-                # In CFDI 3.3 - rule 2.7.1.43 which establish that
-                # invoice payment term should be PPD as soon as the due date
-                # is after the last day of  the month (the month of the invoice date).
+            if move.is_invoice(include_receipts=True) and move.l10n_mx_edi_is_cfdi_needed:
+                move.l10n_mx_edi_payment_policy = (
+                    move.move_type == 'out_refund' and 'PUE'
+                    or move.l10n_mx_edi_payment_policy
+                    or move.partner_id.l10n_mx_edi_payment_policy
+                )
                 if (
-                    move.move_type == 'out_invoice'
-                    and (
-                        move.invoice_date_due.month > move.invoice_date.month
-                        or move.invoice_date_due.year > move.invoice_date.year
-                        or len(move.invoice_payment_term_id.line_ids) > 1
-                    )
+                    not move.l10n_mx_edi_payment_policy
+                    and move.invoice_date_due
+                    and move.invoice_date
                 ):
-                    move.l10n_mx_edi_payment_policy = 'PPD'
+                    # In CFDI 3.3 - rule 2.7.1.43 which establish that
+                    # invoice payment term should be PPD as soon as the due date
+                    # is after the last day of  the month (the month of the invoice date).
+                    if (
+                        move.move_type == 'out_invoice'
+                        and (
+                            move.invoice_date_due > move.invoice_date
+                            and (
+                                move.invoice_date_due.month > move.invoice_date.month
+                                or move.invoice_date_due.year > move.invoice_date.year
+                                or len(move.invoice_payment_term_id.line_ids) > 1
+                            )
+                        )
+                    ):
+                        move.l10n_mx_edi_payment_policy = 'PPD'
+                    else:
+                        # By default, PUE means immediate payment and then, no need to send the payments to
+                        # the SAT except if you explicitly send them.
+                        move.l10n_mx_edi_payment_policy = 'PUE'
+            else:
+                move.l10n_mx_edi_payment_policy = False
 
     @api.depends('l10n_mx_edi_is_cfdi_needed', 'l10n_mx_edi_cfdi_origin', 'partner_id', 'company_id')
     def _compute_l10n_mx_edi_cfdi_to_public(self):
@@ -658,13 +728,13 @@ class AccountMove(models.Model):
                 move.l10n_mx_edi_cfdi_to_public = move.l10n_mx_edi_cfdi_to_public
 
     @api.depends('partner_id', 'commercial_partner_id')
-    def _compute_l10n_mx_edi_addenda_id(self):
+    def _compute_l10n_mx_edi_addenda_ids(self):
         for move in self:
             partner = move.partner_id or move.commercial_partner_id
             if move.l10n_mx_edi_is_cfdi_needed:
-                move.l10n_mx_edi_addenda_id = partner.l10n_mx_edi_addenda_id
+                move.l10n_mx_edi_addenda_ids = partner.l10n_mx_edi_addenda_ids
             else:
-                move.l10n_mx_edi_addenda_id = None
+                move.l10n_mx_edi_addenda_ids = False
 
     @api.depends('journal_id', 'statement_line_id', 'partner_id')
     def _compute_l10n_mx_edi_payment_method_id(self):
@@ -746,13 +816,15 @@ class AccountMove(models.Model):
             "- 05: Traslados de mercancias facturados previamente\n"
             "- 06: Factura generada por los traslados previos\n"
             "- 07: CFDI por aplicación de anticipo\n"
-            "For example: 01|89966ACC-0F5C-447D-AEF3-3EED22E711EE,89966ACC-0F5C-447D-AEF3-3EED22E711EE"
+            "For example: 01|89966ACC-0F5C-447D-AEF3-3EED22E711EE,89966ACC-0F5C-447D-AEF3-3EED22E711EE\n"
+            "If there are more than one relation type, it needs to be separated by comma\n"
+            "For example: 01|89966ACC-0F5C-447D-AEF3-3EED22E711EE,03|89966ACC-0F5C-447D-AEF3-3EED22E711EE,6fad57a1-bf5b-4e27-a5d3-d84b2f36674c"
         )
 
         for move in self.filtered('l10n_mx_edi_cfdi_origin'):
             cfdi_values = {}
             self.env['l10n_mx_edi.document']._add_document_origin_cfdi_values(cfdi_values, move.l10n_mx_edi_cfdi_origin)
-            if not cfdi_values['tipo_relacion'] or not cfdi_values['cfdi_relationado_list']:
+            if not cfdi_values['cfdi_relationado_data']:
                 raise ValidationError(error_message % move.l10n_mx_edi_cfdi_origin)
 
     # -------------------------------------------------------------------------
@@ -972,6 +1044,7 @@ class AccountMove(models.Model):
                 'name': invl._l10n_mx_edi_get_cfdi_line_name(),
                 'product_unspsc_code': invl._get_product_unspsc_code(),
                 'uom_unspsc_code': invl._get_uom_unspsc_code(),
+                'tax_objected': invl.l10n_mx_edi_tax_object,
             }
             for invl in self._l10n_mx_edi_cfdi_invoice_line_ids()
         ]
@@ -1028,6 +1101,10 @@ class AccountMove(models.Model):
             cfdi_values['tipo_cambio'] = None
         else:
             cfdi_values["tipo_cambio"] = 1.0 / self.invoice_currency_rate
+
+        # Additional Addendas and Complementos.
+        cfdi_values['addendas'] = self.l10n_mx_edi_addenda_ids.sudo(flag=False)
+        cfdi_values['move'] = self.sudo(flag=False)
 
     def _l10n_mx_edi_get_invoice_cfdi_filename(self):
         """ Get the filename of the CFDI.
@@ -1161,8 +1238,14 @@ class AccountMove(models.Model):
                 # Both are expressed in different currencies.
                 computed_rate = calculate_rate(invoice_values['invoice_amount_currency'], invoice_values['payment_amount_currency'])
 
+            # 'objeto_imp' has to be set on the invoice but is computed for each lines.
+            all_tax_objected = {line['objeto_imp'] for line in inv_cfdi_values['conceptos_list']}
+            all_tax_objected.discard('04')
+            objeto_imp = all_tax_objected.pop() if len(all_tax_objected) == 1 else '02'
+
             invoice_values_list.append({
                 **inv_cfdi_values,
+                'objeto_imp': objeto_imp,
                 'id_documento': invoice.l10n_mx_edi_cfdi_uuid,
                 'equivalencia': computed_rate,
                 'inv_rate': computed_rate,
@@ -1294,8 +1377,8 @@ class AccountMove(models.Model):
         ):
             for values in dictionary.values():
                 if 'base' in values:
-                    values['base'] = self.currency_id.round(values['base'])
-                values['importe'] = self.currency_id.round(values['importe'])
+                    values['base'] = float_round(values['base'], 6)
+                values['importe'] = float_round(values['importe'], 6)
 
         for key in (
             'total_traslados_base_iva0',
@@ -1697,9 +1780,7 @@ class AccountMove(models.Model):
         """
         self.ensure_one()
 
-        self \
-            .with_context(no_new_invoice=True) \
-            .message_post(body=_("The CFDI document has been successfully cancelled."))
+        self.message_post(body=_("The CFDI document has been successfully cancelled."))
 
         cfdi_values = self.env['l10n_mx_edi.document']._get_company_cfdi_values(self.company_id)
         if cfdi_values['root_company'].l10n_mx_edi_pac_test_env:
@@ -1776,13 +1857,18 @@ class AccountMove(models.Model):
                 self._l10n_mx_edi_cfdi_invoice_document_sent_failed(error, cfdi_filename=cfdi_filename, cfdi_str=cfdi_str)
 
         def on_success(_cfdi_values, cfdi_filename, cfdi_str, populate_return=None):
-            if self.l10n_mx_edi_addenda_id:
-                cfdi_str = self._l10n_mx_edi_cfdi_invoice_append_addenda(cfdi_str, self.l10n_mx_edi_addenda_id)
+            if addendas_post_send := self.l10n_mx_edi_addenda_ids._filter_addenda_by_xml_node('addenda'):
+                append_values = self._l10n_mx_edi_cfdi_invoice_append_addendas(
+                    cfdi_str=cfdi_str,
+                    addendas=addendas_post_send,
+                )
+                if append_values.get('errors'):
+                    self.message_post(body=_("Error when decoding the addenda to append after signing:\n%s",
+                                             '\n'.join(append_values['errors'])))
+                cfdi_str = append_values['cfdi']
 
             document = self._l10n_mx_edi_cfdi_invoice_document_sent(cfdi_filename, cfdi_str)
-            self \
-                .with_context(no_new_invoice=True) \
-                .message_post(
+            self.message_post(
                     body=_("The CFDI document was successfully created and signed by the government."),
                     attachment_ids=document.attachment_id.ids,
                 )
@@ -1884,7 +1970,9 @@ class AccountMove(models.Model):
             * amount_residual_after:    The residual_amount after reconciliation.
         """
         # Only consider the invoices already signed.
-        invoices = self.filtered(lambda x: x.is_invoice() and x.l10n_mx_edi_cfdi_state == 'sent').sorted()
+        invoices = self\
+            .filtered(lambda x: x._l10n_mx_edi_is_cfdi_invoice() and x.l10n_mx_edi_cfdi_state == 'sent')\
+            .sorted()
 
         # Collect the reconciled amounts.
         reconciliation_values = {}
@@ -2014,7 +2102,7 @@ class AccountMove(models.Model):
 
             reconciled_amls = pay_rec_lines.matched_debit_ids.debit_move_id \
                               + pay_rec_lines.matched_credit_ids.credit_move_id
-            invoices = reconciled_amls.move_id.filtered(lambda x: x.l10n_mx_edi_is_cfdi_needed and x.is_invoice())
+            invoices = reconciled_amls.move_id.filtered(lambda x: x._l10n_mx_edi_is_cfdi_invoice())
             if any(
                 not invoice.l10n_mx_edi_cfdi_state
                 for invoice in invoices
@@ -2363,9 +2451,7 @@ class AccountMove(models.Model):
 
             # Chatters.
             for invoice in self:
-                invoice \
-                    .with_context(no_new_invoice=True) \
-                    .message_post(
+                invoice.message_post(
                     body=_("The Global CFDI document was successfully created and signed by the government."),
                     attachment_ids=document.attachment_id.ids,
                 )
@@ -2390,9 +2476,7 @@ class AccountMove(models.Model):
         """
 
         for record in self:
-            record \
-                .with_context(no_new_invoice=True) \
-                .message_post(body=_("The Global CFDI document has been successfully cancelled."))
+            record.message_post(body=_("The Global CFDI document has been successfully cancelled."))
 
     def _l10n_mx_edi_cfdi_global_invoice_try_cancel(self, document, cancel_reason):
         """ Create a CFDI global invoice for multiple invoices.
@@ -2460,7 +2544,7 @@ class AccountMove(models.Model):
 
     def l10n_mx_edi_cfdi_try_sat(self):
         self.ensure_one()
-        if self.is_invoice():
+        if self._l10n_mx_edi_is_cfdi_invoice():
             documents = self.l10n_mx_edi_invoice_document_ids
         elif self._l10n_mx_edi_is_cfdi_payment():
             documents = self.l10n_mx_edi_payment_document_ids
@@ -2513,6 +2597,7 @@ class AccountMove(models.Model):
         code = tree.attrib.get('NoIdentificacion')  # default_code if export from Odoo
         unspsc_code = tree.attrib.get('ClaveProdServ')  # UNSPSC code
         description = tree.attrib.get('Descripcion')  # label of the invoice line "[{p.default_code}] {p.name}"
+        tax_object = tree.attrib.get('ObjetoImp')
         cleaned_name = re.sub(r"^\[.*\] ", "", description)
         product = self.env['product.product']._retrieve_product(
             name=cleaned_name,
@@ -2549,6 +2634,7 @@ class AccountMove(models.Model):
             'price_unit': float(tree.attrib.get('ValorUnitario')),
             'discount': discount_percent,
             'tax_ids': [Command.set(tax_ids)],
+            'l10n_mx_edi_tax_object': tax_object,
         })
         return True
 
@@ -2618,10 +2704,9 @@ class AccountMove(models.Model):
 
     def _l10n_mx_edi_import_cfdi_invoice(self, invoice, file_data, new=False):
         with invoice._get_edi_creation() as invoice:
-            invoice.ensure_one()
             if invoice.l10n_mx_edi_cfdi_attachment_id:
                 # invoice is already associated with a CFDI document, do nothing
-                return False
+                return
             tree = file_data['xml_tree']
             # handle payments
             if tree.findall('.//{*}Pagos'):
@@ -2634,26 +2719,37 @@ class AccountMove(models.Model):
                 move_type = 'in_' + move_type
             else:
                 return
-            invoice.move_type = move_type
-            if not invoice.invoice_line_ids:
-                # don't fill the invoice if it already has lines, simply give it the cfdi info
+
+            # don't fill the invoice if it already has lines, simply give it the cfdi info
+            if invoice.state == 'draft' and not invoice.invoice_line_ids:
+                invoice.move_type = move_type
                 invoice._l10n_mx_edi_import_cfdi_fill_invoice(tree)
+
             # create the document
             self.env['l10n_mx_edi.document'].create({
                 'move_id': invoice.id,
                 'invoice_ids': [Command.set(invoice.ids)],
                 'state': 'invoice_sent' if invoice.is_sale_document() else 'invoice_received',
                 'sat_state': 'not_defined',
-                'attachment_id': file_data['attachment'].id,
+                'attachment_id': file_data['origin_attachment'].id,
                 'datetime': fields.Datetime.now(),
             })
-            return True
+
+    def _get_import_file_type(self, file_data):
+        """ Identify CFDIs. """
+        # EXTENDS 'account'
+        if file_data['xml_tree'] is not None and file_data['xml_tree'].prefix == 'cfdi':
+            return 'l10n_mx.cfdi'
+        return super()._get_import_file_type(file_data)
 
     def _get_edi_decoder(self, file_data, new=False):
         # EXTENDS 'account'
-        if file_data.get('is_cfdi', False):
-            return self._l10n_mx_edi_import_cfdi_invoice
-        return super()._get_edi_decoder(file_data, new=new)
+        if file_data['import_file_type'] == 'l10n_mx.cfdi':
+            return {
+                'priority': 20,
+                'decoder': self._l10n_mx_edi_import_cfdi_invoice,
+            }
+        return super()._get_edi_decoder(file_data, new)
 
     def _get_invoice_legal_documents(self, filetype, allow_fallback=False):
         # EXTENDS account
@@ -2675,3 +2771,18 @@ class AccountMove(models.Model):
                 **self.action_invoice_download_cfdi(),
             })
         return print_items
+
+    def _get_bank_transaction_receipt_report_values(self):
+        """ Get the extra values when rendering the Payment Receipt PDF report from a bank transaction.
+
+        :return: A dictionary:
+            * display_invoices: Display the invoices table.
+            * display_payment_method: Display the payment method value.
+            * cfdi: A dict with all cfdi datas from the record.
+        """
+        self.ensure_one()
+        return {
+            'display_invoices': False,
+            'display_payment_method': False,
+            'cfdi': self._l10n_mx_edi_get_extra_payment_report_values(),
+        }

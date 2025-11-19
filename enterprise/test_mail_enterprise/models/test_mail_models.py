@@ -4,11 +4,11 @@
 from odoo import fields, models
 
 
-class MailTestActivitySMSVoip(models.Model):
+class MailTestActivityBlSmsVoip(models.Model):
     """ A model inheriting from most phone- and mail- related mixin in order
     to test activities with a full setup. """
-    _description = 'VOIP SMS Mailing Blacklist Enabled with activities'
     _name = 'mail.test.activity.bl.sms.voip'
+    _description = 'VOIP SMS Mailing Blacklist Enabled with activities'
     _inherit = [
         'mail.thread.blacklist',
         'mail.thread.phone',
@@ -47,12 +47,3 @@ class MailTestActivitySMSVoip(models.Model):
 
     def _phone_get_number_fields(self):
         return ['phone_nbr', 'mobile_nbr']
-
-
-# This One2many is normally added through `documents_project`.
-# However due to optimisations introduced by https://github.com/odoo/odoo/pull/111651
-# the query count is actually lower when documents_project is installed (compared to just having documents)
-class IrAttachment(models.Model):
-    _inherit = ['ir.attachment']
-
-    document_ids = fields.One2many('documents.document', 'attachment_id')

@@ -2,7 +2,6 @@ import {
     SIZES,
     click,
     contains,
-    insertText,
     openDiscuss,
     patchUiSize,
     start,
@@ -43,7 +42,7 @@ test("Invite users into whatsapp channel", async () => {
     await openDiscuss(channelId);
     await click(".o-mail-Discuss-header button[title='Invite People']");
     await click(".o-discuss-ChannelInvitation-selectable");
-    await click("button[title='Invite']:enabled");
+    await click(".o-discuss-ChannelInvitation [title='Invite']:enabled");
     await contains(".o_mail_notification", { text: "invited WhatsApp User to the channel" });
 });
 
@@ -79,7 +78,7 @@ test("Mobile has WhatsApp category", async () => {
     await contains(".o-mail-NotificationItem", { text: "WhatsApp 1" });
 });
 
-test('"Search WhatsApp Channel" item selection opens WhatsApp channel', async () => {
+test("Can search whatsapp conversations on mobile", async () => {
     const pyEnv = await startServer();
     pyEnv["discuss.channel"].create({
         name: "slytherins",
@@ -89,8 +88,7 @@ test('"Search WhatsApp Channel" item selection opens WhatsApp channel', async ()
     await start();
     await openDiscuss();
     await click("button", { text: "WhatsApp" });
-    await click("button", { text: "Search WhatsApp Channel" });
-    await insertText("input[placeholder='Search WhatsApp Channel']", "slytherins");
-    await click(".o-mail-ChannelSelector-suggestion");
+    await click("button", { text: "Start a conversation" });
+    await click("a", { text: "slytherins" });
     await contains(".o-mail-ChatWindow-header div[title='slytherins']");
 });

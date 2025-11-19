@@ -3,13 +3,13 @@
 from odoo import api, fields, models, _
 
 
-class L10nAuSuperAccount(models.Model):
-    _name = "l10n_au.super.account"
+class L10n_AuSuperAccount(models.Model):
+    _name = 'l10n_au.super.account'
     _description = "Super Account"
     _rec_names_search = ["employee_id", "fund_id"]
 
     employee_id = fields.Many2one('hr.employee', string='Employee', required=True)
-    display_name = fields.Char(compute="_compute_display_name", search="_search_display_name", export_string_translation=False)
+    display_name = fields.Char(export_string_translation=False)
     employee_tfn = fields.Char(related="employee_id.l10n_au_tfn", string='TFN')
     fund_id = fields.Many2one("l10n_au.super.fund", string="Super Fund", required=True)
     fund_type = fields.Selection(related="fund_id.fund_type")
@@ -26,11 +26,10 @@ class L10nAuSuperAccount(models.Model):
     super_account_warning = fields.Text(related="employee_id.super_account_warning")
     company_id = fields.Many2one('res.company', related='employee_id.company_id', string='Company', store=True)
 
-    _sql_constraints = [
-        ('check_proportion',
-         'check(proportion >= 0 and proportion <= 1)',
-         'The Proportion percentage should be between 0 and 100%')
-    ]
+    _check_proportion = models.Constraint(
+        'check(proportion >= 0 and proportion <= 1)',
+        "The Proportion percentage should be between 0 and 100%",
+    )
 
     @api.depends('employee_id', 'fund_id')
     def _compute_display_name(self):

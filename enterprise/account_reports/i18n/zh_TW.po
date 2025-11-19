@@ -3,16 +3,15 @@
 # 	* account_reports
 # 
 # Translators:
-# Benson <Benson.Dr@Gmail.com>, 2024
 # Wil Odoo, 2025
 # Tony Ng, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-30 18:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-16 18:42+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Tony Ng, 2025\n"
 "Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
@@ -22,10 +21,30 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"\n"
+"                    Missing company details (like VAT number or country) can cause errors in your report,\n"
+"                    such as using the wrong VAT rate, wrongly exempting transactions.\n"
+"                "
+msgstr ""
+"\n"
+"                    公司詳情缺漏（例如增值稅稅務編號、國家/地區等）可致報告出現錯誤，\n"
+"                    例如使用錯誤的增值稅稅率、錯誤地將交易豁免徵稅等。\n"
+"                "
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/bank_reconciliation_report/warnings.xml:0
 msgid "\" account balance is affected by"
 msgstr "\" 賬戶結餘受以下影響："
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "%(count)s checks passed"
+msgstr "%(count)s 項檢查已通過"
 
 #. module: account_reports
 #. odoo-python
@@ -47,9 +66,15 @@ msgstr "%(names)s 及另一項"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/res_company.py:0
-msgid "%(report_label)s: %(period)s"
-msgstr "%(report_label)s：%(period)s"
+#: code:addons/account_reports/models/account_return.py:0
+msgid "%(return_name)s Checks"
+msgstr "%(return_name)s 檢查"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "%(return_type_name)s %(period_suffix)s %(country_code)s"
+msgstr "%(return_type_name)s%(period_suffix)s %(country_code)s"
 
 #. module: account_reports
 #. odoo-python
@@ -68,6 +93,22 @@ msgstr "%s 不是數值"
 #: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "%s selected"
 msgstr "已選取 %s 個項目"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+msgid ""
+"'%s' date scope cannot be evaluated for a report used by more than one "
+"return type."
+msgstr "未能為多於一種申報類型所使用的報表，計算「%s」日期範圍。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+msgid ""
+"'%s' date scope cannot be evaluated for a report which is not used by any "
+"return type."
+msgstr "未能為未被任何申報類型使用的報表，計算「%s」日期範圍。"
 
 #. module: account_reports
 #. odoo-python
@@ -132,9 +173,9 @@ msgid ", leading to an unexplained difference of"
 msgstr "，導致出現無法解釋的差異"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.view_move_form_vat_return
-msgid "-> Refresh"
-msgstr "-> 重新載入"
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_form_view
+msgid "20+"
+msgstr "20+"
 
 #. module: account_reports
 #: model:mail.template,body_html:account_reports.email_template_customer_statement
@@ -172,6 +213,11 @@ msgstr ""
 "        "
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "<i class=\"fa fa-ellipsis-v\" title=\"Dropdown Menu\"/>"
+msgstr "<i class=\"fa fa-ellipsis-v\" title=\"下拉式選單\"/>"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_report_send_form
 msgid ""
 "<i class=\"fa fa-question-circle ml4\" role=\"img\" aria-label=\"Warning\" "
@@ -182,6 +228,15 @@ msgstr ""
 "title=\"合作夥伴的電郵地址未知\" invisible=\"not send_mail_readonly\"/>"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_kanban_view
+msgid ""
+"<i invisible=\"result != 'success'\" class=\"fa fa-check text-success align-self-center\" title=\"success\"/>\n"
+"                                            <i invisible=\"result == 'success'\" class=\"fa fa-times text-danger align-self-center\" title=\"failure\"/>"
+msgstr ""
+"<i invisible=\"result != 'success'\" class=\"fa fa-check text-success align-self-center\" title=\"成功\"/>\n"
+"                                            <i invisible=\"result == 'success'\" class=\"fa fa-times text-danger align-self-center\" title=\"失敗\"/>"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.view_account_report_file_download_error_wizard_form
 msgid ""
 "<i>Errors marked with <i class=\"fa fa-warning\"/> are critical and prevent "
@@ -189,9 +244,50 @@ msgid ""
 msgstr "<u>標記有「<i class=\"fa fa-warning\"/>」的錯誤屬非常嚴重，會阻止檔案生成。</u>"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
-msgid "<span role=\"separator\">Reconciliation</span>"
-msgstr "<span role=\"separator\">對賬</span>"
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "<span class=\"oe_stat_text pe-1 text-black-50\">Submitted on: </span>"
+msgstr "<span class=\"oe_stat_text pe-1 text-black-50\">提交日期：</span>"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "<span class=\"oe_stat_text pe-1\">Deadline: </span>"
+msgstr "<span class=\"oe_stat_text pe-1\">期限：</span>"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_kanban_view
+msgid ""
+"<span invisible=\"not records_count or records_count &lt; 21\">20+</span>\n"
+"                                                <span invisible=\"not records_count\"> </span>"
+msgstr ""
+"<span invisible=\"not records_count or records_count &lt; 21\">20+</span>\n"
+"                                                <span invisible=\"not records_count\"> </span>"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.return_creation_wizard_form
+msgid ""
+"<span invisible=\"not show_warning_wrong_dates\" class=\"fa fa-exclamation-triangle text-danger pb-2\" title=\"The selected range doesn't match any fiscal period.\"/>\n"
+"                        <span invisible=\"not show_warning_existing_return\" class=\"fa fa-exclamation-triangle text-danger pb-2\" title=\"A return already exists for the selected period.\"/>"
+msgstr ""
+"<span invisible=\"not show_warning_wrong_dates\" class=\"fa fa-exclamation-triangle text-danger pb-2\" title=\"選取的範圍不符合任何財政期間。\"/>\n"
+"                        <span invisible=\"not show_warning_existing_return\" class=\"fa fa-exclamation-triangle text-danger pb-2\" title=\"選取的期間已有申報表。\"/>"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid ""
+"<span invisible=\"unresolved_check_count != 0 or resolved_check_count &lt;= "
+"0\" class=\"oe_stat_text ps-0 text-success\">Passed</span>"
+msgstr ""
+"<span invisible=\"unresolved_check_count != 0 or resolved_check_count &lt;= "
+"0\" class=\"oe_stat_text ps-0 text-success\">通過</span>"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid ""
+"<span invisible=\"unresolved_check_count &lt;= 0\" class=\"oe_stat_text ps-0"
+" text-danger\">Pending</span>"
+msgstr ""
+"<span invisible=\"unresolved_check_count &lt;= 0\" class=\"oe_stat_text ps-0"
+" text-danger\">待處理</span>"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.view_account_report_file_download_error_wizard_form
@@ -208,6 +304,12 @@ msgstr "已有同名的橫向分組組別。"
 #: code:addons/account_reports/static/src/widgets/account_report_x2many/account_report_x2many.js:0
 msgid "A line with a 'Group By' value cannot have children."
 msgstr "具有 \"分組依據\"值的資料行不能有子項。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/wizard/return_creation_wizard.py:0
+msgid "A return already exists for the selected period."
+msgstr "選取的期間已有申報表。"
 
 #. module: account_reports
 #. odoo-python
@@ -245,11 +347,6 @@ msgid "Account"
 msgstr "帳戶"
 
 #. module: account_reports
-#: model:ir.model,name:account_reports.model_account_chart_template
-msgid "Account Chart Template"
-msgstr "賬目總表範本"
-
-#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_journal_report.py:0
 msgid "Account Code"
@@ -267,10 +364,21 @@ msgid "Account Display Representative Field"
 msgstr "賬戶顯示代表欄位"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__partner_id
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__partner_id
+msgid "Account Holder"
+msgstr "科目持有人"
+
+#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_journal_report.py:0
 msgid "Account Label"
 msgstr "賬戶標籤"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_res_company__account_last_return_cron_refresh
+msgid "Account Last Return Cron Refresh"
+msgstr "賬戶上次申報的 Cron 更新"
 
 #. module: account_reports
 #. odoo-python
@@ -299,15 +407,15 @@ msgid "Account Report Send"
 msgstr "賬戶報表傳送"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__account_reports_show_per_company_setting
-msgid "Account Reports Show Per Company Setting"
-msgstr "賬戶報告按公司設定顯示"
-
-#. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_res_partner__account_represented_company_ids
 #: model:ir.model.fields,field_description:account_reports.field_res_users__account_represented_company_ids
 msgid "Account Represented Company"
 msgstr "賬戶代表公司"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__return_id
+msgid "Account Return"
+msgstr "賬戶申報"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_res_company__account_revaluation_journal_id
@@ -324,6 +432,12 @@ msgstr "賬戶："
 #: model:ir.model.fields,field_description:account_reports.field_res_company__account_representative_id
 msgid "Accounting Firm"
 msgstr "會計公司"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Accounting Periods"
+msgstr "會計期間"
 
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_report
@@ -358,6 +472,21 @@ msgid "Accounting Reports"
 msgstr "會計報表"
 
 #. module: account_reports
+#: model:ir.model,name:account_reports.model_account_return
+msgid "Accounting Return"
+msgstr "會計申報"
+
+#. module: account_reports
+#: model:ir.model,name:account_reports.model_account_return_check
+msgid "Accounting Return Check"
+msgstr "會計申報檢查"
+
+#. module: account_reports
+#: model:ir.model,name:account_reports.model_account_return_type
+msgid "Accounting Return Type"
+msgstr "會計申報類型"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/account_report/filters/filter_analytic.xml:0
 #: code:addons/account_reports/static/src/components/account_report/filters/filter_analytic_groupby.xml:0
@@ -383,9 +512,15 @@ msgid "Accounts coverage"
 msgstr "賬戶覆蓋範圍"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_mail_activity_type__category
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__action
 msgid "Action"
 msgstr "動作"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_needaction
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_needaction
+msgid "Action Needed"
+msgstr "需要採取行動"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_file_download_error_wizard__actionable_errors
@@ -393,21 +528,28 @@ msgid "Actionable Errors"
 msgstr "可採取行動的錯誤"
 
 #. module: account_reports
-#: model:ir.model.fields,help:account_reports.field_mail_activity_type__category
-msgid ""
-"Actions may trigger specific behavior like opening calendar view or "
-"automatically mark as done when a document is uploaded"
-msgstr "操作可能會觸發特定行為，如打開日曆視圖或自動標記為上載文檔時執行的操作"
-
-#. module: account_reports
-#: model:ir.model,name:account_reports.model_mail_activity
-msgid "Activity"
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_ids
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_ids
+msgid "Activities"
 msgstr "活動"
 
 #. module: account_reports
-#: model:ir.model,name:account_reports.model_mail_activity_type
-msgid "Activity Type"
-msgstr "活動類型"
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_exception_decoration
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_exception_decoration
+msgid "Activity Exception Decoration"
+msgstr "活動異常圖示"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_state
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_state
+msgid "Activity State"
+msgstr "活動狀態"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_type_icon
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_type_icon
+msgid "Activity Type Icon"
+msgstr "活動類型圖示"
 
 #. module: account_reports
 #. odoo-javascript
@@ -456,6 +598,14 @@ msgid "Advanced"
 msgstr "進階"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"After adjustements, transfer the undistributed Profits/Losses to an equity "
+"account."
+msgstr "調整後，將未分佈的利潤/虧損，轉入權益賬戶。"
+
+#. module: account_reports
 #: model:ir.model,name:account_reports.model_account_aged_partner_balance_report_handler
 msgid "Aged Partner Balance Custom Handler"
 msgstr "合作夥伴結餘賬齡自訂處理程式"
@@ -497,10 +647,21 @@ msgid "Aged Receivables"
 msgstr "應收賬齡表"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Aged payables per partner"
+msgstr "應付款項賬齡，按合作夥伴劃分"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Aged receivables per partner"
+msgstr "應收款項賬齡，按合作夥伴劃分"
+
+#. module: account_reports
 #. odoo-javascript
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_fiscal_position.xml:0
 #: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 #: code:addons/account_reports/static/src/components/sales_report/filters/filters.js:0
 msgid "All"
@@ -531,6 +692,23 @@ msgid "All Report Variants"
 msgstr "所有報告款式"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"All customer VAT numbers are valid under <a "
+"href=\"https://ec.europa.eu/taxation_customs/vies\" "
+"target=\"_blank\">VIES</a>."
+msgstr ""
+"所有客戶的增值稅稅務編號，在 <a href=\"https://ec.europa.eu/taxation_customs/vies\" "
+"target=\"_blank\">VIES</a> 規定下均有效。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "All customers have a VAT number."
+msgstr "所有客戶都有增值稅稅務編號。"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/tax_report/warnings.xml:0
 msgid ""
@@ -558,6 +736,20 @@ msgstr "金額"
 #: model:account.report.column,name:account_reports.partner_ledger_report_amount_currency
 msgid "Amount Currency"
 msgstr "金額貨幣"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__amount_to_pay
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__amount_to_pay
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__amount_to_pay
+msgid "Amount To Pay"
+msgstr "待付金額"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__amount_to_pay_currency_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__currency_id
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__currency_id
+msgid "Amount To Pay Currency"
+msgstr "待付金額貨幣"
 
 #. module: account_reports
 #. odoo-python
@@ -597,7 +789,7 @@ msgstr "分析賬戶分組依據"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Analytic Simulations"
 msgstr "模擬分析"
 
@@ -617,6 +809,37 @@ msgstr "註釋"
 #: model:ir.model.fields,field_description:account_reports.field_account_report__annotations_ids
 msgid "Annotations"
 msgstr "註釋"
+
+#. module: account_reports
+#: model:account.return.type,name:account_reports.annual_corporate_tax_return_type
+msgid "Annual Closing: Corporate Tax"
+msgstr "周年結算：企業稅"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#: model:account.report,name:account_reports.annual_statements
+#: model:ir.actions.client,name:account_reports.action_account_report_asr
+#: model:ir.ui.menu,name:account_reports.menu_action_account_report_annual_statements
+msgid "Annual Statements"
+msgstr "周年報表"
+
+#. module: account_reports
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_type__deadline_periodicity__year
+#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_return_periodicity__year
+msgid "Annually"
+msgstr "每年"
+
+#. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/widgets/many2many_approvers/many2many_approvers.xml:0
+msgid "Approve"
+msgstr "審批"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__approver_ids
+msgid "Approved By"
+msgstr "審批人"
 
 #. module: account_reports
 #. odoo-python
@@ -642,6 +865,18 @@ msgid "Attach a file"
 msgstr "附加一個文件"
 
 #. module: account_reports
+#: model:ir.model,name:account_reports.model_ir_attachment
+#: model:ir.model.fields,field_description:account_reports.field_account_return__attachment_ids
+msgid "Attachment"
+msgstr "附件"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_attachment_count
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_attachment_count
+msgid "Attachment Count"
+msgstr "附件數目"
+
+#. module: account_reports
 #. odoo-javascript
 #. odoo-python
 #: code:addons/account_reports/models/account_generic_tax_report.py:0
@@ -654,6 +889,11 @@ msgstr "審計"
 #: model:ir.ui.menu,name:account_reports.account_reports_audit_reports_menu
 msgid "Audit Reports"
 msgstr "審計報告"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__available_return_type_ids
+msgid "Available Return Type"
+msgstr "可用申報類型"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_avgcre0
@@ -674,6 +914,7 @@ msgstr "B： %s"
 #. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_journal_report.py:0
+#: code:addons/account_reports/models/account_trial_balance_report.py:0
 #: model:account.report.column,name:account_reports.balance_sheet_balance
 #: model:account.report.column,name:account_reports.cash_flow_report_balance
 #: model:account.report.column,name:account_reports.customer_statement_report_balance
@@ -728,24 +969,32 @@ msgstr "銀行結餘"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Balance tax advance payment account"
 msgstr "預繳稅項賬戶結餘"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Balance tax current account (payable)"
 msgstr "稅款往來賬戶結餘（應付）"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Balance tax current account (receivable)"
 msgstr "稅款往來賬戶結餘（應收）"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
 #: model:ir.actions.client,name:account_reports.action_account_report_bank_reconciliation
+msgid "Bank Matching"
+msgstr "銀行配對"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Bank Reconciliation"
 msgstr "銀行對賬"
 
@@ -765,9 +1014,15 @@ msgid "Bank and Cash Accounts"
 msgstr "銀行及現金賬戶"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"Bank matching isn’t required for VAT returns but helps spot missing bills."
+msgstr "增值稅報稅並不需要銀行配對，但銀行配對有助發現缺漏的賬單。"
+
+#. module: account_reports
 #. odoo-javascript
 #. odoo-python
-#: code:addons/account_reports/models/account_general_ledger.py:0
 #: code:addons/account_reports/models/account_journal_report.py:0
 #: code:addons/account_reports/static/src/components/journal_report/line/line.xml:0
 #: model_terms:ir.ui.view,arch_db:account_reports.pdf_journal_report_taxes_summary
@@ -785,6 +1040,30 @@ msgstr "根據"
 #: code:addons/account_reports/models/account_deferred_reports.py:0
 msgid "Before"
 msgstr "在之前"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Bill"
+msgstr "帳單"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Bill Attachments"
+msgstr "賬單附件"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Bill attachments"
+msgstr "賬單附件"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Bills"
+msgstr "帳單"
 
 #. module: account_reports
 #. odoo-javascript
@@ -817,8 +1096,17 @@ msgid "Budget items can only be edited from account lines."
 msgstr "預算項目只可在賬戶資料行編輯。"
 
 #. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/redirectAction/redirectAction.xml:0
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__bypassed
+msgid "Bypassed"
+msgstr "已繞過"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/tests/common.py:0
+msgid "Can't use this helper to create a line with both tags and formula"
+msgstr "未能使用此助手去建立同時附有標籤及算式的資料行"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_report_send_form
 #: model_terms:ir.ui.view,arch_db:account_reports.view_account_multicurrency_revaluation_wizard
 #: model_terms:ir.ui.view,arch_db:account_reports.view_report_export_wizard
@@ -830,12 +1118,6 @@ msgstr "取消"
 #: code:addons/account_reports/models/account_generic_tax_report.py:0
 msgid "Cannot audit tax from another model than account.tax."
 msgstr "未能審計 account.tax 之外其他模組的稅款。"
-
-#. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_report.py:0
-msgid "Cannot generate carryover values for all fiscal positions at once!"
-msgstr "無法同時產生所有財務規則的結轉金額！"
 
 #. module: account_reports
 #. odoo-javascript
@@ -965,6 +1247,17 @@ msgid "Change Lock Date"
 msgstr "更改鎖定日期"
 
 #. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/account_return/views/account_return_kanban_controller.xml:0
+msgid "Chatter"
+msgstr "聊天視窗"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__code
+msgid "Check ID"
+msgstr "檢查識別碼"
+
+#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/wizard/account_report_send.py:0
 msgid "Check Partner(s) Email(s)"
@@ -977,20 +1270,54 @@ msgid "Check them"
 msgstr "檢查一下"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__check_ids
+msgid "Checks"
+msgstr "檢查"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.view_account_report_file_download_error_wizard_form
 msgid "Close"
 msgstr "關閉"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Closing Entries"
+msgstr "結算記項"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Closing Entry"
 msgstr "期末記項"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__closing_move_ids
+msgid "Closing Move"
+msgstr "結算分錄"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_bank_statement_line__closing_return_id
+#: model:ir.model.fields,field_description:account_reports.field_account_move__closing_return_id
+msgid "Closing Return"
+msgstr "結算申報"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_closing_bank_balance0
 msgid "Closing bank balance"
 msgstr "期末銀行餘額"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_move.py:0
+msgid "Closing entry deleted"
+msgstr "結算記項已刪除"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_move.py:0
+msgid "Closing entry deleted for company %s"
+msgstr "公司 %s 的結算記項已刪除"
 
 #. module: account_reports
 #. odoo-python
@@ -1011,7 +1338,8 @@ msgid "Columns"
 msgstr "欄"
 
 #. module: account_reports
-#: model:account.report.column,name:account_reports.general_ledger_report_communication
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__communication
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__communication
 msgid "Communication"
 msgstr "溝通"
 
@@ -1019,6 +1347,7 @@ msgstr "溝通"
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
 #: model:ir.model,name:account_reports.model_res_company
+#: model:ir.model.fields,field_description:account_reports.field_account_return__company_ids
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__company_ids
 msgid "Companies"
 msgstr "公司"
@@ -1028,6 +1357,10 @@ msgstr "公司"
 #: code:addons/account_reports/models/account_report.py:0
 #: model:ir.model.fields,field_description:account_reports.field_account_multicurrency_revaluation_wizard__company_id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_budget__company_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return__company_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__company_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__company_id
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__company_id
 msgid "Company"
 msgstr "公司"
 
@@ -1046,6 +1379,12 @@ msgid "Company Currency"
 msgstr "公司貨幣"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Company Data"
+msgstr "公司資料"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/account_report/filters/filter_tax_unit.xml:0
 #: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
@@ -1059,10 +1398,22 @@ msgid "Company Settings"
 msgstr "公司設定"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Company data"
+msgstr "公司資料"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/account_report/filters/filter_comparison.xml:0
 msgid "Comparison"
 msgstr "比較"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Complete any necessary manual adjustments and internal checks."
+msgstr "完成任何所需的手動調整及內部檢查。"
 
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_res_config_settings
@@ -1070,21 +1421,10 @@ msgid "Config Settings"
 msgstr "配置設定"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
-msgid "Configure start dates"
-msgstr "配置開始日期"
-
-#. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
-msgid "Configure your TAX accounts - %s"
-msgstr "設定你的稅務賬戶 － %s"
-
-#. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/res_config_settings.py:0
-msgid "Configure your start dates"
-msgstr "配置你的開始日期"
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Configure accounts"
+msgstr "配置賬戶"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
@@ -1130,6 +1470,7 @@ msgstr "未能解析代碼「%s」提供的 account_code 公式"
 #. odoo-python
 #: code:addons/account_reports/models/account_journal_report.py:0
 #: code:addons/account_reports/static/src/components/journal_report/line/line.xml:0
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__report_country_id
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__country_id
 #: model_terms:ir.ui.view,arch_db:account_reports.pdf_journal_report_taxes_summary
 #: model_terms:ir.ui.view,arch_db:account_reports.view_account_report_search
@@ -1163,6 +1504,11 @@ msgid "Create Menu Item"
 msgstr "建立選單項目"
 
 #. module: account_reports
+#: model:ir.model,website_form_label:account_reports.model_res_partner
+msgid "Create a Customer"
+msgstr "建立客戶"
+
+#. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_multicurrency_revaluation_wizard__create_uid
 #: model:ir.model.fields,field_description:account_reports.field_account_report_annotation__create_uid
 #: model:ir.model.fields,field_description:account_reports.field_account_report_budget__create_uid
@@ -1173,7 +1519,14 @@ msgstr "建立選單項目"
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__create_uid
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard__create_uid
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard_format__create_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return__create_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__create_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__create_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__create_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_submission_wizard__create_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__create_uid
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__create_uid
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__create_uid
 msgid "Created by"
 msgstr "建立人員"
 
@@ -1188,7 +1541,14 @@ msgstr "建立人員"
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__create_date
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard__create_date
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard_format__create_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return__create_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__create_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__create_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__create_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_submission_wizard__create_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__create_date
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__create_date
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__create_date
 msgid "Created on"
 msgstr "建立於"
 
@@ -1310,6 +1670,18 @@ msgid "Date"
 msgstr "日期"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__date_from
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__date_from
+msgid "Date From"
+msgstr "起始日期"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__date_to
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__date_to
+msgid "Date To"
+msgstr "結束日期"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Date cannot be empty"
@@ -1321,10 +1693,27 @@ msgid "Date considered as annotated by the annotation."
 msgstr "被視為加入註釋的日期。"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.return_creation_wizard_form
+msgid "Dates"
+msgstr "日期"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/aged_partner_balance/filter_aging.xml:0
 msgid "Days"
 msgstr "天"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__days_to_deadline
+msgid "Days To Deadline"
+msgstr "距截止期限日數"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__date_deadline
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__date_deadline
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_search_view
+msgid "Deadline"
+msgstr "截止日期"
 
 #. module: account_reports
 #. odoo-python
@@ -1362,6 +1751,7 @@ msgstr "此期間的遞延項目尚未產生。"
 #. odoo-python
 #: code:addons/account_reports/models/account_deferred_reports.py:0
 #: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Deferred Entries"
 msgstr "遞延記項"
 
@@ -1408,15 +1798,14 @@ msgid "Definition"
 msgstr "定義"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_res_company__account_tax_periodicity
+#: model:ir.model.fields,field_description:account_reports.field_res_company__account_return_periodicity
 msgid "Delay units"
 msgstr "延遲單位"
 
 #. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid "Depending moves"
-msgstr "依賴的分錄"
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "Delete"
+msgstr "刪除"
 
 #. module: account_reports
 #. odoo-javascript
@@ -1425,10 +1814,21 @@ msgid "Descending"
 msgstr "降序"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message
+msgid "Description"
+msgstr "說明"
+
+#. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Difference from rounding taxes"
 msgstr "稅項四捨五入差額"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.return_creation_wizard_form
+#: model_terms:ir.ui.view,arch_db:account_reports.return_submission_wizard_form
+msgid "Discard"
+msgstr "捨棄"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_line__display_custom_groupby_warning
@@ -1441,17 +1841,63 @@ msgid "Display Mail Composer"
 msgstr "顯示郵件編輯器"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_account__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_aged_partner_balance_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_aged_payable_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_aged_receivable_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_balance_sheet_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_bank_reconciliation_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_cash_flow_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_change_lock_date__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_customer_statement_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_deferred_expense_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_deferred_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_deferred_revenue_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_ec_sales_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_fiscal_position__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_followup_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_general_ledger_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_generic_tax_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_generic_tax_report_handler_account_tax__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_generic_tax_report_handler_tax_account__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_journal__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_journal_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_move__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_move_line__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_multicurrency_revaluation_report_handler__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_multicurrency_revaluation_wizard__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_partner_ledger_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_report__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_annotation__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_budget__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_budget_item__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_report_custom_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_report_expression__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_file_download_error_wizard__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_horizontal_group__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_horizontal_group_rule__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_report_line__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard_format__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_return__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_return_submission_wizard__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_tax_report_handler__display_name
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__display_name
+#: model:ir.model.fields,field_description:account_reports.field_account_trial_balance_report_handler__display_name
+#: model:ir.model.fields,field_description:account_reports.field_ir_actions_account_report_download__display_name
+#: model:ir.model.fields,field_description:account_reports.field_ir_attachment__display_name
+#: model:ir.model.fields,field_description:account_reports.field_ir_ui_menu__display_name
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__display_name
+#: model:ir.model.fields,field_description:account_reports.field_res_company__display_name
+#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:account_reports.field_res_partner__display_name
+#: model:ir.model.fields,field_description:account_reports.field_res_users__display_name
 msgid "Display Name"
 msgstr "顯示名稱"
 
@@ -1472,11 +1918,9 @@ msgid "Domain"
 msgstr "篩選範圍"
 
 #. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_fiscal_position.xml:0
-#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
-msgid "Domestic"
-msgstr "本地"
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_search_view
+msgid "Done"
+msgstr "完成"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__checkbox_download
@@ -1495,14 +1939,14 @@ msgstr "下載數據不變性檢查報告"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Draft Entries"
 msgstr "草稿記項"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_general_ledger.py:0
-msgid "Draft Entry"
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Draft entries"
 msgstr "草稿記項"
 
 #. module: account_reports
@@ -1525,6 +1969,37 @@ msgid "Due Date"
 msgstr "到期日"
 
 #. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/account_return/widgets/account_return_dashboard_list.js:0
+msgid "Due Today"
+msgstr "今天到期"
+
+#. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/account_return/widgets/account_return_dashboard_list.js:0
+msgid "Due Tomorrow"
+msgstr "明天到期"
+
+#. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/account_return/widgets/account_return_dashboard_list.js:0
+msgid "Due Yesterday"
+msgstr "昨天到期"
+
+#. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/account_return/widgets/account_return_dashboard_list.js:0
+msgid "Due in %s days"
+msgstr "%s 天內到期"
+
+#. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/account_return/widgets/account_return_dashboard_list.js:0
+msgid "Due on %s"
+msgstr "到期日：%s"
+
+#. module: account_reports
+#: model:account.report,name:account_reports.generic_ec_sales_report
 #: model:ir.actions.client,name:account_reports.action_account_report_sales
 #: model:ir.ui.menu,name:account_reports.menu_action_account_report_sales
 msgid "EC Sales List"
@@ -1554,11 +2029,16 @@ msgstr "權益"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid ""
-"Editing a manual report line is not allowed in multivat setup when "
-"displaying data from all fiscal positions."
-msgstr "多重增值稅設置版面在顯示所有財務規則的數據時，不可編輯報告的手動資料行。"
+"Each bill should have its own document attached as a proof in case of audit."
+msgstr "每張賬單都應加入相關文件為附件，以便審計時作為證明。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Earnings Allocation"
+msgstr "收益分配"
 
 #. module: account_reports
 #. odoo-python
@@ -1632,15 +2112,45 @@ msgstr "引擎"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Ensure the taxes on invoices and bills match the customer’s country."
+msgstr "確保發票及賬單上的稅項，與客戶的國家/地區相符。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Entries"
+msgstr "分錄"
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_sales_report.py:0
 msgid "Entries with partners with no VAT"
 msgstr "無增值稅合作夥伴的記項"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Entry"
+msgstr "記項"
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
 msgid "Error message"
 msgstr "錯誤消息"
+
+#. module: account_reports
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_type__deadline_periodicity__2_months
+#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_return_periodicity__2_months
+msgid "Every 2 months"
+msgstr "每 2 個月"
+
+#. module: account_reports
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_type__deadline_periodicity__4_months
+#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_return_periodicity__4_months
+msgid "Every 4 months"
+msgstr "每 4 個月"
 
 #. module: account_reports
 #. odoo-javascript
@@ -1662,6 +2172,18 @@ msgstr "排除銀行資料行"
 #: model:ir.model.fields,field_description:account_reports.field_account_account__exclude_provision_currency_ids
 msgid "Exclude Provision Currency"
 msgstr "不包括準備金貨幣"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Exclude any domestic or extra-EU sales from the EC Sales List."
+msgstr "將任何國內或歐盟以外的銷售，排除在歐盟銷售清單之外。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Exclude any private customers."
+msgstr "排除任何私人客戶。"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.multicurrency_revaluation_excluded
@@ -1730,6 +2252,11 @@ msgid ""
 "this report only reference terms belonging to other reports."
 msgstr ""
 "計算目前報表時，會覆蓋標記為 %(label)s 的表達式（行數：%(line)s）。請確保此報表的跨報表匯總數據, 僅引用屬於其他報表的參考項。"
+
+#. module: account_reports
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_check__result__failure
+msgid "Failed"
+msgstr "已失敗"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_horizontal_group_rule__field_name
@@ -1803,21 +2330,13 @@ msgstr "篩選器："
 
 #. module: account_reports
 #: model:ir.actions.act_window,name:account_reports.action_account_report_budget_tree
-#: model:ir.ui.menu,name:account_reports.menu_action_account_report_budget_tree
 msgid "Financial Budgets"
 msgstr "財政預算"
 
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_fiscal_position
-#: model:ir.model.fields,field_description:account_reports.field_account_report_annotation__fiscal_position_id
 msgid "Fiscal Position"
 msgstr "財務規則"
-
-#. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_fiscal_position.xml:0
-msgid "Fiscal Position:"
-msgstr "財務規則："
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__fpos_synced
@@ -1840,6 +2359,24 @@ msgstr "跟進報告"
 #: model:ir.model,name:account_reports.model_account_followup_report_handler
 msgid "Follow-Up Report Custom Handler"
 msgstr "跟進報告自訂處理程式"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_follower_ids
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_follower_ids
+msgid "Followers"
+msgstr "關注人"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_partner_ids
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "關注人（業務夥伴）"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__activity_type_icon
+#: model:ir.model.fields,help:account_reports.field_account_return_check__activity_type_icon
+msgid "Font awesome icon e.g. fa-tasks"
+msgstr "Font awesome 圖示，例如，fa-task"
 
 #. module: account_reports
 #. odoo-python
@@ -1874,6 +2411,11 @@ msgid "Function to Call"
 msgstr "要呼叫的函數"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_search_view
+msgid "Future Activities"
+msgstr "未來活動"
+
+#. module: account_reports
 #. odoo-javascript
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
@@ -1881,6 +2423,7 @@ msgstr "要呼叫的函數"
 #: code:addons/account_reports/static/src/components/bank_reconciliation_report/warnings.xml:0
 #: code:addons/account_reports/static/src/components/multicurrency_revaluation_report/line_name.xml:0
 #: model:account.report,name:account_reports.general_ledger_report
+#: model:account.report.line,name:account_reports.general_ledger_custom_engine_line
 #: model:ir.actions.client,name:account_reports.action_account_report_general_ledger
 #: model:ir.ui.menu,name:account_reports.menu_action_account_report_general_ledger
 msgid "General Ledger"
@@ -1892,10 +2435,21 @@ msgid "General Ledger Custom Handler"
 msgstr "總賬自訂處理程式"
 
 #. module: account_reports
+#: model:ir.actions.act_window,name:account_reports.action_create_account_return
+#: model_terms:ir.ui.view,arch_db:account_reports.return_creation_wizard_form
+msgid "Generate Return"
+msgstr "產生申報"
+
+#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_deferred_reports.py:0
 msgid "Generate entry"
 msgstr "產生記項"
+
+#. module: account_reports
+#: model:ir.actions.server,name:account_reports.ir_cron_generate_account_return_ir_actions_server
+msgid "Generate or refresh account return for every companies"
+msgstr "為所有公司產生或更新賬戶申報表"
 
 #. module: account_reports
 #. odoo-python
@@ -1904,9 +2458,9 @@ msgid "Generated Documents"
 msgstr "已建立文件"
 
 #. module: account_reports
-#: model:account.report,name:account_reports.generic_ec_sales_report
-msgid "Generic EC Sales List"
-msgstr "一般歐盟銷售清單"
+#: model:ir.model,name:account_reports.model_qr_code_payment_wizard
+msgid "Generic Payment Wizard with QR Code"
+msgstr "通用付款精靈連二維碼"
 
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_generic_tax_report_handler
@@ -1935,6 +2489,12 @@ msgstr "全球稅務摘要"
 #: code:addons/account_reports/models/account_sales_report.py:0
 msgid "Goods"
 msgstr "商品"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Goods and services classification"
+msgstr "商品及服務分類"
 
 #. module: account_reports
 #. odoo-javascript
@@ -1984,26 +2544,30 @@ msgid "Grouped Deferral Entry of %s"
 msgstr "%s 已分組遞延記項"
 
 #. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/partner_ledger/filter_extra_options.xml:0
-msgid "Hide Account"
-msgstr "隱藏賬戶"
+#: model:ir.model.fields,field_description:account_reports.field_account_return__has_message
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__has_message
+msgid "Has Message"
+msgstr "有訊息"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__has_move_entries
+msgid "Has Move Entries"
+msgstr "有分錄記項"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__report_opened_once
+msgid "Has the report been opened once"
+msgstr "報告有否開啟過一次"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/partner_ledger/filter_extra_options.xml:0
-msgid "Hide Debit/Credit"
-msgstr "隱藏借記/貸記"
-
-#. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Hide lines at 0"
 msgstr "隱藏 0 處的資料行"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Hierarchy and Subtotals"
 msgstr "層級及小計"
 
@@ -2048,19 +2612,97 @@ msgid "How often tax returns have to be made"
 msgstr "須多久提交一次稅務申報表"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__acc_number
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__acc_number
+msgid "IBAN"
+msgstr "IBAN"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_account__id
+#: model:ir.model.fields,field_description:account_reports.field_account_aged_partner_balance_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_aged_payable_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_aged_receivable_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_balance_sheet_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_bank_reconciliation_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_cash_flow_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_change_lock_date__id
+#: model:ir.model.fields,field_description:account_reports.field_account_customer_statement_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_deferred_expense_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_deferred_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_deferred_revenue_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_ec_sales_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__id
+#: model:ir.model.fields,field_description:account_reports.field_account_fiscal_position__id
+#: model:ir.model.fields,field_description:account_reports.field_account_followup_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_general_ledger_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_generic_tax_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_generic_tax_report_handler_account_tax__id
+#: model:ir.model.fields,field_description:account_reports.field_account_generic_tax_report_handler_tax_account__id
+#: model:ir.model.fields,field_description:account_reports.field_account_journal__id
+#: model:ir.model.fields,field_description:account_reports.field_account_journal_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_move__id
+#: model:ir.model.fields,field_description:account_reports.field_account_move_line__id
+#: model:ir.model.fields,field_description:account_reports.field_account_multicurrency_revaluation_report_handler__id
 #: model:ir.model.fields,field_description:account_reports.field_account_multicurrency_revaluation_wizard__id
+#: model:ir.model.fields,field_description:account_reports.field_account_partner_ledger_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_report__id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_annotation__id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_budget__id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_budget_item__id
+#: model:ir.model.fields,field_description:account_reports.field_account_report_custom_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_account_report_expression__id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_file_download_error_wizard__id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_horizontal_group__id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_horizontal_group_rule__id
+#: model:ir.model.fields,field_description:account_reports.field_account_report_line__id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__id
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard__id
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard_format__id
+#: model:ir.model.fields,field_description:account_reports.field_account_return__id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_submission_wizard__id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__id
+#: model:ir.model.fields,field_description:account_reports.field_account_tax_report_handler__id
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__id
+#: model:ir.model.fields,field_description:account_reports.field_account_trial_balance_report_handler__id
+#: model:ir.model.fields,field_description:account_reports.field_ir_actions_account_report_download__id
+#: model:ir.model.fields,field_description:account_reports.field_ir_attachment__id
+#: model:ir.model.fields,field_description:account_reports.field_ir_ui_menu__id
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__id
+#: model:ir.model.fields,field_description:account_reports.field_res_company__id
+#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__id
+#: model:ir.model.fields,field_description:account_reports.field_res_partner__id
+#: model:ir.model.fields,field_description:account_reports.field_res_users__id
 msgid "ID"
 msgstr "識別號"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_exception_icon
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_exception_icon
+msgid "Icon"
+msgstr "圖示"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__activity_exception_icon
+#: model:ir.model.fields,help:account_reports.field_account_return_check__activity_exception_icon
+msgid "Icon to indicate an exception activity."
+msgstr "用於指示異常活動的圖示。"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__message_needaction
+#: model:ir.model.fields,help:account_reports.field_account_return_check__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "勾選代表有新訊息需要您留意。"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__message_has_error
+#: model:ir.model.fields,help:account_reports.field_account_return__message_has_sms_error
+#: model:ir.model.fields,help:account_reports.field_account_return_check__message_has_error
+#: model:ir.model.fields,help:account_reports.field_account_return_check__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr "勾選代表有訊息發生傳送錯誤。"
 
 #. module: account_reports
 #. odoo-javascript
@@ -2091,7 +2733,7 @@ msgstr "未啟用"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/journal_report/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/journal_report/filters.js:0
 msgid "Include Payments"
 msgstr "包括付款"
 
@@ -2156,14 +2798,20 @@ msgstr "選項參照表的 report_id 不一致。 選項顯示為 %(options_repo
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_general_ledger.py:0
 #: code:addons/account_reports/models/account_report.py:0
 #: code:addons/account_reports/models/account_trial_balance_report.py:0
 msgid "Initial Balance"
 msgstr "初始餘額"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_submission_wizard__instructions
+msgid "Instructions"
+msgstr "指示"
+
+#. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Integer Rounding"
 msgstr "整數捨入"
 
@@ -2208,6 +2856,12 @@ msgid "Invalid token '%(token)s' in account_codes formula '%(formula)s'"
 msgstr "account_codes 算式中的代碼「%(token)s」無效。有關算式為：%(formula)s"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Invoice"
+msgstr "發票"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/aged_partner_balance/filter_aging.xml:0
 #: model:account.report.column,name:account_reports.aged_payable_report_invoice_date
@@ -2224,29 +2878,52 @@ msgid "Invoice lines"
 msgstr "發票資料行"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Invoices"
+msgstr "發票"
+
+#. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report__is_account_coverage_report_available
 msgid "Is Account Coverage Report Available"
 msgstr "賬戶覆蓋報告是否可用"
 
 #. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid "It seems there is some depending closing move to be posted"
-msgstr "似乎有些依賴其他項目的結算分錄，有待過賬"
+#: model:ir.model.fields,field_description:account_reports.field_account_return__is_completed
+msgid "Is Completed"
+msgstr "已完成"
 
 #. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
-msgid ""
-"It's not possible to select a budget with the horizontal group feature."
-msgstr "使用水平分組功能時，無法選取預算。"
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_is_follower
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_is_follower
+msgid "Is Follower"
+msgstr "是關注者"
 
 #. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
-msgid ""
-"It's not possible to select a horizontal group with the budget feature."
-msgstr "使用預算功能時，無法選取水平分組。"
+#: model:ir.model.fields,field_description:account_reports.field_account_return__is_main_company_active
+msgid "Is Main Company Active"
+msgstr "主要公司是否生效"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__is_recoverable
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__is_recoverable
+msgid "Is Recoverable"
+msgstr "是可收回"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__is_report_set
+msgid "Is Report Set"
+msgstr "報告是否已設定"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__is_tax_return
+msgid "Is Tax Return"
+msgstr "是報稅表"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__unresolved_check_count
+msgid "Issues"
+msgstr "議題"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_budget__item_ids
@@ -2256,12 +2933,11 @@ msgstr "項目"
 #. module: account_reports
 #: model:account.report.column,name:account_reports.partner_ledger_report_journal_code
 #: model:ir.model,name:account_reports.model_account_journal
-#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__account_tax_periodicity_journal_id
+#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__account_tax_return_journal_id
 #: model:ir.model.fields,field_description:account_reports.field_account_multicurrency_revaluation_wizard__journal_id
-#: model:ir.model.fields,field_description:account_reports.field_res_company__account_tax_periodicity_journal_id
-#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__account_tax_periodicity_journal_id
+#: model:ir.model.fields,field_description:account_reports.field_res_company__account_tax_return_journal_id
+#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__account_tax_return_journal_id
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
-#: model_terms:ir.ui.view,arch_db:account_reports.setup_financial_year_opening_form
 msgid "Journal"
 msgstr "日記賬"
 
@@ -2286,6 +2962,7 @@ msgstr "日記賬項目"
 #. odoo-python
 #: code:addons/account_reports/models/account_deferred_reports.py:0
 #: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 #: code:addons/account_reports/models/account_trial_balance_report.py:0
 #: code:addons/account_reports/models/bank_reconciliation_report.py:0
 #: code:addons/account_reports/static/src/components/general_ledger/line_name.xml:0
@@ -2367,7 +3044,14 @@ msgstr "上次結單結餘 + 該結單後的交易"
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__write_uid
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard__write_uid
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard_format__write_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return__write_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__write_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__write_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__write_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_submission_wizard__write_uid
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__write_uid
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__write_uid
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__write_uid
 msgid "Last Updated by"
 msgstr "最後更新者"
 
@@ -2382,7 +3066,14 @@ msgstr "最後更新者"
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__write_date
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard__write_date
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard_format__write_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return__write_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__write_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__write_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__write_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_submission_wizard__write_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__write_date
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__write_date
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__write_date
 msgid "Last Updated on"
 msgstr "最後更新於"
 
@@ -2390,6 +3081,11 @@ msgstr "最後更新於"
 #: model:account.report.line,name:account_reports.last_statement_balance
 msgid "Last statement balance"
 msgstr "上次結單結餘"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_search_view
+msgid "Late Activities"
+msgstr "逾期活動"
 
 #. module: account_reports
 #. odoo-python
@@ -2437,9 +3133,19 @@ msgid "Load more..."
 msgstr "載入更多⋯"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.company_information
+msgid "Logo"
+msgstr "標誌"
+
+#. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__mail_attachments_widget
 msgid "Mail Attachments Widget"
 msgstr "電郵附件小工具"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_main_attachment_id
+msgid "Main Attachment"
+msgstr "主要附件"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__main_company_id
@@ -2460,9 +3166,21 @@ msgid "Make Adjustment Entry"
 msgstr "加入調整記項"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Make sure the \"Reverse Charge\" mention appears on all invoices."
+msgstr "確保所有發票都有註明「反向收費」。"
+
+#. module: account_reports
 #: model:ir.model,name:account_reports.model_account_report_file_download_error_wizard
 msgid "Manage the file generation errors from report exports."
 msgstr "管理報告匯出時的文件生成錯誤。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Manual Adjustments"
+msgstr "手動調整"
 
 #. module: account_reports
 #. odoo-python
@@ -2477,6 +3195,26 @@ msgid "Manual values"
 msgstr "手動值"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__manually_created
+msgid "Manually Created"
+msgstr "手動建立"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.return_generic_payment_wizard_form
+msgid "Mark Paid"
+msgstr "標記為已付款"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "Mark as Completed"
+msgstr "標記為完成"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.return_submission_wizard_form
+msgid "Mark as Submitted"
+msgstr "標記為已提交"
+
+#. module: account_reports
 #: model:account.report.column,name:account_reports.partner_ledger_report_matching_number
 msgid "Matching"
 msgstr "匹配"
@@ -2485,6 +3223,23 @@ msgstr "匹配"
 #: model:ir.model.fields,help:account_reports.field_account_tax_unit__company_ids
 msgid "Members of this unit"
 msgstr "此單位成員"
+
+#. module: account_reports
+#: model:ir.model,name:account_reports.model_ir_ui_menu
+msgid "Menu"
+msgstr "功能表"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_has_error
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_has_error
+msgid "Message Delivery error"
+msgstr "訊息遞送錯誤"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_ids
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_ids
+msgid "Messages"
+msgstr "訊息"
 
 #. module: account_reports
 #. odoo-python
@@ -2512,6 +3267,12 @@ msgstr "模型"
 #: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Month"
 msgstr "月"
+
+#. module: account_reports
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_type__deadline_periodicity__monthly
+#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_return_periodicity__monthly
+msgid "Monthly"
+msgstr "每月"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_report_budget_form
@@ -2545,35 +3306,36 @@ msgid "Multiple Recipients"
 msgstr "多名收件人"
 
 #. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/res_company.py:0
-msgid ""
-"Multiple draft tax closing entries exist for fiscal position %(position)s after %(period_start)s. There should be at most one. \n"
-" %(closing_entries)s"
-msgstr ""
-"財務規則「%(position)s」在 %(period_start)s 之後有多個稅務結算草稿記項。最多應該只有一個。\n"
-" %(closing_entries)s"
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_search_view
+msgid "My Activities"
+msgstr "我的活動"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__my_activity_date_deadline
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__my_activity_date_deadline
+msgid "My Activity Deadline"
+msgstr "我的活動截止時間"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/res_company.py:0
+#: code:addons/account_reports/models/executive_summary_report.py:0
 msgid ""
-"Multiple draft tax closing entries exist for your domestic region after %(period_start)s. There should be at most one. \n"
-" %(closing_entries)s"
-msgstr ""
-"你的本地區域在 %(period_start)s 之後有多個稅務結算草稿記項。最多應該只有一個。\n"
-" %(closing_entries)s"
+"NDays expressions of executive summary report don't support the 'group by' "
+"feature."
+msgstr "執行摘要報告的 NDays 表達式，不支援「分組依據」功能。"
 
 #. module: account_reports
 #. odoo-javascript
 #. odoo-python
-#: code:addons/account_reports/models/account_general_ledger.py:0
 #: code:addons/account_reports/models/account_journal_report.py:0
 #: code:addons/account_reports/static/src/components/journal_report/line/line.xml:0
 #: model:account.report.line,name:account_reports.journal_report_line
 #: model:ir.model.fields,field_description:account_reports.field_account_report_budget__name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_horizontal_group__name
 #: model:ir.model.fields,field_description:account_reports.field_account_reports_export_wizard_format__name
+#: model:ir.model.fields,field_description:account_reports.field_account_return__name
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__name
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__name
 #: model:ir.model.fields,field_description:account_reports.field_account_tax_unit__name
 #: model_terms:ir.ui.view,arch_db:account_reports.duplicated_vat_partner_tree_view
 #: model_terms:ir.ui.view,arch_db:account_reports.pdf_journal_report_taxes_summary
@@ -2609,9 +3371,28 @@ msgid "Net profit margin (net profit / revenue)"
 msgstr "淨利潤率（淨利潤 ÷ 收入）"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
-msgid "Never miss a tax deadline."
-msgstr "不再錯過報稅繳稅期限。"
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_calendar_event_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_calendar_event_id
+msgid "Next Activity Calendar Event"
+msgstr "下一個活動日曆事件"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_date_deadline
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_date_deadline
+msgid "Next Activity Deadline"
+msgstr "下一活動截止日期"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_summary
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_summary
+msgid "Next Activity Summary"
+msgstr "下一活動摘要"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_type_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_type_id
+msgid "Next Activity Type"
+msgstr "下一活動類型"
 
 #. module: account_reports
 #. odoo-javascript
@@ -2653,9 +3434,9 @@ msgstr "沒有數據可顯示。"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/chart_template.py:0
-msgid "No default miscellaneous journal could be found for the active company"
-msgstr "找不到生效公司的預設雜項日記賬"
+#: code:addons/account_reports/models/account_return.py:0
+msgid "No draft entries"
+msgstr "沒有草稿記項"
 
 #. module: account_reports
 #. odoo-python
@@ -2712,6 +3493,36 @@ msgid "Not Started"
 msgstr "未開始"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__notes
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_form_view
+msgid "Notes"
+msgstr "備註"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_needaction_counter
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_needaction_counter
+msgid "Number of Actions"
+msgstr "操作數目"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_has_error_counter
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_has_error_counter
+msgid "Number of errors"
+msgstr "錯誤數量"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__message_needaction_counter
+#: model:ir.model.fields,help:account_reports.field_account_return_check__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "需要採取行動的訊息數目"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__message_has_error_counter
+#: model:ir.model.fields,help:account_reports.field_account_return_check__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "有發送錯誤的郵件數量"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Number of periods cannot be smaller than 1"
@@ -2730,6 +3541,15 @@ msgid "Odoo Warning"
 msgstr "Odoo警告"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"Odoo manages your deferred entries automatically. No deferred entries were "
+"found for this period. Ensure your start and end dates are correctly set on "
+"your bills and invoices."
+msgstr "Odoo 自動管理你的遞延記項。在此期間內，未發現有遞延記項。請確保賬單及發票已設定正確的開始日期及結束日期。"
+
+#. module: account_reports
 #: model:account.report.column,name:account_reports.aged_payable_report_period5
 #: model:account.report.column,name:account_reports.aged_receivable_report_period5
 msgid "Older"
@@ -2743,14 +3563,31 @@ msgstr "其中一種已選取格式無法在 DMS 匯出"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid "Only Billing Administrators are allowed to change lock dates!"
-msgstr "只限賬單管理員才可更改鎖定日期！"
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Only business customers"
+msgstr "只限商業客戶"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Only intra-EU customers"
+msgstr "只限歐盟內客戶"
 
 #. module: account_reports
 #: model:ir.actions.server,name:account_reports.action_account_reports_customer_statements
 msgid "Open Customer Statements"
 msgstr "開啟客戶結單"
+
+#. module: account_reports
+#: model:ir.actions.client,name:account_reports.action_open_view_account_return
+#: model:ir.actions.server,name:account_reports.action_server_open_view_account_return
+msgid "Open Tax Return"
+msgstr "開啟報稅表"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_kanban_view
+msgid "Open form view"
+msgstr "開啟表單檢視畫面"
 
 #. module: account_reports
 #: model:ir.model,name:account_reports.model_account_financial_year_op
@@ -2790,6 +3627,18 @@ msgstr "逾期"
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Overdue payables"
+msgstr "逾期應付款項"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Overdue receivables"
+msgstr "逾期應收款項"
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
 msgid "PDF"
 msgstr "PDF"
@@ -2806,12 +3655,20 @@ msgstr "上級嚮導"
 
 #. module: account_reports
 #. odoo-javascript
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
 #: code:addons/account_reports/static/src/components/aged_partner_balance/line_name/line_name.xml:0
 #: code:addons/account_reports/static/src/components/partner_ledger/line_name.xml:0
 #: model:account.report.column,name:account_reports.general_ledger_report_partner_name
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__partner_ids
 msgid "Partner"
 msgstr "業務夥伴"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__partner_bank_id
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__partner_bank_id
+msgid "Partner Bank"
+msgstr "合作夥伴銀行"
 
 #. module: account_reports
 #. odoo-python
@@ -2855,6 +3712,7 @@ msgstr "合作夥伴應該有電郵地址。"
 #. odoo-javascript
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 #: code:addons/account_reports/static/src/components/account_report/filters/filter_partner.xml:0
 msgid "Partners"
 msgstr "合作夥伴"
@@ -2866,9 +3724,21 @@ msgstr "合作夥伴類別："
 
 #. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Partners in Wrong Country"
+msgstr "合作夥伴的國家/地區錯誤"
+
+#. module: account_reports
+#. odoo-python
 #: code:addons/account_reports/models/account_sales_report.py:0
 msgid "Partners with duplicated VAT numbers"
 msgstr "有重複增值稅號碼的合作夥伴"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Partners without VAT"
+msgstr "合作夥伴沒有增值稅編號"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.pdf_export_filters
@@ -2876,15 +3746,21 @@ msgid "Partners:"
 msgstr "合作夥伴："
 
 #. module: account_reports
-#: model:mail.activity.type,name:account_reports.mail_activity_type_tax_report_to_pay
-msgid "Pay Tax"
-msgstr "繳付稅項"
+#: model:ir.model.fields,field_description:account_reports.field_account_return__resolved_check_count
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_check__result__success
+msgid "Passed"
+msgstr "通過"
 
 #. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid "Pay tax: %s"
-msgstr "繳付稅項：%s"
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+#: model_terms:ir.ui.view,arch_db:account_reports.return_generic_payment_wizard_form
+msgid "Pay"
+msgstr "付款"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.return_generic_payment_wizard_form
+msgid "Pay Later"
+msgstr "先買後付"
 
 #. module: account_reports
 #. odoo-python
@@ -2895,7 +3771,7 @@ msgstr "應付"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Payable tax amount"
 msgstr "應付稅額"
 
@@ -2904,6 +3780,22 @@ msgstr "應付稅額"
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_creditors0
 msgid "Payables"
 msgstr "應付"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Payment"
+msgstr "付款"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__payment_partner_id
+msgid "Payment Partner"
+msgstr "付款合作夥伴"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__payment_partner_bank_id
+msgid "Payment Partner Bank"
+msgstr "付款合作夥伴銀行"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_performance0
@@ -2941,22 +3833,30 @@ msgid "Period 4"
 msgstr "期間 4"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+msgid "Period Total"
+msgstr "期間總計"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/account_report/filters/filter_comparison.xml:0
 msgid "Period order"
 msgstr "時期訂單"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__account_tax_periodicity
-#: model:ir.model.fields,help:account_reports.field_account_financial_year_op__account_tax_periodicity
-#: model:ir.model.fields,help:account_reports.field_res_company__account_tax_periodicity
-#: model:ir.model.fields,help:account_reports.field_res_config_settings__account_tax_periodicity
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__deadline_periodicity
+#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__account_return_periodicity
+#: model:ir.model.fields,help:account_reports.field_account_financial_year_op__account_return_periodicity
+#: model:ir.model.fields,help:account_reports.field_res_company__account_return_periodicity
+#: model:ir.model.fields,help:account_reports.field_res_config_settings__account_return_periodicity
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
+#: model_terms:ir.ui.view,arch_db:account_reports.setup_financial_year_opening_form
 msgid "Periodicity"
 msgstr "周期"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__account_tax_periodicity
+#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__account_return_periodicity
 msgid "Periodicity in month"
 msgstr "周期（月）"
 
@@ -3014,8 +3914,8 @@ msgstr "請於會計設定中，設定遞延日記賬。"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
-msgid "Please specify the accounts necessary for the Tax Closing Entry."
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Please specify the accounts necessary for the tax closing entry."
 msgstr "請指定稅務結算記項所需的賬戶。"
 
 #. module: account_reports
@@ -3106,9 +4006,9 @@ msgstr "列印並傳送"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
-msgid "Proceed"
-msgstr "繼續"
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Private Customers"
+msgstr "私人客戶"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.view_account_multicurrency_revaluation_wizard
@@ -3144,15 +4044,15 @@ msgid "Profitability"
 msgstr "盈利能力"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.view_move_form_vat_return
-msgid "Proposition of tax closing journal entry."
-msgstr "稅務結算日記賬記項的提案。"
-
-#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/wizard/multicurrency_revaluation.py:0
 msgid "Provision for %(for_cur)s (1 %(comp_cur)s = %(rate)s %(for_cur)s)"
 msgstr "%(for_cur)s 貨幣的準備金（1 %(comp_cur)s = %(rate)s %(for_cur)s）"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__qr_code
+msgid "Qr Code"
+msgstr "二維碼"
 
 #. module: account_reports
 #. odoo-javascript
@@ -3161,10 +4061,22 @@ msgid "Quarter"
 msgstr "季"
 
 #. module: account_reports
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_type__deadline_periodicity__trimester
+#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_return_periodicity__trimester
+msgid "Quarterly"
+msgstr "每季"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/multicurrency_revaluation_report/line_name.xml:0
 msgid "Rates"
 msgstr "匯率設定"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__rating_ids
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__rating_ids
+msgid "Ratings"
+msgstr "評分"
 
 #. module: account_reports
 #. odoo-python
@@ -3175,7 +4087,7 @@ msgstr "應收"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Receivable tax amount"
 msgstr "應收稅額"
 
@@ -3192,21 +4104,39 @@ msgid "Recipients"
 msgstr "接收者"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
-msgid "Reconciliation Report"
-msgstr "對賬報表"
+#. odoo-python
+#: code:addons/account_reports/models/account_deferred_reports.py:0
+msgid "Recognized"
+msgstr "已認列"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__account_tax_periodicity_reminder_day
-#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__account_tax_periodicity_reminder_day
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Reconcile all bank account transactions up to year-end."
+msgstr "為直至年底的所有銀行賬戶交易進行對賬。"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__records_count
+msgid "Records Count"
+msgstr "記錄數目"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__records_name
+msgid "Records Name"
+msgstr "記錄名稱"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__account_return_reminder_day
+#: model:ir.model.fields,field_description:account_reports.field_res_config_settings__account_return_reminder_day
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
-#: model_terms:ir.ui.view,arch_db:account_reports.setup_financial_year_opening_form
 msgid "Reminder"
 msgstr "提醒"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_annotation__report_id
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__account_report_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__report_id
+#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
 msgid "Report"
 msgstr "報表"
 
@@ -3216,9 +4146,15 @@ msgid "Report Line"
 msgstr "報表明細"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__report_name
 #: model_terms:ir.ui.view,arch_db:account_reports.account_report_form
 msgid "Report Name"
 msgstr "報告名稱"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__report_opened_once
+msgid "Report Opened Once"
+msgstr "報告已開啟過一次"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_send__report_options
@@ -3238,14 +4174,15 @@ msgid "Report:"
 msgstr "報表："
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
-msgid "Reporting"
-msgstr "報告"
-
-#. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_report_horizontal_group__report_ids
 msgid "Reports"
 msgstr "報表"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_kanban_view
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "Reset"
+msgstr "重設"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.account_report_line_form
@@ -3253,14 +4190,86 @@ msgid "Reset to Standard"
 msgstr "重設為標準"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__activity_user_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__activity_user_id
+msgid "Responsible User"
+msgstr "負責使用者"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__result
+msgid "Result"
+msgstr "結果"
+
+#. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_retained_earnings0
 msgid "Retained Earnings"
 msgstr "留存收益"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_payment_wizard__return_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_submission_wizard__return_id
+#: model:ir.model.fields,field_description:account_reports.field_qr_code_payment_wizard__return_id
+msgid "Return"
+msgstr "交還"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__return_name
+msgid "Return Name"
+msgstr "申報名稱"
+
+#. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/account_report/filters/filter_date.xml:0
+msgid "Return Period"
+msgstr "申報期"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__return_state
+msgid "Return State"
+msgstr "申報狀態"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__state
+msgid "Return State To Check For"
+msgstr "要檢查的申報狀態"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__type_id
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__return_type_id
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_search_view
+msgid "Return Type"
+msgstr "退回類型"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_report__return_type_ids
+msgid "Return Types"
+msgstr "申報類型"
+
+#. module: account_reports
+#: model:ir.model,name:account_reports.model_account_return_creation_wizard
+msgid "Return creation wizard"
+msgstr "申報建立精靈"
+
+#. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_return_investment0
 msgid "Return on investments (net profit / assets)"
 msgstr "投資回報(淨利潤/資產)"
+
+#. module: account_reports
+#: model:ir.model,name:account_reports.model_account_return_submission_wizard
+msgid "Return submission wizard"
+msgstr "申報提交精靈"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+msgid "Returns"
+msgstr "退回"
+
+#. module: account_reports
+#: model:ir.model,name:account_reports.model_account_return_payment_wizard
+msgid "Returns Generic Payment Wizard"
+msgstr "申報表通用付款精靈"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_income0
@@ -3286,6 +4295,71 @@ msgid "Reversal of: %s"
 msgstr "撤銷對象： %s"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Reverse charge mention"
+msgstr "註明反向收費"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "Review"
+msgstr "審查"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"Review and post draft invoices and bills in the period, or change their "
+"accounting date."
+msgstr "審查及過賬該期間內的草稿發票及賬單，或更改它們的會計日期。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"Review and post draft invoices, bills and entries in the period, or change "
+"their accounting date."
+msgstr "審查及過賬該期間內的草稿發票、賬單及記項，或更改它們的會計日期。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"Review overdue payables aged over 60 days and assess the need for an "
+"allowance for uncertain liabilities."
+msgstr "審查超過 60 天賬齡的逾期應付款項，評估需否為不確定負債，提列預留款項。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"Review overdue receivables aged over 60 days and assess the need for an "
+"allowance for doubtful accounts or expected credit loss provision, as per "
+"IFRS 9 guidelines."
+msgstr ""
+"審查超過 60 天賬齡的逾期應收款項，評估需否按照 IFRS 9 指引（國際財務報告準則第 9 號），為可能的壞賬或預期信用損失，提列預留款項。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Review payables without a partner."
+msgstr "審查沒有合作夥伴的應付款項。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Review receivables without a partner."
+msgstr "審查沒有合作夥伴的應收款項。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"Review the tax code and ensure each transaction is correctly classified as a"
+" supply of goods or services."
+msgstr "審視稅務法規，確保每宗交易都正確分類為供應商品或服務。"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.view_account_report_search
 msgid "Root Report"
 msgstr "根報表"
@@ -3296,10 +4370,22 @@ msgid "Rules"
 msgstr "規則"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__message_has_sms_error
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr "簡訊發送錯誤"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/account_report/filters/filter_comparison.xml:0
 msgid "Same Period Last Year"
 msgstr "去年同一期間"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/wizard/qr_code_payment_wizard.py:0
+msgid "Scan me with your banking app."
+msgstr "使用您的銀行App掃描."
 
 #. module: account_reports
 #. odoo-javascript
@@ -3313,15 +4399,26 @@ msgid "Sections"
 msgstr "分節"
 
 #. module: account_reports
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/account_return/actions/client_check_completed_notification.js:0
+msgid "See Checks"
+msgstr "查看檢查項目"
+
+#. module: account_reports
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_type__deadline_periodicity__semester
+#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_return_periodicity__semester
+msgid "Semi-annually"
+msgstr "半年"
+
+#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_customer_statement.py:0
-#: code:addons/account_reports/models/account_partner_ledger.py:0
 msgid "Send"
 msgstr "傳送"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_partner_ledger.py:0
+#: code:addons/account_reports/models/account_customer_statement.py:0
 msgid "Send %s Statement"
 msgstr "傳送 %s 結單"
 
@@ -3337,7 +4434,7 @@ msgstr "傳送唯讀郵件"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_partner_ledger.py:0
+#: code:addons/account_reports/models/account_customer_statement.py:0
 msgid "Send Partner Ledgers"
 msgstr "傳送合作夥伴分類賬"
 
@@ -3345,12 +4442,6 @@ msgstr "傳送合作夥伴分類賬"
 #: model:ir.actions.server,name:account_reports.ir_cron_account_report_send_ir_actions_server
 msgid "Send account reports automatically"
 msgstr "自動傳送賬戶報表"
-
-#. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid "Send tax report: %s"
-msgstr "傳送稅務報告：%s"
 
 #. module: account_reports
 #. odoo-python
@@ -3371,13 +4462,19 @@ msgstr "服務"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.view_journal_report_audit_move_line_tree
-msgid "Set as Checked"
-msgstr "設為已檢查"
+msgid "Set as Reviewed"
+msgstr "設為已審核"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.duplicated_vat_partner_tree_view
 msgid "Set as main"
 msgstr "設為主要"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Set your company data"
+msgstr "設定公司資料"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_report_executivesummary_st_cash_forecast0
@@ -3386,7 +4483,7 @@ msgstr "短期現金預測"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/aged_partner_balance/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/aged_partner_balance/filters.js:0
 msgid "Show Account"
 msgstr "顯示賬戶"
 
@@ -3397,15 +4494,40 @@ msgid "Show All Accounts"
 msgstr "顯示所有賬戶"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__show_amount_to_pay
+msgid "Show Amount To Pay"
+msgstr "顯示待付金額"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__show_companies
+msgid "Show Companies"
+msgstr "顯示公司"
+
+#. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/aged_partner_balance/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/aged_partner_balance/filters.js:0
 msgid "Show Currency"
 msgstr "顯示貨幣"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__show_warning_existing_return
+msgid "Show Warning Existing Return"
+msgstr "顯示已有申報警告"
 
 #. module: account_reports
 #: model:ir.model.fields,field_description:account_reports.field_account_multicurrency_revaluation_wizard__show_warning_move_id
 msgid "Show Warning Move"
 msgstr "顯示警告分錄"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return_creation_wizard__show_warning_wrong_dates
+msgid "Show Warning Wrong Dates"
+msgstr "顯示錯誤日期警告"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_search_view
+msgid "Show all records whose next activity date is past"
+msgstr "顯示下一活動日期已過的所有記錄"
 
 #. module: account_reports
 #. odoo-javascript
@@ -3433,11 +4555,8 @@ msgstr "部份日記賬項目似乎指向失效的報表資料行。"
 #. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/sales_report/warnings.xml:0
-msgid ""
-"Some lines in the report involve partners that share the same VAT number.\n"
-"\n"
-"        Please review the"
-msgstr ""
+msgid "Some partners"
+msgstr "部份合作夥伴"
 
 #. module: account_reports
 #. odoo-javascript
@@ -3455,17 +4574,17 @@ msgstr "指定一家會計師事務所作為匯出報表時的代表。"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Split Horizontally"
 msgstr "水平分割"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_account_report__tax_closing_start_date
+#: model:ir.model.fields,field_description:account_reports.field_account_return_type__deadline_start_date
 msgid "Start Date"
 msgstr "開始日期"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_res_company__account_tax_periodicity_reminder_day
+#: model:ir.model.fields,field_description:account_reports.field_res_company__account_return_reminder_day
 msgid "Start from"
 msgstr "開始於"
 
@@ -3474,6 +4593,11 @@ msgstr "開始於"
 #: code:addons/account_reports/models/account_journal_report.py:0
 msgid "Starting Balance"
 msgstr "起始結餘"
+
+#. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__state
+msgid "State"
+msgstr "狀態"
 
 #. module: account_reports
 #. odoo-javascript
@@ -3486,6 +4610,20 @@ msgstr "銀行結單"
 #: code:addons/account_reports/wizard/account_report_send.py:0
 msgid "Statements are being sent in the background."
 msgstr "結單正於背景傳送中。"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__activity_state
+#: model:ir.model.fields,help:account_reports.field_account_return_check__activity_state
+msgid ""
+"Status based on activities\n"
+"Overdue: Due date is already passed\n"
+"Today: Activity date is today\n"
+"Planned: Future activities."
+msgstr ""
+"根據活動的狀態 \n"
+" 逾期：已經超過截止日期 \n"
+" 現今：活動日期是當天 \n"
+" 計劃：未來活動。"
 
 #. module: account_reports
 #. odoo-javascript
@@ -3504,6 +4642,17 @@ msgid "Subject..."
 msgstr "主題..."
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__date_submission
+msgid "Submission Date"
+msgstr "提交日期"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+#: model_terms:ir.ui.view,arch_db:account_reports.return_submission_wizard_form
+msgid "Submit"
+msgstr "提交"
+
+#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_journal_report.py:0
 msgid "T: %s"
@@ -3518,7 +4667,6 @@ msgstr "標籤"
 #. module: account_reports
 #. odoo-javascript
 #. odoo-python
-#: code:addons/account_reports/models/account_general_ledger.py:0
 #: code:addons/account_reports/models/account_journal_report.py:0
 #: code:addons/account_reports/static/src/components/journal_report/line/line.xml:0
 #: model_terms:ir.ui.view,arch_db:account_reports.pdf_journal_report_taxes_summary
@@ -3529,24 +4677,6 @@ msgstr "稅金總額"
 #: model_terms:ir.ui.view,arch_db:account_reports.pdf_journal_report_taxes_summary
 msgid "Tax Applied"
 msgstr "套用的稅項"
-
-#. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_account_bank_statement_line__tax_closing_alert
-#: model:ir.model.fields,field_description:account_reports.field_account_move__tax_closing_alert
-msgid "Tax Closing Alert"
-msgstr "稅務結算警報"
-
-#. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_account_bank_statement_line__tax_closing_report_id
-#: model:ir.model.fields,field_description:account_reports.field_account_move__tax_closing_report_id
-msgid "Tax Closing Report"
-msgstr "稅務結算報表"
-
-#. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_general_ledger.py:0
-msgid "Tax Declaration"
-msgstr "稅金聲明"
 
 #. module: account_reports
 #. odoo-python
@@ -3566,37 +4696,31 @@ msgstr "稅務編號："
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Tax Paid Adjustment"
 msgstr "已繳稅款調整"
 
 #. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/tax_report/filters/filter_date.xml:0
-msgid "Tax Period"
-msgstr "課稅期間"
+#: model_terms:ir.ui.view,arch_db:account_reports.setup_financial_year_opening_form
+msgid "Tax Periodicity"
+msgstr "稅務周期"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid "Tax Received Adjustment"
 msgstr "已收稅款調整"
 
 #. module: account_reports
-#: model:mail.activity.type,name:account_reports.tax_closing_activity_type
-#: model:mail.activity.type,summary:account_reports.tax_closing_activity_type
-#: model_terms:ir.ui.view,arch_db:account_reports.view_move_form_vat_return
+#: model:ir.ui.menu,name:account_reports.menu_action_account_report_gt
 msgid "Tax Report"
 msgstr "稅務報表"
 
 #. module: account_reports
-#: model:mail.activity.type,name:account_reports.mail_activity_type_tax_report_to_be_sent
-msgid "Tax Report Ready"
-msgstr "稅務報表備妥"
-
-#. module: account_reports
+#: model:ir.actions.act_window,name:account_reports.action_view_account_return
 #: model:ir.actions.client,name:account_reports.action_account_report_gt
-#: model:ir.ui.menu,name:account_reports.menu_action_account_report_gt
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_calendar_view
+#: model_terms:ir.ui.view,arch_db:account_reports.view_move_form_vat_return
 msgid "Tax Return"
 msgstr "報稅"
 
@@ -3606,7 +4730,16 @@ msgid "Tax Return Periodicity"
 msgstr "報稅周期"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/res_users.py:0
+#: model:ir.ui.menu,name:account_reports.menu_action_account_return
+#: model_terms:ir.ui.view,arch_db:account_reports.account_reports_journal_dashboard_kanban_view
+msgid "Tax Returns"
+msgstr "報稅表"
+
+#. module: account_reports
 #: model:ir.model,name:account_reports.model_account_tax_unit
+#: model:ir.model.fields,field_description:account_reports.field_account_return__tax_unit_id
 #: model_terms:ir.ui.view,arch_db:account_reports.view_tax_unit_form
 msgid "Tax Unit"
 msgstr "稅務單位"
@@ -3625,32 +4758,6 @@ msgid "Tax Units"
 msgstr "稅項單位"
 
 #. module: account_reports
-#: model:ir.model.fields,field_description:account_reports.field_mail_activity__account_tax_closing_params
-msgid "Tax closing additional params"
-msgstr "稅務結算附加參數"
-
-#. module: account_reports
-#: model:mail.activity.type,summary:account_reports.mail_activity_type_tax_report_to_pay
-msgid "Tax is ready to be paid"
-msgstr "稅款已準備好繳付"
-
-#. module: account_reports
-#: model:ir.model.fields.selection,name:account_reports.selection__mail_activity_type__category__tax_report
-msgid "Tax report"
-msgstr "稅務報表"
-
-#. module: account_reports
-#: model:mail.activity.type,summary:account_reports.mail_activity_type_tax_report_to_be_sent
-msgid "Tax report is ready to be sent to the administration"
-msgstr "稅務報表已準備好發送至行政機關"
-
-#. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/res_company.py:0
-msgid "Tax return"
-msgstr "報稅表"
-
-#. module: account_reports
 #. odoo-python
 #: code:addons/account_reports/models/account_journal_report.py:0
 msgid "Taxes"
@@ -3663,6 +4770,12 @@ msgstr "稅項"
 #: code:addons/account_reports/static/src/components/journal_report/line/line.xml:0
 msgid "Taxes Applied"
 msgstr "採用的稅"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Taxes and countries matching"
+msgstr "稅項及國家/地區相符"
 
 #. module: account_reports
 #: model:ir.model.fields,help:account_reports.field_account_tax_unit__fpos_synced
@@ -3701,14 +4814,6 @@ msgstr "註釋的內容。"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid ""
-"The attachments of the tax report can be found on the %(link_start)sclosing "
-"entry%(link_end)s of the representative company."
-msgstr "稅務報告附件可在代表公司的%(link_start)s結算記項%(link_end)s中找到。"
-
-#. module: account_reports
-#. odoo-python
 #: code:addons/account_reports/models/account_partner_ledger.py:0
 msgid "The column '%s' is not available for this report."
 msgstr "直欄「%s」不可供此報告使用。"
@@ -3741,20 +4846,6 @@ msgid "The current balance in the"
 msgstr "以下項目的目前結餘："
 
 #. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
-msgid ""
-"The currently selected dates don't match a tax period. The closing entry "
-"will be created for the closest-matching period according to your "
-"periodicity setup."
-msgstr "目前選擇的日期，不符合課稅期間。系統將根據你的周期設定，為最接近符合的期間建立結算記項。"
-
-#. module: account_reports
-#: model:ir.model.fields,help:account_reports.field_account_report_annotation__fiscal_position_id
-msgid "The fiscal position used while annotating."
-msgstr "註釋時使用的財務規則。"
-
-#. module: account_reports
 #: model:ir.model.fields,help:account_reports.field_account_report_annotation__line_id
 msgid "The id of the annotated line."
 msgstr "已註釋資料行的識別碼。"
@@ -3774,6 +4865,12 @@ msgstr "提交該單位的報告時要使用的識別碼。"
 #: code:addons/account_reports/models/account_tax.py:0
 msgid "The main company of a tax unit has to be part of it."
 msgstr "稅務單位的主要公司必須是其一部分。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/wizard/return_creation_wizard.py:0
+msgid "The selected range doesn't match any fiscal period."
+msgstr "選取的範圍不符合任何財政期間。"
 
 #. module: account_reports
 #: model:ir.model.fields,help:account_reports.field_res_company__account_tax_unit_ids
@@ -3798,6 +4895,12 @@ msgstr "本會計期間或之前，尚有"
 msgid ""
 "There are currently reports waiting to be sent, please try again later."
 msgstr "目前有報表正等待傳送，請稍後再試。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/tests/common.py:0
+msgid "There are no reports to compare."
+msgstr "沒有可以比較的報告。"
 
 #. module: account_reports
 #. odoo-javascript
@@ -3933,14 +5036,10 @@ msgid ""
 msgstr "此標籤在報告的一行中報告, 但不連結到會計科目表的任何科目"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.view_move_form_vat_return
-msgid ""
-"This tax closing entry is posted, but the tax lock date is earlier than the "
-"covered period's last day. You might need to reset it to draft and refresh "
-"its content, in case other entries using taxes have been posted in the "
-"meantime."
-msgstr ""
-"該稅款結賬條目已發佈，但稅款鎖定日期早於所涉期間的最後一天。您可能需要將其重置為草稿並刷新其內容, 以防在此期間有其他使用稅款的分錄已發佈。"
+#: model:ir.model.fields.selection,name:account_reports.selection__account_return_check__result__manual
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_search_view
+msgid "To Do"
+msgstr "待辦事項"
 
 #. module: account_reports
 #. odoo-javascript
@@ -3949,12 +5048,18 @@ msgid "Today"
 msgstr "今天"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_search_view
+msgid "Today Activities"
+msgstr "今天的活動"
+
+#. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_analytic_report.py:0
 #: code:addons/account_reports/models/account_deferred_reports.py:0
-#: code:addons/account_reports/models/account_general_ledger.py:0
 #: code:addons/account_reports/models/account_journal_report.py:0
 #: code:addons/account_reports/models/account_partner_ledger.py:0
 #: code:addons/account_reports/models/account_sales_report.py:0
+#: code:addons/account_reports/models/account_trial_balance_report.py:0
 #: model:account.report.column,name:account_reports.aged_payable_report_total
 #: model:account.report.column,name:account_reports.aged_receivable_report_total
 msgid "Total"
@@ -3967,10 +5072,40 @@ msgid "Total %s"
 msgstr "%s總額"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_general_ledger.py:0
+msgid "Total General Ledger"
+msgstr "總賬總計"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Total Receivables"
+msgstr "應收款項總額"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Total payables"
+msgstr "應付款項總額"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Trade Partners"
 msgstr "貿易夥伴"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Transaction"
+msgstr "交易"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Transactions"
+msgstr "交易"
 
 #. module: account_reports
 #: model:account.report.line,name:account_reports.transaction_without_statement
@@ -3979,6 +5114,7 @@ msgstr "無結單交易"
 
 #. module: account_reports
 #: model:account.report,name:account_reports.trial_balance_report
+#: model:account.report.line,name:account_reports.trial_balance_report_all
 #: model:ir.actions.client,name:account_reports.action_account_report_coa
 #: model:ir.ui.menu,name:account_reports.menu_action_account_report_coa
 msgid "Trial Balance"
@@ -4024,6 +5160,17 @@ msgid "Trying to expand groupby results on lines without a groupby value."
 msgstr "正嘗試在沒有分組依據值的資料行上，擴展分組結果。"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__type_external_id
+msgid "Type External"
+msgstr "外部類型"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__activity_exception_decoration
+#: model:ir.model.fields,help:account_reports.field_account_return_check__activity_exception_decoration
+msgid "Type of the exception activity on record."
+msgstr "記錄的異常活動的類型。"
+
+#. module: account_reports
 #: model:account.report.line,name:account_reports.account_financial_unaffected_earnings0
 msgid "Unallocated Earnings"
 msgstr "未分配的利潤"
@@ -4036,7 +5183,7 @@ msgstr "未定義的"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_extra_options.xml:0
+#: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 msgid "Unfold All"
 msgstr "展開所有"
 
@@ -4076,11 +5223,26 @@ msgstr "未變現匯兌利潤/虧損"
 #. odoo-javascript
 #. odoo-python
 #: code:addons/account_reports/models/account_report.py:0
-#: code:addons/account_reports/static/src/components/account_report/filters/filter_extra_options.xml:0
 #: code:addons/account_reports/static/src/components/account_report/filters/filters.js:0
 #: model_terms:ir.ui.view,arch_db:account_reports.pdf_export_filter_extra_options_template
 msgid "Unreconciled Entries"
 msgstr "未核銷分錄"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_financial_year_op__vat_label
+msgid "Use this field if you want to change vat label."
+msgstr "如果想更改增值稅標籤，請使用此欄位."
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return_type__deadline_start_date
+msgid ""
+"Used to describe the day and month of the deadline based on the periodicity."
+msgstr "用於根據適用周期，描述最後期限的日子及月份。"
+
+#. module: account_reports
+#: model:ir.model,name:account_reports.model_res_users
+msgid "User"
+msgstr "使用者"
 
 #. module: account_reports
 #: model:account.report.column,name:account_reports.account_financial_report_ec_sales_vat
@@ -4088,9 +5250,21 @@ msgid "VAT Number"
 msgstr "增值稅號碼"
 
 #. module: account_reports
-#: model_terms:ir.ui.view,arch_db:account_reports.setup_financial_year_opening_form
-msgid "VAT Periodicity"
-msgstr "增值稅周期"
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "VAT Numbers"
+msgstr "增值稅編號"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Valid VAT Numbers"
+msgstr "有效增值稅編號"
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_check_kanban_view
+msgid "Validate"
+msgstr "批准"
 
 #. module: account_reports
 #. odoo-javascript
@@ -4099,10 +5273,22 @@ msgid "Value"
 msgstr "值"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_financial_year_op__vat_label
+msgid "Vat Label"
+msgstr "增值稅標籤"
+
+#. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid "Vat closing from %(date_from)s to %(date_to)s"
-msgstr "增值稅結算（由 %(date_from)s 至 %(date_to)s）"
+#: code:addons/account_reports/models/account_return.py:0
+msgid "Verify that the total aged payables equals the vendor account balance."
+msgstr "驗證應付賬齡款項總額，是否等於供應商賬戶的結餘。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"Verify that the total aged receivables equals the customer account balance."
+msgstr "驗證應收賬齡款項總額，是否等於客戶賬戶的結餘。"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.view_journal_report_audit_move_line_tree
@@ -4122,7 +5308,18 @@ msgid "View Carryover Lines"
 msgstr "檢視結轉資料行"
 
 #. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "View Checks"
+msgstr ""
+
+#. module: account_reports
+#: model_terms:ir.ui.view,arch_db:account_reports.account_return_kanban_view
+msgid "View Entry"
+msgstr "檢視記項"
+
+#. module: account_reports
 #. odoo-python
+#: code:addons/account_reports/models/account_general_ledger.py:0
 #: code:addons/account_reports/models/account_report.py:0
 msgid "View Journal Entry"
 msgstr "查看日記帳分錄"
@@ -4153,6 +5350,18 @@ msgid "Warnings"
 msgstr "警告"
 
 #. module: account_reports
+#: model:ir.model.fields,field_description:account_reports.field_account_return__website_message_ids
+#: model:ir.model.fields,field_description:account_reports.field_account_return_check__website_message_ids
+msgid "Website Messages"
+msgstr "網站資訊"
+
+#. module: account_reports
+#: model:ir.model.fields,help:account_reports.field_account_return__website_message_ids
+#: model:ir.model.fields,help:account_reports.field_account_return_check__website_message_ids
+msgid "Website communication history"
+msgstr "網站溝通記錄"
+
+#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
 msgid ""
 "When ticked, totals and subtotals appear below the sections of the report"
@@ -4180,12 +5389,6 @@ msgstr "是否必須為選定外幣撥備準備金。"
 #: model_terms:ir.ui.view,arch_db:account_reports.pdf_export_filter_extra_options_template
 msgid "With Draft Entries"
 msgstr "包括草稿記項"
-
-#. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_general_ledger.py:0
-msgid "Wrong ID for general ledger line to expand: %s"
-msgstr "要擴展的總賬資料行識別碼錯誤： %s"
 
 #. module: account_reports
 #. odoo-python
@@ -4220,6 +5423,14 @@ msgid "Yes"
 msgstr "是"
 
 #. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/wizard/return_creation_wizard.py:0
+msgid ""
+"You are trying to create returns for a company you don't have access to, "
+"please select it in the company selector"
+msgstr "你正在嘗試為一間你沒有權限存取的公司建立申報。請在公司選擇器中選擇適用公司"
+
+#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/multicurrency_revaluation_report/warnings.xml:0
 msgid "You are using custom exchange rates."
@@ -4227,9 +5438,15 @@ msgstr "你正使用自訂匯率。"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid "You can't open a tax report from a move without a VAT closing date."
-msgstr "若分錄未有增值稅關閉日期，便不可從該分錄開啟稅務報告。"
+#: code:addons/account_reports/models/account_return.py:0
+msgid "You can only have a unique check code for each return."
+msgstr "每項申報只可有一個獨一無二的檢查代碼。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "You can only revert a completed return if the previous state was new."
+msgstr "若之前的狀態是新增，你只可恢復已完成的申報。"
 
 #. module: account_reports
 #. odoo-python
@@ -4253,15 +5470,7 @@ msgstr "無法為鎖定的期間生成條目。"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
-msgid ""
-"You cannot reset this closing entry to draft, as another closing entry has "
-"been posted at a later date."
-msgstr "此結算記項不可重設為草稿，因為有另一個結算記項已在較後日子過賬。"
-
-#. module: account_reports
-#. odoo-python
-#: code:addons/account_reports/models/account_move.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid ""
 "You cannot reset this closing entry to draft, as it would delete carryover "
 "values impacting the tax report of a locked period. To do this, you first "
@@ -4270,18 +5479,33 @@ msgstr "此收結記項不可重設為草稿，因為這樣做會刪除撥入下
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_multicurrency_revaluation_report.py:0
-msgid "You need to activate more than one currency to access this report."
-msgstr "您需要啟動一種以上貨幣才能訪問該報告。"
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"You cannot reset this return to reviewed, as another return has been posted "
+"at a later date."
+msgstr "你不可將此項申報重設為已審核，因為另一項申報已過賬至較後日期。"
 
 #. module: account_reports
 #. odoo-python
-#: code:addons/account_reports/models/account_generic_tax_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
 msgid ""
-"You're about the generate the closing entries of multiple companies at once."
-" Each of them will be created in accordance with its company tax "
-"periodicity."
-msgstr "你即將同一時間產生多間公司的結算記項。各個記項將根據各自公司的課稅周期去建立。"
+"You cannot submit this return as there are previous returns that are waiting"
+" to be posted."
+msgstr "你不可提交此項申報，因為仍有其他先前的申報正等待過賬。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid ""
+"You first need to define an opening date for your accounting. Please contact"
+" your administrator."
+msgstr ""
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_multicurrency_revaluation_report.py:0
+msgid "You need to activate more than one currency to access this report."
+msgstr "您需要啟動一種以上貨幣才能訪問該報告。"
 
 #. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.journal_report_pdf_export_main
@@ -4297,24 +5521,12 @@ msgstr "收件人"
 
 #. module: account_reports
 #. odoo-javascript
-#: code:addons/account_reports/static/src/components/sales_report/warnings.xml:0
-msgid "affected partners"
-msgstr ""
-
-#. module: account_reports
-#. odoo-javascript
 #: code:addons/account_reports/static/src/components/tax_report/warnings.xml:0
 msgid "and correct their tax tags if necessary."
 msgstr "並在必要時更正其稅項標籤。"
 
 #. module: account_reports
-#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__year
-msgid "annually"
-msgstr "每年"
-
-#. module: account_reports
 #: model_terms:ir.ui.view,arch_db:account_reports.res_config_settings_view_form
-#: model_terms:ir.ui.view,arch_db:account_reports.setup_financial_year_opening_form
 msgid "days after period"
 msgstr "天(期間之後)"
 
@@ -4325,20 +5537,18 @@ msgid "doesn't match the balance of your"
 msgstr "不符合你以下項目的結餘："
 
 #. module: account_reports
-#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__2_months
-msgid "every 2 months"
-msgstr "每 2 個月"
-
-#. module: account_reports
-#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__4_months
-msgid "every 4 months"
-msgstr "每 4 個月"
-
-#. module: account_reports
 #. odoo-javascript
 #: code:addons/account_reports/static/src/components/bank_reconciliation_report/warnings.xml:0
 msgid "have a starting balance different from the previous ending balance."
 msgstr "的期初結餘，與上一期間的期末結餘不同。"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+#: code:addons/account_reports/models/account_return.py:0
+#: code:addons/account_reports/wizard/report_export_wizard.py:0
+msgid "id"
+msgstr "id"
 
 #. module: account_reports
 #. odoo-javascript
@@ -4365,9 +5575,16 @@ msgid "last bank statement"
 msgstr "最後銀行結單"
 
 #. module: account_reports
-#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__monthly
-msgid "monthly"
-msgstr "每月"
+#. odoo-python
+#: code:addons/account_reports/models/account_return.py:0
+msgid "line_ids"
+msgstr "line_ids"
+
+#. module: account_reports
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+msgid "millions"
+msgstr "百萬"
 
 #. module: account_reports
 #. odoo-python
@@ -4388,14 +5605,16 @@ msgid "prior or included in this period."
 msgstr "在此期間之前或包含在該期間內。"
 
 #. module: account_reports
-#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__trimester
-msgid "quarterly"
-msgstr "每季"
+#. odoo-python
+#: code:addons/account_reports/models/account_report.py:0
+msgid "section_main_report_ids"
+msgstr "section_main_report_ids"
 
 #. module: account_reports
-#: model:ir.model.fields.selection,name:account_reports.selection__res_company__account_tax_periodicity__semester
-msgid "semi-annually"
-msgstr "每半年"
+#. odoo-javascript
+#: code:addons/account_reports/static/src/components/sales_report/warnings.xml:0
+msgid "share the same VAT number."
+msgstr "共用相同的增值稅號碼。"
 
 #. module: account_reports
 #. odoo-javascript
@@ -4426,12 +5645,6 @@ msgstr "，而它們未在外國設立。"
 #: code:addons/account_reports/static/src/components/account_report/filters/filter_date.xml:0
 msgid "to"
 msgstr "到"
-
-#. module: account_reports
-#. odoo-javascript
-#: code:addons/account_reports/static/src/components/sales_report/warnings.xml:0
-msgid "to resolve the duplication."
-msgstr ""
 
 #. module: account_reports
 #. odoo-javascript

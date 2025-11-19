@@ -1,11 +1,11 @@
-import { _t } from "@web/core/l10n/translation";
+import { router } from "@web/core/browser/router";
+import { Domain } from "@web/core/domain";
 import { deserializeDateTime, serializeDateTime } from "@web/core/l10n/dates";
+import { _t } from "@web/core/l10n/translation";
+import { pick } from "@web/core/utils/objects";
+import { localStartOf } from "@web_gantt/gantt_helpers";
 import { GanttModel } from "@web_gantt/gantt_model";
 import { usePlanningModelActions } from "../planning_hooks";
-import { Domain } from "@web/core/domain";
-import { pick } from "@web/core/utils/objects";
-import { router } from "@web/core/browser/router";
-import { getRangeFromDate, localStartOf, localEndOf } from "@web_gantt/gantt_helpers";
 
 const GROUPBY_COMBINATIONS = [
     "role_id",
@@ -85,17 +85,12 @@ export class PlanningGanttModel extends GanttModel {
      */
     getAdditionalContext() {
         const { records } = this.data;
-        const { startDate, scale, rangeId } = this.metaData;
+        const { startDate, scale, stopDate } = this.metaData;
         const defaultEmployeeIds = new Set();
         for (const record of records) {
-            const val = record.employee_id;
-            if (val) {
-                defaultEmployeeIds.add(val[0]);
+            if (record.employee_id) {
+                defaultEmployeeIds.add(record.employee_id.id);
             }
-        }
-        let stopDate = this.metaData.stopDate;
-        if (this.metaData.ranges && rangeId in this.metaData.ranges) {
-            stopDate = localEndOf(startDate, rangeId);
         }
         return {
             ...this.searchParams.context,
@@ -131,6 +126,12 @@ export class PlanningGanttModel extends GanttModel {
         return this._getDomain(metaData);
     }
 
+    getRangeFromDate(rangeId, date) {
+        const startDate = localStartOf(date, rangeId);
+        const stopDate = startDate.plus({ [rangeId]: 1 }).minus({ day: 1 });
+        return { focusDate: date, startDate, stopDate, rangeId };
+    }
+
     /**
      * @override
      */
@@ -150,6 +151,22 @@ export class PlanningGanttModel extends GanttModel {
         if (data.recurrence_update) {
             result.recurrence_update = data.recurrence_update;
         }
+        return result;
+    }
+
+    async splitPill(start, stop, record) {
+        const values = {
+            start_datetime: serializeDateTime(start),
+            end_datetime: serializeDateTime(stop)
+        };
+        const context = { planning_split_tool: true };
+        const result = await this.orm.call(
+            this.metaData.resModel,
+            'split_pill',
+            [[record.id]],
+            { context, values: values },
+        );
+        await this.fetchData();
         return result;
     }
 
@@ -250,7 +267,7 @@ export class PlanningGanttModel extends GanttModel {
                 // Here, we are generating top level rows.
                 if (this._allowCreateEmptyGroups(groupedBy)) {
                     // The group with false values for every groupby can be absent from
-                    // groups (= groups returned by read_group basically).
+                    // groups (= groups returned by formatted_read_group basically).
                     // Here we add the fake group {} in groups in any case (this simulates the group
                     // with false values mentionned above).
                     // This will force the creation of some rows with resId = false
@@ -267,7 +284,7 @@ export class PlanningGanttModel extends GanttModel {
                 // We make sure that a row with resId = false for
                 // the unique groupby in groupedBy and same "parent" will be
                 // added by adding a suitable fake group to the groups (a subset
-                // of the groups returned by read_group).
+                // of the groups returned by formatted_read_group).
                 const fakeGroup = Object.assign({}, ...parentGroup);
                 groups.push(fakeGroup);
             }
@@ -302,32 +319,32 @@ export class PlanningGanttModel extends GanttModel {
     /**
      * @override
      */
-    _getInitialRangeParams(metaData) {
-        let { focusDate, scaleId, startDate, stopDate, rangeId } = super._getInitialRangeParams(...arguments);
+    _getInitialRangeParams() {
         // take parameters from url if set https://example.com/web?date_start=2020-11-08
         // this is used by the mail of planning.planning
         const urlState = router.current;
         if (urlState.date_start) {
-            focusDate = deserializeDateTime(urlState.date_start);
+            const focusDate = deserializeDateTime(urlState.date_start);
+            let startDate;
+            let stopDate;
+            let rangeId;
             if (urlState.date_end) {
                 const end = deserializeDateTime(urlState.date_end);
                 if (localStartOf(focusDate, "week").equals(localStartOf(end, "week"))) {
-                    ({ startDate, stopDate, rangeId } = getRangeFromDate("week", focusDate));
-                    scaleId = metaData.ranges[rangeId].scaleId;
+                    ({ startDate, stopDate, rangeId } = this.getRangeFromDate("week", focusDate));
                 } else if (localStartOf(focusDate, "month").equals(localStartOf(end, "month"))) {
-                    ({ startDate, stopDate, rangeId } = getRangeFromDate("month", focusDate));
-                    scaleId = metaData.ranges[rangeId].scaleId;
+                    ({ startDate, stopDate, rangeId } = this.getRangeFromDate("month", focusDate));
                 } else {
                     startDate = focusDate;
                     stopDate = end;
                     rangeId = "custom";
                 }
             } else {
-                const { unit } = metaData.scales[scaleId];
-                ({ startDate, stopDate, rangeId } = getRangeFromDate(unit, focusDate));
+                ({ startDate, stopDate, rangeId } = this.getRangeFromDate("month", focusDate));
             }
+            return { focusDate, startDate, stopDate, rangeId };
         }
-        return { focusDate, scaleId, startDate, stopDate, rangeId };
+        return super._getInitialRangeParams(...arguments);
     }
 
     /**

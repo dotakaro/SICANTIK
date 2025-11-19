@@ -94,20 +94,15 @@ class TestPayslipValidationCommon(AccountTestInvoicingCommon):
             'resource_calendar_id': cls.resource_calendar.id,
             'company_id': cls.env.company.id,
             'country_id': country.id,
+            'structure_type_id': structure_type.id,
+            'contract_date_start': date(2016, 1, 1),
+            'date_version': date(2016, 1, 1),
+            'wage': 1000.0,
         })
         if employee_fields:
             cls.employee.write(employee_fields)
 
-        cls.contract = cls.env['hr.contract'].create({
-            'name': country_code + " Employee's contract",
-            'employee_id': cls.employee.id,
-            'resource_calendar_id': cls.resource_calendar.id,
-            'company_id': cls.env.company.id,
-            'structure_type_id': structure_type.id,
-            'date_start': date(2016, 1, 1),
-            'state': "open",
-            'wage': 1000.0,
-        })
+        cls.contract = cls.employee.version_id
         if contract_fields:
             cls.contract.write(contract_fields)
 
@@ -118,12 +113,12 @@ class TestPayslipValidationCommon(AccountTestInvoicingCommon):
             cls.contract.write({'car_id': cls.car.id})
 
     @classmethod
-    def _generate_payslip(cls, date_from, date_to, struct_id=False, input_line_ids=False, contract_id=False, employee_id=False):
+    def _generate_payslip(cls, date_from, date_to, struct_id=False, input_line_ids=False, version_id=False, employee_id=False):
         work_entries = cls.contract.generate_work_entries(date_from, date_to)
         payslip = cls.env['hr.payslip'].create([{
             'name': "Test Payslip",
             'employee_id': employee_id or cls.employee.id,
-            'contract_id': contract_id or cls.contract.id,
+            'version_id': version_id or cls.contract.id,
             'company_id': cls.env.company.id,
             'struct_id': struct_id or cls.structure.id,
             'date_from': date_from,
@@ -139,54 +134,46 @@ class TestPayslipValidationCommon(AccountTestInvoicingCommon):
 
     @classmethod
     def _generate_leave(cls, date_from, date_to, holiday_status_id):
-        return cls.env['hr.leave'].create({
+        leave = cls.env['hr.leave'].sudo().create({
             'employee_id': cls.employee.id,
             'request_date_from': date_from,
             'request_date_to': date_to,
-            'holiday_status_id': cls.env.ref(holiday_status_id).id,
-        }).action_validate()
+            'holiday_status_id': holiday_status_id.id,
+        })
+
+        if holiday_status_id.leave_validation_type != 'no_validation':
+            leave.action_approve()
 
     def _validate_payslip(self, payslip, results, skip_lines=False):
         error = []
-        line_values = payslip._get_line_values(set(payslip.line_ids.mapped('code')))
+        payslip_lines = payslip.line_ids.filtered(lambda l: not l.salary_rule_id.title)
+        line_values = payslip._get_line_values(set(payslip_lines.mapped('code')))
         for code, value in results.items():
             if code in line_values:
                 payslip_line_value = line_values[code][payslip.id]['total']
                 if float_compare(payslip_line_value, value, 2):
-                    error.append(f"Code: {code:<30} │ Expected: {value:<15} │ Reality: {payslip_line_value:<15}")
-        if error:
-            error.insert(0, '')
-            error.append('')
+                    error.append(f"{'WRONG CALCULATION':>20} │ {code:<30} │ {value:>15} │ {payslip_line_value:>15} │ {round(payslip_line_value-value, 2):>15} │")
         if not skip_lines:
-            error_before = bool(error)
-            unnecessary_line = False
-            for code in results:
-                if code not in payslip.line_ids.mapped('code'):
+            for code, value in results.items():
+                if code not in payslip_lines.mapped('code'):
                     error.append(
-                        f"Unnecessary Line: {code:<30}")
-                    unnecessary_line = True
-            if unnecessary_line:
-                error.append('')
-                if not error_before:
-                    error.insert(0, '')
-            error_before = bool(error)
-            missing_line = False
-            for line in payslip.line_ids:
+                        f"{'UNNECESSARY LINE':>20} │ {code:<30} │ {value:>15} │ {'/':>15} │")
+            for line in payslip_lines:
                 if line.code not in results:
                     error.append(
-                        f"Missing Line: {line.code:<30} - {line_values[line.code][payslip.id]['total']:<15}")
-                    missing_line = True
-            if missing_line:
-                error.append('')
-                if not error_before:
-                    error.insert(0, '')
+                        f"{'MISSING LINE':>20} │ {line.code:<30} │ {'/':>15} │ {line_values[line.code][payslip.id]['total']:>15} │")
         if error:
+            error.insert(
+                0,
+                f"{'ERROR':>20} │ {'CODE':<30} │ {'EXPECTED':>15} │ {'REALITY':>15} │ {'DIFFERENCE':>15} │\n"
+                f"{'':>20} │ {'':<30} │ {'':>15} │ {'':>15} │ {'':>15} │")
             error.extend([
+                "",
                 f"Payslip Period: {payslip.date_from} - {payslip.date_to}",
                 "Payslip Actual Values: ",
-                "        payslip_results = {" + ', '.join(f"'{line.code}': {line_values[line.code][payslip.id]['total']}" for line in payslip.line_ids) + "}"
+                "        payslip_results = {" + ', '.join(f"'{line.code}': {line_values[line.code][payslip.id]['total']}" for line in payslip_lines) + "}"
             ])
-        self.assertEqual(len(error), 0, '\n' + '\n'.join(error))
+        self.assertEqual(len(error), 0, '\n\n' + '\n'.join(error))
 
     def _validate_worked_days(self, payslip, results, skip_lines=False):
         error = []
@@ -238,20 +225,12 @@ class TestPayslipValidationCommon(AccountTestInvoicingCommon):
                         error.append('%s - %s - %s' % (line.account_id.code, move_type, line[move_type]))
         self.assertEqual(len(error), 0, '\n' + '\n'.join(error))
 
-    def _add_other_inputs(self, payslip, other_inputs):
-        """
-        Add all the other inputs to the payslip
-        :param payslip: a payslip
-        :param other_inputs: dict of other inputs xml_id: value
-        :return:
-        """
-        for other_input, amount in other_inputs.items():
-            self.env['hr.payslip.input'].create({
-                'payslip_id': payslip.id,
-                'input_type_id': self.env.ref(other_input).id,
-                'amount': amount,
-            })
-        payslip.compute_sheet()
+    def _add_other_input(self, payslip_id, other_input_id, amount):
+        self.env['hr.payslip.input'].create({
+            'payslip_id': payslip_id.id,
+            'input_type_id': other_input_id.id,
+            'amount': amount,
+        })
 
     def _add_rule_parameter_value(self, rule_parameter_code, value, date):
         rule_parameter_id = self.env['hr.rule.parameter'].search([('code', '=', rule_parameter_code)]).id

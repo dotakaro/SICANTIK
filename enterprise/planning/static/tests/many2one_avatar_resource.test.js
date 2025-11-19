@@ -1,9 +1,9 @@
-import { expect, test, beforeEach, describe } from "@odoo/hoot";
-import { queryFirst, queryAll, click } from "@odoo/hoot-dom";
+import { beforeEach, describe, expect, test } from "@odoo/hoot";
+import { click, queryAll, queryFirst } from "@odoo/hoot-dom";
 import { animationFrame, mockDate } from "@odoo/hoot-mock";
 
-import { fields, onRpc, mountView, getKwArgs } from "@web/../tests/web_test_helpers";
 import { mailModels } from "@mail/../tests/mail_test_helpers";
+import { fields, mountView, onRpc } from "@web/../tests/web_test_helpers";
 
 import { definePlanningModels, planningModels } from "./planning_mock_models";
 
@@ -115,11 +115,6 @@ class ResourceResource extends planningModels.ResourceResource {
             im_status: "online",
         },
     ];
-
-    get_avatar_card_data(ids, fields) {
-        const kwargs = getKwArgs(arguments, "ids", "fields");
-        return this.read(kwargs.ids, kwargs.fields);
-    }
 }
 
 class HrEmployee extends planningModels.HrEmployee {
@@ -162,6 +157,11 @@ planningModels.HrEmployee = HrEmployee;
 planningModels.HrEmployeePublic = HrEmployeePublic;
 
 definePlanningModels();
+
+onRpc("get_avatar_card_data", function ({ args }) {
+    const [ids, fields] = args[0];
+    return this.env["resource.resource"].read(ids, fields);
+});
 
 beforeEach(() => {
     mailModels.ResUsers._records.push({
@@ -212,54 +212,52 @@ test("many2one_avatar_resource widget in kanban view", async () => {
     });
 
     // 1. Clicking on material resource's icon with only one role
-    await click(".o_kanban_record:nth-of-type(1) .o_m2o_avatar");
+    await click(".o_kanban_record:nth-of-type(1) .o_m2o_avatar i");
     await animationFrame();
     expect(".o_avatar_card").toHaveCount(0);
 
     // 2. Clicking on material resource's icon with two roles
-    await click(".o_kanban_record:nth-of-type(2) .o_m2o_avatar");
+    await click(".o_kanban_record:nth-of-type(2) .o_m2o_avatar i");
     await animationFrame();
     expect(".o_avatar_card").toHaveCount(1);
     expect(".o_avatar_card .o_avatar > img").toHaveCount(0, {
         message: "There should not be any avatar for material resource",
     });
     expect(".o_avatar_card_buttons button").toHaveCount(0);
-    expect(".o_avatar_card .o_resource_roles_tags > .o_tag").toHaveCount(2, {
+    expect(".o_avatar_card .o_resource_roles_tags .o_tag").toHaveCount(2, {
         message: "Roles should be listed in the card",
     });
 
     // 3. Clicking on human resource's avatar with no user associated
-    await click(".o_kanban_record:nth-of-type(3) .o_m2o_avatar");
+    await click(".o_kanban_record:nth-of-type(3) .o_m2o_avatar img");
     await animationFrame();
     expect(".o_card_user_infos span:first").toHaveText("Marie");
 
     // 4. Clicking on human resource's avatar with one user associated
-    await click(".o_kanban_record:nth-of-type(4) .o_m2o_avatar");
+    await click(".o_kanban_record:nth-of-type(4) .o_m2o_avatar img");
     await animationFrame();
     expect(".o_card_user_infos span:first").toHaveText("Pierre");
 });
 
 test("Employee avatar in Gantt view", async () => {
     mockDate("2023-11-08 8:00:00", 0);
-    onRpc("gantt_resource_work_interval", () => {
-        return [
-            {
-                1: [
-                    ["2022-10-10 06:00:00", "2022-10-10 10:00:00"], //Monday    4h
-                    ["2022-10-11 06:00:00", "2022-10-11 10:00:00"], //Tuesday   5h
-                    ["2022-10-11 11:00:00", "2022-10-11 12:00:00"],
-                    ["2022-10-12 06:00:00", "2022-10-12 10:00:00"], //Wednesday 6h
-                    ["2022-10-12 11:00:00", "2022-10-12 13:00:00"],
-                    ["2022-10-13 06:00:00", "2022-10-13 10:00:00"], //Thursday  7h
-                    ["2022-10-13 11:00:00", "2022-10-13 14:00:00"],
-                    ["2022-10-14 06:00:00", "2022-10-14 10:00:00"], //Friday    8h
-                    ["2022-10-14 11:00:00", "2022-10-14 15:00:00"],
-                ],
-            },
-        ];
-    });
-    onRpc("get_gantt_data", async ({ kwargs, parent }) => {
-        const result = await parent();
+    onRpc("gantt_resource_work_interval", () => [
+        {
+            1: [
+                ["2022-10-10 06:00:00", "2022-10-10 10:00:00"], //Monday    4h
+                ["2022-10-11 06:00:00", "2022-10-11 10:00:00"], //Tuesday   5h
+                ["2022-10-11 11:00:00", "2022-10-11 12:00:00"],
+                ["2022-10-12 06:00:00", "2022-10-12 10:00:00"], //Wednesday 6h
+                ["2022-10-12 11:00:00", "2022-10-12 13:00:00"],
+                ["2022-10-13 06:00:00", "2022-10-13 10:00:00"], //Thursday  7h
+                ["2022-10-13 11:00:00", "2022-10-13 14:00:00"],
+                ["2022-10-14 06:00:00", "2022-10-14 10:00:00"], //Friday    8h
+                ["2022-10-14 11:00:00", "2022-10-14 15:00:00"],
+            ],
+        },
+    ]);
+    onRpc("get_gantt_data", ({ kwargs, parent }) => {
+        const result = parent();
         expect(kwargs.progress_bar_fields).toEqual(["resource_id"]);
         result.progress_bars.resource_id = {
             1: {
@@ -332,7 +330,7 @@ test("Employee avatar in Gantt view", async () => {
         message: "There should not be any avatar for material resource",
     });
     expect(".o_avatar_card_buttons button").toHaveCount(0);
-    expect(".o_avatar_card .o_resource_roles_tags > .o_tag").toHaveCount(2, {
+    expect(".o_avatar_card .o_resource_roles_tags .o_tag").toHaveCount(2, {
         message: "Roles should be listed in the card",
     });
 

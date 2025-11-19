@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { user } from "@web/core/user";
@@ -18,10 +16,10 @@ export class HomeMenuCustomizer extends Component {
     setup() {
         this.ui = useService("ui");
         this.notification = useService("notification");
-        this.company = useService("company");
         this.actionManager = useService("action");
         this.menus = useService("menu");
         this.dialogManager = useService("dialog");
+        this.user = user;
     }
 
     setBackgroundImage(attachment_id) {

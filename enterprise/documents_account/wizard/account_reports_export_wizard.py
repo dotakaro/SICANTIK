@@ -3,7 +3,7 @@
 from odoo import api, models, fields, _
 
 
-class ReportExportWizard(models.TransientModel):
+class Account_ReportsExportWizard(models.TransientModel):
     """ Extends the report export wizard to give it the ability to save the
     attachments it generates as documents, in a folder of the Documents app.
     """
@@ -46,7 +46,7 @@ class ReportExportWizard(models.TransientModel):
         }
 
 
-class ReportExportWizardOption(models.TransientModel):
+class Account_ReportsExportWizardFormat(models.TransientModel):
     _inherit = 'account_reports.export.wizard.format'
 
     def get_attachment_vals(self, file_name, file_content, mimetype, log_options_dict):

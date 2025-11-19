@@ -1,23 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import json
 
 from odoo.tests.common import new_test_user
 from odoo.addons.spreadsheet_edition.tests.spreadsheet_test_case import SpreadsheetTestCase
 
 
 class SaleOrderSpreadsheet(SpreadsheetTestCase):
-
-    def test_create_spreadsheet(self):
-        spreadsheet = self.env["sale.order.spreadsheet"].create({"name": "spreadsheet"})
-        data = spreadsheet.join_spreadsheet_session()["data"]
-        self.assertTrue(data["lists"])
-        self.assertTrue(data["globalFilters"])
-        revision = spreadsheet.spreadsheet_revision_ids
-        self.assertEqual(len(revision), 1)
-        commands = json.loads(revision.commands)["commands"]
-        self.assertEqual(commands[0]["type"], "RE_INSERT_ODOO_LIST")
-        self.assertEqual(commands[1]["type"], "CREATE_TABLE")
 
     def test_sale_order_action_open(self):
         spreadsheet = self.env["sale.order.spreadsheet"].create({"name": "spreadsheet"})
@@ -48,8 +36,17 @@ class SaleOrderSpreadsheet(SpreadsheetTestCase):
         sale_order.action_open_sale_order_spreadsheet()
         spreadsheets = sale_order.spreadsheet_ids
         sale_order.action_open_sale_order_spreadsheet()
-        self.assertEqual(sale_order.spreadsheet_ids, spreadsheets, "it should be the same spreadsheets")
-        
+        self.assertEqual(sale_order.spreadsheet_ids, spreadsheets, "it should be the same spreadsheet")
+
+    def test_get_selector_spreadsheet_models(self):
+        user = new_test_user(self.env, login="Raoul")
+        result = self.env["spreadsheet.mixin"].with_user(user).get_selector_spreadsheet_models()
+        self.assertFalse(any(r["model"] == "sale.order.spreadsheet" for r in result))
+
+        user.group_ids |= self.env.ref("sales_team.group_sale_salesman")
+        result = self.env["spreadsheet.mixin"].with_user(user).get_selector_spreadsheet_models()
+        self.assertTrue(any(r["model"] == "sale.order.spreadsheet" for r in result))
+
     def test_sale_order_spreadsheet_deleted_with_related_order(self):
         spreadsheet = self.env["sale.order.spreadsheet"].create({"name": "spreadsheet"})
         quotation_template = self.env["sale.order.template"].create({
@@ -116,7 +113,7 @@ class SaleOrderSpreadsheet(SpreadsheetTestCase):
         self.assertFalse(sale_order.has_access("unlink"))
         self.assertTrue(spreadsheet.has_access("read"))
         self.assertTrue(spreadsheet.has_access("write"))
-        self.assertFalse(spreadsheet.has_access("unlink"))
+        self.assertTrue(spreadsheet.has_access("unlink"))
 
         # other users don't have access by default
         self.assertFalse(sale_order.with_user(other_salesman).has_access("read"))
@@ -127,10 +124,10 @@ class SaleOrderSpreadsheet(SpreadsheetTestCase):
         self.assertFalse(spreadsheet.with_user(other_salesman).has_access("unlink"))
 
         # add access to all orders
-        other_salesman.groups_id |= self.env.ref("sales_team.group_sale_salesman_all_leads")
+        other_salesman.group_ids |= self.env.ref("sales_team.group_sale_salesman_all_leads")
         self.assertTrue(sale_order.with_user(other_salesman).has_access("read"))
         self.assertTrue(sale_order.with_user(other_salesman).has_access("write"))
         self.assertFalse(sale_order.with_user(other_salesman).has_access("unlink"))
         self.assertTrue(spreadsheet.with_user(other_salesman).has_access("read"))
         self.assertTrue(spreadsheet.with_user(other_salesman).has_access("write"))
-        self.assertFalse(spreadsheet.with_user(other_salesman).has_access("unlink"))
+        self.assertTrue(spreadsheet.with_user(other_salesman).has_access("unlink"))

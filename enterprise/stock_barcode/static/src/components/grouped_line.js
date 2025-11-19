@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import LineComponent from "@stock_barcode/components/line";
 
 export default class GroupedLineComponent extends LineComponent {
@@ -7,8 +5,12 @@ export default class GroupedLineComponent extends LineComponent {
     static template = "stock_barcode.GroupedLineComponent";
 
     get isComplete() {
-        if (this.linesToDisplay.length > 1 && this.isTracked &&
-            this.qtyDemand && this.qtyDone === this.qtyDemand) {
+        if (
+            this.linesToDisplay.length > 1 &&
+            this.isTracked &&
+            this.qtyDemand &&
+            this.qtyDone === this.qtyDemand
+        ) {
             // In case the line is tracked and has multiple sublines, we consider the line complete
             // if it has enough quantity and all sublines with quantity has a lot.
             for (const subline of this.linesToDisplay) {
@@ -41,8 +43,12 @@ export default class GroupedLineComponent extends LineComponent {
 
     get linesToDisplay() {
         if (!this.env.model.showReservedSns) {
-            return this.props.line.lines.filter(line => {
-                return this.env.model.getQtyDone(line) > 0 || line.product_id.tracking == "none" || this.env.model.getQtyDemand(line) == 0;
+            return this.props.line.lines.filter((line) => {
+                return (
+                    this.env.model.getQtyDone(line) > 0 ||
+                    line.product_id.tracking == "none" ||
+                    this.env.model.getQtyDemand(line) == 0
+                );
             });
         }
         return this.props.line.lines;

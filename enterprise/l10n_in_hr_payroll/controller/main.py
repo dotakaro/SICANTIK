@@ -6,7 +6,6 @@ from copy import deepcopy
 
 from odoo import http, _
 from odoo.http import request
-from odoo.tools.misc import xlsxwriter
 
 
 class L10nInSalaryRegisterController(http.Controller):
@@ -40,6 +39,7 @@ class L10nInSalaryRegisterController(http.Controller):
                 }
             )
         output = BytesIO()
+        import xlsxwriter  # noqa: PLC0415
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         worksheet = workbook.add_worksheet('salary_register_report')
         style_highlight = workbook.add_format({'bold': True, 'pattern': 1, 'bg_color': '#E0E0E0', 'align': 'center'})
@@ -74,7 +74,8 @@ class L10nInSalaryRegisterController(http.Controller):
         ]
 
         # HORIZONTAL DATA
-        domain = [('employee_id', 'in', employee_ids.ids), ('date_from', '>=', date_from), ('date_to', '<=', date_to), ('state', '=', 'paid')]
+        domain = wizard._get_payslip_domain()
+        domain.append(('employee_id', 'in', employee_ids.ids))
         if struct_id:
             domain.append(('struct_id', '=', struct_id.id))
         payslips_per_employee = dict(request.env['hr.payslip']._read_group(
@@ -132,5 +133,69 @@ class L10nInSalaryRegisterController(http.Controller):
             headers=[
                 ('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
                 ('Content-Disposition', f'attachment; filename={filename}.xlsx')],
+        )
+        return response
+
+
+class L10nInHrPayrollLabourWelfareFundController(http.Controller):
+    @http.route("/export/labour_welfare_fund/<int:wizard_id>", type='http', auth='user')
+    def export_labour_welfare_fund(self, wizard_id):
+        wizard = request.env['l10n.in.labour.welfare.fund.wizard'].browse(wizard_id)
+        if not wizard.exists() or not request.env.user.has_group('hr_payroll.group_hr_payroll_user'):
+            return request.render(
+                'http_routing.http_error', {
+                    'status_code': 'Oops',
+                    'status_message': "Please contact an administrator..."})
+
+        output = BytesIO()
+        import xlsxwriter  # noqa: PLC0415
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        worksheet = workbook.add_worksheet('Worksheet')
+        style_highlight = workbook.add_format({'bold': True, 'pattern': 1, 'bg_color': '#E0E0E0', 'align': 'center'})
+        style_normal = workbook.add_format({'align': 'center'})
+        style_title = workbook.add_format({'bold': True, 'align': 'center', 'font_size': 32})
+
+        worksheet.merge_range('A1:F1', 'Labour Welfare Fund Summary', style_title)
+        worksheet.merge_range('A2:F2', f'{wizard.date_from} to {wizard.date_to}', style_normal)
+
+        headers = [
+            _("LWF Account Number"),
+            _("Employee ID"),
+            _("Employee Name"),
+            _("Employees' Contribution"),
+            _("Employer's Contribution"),
+            _("Total Contribution"),
+        ]
+
+        row = 2
+        for col, header in enumerate(headers):
+            worksheet.write(row, col, header, style_highlight)
+            worksheet.set_column(col, col, len(header) + 2)
+
+        data = []
+        for line in wizard.line_ids:
+            data.append([
+                line.employee_lwf_account or "",
+                line.employee_id.registration_number or "",
+                line.employee_name,
+                line.employee_contibution,
+                line.employer_contribution,
+                line.total_contribution,
+            ])
+        row += 1
+        for record in data:
+            col = 0
+            for info in record:
+                worksheet.write(row, col, info, style_normal)
+                col += 1
+            row += 1
+
+        workbook.close()
+        xlsx_data = output.getvalue()
+        response = request.make_response(
+            xlsx_data,
+            headers=[
+                ('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+                ('Content-Disposition', 'attachment; filename=labour_welfare_fund.xlsx')],
         )
         return response

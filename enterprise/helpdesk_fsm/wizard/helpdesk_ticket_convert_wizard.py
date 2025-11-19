@@ -3,6 +3,7 @@
 
 from odoo import models
 
+
 class HelpdeskTicketConvertWizard(models.TransientModel):
     _inherit = 'helpdesk.ticket.convert.wizard'
 

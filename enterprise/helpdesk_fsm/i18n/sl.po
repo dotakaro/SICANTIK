@@ -3,15 +3,16 @@
 # 	* helpdesk_fsm
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
+# Aleš Pipan, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:27+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Aleš Pipan, 2025\n"
 "Language-Team: Slovenian (https://app.transifex.com/odoo/teams/41243/sl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -42,6 +43,16 @@ msgid "Create a Field Service task"
 msgstr "Ustvari opravilo v storitvi na terenu"
 
 #. module: helpdesk_fsm
+#: model:ir.model,website_form_label:helpdesk_fsm.model_project_task
+msgid "Create a Task"
+msgstr "Ustvari nalogo"
+
+#. module: helpdesk_fsm
+#: model:ir.model,website_form_label:helpdesk_fsm.model_helpdesk_ticket
+msgid "Create a Ticket"
+msgstr "Ustvari zahtevek"
+
+#. module: helpdesk_fsm
 #: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_create_fsm_task__create_uid
 msgid "Created by"
 msgstr "Ustvaril"
@@ -63,13 +74,17 @@ msgstr "Opusti"
 
 #. module: helpdesk_fsm
 #: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_create_fsm_task__display_name
+#: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_team__display_name
+#: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_ticket__display_name
+#: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_ticket_convert_wizard__display_name
+#: model:ir.model.fields,field_description:helpdesk_fsm.field_project_task__display_name
 msgid "Display Name"
 msgstr "Prikazani naziv"
 
 #. module: helpdesk_fsm
 #: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_team__fsm_project_id
 msgid "FSM Project"
-msgstr ""
+msgstr "FSM Projekt"
 
 #. module: helpdesk_fsm
 #: model:ir.model,name:helpdesk_fsm.model_helpdesk_team
@@ -83,6 +98,10 @@ msgstr "Zahtevek za pomoč uporabnikom"
 
 #. module: helpdesk_fsm
 #: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_create_fsm_task__id
+#: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_team__id
+#: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_ticket__id
+#: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_ticket_convert_wizard__id
+#: model:ir.model.fields,field_description:helpdesk_fsm.field_project_task__id
 msgid "ID"
 msgstr "ID"
 
@@ -104,7 +123,13 @@ msgstr "Originalni zahtevek"
 #. module: helpdesk_fsm
 #: model_terms:ir.ui.view,arch_db:helpdesk_fsm.helpdesk_ticket_view_form
 msgid "Plan Intervention"
-msgstr ""
+msgstr "Načrt intervencije"
+
+#. module: helpdesk_fsm
+#. odoo-python
+#: code:addons/helpdesk_fsm/models/project_task.py:0
+msgid "Portal Ticket"
+msgstr "Portalna vstopnica"
 
 #. module: helpdesk_fsm
 #: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_create_fsm_task__project_id
@@ -115,7 +140,7 @@ msgstr "Projekt"
 #. module: helpdesk_fsm
 #: model:ir.model.fields,help:helpdesk_fsm.field_helpdesk_create_fsm_task__project_id
 msgid "Project in which to create the task"
-msgstr ""
+msgstr "Projekt, v katerem želite ustvariti nalogo"
 
 #. module: helpdesk_fsm
 #: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_create_fsm_task__helpdesk_ticket_id
@@ -133,7 +158,7 @@ msgstr "Opravilo"
 #: model:mail.message.subtype,description:helpdesk_fsm.mt_ticket_task_canceled
 #: model:mail.message.subtype,name:helpdesk_fsm.mt_ticket_task_canceled
 msgid "Task Cancelled"
-msgstr ""
+msgstr "Naloga preklicana"
 
 #. module: helpdesk_fsm
 #: model:mail.message.subtype,description:helpdesk_fsm.mt_team_ticket_task_done
@@ -147,7 +172,7 @@ msgstr "Opravilo končano"
 #. odoo-python
 #: code:addons/helpdesk_fsm/wizard/create_task.py:0
 msgid "Task created"
-msgstr ""
+msgstr "Naloga ustvarjena"
 
 #. module: helpdesk_fsm
 #. odoo-python
@@ -184,9 +209,30 @@ msgstr "Zahtevki iz tega opravila"
 #. module: helpdesk_fsm
 #: model:ir.model.fields,help:helpdesk_fsm.field_helpdesk_create_fsm_task__partner_id
 msgid "Ticket's customer, will be linked to the task"
-msgstr ""
+msgstr "Stranka zahteve bo povezana z nalogo"
 
 #. module: helpdesk_fsm
 #: model:ir.model.fields,field_description:helpdesk_fsm.field_helpdesk_create_fsm_task__name
 msgid "Title"
 msgstr "Naslov"
+
+#. module: helpdesk_fsm
+#: model:ir.model.fields,help:helpdesk_fsm.field_project_task__display_name
+msgid ""
+"Use these keywords in the title to set new tasks:\n"
+"\n"
+"        30h Allocate 30 hours to the task\n"
+"        #tags Set tags on the task\n"
+"        @user Assign the task to a user\n"
+"        ! Set the task a high priority\n"
+"\n"
+"        Make sure to use the right format and order e.g. Improve the configuration screen 5h #feature #v16 @Mitchell !"
+msgstr ""
+"Za nastavitev novih nalog uporabite te ključne besede v naslovu:\n"
+"\n"
+"        30h Dodelite nalogi 30 ur\n"
+"        #oznake Nastavite oznake za nalogo\n"
+"        @uporabnik Dodeli nalogo uporabniku\n"
+"        ! Nastavite nalogo kot visoko prioriteto\n"
+"\n"
+"        Prepričajte se, da uporabljate pravilno obliko in vrstni red, npr. Izboljšajte konfiguracijski zaslon 5h #funkcija #v16 @Tomaz !"

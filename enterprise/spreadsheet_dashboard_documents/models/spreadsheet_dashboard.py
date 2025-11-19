@@ -2,8 +2,7 @@ from odoo import _, api, models
 
 
 class SpreadsheetDashboard(models.Model):
-    _name = 'spreadsheet.dashboard'
-    _inherit = ['spreadsheet.dashboard']
+    _inherit = 'spreadsheet.dashboard'
 
     def action_add_document_spreadsheet_to_dashboard(self):
         return {
@@ -24,6 +23,7 @@ class SpreadsheetDashboard(models.Model):
             "spreadsheet_binary_data": document.datas,
         })
         document._copy_revisions_to(dashboard)
+        document.action_archive()
         dashboard._delete_comments_from_data()
 
     @api.model

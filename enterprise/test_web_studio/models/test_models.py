@@ -1,8 +1,8 @@
 from odoo import models, fields
 
 
-class ModelAction(models.Model):
-    _name = "test.studio.model_action"
+class TestStudioModel_Action(models.Model):
+    _name = 'test.studio.model_action'
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _description = "Test Model Studio"
 
@@ -19,14 +19,14 @@ class ModelAction(models.Model):
             rec.step = rec.step + 1
 
 
-class ModelAction2(models.Model):
-    _inherit = "test.studio.model_action"
-    _name = "test.studio.model_action2"
+class TestStudioModel_Action2(models.Model):
+    _name = 'test.studio.model_action2'
+    _inherit = ["test.studio.model_action"]
     _description = "Test Model Studio 2"
 
 
-class Model1(models.Model):
-    _name = "test.studio_export.model1"
+class TestStudio_ExportModel1(models.Model):
+    _name = 'test.studio_export.model1'
     _description = "Test Model for Studio Exports 1"
     name = fields.Char()
     attachment_id = fields.Many2one("ir.attachment")
@@ -40,8 +40,8 @@ class Model1(models.Model):
     model2_id = fields.Many2one("test.studio_export.model2")
 
 
-class Model2(models.Model):
-    _name = "test.studio_export.model2"
+class TestStudio_ExportModel2(models.Model):
+    _name = 'test.studio_export.model2'
     _description = "Test Model for Studio Exports 2"
     name = fields.Char()
     model2_id = fields.Many2one("test.studio_export.model2")
@@ -50,8 +50,8 @@ class Model2(models.Model):
     res_id = fields.Many2oneReference(model_field="res_model")
 
 
-class Model3(models.Model):
-    _name = "test.studio_export.model3"
+class TestStudio_ExportModel3(models.Model):
+    _name = 'test.studio_export.model3'
     _description = "Test Model for Studio Exports 3"
     name = fields.Char()
     model1_id = fields.Many2one("test.studio_export.model1")

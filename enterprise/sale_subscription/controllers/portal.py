@@ -1,3 +1,5 @@
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 import datetime
 import werkzeug
 from collections import OrderedDict
@@ -5,10 +7,11 @@ from dateutil.relativedelta import relativedelta
 from math import ceil
 from werkzeug.urls import url_encode
 
-from odoo import Command, fields, http, _
+from odoo import Command, fields, http, _, SUPERUSER_ID
 from odoo.exceptions import AccessError, MissingError, UserError, ValidationError
 from odoo.http import request
 from odoo.tools import format_date, str2bool
+from odoo.tools.misc import get_lang
 
 from odoo.addons.sale.controllers import portal as payment_portal
 from odoo.addons.payment import utils as payment_utils
@@ -16,12 +19,13 @@ from odoo.addons.portal.controllers.portal import pager as portal_pager
 from odoo.addons.sale.controllers import portal as sale_portal
 from odoo.addons.sale_subscription.models.sale_order import SUBSCRIPTION_PROGRESS_STATE, SUBSCRIPTION_CLOSED_STATE
 
-
 class CustomerPortal(payment_portal.PaymentPortal):
 
     def _get_subscription_domain(self, partner):
+        # Include all subscriptions linked to any contact (child) of the company (commercial partner).
+        # This ensures all users of a company can view and manage each other's subscriptions.
         return [
-            ('partner_id', 'in', [partner.id, partner.commercial_partner_id.id]),
+            ('partner_id', 'child_of', partner.commercial_partner_id.id),
             ('subscription_state', 'in', ['3_progress', '4_paused', '6_churn']),
             ('is_subscription', '=', True)
         ]
@@ -140,18 +144,17 @@ class CustomerPortal(payment_portal.PaymentPortal):
     @http.route(['/my/subscriptions/<int:order_id>', '/my/subscriptions/<int:order_id>/<access_token>',
                  '/my/subscription/<int:order_id>', '/my/subscription/<int:order_id>/<access_token>'],
                 type='http', auth='public', website=True)
-    def subscription(self, order_id, access_token=None, message='', report_type=None, download=False, **kw):
+    def subscription(self, order_id, access_token=None, message='', report_type=None, download=False, payment_amount=None, **kw):
         order_sudo, redirection = self._get_subscription(access_token, order_id)
         if redirection:
             return redirection
         if report_type in ('html', 'pdf', 'text'):
             return self._show_report(model=order_sudo, report_type=report_type, report_ref='sale.action_report_saleorder', download=download)
 
+        payment_amount = self._cast_as_float(payment_amount)
         enable_token_management = request.env.user.partner_id in (order_sudo.partner_id.child_ids | order_sudo.partner_id)
         closable = order_sudo.user_closable and order_sudo.subscription_state in ['3_progress', '4_paused']
-        end_date_reached = order_sudo.end_date and order_sudo.end_date <= order_sudo.next_invoice_date
-        display_close = closable and not end_date_reached
-        is_follower = request.env.user.partner_id in order_sudo.message_follower_ids.partner_id
+        display_close = closable and (not order_sudo.end_date or order_sudo.end_date > order_sudo.next_invoice_date)
         periods = {'week': 'weeks', 'month': 'months', 'year': 'years'}
         # Calculate the duration when the customer can reopen his subscription
         missing_periods = 1
@@ -185,8 +188,6 @@ class CustomerPortal(payment_portal.PaymentPortal):
             'report_type': 'html',
             'display_close': display_close,
             'closable': closable,
-            'end_date_reached': end_date_reached,
-            'is_follower': is_follower,
             'close_reasons': request.env['sale.order.close.reason'].search([]),
             'missing_periods': missing_periods,
             'user': request.env.user,
@@ -202,6 +203,9 @@ class CustomerPortal(payment_portal.PaymentPortal):
             'product_documents': order_sudo._get_product_documents(),
             'next_billing_details': order_sudo._next_billing_details(),
             'format_date': lambda date: format_date(request.env, date),
+            'next_invoice_date_at_resume': max(order_sudo.user_pause_start, fields.Date.today()) if order_sudo.user_pause_start else False,
+            'is_subscription_postpaid': order_sudo._is_subscription_postpaid(),
+            **self._prepare_partner_addresses(order_sudo)
         }
 
         history_session_key = request.session.get('current_history', 'my_subscriptions_history')
@@ -214,18 +218,25 @@ class CustomerPortal(payment_portal.PaymentPortal):
         }
 
         payment_context = {
-            # Used only for fetching the PMs with Stripe Elements; the final amount is determined by
-            # the generated invoice.
-            'amount': order_sudo.amount_total,
             'partner_id': order_sudo.partner_id.id,
         }
         rendering_context = {
-            **SalePortal._get_payment_values(self, order_sudo, is_subscription=True, subscription_anticipate=True),
+            **SalePortal._get_payment_values(self, order_sudo, is_subscription=True, subscription_anticipate=True, payment_amount=payment_amount),
             **portal_page_values,
             **payment_form_values,
             **payment_context,
         }
         return request.render("sale_subscription.subscription_portal_template", rendering_context)
+
+    def _prepare_partner_addresses(self, order_sudo):
+        """ Retrieves the invoicing and delivery addresses of the sale order, and format them properly for display. """
+        addresses_data = self._prepare_address_data(order_sudo.partner_id)
+        # we don't allow to update the subscription shipping address yet.
+        return {
+            'multiple_addresses_enabled': order_sudo.user_id.has_group('account.group_delivery_invoice_address'),
+            'invoicing_addresses': [{'id': partner.id, 'address': f'{partner.name}, {partner._display_address(without_company=True)}'} for partner in addresses_data.get('billing_addresses')],
+            'delivery_addresses': [{'id': partner.id, 'address': f'{partner.name}, {partner._display_address(without_company=True)}'} for partner in addresses_data.get('delivery_addresses') if order_sudo.partner_shipping_id.id == partner.id],
+        }
 
     @http.route([
         '/my/orders/<int:order_id>/document/<int:document_id>',
@@ -256,6 +267,68 @@ class CustomerPortal(payment_portal.PaymentPortal):
                 order_sudo.plan_id = new_plan
         return request.redirect(order_sudo.get_portal_url())
 
+    @http.route(['/my/subscriptions/<int:order_id>/pause'], type='http', methods=["POST"], auth="public", website=True)
+    def subscription_pause(self, order_id, access_token=None, **kw):
+        order_sudo, redirection = self._get_subscription(access_token, order_id)
+
+        if redirection:
+            return redirection
+        if order_sudo.next_invoice_date <= fields.Date.today():
+            raise UserError(self.env._('You cannot pause a subscription that is not yet due.'))
+        if order_sudo._is_subscription_postpaid():
+            raise UserError(self.env._('You cannot pause a subscription with postpaid lines.'))
+
+        until = kw.get('until')
+        if not until:
+            raise ValidationError(self.env._('Please select a date to pause the subscription until.'))
+
+        if order_sudo.plan_id.pausable_by_user and until and not order_sudo.user_pause_start:
+            user_lang = get_lang(request.env).date_format
+            until = fields.Date.to_date(datetime.datetime.strptime(until, user_lang).date())
+
+            user_pause_start = order_sudo.next_invoice_date
+
+            if until == order_sudo.next_invoice_date:
+                raise UserError(self.env._('You cannot pause the subscription for 0 days.'))
+            if until < order_sudo.next_invoice_date:
+                raise UserError(self.env._('A pause can\'t take place before the next invoice date.'))
+            if until > user_pause_start + order_sudo.plan_id.billing_period:
+                raise UserError(self.env._('Pause duration cannot exceed 1 period.'))
+
+            message_body = self.env._(
+                "Subscription will be paused from %(date_from)s to %(date_to)s.",
+                date_from=format_date(request.env, user_pause_start),
+                date_to=format_date(request.env, until),
+            )
+
+            user = request.env['res.users'].sudo().search([('partner_id', '=', order_sudo.partner_id.id)], limit=1) or SUPERUSER_ID
+            order_sudo.with_user(user).sudo().with_context(subscription_pause=True).write({
+                'next_invoice_date': until,
+                'user_pause_start': user_pause_start,
+            })
+            order_sudo.with_user(user).sudo().message_post(body=message_body)
+
+        return request.redirect(order_sudo.get_portal_url())
+
+    @http.route(['/my/subscriptions/<int:order_id>/resume'], type='http', methods=["POST"], auth="public", website=True)
+    def subscription_resume(self, order_id, access_token=None, **kw):
+        order_sudo, redirection = self._get_subscription(access_token, order_id)
+        if redirection:
+            return redirection
+        if order_sudo.next_invoice_date <= fields.Date.today():
+            raise UserError(self.env._('You cannot resume a subscription that is not yet due.'))
+
+        if order_sudo.plan_id.pausable_by_user and order_sudo.user_pause_start:
+            user = request.env['res.users'].sudo().search([('partner_id', '=', order_sudo.partner_id.id)], limit=1) or SUPERUSER_ID
+            invoice_date = max(order_sudo.user_pause_start, fields.Date.today())
+            message_body = self.env._("Subscription was resumed on the %s.", format_date(request.env, invoice_date))
+            order_sudo.with_user(user).sudo().with_context(subscription_pause=True).write({
+                'next_invoice_date': invoice_date,
+                'user_pause_start': False
+            })
+            order_sudo.with_user(user).sudo().message_post(body=message_body)
+        return request.redirect(order_sudo.get_portal_url())
+
     @http.route(['/my/subscriptions/<int:order_id>/upsell'], type='http', auth="public")
     def subscription_portal_upsell(self, order_id, access_token=None, **kw):
         order_sudo, redirection = self._get_subscription(access_token, order_id)
@@ -279,6 +352,21 @@ class CustomerPortal(payment_portal.PaymentPortal):
             renewal.action_quotation_sent()
             return request.redirect(renewal.get_portal_url(query_string=qs))
 
+    @http.route(['/my/subscriptions/<int:order_id>/change_address'], type='http', methods=["POST"], auth="public", website=True)
+    def subscription_change_address(self, order_id, access_token=None, **kw):
+        order_sudo, redirection = self._get_subscription(access_token, order_id)
+        if redirection:
+            return redirection
+        multiple_addresses_enabled = order_sudo.user_id.has_group('account.group_delivery_invoice_address')
+        if not multiple_addresses_enabled:
+            raise request.not_found()
+        addresses_data = self._prepare_address_data(order_sudo.partner_id)
+        invoicing_id = int(kw.get('invoicing_address', 0))
+        invoicing_partner = request.env['res.partner'].browse(invoicing_id)
+        # Check if the provided address is in the list of accessible address to the SO partner
+        if invoicing_partner in addresses_data['billing_addresses']:
+            order_sudo.partner_invoice_id = invoicing_partner
+        return request.redirect(order_sudo.get_portal_url(query_string="&%s" % url_encode({'address_updated': 'true'})))
 
 class PaymentPortal(payment_portal.PaymentPortal):
 
@@ -335,24 +423,24 @@ class PaymentPortal(payment_portal.PaymentPortal):
                     'landing_route': order_sudo.get_portal_url(),
                 })
         if subscription_invoice_id:
-            subscription_invoice_id = self._cast_as_int(subscription_invoice_id)
+            invoice_id = self._cast_as_int(subscription_invoice_id)
+            access_token = kwargs.get('invoice_access_token')
             try:
-                invoice_sudo = self._document_check_access('account.move', subscription_invoice_id, kwargs.get('invoice_access_token'))
+                invoice_sudo = self._document_check_access('account.move', invoice_id, access_token)
             except AccessError:  # It is a payment access token computed on the payment context.
                 if not payment_utils.check_access_token(
-                    kwargs.get('invoice_access_token'),
+                    access_token,
                     kwargs.get('partner_id'),
                     kwargs.get('amount'),
                     kwargs.get('currency_id'),
                 ):
                     raise
-            invoice_sudo = request.env['account.move'].sudo().browse(subscription_invoice_id)
+            invoice_sudo = request.env['account.move'].sudo().browse(invoice_id)
 
-            subscriptions = invoice_sudo.invoice_line_ids.subscription_id
-            if subscriptions:
+            if invoice_sudo.invoice_line_ids.subscription_id:
                 # Reroute the next steps of the payment flow to the portal view of the invoice.
                 # Add `is_subscription` variable in invoice information for differentiating subscriptions from regular SOs.
-                transaction_route = f'/my/subscriptions/invoice/{invoice_sudo.id}/transaction'
+                transaction_route = f'/my/subscriptions/invoice/{invoice_id}/transaction'
                 extra_payment_form_values.update({
                     'transaction_route_subscription': transaction_route,
                     'access_token': invoice_sudo.access_token,
@@ -376,7 +464,7 @@ class PaymentPortal(payment_portal.PaymentPortal):
             subscriptions.pending_transaction = True
         return tx_sudo
 
-    @http.route('/my/subscriptions/<int:order_id>/transaction', type='json', auth='public')
+    @http.route('/my/subscriptions/<int:order_id>/transaction', type='jsonrpc', auth='public')
     def subscription_transaction(
         self, order_id, access_token, is_validation=False, **kwargs
     ):
@@ -414,13 +502,6 @@ class PaymentPortal(payment_portal.PaymentPortal):
 
                 amount_to_invoice = invoice_to_pay.amount_total if invoice_to_pay else order_sudo.amount_to_invoice
                 amount = amount or amount_to_invoice
-
-            if subscription_anticipate or amount >= order_sudo.amount_to_invoice and not invoice_to_pay:
-                # TODO MASTER: don't create the invoice here, let the post process of transaction create it
-                order_sudo.order_line.invoice_lines.move_id.filtered(
-                    lambda r: r.move_type in ('out_invoice', 'out_refund') and r.state == 'draft'
-                ).button_cancel()
-                invoice_to_pay = order_sudo.with_context(lang=partner_sudo.lang)._create_invoices(final=True)
             recurring_amount = sum(order_sudo.order_line.filtered(lambda l: l.recurring_invoice).mapped('price_total'))
             is_zero = order_sudo.currency_id.is_zero(amount or recurring_amount)
             tokenize = not is_zero and amount and recurring_amount and order_sudo.currency_id.compare_amounts(amount, recurring_amount) >= 0
@@ -458,7 +539,7 @@ class PaymentPortal(payment_portal.PaymentPortal):
 
         return tx_sudo._get_processing_values()
 
-    @http.route('/my/subscriptions/invoice/<int:invoice_id>/transaction', type='json', auth='public')
+    @http.route('/my/subscriptions/invoice/<int:invoice_id>/transaction', type='jsonrpc', auth='public')
     def subscription_transaction_from_invoice(
         self, invoice_id, access_token, is_validation=False, **kwargs
     ):
@@ -495,7 +576,7 @@ class PaymentPortal(payment_portal.PaymentPortal):
         )
         return tx_sudo._get_processing_values()
 
-    @http.route('/my/subscriptions/assign_token/<int:order_id>', type='json', auth='user')
+    @http.route('/my/subscriptions/assign_token/<int:order_id>', type='jsonrpc', auth='user')
     def subscription_assign_token(self, order_id, token_id, access_token=None):
         """ Assign a token to a subscription.
 

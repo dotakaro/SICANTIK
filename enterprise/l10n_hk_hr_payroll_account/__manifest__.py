@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
     'name': 'Hong Kong - Payroll with Accounting',
     'version': '1.0',
+    'countries': ['hk'],
     'category': 'Human Resources/Payroll',
     'description': """
 Accounting Data for Hong Kong Payroll Rules
@@ -16,6 +16,7 @@ Accounting Data for Hong Kong Payroll Rules
     'demo': [
         'data/l10n_hk_hr_payroll_account_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'auto_install': True,
 }

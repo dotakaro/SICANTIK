@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import contextlib
 import csv
 import io
 import logging
 import re
 
 from odoo import http, fields
+from odoo.addons.hr_payroll.controllers.main import HrPayroll
 from odoo.http import request, content_disposition
-from odoo.tools import pycompat
-from odoo.tools.misc import xlsxwriter
+from dateutil.relativedelta import relativedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -27,6 +25,7 @@ class L10nBeHrPayrollEcoVoucherController(http.Controller):
                     'status_message': "Please contact an administrator..."})
 
         output = io.BytesIO()
+        import xlsxwriter  # noqa: PLC0415
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         worksheet = workbook.add_worksheet('Worksheet')
         style_highlight = workbook.add_format({'bold': True, 'pattern': 1, 'bg_color': '#E0E0E0', 'align': 'center'})
@@ -79,10 +78,10 @@ class L10nBeHrPayrollEcoVoucherController(http.Controller):
                 amount,
                 quantity * amount,
                 f'{birthdate:%m/%d/%Y}',
-                'F' if employee.gender == 'female' else 'M',
+                'F' if employee.sex == 'female' else 'M',
                 lang,
                 ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-                'Actif' if employee.contract_id.state == 'open' else 'Fin de la collaboration',
+                'Actif' if employee.version_id.state == 'open' else 'Fin de la collaboration',
             ))
 
         col = 0
@@ -109,6 +108,7 @@ class L10nBeHrPayrollEcoVoucherController(http.Controller):
         )
         return response
 
+
 class L10nBeHrPayrollGroupInsuranceController(http.Controller):
 
     @http.route(["/export/group_insurance/<int:wizard_id>"], type='http', auth='user')
@@ -121,6 +121,7 @@ class L10nBeHrPayrollGroupInsuranceController(http.Controller):
                     'status_message': "Please contact an administrator..."})
 
         output = io.BytesIO()
+        import xlsxwriter  # noqa: PLC0415
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         worksheet = workbook.add_worksheet('Worksheet')
         style_highlight = workbook.add_format({'bold': True, 'pattern': 1, 'bg_color': '#E0E0E0', 'align': 'center'})
@@ -193,3 +194,24 @@ class L10nBeHrPayrollWarrantPayslipsController(http.Controller):
             ('Content-Disposition', content_disposition('exported_employees.csv'))
         ]
         return request.make_response(content, headers=headers)
+
+
+class L10nBeHrPayroll(HrPayroll):
+
+    @http.route()
+    def get_payroll_report_print(self, list_ids='', **post):
+        res = super().get_payroll_report_print(list_ids, **post)
+        ids = [int(s) for s in list_ids.split(',') if s.isdigit()]
+
+        if len(ids) == 1:
+            payslip = request.env['hr.payslip'].browse(ids)
+            if payslip.struct_id.code == 'CP200HOLN':
+                res.headers.set(
+                    'Content-Disposition',
+                    content_disposition(f"Holiday {payslip.employee_id.legal_name} - Certificate {payslip.date_from.strftime('%Y')}.pdf"))
+            elif payslip.struct_id.code == 'CP200HOLN1':
+                res.headers.set(
+                    'Content-Disposition',
+                    content_disposition(f"{payslip.employee_id.legal_name} - Holiday Certificate {(payslip.date_from - relativedelta(years=1)).strftime('%Y') }.pdf"))
+
+        return res

@@ -6,8 +6,9 @@ from uuid import uuid4
 from odoo import api, fields, models, _
 from odoo.tools.translate import html_translate
 
-class Room(models.Model):
-    _name = "room.room"
+
+class RoomRoom(models.Model):
+    _name = 'room.room'
     _inherit = ["mail.thread"]
     _description = "Room"
     _order = "name, id"
@@ -31,10 +32,14 @@ class Room(models.Model):
     booked_background_color = fields.Char("Booked Background Color", default="#dd2d4a")
     room_background_image = fields.Image("Background Image")
 
-    _sql_constraints = [
-        ("uniq_access_token", "unique(access_token)", "The access token must be unique"),
-        ("uniq_short_code", "unique(short_code)", "The short code must be unique."),
-    ]
+    _uniq_access_token = models.Constraint(
+        'unique(access_token)',
+        "The access token must be unique",
+    )
+    _uniq_short_code = models.Constraint(
+        'unique(short_code)',
+        "The short code must be unique.",
+    )
 
     @api.depends("office_id")
     def _compute_display_name(self):
@@ -73,7 +78,7 @@ class Room(models.Model):
     # ------------------------------------------------------
 
     def write(self, vals):
-        result = super(Room, self).write(vals)
+        result = super().write(vals)
         for room in self:
             room._notify_booking_view("reload")
         return result

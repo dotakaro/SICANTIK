@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models, _
+from markupsafe import Markup, escape
 
 
 class HrPayrollEditPayslipLinesWizard(models.TransientModel):
@@ -28,7 +29,6 @@ class HrPayrollEditPayslipLinesWizard(models.TransientModel):
         if not wizard_line.salary_rule_id:
             return reload_wizard
         localdict = self.payslip_id._get_localdict()
-        rules_dict = localdict['rules']
         result_rules_dict = localdict['result_rules']
         remove_lines = False
         lines_to_remove = []
@@ -37,13 +37,12 @@ class HrPayrollEditPayslipLinesWizard(models.TransientModel):
             if remove_lines and line.code in self.payslip_id.line_ids.mapped('code'):
                 lines_to_remove.append((2, line.id, 0))
             else:
-                rules_dict[line.code] = line.salary_rule_id
                 if line == wizard_line:
                     line._compute_total()
                     remove_lines = True
                 blacklisted_rule_ids.append(line.salary_rule_id.id)
                 localdict[line.code] = line.total
-                result_rules_dict[line.code] = {'total': line.total, 'amount': line.amount, 'quantity': line.quantity, 'rate': line.rate}
+                result_rules_dict[line.code] = {'total': line.total, 'amount': line.amount, 'quantity': line.quantity, 'rate': line.rate, 'ytd': line.ytd}
                 localdict = line.salary_rule_id.category_id._sum_salary_rule_category(localdict, line.total)
 
         payslip = self.payslip_id.with_context(force_payslip_localdict=localdict, prevent_payslip_computation_line_ids=blacklisted_rule_ids)
@@ -65,6 +64,27 @@ class HrPayrollEditPayslipLinesWizard(models.TransientModel):
 
     def action_validate_edition(self):
         today = fields.Date.today()
+        old_lines_data = {
+            line.salary_rule_id.id: {
+                'name': line.name,
+                'quantity': line.quantity,
+                'rate': line.rate,
+                'amount': line.amount,
+                'total': line.total,
+                'ytd': line.ytd
+            }
+            for line in self.payslip_id.line_ids
+        }
+        old_worked_days_data = {
+            wd.work_entry_type_id.id: {
+                'name': wd.name,
+                'number_of_days': wd.number_of_days,
+                'number_of_hours': wd.number_of_hours,
+                'amount': wd.amount,
+                'ytd': wd.ytd,
+            }
+            for wd in self.payslip_id.worked_days_line_ids
+        }
         self.mapped('payslip_id.line_ids').unlink()
         self.mapped('payslip_id.worked_days_line_ids').unlink()
         for wizard in self:
@@ -76,7 +96,63 @@ class HrPayrollEditPayslipLinesWizard(models.TransientModel):
                 'worked_days_line_ids': worked_days_lines,
                 'compute_date': today
             })
-            wizard.payslip_id.message_post(body=_('This payslip has been manually edited by %s.', self.env.user.name))
+
+            line_fields = {
+                'name': _('Name'),
+                'quantity': _('Quantity'),
+                'rate': _('Rate'),
+                'amount': _('Amount'),
+                'total': _('Total'),
+                'ytd': _('YTD'),
+            }
+            worked_days_fields = {
+                'name': _('Name'),
+                'number_of_hours': _('Number of Hours'),
+                'number_of_days': _('Number of Days'),
+                'amount': _('Amount'),
+                'ytd': _('YTD'),
+            }
+            worked_days_changes = self._generate_changed_values(worked_days_lines, old_worked_days_data, worked_days_fields, 'work_entry_type_id')
+            line_changes = self._generate_changed_values(lines, old_lines_data, line_fields, 'salary_rule_id')
+
+            if line_changes or worked_days_changes:
+                message_body = Markup('%s<br/>') % _(
+                    "This payslip has been manually edited by %(user)s.",
+                    user=self.env.user.name
+                )
+                message_body += worked_days_changes + line_changes
+                wizard.payslip_id.message_post(body=message_body)
+
+    def _generate_changed_values(self, new_items, old_data, fields, item):
+        changes_list = []
+        for new_item in new_items:
+            new_item_data = new_item[2]
+            old_item_data = old_data.get(new_item_data[item], {})
+            changes = []
+            line_name = new_item_data['name']
+
+            for field, field_name in fields.items():
+                if field == 'ytd' and not self.ytd_computation:
+                    continue
+                old_value = old_item_data.get(field, None)
+                new_value = new_item_data.get(field, None)
+                if old_value != new_value:
+                    changes.append(Markup('<li><strong>%s: %s → <span class="text-info">%s</span></strong></li>') % (field_name, old_value, new_value))
+            if changes:
+                changes_list.append(
+                    Markup('<li>%s</li><ul>') % (line_name) +
+                    Markup('').join(changes) +
+                    Markup('</ul>')
+                )
+        if not changes_list:
+            return ''
+        if item == 'salary_rule_id':
+            message_body = Markup('%s<ul>') % _("Payslip Lines Changes:")
+        else:
+            message_body = Markup('%s<ul>') % _("Worked Days lines Changes:")
+        message_body += Markup('').join(changes_list)
+        message_body += Markup('</ul>')
+        return message_body
 
 
 class HrPayrollEditPayslipLine(models.TransientModel):
@@ -89,8 +165,8 @@ class HrPayrollEditPayslipLine(models.TransientModel):
         'hr.salary.rule', string='Rule',
         domain="[('struct_id', '=', struct_id)]")
     code = fields.Char(related='salary_rule_id.code')
-    contract_id = fields.Many2one(related='slip_id.contract_id', string='Contract')
-    employee_id = fields.Many2one(related='contract_id.employee_id', string='Employee')
+    version_id = fields.Many2one(related='slip_id.version_id', string='Contract')
+    employee_id = fields.Many2one(related='version_id.employee_id', string='Employee')
     rate = fields.Float(string='Rate (%)', digits='Payroll Rate', default=100.0)
     amount = fields.Float(digits='Payroll')
     quantity = fields.Float(digits='Payroll', default=1.0)
@@ -113,7 +189,7 @@ class HrPayrollEditPayslipLine(models.TransientModel):
             'code': line.code,
             'name': line.name,
             'salary_rule_id': line.salary_rule_id.id,
-            'contract_id': line.contract_id.id,
+            'version_id': line.version_id.id,
             'employee_id': line.employee_id.id,
             'amount': line.amount,
             'quantity': line.quantity,
@@ -122,6 +198,7 @@ class HrPayrollEditPayslipLine(models.TransientModel):
             'ytd': line.ytd,
             'slip_id': line.slip_id.id
         } for line in self]
+
 
 class HrPayrollEditPayslipWorkedDaysLine(models.TransientModel):
     _name = 'hr.payroll.edit.payslip.worked.days.line'

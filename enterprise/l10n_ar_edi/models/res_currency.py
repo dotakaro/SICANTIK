@@ -9,7 +9,6 @@ from odoo.tools import format_date
 
 
 class ResCurrency(models.Model):
-
     _inherit = "res.currency"
 
     def _l10n_ar_get_last_business_day_rate(self, afip_ws='wsfe', from_date=None):

@@ -4,7 +4,7 @@
 
 {
     'name': 'Quality Steps with IoT',
-    'category': 'Manufacturing/Internet of Things (IoT)',
+    'category': 'Supply Chain/Internet of Things (IoT)',
     'summary': 'Quality steps and IoT devices',
     'description': """
 This module provides the link between quality steps and IoT devices. 
@@ -14,6 +14,7 @@ This module provides the link between quality steps and IoT devices.
         'views/iot_views.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

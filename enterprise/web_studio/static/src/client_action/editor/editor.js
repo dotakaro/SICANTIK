@@ -1,4 +1,3 @@
-/** @odoo-module **/
 import { Component, EventBus, onWillDestroy, useState, useSubEnv, xml } from "@odoo/owl";
 
 import { registry } from "@web/core/registry";
@@ -82,7 +81,6 @@ export class Editor extends Component {
         useBus(globalBus, "MENUS:APP-CHANGED", (ev) =>
             newBus.trigger("MENUS:APP-CHANGED", ev.detail)
         );
-        newBus.addEventListener("CLEAR-CACHES", () => globalBus.trigger("CLEAR-CACHES"));
 
         useSubEnv({
             bus: newBus,

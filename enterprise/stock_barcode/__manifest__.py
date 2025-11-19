@@ -6,7 +6,7 @@
     'description': """
 This module enables the barcode scanning feature for the warehouse management system.
     """,
-    'category': 'Inventory/Inventory',
+    'category': 'Supply Chain/Inventory',
     'sequence': 255,
     'version': '1.0',
     'depends': ['stock', 'web_tour', 'web_mobile'],
@@ -31,6 +31,7 @@ This module enables the barcode scanning feature for the warehouse management sy
     'installable': True,
     'auto_install': True,
     'application': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

@@ -30,7 +30,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             self.assertEqual(sub.order_line.qty_invoiced, 1, 'Order line should now be marked as invoiced')
             self.assertEqual(sub.invoice_ids.amount_total, 45)
             invoice_line = sub.invoice_ids.invoice_line_ids
-            self.assertEqual(invoice_line.name.split('\n')[1], '1 Months 03/02/2022 to 04/01/2022')
+            self.assertEqual(invoice_line.name.split('\n')[1], '1 Month 03/02/2022 to 04/01/2022')
             self.assertEqual(invoice_line.product_id, self.sub_product_order)
             self.assertEqual(invoice_line.quantity, 1)
             self.assertEqual(sub.order_line.qty_invoiced, 1, 'Order line should still be marked as invoiced')
@@ -147,7 +147,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
         sub.order_line.product_uom_qty = 2
 
         with freeze_time("2022-03-02"):
-            sub.write({'start_date': fields.date.today(), 'next_invoice_date': False})
+            sub.write({'start_date': fields.Date.today(), 'next_invoice_date': False})
             sub.action_confirm()
             picking_id = sub.picking_ids  # only one picking
             self.assertEqual(len(picking_id), 1, 'After confirming we should create a delivery')
@@ -181,12 +181,12 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
                 Command.create({
                 'product_id': self.sub_product_order.id,
                 'product_uom_qty': 1,
-                'tax_id': [Command.clear()],
+                'tax_ids': [Command.clear()],
                 }),
                 Command.create({
                 'product_id': self.sub_product_order_2.id,
                 'product_uom_qty': 2,
-                'tax_id': [Command.clear()],
+                'tax_ids': [Command.clear()],
                 }),
             ]
         })
@@ -214,13 +214,13 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
                 Command.create({
                 'product_id': self.sub_product_order.id,
                 'product_uom_qty': 1,
-                'tax_id': [Command.clear()],
+                'tax_ids': [Command.clear()],
                 }),
                 Command.create({
                 'product_id': self.test_product_order.id,
                 'price_unit': 1,
                 'product_uom_qty': 1,
-                'tax_id': [Command.clear()],
+                'tax_ids': [Command.clear()],
                 }),
             ]
         })
@@ -367,31 +367,28 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             'product_uom_id': self.uom_unit.id,
         })
 
-        self.inventory_wizard = self.env['stock.change.product.qty'].create({
-            'product_id': self.additional_kit_product.id,
-            'product_tmpl_id': self.additional_kit_product.product_tmpl_id.id,
-            'new_quantity': 100.0,
-        })
-        self.inventory_wizard.change_product_qty()
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.env.company.id)], limit=1
+        )
+        self.env['stock.quant']._update_available_quantity(self.additional_kit_product, warehouse.lot_stock_id, 100)
 
         self.subscription_order_with_bom = self.env['sale.order'].create({
             'name': 'Order',
             'is_subscription': True,
             'partner_id': self.user_portal.partner_id.id,
             'plan_id': self.plan_month.id,
-            'pricelist_id': self.company_data['default_pricelist'].id,
             'order_line': [
                 Command.create(
-                    {'product_id': self.sub_product_order.id, 'product_uom_qty': 1, 'tax_id': [Command.clear()]}
+                    {'product_id': self.sub_product_order.id, 'product_uom_qty': 1, 'tax_ids': [Command.clear()]}
                 ),
                 Command.create(
-                    {'product_id': self.additional_kit_product.id, 'product_uom_qty': 1, 'tax_id': [Command.clear()]}
+                    {'product_id': self.additional_kit_product.id, 'product_uom_qty': 1, 'tax_ids': [Command.clear()]}
                 )
             ]
         })
 
         with freeze_time("2024-02-02"):
-            self.subscription_order_with_bom.write({'start_date': fields.date.today(), 'next_invoice_date': False})
+            self.subscription_order_with_bom.write({'start_date': fields.Date.today(), 'next_invoice_date': False})
             self.subscription_order_with_bom.action_confirm()
             self.assertEqual(self.subscription_order_with_bom.invoice_count, 0,
                              'No invoices should be present initially')
@@ -405,13 +402,14 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             )
             self.assertEqual(self.subscription_order_with_bom.order_line[0].product_id.qty_available, 100)
             first_invoice, picking = self.simulate_period(self.subscription_order_with_bom, "2024-02-02")
+            self.env.invalidate_all()
             self.assertEqual(self.subscription_order_with_bom.invoice_count, 1, 'The first period should be invoiced')
             self.assertEqual(
                 len(self.subscription_order_with_bom.picking_ids[0].move_ids), 2,
                 'A move should be added to the picking after invoicing'
             )
             self.assertTrue(
-                self.sub_product_order.name in self.subscription_order_with_bom.picking_ids[0].move_ids[0].description_bom_line,
+                self.sub_product_order.name in self.subscription_order_with_bom.picking_ids[0].move_ids[0].description_picking,
                 'The description should contain the bom line name'
             )
             self.assertEqual(self.subscription_order_with_bom.order_line[0].product_id.qty_available, 98)
@@ -434,6 +432,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
         # create invoice for the second period
         with freeze_time("2024-03-02"):
             second_invoice, picking_1 = self.simulate_period(self.subscription_order_with_bom, "2024-03-02")
+            self.env.invalidate_all()
 
             self.assertEqual(self.subscription_order_with_bom.invoice_count, 2, 'The second period should be invoiced')
             self.assertEqual(
@@ -442,19 +441,13 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             )
             self.assertEqual(self.subscription_order_with_bom.order_line[0].product_id.qty_available, 99)
             self.assertTrue(
-                self.sub_product_order.name in picking_1.move_ids[0].description_bom_line,
+                self.sub_product_order.name in picking_1.move_ids[0].description_picking,
                 'The description should contain the bom line name'
             )
             self.assertEqual(
                 len(self.subscription_order_with_bom.picking_ids[1].move_ids), len(second_invoice.invoice_line_ids),
                 'The move lines should match the moves of the second period'
             )
-
-    def test_stock_user_without_sale_permission_can_access_product_form(self):
-        stock_manager = new_test_user(
-            self.env, 'temp_stock_manager', 'stock.group_stock_manager',
-        )
-        Form(self.env['product.product'].with_user(stock_manager))
 
     def test_subscription_stock_delivery_recurring_product(self):
         # make sure we have enough product on hand
@@ -477,7 +470,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
                 Command.create({
                     'product_id': self.sub_product_order.id,
                     'product_uom_qty': 1,
-                    'tax_id': [Command.clear()],
+                    'tax_ids': [Command.clear()],
                 }),
             ]
         })
@@ -519,7 +512,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             self.assertEqual(sub.order_line.qty_delivered, 1)
             self.assertEqual(sub.order_line.qty_to_deliver, 0)
 
-        invoice, picking = self.simulate_period(sub, "2022-05-2")
+        invoice, picking = self.simulate_period(sub, "2022-05-02")
         self.assertTrue(picking)
         self.assertTrue(invoice)
         self.assertEqual(len(invoice.invoice_line_ids), 1, 'We should invoice the recurring line lines')
@@ -571,12 +564,12 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
                     Command.create({
                         'product_id': self.product.id,
                         'product_uom_qty': 1,
-                        'tax_id': [Command.clear()],
+                        'tax_ids': [Command.clear()],
                     }),
                     Command.create({
                         'product_id': self.sub_product_order.id,
                         'product_uom_qty': 1,
-                        'tax_id': [Command.clear()],
+                        'tax_ids': [Command.clear()],
                     }),
                 ]
             })
@@ -606,7 +599,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
 
         # --------- Start Case 2 --------- #
 
-        with freeze_time("2023-01-1"):
+        with freeze_time("2023-01-01"):
             sub = sub_temp.copy()
             sub.action_confirm()
             self.env['sale.order']._create_recurring_invoice()
@@ -683,12 +676,12 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
                     Command.create({
                         'product_id': self.product.id,
                         'product_uom_qty': 1,
-                        'tax_id': [Command.clear()],
+                        'tax_ids': [Command.clear()],
                     }),
                     Command.create({
                         'product_id': self.sub_product_order.id,
                         'product_uom_qty': 1,
-                        'tax_id': [Command.clear()],
+                        'tax_ids': [Command.clear()],
                     }),
                 ]
             })
@@ -873,19 +866,17 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             and skip the picking creation.
         """
 
-        self.storable_product = self.env['product.product'].create({
+        storable_product = self.env['product.product'].create({
             'name': 'Storable Product',
             'type': 'consu',
             'is_storable': True,
             'uom_id': self.uom_unit.id,
             'recurring_invoice': True,
         })
-        self.inventory_wizard = self.env['stock.change.product.qty'].create({
-            'product_id': self.storable_product.id,
-            'product_tmpl_id': self.storable_product.product_tmpl_id.id,
-            'new_quantity': 100.0,
-        })
-        self.inventory_wizard.change_product_qty()
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.env.company.id)], limit=1
+        )
+        self.env['stock.quant']._update_available_quantity(storable_product, warehouse.lot_stock_id, 100.0)
 
         sub = self.env['sale.order'].create({
             'name': "Order",
@@ -894,9 +885,9 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             'plan_id': self.plan_month.id,
             'start_date': "2024-10-01",
             'next_invoice_date': False,
-            'order_line': [Command.create({'product_id': self.storable_product.id, 'product_uom_qty': 1})]
+            'order_line': [Command.create({'product_id': storable_product.id, 'product_uom_qty': 1})]
         })
-        self.assertEqual(self.storable_product.invoice_policy, "order", "The product is invoiced on ordered quantity")
+        self.assertEqual(storable_product.invoice_policy, "order", "The product is invoiced on ordered quantity")
         self.assertFalse(sub.order_line._is_postpaid_line(), "The line is invoiced at the beginning of the period")
 
         with freeze_time("2024-11-15"):
@@ -929,20 +920,18 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             self.assertEqual(quantity_delivered, 2)
 
     def test_sale_order_with_passed_start_date(self):
-        self.storable_product = self.env['product.product'].create({
+        storable_product = self.env['product.product'].create({
             'name': 'Storable Product',
             'type': 'consu',
             'is_storable': True,
             'uom_id': self.uom_unit.id,
             'recurring_invoice': True,
         })
-        self.inventory_wizard = self.env['stock.change.product.qty'].create({
-            'product_id': self.storable_product.id,
-            'product_tmpl_id': self.storable_product.product_tmpl_id.id,
-            'new_quantity': 100.0,
-        })
-        self.inventory_wizard.change_product_qty()
 
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.env.company.id)], limit=1
+        )
+        self.env['stock.quant']._update_available_quantity(storable_product, warehouse.lot_stock_id, 100.0)
         sub = self.env['sale.order'].create({
             'name': "Order",
             'is_subscription': True,
@@ -950,7 +939,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             'plan_id': self.plan_month.id,
             'start_date': "2024-10-01",
             'next_invoice_date': False,
-            'order_line': [Command.create({'product_id': self.storable_product.id, 'product_uom_qty': 1})]
+            'order_line': [Command.create({'product_id': storable_product.id, 'product_uom_qty': 1})]
         })
 
         with freeze_time("2024-10-05"):
@@ -961,19 +950,17 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             self.assertEqual(picking.date_deadline, datetime.datetime(2024, 10, 31), "The delivery deadline should be set to the end of the period.")
 
     def test_sale_order_with_future_start_date(self):
-        self.storable_product = self.env['product.product'].create({
+        storable_product = self.env['product.product'].create({
             'name': 'Storable Product',
             'type': 'consu',
             'is_storable': True,
             'uom_id': self.uom_unit.id,
             'recurring_invoice': True,
         })
-        self.inventory_wizard = self.env['stock.change.product.qty'].create({
-            'product_id': self.storable_product.id,
-            'product_tmpl_id': self.storable_product.product_tmpl_id.id,
-            'new_quantity': 100.0,
-        })
-        self.inventory_wizard.change_product_qty()
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.env.company.id)], limit=1
+        )
+        self.env['stock.quant']._update_available_quantity(storable_product, warehouse.lot_stock_id, 100.0)
 
         sub = self.env['sale.order'].create({
             'name': "Order",
@@ -982,7 +969,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             'plan_id': self.plan_month.id,
             'start_date': "2024-11-06",
             'next_invoice_date': False,
-            'order_line': [Command.create({'product_id': self.storable_product.id, 'product_uom_qty': 1})]
+            'order_line': [Command.create({'product_id': storable_product.id, 'product_uom_qty': 1})]
         })
 
         with freeze_time("2024-10-05"):
@@ -993,19 +980,17 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             self.assertEqual(picking.date_deadline, datetime.datetime(2024, 12, 5), "The delivery deadline should be set to the end of the period.")
 
     def test_sale_order_with_different_start_and_invoice_dates(self):
-        self.storable_product = self.env['product.product'].create({
+        storable_product = self.env['product.product'].create({
             'name': 'Storable Product',
             'type': 'consu',
             'is_storable': True,
             'uom_id': self.uom_unit.id,
             'recurring_invoice': True,
         })
-        self.inventory_wizard = self.env['stock.change.product.qty'].create({
-            'product_id': self.storable_product.id,
-            'product_tmpl_id': self.storable_product.product_tmpl_id.id,
-            'new_quantity': 100.0,
-        })
-        self.inventory_wizard.change_product_qty()
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.env.company.id)], limit=1
+        )
+        self.env['stock.quant']._update_available_quantity(storable_product, warehouse.lot_stock_id, 100.0)
 
         sub = self.env['sale.order'].create({
             'name': "Order",
@@ -1014,7 +999,7 @@ class TestSubscriptionStockOnOrder(TestSubscriptionStockCommon):
             'plan_id': self.plan_month.id,
             'start_date': "2024-10-01",
             'next_invoice_date': "2024-10-02",
-            'order_line': [Command.create({'product_id': self.storable_product.id, 'product_uom_qty': 1})]
+            'order_line': [Command.create({'product_id': storable_product.id, 'product_uom_qty': 1})]
         })
 
         with freeze_time("2024-10-05"):

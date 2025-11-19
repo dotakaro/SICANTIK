@@ -2,7 +2,7 @@
 {
     'name': "Spreadsheet dashboard for marketing automation",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Productivity/Dashboard',
     'summary': 'Spreadsheet',
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'marketing_automation'],
@@ -11,5 +11,6 @@
     ],
     'installable': True,
     'auto_install': ['marketing_automation'],
+    'author': 'Odoo S.A.',
     'license': 'LGPL-3',
 }

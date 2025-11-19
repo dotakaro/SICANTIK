@@ -2,12 +2,11 @@
 
 import random
 
-
 from odoo import api, fields, models
 
 
 class HrTimesheetTip(models.Model):
-    _name = "hr.timesheet.tip"
+    _name = 'hr.timesheet.tip'
     _description = "Timesheets Leaderboard Tip"
 
     name = fields.Char('Tip Name', required=True, translate=True)

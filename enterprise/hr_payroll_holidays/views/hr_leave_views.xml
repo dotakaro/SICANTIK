@@ -11,7 +11,7 @@
                 <separator/>
             </xpath>
             <xpath expr="//field[@name='employee_id']" position="after">
-                <field name="employee_id" string="Employee Code" filter_domain="[('employee_id.registration_number','ilike', self)]"/>
+                <field name="employee_registration_number" string="Employee Reference" filter_domain="[('employee_registration_number','ilike', self)]"/>
             </xpath>
         </field>
     </record>
@@ -31,7 +31,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='holiday_status_id']" position="after">
                 <field name="payslip_state" widget="state_selection"
-                    options="{'hide_label': False}" class="ms-auto mb-2"/>
+                    options="{'hide_label': False}" class="ms-auto mb-2" invisible="state == 'cancel' or not id"/>
             </xpath>
             <button name="action_refuse" position="before">
                 <button
@@ -78,9 +78,9 @@
 
     <menuitem
         id="menu_work_entry_leave_to_approve"
-        name="Time Off to Report"
+        name="Time Offs"
         action="hr_leave_work_entry_action"
-        parent="hr_work_entry_contract_enterprise.menu_hr_payroll_work_entries_root"
+        parent="hr_work_entry_enterprise.menu_hr_payroll_work_entries_root"
         sequence="75"
         groups="hr_holidays.group_hr_holidays_user"/>
 

@@ -3,10 +3,11 @@
 from contextlib import contextmanager
 from datetime import timedelta
 from freezegun import freeze_time
+from markupsafe import Markup
 from unittest.mock import patch
 
 from odoo.exceptions import UserError
-from odoo.fields import Date, Markup
+from odoo.fields import Date
 from odoo.tests.common import TransactionCase, tagged
 from odoo.tools.zeep.exceptions import Fault
 
@@ -43,15 +44,14 @@ class TestMonsterIntegration(TransactionCase):
 
         cls.job2 = cls.env['hr.job'].create({
             'name': 'Test job 2',
-            'address_id': cls.partner.id,
-            'schedule_id': cls.env.ref('resource.resource_calendar_std').id
+            'address_id': cls.partner.id
         })
 
         cls.monster_platform = cls.env['hr.recruitment.platform'].search([
             ('name', '=', 'Monster.com')
         ])
 
-        cls.post_content = "As an employee of our company, you will collaborate with each department to create and deploy disruptive products. Come work at a growing company that offers great benefits with opportunities to moving forward and learn alongside accomplished leaders. We're seeking an experienced and outstanding member of staff. This position is both creative and rigorous by nature you need to think outside the box. We expect the candidate to be proactive and have a 'get it done' spirit."
+        cls.post_content = "As an employee of our company, you will collaborate with each department to create and deploy disruptive products. Come work at a growing company that offers great benefits with opportunities to moving forward and learn alongside accomplished leaders. We are seeking an experienced and outstanding member of staff. This position is both creative and rigorous by nature you need to think outside the box. We expect the candidate to be proactive and have a get it done spirit."
 
         cls.today = Date().today()
 
@@ -111,16 +111,8 @@ class TestMonsterIntegration(TransactionCase):
         self.assertEqual(job_post.job_id.id, self.job1.id)
         self.assertEqual(job_post.platform_id.id, self.monster_platform.id)
         self.assertEqual(job_post.campaign_start_date, self.today)
-        self.assertEqual(job_post.post_html, Markup(f'<p>{self.post_content}</p>'))
+        self.assertEqual(job_post.post_html, Markup("<p>{content}</p>").format(content=self.post_content))
         self.assertEqual(job_post.apply_vector, 'example@test.com')
-        self.assertEqual(job_post.status, 'success')
-
-    def test_create_post_with_job_having_schedule_id(self):
-        job_post = self.create_publish_job_post(self.job2.id, self.today)
-        if not job_post:
-            self.fail("Should have created a job post.")
-        self.assertEqual(job_post.job_id.id, self.job2.id)
-        self.assertTrue(job_post.job_id.schedule_id)
         self.assertEqual(job_post.status, 'success')
 
     def test_delete_post(self):
@@ -141,7 +133,7 @@ class TestMonsterIntegration(TransactionCase):
                 'status_message': '',
             }
 
-        with patch('odoo.addons.hr_recruitment_integration_monster.models.hr_recruitment_platform.RecruitmentPlatform._post_api_call') as patched_function:
+        with patch('odoo.addons.hr_recruitment_integration_monster.models.hr_recruitment_platform.HrRecruitmentPlatform._post_api_call') as patched_function:
             patched_function.side_effect = _post_api_call
             yield patched_function
 
@@ -153,15 +145,18 @@ class TestMonsterIntegration(TransactionCase):
         self.assertEqual(job_post.job_id.id, self.job2.id)
         self.assertEqual(job_post.platform_id.id, self.monster_platform.id)
         self.assertEqual(job_post.campaign_start_date, tomorrow)
-        self.assertEqual(job_post.post_html, Markup(f'<p>{self.post_content}</p>'))
+        self.assertEqual(job_post.post_html, Markup("<p>{content}</p>").format(content=self.post_content))
         self.assertEqual(job_post.apply_vector, 'example@test.com')
         self.assertEqual(job_post.status, 'pending')
 
-        with freeze_time(self.today + timedelta(days=2)):
+        with (
+            freeze_time(self.today + timedelta(days=2)),
             # Patch API call as it complains with the freeze_time
-            with self.patch_post_api_call():
-                self.env.ref('hr_recruitment_integration_base.job_board_campaign_manager_start').method_direct_trigger()
-                self.assertEqual(job_post.status, 'success')
+            self.patch_post_api_call(),
+            self.enter_registry_test_mode(),
+        ):
+            self.env.ref('hr_recruitment_integration_base.job_board_campaign_manager_start').method_direct_trigger()
+            self.assertEqual(job_post.status, 'success')
 
     def test_postpone_already_posted(self):
         job_post = self.create_publish_job_post(self.job1.id, self.today)
@@ -173,11 +168,14 @@ class TestMonsterIntegration(TransactionCase):
         tomorrow = self.today + timedelta(days=1)
         job_post = self.create_publish_job_post(self.job1.id, self.today, tomorrow)
         self.assertEqual(job_post.status, 'success')
-        with freeze_time(self.today + timedelta(days=2)):
+        with (
+            freeze_time(self.today + timedelta(days=2)),
             # Patch API call as it complains with the freeze_time
-            with self.patch_post_api_call():
-                self.env.ref('hr_recruitment_integration_base.job_board_campaign_manager_stop').method_direct_trigger()
-                self.assertEqual(job_post.status, 'deleted')
+            self.patch_post_api_call(),
+            self.enter_registry_test_mode(),
+        ):
+            self.env.ref('hr_recruitment_integration_base.job_board_campaign_manager_stop').method_direct_trigger()
+            self.assertEqual(job_post.status, 'deleted')
 
 
 @tagged('standard', '-external')
@@ -456,7 +454,3 @@ class TestMockupMonsterIntegration(TestMonsterIntegration):
     def test_stop_finished_campaign(self):
         with self.patch_monster_requests():
             super().test_stop_finished_campaign()
-
-    def test_create_post_with_job_having_schedule_id(self):
-        with self.patch_monster_requests():
-            super().test_create_post_with_job_having_schedule_id()

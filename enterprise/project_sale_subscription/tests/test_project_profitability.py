@@ -2,9 +2,8 @@
 
 from dateutil.relativedelta import relativedelta
 
-from odoo.tests import tagged
 from odoo import fields, Command
-
+from odoo.tests import tagged
 from odoo.addons.project.tests.test_project_profitability import TestProjectProfitabilityCommon
 from odoo.addons.sale_subscription.tests.common_sale_subscription import TestSubscriptionCommon
 
@@ -47,7 +46,6 @@ class TestSaleSubscriptionProjectProfitability(TestProjectProfitabilityCommon, T
             'plan_id': cls.plan_month.id,
             'note': "original subscription description",
             'partner_id': cls.user_portal.partner_id.id,
-            'pricelist_id': cls.company_data_2['default_pricelist'].id,
             'company_id': cls.company_data_2['company'].id,
             'sale_order_template_id': cls.subscription_tmpl_foreign_company.id,
         }, {
@@ -56,7 +54,6 @@ class TestSaleSubscriptionProjectProfitability(TestProjectProfitabilityCommon, T
             'plan_id': cls.plan_month.id,
             'note': "original subscription description",
             'partner_id': cls.user_portal.partner_id.id,
-            'pricelist_id': cls.company_data['default_pricelist'].id,
             'company_id': cls.company_data['company'].id,
             'sale_order_template_id': cls.subscription_tmpl_foreign_company.id,
         }])
@@ -293,7 +290,7 @@ class TestSaleSubscriptionProjectProfitability(TestProjectProfitabilityCommon, T
     def test_project_update(self):
         """Test that the project update panel works when the project
         is linked to a closed subscription that was invoiced."""
-        self.env.user.groups_id += self.env.ref('analytic.group_analytic_accounting')
+        self.env.user.group_ids += self.env.ref('analytic.group_analytic_accounting')
 
         sale_order = self.env['sale.order'].create({
             'is_subscription': True,

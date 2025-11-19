@@ -2,14 +2,13 @@
 import json
 import logging
 
-from lxml import etree
 from markupsafe import Markup
 from stdnum.br.cnpj import format as format_cnpj
 from stdnum.br.cpf import format as format_cpf
 
 from odoo import models, fields, api, _, Command
 from odoo.addons.iap import InsufficientCreditError
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError
 from odoo.tools import html2plaintext
 from odoo.tools.xml_utils import find_xml_value
 
@@ -124,20 +123,17 @@ class AccountMove(models.Model):
         help="Brazil: After an NFS-e invoice is issued and confirmed by the municipality, a unique code is provided for online verification of its authenticity.",
     )
 
-    def _l10n_br_call_avatax_taxes(self):
-        """Override to store the retrieved Avatax data."""
-        document_to_response = super()._l10n_br_call_avatax_taxes()
-
-        for document, response in document_to_response.items():
-            document.l10n_br_edi_avatax_data = json.dumps(
-                {
-                    "header": response.get("header"),
-                    "lines": response.get("lines"),
-                    "summary": response.get("summary"),
-                }
-            )
-
-        return document_to_response
+    def _l10n_br_call_avatax_taxes(self, company, document_data):
+        # EXTENDS 'account.external.tax.mixin' to store the retrieved Avatax data.
+        api_response = super()._l10n_br_call_avatax_taxes(company, document_data)
+        self.l10n_br_edi_avatax_data = json.dumps(
+            {
+                "header": api_response.get("header"),
+                "lines": api_response.get("lines"),
+                "summary": api_response.get("summary"),
+            }
+        )
+        return api_response
 
     @api.depends("l10n_br_last_edi_status")
     def _compute_show_reset_to_draft_button(self):
@@ -146,13 +142,19 @@ class AccountMove(models.Model):
         super()._compute_show_reset_to_draft_button()
         self.filtered(lambda move: move.l10n_br_last_edi_status == "pending").show_reset_to_draft_button = False
 
-    @api.depends("l10n_br_last_edi_status", "country_code", "company_currency_id", "move_type", "fiscal_position_id")
+    @api.depends("l10n_br_last_edi_status", "country_code", "company_currency_id", "move_type", "fiscal_position_id", "journal_id.l10n_br_invoice_serial")
     def _compute_l10n_br_edi_is_needed(self):
         for move in self:
             move.l10n_br_edi_is_needed = (
                 not move.l10n_br_last_edi_status
                 and move.country_code == "BR"
-                and move.move_type in ("out_invoice", "out_refund")
+                and (
+                    move.move_type in ("out_invoice", "out_refund")
+                    or (
+                        move.move_type in ("in_invoice", "in_refund")
+                        and move.journal_id.l10n_br_invoice_serial
+                    )
+                )
                 and move.fiscal_position_id.l10n_br_is_avatax
             )
 
@@ -160,6 +162,120 @@ class AccountMove(models.Model):
     def _compute_need_cancel_request(self):
         # EXTENDS 'account' to add dependencies
         super()._compute_need_cancel_request()
+
+    @api.depends('l10n_br_edi_is_needed')
+    def _compute_display_send_button(self):
+        # EXTENDS 'account' to display the "Send" button on unsent vendor bills
+        super()._compute_display_send_button()
+        for move in self:
+            # l10n_br_edi_is_needed filters the right move_types
+            if move.l10n_br_edi_is_needed:
+                move.display_send_button |= move.state == 'posted'
+
+    @api.depends('l10n_br_edi_is_needed')
+    def _compute_highlight_send_button(self):
+        # EXTENDS 'account' to highlight the "Send" button on unsent vendor bills
+        super()._compute_highlight_send_button()
+        for move in self:
+            # l10n_br_edi_is_needed filters the right move_types
+            if move.l10n_br_edi_is_needed:
+                move.highlight_send_button |= move.state == 'posted'
+
+    def _is_manual_document_number(self):
+        # EXTENDS 'l10n_latam_invoice_document' to automatically number purchase EDI journals
+        journal = self.journal_id
+        if journal.company_id.account_fiscal_country_id.code == 'BR' and journal.type == 'purchase' and journal.l10n_br_invoice_serial:
+            return False
+        return super()._is_manual_document_number()
+
+    def _l10n_br_edi_check_calculated_tax(self):
+        if self.state != "posted" or self.l10n_br_last_edi_status:
+            return {}
+
+        if not self.l10n_br_edi_avatax_data:
+            return {
+                "tax_not_calculated": {
+                    "message": _('Tax has never been calculated on this invoice, please "Reset to Draft" and re-post.'),
+                    "level": "danger",
+                }
+            }
+
+        return {}
+
+    def _l10n_br_edi_check_partners(self, partners):
+        if self.state != "posted":  # only required for EDI
+            return {}
+
+        if not partners:
+            return {}
+
+        partners_missing_fields = self.env["res.partner"]
+        for partner in partners:
+            requires_minimal_info = (
+                self.l10n_br_is_service_transaction and
+                partner.l10n_br_tax_regime == "individual" and
+                partner.l10n_br_activity_sector == "finalConsumer" and
+                partner.l10n_latam_identification_type_id == self.env.ref("l10n_br.cpf")
+            )
+            required_fields = ("zip",) if requires_minimal_info else ("street", "street2", "zip", "vat", "l10n_latam_identification_type_id")
+
+            for field in required_fields:
+                if not partner[field]:
+                    partners_missing_fields |= partner
+
+        if partners_missing_fields:
+            return {
+                "partners_missing_fields": {
+                    "message": _(
+                        "For Brazilian electronic invoicing, contacts must have a complete address, VAT number and identification type:\n%s",
+                        partners_missing_fields.mapped('display_name'),
+                    ),
+                    "action_text": _("View contacts"),
+                    "action": partners_missing_fields._l10n_br_avatax_action_missing_fields(),
+                    "level": "danger",
+                }
+            }
+
+        return {}
+
+    def _l10n_br_check_origin_access_key(self, service_params):
+        if origin := service_params['origin_record']:
+            if not origin.l10n_br_access_key:
+                return {
+                    "origin_missing_access_key": {
+                        "message": _(
+                            "The originating invoice (%(origin_invoice)s) must have an access key before electronically invoicing %(current_invoice)s. The access key can be set manually or by electronically invoicing %(origin_invoice)s.",
+                            origin_invoice=origin.display_name,
+                            current_invoice=self.display_name,
+                        ),
+                        "action_text": _("View invoice"),
+                        "action": origin._get_records_action(),
+                        "level": "danger",
+                    }
+                }
+
+        return {}
+
+    @api.depends(lambda self: self._depends_l10n_br_avatax_warnings())
+    def _compute_l10n_br_avatax_warnings(self):
+        """Override."""
+        super()._compute_l10n_br_avatax_warnings()
+
+        for move in self:
+            if not move.l10n_br_is_avatax:
+                move.l10n_br_avatax_warnings = False
+                continue
+
+            move.l10n_br_avatax_warnings = {
+                **(move.l10n_br_avatax_warnings or {}),
+                **move._l10n_br_edi_check_calculated_tax(),
+                **move._l10n_br_edi_check_partners(self.partner_id | self.company_id.partner_id | self._l10n_br_get_transporter()),
+                **move._l10n_br_check_origin_access_key(move._get_l10n_br_avatax_service_params()),
+            }
+
+    def _depends_l10n_br_avatax_warnings(self):
+        """Override."""
+        return super()._depends_l10n_br_avatax_warnings() + ["partner_id", "l10n_br_edi_avatax_data", "l10n_br_edi_transporter_id"]
 
     def _need_cancel_request(self):
         # EXTENDS 'account'
@@ -218,6 +334,7 @@ class AccountMove(models.Model):
 
         response = self._l10n_br_iap_request(
             "get_invoice_services",
+            self.company_id,
             {
                 "serie": self.journal_id.l10n_br_invoice_serial,
                 "number": self.l10n_latam_document_number,
@@ -226,7 +343,7 @@ class AccountMove(models.Model):
         if error := self._l10n_br_get_error_from_response(response):
             self.l10n_br_last_edi_status = "error"
             self.l10n_br_edi_error = error
-            self.with_context(no_new_invoice=True).message_post(body=_("E-invoice was not accepted:\n%s", error))
+            self.message_post(body=_("E-invoice was not accepted:\n%s", error))
             return
 
         status = response.get("status", {})
@@ -261,23 +378,18 @@ class AccountMove(models.Model):
         else:
             message = _("Unknown E-invoice status code %(code)s: %(description)s", code=response_code, description=status.get("desc"))
 
-        self.with_context(no_new_invoice=True).message_post(
+        self.message_post(
             body=message, attachment_ids=attachments.ids, subtype_xmlid=subtype_xmlid
         )
 
     def _l10n_br_iap_cancel_invoice_goods(self, transaction):
-        return self._l10n_br_iap_request("cancel_invoice_goods", transaction)
+        return self._l10n_br_iap_request("cancel_invoice_goods", self.company_id, transaction)
 
     def _l10n_br_iap_correct_invoice_goods(self, transaction):
-        return self._l10n_br_iap_request("correct_invoice_goods", transaction)
+        return self._l10n_br_iap_request("correct_invoice_goods", self.company_id, transaction)
 
     def _l10n_br_iap_cancel_range_goods(self, transaction, company):
-        return self._l10n_br_iap_request("cancel_range_goods", transaction, company=company)
-
-    def _l10n_br_edi_check_calculated_tax(self):
-        if not self.l10n_br_edi_avatax_data:
-            return [_('Tax has never been calculated on this invoice, please "Reset to Draft" and re-post.')]
-        return []
+        return self._l10n_br_iap_request("cancel_range_goods", company, transaction)
 
     def _l10n_br_edi_get_xml_attachment_name(self):
         return f"{self.name}_edi.xml"
@@ -323,58 +435,85 @@ class AccountMove(models.Model):
     def _l10n_br_edi_send(self):
         """Sends the e-invoice and returns an array of error strings."""
         for invoice in self:
-            payload, validation_errors = invoice._l10n_br_prepare_invoice_payload()
-
-            if validation_errors:
-                return validation_errors
+            payload = invoice._l10n_br_prepare_invoice_payload()
+            response, api_error = self._l10n_br_submit_invoice(invoice, payload)
+            if api_error:
+                invoice.l10n_br_last_edi_status = "error"
+                return api_error
             else:
-                response, api_error = self._l10n_br_submit_invoice(invoice, payload)
-                if api_error:
-                    invoice.l10n_br_last_edi_status = "error"
-                    return [api_error]
-                else:
-                    invoice.l10n_br_last_edi_status = "pending" if invoice.l10n_br_is_service_transaction else "accepted"
-                    invoice.l10n_br_access_key = response["key"]
+                invoice.l10n_br_last_edi_status = "pending" if invoice.l10n_br_is_service_transaction else "accepted"
+                invoice.l10n_br_access_key = response["key"]
+                invoice.message_post(
+                    body=_("E-invoice submitted successfully."),
+                    attachment_ids=invoice._l10n_br_edi_attachments_from_response(response).ids,
+                )
 
-                    invoice.with_context(no_new_invoice=True).message_post(
-                        body=_("E-invoice submitted successfully."),
-                        attachment_ids=invoice._l10n_br_edi_attachments_from_response(response).ids,
-                    )
+                # Now that the invoice is submitted and accepted we no longer need the saved tax computation data.
+                invoice.l10n_br_edi_avatax_data = False
 
-                    # Now that the invoice is submitted and accepted we no longer need the saved tax computation data.
-                    invoice.l10n_br_edi_avatax_data = False
-
-    def _l10n_br_edi_vat_for_api(self, vat):
-        # Typically users enter the VAT as e.g. "xx.xxx.xxx/xxxx-xx", but the API errors on non-digit characters
-        return "".join(c for c in vat or "" if c.isdigit())
+        return None
 
     def _l10n_br_edi_get_goods_values(self):
         """Returns the appropriate (finNFe, goal) tuple for the goods section in the header."""
+        goal_to_operation_types = {
+            "Shipping": {
+                "itemsForManufacturingShippingInbound",
+                "salesOutsideTheEstablishmentReturnOfUnsoldGoods",
+            },
+            "TransferBack": {
+                "fairShippingInbound",
+                "fixedAssetInboundOfReturnForUseOutsideEstab",
+                "generalStorageShippingReturnInBound",
+                "generalStorageShippingReturnOutBound",
+                "itemsForManufacturingReturnsShippingIncoming",
+                "itemsForRepairReturnShippingInbound",
+                "itemsForRepairReturnShippingOutbound",
+                "itemsNotUsedForManufacReturnsShippingIncoming",
+                "itemsNotUsedForManufacReturnsShippingOutbound",
+                "returnOfDemonstrationShippingInbound",
+                "returnOfDemonstrationShippingOutbound",
+                "salesOutsideTheEstablishmentReturnOfUnsoldGoods",
+                "shippingLendingReturnIn",
+                "shippingLendingReturnOut",
+                "shippingReturnReturnablePackaging",
+                "showcaseItemsReturnsShippingInbound",
+                "symbolicTransferBackFormGeneralStorage",
+                "x925ManufactoringInBoundReturn",
+                "x925ManufactoringReturn",
+            },
+        }
+        for goal, operation_types in goal_to_operation_types.items():
+            if self.l10n_br_goods_operation_type_id.technical_name in operation_types:
+                return 1, goal
+
         if self.debit_origin_id:
             return 2, "Complementary"
-        elif self.move_type == "out_refund":
+        elif self.move_type in ("out_refund", "in_refund"):
             return 4, "Return"
         else:
             return 1, "Normal"
 
-    def _l10n_br_edi_get_invoice_refs(self):
-        """For credit and debit notes this returns the appropriate reference to the original invoice. For tax
+    def _get_l10n_br_avatax_service_params(self):
+        """ EXTENDS 'account.move'
+        For credit and debit notes this returns the appropriate reference to the original invoice. For tax
         calculation we send these references as documentCode, which are Odoo references (e.g. account.move_31).
         For EDI the government requires these references as refNFe instead. They should contain the access key
-        assigned when the original invoice was e-invoiced. Returns a (dict, errors) tuple."""
-        if origin := self._l10n_br_get_origin_invoice():
-            if not origin.l10n_br_access_key:
-                return {}, (
-                    _(
-                        "The originating invoice (%(origin_invoice)s) must have an access key before electronically invoicing %(current_invoice)s. The access key can be set manually or by electronically invoicing %(origin_invoice)s.",
-                        origin_invoice=origin.display_name,
-                        current_invoice=self.display_name,
-                    )
-                )
+        assigned when the original invoice was e-invoiced. """
+        params = super()._get_l10n_br_avatax_service_params()
 
-            return self._l10n_br_invoice_refs_for_code("refNFe", origin.l10n_br_access_key), None
+        params['invoice_refs_edi'] = {}
+        if origin := params['origin_record']:
+            # origin.l10n_br_access_key's existence is checked by l10n_br_avatax_warnings
+            params['invoice_refs_edi'] = {
+                'invoicesRefs': [
+                    {
+                        'type': 'refNFe',
+                        'refNFe': origin.l10n_br_access_key,
+                    }
+                ]
+            }
 
-        return {}, None
+        return params
 
     def _l10n_br_edi_get_tax_data(self):
         """Due to Avalara bugs they're unable to resolve we have to change their tax calculation response before
@@ -391,31 +530,6 @@ class AccountMove(models.Model):
                         del detail[key]
 
         return tax_calculation_response, tax_calculation_response.pop("header")
-
-    def _l10n_br_edi_validate_partner(self, partner):
-        if not partner:
-            return []
-
-        errors = []
-        requires_minimal_info = (
-            self.l10n_br_is_service_transaction and
-            partner.l10n_br_tax_regime == "individual" and
-            partner.l10n_br_activity_sector == "finalConsumer" and
-            partner.l10n_latam_identification_type_id == self.env.ref("l10n_br.cpf")
-        )
-        required_fields = ("zip",) if requires_minimal_info else ("street", "street2", "zip", "vat")
-
-        for field in required_fields:
-            if not partner[field]:
-                errors.append(
-                    _(
-                        "%(field)s on partner %(partner)s is required for e-invoicing",
-                        field=partner._fields[field].string,
-                        partner=partner.display_name,
-                    )
-                )
-
-        return errors
 
     def _l10n_br_prepare_payment_mode(self):
         payment_value = False
@@ -446,7 +560,7 @@ class AccountMove(models.Model):
             line = ", ".join(f"{key}: {value}" for key, value in tax.items())
             pretty_informative_taxes += Markup("<li>%s</li>") % line
 
-        self.with_context(no_new_invoice=True).message_post(
+        self.message_post(
             body=Markup("%s<ul>%s</ul>")
             % (_("Informative taxes:"), pretty_informative_taxes or Markup("<li>%s</li>") % _("N/A"))
         )
@@ -531,6 +645,17 @@ class AccountMove(models.Model):
             "additionalInfo": {"otherInfo" if self.l10n_br_is_service_transaction else "complementaryInfo": info}
         }
 
+    def _l10n_br_get_transporter(self):
+        customer = self.partner_id
+        transporter = self.l10n_br_edi_transporter_id
+        is_invoice = self.move_type == "out_invoice"
+        if self.l10n_br_edi_freight_model == "SenderVehicle":
+            transporter = self.company_id.partner_id if is_invoice else customer
+        elif self.l10n_br_edi_freight_model == "ReceiverVehicle":
+            transporter = customer if is_invoice else self.company_id.partner_id
+
+        return transporter
+
     def _l10n_br_prepare_invoice_payload(self):
         def deep_update(d, u):
             """Like {}.update but handles nested dicts recursively. Based on https://stackoverflow.com/a/3233356."""
@@ -551,40 +676,19 @@ class AccountMove(models.Model):
                     cleaned_dict[k] = v
             return cleaned_dict or None
 
-        errors = []
-
-        # Don't raise because it would break account.move.send's async batch mode.
-        try:
-            # The /transaction payload requires a superset of the /calculate payload we use for tax calculation.
-            payload = self._l10n_br_get_calculate_payload()
-        except (UserError, ValidationError) as e:
-            payload = {}
-            errors.append(str(e).replace("- ", ""))
+        # The /transaction payload requires a superset of the /calculate payload we use for tax calculation.
+        service_params = self._get_l10n_br_avatax_service_params()
+        payload = self._prepare_l10n_br_avatax_document_service_call(service_params)
 
         customer = self.partner_id
         company_partner = self.company_id.partner_id
-
-        transporter = self.l10n_br_edi_transporter_id
-        is_invoice = self.move_type == "out_invoice"
-        if self.l10n_br_edi_freight_model == "SenderVehicle":
-            transporter = self.company_id.partner_id if is_invoice else customer
-        elif self.l10n_br_edi_freight_model == "ReceiverVehicle":
-            transporter = customer if is_invoice else self.company_id.partner_id
-
-        errors.extend(self._l10n_br_edi_check_calculated_tax())
-        errors.extend(self._l10n_br_edi_validate_partner(customer))
-        errors.extend(self._l10n_br_edi_validate_partner(company_partner))
-        errors.extend(self._l10n_br_edi_validate_partner(transporter))
-
-        invoice_refs, error = self._l10n_br_edi_get_invoice_refs()
-        if error:
-            errors.append(error)
+        transporter = self._l10n_br_get_transporter()
 
         tax_data_to_include, tax_data_header = self._l10n_br_edi_get_tax_data()
         extra_payload = {
             "header": {
-                "companyLocation": self._l10n_br_edi_vat_for_api(company_partner.vat),
-                **invoice_refs,
+                "companyLocation": company_partner.vat,
+                **service_params['invoice_refs_edi'],
                 **self._l10n_br_type_specific_header(tax_data_header),
                 "locations": self._l10n_br_get_locations(
                     customer,
@@ -616,7 +720,7 @@ class AccountMove(models.Model):
         if self.l10n_br_is_service_transaction:
             self._l10n_br_remove_informative_taxes(payload)
 
-        return payload, errors
+        return payload
 
     def _l10n_br_get_error_from_response(self, response):
         if error := response.get("error"):
@@ -625,7 +729,7 @@ class AccountMove(models.Model):
     def _l10n_br_submit_invoice(self, invoice, payload):
         try:
             route = "submit_invoice_services" if self.l10n_br_is_service_transaction else "submit_invoice_goods"
-            response = invoice._l10n_br_iap_request(route, payload)
+            response = invoice._l10n_br_iap_request(route, self.company_id, payload)
             return response, self._l10n_br_get_error_from_response(response)
         except (UserError, InsufficientCreditError) as e:
             # These exceptions can be thrown by iap_jsonrpc()
@@ -640,6 +744,9 @@ class AccountMove(models.Model):
             self.env.ref("l10n_br_edi.ir_cron_l10n_br_edi_check_status")._trigger()
 
     def _l10n_br_edi_import_invoice(self, invoice, data, is_new):
+        if invoice.invoice_line_ids:
+            return invoice._reason_cannot_decode_has_invoice_lines()
+
         namespaces = {'nfe': 'http://www.portalfiscal.inf.br/nfe'}
 
         def get_xml_text(tree, xpath):
@@ -730,7 +837,7 @@ class AccountMove(models.Model):
                     'L': self.env.ref('uom.product_uom_litre'),
                     'M': self.env.ref('uom.product_uom_meter'),
                     'MM': self.env.ref('uom.product_uom_millimeter'),
-                    'M2': self.env.ref('uom.uom_square_meter'),
+                    'M2': self.env.ref('uom.product_uom_square_meter'),
                     'M3': self.env.ref('uom.product_uom_cubic_meter'),
                     'DZ': self.env.ref('uom.product_uom_dozen'),
                     'GL': self.env.ref('uom.product_uom_gal'),
@@ -775,11 +882,7 @@ class AccountMove(models.Model):
 
             return vals
 
-        try:
-            tree = etree.fromstring(data['content'])
-        except (etree.ParseError, ValueError) as e:
-            _logger.info("XML parsing of %s failed: %s", data['filename'], e)
-            return
+        tree = data['xml_tree']
 
         # emit is required in leiauteNFe_v4.00.xsd
         vendor = get_partner_id('.//nfe:emit', create_if_not_found=True)
@@ -796,12 +899,20 @@ class AccountMove(models.Model):
             'l10n_br_edi_freight_model': get_freight_model(),
         })
 
+    def _get_import_file_type(self, file_data):
+        """ Identify NFe files. """
+        # EXTENDS 'account'
+
+        if b"<nfeProc " in file_data['raw'] and b"<NFe " in file_data['raw']:
+            return 'l10n_br.nfe'
+
+        return super()._get_import_file_type(file_data)
+
     def _get_edi_decoder(self, file_data, new=False):
         # EXTENDS 'account'
-        def is_nfe(content):
-            return b"<nfeProc " in content and b"<NFe " in content
-
-        if file_data['type'] == 'xml' and is_nfe(file_data['content']):
-            return self._l10n_br_edi_import_invoice
-
-        return super()._get_edi_decoder(file_data, new=new)
+        if file_data['import_file_type'] == 'l10n_br.nfe':
+            return {
+                'priority': 20,
+                'decoder': self._l10n_br_edi_import_invoice,
+            }
+        return super()._get_edi_decoder(file_data, new)

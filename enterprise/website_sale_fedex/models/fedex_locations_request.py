@@ -8,7 +8,7 @@ from odoo.tools.zeep.exceptions import Fault
 
 from odoo.exceptions import UserError
 from odoo.addons.delivery_fedex.models.fedex_request import remove_accents, FedexRequest, LogPlugin, STATECODE_REQUIRED_COUNTRIES
-from odoo.models import _
+from odoo.tools import _
 from odoo.tools.misc import file_path
 
 
@@ -96,7 +96,7 @@ class FEDEXLocationsRequest(FedexRequest):
 
         except Fault as fault:
             raise UserError(_('There was an error retrieving Fedex localisations:\n%s', fault))
-        except IOError:
+        except OSError:
             raise UserError(_('Fedex Server Not Found'))
         except ValueError:
             raise UserError(_('No Fedex pick-up points available for that shipping address'))

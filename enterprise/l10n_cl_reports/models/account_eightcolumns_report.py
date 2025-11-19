@@ -6,9 +6,9 @@ from collections import OrderedDict
 from datetime import timedelta
 
 
-class ChileanReportCustomHandler(models.AbstractModel):
+class L10n_ClReportHandler(models.AbstractModel):
     _name = 'l10n_cl.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.balance.sheet.report.handler']
     _description = 'Chilean Report Custom Handler'
 
     def _dynamic_lines_generator(self, report, options, all_column_groups_expression_totals, warnings=None):

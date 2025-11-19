@@ -49,12 +49,17 @@ class HrPayrollStructure(models.Model):
                 ('report_name', 'not ilike', 'l10n')
             ]
 
-    name = fields.Char(required=True)
+    name = fields.Char(required=True, translate=True)
     code = fields.Char()
     active = fields.Boolean(default=True)
     type_id = fields.Many2one(
-        'hr.payroll.structure.type', required=True)
-    country_id = fields.Many2one('res.country', string='Country', default=lambda self: self.env.company.country_id)
+        'hr.payroll.structure.type', required=True, index=True)
+    country_id = fields.Many2one(
+        'res.country',
+        string='Country',
+        default=lambda self: self.env.company.country_id,
+        domain=lambda self: [('id', 'in', self.env.companies.country_id.ids)]
+    )
     note = fields.Html(string='Description')
     rule_ids = fields.One2many(
         'hr.salary.rule', 'struct_id', copy=True,

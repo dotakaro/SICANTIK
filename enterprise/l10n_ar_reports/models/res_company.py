@@ -3,7 +3,6 @@ from odoo import models, fields
 
 
 class ResCompany(models.Model):
-
     _inherit = 'res.company'
 
     l10n_ar_computable_tax_credit = fields.Selection(

@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
     'name': 'Documents - Swiss Payroll',
     'icon': '/account/static/description/l10n.png',
     'version': '1.0',
+    'countries': ['ch'],
     'category': 'Human Resources/Payroll',
     'summary': 'Store individual accounts in Documents application',
     'description': """
@@ -17,5 +17,6 @@ Employees' individual account forms are automatically integrated to the Document
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -5,7 +5,7 @@ from odoo import fields, models, _
 from odoo.exceptions import UserError
 
 
-class MrpProductionWorkcenterLine(models.Model):
+class MrpWorkorder(models.Model):
     _inherit = "mrp.workorder"
 
 

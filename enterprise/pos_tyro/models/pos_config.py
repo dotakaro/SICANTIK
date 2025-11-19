@@ -2,7 +2,7 @@ from odoo import models
 
 
 class PosConfig(models.Model):
-    _inherit = ['pos.config']
+    _inherit = 'pos.config'
 
     def _get_special_products(self):
         result = super()._get_special_products()

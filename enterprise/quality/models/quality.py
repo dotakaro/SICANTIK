@@ -10,8 +10,8 @@ from odoo.exceptions import UserError
 from odoo.osv.expression import OR
 
 
-class TestType(models.Model):
-    _name = "quality.point.test_type"
+class QualityPointTest_Type(models.Model):
+    _name = 'quality.point.test_type'
     _description = "Quality Control Test Type"
 
     # Used instead of selection field in order to hide a choice depending on the view.
@@ -21,7 +21,7 @@ class TestType(models.Model):
 
 
 class QualityPoint(models.Model):
-    _name = "quality.point"
+    _name = 'quality.point'
     _description = "Quality Control Point"
     _inherit = ['mail.thread']
     _order = "sequence, id"
@@ -58,7 +58,7 @@ class QualityPoint(models.Model):
         'res.company', string='Company', required=True, index=True,
         default=lambda self: self.env.company)
     user_id = fields.Many2one('res.users', 'Responsible',
-        domain=lambda self: [('groups_id', 'in', self.env.ref("quality.group_quality_user").id), ('share', '=', False)],
+        domain=lambda self: [('all_group_ids', 'in', self.env.ref("quality.group_quality_user").id), ('share', '=', False)],
         check_company=True)
     active = fields.Boolean(default=True)
     check_count = fields.Integer(compute="_compute_check_count")
@@ -68,12 +68,23 @@ class QualityPoint(models.Model):
     test_type = fields.Char(related='test_type_id.technical_name', readonly=True)
     note = fields.Html('Note')
     reason = fields.Html('Cause')
+    failure_location_ids = fields.Many2many('stock.location', string="Failure Locations", domain="[('usage', '=', 'internal')]",
+                            help="If quality check fails, a destination location is chosen from this list for\n"
+                                "- each failed specific product quantity if control is per quantity\n /"
+                                "- all quantities of a product if control is per product\n /"
+                                "- all quantities of products in the operation if control is per operation")
+    show_failure_location = fields.Boolean(compute='_compute_show_failure_location')
 
     def _compute_check_count(self):
         check_data = self.env['quality.check']._read_group([('point_id', 'in', self.ids)], ['point_id'], ['__count'])
         result = {point.id: count for point, count in check_data}
         for point in self:
             point.check_count = result.get(point.id, 0)
+
+    @api.depends('test_type')
+    def _compute_show_failure_location(self):
+        for point in self:
+            point.show_failure_location = point.test_type not in ["instructions", "picture"]
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -92,7 +103,7 @@ class QualityPoint(models.Model):
 
 
 class QualityAlertTeam(models.Model):
-    _name = "quality.alert.team"
+    _name = 'quality.alert.team'
     _description = "Quality Alert Team"
     _inherit = ['mail.alias.mixin', 'mail.thread']
     _order = "sequence, id"
@@ -123,8 +134,7 @@ class QualityAlertTeam(models.Model):
         if team_id:
             return team_id
         else:
-            raise UserError(_("No quality team found for this company.\n"
-                              "Please go to configuration and create one first."))
+            raise UserError(_("No quality teams found for this company! Head over to the configuration menu to create your first quality team."))
 
     def _alias_get_creation_values(self):
         values = super(QualityAlertTeam, self)._alias_get_creation_values()
@@ -137,14 +147,14 @@ class QualityAlertTeam(models.Model):
 
 
 class QualityReason(models.Model):
-    _name = "quality.reason"
+    _name = 'quality.reason'
     _description = "Root Cause for Quality Failure"
 
     name = fields.Char('Name', required=True, translate=True)
 
 
 class QualityTag(models.Model):
-    _name = "quality.tag"
+    _name = 'quality.tag'
     _description = "Quality Tag"
 
     name = fields.Char('Tag Name', required=True)
@@ -152,7 +162,7 @@ class QualityTag(models.Model):
 
 
 class QualityAlertStage(models.Model):
-    _name = "quality.alert.stage"
+    _name = 'quality.alert.stage'
     _description = "Quality Alert Stage"
     _order = "sequence, id"
     _fold_name = 'folded'
@@ -165,7 +175,7 @@ class QualityAlertStage(models.Model):
 
 
 class QualityCheck(models.Model):
-    _name = "quality.check"
+    _name = 'quality.check'
     _description = "Quality Check"
     _order = "point_id, id"
     _inherit = ['mail.thread', 'mail.activity.mixin']
@@ -173,7 +183,7 @@ class QualityCheck(models.Model):
 
     name = fields.Char('Reference', copy=False)
     point_id = fields.Many2one(
-        'quality.point', 'Control Point', check_company=True)
+        'quality.point', 'Control Point', check_company=True, index='btree_not_null')
     title = fields.Char('Title', compute='_compute_title', store=True, precompute=True, readonly=False)
     quality_state = fields.Selection([
         ('none', 'To do'),
@@ -184,7 +194,7 @@ class QualityCheck(models.Model):
     product_id = fields.Many2one(
         'product.product', 'Product', check_company=True,
         domain="[('type', '=', 'consu')]")
-    picking_id = fields.Many2one('stock.picking', 'Picking', check_company=True)
+    picking_id = fields.Many2one('stock.picking', 'Picking', check_company=True, index='btree_not_null')
     partner_id = fields.Many2one(
         related='picking_id.partner_id', string='Partner')
     lot_id = fields.Many2one(
@@ -207,6 +217,7 @@ class QualityCheck(models.Model):
     picture = fields.Binary('Picture', attachment=True)
     additional_note = fields.Text(
         'Additional Note', help="Additional remarks concerning this check.")
+    failure_location_id = fields.Many2one('stock.location', string="Failure Location")
 
     def _compute_alert_count(self):
         alert_data = self.env['quality.alert']._read_group([('check_id', 'in', self.ids)], ['check_id'], ['__count'])
@@ -237,9 +248,13 @@ class QualityCheck(models.Model):
                 vals['test_type_id'] = self.env['quality.point'].browse(vals['point_id']).test_type_id.id
             if 'point_id' in vals and not vals.get('note'):
                 vals['note'] = self.env['quality.point'].browse(vals['point_id']).note
+            if vals.get('note', False) == '<p data-oe-version="1.1"><br></p>':
+                vals['note'] = False
         return super().create(vals_list)
 
     def write(self, vals):
+        if vals.get('note', False) == '<p data-oe-version="1.1"><br></p>':
+            vals['note'] = False
         res = super().write(vals)
         if 'quality_state' in vals and not vals.get('user_id') or not vals.get('control_date'):
             if vals.get('quality_state') == 'pass':
@@ -261,7 +276,7 @@ class QualityCheck(models.Model):
 
 
 class QualityAlert(models.Model):
-    _name = "quality.alert"
+    _name = 'quality.alert'
     _description = "Quality Alert"
     _inherit = ['mail.thread.cc', 'mail.activity.mixin']
     _check_company_auto = True
@@ -296,7 +311,7 @@ class QualityAlert(models.Model):
     tag_ids = fields.Many2many('quality.tag', string="Tags")
     date_assign = fields.Datetime('Date Assigned')
     date_close = fields.Datetime('Date Closed')
-    picking_id = fields.Many2one('stock.picking', 'Picking', check_company=True)
+    picking_id = fields.Many2one('stock.picking', 'Picking', check_company=True, index='btree_not_null')
     action_corrective = fields.Html('Corrective Action')
     action_preventive = fields.Html('Preventive Action')
     user_id = fields.Many2one('res.users', 'Responsible', tracking=True, default=lambda self: self.env.user)
@@ -304,7 +319,7 @@ class QualityAlert(models.Model):
         'quality.alert.team', 'Team', required=True, check_company=True,
         default=lambda x: x._get_default_team_id())
     partner_id = fields.Many2one('res.partner', 'Vendor', check_company=True)
-    check_id = fields.Many2one('quality.check', 'Check', check_company=True)
+    check_id = fields.Many2one('quality.check', 'Check', check_company=True, index='btree_not_null')
     product_tmpl_id = fields.Many2one(
         'product.template', 'Product', check_company=True,
         domain="[('type', '=', 'consu')]")

@@ -3,6 +3,7 @@
 
 from ast import literal_eval
 from odoo import models, fields, api
+from odoo.tools import float_is_zero
 from odoo.http import request
 
 
@@ -23,11 +24,7 @@ class MrpWorkcenter(models.Model):
             action = super().action_work_order()
         context = action.get('context', '{}')
         if 'active_id' not in context:
-            context = context[:-1] + ",'workcenter_id':active_id}"
-        if 'search_default_ready' in self.env.context:
-            context = context[:-1] + ",'show_ready_workorders':1}"
-        if 'search_default_progress' in self.env.context:
-            context = context[:-1] + ",'show_progress_workorders':1}"
+            context = context[:-1] + ",'workcenter_id': active_id}"
         context = context.replace('active_id', str(self.id))
         action['context'] = dict(literal_eval(context), employee_id=request.session.get('employee_id'), shouldHideNewWorkcenterButton=True)
         return action
@@ -51,6 +48,9 @@ class MrpWorkcenter(models.Model):
                 # the workcenter is blocked
                 time.workcenter_id.working_state = 'blocked'
 
+    def action_enable_routings(self):
+        self.env['res.config.settings'].create([{'group_mrp_routings': True}]).execute()
+
 
 class MrpWorkcenterProductivity(models.Model):
     _inherit = "mrp.workcenter.productivity"
@@ -65,7 +65,13 @@ class MrpWorkcenterProductivity(models.Model):
     @api.depends('employee_id.hourly_cost')
     def _compute_employee_cost(self):
         for time in self:
-            time.employee_cost = time.employee_id.hourly_cost if time.employee_id else time.workcenter_id.employee_costs_hour
+            if time.workorder_id.state == 'done' and not float_is_zero(time.employee_cost, 2):
+                continue
+
+            if time.employee_id and not float_is_zero(time.employee_id.hourly_cost, 2):
+                time.employee_cost = time.employee_id.hourly_cost
+            else:
+                time.employee_cost = time.workcenter_id.employee_costs_hour
 
     @api.depends('duration', 'employee_cost')
     def _compute_total_cost(self):

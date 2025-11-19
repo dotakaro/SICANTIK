@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 
 registry.category("web_tour.tours").add('test_carrier_type_selection_field', { steps: () => [
@@ -38,10 +36,5 @@ registry.category("web_tour.tours").add('test_carrier_type_selection_field', { s
                 console.error(`${carrierType} value should not be allowed.`);
             }
         }
-    },
-    {
-        content: "Discard the carrier type's modal",
-        trigger: ".modal-footer button:contains('Cancel')",
-        run: 'click',
     },
 ]});

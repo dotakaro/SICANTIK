@@ -5,9 +5,9 @@ from odoo import models, _
 from odoo.tools import SQL, Query
 
 
-class DisallowedExpensesCustomHandler(models.AbstractModel):
+class AccountDisallowedExpensesReportHandler(models.AbstractModel):
     _name = 'account.disallowed.expenses.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.report.custom.handler']
     _description = 'Disallowed Expenses Custom Handler'
 
     def _dynamic_lines_generator(self, report, options, all_column_groups_expression_totals, warnings=None):
@@ -15,7 +15,7 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
         lines = []
 
         totals = {
-            column_group_key: {key: 0.0 for key in ['total_amount', 'disallowed_amount']}
+            column_group_key: {key: 0.0 for key in ['total_amount', 'deductible_amount']}
             for column_group_key in options['column_groups']
         }
 
@@ -128,7 +128,7 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
                 ARRAY_AGG(aml.company_id) company_id,
                 ARRAY_AGG(aml.account_id) account_id,
                 ARRAY_AGG(rate.rate) account_rate,
-                SUM(aml.balance * rate.rate) / 100 AS account_disallowed_amount
+                SUM(aml.balance * rate.rate) / 100 AS account_deductible_amount
             """,
             account_name=self.env['account.account']._field_to_sql('account', 'name'),
             account_code=account_code,
@@ -186,7 +186,7 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
         if not line_id:
             return current
 
-        for dummy, model, record_id in self.env['account.report']._parse_line_id(line_id):
+        for _markup, model, record_id in self.env['account.report']._parse_line_id(line_id):
             if model == 'account.disallowed.expenses.category':
                 current['category_id'] = record_id
             if model == 'account.account':
@@ -203,6 +203,11 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
         if current.get('account_id'):
             parent_line_id = line_id
             line_id = report._get_generic_line_id('account.account', current['account_id'], parent_line_id=line_id)
+            # This handles the case of child account lines without any rate or having 0% rate.
+            # We replicate the account_id in the line id in order to differentiate the child's line id from its parent.
+            if len(current) != level and not current.get('account_rate'):
+                parent_line_id = line_id
+                line_id = report._get_generic_line_id('account.account', current['account_id'], parent_line_id=line_id)
         if current.get('account_rate'):
             parent_line_id = line_id
             line_id = report._get_generic_line_id('account.disallowed.expenses.rate', current['account_rate'], markup=markup, parent_line_id=line_id)
@@ -255,7 +260,8 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
 
         for group_key, result in results.items():
             current = self._parse_hierarchy_group_key(group_key)
-            lines.append(self._get_account_line(options, result, current, len(current)))
+            level = len(self._parse_line_id(options, line_dict_id)) + 1
+            lines.append(self._get_account_line(options, result, current, level))
 
         return {'lines': lines}
 
@@ -265,9 +271,10 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
 
         for group_key, result in results.items():
             current = self._parse_hierarchy_group_key(group_key)
+            level = len(self._parse_line_id(options, line_dict_id)) + 1
             base_line_values = list(result.values())[0]
             account_id = self._get_single_value(base_line_values, 'account_id')
-            lines.append(self._get_rate_line(options, result, current, len(current), account_id))
+            lines.append(self._get_rate_line(options, result, current, level, account_id))
 
         return {'lines': lines}
 
@@ -279,7 +286,7 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
             vals = values.get(column['column_group_key'], {})
             if vals and not is_total_line:
                 vals['rate'] = self._get_current_rate(vals)
-                vals['disallowed_amount'] = self._get_current_disallowed_amount(vals)
+                vals['deductible_amount'] = self._get_current_deductible_amount(vals)
             col_val = vals.get(column['expression_label'])
 
             column_values.append(report._build_column_dict(
@@ -353,7 +360,9 @@ class DisallowedExpensesCustomHandler(models.AbstractModel):
         return all(values[key][0] == x for x in values[key]) and values[key][0]
 
     def _get_current_rate(self, values):
+        if all(v is None for v in values['account_rate']):
+            return '100.00%'
         return self._get_single_value(values, 'account_rate') or None
 
-    def _get_current_disallowed_amount(self, values):
-        return values['account_disallowed_amount']
+    def _get_current_deductible_amount(self, values):
+        return values['account_deductible_amount']

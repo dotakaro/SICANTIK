@@ -97,7 +97,7 @@ class TestPerformance(AccountTestInvoicingCommon):
             'country_id': cls.env.ref('base.au').id,
             'lang': 'en_US',
             'spouse_birthdate': datetime.today() + relativedelta(years=-25, month=1, day=1),
-            'gender': 'male',
+            'sex': 'male',
             'birthday': "1990-01-01",
             'private_email': "test%i@example.com" % i,
             'private_phone': '123456789',
@@ -106,6 +106,12 @@ class TestPerformance(AccountTestInvoicingCommon):
             'private_zip': '2000',
             "private_state_id": cls.env.ref("base.state_au_2").id,
             'private_country_id': cls.env.ref('base.au').id,
+            'date_generated_from': datetime(2020, 9, 1, 0, 0, 0),
+            'date_generated_to': datetime(2020, 9, 1, 0, 0, 0),
+            'structure_type_id': cls.env.ref('l10n_au_hr_payroll.structure_type_schedule_1').id,
+            'date_version': date(2018, 12, 31),
+            'contract_date_start': date(2018, 12, 31),
+            'wage': 10000,
         } for i in range(cls.EMPLOYEES_COUNT)])
 
         cls.super_fund = cls.env['l10n_au.super.fund'].create({
@@ -120,22 +126,11 @@ class TestPerformance(AccountTestInvoicingCommon):
             "fund_id": cls.super_fund.id,
         } for i in range(cls.EMPLOYEES_COUNT)])
 
-        cls.employees[1].user_id = new_test_user(cls.env, login='employee1', groups='hr.group_hr_manager')
+        cls.employees[1].user_id = new_test_user(cls.env, login='employee1', groups='hr.group_hr_manager', email="test@example.com")
         cls.company.l10n_au_hr_super_responsible_id = cls.employees[1]
         cls.company.l10n_au_stp_responsible_id = cls.employees[1]
 
-        cls.contracts = cls.env['hr.contract'].create([{
-            'name': "Contract For Payslip Test %i" % i,
-            'employee_id': cls.employees[i].id,
-            'resource_calendar_id': cls.resource_calendar_40_hours_per_week.id,
-            'company_id': cls.company.id,
-            'date_generated_from': datetime(2020, 9, 1, 0, 0, 0),
-            'date_generated_to': datetime(2020, 9, 1, 0, 0, 0),
-            'structure_type_id': cls.env.ref('l10n_au_hr_payroll.structure_type_schedule_1').id,
-            'date_start': date(2018, 12, 31),
-            'wage': 10000,
-            'state': "open",
-        } for i in range(cls.EMPLOYEES_COUNT)])
+        cls.contracts = cls.employees.version_id
 
         # Public Holiday (global)
         cls.env['resource.calendar.leaves'].create([{
@@ -146,11 +141,11 @@ class TestPerformance(AccountTestInvoicingCommon):
             'date_to': datetime(2023, 8, 15, 23, 0, 0),
             'resource_id': False,
             'time_type': "leave",
-            'work_entry_type_id': cls.env.ref('l10n_au_hr_payroll.l10n_au_work_entry_type_other').id
+            'work_entry_type_id': cls.env.ref('hr_work_entry.l10n_au_work_entry_type_other').id
         }])
 
         # Everyone takes a legal leave the same day
-        legal_leave = cls.env.ref('hr_work_entry_contract.work_entry_type_legal_leave')
+        legal_leave = cls.env.ref('hr_work_entry.work_entry_type_legal_leave')
         cls.env['resource.calendar.leaves'].create([{
             'name': "Legal Leave %i" % i,
             'calendar_id': cls.resource_calendar_40_hours_per_week.id,
@@ -178,7 +173,19 @@ class TestPerformance(AccountTestInvoicingCommon):
     @warmup
     def test_performance_l10n_au_payroll_whole_flow(self):
         # Create Opening Balances
-        self.company._create_ytd_values(self.employees, self.date_from)
+        self.env["l10n_au.previous.payroll.transfer"].create(
+            {
+                "company_id": self.company.id,
+                "l10n_au_previous_payroll_transfer_employee_ids": [
+                    (0, 0, {
+                        "employee_id": employee.id,
+                        "previous_payroll_id": "employee_%s" % employee.id,
+                        "l10n_au_income_stream_type": employee.l10n_au_income_stream_type,
+                    }) for employee in self.employees
+                ]
+            }
+        ).action_transfer()
+        # self.company._create_ytd_values(self.employees, self.date_from)
 
         # Work entry generation
         self.employees.generate_work_entries(self.date_from, self.date_to)
@@ -187,7 +194,7 @@ class TestPerformance(AccountTestInvoicingCommon):
         payslips_values = [{
             'name': "Test Payslip %i" % i,
             'employee_id': self.employees[i].id,
-            'contract_id': self.contracts[i].id,
+            'version_id': self.contracts[i].id,
             'company_id': self.company.id,
             'struct_id': structure.id,
             'date_from': self.date_from,
@@ -195,7 +202,8 @@ class TestPerformance(AccountTestInvoicingCommon):
         } for i in range(self.EMPLOYEES_COUNT)]
 
         # Payslip Creation
-        with self.assertQueryCount(admin=1300):  # randomness
+        with self.assertQueryCount(admin=1400):  # randomness
+            self.env.user.partner_id.email = "admin@example.com"
             start_time = time.time()
             payslips = self.env['hr.payslip'].with_context(allowed_company_ids=self.company.ids).create(payslips_values)
             # --- 0.11892914772033691 seconds ---
@@ -209,14 +217,14 @@ class TestPerformance(AccountTestInvoicingCommon):
             _logger.info("Payslips Computation: --- %s seconds ---", time.time() - start_time)
 
         # Payslip Validation
-        with self.assertQueryCount(admin=600):
+        with self.assertQueryCount(admin=1000):
             start_time = time.time()
             payslips.action_payslip_done()
             # --- 0.3815627098083496 seconds ---
             _logger.info("Payslips Validation: --- %s seconds ---", time.time() - start_time)
 
         # STP Submission
-        with self.assertQueryCount(admin=2000):
+        with self.assertQueryCount(admin=2500):
             start_time = time.time()
             stp = payslips._get_payslip_stp()[payslips[0].id]
             self.assertTrue(stp, "The STP record should have been created when the payslip was created")

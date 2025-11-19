@@ -11,60 +11,98 @@
                 <field name="responsible_count"/>
                 <field name="create_uid"/>
                 <field name="is_sharing"/>
+                <field name="create_date"/>
                 <templates>
                     <div t-name="menu">
-                        <a role="menuitem" type="object" name="go_to_custom_template" class="d-none d-md-block dropdown-item" context="{'sign_edit_call': 'sign_template_edit'}">Modify Template</a>
-                        <a role="menuitem" type="object" name="open_requests" class="dropdown-item">Signed Documents</a>
+                        <a role="menuitem" type="object" name="go_to_custom_template" class="d-none d-md-block dropdown-item" context="{'sign_edit_call': 'sign_template_edit'}">Edit</a>
                         <a role="menuitem" type="object" name="stop_sharing" class="dropdown-item" invisible="not is_sharing">Stop Sharing</a>
-                        <a role="menuitem" type="action" name="%(sign.action_sign_duplicate_template_with_pdf)d" class="dropdown-item">Use Layout</a>
-                        <a role="menuitem" type="object" name="toggle_active" class="dropdown-item">
-                            <t t-if="!record.active.raw_value">Restore</t>
-                            <t t-if="record.active.raw_value">Archive</t>
-                        </a>
-                        <a role="menuitem" type="delete" class="dropdown-item">Delete</a>
-
+                        <a role="menuitem" type="object" name="action_duplicate" class="dropdown-item">Duplicate</a>
+                        <a role="menuitem" type="object" name="action_archive" class="dropdown-item" t-if="record.active.raw_value">Archive</a>
+                        <a role="menuitem" type="object" name="action_unarchive" class="dropdown-item" t-if="!record.active.raw_value">Restore</a>
+                        <a role="menuitem" type="object" name="action_template_configuration" class="dropdown-item">Configuration</a>
+                        <div role="separator" class="dropdown-divider"/>
+                        <div role="separator" class="dropdown-item-text">Color</div>
                         <field name="color" widget="kanban_color_picker"/>
                     </div>
-                    <t t-name="card">
-                        <div class="d-flex lh-1 mb-1">
-                            <t t-if="record.favorited_ids.raw_value.indexOf(context.uid) &lt; 0">
-                                <a type="object" name="toggle_favorited" aria-label="Not in favorites, set it" title="Not in favorites, add it"
-                                    class="fa fa-lg fa-star-o favorite_sign_button"/>
-                            </t>
-                            <t t-else="">
-                                <a type="object" name="toggle_favorited" aria-label="In favorites, remove it" title="In favorites, remove it"
-                                    class="fa fa-lg fa-star favorite_sign_button_enabled favorite_sign_button"/>
-                            </t>
-                            <field name="display_name" class="ms-4 fw-bold fs-5"/>
+                    <t t-name="card" t-att-class="o_sign_kanban_card align-item-center">
+                        <div class="row mx-0">
+                            <div class="col-lg-4 col-sm-12 py-0 my-2 my-lg-0">
+                                <div class="d-flex flex-row mt-2">
+                                    <t t-if="record.favorited_ids.raw_value.indexOf(context.uid) &lt; 0">
+                                        <a type="object" name="toggle_favorited" aria-label="Set as favorite" title="Set as favorite"
+                                            class="fa fa-lg fa-star-o favorite_sign_button"/>
+                                    </t>
+                                    <t t-else="">
+                                        <a type="object" name="toggle_favorited" aria-label="Remove from favorites" title="Remove from favorites"
+                                            class="fa fa-lg fa-star favorite_sign_button_enabled favorite_sign_button"/>
+                                    </t>
+                                    <field name="display_name" class="ms-4 fw-bold text-truncate"/>
+                                </div>
+                                <span class="d-flex align-items-center">
+                                    <field name="user_id" widget="many2one_avatar_user"
+                                        options="{'display_avatar_name': True}"/>
+                                        <span class="mx-1"/>
+                                    <em>
+                                        <t t-esc="luxon.DateTime.fromISO(record.create_date.raw_value).toFormat('MMM yyyy')"/>
+                                    </em>
+                                </span>
+                            </div>
+                            <div class="col-lg-1 col-sm-6 my-3 py-0">
+                                <span class="badge rounded-pill text-bg-success" title="Shared" invisible="not is_sharing">
+                                    Shared
+                                </span>
+                            </div>
+                            <div class="col-lg-2 col-sm-8 d-sm-block col-12 my-3 py-0">
+                                <div class="d-flex flex-column">
+                                    <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                                </div>
+                            </div>
+                            <div t-attf-class="col-lg-1 col-sm-8 col-6 py-0 my-2">
+                                <div class="d-flex flex-column">
+                                    <a type="object" name="get_action_in_progress_requests">
+                                        <field name="in_progress_count" class="fw-bold fs-4"/>
+                                        <div class="me-2 text-dark" title="Number of documents in progress for this template.">
+                                            <span>In Progress</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            <div t-attf-class="col-lg-1 col-sm-4 col-6 py-0 my-2 me-auto">
+                                <div class="d-flex flex-column">
+                                    <a type="object" name="get_action_signed_requests">
+                                        <field name="signed_count" class="fw-bold fs-4"/>
+                                        <div class="me-2 text-dark" title="Number of documents signed for this template.">
+                                            <span>Signed</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-sm-12 col-12 my-3 py-0 o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left float-lg-end">
+                                    <button
+                                        name="%(sign.action_sign_send_request)d"
+                                        type="action"
+                                        class="btn btn-primary me-1"
+                                        context="{'sign_directly_without_mail': 0, 'show_email': 1}">
+                                        Send
+                                    </button>
+                                    <button
+                                        name="%(sign.action_sign_send_request)d"
+                                        type="action"
+                                        class="btn btn-primary me-1"
+                                        context="{'sign_directly_without_mail': 1}">
+                                        Sign Now
+                                    </button>
+                                    <button
+                                        name="open_shared_sign_request"
+                                        type="object"
+                                        class="btn btn-secondary"
+                                        invisible="not active or responsible_count &gt; 1">
+                                        Share
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <field name="create_date" class="fst-italic mb-1" options="{'show_seconds': false}"/>
-                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
-                        <footer class="pt-1">
-                            <div class="d-flex mobile-xs-hide">
-                                <button name="%(sign.action_sign_send_request)d" type="action" class="btn btn-primary btn-sm mt8 mr8 px-2 py-0" context="{'sign_directly_without_mail': 0, 'show_email': 1}">Send</button>
-                                <button name="%(sign.action_sign_send_request)d" type="action" class="btn btn-primary btn-sm mt8 mr8 px-2 py-0" context="{'sign_directly_without_mail': 1}">Sign Now</button>
-                                <button name="open_shared_sign_request" type="object" class="btn btn-secondary btn-sm mt8 mr8 px-2 py-0" invisible="not active or responsible_count &gt; 1">Share</button>
-                            </div>
-                            <div class="d-flex mobile-xs-show">
-                                <button name="dropdown" class="btn btn-primary mt8 px-2 py-0 dropdown-toggle kanban_ignore_dropdown mr8" type="button" data-bs-toggle="dropdown">Action</button>
-                                <div class="dropdown-menu kanban_ignore_dropdown" role="menu">
-                                    <button name="%(sign.action_sign_send_request)d" type="action" class="btn btn-primary btn-sm dropdown-item" context="{'sign_directly_without_mail': 0, 'show_email': 1}">Send</button>
-                                    <button name="%(sign.action_sign_send_request)d" type="action" class="btn btn-primary btn-sm dropdown-item" context="{'sign_directly_without_mail': 1}">Sign Now</button>
-                                    <button name="open_shared_sign_request" type="object" class="btn btn-secondary btn-sm dropdown-item" invisible="not active or responsible_count &gt; 1">Share</button>
-                                </div>
-                            </div>
-                            <div class="ms-auto mt8 d-flex align-items-center">
-                                <div class="mt-2 mr8" title="Number of documents in progress for this template.">
-                                    <field name="in_progress_count" class="fa fa-hourglass-half"/>
-                                </div>
-                                <div class="mt-2 mr8" title="Number of documents signed for this template.">
-                                    <field name="signed_count" class="fa fa-check"/>
-                                </div>
-                                <div class="align-items-center mr8">
-                                    <field name="user_id" widget="many2one_avatar_user"/>
-                                </div>
-                            </div>
-                        </footer>
                     </t>
                 </templates>
             </kanban>
@@ -75,16 +113,20 @@
         <field name="name">sign.template.list</field>
         <field name="model">sign.template</field>
         <field name="arch" type="xml">
-            <list sample="1" js_class="sign_list">
-                <field name="attachment_id" string="Name"/>
-                <field name="create_date"/>
-                <field name="sign_item_ids"/>
+            <list sample="1" js_class="sign_list" action="go_to_custom_template" type="object">
+                <field name="name"/>
+                <field name="tag_ids" string="Tags" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="create_date" optional="hide"/>
+                <field name="responsible_count" string="Signees" optional="hide"/>
+                <field name="document_ids"/>
+                <field name="sign_item_ids" string="Signature fields" optional="hide"/>
                 <field name="active" column_invisible="True"/>
-                <field name="responsible_count" column_invisible="True"/>
-                <field name="is_sharing" string="Shareable"/>
+                <field name="signed_count" string="Signed documents" optional="hide" width="125px"/>
                 <button name="%(sign.action_sign_send_request)d" string="Send" type="action" context="{'sign_directly_without_mail': 0, 'show_email': 1}"/>
                 <button name="%(sign.action_sign_send_request)d" string="Sign Now" type="action" context="{'sign_directly_without_mail': 1}"/>
-                <button name="open_shared_sign_request" string="Share" type="object" invisible="not active or responsible_count &gt; 1"/>
+                <button name="open_shared_sign_request" string="Share" type="object" invisible="is_sharing or not active or responsible_count &gt; 1"/>
+                <button name="stop_sharing" string="Stop sharing" type="object" invisible="not is_sharing"/>
             </list>
         </field>
     </record>
@@ -117,7 +159,6 @@
                     <group>
                         <group>
                             <field name="active" invisible="1"/>
-                            <field name="attachment_id" invisible="1"/>
                             <field name="responsible_count" invisible="1"/>
                             <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" placeholder="Tags"/>
                         </group>
@@ -130,9 +171,6 @@
                         </group>
                     </group>
                     <notebook>
-                        <page name="document" string="Document">
-                            <field name="datas" widget="pdf_viewer"/>
-                        </page>
                         <page string="Fields" name="signatures">
                             <field name="sign_item_ids" readonly="1"/>
                         </page>
@@ -180,9 +218,10 @@
         <field name="model">sign.template</field>
         <field name="arch" type="xml">
             <search>
-                <field name="attachment_id" string="Document Name"/>
+                <field name="name" string="Template Name"/>
                 <filter name="my_templates" string="My Templates" domain="[('user_id', '=', uid)]"/>
                 <filter name="favorite" string="My Favorites" domain="[('favorited_ids', 'in', uid)]"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
                 <searchpanel class="searchpanel-xs-hide">
                     <field name="tag_ids" select="multi" icon="fa-tag" enable_counters="1"/>
                 </searchpanel>
@@ -269,6 +308,7 @@
             <list>
                 <field name="name"/>
                 <field name="item_type"/>
+                <field name="model_id" groups="base.group_system"/>
                 <field name="auto_field" groups="base.group_system"/>
             </list>
         </field>
@@ -285,8 +325,14 @@
                         <h1><field name="name"/></h1>
                     </div>
                     <group>
-                        <field name="item_type"/>
-                        <field name="auto_field" groups="base.group_system"/>
+                        <group>
+                            <field name="item_type"/>
+                            <field name="model_id" groups="base.group_system" invisible="item_type not in ['text', 'textarea']"/>
+                            <field name="auto_field" widget="field_selector"
+                                options="{'model': 'model_name'}"
+                                invisible="item_type not in ['text', 'textarea'] or not model_name"
+                                groups="base.group_system"/>
+                        </group>
                     </group>
                     <group>
                         <group>
@@ -318,61 +364,27 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <record id="sign_item_option_view_tree" model="ir.ui.view">
-        <field name="name">sign.item.option.list</field>
-        <field name="model">sign.item.option</field>
-        <field name="arch" type="xml">
-            <list create="0" decoration-muted="available == False" default_order="available desc, id">
-                <field name="value" readonly="1"/>
-                <field name="available" widget="boolean_toggle"/>
-            </list>
-        </field>
-    </record>
-
     <record id="sign_item_option_action" model="ir.actions.act_window">
         <field name="name">Signature Item Options</field>
         <field name="res_model">sign.item.option</field>
         <field name="view_mode">list</field>
     </record>
 
-    <!-- Signature Item Party Views -->
-    <record id="sign_item_role_view_tree" model="ir.ui.view">
-        <field name="name">sign.item.role.list</field>
-        <field name="model">sign.item.role</field>
-        <field name="arch" type="xml">
-            <list editable="bottom">
-                <field name="sequence" widget="handle"/>
-                <field name="name" string="Role Name"/>
-                <field name="auth_method"/>
-                <field name="change_authorized"/>
-                <field name="color" widget="color_picker"/>
-            </list>
-        </field>
-    </record>
-
+    <!-- Signature Item Role Views -->
     <record id="sign_item_role_view_form" model="ir.ui.view">
         <field name="name">sign.item.role.form</field>
         <field name="model">sign.item.role</field>
         <field name="arch" type="xml">
             <form>
                 <sheet>
-                    <div class="oe_title">
-                        <label for="name"/>
-                        <h1><field name="name" placeholder="e.g. Employee"/></h1>
-                    </div>
                     <group>
-                        <field name="auth_method"/>
-                        <field name="change_authorized"/>
+                        <field name="name" placeholder="e.g. Employee"/>
+                        <field name="auth_method" string="Authentication" placeholder="By Email"/>
+                        <field name="change_authorized" string="Can delegate"/>
                     </group>
                 </sheet>
             </form>
         </field>
-    </record>
-
-    <record id="sign_item_role_action" model="ir.actions.act_window">
-        <field name="name">Signature Item Role</field>
-        <field name="res_model">sign.item.role</field>
-        <field name="view_mode">list,form</field>
     </record>
 
     <record id="sign_template_tag_action" model="ir.actions.act_window">
@@ -393,7 +405,6 @@
         <field name="name">Settings</field>
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
-        <field name="target">inline</field>
         <field name="context">{'module' : 'sign', 'bin_size': False}</field>
     </record>
 
@@ -418,7 +429,6 @@
     <!-- Menus -->
     <menuitem id="sign.sign_item_settings_menu" name="Settings" parent="sign.menu_sign_configuration" action="sign_settings_action" groups="sign.group_sign_manager"/>
     <menuitem id="sign.sign_item_type_menu" name="Field Types" parent="sign.menu_sign_configuration" action="sign_item_type_action" groups="base.group_no_one"/>
-    <menuitem id="sign.sign_item_role_menu" name="Roles" parent="sign.menu_sign_configuration" action="sign_item_role_action" groups="sign.group_sign_manager"/>
     <menuitem id="sign.sign_template_tag_menu" name="Tags" parent="sign.menu_sign_configuration" action="sign_template_tag_action" groups="sign.group_sign_manager"/>
     <menuitem id="sign_report_green_savings" name="Green Savings" parent="sign_reports" action="sign.sign_report_green_savings_action"/>
     <menuitem id="sign_request_my_documents" name="My Documents" parent="sign_request_menu" action="sign_request_action" sequence="10"/>

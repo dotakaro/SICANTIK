@@ -4,6 +4,9 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from datetime import datetime
+from odoo.osv.expression import AND
+import hashlib
+import re
 
 
 class PosOrder(models.Model):
@@ -66,6 +69,7 @@ class PosOrder(models.Model):
     )
     plu_hash = fields.Char(help="Eight last characters of PLU hash")
     pos_version = fields.Char(help="Version of Odoo that created the order")
+    is_clock = fields.Boolean("Is clock in/out", compute='_compute_is_clock')
 
     @api.depends("blackbox_date", "blackbox_time")
     def _compute_blackbox_pos_receipt_time(self):
@@ -77,31 +81,16 @@ class PosOrder(models.Model):
             else:
                 order.blackbox_pos_receipt_time = False
 
+    def _compute_is_clock(self):
+        work_products_set = set(self.env['pos.config']._get_work_products().ids)
+        for order in self:
+            order.is_clock = bool(work_products_set & set(order.lines.product_id.ids))
+
     @api.ondelete(at_uninstall=False)
     def unlink_if_blackboxed(self):
         for order in self:
             if order.config_id.certified_blackbox_identifier:
                 raise UserError(_("Deleting of registered orders is not allowed."))
-
-    def write(self, values):
-        for order in self:
-            if order.config_id.certified_blackbox_identifier and order.state != "draft" and not order.lines.filtered(lambda l: l.product_id.id in self.env['pos.config']._get_work_products().ids) and not self.env.context.get('backend_recomputation'):
-                white_listed_fields = [
-                    "state",
-                    "account_move",
-                    "picking_id",
-                    "invoice_id",
-                    "last_order_preparation_change",
-                    "partner_id",
-                    "to_invoice",
-                    "nb_print",
-                ]
-
-                for field in values:
-                    if field not in white_listed_fields:
-                        raise UserError(_("Modifying registered orders is not allowed."))
-
-        return super().write(values)
 
     @api.model
     def create_log(self, orders):
@@ -115,7 +104,7 @@ class PosOrder(models.Model):
             self.env['pos.session'].browse(order['session_id'])._update_pro_forma(order)
 
     def _create_log_description(self, order):
-        decimal_places = self.env['res.currency'].browse(order['currency_id']).decimal_places
+        currency_id = self.env['res.currency'].browse(order['currency_id'])
         lines = []
         total = 0
         rounding_applied = 0
@@ -125,7 +114,7 @@ class PosOrder(models.Model):
             line_description = "{qty} x {product_name}: {price}".format(
                 qty=line["qty"],
                 product_name=line["product_name"],
-                price=round(line["price_subtotal_incl"], decimal_places),
+                price=currency_id.round(line["price_subtotal_incl"]),
             )
 
             if line["discount"]:
@@ -135,23 +124,20 @@ class PosOrder(models.Model):
 
             lines.append(line_description)
         total = (
-            round(order["amount_total"], decimal_places)
+            currency_id.round(order["amount_total"])
             if order['state'] == "draft"
-            else round(order["amount_paid"], decimal_places)
+            else currency_id.round(order["amount_paid"])
         )
         rounding_applied = (
             0
             if order['state'] == "draft"
-            else round(
-                order["amount_total"] - order["amount_paid"],
-                decimal_places,
-            )
+            else currency_id.round(order["amount_total"] - order["amount_paid"] + order["change"])
         )
         hash_string = order["plu_hash"]
         sale_type = ""
-        if round(order["amount_total"], decimal_places) > 0:
+        if currency_id.round(order["amount_total"]) > 0:
             sale_type = " SALES"
-        elif round(order["amount_total"], decimal_places) < 0:
+        elif currency_id.round(order["amount_total"]) < 0:
             sale_type = " REFUNDS"
         else:
             if len(order["lines"]) == 0 or order["lines"][0]["qty"] >= 0:
@@ -221,17 +207,125 @@ class PosOrder(models.Model):
                 })
         return super().action_pos_order_cancel()
 
+    @api.model
+    def search_paid_order_ids(self, config_id, domain, limit, offset):
+        domain = AND([[['lines.product_id', 'not in', self.env['pos.config']._get_work_products()]], domain])
+        return super().search_paid_order_ids(config_id, domain, limit, offset)
+
+    def _get_tax_amount_by_percent(self, tax_percent):
+        return sum(
+            line.price_subtotal_incl - line.price_subtotal
+            for line in self.lines
+            if line.tax_ids.amount_type == 'percent' and line.tax_ids.amount == tax_percent
+        )
+
+    def _get_plu(self):
+        return hashlib.sha1(b''.join([line.blackbox_plu.encode('utf8') for line in self.lines])).hexdigest()[-8:]  # Circulaire AG Fisc Nr. 33/2016 Art. 43.l. take the last eight characters of the hash
+
+    def _create_order_for_blackbox(self, clock=False, clock_in=True):
+        now = datetime.now()
+        self.write({
+            'blackbox_order_sequence': self.config_id.get_NS_sequence_next(),
+            'blackbox_tax_category_a': self._get_tax_amount_by_percent(21),
+            'blackbox_tax_category_b': self._get_tax_amount_by_percent(12),
+            'blackbox_tax_category_c': self._get_tax_amount_by_percent(6),
+            'blackbox_tax_category_d': self._get_tax_amount_by_percent(0),
+            'plu_hash': self._get_plu(),
+        })
+        return {
+            'date': now.strftime('%Y%m%d'),
+            'ticket_time': now.strftime('%H%M%S'),
+            'insz_or_bis_number': self.sudo().config_id.current_session_id.user_id.insz_or_bis_number,
+            'ticket_number': str(self.blackbox_order_sequence).lstrip('0'),
+            'type': 'NS',
+            'receipt_total': f"{abs(self.amount_total * 100):.0f}",
+            'vat1': f"{abs(self.blackbox_tax_category_a * 100):03.0f}" if self.blackbox_tax_category_a else '',
+            'vat2': f"{abs(self.blackbox_tax_category_b * 100):03.0f}" if self.blackbox_tax_category_b else '',
+            'vat3': f"{abs(self.blackbox_tax_category_c * 100):03.0f}" if self.blackbox_tax_category_c else '',
+            'vat4': f"{abs(self.blackbox_tax_category_d * 100):03.0f}" if self.blackbox_tax_category_d else '',
+            'plu': self.plu_hash,
+            'clock': ('in' if clock_in else 'out') if clock else False,
+        }
+
+    def _update_from_blackbox(self, data):
+        date_str = data.get("date")
+        time_str = data.get("time")
+        self.write({
+            'blackbox_signature': data.get("signature"),
+            'blackbox_date': f"{date_str[6:]}-{date_str[4:6]}-{date_str[:4]}",
+            'blackbox_time': f"{time_str[:2]}:{time_str[2:4]}:{time_str[4:]}",
+            'blackbox_ticket_counters': "NS " + data.get("ticket_counter") + "/" + data.get("total_ticket_counter"),
+            'blackbox_unique_fdm_production_number': data.get("fdm_number"),
+            'blackbox_vsc_identification_number': data.get("vsc"),
+        })
+
 
 class PosOrderLine(models.Model):
     _inherit = "pos.order.line"
 
-    vat_letter = fields.Selection(
-        [("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")],
-        help="The VAT letter is related to the amount of the tax. A=21%, B=12%, C=6% and D=0%.",
-    )
+    blackbox_plu = fields.Char("PLU hash", compute='_compute_plu_line')
 
-    def write(self, values):
-        if values.get("vat_letter"):
-            raise UserError(_("Can't modify fields related to the Fiscal Data Module."))
+    def _compute_plu_line(self):
+        for line in self:
+            if line.order_id.config_id.certified_blackbox_identifier:
+                qty = line.qty
+                description = line.product_id.display_name
+                price = round(abs(line.price_subtotal_incl) * 100, 2)
+                tax_labels = line.tax_ids.tax_group_id.mapped(lambda tg: tg.pos_receipt_label)
+                tax_label = tax_labels[0] if len(tax_labels) > 0 else 'D'
 
-        return super().write(values)
+                qty = line._prepare_number_for_plu(qty, 4)
+                description = line._prepare_description_for_plu(description)
+                price = line._prepare_number_for_plu(price, 8)
+
+                line.blackbox_plu = qty + description + price + tax_label
+            else:
+                line.blackbox_plu = ''
+
+    @api.model
+    def _generate_translation_table(self):
+        special_car = {
+            ('Ä', 'Å', 'Â', 'Á', 'À', 'â', 'ä', 'á', 'à', 'ã'): 'A',
+            ('Æ', 'æ'): 'AE',
+            'ß': 'SS',
+            ('ç', 'Ç'): 'C',
+            ('Î', 'Ï', 'Í', 'Ì', 'ï', 'î', 'ì', 'í'): 'I',
+            '€': 'E',
+            ('Ê', 'Ë', 'É', 'È', 'ê', 'ë', 'é', 'è'): 'E',
+            ('Û', 'Ü', 'Ú', 'Ù', 'ü', 'û', 'ú', 'ù'): 'U',
+            ('Ô', 'Ö', 'Ó', 'Ò', 'ö', 'ô', 'ó', 'ò'): 'O',
+            ('Œ', 'œ'): 'OE',
+            ('ñ', 'Ñ'): 'N',
+            ('ý', 'Ý', 'ÿ'): 'Y'
+        }
+        complete_table = {}
+        for (key, value) in special_car.items():
+            for char_key in key:
+                complete_table[char_key] = value
+
+        return complete_table
+
+    @api.model
+    def _replace_hash_and_sign_chars(self, string):
+        translation_table = self._generate_translation_table()
+        replaced_char = [translation_table[char] if char in translation_table else char.upper() for char in string]
+        return ''.join(replaced_char)
+
+    @api.model
+    def _filter_allowed_hash_and_sign_chars(self, string):
+        return re.sub(r'[^A-Z0-9]', '', string)
+
+    @api.model
+    def _prepare_number_for_plu(self, number, length):
+        number = f"{abs(number):.0f}"
+        number = self._replace_hash_and_sign_chars(number)
+        number = self._filter_allowed_hash_and_sign_chars(number)
+        number = number[-length:]
+        return number.zfill(length)
+
+    @api.model
+    def _prepare_description_for_plu(self, description):
+        description = self._replace_hash_and_sign_chars(description)
+        description = self._filter_allowed_hash_and_sign_chars(description)
+        description = description[-20:]
+        return description.ljust(20)

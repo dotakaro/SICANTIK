@@ -3,7 +3,7 @@
 from odoo import models, fields
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = "res.company"
 
     account_check_printing_layout = fields.Selection(

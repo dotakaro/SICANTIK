@@ -17,8 +17,8 @@ class TestUi(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
             "l10n_mx_edi_usage": "I01",
         })
 
-    def test_mx_pos_invoice_order(self):
-        self.start_tour("/odoo", "l10n_mx_edi_pos.tour_invoice_order", login=self.env.user.login)
+    def test_mx_pos_invoice_order_and_refund(self):
+        self.start_tour("/odoo", "l10n_mx_edi_pos.test_mx_pos_invoice_order_and_refund", login=self.env.user.login)
 
     def test_mx_pos_invoice_order_default_usage(self):
         self.start_tour("/odoo", "l10n_mx_edi_pos.tour_invoice_order_default_usage", login=self.env.user.login)
@@ -49,6 +49,7 @@ class TestUi(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
         self.new_partner = self.env['res.partner'].create({
             'name': 'AAA Partner',
             'zip': '12345',
+            'state_id': self.env.ref('base.state_mx_ags').id,
             'country_id': self.env.company.country_id.id,
         })
         self.product1 = self.env['product.product'].create({
@@ -88,7 +89,7 @@ class TestUi(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
             'city': "Test City",
             'zipcode': self.new_partner.zip,
             'country_id': self.new_partner.country_id.id,
-            'state_id': self.new_partner.state_id,
+            'state_id': self.new_partner.state_id.id,
             'phone': "123456789",
             'vat': 'GODE561231GR8',
             'invoice_l10n_mx_edi_usage': 'D10',
@@ -149,7 +150,8 @@ class TestUi(TestMxEdiPosCommon, TestPointOfSaleHttpCommon):
         current_session.action_pos_session_closing_control()
 
         self.main_pos_config.with_user(self.user).open_ui()
-        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'pos_settle_account_due', login="accountman")
+        self.start_tour("/pos/ui/%d" % self.main_pos_config.id, 'pos_settle_account_due', login="accountman")
+        self.main_pos_config.current_session_id.action_pos_session_closing_control()
         self.assertEqual(self.partner_test_1.total_due, 0)
 
     def test_usage_mx_pos_invoice_order(self):

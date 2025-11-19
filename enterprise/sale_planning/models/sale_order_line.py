@@ -12,7 +12,7 @@ class SaleOrderLine(models.Model):
     planning_hours_planned = fields.Float(compute='_compute_planning_hours_planned', store=True, compute_sudo=True, export_string_translation=False)
     planning_hours_to_plan = fields.Float(compute='_compute_planning_hours_to_plan', store=True, compute_sudo=True, export_string_translation=False)
 
-    @api.depends('product_uom', 'product_uom_qty', 'state')
+    @api.depends('product_uom_id', 'product_uom_qty', 'state')
     def _compute_planning_hours_to_plan(self):
         sol_planning = self.filtered_domain([('state', 'not in', ['draft', 'sent'])])
         if sol_planning:
@@ -20,11 +20,11 @@ class SaleOrderLine(models.Model):
             uom_hour = self.env.ref('uom.product_uom_hour')
             uom_unit = self.env.ref('uom.product_uom_unit')
             for sol in sol_planning:
-                if sol.product_uom == uom_hour or sol.product_uom == uom_unit:
+                if sol.product_uom_id == uom_hour or sol.product_uom_id == uom_unit:
                     sol.planning_hours_to_plan = sol.product_uom_qty
                 else:
                     sol.planning_hours_to_plan = float_round(
-                        sol.product_uom._compute_quantity(sol.product_uom_qty, uom_hour, raise_if_failure=False),
+                        sol.product_uom_id._compute_quantity(sol.product_uom_qty, uom_hour, raise_if_failure=False),
                         precision_digits=2
                     )
         for line in self - sol_planning:
@@ -41,7 +41,7 @@ class SaleOrderLine(models.Model):
             ('start_datetime', '!=', False),
             '|',
                 ('resource_id', '=', False),
-                ('resource_type', '!=', 'material'),
+                ('resource_type', 'in', ['user', 'material']),
         ], ['sale_line_id'], ['allocated_hours:sum'])
         mapped_data = {sale_line.id: allocated_hours_sum for sale_line, allocated_hours_sum in group_data}
         for line in self:
@@ -124,17 +124,23 @@ class SaleOrderLine(models.Model):
         """
             For SO service lines with slot generation, create the planning slot.
         """
-        vals_list = []
-        for so_line in self:
-            if (so_line.product_id.type == 'service'
-               and so_line.product_id.planning_enabled
-               and not so_line.planning_slot_ids.filtered(lambda shift: not shift.start_datetime)
-               and float_compare(
-                    so_line.planning_hours_to_plan,
-                    so_line.planning_hours_planned,
-                    precision_digits=2) == 1):
-                vals_list.append(so_line._planning_slot_values())
+        vals_list = self.filtered(lambda sol: sol._should_generate_planning_slot())._planning_slot_vals_list()
         self.env['planning.slot'].create(vals_list)
+
+    def _should_generate_planning_slot(self):
+        return (
+            self.product_id.type == 'service'
+            and self.product_id.planning_enabled
+            and not self.planning_slot_ids.filtered(lambda shift: not shift.start_datetime)
+            and float_compare(
+                self.planning_hours_to_plan,
+                self.planning_hours_planned,
+                precision_digits=2
+            ) == 1
+        )
+
+    def _planning_slot_vals_list(self):
+        return [sol._planning_slot_values() for sol in self]
 
     def _planning_slot_values(self):
         return {

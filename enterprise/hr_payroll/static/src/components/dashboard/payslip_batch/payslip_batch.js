@@ -1,8 +1,6 @@
-/** @odoo-module **/
-
-import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { Component } from "@odoo/owl";
+import { useOpenPayRun } from "../../../views/payslip_run_hook";
 
 export class PayrollDashboardPayslipBatch extends Component {
     static template = "hr_payroll.PayslipBatch";
@@ -10,38 +8,34 @@ export class PayrollDashboardPayslipBatch extends Component {
 
     setup() {
         this.actionService = useService("action");
+        this.openPayRun = useOpenPayRun();
     }
 
     /**
      * Handles clicking on the title
      */
     onClickTitle() {
-        this.actionService.doAction('hr_payroll.action_hr_payslip_run_tree');
+        this.actionService.doAction("hr_payroll.action_hr_payslip_run");
     }
 
     getColorFromState(state) {
         const colorMap = {
-            'New': 'text-bg-secondary',
-            'Confirmed': 'text-bg-success',
-            'Done': 'text-bg-primary',
-            'Paid': 'text-bg-warning',
+            New: "text-bg-info",
+            Confirmed: "text-bg-warning",
+            Done: "text-bg-success",
+            Paid: "text-bg-primary",
         };
-        return colorMap[state] || 'text-bg-primary'
+        return colorMap[state] || "text-bg-info";
     }
 
     /**
      * Handles clicking on the line
      *
      * @param {number} batchID
-     * @param {string} batchNames
      */
-    onClickLine(batchID, batchName) {
-        this.actionService.doAction({
-            type: 'ir.actions.act_window',
-            name: _t('Employee Payslips'),
-            res_model: 'hr.payslip.run',
-            res_id: batchID,
-            views: [[false, 'form']],
+    onClickLine(batchID) {
+        this.openPayRun({
+            id: batchID
         });
     }
 }

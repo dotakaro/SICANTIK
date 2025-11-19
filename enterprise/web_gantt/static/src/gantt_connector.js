@@ -69,11 +69,10 @@ export class GanttConnector extends Component {
                     Function,
                     { type: Object, shape: { left: Number, top: Number } },
                 ],
+                dashed: { type: Boolean, optional: true },
             },
         },
-        onLeftButtonClick: { type: Function, optional: true },
         onRemoveButtonClick: { type: Function, optional: true },
-        onRightButtonClick: { type: Function, optional: true },
     };
     static defaultProps = {
         highlighted: false,
@@ -115,6 +114,10 @@ export class GanttConnector extends Component {
 
     get targetPoint() {
         return this.props.reactive.targetPoint;
+    }
+
+    get isDashed() {
+        return this.props.reactive.dashed;
     }
 
     setup() {
@@ -268,21 +271,9 @@ export class GanttConnector extends Component {
     // Handlers
     //-------------------------------------------------------------------------
 
-    onLeftButtonClick() {
-        if (this.props.onLeftButtonClick) {
-            this.props.onLeftButtonClick();
-        }
-    }
-
     onRemoveButtonClick() {
         if (this.props.onRemoveButtonClick) {
             this.props.onRemoveButtonClick();
-        }
-    }
-
-    onRightButtonClick() {
-        if (this.props.onRightButtonClick) {
-            this.props.onRightButtonClick();
         }
     }
 

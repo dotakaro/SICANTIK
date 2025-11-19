@@ -14,6 +14,7 @@ Also adds DATEV export options to general ledger
         'l10n_de', 'account_reports'
     ],
     'data': [
+        'data/account_return_data.xml',
         'data/balance_sheet.xml',
         'data/profit_and_loss.xml',
         'data/ec_sales_list_report.xml',
@@ -26,5 +27,6 @@ Also adds DATEV export options to general ledger
     'installable': True,
     'post_init_hook': '_l10n_de_reports_post_init',
     'auto_install': ['l10n_de', 'account_reports'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

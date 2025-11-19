@@ -3,15 +3,15 @@
 # 	* helpdesk
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Tony Ng, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Tony Ng, 2025\n"
 "Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
@@ -103,11 +103,9 @@ msgstr "<b>拖放</b>卡片，以改變支援請求的階段。"
 #. odoo-javascript
 #: code:addons/helpdesk/static/src/js/tours/helpdesk.js:0
 msgid ""
-"<b>Log notes</b> for internal communications (you will only notify the "
-"persons you specifically tag). Use <b>@ mentions</b> to ping a colleague or "
-"<b># mentions</b> to contact a group of people."
-msgstr ""
-"<b>記下備註</b>，以作內部通訊（只會通知你特意標記的人）。使用「<b>@提及</b>」以特別指明某位同事，或「<b>#提及</b>」去聯絡一組人。"
+"<b>Log internal notes</b> and use @<b>mentions</b> to notify your "
+"colleagues."
+msgstr "<b>記錄內部備註</b>，使用 @<b>提及</b> 以通知你的同事。"
 
 #. module: helpdesk
 #: model:mail.template,body_html:helpdesk.solved_ticket_request_email_template
@@ -170,17 +168,17 @@ msgid ""
 "                        <tr>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/5\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\"/>\n"
+"                                    <img alt=\"Happy\" src=\"/rating/static/src/img/rating_5.png\" title=\"Happy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/3\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\"/>\n"
+"                                    <img alt=\"Neutral\" src=\"/rating/static/src/img/rating_3.png\" title=\"Neutral\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/1\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\"/>\n"
+"                                    <img alt=\"Unhappy\" src=\"/rating/static/src/img/rating_1.png\" title=\"Unhappy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                        </tr>\n"
@@ -233,7 +231,7 @@ msgstr ""
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/3\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"還可以\" src=\"/rating/static/src/img/rating_3.png\" title=\"還可以\"/>\n"
+"                                    <img alt=\"中性\" src=\"/rating/static/src/img/rating_3.png\" title=\"中性\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
@@ -278,19 +276,19 @@ msgid ""
 "\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.use_website_helpdesk_form\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">View Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">View Ticket</a>\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">View Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">View Ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
 "        </t>\n"
 "        <t t-elif=\"object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"object.team_id.use_website_helpdesk_forum or object.team_id.use_website_helpdesk_knowledge or object.team_id.use_website_helpdesk_slides\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visit Help Center</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visit Help Center</a>\n"
 "        </t><br/><br/>\n"
 "    </div>\n"
 "\n"
@@ -319,19 +317,19 @@ msgstr ""
 "\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.use_website_helpdesk_form\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">查看請求</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">查看請求</a>\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">查看請求</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">查看請求</a>\n"
 "        </t>\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">關閉請求</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">關閉請求</a>\n"
 "        </t>\n"
 "        <t t-elif=\"object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">關閉請求</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">關閉請求</a>\n"
 "        </t>\n"
 "        <t t-if=\"object.team_id.use_website_helpdesk_forum or object.team_id.use_website_helpdesk_knowledge or object.team_id.use_website_helpdesk_slides\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">前往幫助中心</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">前往幫助中心</a>\n"
 "        </t><br/><br/>\n"
 "    </div>\n"
 "\n"
@@ -351,12 +349,12 @@ msgstr "<i class=\"fa fa-envelope-o\" title=\"網域別名\" role=\"img\" aria-l
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_form
 msgid ""
-"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Satisfied\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Okay\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Dissatisfied\"/>"
+"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Happy\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Neutral\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Unhappy\"/>"
 msgstr ""
 "<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"滿意\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"還可以\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"中性\"/>\n"
 "                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"不滿意\"/>"
 
 #. module: helpdesk
@@ -580,6 +578,11 @@ msgid ""
 msgstr "當建立別名的新記錄時，一個Python字典被提供作為預設值."
 
 #. module: helpdesk
+#: model:ir.model.constraint,message:helpdesk.constraint_helpdesk_tag_assignment_tag_team_unique
+msgid "A tag can only be used once per team."
+msgstr "同一團隊只可使用同一標籤一次。"
+
+#. module: helpdesk
 #: model:ir.model.constraint,message:helpdesk.constraint_helpdesk_tag_name_uniq
 msgid "A tag with the same name already exists."
 msgstr "已有同名標籤。"
@@ -668,6 +671,11 @@ msgid ""
 "Add your stage and place it at the right step of your workflow by dragging &"
 " dropping it."
 msgstr "加入工作階段，透過拖放將其放置在工作流程內的正確步驟。"
+
+#. module: helpdesk
+#: model:ir.actions.act_window,name:helpdesk.action_edit_followers_helpdesk_ticket
+msgid "Add/remove followers"
+msgstr "加入/移除關注者"
 
 #. module: helpdesk
 #: model:res.groups,name:helpdesk.group_helpdesk_manager
@@ -783,6 +791,13 @@ msgid "Are you sure you want to delete these stages?"
 msgstr "確定要刪除這些階段嗎？"
 
 #. module: helpdesk
+#: model_terms:ir.actions.act_window,help:helpdesk.action_helpdesk_tag_assignment
+msgid ""
+"Assign tickets to the appropriate team members by defining who can work on "
+"tickets with certain tags."
+msgstr "透過設定誰人可處理附有特定標籤的支援請求，便可輕鬆將支援請求分配至適當的團隊成員。"
+
+#. module: helpdesk
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_graph_main
@@ -857,11 +872,6 @@ msgid "Automatic Closing"
 msgstr "自動關閉"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Average"
-msgstr "平均"
-
-#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__avg_response_hours
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__avg_response_hours
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__avg_response_hours
@@ -893,20 +903,20 @@ msgstr "近 7 天平均評分"
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Dissatisfied"
-msgstr "平均評分：不滿意"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Okay"
-msgstr "平均評分：還可以"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Satisfied"
+msgid "Average Rating: Happy"
 msgstr "平均評分：滿意"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
+msgid "Average Rating: Neutral"
+msgstr "平均評分：中性"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
+msgid "Average Rating: Unhappy"
+msgstr "平均評分：不滿意"
 
 #. module: helpdesk
 #. odoo-javascript
@@ -930,11 +940,6 @@ msgstr "平均過去 7 天"
 #: code:addons/helpdesk/static/src/components/helpdesk_team_dashboard/helpdesk_team_dashboard.xml:0
 msgid "Avg Open Hours"
 msgstr "平均未完成時數"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Bad"
-msgstr "糟糕"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
@@ -1120,6 +1125,16 @@ msgid "Configuration"
 msgstr "配置"
 
 #. module: helpdesk
+#: model:ir.actions.act_window,name:helpdesk.action_helpdesk_tag_assignment
+msgid "Configure Tags Handled by Team Members"
+msgstr "配置由團隊成員處理的標籤"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
+msgid "Configure tags handled by team members"
+msgstr "配置由團隊成員處理的標籤"
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_delete_confirmation_wizard
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_unarchive_wizard
 msgid "Confirm"
@@ -1151,6 +1166,16 @@ msgstr "優惠券"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 msgid "Create Date"
 msgstr "建立日期"
+
+#. module: helpdesk
+#: model:ir.model,website_form_label:helpdesk.model_res_partner
+msgid "Create a Customer"
+msgstr "建立客戶"
+
+#. module: helpdesk
+#: model:ir.model,website_form_label:helpdesk.model_helpdesk_ticket
+msgid "Create a Ticket"
+msgstr "建立支援請求"
 
 #. module: helpdesk
 #: model_terms:ir.actions.act_window,help:helpdesk.email_template_action_helpdesk
@@ -1187,6 +1212,7 @@ msgstr "建立請求，以獲取統計數據。"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__create_uid
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__create_uid
 msgid "Created by"
@@ -1198,6 +1224,7 @@ msgstr "建立人員"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__create_date
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__create_date
 msgid "Created on"
@@ -1228,7 +1255,6 @@ msgstr "自訂彈跳訊息"
 #. module: helpdesk
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
-#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_id
@@ -1245,8 +1271,6 @@ msgid "Customer Care"
 msgstr "客戶關顧"
 
 #. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_email
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_email
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_email
@@ -1319,11 +1343,8 @@ msgid "Deadline"
 msgstr "截止日期"
 
 #. module: helpdesk
-#. odoo-javascript
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_graph/helpdesk_ticket_graph_model.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_kanban/helpdesk_ticket_kanban_header.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_list/helpdesk_ticket_list_renderer.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_pivot/helpdesk_ticket_pivot_model.js:0
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "Deadline reached"
 msgstr "截止日期已到"
 
@@ -1380,23 +1401,30 @@ msgid "Discard"
 msgstr "捨棄"
 
 #. module: helpdesk
+#: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_team__assign_method__tags
+msgid "Dispatch tickets based on tags"
+msgstr "根據標籤分派支援請求"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_digest_digest__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_ir_module_module__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_ir_ui_menu__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_mail_message__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_company__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_partner__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_users__display_name
 msgid "Display Name"
 msgstr "顯示名稱"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Dissatisfied"
-msgstr "不滿意"
 
 #. module: helpdesk
 #. odoo-python
@@ -1413,11 +1441,6 @@ msgstr "每名使用者都有相同數量的未完成請求"
 #: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_team__assign_method__randomly
 msgid "Each user is assigned an equal number of tickets"
 msgstr "每名使用者都獲分配相同數量的請求"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Edit"
-msgstr "編輯"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_email
@@ -1647,6 +1670,7 @@ msgid "Group By"
 msgstr "分組依據"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
 msgid "Happy"
 msgstr "快樂"
@@ -1685,6 +1709,7 @@ msgstr "支援中心"
 
 #. module: helpdesk
 #: model:ir.ui.menu,name:helpdesk.menu_helpdesk_root
+#: model:res.groups.privilege,name:helpdesk.res_groups_privilege_helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.digest_digest_view_form
 msgid "Helpdesk"
 msgstr "技術支援"
@@ -1708,6 +1733,11 @@ msgstr "技術支援階段"
 #: model:ir.model,name:helpdesk.model_helpdesk_stage_delete_wizard
 msgid "Helpdesk Stage Delete Wizard"
 msgstr "技術支援階段刪除精靈"
+
+#. module: helpdesk
+#: model:ir.model,name:helpdesk.model_helpdesk_tag_assignment
+msgid "Helpdesk Tag Assignment"
+msgstr "幫助台標籤指派"
 
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_helpdesk_tag
@@ -1812,15 +1842,23 @@ msgid "Hours to First Response"
 msgstr "首次回應需時"
 
 #. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_digest_digest__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__id
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__id
+#: model:ir.model.fields,field_description:helpdesk.field_ir_module_module__id
+#: model:ir.model.fields,field_description:helpdesk.field_ir_ui_menu__id
+#: model:ir.model.fields,field_description:helpdesk.field_mail_message__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_company__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_partner__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_users__id
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
 msgid "ID"
 msgstr "識別號"
@@ -1831,6 +1869,11 @@ msgid ""
 "ID of the parent record holding the alias (example: project holding the task"
 " creation alias)"
 msgstr "上級記錄ID支援別名(例如:專案支援任務建立別名)"
+
+#. module: helpdesk
+#: model:helpdesk.team,name:helpdesk.helpdesk_team2
+msgid "IT Support (Auto Assignment by Tags)"
+msgstr "資訊科技支援（按標籤自動分配）"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_exception_icon
@@ -1992,6 +2035,7 @@ msgstr "最後階段更新"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__write_uid
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__write_uid
 msgid "Last Updated by"
@@ -2003,6 +2047,7 @@ msgstr "最後更新者"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__write_date
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__write_date
 msgid "Last Updated on"
@@ -2155,6 +2200,12 @@ msgid "Move to Stage"
 msgstr "移至階段"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
+msgid "My Activities"
+msgstr "我的活動"
+
+#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__my_activity_date_deadline
 msgid "My Activity Deadline"
 msgstr "我的活動截止時間"
@@ -2191,6 +2242,12 @@ msgstr "我的支援請求"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
 msgid "Name"
 msgstr "名稱"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
+#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
+msgid "Neutral"
+msgstr "中立"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
@@ -2282,6 +2339,11 @@ msgid "No tags found. Let's create one!"
 msgstr "找不到標籤。 立即建立一個！"
 
 #. module: helpdesk
+#: model_terms:ir.actions.act_window,help:helpdesk.action_helpdesk_tag_assignment
+msgid "No tags or team members found. Let's create them!"
+msgstr "找不到標籤或團隊成員。讓我們建立它們吧！"
+
+#. module: helpdesk
 #: model_terms:ir.actions.act_window,help:helpdesk.helpdesk_team_dashboard_action_main
 msgid "No teams found"
 msgstr "沒有找到團隊"
@@ -2363,12 +2425,6 @@ msgstr "同一合作夥伴其他請求數量"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 msgid "Number of tickets closed in the past 7 days."
 msgstr "過去 7 天內關閉的請求數量。"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Okay"
-msgstr "尚可"
 
 #. module: helpdesk
 #: model:helpdesk.stage,name:helpdesk.stage_on_hold
@@ -2693,12 +2749,6 @@ msgid "Red Kanban Label"
 msgstr "紅色的看板標籤"
 
 #. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/controllers/portal.py:0
-msgid "Reference"
-msgstr "編號"
-
-#. module: helpdesk
 #: model:mail.message.subtype,name:helpdesk.mt_ticket_refund_status
 msgid "Refund Status"
 msgstr "退款狀態"
@@ -2880,22 +2930,10 @@ msgid "SMS Delivery error"
 msgstr "簡訊發送錯誤"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Sad face"
-msgstr "悲傷的表情"
-
-#. module: helpdesk
 #. odoo-javascript
 #: code:addons/helpdesk/static/src/components/helpdesk_team_dashboard/helpdesk_team_dashboard.xml:0
 msgid "Sample"
 msgstr "樣品"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Satisfied"
-msgstr "滿意"
 
 #. module: helpdesk
 #. odoo-javascript
@@ -3028,8 +3066,8 @@ msgstr "顯示SLA政策"
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
-msgid "Show all records which has next action date is before today"
-msgstr "顯示在今天之前的下一個行動日期的所有記錄"
+msgid "Show all records whose next activity date is past"
+msgstr "顯示下一活動日期已過的所有記錄"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__sla_id
@@ -3179,6 +3217,12 @@ msgid "Team"
 msgstr "團隊"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_tag_assignment_search
+msgid "Team Member"
+msgstr "團隊成員"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__user_ids
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__member_ids
 msgid "Team Members"
 msgstr "團隊成員"
@@ -3221,14 +3265,6 @@ msgid ""
 "The time spent in these stages won't be taken into account in the "
 "calculation of the SLA."
 msgstr "計算 SLA 時，不會考慮在這些階段上花費的時間。"
-
-#. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/models/helpdesk_team.py:0
-msgid ""
-"The visibility of the team needs to be set as \"Invited portal users and all"
-" internal users\" in order to use the website form."
-msgstr "團隊的顯示設定須設為「受邀門戶網站使用者及所有內部使用者」，才可使用網站表單。"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
@@ -3375,6 +3411,11 @@ msgstr "已評分請求"
 #: model:ir.model,name:helpdesk.model_helpdesk_sla_status
 msgid "Ticket SLA Status"
 msgstr "支援請求SLA狀態"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__tag_id
+msgid "Ticket Tag"
+msgstr "支援請求標籤"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.quick_create_ticket_form
@@ -3552,10 +3593,8 @@ msgid "Unarchive Tickets"
 msgstr "取消封存請求"
 
 #. module: helpdesk
-#. odoo-javascript
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_graph/helpdesk_ticket_graph_model.js:0
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
 msgid "Unassigned"
@@ -3567,6 +3606,18 @@ msgstr "未分派"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 msgid "Unassigned Tickets"
 msgstr "未分配請求"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
+#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
+msgid "Unhappy"
+msgstr "不滿意"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
+msgid "Unhappy face"
+msgstr "不開心表情"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
@@ -3639,6 +3690,14 @@ msgid ""
 msgstr "想要<b>提高客戶滿意度</b>嗎？<br/>請按「技術支援」開始。<i></i>"
 
 #. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_team.py:0
+msgid ""
+"Want to use the website form? Just adjust your team's visibility to "
+"\"Invited portal users and all internal users\" and watch the magic happen!"
+msgstr "想使用網站表單？只需將團隊的顯示設定，調整為「獲邀請門戶使用者及所有內部使用者」即可。"
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.tickets_followup
 msgid ""
 "We hope to have addressed your request satisfactorily. If you no longer need"
@@ -3647,6 +3706,7 @@ msgstr "我們希望能圓滿解決你的請求。如果你不再需要我們的
 
 #. module: helpdesk
 #: model_terms:helpdesk.team,description:helpdesk.helpdesk_team1
+#: model_terms:helpdesk.team,description:helpdesk.helpdesk_team2
 #: model_terms:helpdesk.team,description:helpdesk.helpdesk_team3
 msgid ""
 "We provide 24/7 support, Monday through Friday. Ticket responses are usually provided within 2 working days.<br>\n"
@@ -3771,6 +3831,12 @@ msgid "alias"
 msgstr "別名"
 
 #. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/controllers/portal.py:0
+msgid "close_date"
+msgstr "close_date"
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_sla_view_form
 msgid "e.g. Close urgent tickets within 36 hours"
 msgstr "例：36 小時內解決緊急請求"
@@ -3823,9 +3889,21 @@ msgstr "搜尋團隊"
 
 #. module: helpdesk
 #. odoo-python
+#: code:addons/helpdesk/models/helpdesk_team.py:0
+msgid "team_id"
+msgstr "team_id"
+
+#. module: helpdesk
+#. odoo-python
 #: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "tickets"
 msgstr "支援請求"
+
+#. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/controllers/portal.py:0
+msgid "user_id"
+msgstr "user_id"
 
 #. module: helpdesk
 #: model:mail.template,subject:helpdesk.rating_ticket_request_email_template
@@ -3842,6 +3920,7 @@ msgid "{{ object.name }}"
 msgstr "{{ object.name }}"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_data
-msgid "{{rating.res_name if t['is_helpdesk_user'] else ''}}"
-msgstr "{{rating.res_name if t['is_helpdesk_user'] else ''}}"
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_ticket.py:0
+msgid "👤 Unassigned"
+msgstr "👤 未指派"

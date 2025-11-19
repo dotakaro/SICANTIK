@@ -3,12 +3,13 @@
 
 {
     'name': 'Employees in Gantt',
-    'category': 'Hidden',
+    'category': 'Human Resources/Employees',
     'summary': 'Employees in Gantt',
     'version': '1.0',
     'description': """ """,
     'depends': ['hr', 'web_gantt'],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend_lazy': [

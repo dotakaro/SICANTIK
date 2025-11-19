@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0326
+from datetime import timedelta
+
 from odoo.tests import tagged
 from odoo import fields, Command
 
@@ -65,7 +67,7 @@ class TestAccountReports(TestAccountReportsCommon):
 
         cls._reconcile_on((invoice + payment_2).line_ids, cls.receivable_account_1)
 
-        cls.env.user.groups_id += cls.env.ref('analytic.group_analytic_accounting')
+        cls.env.user.group_ids += cls.env.ref('analytic.group_analytic_accounting')
         cls.analytic_plan_departments, cls.analytic_other_plan = cls.env['account.analytic.plan'].create([
             {'name': 'Departments Plan'},
             {'name': 'Other Plan'},
@@ -88,26 +90,26 @@ class TestAccountReports(TestAccountReportsCommon):
         self.assertLinesValues(
             lines,
             #   Name                            Debit       Credit      Balance
-            [   0,                              4,          5,          6],
+            [   0,                              3,          4,          5],
             [
                 # Accounts.
                 ('101401 Bank',                 460.0,      0.0,    460.0),
                 ('121000 Account Receivable',   460.0,      460.0,    0.0),
                 ('400000 Product Sales',        0.0,        460.0, -460.0),
                 # Report Total.
-                ('Total',                       920.0,      920.0,    0.0),
+                ('Total General Ledger',        920.0,      920.0,    0.0),
             ],
             options,
         )
 
         # Mark the '101200 Account Receivable' line to be unfolded.
-        line_id = lines[2]['id'] # Index 2, because there is the total line for bank in position 1
+        line_id = lines[2]['id']  # Index 2, because there is the total line for bank in position 1
         options['unfolded_lines'] = [line_id]
         self.assertLinesValues(
             report._get_lines(options),
             # pylint: disable=C0326
             #   Name                                    Date            Debit           Credit          Balance
-            [   0,                                      1,                    4,             5,             6],
+            [   0,                                      1,                    3,             4,             5],
             [
                 # Account.
                 ('101401 Bank',                         '',              460.00,          0.00,        460.00),
@@ -123,7 +125,7 @@ class TestAccountReports(TestAccountReportsCommon):
                 ('Total 121000 Account Receivable',     '',              460.00,        460.00,          0.00),
                 ('400000 Product Sales',                '',                0.00,        460.00,       -460.00),
                 # Report Total.
-                ('Total',                               '',              920.00,        920.00,          0.00),
+                ('Total General Ledger',                '',              920.00,        920.00,          0.00),
             ],
             options,
         )
@@ -198,13 +200,13 @@ class TestAccountReports(TestAccountReportsCommon):
             # pylint: disable=C0326
             report._get_lines(options),
             #   Name                                     Debit           Credit          Balance
-            [   0,                                       4,              5,              6],
+            [   0,                                       3,              4,              5],
             [
                 # Accounts.
+                ('101403 Outstanding Receipts',        115,              0,            115),
                 ('121000 Account Receivable',            0,            115,           -115),
-                ('OSTR00 Outstanding Receipts',        115,              0,            115),
                 # Report Total.
-                ('Total',                              115,            115,             0),
+                ('Total General Ledger',               115,            115,             0),
             ],
             options,
         )
@@ -215,15 +217,15 @@ class TestAccountReports(TestAccountReportsCommon):
             # pylint: disable=C0326
             report._get_lines(options),
             #   Name                                     Debit           Credit          Balance
-            [   0,                                       4,              5,              6],
+            [   0,                                       3,              4,              5],
             [
                 # Accounts.
+                ('101403 Outstanding Receipts',        115,              0,            115),
                 ('121000 Account Receivable',          115,            115,              0),
                 ('251000 Tax Received',                  0,             15,            -15),
                 ('400000 Product Sales',                 0,            100,           -100),
-                ('OSTR00 Outstanding Receipts',        115,              0,            115),
                 # Report Total.
-                ('Total',                              230,            230,             0),
+                ('Total General Ledger',               230,            230,             0),
             ],
             options,
         )
@@ -276,13 +278,13 @@ class TestAccountReports(TestAccountReportsCommon):
         self.assertLinesValues(
             report._get_lines(options),
             #   Name                                     Debit           Credit          Balance
-            [   0,                                       5,              6,              7],
+            [   0,                                       4,              5,              6],
             [
                 # Accounts.
                 # There should be no lines in this report.
 
                 # Report Total.
-                ('Total',                                0,              0,              0),
+                ('Total General Ledger',                 0,              0,              0),
             ],
             options,
         )
@@ -296,14 +298,14 @@ class TestAccountReports(TestAccountReportsCommon):
         self.assertLinesValues(
             report._get_lines(options),
             #   Name                                     Debit           Credit          Balance
-            [   0,                                       5,              6,              7],
+            [   0,                                       4,              5,              6],
             [
                 # Accounts.
                 ('101401 Bank',                        350,              0,            350),
                 ('121000 Account Receivable',          245,            455,           -210),
                 ('400000 Product Sales',                 0,            140,           -140),
                 # Report Total.
-                ('Total',                              595,            595,              0),
+                ('Total General Ledger',               595,            595,              0),
             ],
             options,
         )
@@ -317,7 +319,7 @@ class TestAccountReports(TestAccountReportsCommon):
         self.assertLinesValues(
             report._get_lines(options),
             #   Name                                     Debit           Credit          Balance
-            [   0,                                       5,              6,              7],
+            [   0,                                       4,              5,              6],
             [
                 # Accounts.
                 ('101401 Bank',                        350,              0,            350),
@@ -326,7 +328,7 @@ class TestAccountReports(TestAccountReportsCommon):
                 ('499000 Other Income',                  0,            150,           -150),
                 ('999999 Undistributed Profits/Losses',  0,            140,           -140),
                 # Report Total.
-                ('Total',                              850,            850,              0),
+                ('Total General Ledger',               850,            850,              0),
             ],
             options,
         )
@@ -339,7 +341,7 @@ class TestAccountReports(TestAccountReportsCommon):
         self.assertLinesValues(
             report._get_lines(options),
             #   Name                                     Debit           Credit          Balance
-            [   0,                                       5,              6,              7],
+            [   0,                                       4,              5,              6],
             [
                 # Accounts.
                 ('101401 Bank',                        350,              0,            350),
@@ -347,30 +349,37 @@ class TestAccountReports(TestAccountReportsCommon):
                 ('400000 Product Sales',                 0,            200,           -200),
                 ('499000 Other Income',                  0,            150,           -150),
                 # Report Total.
-                ('Total',                              850,            850,              0),
+                ('Total General Ledger',               850,            850,              0),
             ],
             options,
         )
 
     def test_cash_basis_general_ledger_load_more_lines(self):
-        self.env['account.account'].search([('code', '=', 'OSTR00')]).code = '101403'
         invoice_date = fields.Date.from_string('2023-01-01')
+        report_end = fields.Date.from_string('2023-01-31')
         invoice = self.init_invoice('out_invoice', amounts=[3000.0], taxes=[], partner=self.partner_a, invoice_date=invoice_date, post=True)
-        for _ in range(3):
-            self.env['account.payment.register'].with_context(active_ids=invoice.ids, active_model='account.move')\
-                .create({'payment_date': invoice_date, 'amount': 1000})._create_payments()
+        self.env['account.payment.register'].with_context(active_ids=invoice.ids, active_model='account.move')\
+            .create({'payment_date': invoice_date, 'amount': 1000})._create_payments()
+        self.env['account.payment.register'].with_context(active_ids=invoice.ids, active_model='account.move')\
+            .create({'payment_date': invoice_date, 'amount': 1000})._create_payments()
+        self.env['account.payment.register'].with_context(active_ids=invoice.ids, active_model='account.move')\
+            .create({'payment_date': invoice_date + timedelta(days=1), 'amount': 500})._create_payments()
+        self.env['account.payment.register'].with_context(active_ids=invoice.ids, active_model='account.move')\
+            .create({'payment_date': invoice_date + timedelta(days=2), 'amount': 500})._create_payments()
         report = self.env.ref('account_reports.general_ledger_report')
         report.load_more_limit = 2
-        options = self._generate_options(report, invoice_date, invoice_date)
+        options = self._generate_options(report, invoice_date, report_end)
         options['report_cash_basis'] = True
-        lines = report._get_lines(options)
-        lines_to_unfold_id = lines[5]['id'] # Mark the '101200 Account Receivable' line to be unfolded.
-        options['unfolded_lines'] = [lines_to_unfold_id]
+        options['ignore_totals_below_sections'] = True
+        parent_line_id = report._get_generic_line_id(model_name='account.report.line', value=self.env.ref("account_reports.general_ledger_custom_engine_line").id)
+        account_revenue_line_id = report._get_generic_line_id(model_name='account.account', value=self.company_data['default_account_revenue'].id, markup={'groupby': 'account_or_unaff_id'}, parent_line_id=parent_line_id)
+        options['unfolded_lines'] = [account_revenue_line_id]
+
         lines = report._get_lines(options)
         self.assertLinesValues(
             lines,
             #   Name                                    Debit       Credit     Balance
-            [0, 5, 6, 7],
+            [0, 4, 5, 6],
             [
                 # Accounts.
                 ('101401 Bank',                         460.0,      0,          460.0),
@@ -378,32 +387,32 @@ class TestAccountReports(TestAccountReportsCommon):
                 ('121000 Account Receivable',           3460.0,     3460.0,     0.0),
                 # Expanded line
                 ('400000 Product Sales',                0,          3000.0,     -3000.0),
-                ('INV/2023/00001',                      0,          2000.0,     -2000.0),  # The 2 first payments are grouped
+                ('INV/2023/00001 test line',            0,          2000.0,     -2000.0),  # All lines are grouped if they are on the same date with the same id
+                ('INV/2023/00001 test line',            0,          500.0,      -2500.0),
                 ('Load more...',                        '',         '',          ''),
-                ('Total 400000 Product Sales',          0,          3000.0,     -3000.0),
                 ('999999 Undistributed Profits/Losses', 0,          460.0,      -460.0),
                 # Report Total.
-                ('Total',                               6920.0,     6920.0,     0),
+                ('Total General Ledger',                6920.0,     6920.0,     0),
             ],
             options,
         )
 
         load_more_1 = report.get_expanded_lines(
             options,
-            lines[5]['id'],
-            lines[7]['groupby'],
-            '_report_expand_unfoldable_line_general_ledger',
-            lines[7]['progress'],
-            lines[7]['offset'],
+            lines[3]['id'],
+            lines[6]['groupby'],
+            '_report_expand_unfoldable_line_with_groupby',
+            lines[6]['progress'],
+            lines[6]['offset'],
             None,
         )
 
         self.assertLinesValues(
             load_more_1,
             #   Name, Debit, Credit, Balance
-            [0, 5, 6, 7],
+            [0, 4, 5, 6],
             [
-                ('INV/2023/00001', 0, 1000.0, -3000.0),  # The last payment is displayed on another line
+                ('INV/2023/00001 test line', 0, 500.0, -3000.0),  # The last payment is displayed on another line
             ],
             options,
         )
@@ -1051,10 +1060,11 @@ class TestAccountReports(TestAccountReportsCommon):
             fields.Date.from_string('2017-12-31'),
             default_options={'report_cash_basis': True}
         )
+        lines = report._get_lines(options)
         self.assertLinesValues(
-            report._get_lines(options),
+            lines,
             #   Name                                    Debit       Credit        Balance
-            [   0,                                      4,          5,            6],
+            [   0,                                      3,          4,            5],
             [
                 # Accounts.
                 ('101401 Bank',                         530.0,      0.0,      530.0),
@@ -1063,7 +1073,7 @@ class TestAccountReports(TestAccountReportsCommon):
                 ('400000 Product Sales',                0.0,        70.0,     -70.0),
                 ('999999 Undistributed Profits/Losses', 0.0,        460.0,   -460.0),
                 # Report Total.
-                ('Total',                               1060.0,     1060.0,     0.0),
+                ('Total General Ledger',                1060.0,     1060.0,     0.0),
             ],
             options
         )
@@ -1099,7 +1109,7 @@ class TestAccountReports(TestAccountReportsCommon):
         self.assertLinesValues(
             report._get_lines(options),
             #   Name                                    Debit       Credit        Balance
-            [   0,                                      4,          5,            6],
+            [   0,                                      3,          4,            5],
             [
                 # Accounts.
                 ('101401 Bank',                         610.0,      0.0,      610.0),
@@ -1109,7 +1119,7 @@ class TestAccountReports(TestAccountReportsCommon):
                 ('400000 Product Sales',                0.0,        150.0,   -150.0),
                 ('999999 Undistributed Profits/Losses', 0.0,        460.0,   -460.0),
                 # Report Total.
-                ('Total',                               1220.0,     1220.0,     0.0),
+                ('Total General Ledger',                1220.0,     1220.0,     0.0),
             ],
             options
         )

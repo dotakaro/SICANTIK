@@ -3,29 +3,15 @@
 # 	* mrp_maintenance
 # 
 # Translators:
-# Jukka Paulin <jukka.paulin@gmail.com>, 2024
-# Mikko Virtanen <mikko.virtanen2013@gmail.com>, 2024
-# Petteri Torssonen <info@collapick.com>, 2024
-# Heikki Katajisto <heikki.katajisto@myyntivoima.fi>, 2024
-# Sari Mäyrä <sari.mayra@sv-oy.fi>, 2024
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Johanna Valkonen <miujohanna@gmail.com>, 2024
-# Jenni Heikkilä <jenni.heikkila@sv-oy.fi>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Pekko Tuomisto <pekko.tuomisto@web-veistamo.fi>, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Martin Trigaux, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:27+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024\n"
+"POT-Creation-Date: 2025-07-03 12:23+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -127,6 +113,16 @@ msgid "Discard"
 msgstr "Hylkää"
 
 #. module: mrp_maintenance
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_equipment__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_request__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_stage__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_production__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workorder__display_name
+msgid "Display Name"
+msgstr "Näyttönimi"
+
+#. module: mrp_maintenance
 #: model:maintenance.equipment,name:mrp_maintenance.equipment_furniture3
 msgid "Drill Machine"
 msgstr "Porakone"
@@ -204,6 +200,16 @@ msgstr "Huonekalutyökalut"
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__has_message
 msgid "Has Message"
 msgstr "Sisältää viestin"
+
+#. module: mrp_maintenance
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_equipment__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_request__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_stage__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_production__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workorder__id
+msgid "ID"
+msgstr "ID"
 
 #. module: mrp_maintenance
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__activity_exception_icon
@@ -289,8 +295,8 @@ msgid "Maintenance Equipment"
 msgstr "Huoltovälineet"
 
 #. module: mrp_maintenance
+#: model:ir.actions.server,name:mrp_maintenance.action_production_maintenance_request
 #: model:ir.model,name:mrp_maintenance.model_maintenance_request
-#: model_terms:ir.ui.view,arch_db:mrp_maintenance.mrp_production_view_form_inherit_maintenance
 msgid "Maintenance Request"
 msgstr "Huoltopyyntö"
 
@@ -315,7 +321,13 @@ msgstr "Huoltotiimi"
 #: model:ir.model,name:mrp_maintenance.model_mrp_production
 #: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_request__production_id
 msgid "Manufacturing Order"
-msgstr "Valmistustilaus"
+msgstr "Tuotantotilaus"
+
+#. module: mrp_maintenance
+#. odoo-python
+#: code:addons/mrp_maintenance/models/mrp_maintenance.py:0
+msgid "Manufacturing Orders are already scheduled for this time slot."
+msgstr "Tuotantotilauksia on jo aikataulutettu tälle aikavälille."
 
 #. module: mrp_maintenance
 #: model_terms:ir.actions.act_window,help:mrp_maintenance.maintenance_workcenter_action
@@ -323,7 +335,7 @@ msgid ""
 "Manufacturing operations are processed at Work Centers. A Work Center can be composed of\n"
 "            workers and/or machines, they are used for costing, scheduling, capacity planning, etc."
 msgstr ""
-"Valmistustoiminnot käsitellään työkeskuksissa. Työkeskus voi koostua\n"
+"Tuotannon toimenpiteet käsitellään työkeskuksissa. Työkeskus voi koostua\n"
 "            työntekijöistä ja/tai koneista, ja niitä käytetään kustannuslaskentaan, aikataulutukseen, kapasiteetin suunnitteluun jne."
 
 #. module: mrp_maintenance
@@ -500,8 +512,8 @@ msgid ""
 "The schedule has changed from %(desired_date)s to %(effective_date)s due to "
 "planned manufacturing orders."
 msgstr ""
-"Aikataulu on muuttunut %(desired_date)ssta %(effective_date)s:ksi "
-"suunniteltujen valmistustilausten vuoksi."
+"Aikataulu on muuttunut aiemmasta %(desired_date)s uuteen: "
+"%(effective_date)s, suunniteltujen tuotantotilausten vuoksi."
 
 #. module: mrp_maintenance
 #. odoo-python

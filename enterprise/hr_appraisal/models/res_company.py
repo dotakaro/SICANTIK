@@ -28,11 +28,10 @@ class ResCompany(models.Model):
     duration_first_appraisal = fields.Integer(string="Create a first Appraisal after", default=6)
     duration_next_appraisal = fields.Integer(string="Create a second Appraisal after", default=12)
 
-    _sql_constraints = [(
-        'positif_number_months',
+    _positif_number_months = models.Constraint(
         'CHECK(duration_after_recruitment > 0 AND duration_first_appraisal > 0 AND duration_next_appraisal > 0)',
-        "The duration time must be bigger or equal to 1 month."),
-    ]
+        "The duration time must be bigger or equal to 1 month.",
+    )
 
     @api.model
     def _get_default_assessment_note_ids(self):
@@ -59,7 +58,7 @@ class ResCompany(models.Model):
             'employee_id': employee.id,
             'date_close': employee.next_appraisal_date + relativedelta(days=days),
             'manager_ids': employee.parent_id,
-            'state': 'pending',
+            'state': '2_pending',
             'employee_feedback_published': False,
             'manager_feedback_published': False,
         } for employee in employees]
@@ -68,7 +67,7 @@ class ResCompany(models.Model):
     @api.model
     def _get_employee_start_date_field(self):
         self.ensure_one()
-        return 'create_date'
+        return 'contract_date_start'
 
     # CRON job
     def _run_employee_appraisal_plans(self):

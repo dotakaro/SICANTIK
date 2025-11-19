@@ -38,8 +38,8 @@ class SDDTest(SDDTestCommon):
         # Test when cancelling a payment
         payment_agrolait = self.invoice_agrolait._get_reconciled_payments()
         payment_agrolait.action_draft()
+        payment_agrolait.move_id.line_ids.remove_move_reconcile()
         self.assertEqual(self.invoice_agrolait.payment_state, 'not_paid')
-        self.assertFalse(self.invoice_agrolait.sdd_mandate_id)
 
     def test_xml_pain_008_001_08_generation(self):
         self.sdd_company_bank_journal.debit_sepa_pain_version = 'pain.008.001.08'
@@ -77,7 +77,7 @@ class SDDTest(SDDTestCommon):
             self.assertTrue(mandates_per_validity['expiring'], 'The mandate is expiring soon')
 
             new_invoice = self.create_invoice(self.partner_agrolait)
-            payment = self.pay_with_mandate(new_invoice)  # Should reset the 36-month up to 2025-12-2
+            payment = self.pay_with_mandate(new_invoice)  # Should reset the 36-month up to 2025-12-02
             payment.action_validate()
             mandates_per_validity = mandate._update_and_partition_state_by_validity()
             self.assertTrue(mandates_per_validity['valid'], 'The mandate should not be expiring soon anymore, as we have reset the period')

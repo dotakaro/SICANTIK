@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, test } from "@odoo/hoot";
-import { click, leave, queryAll, queryOne, queryFirst } from "@odoo/hoot-dom";
-import { animationFrame, mockDate } from "@odoo/hoot-mock";
+import { click, leave, queryAll, queryAllTexts, queryFirst, queryOne } from "@odoo/hoot-dom";
+import { animationFrame, mockDate, runAllTimers } from "@odoo/hoot-mock";
 import { contains, defineParams, onRpc } from "@web/../tests/web_test_helpers";
 import { Tasks, defineGanttModels } from "./gantt_mock_models";
 import {
     SELECTORS,
     clickCell,
-    getActiveScale,
+    dragPill,
     getCell,
     getCellColorProperties,
     getGridContent,
@@ -15,6 +15,7 @@ import {
     hoverGridCell,
     mountGanttView,
     resizePill,
+    setCellParts,
 } from "./web_gantt_test_helpers";
 
 describe.current.tags("desktop");
@@ -38,8 +39,8 @@ test("create attribute", async () => {
         arch: `<gantt date_start="start" date_stop="stop" create="0"/>`,
     });
     expect(".o_dialog").toHaveCount(0);
-    await hoverGridCell("06 December 2018");
-    await clickCell("06 December 2018");
+    await hoverGridCell("06", "December 2018");
+    await clickCell("06", "December 2018");
     expect(".o_dialog").toHaveCount(1);
     expect(".modal-title").toHaveText("Plan");
     expect(".o_create_button").toHaveCount(0);
@@ -52,8 +53,8 @@ test("plan attribute", async () => {
         arch: `<gantt date_start="start" date_stop="stop" plan="0"/>`,
     });
     expect(".o_dialog").toHaveCount(0);
-    await hoverGridCell("06 December 2018");
-    await clickCell("06 December 2018");
+    await hoverGridCell("06", "December 2018");
+    await clickCell("06", "December 2018");
     expect(".o_dialog").toHaveCount(1);
     expect(".modal-title").toHaveText("Create");
 });
@@ -72,9 +73,9 @@ test("edit attribute", async () => {
                 {
                     title: "Task 5",
                     level: 0,
-                    colSpan: "Out of bounds (1)  -> 04 (1/2) December 2018",
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
                 },
-                { title: "Task 1", level: 1, colSpan: "Out of bounds (1)  -> 31 December 2018" },
+                { title: "Task 1", level: 1, colSpan: "01 December 2018 -> Out of bounds (63) " },
                 {
                     title: "Task 2",
                     level: 0,
@@ -90,7 +91,7 @@ test("edit attribute", async () => {
                     level: 2,
                     colSpan: "20 (1/2) December 2018 -> 20 December 2018",
                 },
-                { title: "Task 3", level: 0, colSpan: "27 December 2018 -> 03 (1/2) January 2019" },
+                { title: "Task 3", level: 0, colSpan: "27 December 2018 -> Out of bounds (68) " },
             ],
         },
     ]);
@@ -114,9 +115,9 @@ test("total_row attribute", async () => {
                 {
                     title: "Task 5",
                     level: 0,
-                    colSpan: "Out of bounds (1)  -> 04 (1/2) December 2018",
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
                 },
-                { title: "Task 1", level: 1, colSpan: "Out of bounds (1)  -> 31 December 2018" },
+                { title: "Task 1", level: 1, colSpan: "01 December 2018 -> Out of bounds (63) " },
                 {
                     title: "Task 2",
                     level: 0,
@@ -132,14 +133,14 @@ test("total_row attribute", async () => {
                     level: 2,
                     colSpan: "20 (1/2) December 2018 -> 20 December 2018",
                 },
-                { title: "Task 3", level: 0, colSpan: "27 December 2018 -> 03 (1/2) January 2019" },
+                { title: "Task 3", level: 0, colSpan: "27 December 2018 -> Out of bounds (68) " },
             ],
         },
         {
             isTotalRow: true,
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 04 (1/2) December 2018",
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
                     level: 0,
                     title: "2",
                 },
@@ -174,49 +175,42 @@ test("total_row attribute", async () => {
                     title: "1",
                 },
                 {
-                    colSpan: "27 December 2018 -> 31 December 2018",
+                    colSpan: "27 December 2018 -> Out of bounds (63) ",
                     level: 0,
                     title: "2",
-                },
-                {
-                    colSpan: "01 January 2019 -> 03 (1/2) January 2019",
-                    level: 0,
-                    title: "1",
                 },
             ],
         },
     ]);
 });
 
-test("default_scale attribute", async () => {
+test("default_range attribute excluded from scales", async () => {
     await mountGanttView({
         resModel: "tasks",
-        arch: `<gantt date_start="start" date_stop="stop" default_scale="day"/>`,
-    });
-    expect(getActiveScale()).toBe(5); // day scale
-    const { columnHeaders, range } = getGridContent();
-    expect(range).toBe("From: 12/20/2018 to: 12/22/2018");
-    expect(columnHeaders).toHaveLength(38);
-});
-
-test("default_scale attribute excluded from scales", async () => {
-    await mountGanttView({
-        resModel: "tasks",
-        arch: `<gantt date_start="start" date_stop="stop" default_scale="day" scales="week"/>`,
+        arch: `<gantt date_start="start" date_stop="stop" default_range="day" scales="week"/>`,
     });
     const { columnHeaders, range } = getGridContent();
-    expect(range).toBe("From: 12/20/2018 to: 12/22/2018");
-    expect(columnHeaders).toHaveLength(38);
+    expect(range).toBe("Day");
+    expect(columnHeaders).toHaveLength(42);
 });
 
-test("default_scale omitted, scales provided", async () => {
+test("default_range omitted, scales provided", async () => {
     await mountGanttView({
         resModel: "tasks",
         arch: `<gantt date_start="start" date_stop="stop" scales="day,week"/>`,
     });
     const { columnHeaders, range } = getGridContent();
-    expect(range).toBe("From: 12/20/2018 to: 12/22/2018");
-    expect(columnHeaders).toHaveLength(38);
+    expect(range).toBe("From: 12/01/2018 to: 02/28/2019");
+    expect(columnHeaders).toHaveLength(9);
+
+    await contains(SELECTORS.scaleSelectorToggler).click();
+    await animationFrame();
+    expect(`${SELECTORS.scaleSelectorMenu} .dropdown-item`).toHaveCount(3);
+    expect(queryAllTexts(`${SELECTORS.scaleSelectorMenu} .dropdown-item`)).toEqual([
+        "Day",
+        "Week",
+        "From\n12/01/2018\nto\n02/28/2019\nApply",
+    ]);
 });
 
 test("scales attribute", async () => {
@@ -224,13 +218,20 @@ test("scales attribute", async () => {
         resModel: "tasks",
         arch: `<gantt date_start="start" date_stop="stop" scales="month,day,trololo"/>`,
     });
-    expect(queryOne(".o_gantt_renderer_controls input").max).toBe("1", {
-        message: "there are only 2 valid scales (starting from 0)",
-    });
-    expect(getActiveScale()).toBe(1);
+    const { columnHeaders, range } = getGridContent();
+    expect(range).toBe("From: 12/01/2018 to: 02/28/2019");
+    expect(columnHeaders).toHaveLength(29);
+
+    await contains(SELECTORS.scaleSelectorToggler).click();
+    await animationFrame();
+    expect(queryAllTexts(`${SELECTORS.scaleSelectorMenu} .dropdown-item`)).toEqual([
+        "Day",
+        "Month",
+        "From\n12/01/2018\nto\n02/28/2019\nApply",
+    ]);
 });
 
-test("precision attribute", async () => {
+test("precision attribute ('day': 'hour:quarter')", async () => {
     onRpc("write", ({ args }) => expect.step(args));
     await mountGanttView({
         resModel: "tasks",
@@ -238,23 +239,74 @@ test("precision attribute", async () => {
             <gantt
                 date_start="start"
                 date_stop="stop"
-                precision="{'day': 'hour:quarter', 'week': 'day:half', 'month': 'day', 'year': 'month:quarter'}"
-                default_scale="day"
+                precision="{'day': 'hour:quarter'}"
+            />
+        `,
+        context: {
+            default_start_date: "2018-12-20",
+            default_stop_date: "2018-12-20",
+        },
+        domain: [["id", "=", 7]],
+    });
+
+    // resize of a quarter
+    const dropHandle = await resizePill(getPillWrapper("Task 7"), "end", 0.25, false);
+    await animationFrame();
+    expect(SELECTORS.startBadge).toHaveText("1:30 PM");
+    expect(SELECTORS.stopBadge).toHaveText("7:44 PM (+15 minutes)");
+
+    // manually trigger the drop to trigger a write
+    await dropHandle();
+    await animationFrame();
+    expect(SELECTORS.startBadge).toHaveCount(0);
+    expect(SELECTORS.stopBadge).toHaveCount(0);
+    expect.verifySteps([[[7], { stop: "2018-12-20 18:44:59" }]]);
+
+    const { moveTo, drop } = await dragPill("Task 7");
+    await moveTo({ columnHeader: "12pm", groupHeader: "December 20, 2018", part: 4 });
+    expect(SELECTORS.startBadge).toHaveText("12:45 PM");
+    expect(SELECTORS.stopBadge).toHaveText("6:59 PM");
+    expect(SELECTORS.startBadge).toHaveClass("text-danger");
+    expect(SELECTORS.stopBadge).toHaveClass("text-danger");
+    await drop();
+    expect.verifySteps([[[7], { start: "2018-12-20 11:45:12", stop: "2018-12-20 17:59:59" }]]);
+});
+
+test("precision attribute ('month': 'day:full')", async () => {
+    onRpc("write", ({ args }) => expect.step(args));
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `
+            <gantt
+                date_start="start"
+                date_stop="stop"
+                precision="{'month': 'day:full'}"
             />
         `,
         domain: [["id", "=", 7]],
     });
 
     // resize of a quarter
-    const drop = await resizePill(getPillWrapper("Task 7"), "end", 0.25, false);
+    const dropHandle = await resizePill(getPillWrapper("Task 7"), "end", 2, false);
     await animationFrame();
-    expect(SELECTORS.resizeBadge).toHaveText("+15 minutes");
+    expect(SELECTORS.startBadge).toHaveText("12/20/2018");
+    expect(SELECTORS.stopBadge).toHaveText("12/22/2018 (+48 hours)");
 
     // manually trigger the drop to trigger a write
-    await drop();
+    await dropHandle();
     await animationFrame();
-    expect(SELECTORS.resizeBadge).toHaveCount(0);
-    expect.verifySteps([[[7], { stop: "2018-12-20 18:44:59" }]]);
+    expect(SELECTORS.startBadge).toHaveCount(0);
+    expect(SELECTORS.stopBadge).toHaveCount(0);
+    expect.verifySteps([[[7], { stop: "2018-12-22 18:29:59" }]]);
+
+    const { moveTo, drop } = await dragPill("Task 7");
+    await moveTo({ columnHeader: "23", groupHeader: "December 2018" });
+    expect(SELECTORS.startBadge).toHaveText("12/23/2018");
+    expect(SELECTORS.stopBadge).toHaveText("12/25/2018");
+    expect(SELECTORS.startBadge).toHaveClass("text-success");
+    expect(SELECTORS.stopBadge).toHaveClass("text-success");
+    await drop();
+    expect.verifySteps([[[7], { start: "2018-12-23 12:30:12", stop: "2018-12-25 18:29:59" }]]);
 });
 
 test("progress attribute", async () => {
@@ -263,7 +315,7 @@ test("progress attribute", async () => {
         arch: `<gantt string="Tasks" date_start="start" date_stop="stop" progress="progress"/>`,
         groupBy: ["project_id"],
     });
-    expect(`${SELECTORS.pill} .o_gantt_progress`).toHaveCount(3);
+    expect(`${SELECTORS.pill} .o_gantt_progress`).toHaveCount(4);
     expect(
         queryAll(SELECTORS.pill).map((el) => ({
             text: el.innerText,
@@ -274,6 +326,7 @@ test("progress attribute", async () => {
         { text: "Task 2", progress: "30%" },
         { text: "Task 4", progress: null },
         { text: "Task 3", progress: "60%" },
+        { text: "Task 5", progress: "100%" },
         { text: "Task 7", progress: "80%" },
     ]);
 });
@@ -350,9 +403,10 @@ test("consolidation feature", async () => {
     // Consolidation
     // 0 over the size of Task 5 (Task 5 is 100 but is excluded!) then 0 over the rest of Task 1, cut by Task 4 which has progress 0
     expect(rows[0].pills).toEqual([
-        { colSpan: "Out of bounds (8)  -> 19 December 2018", title: "0" },
+        { colSpan: "01 December 2018 -> 04 (1/2) December 2018", title: "0" },
+        { colSpan: "04 (1/2) December 2018 -> 19 December 2018", title: "0" },
         { colSpan: "20 December 2018 -> 20 (1/2) December 2018", title: "0" },
-        { colSpan: "20 (1/2) December 2018 -> 31 December 2018", title: "0" },
+        { colSpan: "20 (1/2) December 2018 -> Out of bounds (63) ", title: "0" },
     ]);
 
     // 30 over Task 2 until Task 7 then 110 (Task 2 (30) + Task 7 (80)) then 30 again until end of task 2 then 60 over Task 3
@@ -360,7 +414,7 @@ test("consolidation feature", async () => {
         { colSpan: "17 (1/2) December 2018 -> 20 (1/2) December 2018", title: "30" },
         { colSpan: "20 (1/2) December 2018 -> 20 December 2018", title: "110" },
         { colSpan: "21 December 2018 -> 22 (1/2) December 2018", title: "30" },
-        { colSpan: "27 December 2018 -> 03 (1/2) January 2019", title: "60" },
+        { colSpan: "27 December 2018 -> Out of bounds (68) ", title: "60" },
     ]);
 
     const withStatus = [];
@@ -374,6 +428,7 @@ test("consolidation feature", async () => {
     }
 
     expect(withStatus).toEqual([
+        { title: "0", danger: false },
         { title: "0", danger: false },
         { title: "0", danger: false },
         { title: "0", danger: false },
@@ -401,13 +456,15 @@ test("consolidation feature (single level)", async () => {
 
     const { rows, range } = getGridContent();
     expect(range).toBe("From: 12/01/2018 to: 02/28/2019");
-    expect(".o_gantt_button_expand_rows").toHaveCount(1);
+    expect(SELECTORS.expandButton).toHaveCount(0);
+    expect(SELECTORS.collapseButton).toHaveCount(1);
     expect(rows).toEqual([
         {
             isGroup: true,
             pills: [
+                { colSpan: "01 December 2018 -> 04 (1/2) December 2018", title: "0" },
                 {
-                    colSpan: "Out of bounds (8)  -> 19 December 2018",
+                    colSpan: "04 (1/2) December 2018 -> 19 December 2018",
                     title: "0",
                 },
                 {
@@ -415,7 +472,7 @@ test("consolidation feature (single level)", async () => {
                     title: "0",
                 },
                 {
-                    colSpan: "20 (1/2) December 2018 -> 31 December 2018",
+                    colSpan: "20 (1/2) December 2018 -> Out of bounds (63) ",
                     title: "0",
                 },
             ],
@@ -424,7 +481,12 @@ test("consolidation feature (single level)", async () => {
         {
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    level: 0,
+                    title: "Task 5",
+                },
+                {
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     level: 1,
                     title: "Task 1",
                 },
@@ -452,7 +514,7 @@ test("consolidation feature (single level)", async () => {
                     title: "30",
                 },
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     title: "60",
                 },
             ],
@@ -471,7 +533,7 @@ test("consolidation feature (single level)", async () => {
                     title: "Task 7",
                 },
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     level: 0,
                     title: "Task 3",
                 },
@@ -519,28 +581,30 @@ test(`Today style with unavailabilities ("week": "day:half")`, async () => {
         },
     ];
 
-    onRpc("get_gantt_data", async ({ parent }) => {
-        const result = await parent();
+    onRpc("get_gantt_data", ({ parent }) => {
+        const result = parent();
         result.unavailabilities.__default = { false: unavailabilities };
         return result;
     });
     await mountGanttView({
         resModel: "tasks",
-        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_scale="week" scales="week" precision="{'week': 'day:half'}"/>`,
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_range="week" scales="week" precision="{'week': 'day:half'}"/>`,
     });
 
     // Normal day / unavailability
-    expect(getCellColorProperties("18 W51 2018")).toEqual([
+    expect(getCellColorProperties("Tuesday 18", "Week 51, Dec 16 - Dec 22")).toEqual([
         "--Gantt__Day-background-color",
         "--Gantt__DayOff-background-color",
     ]);
 
     // Full unavailability
-    expect(getCellColorProperties("19 W51 2018")).toEqual(["--Gantt__DayOff-background-color"]);
+    expect(getCellColorProperties("Wednesday 19", "Week 51, Dec 16 - Dec 22")).toEqual([
+        "--Gantt__DayOff-background-color",
+    ]);
 
     // Unavailability / today
-    expect(getCell("20 W51 2018")).toHaveClass("o_gantt_today");
-    expect(getCellColorProperties("20 W51 2018")).toEqual([
+    expect(getCell("Thursday 20", "Week 51, Dec 16 - Dec 22")).toHaveClass("o_gantt_today");
+    expect(getCellColorProperties("Thursday 20", "Week 51, Dec 16 - Dec 22")).toEqual([
         "--Gantt__DayOff-background-color",
         "--Gantt__DayOffToday-background-color",
     ]);
@@ -555,21 +619,22 @@ test("Today style of group rows", async () => {
     ];
     Tasks._records = [Tasks._records[3]]; // id: 4
 
-    onRpc("get_gantt_data", async ({ parent }) => {
+    onRpc("get_gantt_data", ({ parent }) => {
         expect.step("get_gantt_data");
-        const result = await parent();
+        const result = parent();
         result.unavailabilities.project_id = { 1: unavailabilities };
         return result;
     });
     await mountGanttView({
         resModel: "tasks",
-        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_scale="week" scales="week" precision="{'week': 'day:half'}"/>`,
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_range="week" scales="week" precision="{'week': 'day:half'}"/>`,
         groupBy: ["user_id", "project_id"],
     });
     expect.verifySteps(["get_gantt_data"]);
+    await contains(".o_gantt_header_folded").click();
 
     // Normal group cell: open
-    let cell4 = getCell("19 W51 2018");
+    let cell4 = getCell("Wednesday 19", "Week 51, Dec 16 - Dec 22");
     expect(cell4).not.toHaveClass("o_gantt_today");
     expect(cell4).toHaveClass("o_group_open");
     expect(cell4).toHaveStyle({
@@ -577,7 +642,7 @@ test("Today style of group rows", async () => {
     });
 
     // Today group cell: open
-    let cell5 = getCell("20 W51 2018");
+    let cell5 = getCell("Thursday 20", "Week 51, Dec 16 - Dec 22");
     expect(cell5).toHaveClass("o_gantt_today");
     expect(cell5).toHaveClass("o_group_open");
     expect(cell5).toHaveStyle({
@@ -586,7 +651,7 @@ test("Today style of group rows", async () => {
     await contains(SELECTORS.group).click(); // fold group
     await leave();
     // Normal group cell: closed
-    cell4 = getCell("19 W51 2018");
+    cell4 = getCell("Wednesday 19", "Week 51, Dec 16 - Dec 22");
     expect(cell4).not.toHaveClass("o_gantt_today");
     expect(cell4).not.toHaveClass("o_group_open");
     expect(cell4).toHaveStyle({
@@ -594,7 +659,7 @@ test("Today style of group rows", async () => {
     });
 
     // Today group cell: closed
-    cell5 = getCell("20 W51 2018");
+    cell5 = getCell("Thursday 20", "Week 51, Dec 16 - Dec 22");
     expect(cell5).toHaveClass("o_gantt_today");
     expect(cell5).not.toHaveClass("o_group_open");
     expect(cell5).toHaveStyle({ backgroundImage: "none" });
@@ -613,10 +678,10 @@ test("style without unavailabilities", async () => {
         arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1"/>`,
     });
     expect.verifySteps(["get_gantt_data"]);
-    const cell5 = getCell("05 December 2018");
+    const cell5 = getCell("05", "December 2018");
     expect(cell5).toHaveClass("o_gantt_today");
     expect(cell5).toHaveAttribute("style", "grid-column:c9/c11;grid-row:r1/r5;");
-    const cell6 = getCell("06 December 2018");
+    const cell6 = getCell("06", "December 2018");
     expect(cell6).toHaveAttribute("style", "grid-column:c11/c13;grid-row:r1/r5;");
 });
 
@@ -648,23 +713,23 @@ test(`Unavailabilities ("month": "day:half")`, async () => {
         arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1"/>`,
     });
     expect.verifySteps(["get_gantt_data"]);
-    expect(getCell("05 December 2018")).toHaveClass("o_gantt_today");
-    expect(getCellColorProperties("05 December 2018")).toEqual([
+    expect(getCell("05", "December 2018")).toHaveClass("o_gantt_today");
+    expect(getCellColorProperties("05", "December 2018")).toEqual([
         "--Gantt__DayOffToday-background-color",
         "--Gantt__DayOff-background-color",
     ]);
-    expect(getCellColorProperties("06 December 2018")).toEqual([
+    expect(getCellColorProperties("06", "December 2018")).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
-    expect(getCellColorProperties("07 December 2018")).toEqual([]);
-    expect(getCellColorProperties("16 December 2018")).toEqual([
+    expect(getCellColorProperties("07", "December 2018")).toEqual([]);
+    expect(getCellColorProperties("16", "December 2018")).toEqual([
         "--Gantt__Day-background-color",
         "--Gantt__DayOff-background-color",
     ]);
-    expect(getCellColorProperties("17 December 2018")).toEqual([
+    expect(getCellColorProperties("17", "December 2018")).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
-    expect(getCellColorProperties("18 December 2018")).toEqual([
+    expect(getCellColorProperties("18", "December 2018")).toEqual([
         "--Gantt__DayOff-background-color",
         "--Gantt__Day-background-color",
     ]);
@@ -675,16 +740,16 @@ test(`Unavailabilities ("day": "hours:quarter")`, async () => {
     const unavailabilities = [
         // in utc
         {
-            start: "2018-12-20 08:15:00",
-            stop: "2018-12-20 08:30:00",
+            start: "2018-12-19 08:15:00",
+            stop: "2018-12-19 08:30:00",
         },
         {
-            start: "2018-12-20 10:35:00",
-            stop: "2018-12-20 12:29:00",
+            start: "2018-12-19 10:35:00",
+            stop: "2018-12-19 12:29:00",
         },
         {
-            start: "2018-12-20 20:15:00",
-            stop: "2018-12-20 20:50:00",
+            start: "2018-12-19 20:15:00",
+            stop: "2018-12-19 20:50:00",
         },
     ];
     onRpc("get_gantt_data", ({ kwargs, parent }) => {
@@ -695,9 +760,10 @@ test(`Unavailabilities ("day": "hours:quarter")`, async () => {
     });
     await mountGanttView({
         resModel: "tasks",
-        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_scale="day" scales="day" precision="{'day': 'hours:quarter'}"/>`,
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_range="day" precision="{'day': 'hours:quarter'}"/>`,
     });
-    expect(getCellColorProperties("9am 20 December 2018")).toEqual([
+    await contains(".o_content").scroll({ left: 0 });
+    expect(getCellColorProperties("9am", "December 19, 2018")).toEqual([
         "--Gantt__Day-background-color",
         "--Gantt__DayOff-background-color",
         "--Gantt__DayOff-background-color",
@@ -705,7 +771,7 @@ test(`Unavailabilities ("day": "hours:quarter")`, async () => {
         "--Gantt__Day-background-color",
         "--Gantt__Day-background-color",
     ]);
-    expect(getCellColorProperties("11am 20 December 2018")).toEqual([
+    expect(getCellColorProperties("11am", "December 19, 2018")).toEqual([
         "--Gantt__Day-background-color",
         "--Gantt__Day-background-color",
         "--Gantt__Day-background-color",
@@ -713,10 +779,10 @@ test(`Unavailabilities ("day": "hours:quarter")`, async () => {
         "--Gantt__Day-background-color",
         "--Gantt__DayOff-background-color",
     ]);
-    expect(getCellColorProperties("12pm 20 December 2018")).toEqual([
+    expect(getCellColorProperties("12pm", "December 19, 2018")).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
-    expect(getCellColorProperties("1pm 20 December 2018")).toEqual([
+    expect(getCellColorProperties("1pm", "December 19, 2018")).toEqual([
         "--Gantt__DayOff-background-color",
         "--Gantt__Day-background-color",
         "--Gantt__Day-background-color",
@@ -724,7 +790,7 @@ test(`Unavailabilities ("day": "hours:quarter")`, async () => {
         "--Gantt__Day-background-color",
         "--Gantt__Day-background-color",
     ]);
-    expect(getCellColorProperties("9pm 20 December 2018")).toEqual([
+    expect(getCellColorProperties("9pm", "December 19, 2018")).toEqual([
         "--Gantt__Day-background-color",
         "--Gantt__DayOff-background-color",
         "--Gantt__DayOff-background-color",
@@ -734,16 +800,476 @@ test(`Unavailabilities ("day": "hours:quarter")`, async () => {
     ]);
 });
 
-test("offset attribute", async () => {
+test(`Fold unavailabilities ("day": "hours:quarter")`, async () => {
+    Tasks._records = [Tasks._records[3]]; // id: 4
+    const unavailabilities = [
+        // in utc
+        {
+            start: "2018-12-18 16:00:00",
+            stop: "2018-12-19 07:00:00",
+        },
+        {
+            start: "2018-12-19 11:00:00",
+            stop: "2018-12-19 12:25:00",
+        },
+        {
+            start: "2018-12-19 16:15:00",
+            stop: "2018-12-20 08:00:00",
+        },
+        {
+            start: "2018-12-20 16:15:00",
+            stop: "2018-12-22 08:00:00",
+        },
+    ];
+    onRpc("get_gantt_data", ({ kwargs, parent }) => {
+        expect(kwargs.unavailability_fields).toEqual([]);
+        const result = parent();
+        result.unavailabilities = { __default: { false: unavailabilities } };
+        return result;
+    });
     await mountGanttView({
         resModel: "tasks",
-        arch: `<gantt date_start="start" date_stop="stop" offset="-4" default_scale="day"/>`,
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" scales="day" default_range="day" precision="{'day': 'hours:quarter'}"/>`,
     });
+    await contains(".o_content").scroll({ left: 0 });
+    const { columnHeaders, groupHeaders } = getGridContent({ setTitleAttrOnHeaders: true });
+    expect(columnHeaders).toHaveLength(28);
+    expect(groupHeaders).toEqual(
+        [
+            {
+                range: [1, 97],
+                title: "December 19, 2018",
+                titleAttr: "Wednesday, December 19, 2018",
+            },
+            {
+                range: [97, 193],
+                title: "December 20, 2018",
+                titleAttr: "Thursday, December 20, 2018",
+            },
+            {
+                range: [193, 289],
+                title: "",
+                titleAttr: "",
+            },
+        ],
+        { message: "Last group's title is hidden since all of its content is folded" }
+    );
+    expect(columnHeaders).toEqual([
+        { range: [1, 33], title: "", titleAttr: "" },
+        { range: [33, 37], title: "8am", titleAttr: "Wednesday, December 19, 2018, 8:00 AM" },
+        { range: [37, 41], title: "9am", titleAttr: "Wednesday, December 19, 2018, 9:00 AM" },
+        { range: [41, 45], title: "10am", titleAttr: "Wednesday, December 19, 2018, 10:00 AM" },
+        { range: [45, 49], title: "11am", titleAttr: "Wednesday, December 19, 2018, 11:00 AM" },
+        { range: [49, 53], title: "12pm", titleAttr: "Wednesday, December 19, 2018, 12:00 PM" },
+        { range: [53, 57], title: "1pm", titleAttr: "Wednesday, December 19, 2018, 1:00 PM" },
+        { range: [57, 61], title: "2pm", titleAttr: "Wednesday, December 19, 2018, 2:00 PM" },
+        { range: [61, 65], title: "3pm", titleAttr: "Wednesday, December 19, 2018, 3:00 PM" },
+        { range: [65, 69], title: "4pm", titleAttr: "Wednesday, December 19, 2018, 4:00 PM" },
+        { range: [69, 73], title: "5pm", titleAttr: "Wednesday, December 19, 2018, 5:00 PM" },
+        { range: [73, 109], title: "", titleAttr: "" },
+        { range: [109, 113], title: "3am", titleAttr: "Thursday, December 20, 2018, 3:00 AM" },
+        { range: [113, 117], title: "4am", titleAttr: "Thursday, December 20, 2018, 4:00 AM" },
+        { range: [117, 121], title: "5am", titleAttr: "Thursday, December 20, 2018, 5:00 AM" },
+        { range: [121, 125], title: "6am", titleAttr: "Thursday, December 20, 2018, 6:00 AM" },
+        { range: [125, 129], title: "7am", titleAttr: "Thursday, December 20, 2018, 7:00 AM" },
+        { range: [129, 133], title: "8am", titleAttr: "Thursday, December 20, 2018, 8:00 AM" },
+        { range: [133, 137], title: "9am", titleAttr: "Thursday, December 20, 2018, 9:00 AM" },
+        { range: [137, 141], title: "10am", titleAttr: "Thursday, December 20, 2018, 10:00 AM" },
+        { range: [141, 145], title: "11am", titleAttr: "Thursday, December 20, 2018, 11:00 AM" },
+        { range: [145, 149], title: "12pm", titleAttr: "Thursday, December 20, 2018, 12:00 PM" },
+        { range: [149, 153], title: "1pm", titleAttr: "Thursday, December 20, 2018, 1:00 PM" },
+        { range: [153, 157], title: "2pm", titleAttr: "Thursday, December 20, 2018, 2:00 PM" },
+        { range: [157, 161], title: "3pm", titleAttr: "Thursday, December 20, 2018, 3:00 PM" },
+        { range: [161, 165], title: "4pm", titleAttr: "Thursday, December 20, 2018, 4:00 PM" },
+        { range: [165, 169], title: "5pm", titleAttr: "Thursday, December 20, 2018, 5:00 PM" },
+        { range: [169, 289], title: "", titleAttr: "" },
+    ]);
+    expect(".o_gantt_header_cell .fa-caret-left:visible").toHaveCount(3);
+    expect(queryFirst(".o_gantt_cell").offsetWidth).toBe(36, {
+        message: "Folded cells have a fixed width of 36px",
+    });
+});
 
-    const { range } = getGridContent();
-    expect(range).toBe("From: 12/16/2018 to: 12/18/2018", {
-        message: "gantt view should be set to 4 days before initial date",
+test(`Fold unavailabilities ("week": "day:half")`, async () => {
+    Tasks._records = [Tasks._records[3]]; // id: 4
+    const unavailabilities = [
+        // in utc
+        {
+            start: "2018-12-14 16:00:00",
+            stop: "2018-12-17 07:00:00",
+        },
+        {
+            start: "2018-12-18 16:15:00",
+            stop: "2018-12-20 08:00:00",
+        },
+    ];
+    onRpc("get_gantt_data", ({ kwargs, parent }) => {
+        expect(kwargs.unavailability_fields).toEqual([]);
+        const result = parent();
+        result.unavailabilities = { __default: { false: unavailabilities } };
+        return result;
     });
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_range="week" scales="week" precision="{'week': 'day:half'}"/>`,
+    });
+    const { columnHeaders, groupHeaders } = getGridContent({ setTitleAttrOnHeaders: true });
+    expect(columnHeaders).toHaveLength(11);
+    expect(groupHeaders).toEqual([
+        {
+            range: [1, 15],
+            title: "Week 50, Dec 9 - Dec 15",
+            titleAttr: "Week 50, Dec 9 - Dec 15",
+        },
+        {
+            range: [15, 29],
+            title: "Week 51, Dec 16 - Dec 22",
+            titleAttr: "Week 51, Dec 16 - Dec 22",
+        },
+        {
+            range: [29, 43],
+            title: "Week 52, Dec 23 - Dec 29",
+            titleAttr: "Week 52, Dec 23 - Dec 29",
+        },
+    ]);
+    expect(columnHeaders).toEqual([
+        { range: [11, 13], title: "Friday 14", titleAttr: "Friday, December 14, 2018" },
+        { range: [13, 17], title: "", titleAttr: "" },
+        { range: [17, 19], title: "Monday 17", titleAttr: "Monday, December 17, 2018" },
+        { range: [19, 21], title: "Tuesday 18", titleAttr: "Tuesday, December 18, 2018" },
+        { range: [21, 23], title: "", titleAttr: "" }, // Single unavailability columns are folded in week scale
+        { range: [23, 25], title: "Thursday 20", titleAttr: "Thursday, December 20, 2018" },
+        { range: [25, 27], title: "Friday 21", titleAttr: "Friday, December 21, 2018" },
+        { range: [27, 29], title: "Saturday 22", titleAttr: "Saturday, December 22, 2018" },
+        { range: [29, 31], title: "Sunday 23", titleAttr: "Sunday, December 23, 2018" },
+        { range: [31, 33], title: "Monday 24", titleAttr: "Monday, December 24, 2018" },
+        { range: [33, 35], title: "Tuesday 25", titleAttr: "Tuesday, December 25, 2018" },
+    ]);
+    expect(".o_gantt_header_cell .fa-caret-left:visible").toHaveCount(2);
+});
+
+test(`Fold unavailabilities ("month": "day:half")`, async () => {
+    Tasks._records = [Tasks._records[3]]; // id: 4
+    const unavailabilities = [
+        // in utc
+        {
+            start: "2018-11-13 16:00:00",
+            stop: "2018-11-16 07:00:00",
+        },
+        {
+            start: "2018-11-19 16:15:00",
+            stop: "2018-11-29 08:00:00",
+        },
+    ];
+    onRpc("get_gantt_data", ({ kwargs, parent }) => {
+        expect(kwargs.unavailability_fields).toEqual([]);
+        const result = parent();
+        result.unavailabilities = { __default: { false: unavailabilities } };
+        return result;
+    });
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_range="month" scales="month" precision="{'month': 'day:half'}"/>`,
+    });
+    await contains(".o_content").scroll({ left: 0 });
+    const { columnHeaders, groupHeaders } = getGridContent({ setTitleAttrOnHeaders: true });
+    expect(columnHeaders).toHaveLength(30);
+    expect(groupHeaders).toEqual([
+        {
+            range: [1, 61],
+            title: "November 2018",
+            titleAttr: "November 2018",
+        },
+        {
+            range: [61, 123],
+            title: "December 2018",
+            titleAttr: "December 2018",
+        },
+    ]);
+    expect(columnHeaders).toEqual([
+        { range: [1, 3], title: "01", titleAttr: "Thursday, November 1, 2018" },
+        { range: [3, 5], title: "02", titleAttr: "Friday, November 2, 2018" },
+        { range: [5, 7], title: "03", titleAttr: "Saturday, November 3, 2018" },
+        { range: [7, 9], title: "04", titleAttr: "Sunday, November 4, 2018" },
+        { range: [9, 11], title: "05", titleAttr: "Monday, November 5, 2018" },
+        { range: [11, 13], title: "06", titleAttr: "Tuesday, November 6, 2018" },
+        { range: [13, 15], title: "07", titleAttr: "Wednesday, November 7, 2018" },
+        { range: [15, 17], title: "08", titleAttr: "Thursday, November 8, 2018" },
+        { range: [17, 19], title: "09", titleAttr: "Friday, November 9, 2018" },
+        { range: [19, 21], title: "10", titleAttr: "Saturday, November 10, 2018" },
+        { range: [21, 23], title: "11", titleAttr: "Sunday, November 11, 2018" },
+        { range: [23, 25], title: "12", titleAttr: "Monday, November 12, 2018" },
+        { range: [25, 27], title: "13", titleAttr: "Tuesday, November 13, 2018" },
+        { range: [27, 31], title: "", titleAttr: "" },
+        { range: [31, 33], title: "16", titleAttr: "Friday, November 16, 2018" },
+        { range: [33, 35], title: "17", titleAttr: "Saturday, November 17, 2018" },
+        { range: [35, 37], title: "18", titleAttr: "Sunday, November 18, 2018" },
+        { range: [37, 39], title: "19", titleAttr: "Monday, November 19, 2018" },
+        { range: [39, 57], title: "", titleAttr: "" },
+        { range: [57, 59], title: "29", titleAttr: "Thursday, November 29, 2018" },
+        { range: [59, 61], title: "30", titleAttr: "Friday, November 30, 2018" },
+        { range: [61, 63], title: "01", titleAttr: "Saturday, December 1, 2018" },
+        { range: [63, 65], title: "02", titleAttr: "Sunday, December 2, 2018" },
+        { range: [65, 67], title: "03", titleAttr: "Monday, December 3, 2018" },
+        { range: [67, 69], title: "04", titleAttr: "Tuesday, December 4, 2018" },
+        { range: [69, 71], title: "05", titleAttr: "Wednesday, December 5, 2018" },
+        { range: [71, 73], title: "06", titleAttr: "Thursday, December 6, 2018" },
+        { range: [73, 75], title: "07", titleAttr: "Friday, December 7, 2018" },
+        { range: [75, 77], title: "08", titleAttr: "Saturday, December 8, 2018" },
+        { range: [77, 79], title: "09", titleAttr: "Sunday, December 9, 2018" },
+    ]);
+    expect(".o_gantt_header_cell .fa-caret-left:visible").toHaveCount(2);
+    const cell1 = queryFirst(".o_gantt_cell");
+    const cell2 = queryOne(".o_gantt_cell:eq(1)");
+    expect(Math.abs(cell1.clientWidth - cell2.clientWidth)).toBeLessThan(4, {
+        message:
+            "Folded cells have similar width compared to regular cells besides covering a wider date range",
+    });
+});
+
+test(`Fold unavailabilities with multiple rows`, async () => {
+    const unavailabilities1 = [
+        // in utc
+        { start: "2018-12-18 16:00:00", stop: "2018-12-19 07:00:00" },
+        { start: "2018-12-19 11:00:00", stop: "2018-12-19 12:25:00" },
+        { start: "2018-12-19 16:15:00", stop: "2018-12-20 08:00:00" },
+        { start: "2018-12-20 16:15:00", stop: "2018-12-22 08:00:00" },
+    ];
+    const unavailabilities2 = [
+        // in utc
+        { start: "2018-12-18 16:00:00", stop: "2018-12-19 09:00:00" },
+        { start: "2018-12-19 13:15:00", stop: "2018-12-20 08:00:00" },
+        { start: "2018-12-20 20:15:00", stop: "2018-12-22 08:00:00" },
+    ];
+    onRpc("get_gantt_data", ({ kwargs, parent }) => {
+        expect(kwargs.unavailability_fields).toEqual(["user_id"]);
+        const result = parent();
+        result.unavailabilities = { user_id: { 1: unavailabilities1, 2: unavailabilities2 } };
+        return result;
+    });
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_range="day" scales="day" precision="{'day': 'hours:quarter'}"/>`,
+        groupBy: ["user_id"],
+        domain: [["id", "in", [4, 7]]],
+    });
+    const { columnHeaders, groupHeaders } = getGridContent();
+    expect(groupHeaders).toEqual([
+        { range: [1, 97], title: "December 19, 2018" },
+        { range: [97, 193], title: "December 20, 2018" },
+        { range: [193, 289], title: "" },
+    ]);
+    expect(columnHeaders).toEqual([
+        { range: [1, 33], title: "" },
+        { range: [33, 37], title: "8am" },
+        { range: [37, 41], title: "9am" },
+        { range: [41, 45], title: "10am" },
+        { range: [45, 49], title: "11am" },
+        { range: [49, 53], title: "12pm" },
+        { range: [53, 57], title: "1pm" },
+        { range: [57, 61], title: "2pm" },
+        { range: [61, 65], title: "3pm" },
+        { range: [65, 69], title: "4pm" },
+        { range: [69, 73], title: "5pm" },
+        { range: [73, 109], title: "" },
+        { range: [109, 113], title: "3am" },
+        { range: [113, 117], title: "4am" },
+        { range: [117, 121], title: "5am" },
+        { range: [121, 125], title: "6am" },
+        { range: [125, 129], title: "7am" },
+        { range: [129, 133], title: "8am" },
+        { range: [133, 137], title: "9am" },
+        { range: [137, 141], title: "10am" },
+        { range: [141, 145], title: "11am" },
+        { range: [145, 149], title: "12pm" },
+        { range: [149, 153], title: "1pm" },
+        { range: [153, 157], title: "2pm" },
+        { range: [157, 161], title: "3pm" },
+        { range: [161, 165], title: "4pm" },
+        { range: [165, 169], title: "5pm" },
+        { range: [169, 173], title: "6pm" },
+        { range: [173, 177], title: "7pm" },
+        { range: [177, 181], title: "8pm" },
+        { range: [181, 185], title: "9pm" },
+        { range: [185, 289], title: "" },
+    ]);
+});
+
+test(`Partial fold/unfold in gantt`, async () => {
+    Tasks._records = [Tasks._records[3]]; // id: 4
+    const unavailabilities = [
+        // in utc
+        {
+            start: "2018-12-18 16:00:00",
+            stop: "2018-12-19 07:00:00",
+        },
+        {
+            start: "2018-12-19 11:00:00",
+            stop: "2018-12-19 12:25:00",
+        },
+        {
+            start: "2018-12-19 16:15:00",
+            stop: "2018-12-20 08:00:00",
+        },
+        {
+            start: "2018-12-20 16:15:00",
+            stop: "2018-12-22 08:00:00",
+        },
+    ];
+    onRpc("get_gantt_data", ({ kwargs, parent }) => {
+        expect(kwargs.unavailability_fields).toEqual([]);
+        const result = parent();
+        result.unavailabilities = { __default: { false: unavailabilities } };
+        return result;
+    });
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_range="day" scales="day" precision="{'day': 'hours:quarter'}"/>`,
+    });
+    setCellParts(4);
+    await contains(".o_content").scroll({ left: 0 });
+    let { columnHeaders, rows } = getGridContent();
+    expect(columnHeaders).toHaveLength(28);
+    expect(columnHeaders[11]).toEqual({
+        range: [73, 109],
+        title: "",
+    });
+    expect(rows[0].pills[0]).toEqual({
+        title: "Task 4",
+        colSpan: "3am (2/4) December 20, 2018 -> 7am (2/4) December 20, 2018",
+        level: 0,
+    });
+    await contains(".o_gantt_cell:eq(11)").click();
+    ({ columnHeaders } = getGridContent());
+    expect(columnHeaders).toHaveLength(36);
+    expect(columnHeaders[11]).toEqual({
+        range: [73, 77],
+        title: "6pm",
+    });
+    await runAllTimers();
+    await contains(".o_gantt_cell:eq(0)").click();
+    ({ columnHeaders } = getGridContent());
+    expect(columnHeaders).toHaveLength(38);
+    expect(columnHeaders[11]).toEqual({
+        range: [45, 49],
+        title: "11am",
+    });
+    expect(columnHeaders[18]).toEqual({
+        range: [73, 77],
+        title: "6pm",
+    });
+    await contains(".o_gantt_header_cell:eq(18)").hover();
+    expect(".o_gantt_header_cell:eq(19)").toHaveClass("o_gantt_foldable_hovered");
+    await contains(".o_gantt_header_cell:eq(18)").click();
+    ({ columnHeaders } = getGridContent());
+    expect(columnHeaders).toHaveLength(35);
+    expect(columnHeaders[18]).toEqual({
+        range: [73, 109],
+        title: "",
+    });
+    const { drop } = await dragPill("Task 4");
+    await drop({ columnHeader: "5pm", groupHeader: "December 19, 2018", part: 4 });
+    ({ columnHeaders, rows } = getGridContent());
+    expect(columnHeaders).toHaveLength(39);
+    expect(columnHeaders[18]).toEqual({
+        range: [73, 77],
+        title: "6pm",
+    });
+    expect(columnHeaders[22]).toEqual({
+        range: [89, 109],
+        title: "",
+    });
+    expect(rows[0].pills[0]).toEqual({
+        title: "Task 4",
+        colSpan: "5pm (3/4) December 19, 2018 -> 9pm (3/4) December 19, 2018",
+        level: 0,
+    });
+    await resizePill(getPillWrapper("Task 4"), "end", +1); // wrong but we don't want to rewrite helpers for this
+    ({ columnHeaders, rows } = getGridContent());
+    expect(columnHeaders).toHaveLength(39);
+    expect(columnHeaders[22]).toEqual({
+        range: [89, 93],
+        title: "10pm",
+    });
+    expect(rows[0].pills[0]).toEqual({
+        title: "Task 4",
+        colSpan: "5pm (3/4) December 19, 2018 -> 3am December 20, 2018",
+        level: 0,
+    });
+});
+
+test(`Full unavailabilities period`, async () => {
+    Tasks._records = []; // no pill
+    const unavailabilities = [
+        // in utc
+        {
+            start: "2018-12-18 16:00:00",
+            stop: "2018-12-23 07:00:00",
+        },
+    ];
+    onRpc("get_gantt_data", ({ kwargs, parent }) => {
+        expect(kwargs.unavailability_fields).toEqual([]);
+        const result = parent();
+        result.unavailabilities = { __default: { false: unavailabilities } };
+        return result;
+    });
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `<gantt date_start="start" date_stop="stop" display_unavailability="1" default_range="day" scales="day" precision="{'day': 'hours:quarter'}"/>`,
+    });
+    // Only one folded cell appears which takes the full screen width instead of 36px
+    expect(SELECTORS.cell).toHaveCount(1);
+    expect(SELECTORS.cell).toHaveClass("o_gantt_cell_folded");
+    expect(SELECTORS.cell).toHaveRect({ width: 1366 });
+    expect(SELECTORS.groupHeader).toHaveCount(2);
+    expect(queryAllTexts(SELECTORS.groupHeader)).toEqual(["", ""]);
+
+    await contains(SELECTORS.cell).click();
+    const { columnHeaders, groupHeaders } = getGridContent();
+    expect(groupHeaders).toEqual([
+        { range: [1, 97], title: "December 19, 2018" },
+        { range: [97, 193], title: "December 20, 2018" },
+    ]);
+    expect(columnHeaders).toEqual([
+        { range: [1, 5], title: "12am" },
+        { range: [5, 9], title: "1am" },
+        { range: [9, 13], title: "2am" },
+        { range: [13, 17], title: "3am" },
+        { range: [17, 21], title: "4am" },
+        { range: [21, 25], title: "5am" },
+        { range: [25, 29], title: "6am" },
+        { range: [29, 33], title: "7am" },
+        { range: [33, 37], title: "8am" },
+        { range: [37, 41], title: "9am" },
+        { range: [41, 45], title: "10am" },
+        { range: [45, 49], title: "11am" },
+        { range: [49, 53], title: "12pm" },
+        { range: [53, 57], title: "1pm" },
+        { range: [57, 61], title: "2pm" },
+        { range: [61, 65], title: "3pm" },
+        { range: [65, 69], title: "4pm" },
+        { range: [69, 73], title: "5pm" },
+        { range: [73, 77], title: "6pm" },
+        { range: [77, 81], title: "7pm" },
+        { range: [81, 85], title: "8pm" },
+        { range: [85, 89], title: "9pm" },
+        { range: [89, 93], title: "10pm" },
+        { range: [93, 97], title: "11pm" },
+        { range: [97, 101], title: "12am" },
+        { range: [101, 105], title: "1am" },
+        { range: [105, 109], title: "2am" },
+        { range: [109, 113], title: "3am" },
+        { range: [113, 117], title: "4am" },
+        { range: [117, 121], title: "5am" },
+        { range: [121, 125], title: "6am" },
+        { range: [125, 129], title: "7am" },
+        { range: [129, 133], title: "8am" },
+        { range: [133, 137], title: "9am" },
+        { range: [137, 141], title: "10am" },
+        { range: [141, 145], title: "11am" },
+        { range: [145, 149], title: "12pm" },
+        { range: [149, 153], title: "1pm" },
+    ]);
 });
 
 test("default_group_by attribute", async () => {
@@ -752,13 +1278,20 @@ test("default_group_by attribute", async () => {
         arch: `<gantt date_start="start" date_stop="stop" default_group_by="user_id"/>`,
     });
 
+    expect(`.o_searchview_facet`).toHaveCount(1);
+    expect(`.o_searchview_facet`).toHaveText("Assign To");
     const { rows } = getGridContent();
     expect(rows).toEqual([
         {
             title: "User 1",
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    level: 0,
+                    title: "Task 5",
+                },
+                {
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     level: 1,
                     title: "Task 1",
                 },
@@ -783,7 +1316,7 @@ test("default_group_by attribute", async () => {
                     title: "Task 7",
                 },
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     level: 0,
                     title: "Task 3",
                 },
@@ -800,13 +1333,14 @@ test("default_group_by attribute with groupBy", async () => {
         groupBy: ["project_id"],
     });
 
+    expect(`.o_searchview_facet`).toHaveCount(0);
     const { rows } = getGridContent();
     expect(rows).toEqual([
         {
             title: "Project 1",
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     level: 0,
                     title: "Task 1",
                 },
@@ -821,7 +1355,7 @@ test("default_group_by attribute with groupBy", async () => {
                     title: "Task 4",
                 },
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     level: 1,
                     title: "Task 3",
                 },
@@ -830,6 +1364,11 @@ test("default_group_by attribute with groupBy", async () => {
         {
             title: "Project 2",
             pills: [
+                {
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    level: 0,
+                    title: "Task 5",
+                },
                 {
                     colSpan: "20 (1/2) December 2018 -> 20 December 2018",
                     level: 0,
@@ -846,6 +1385,8 @@ test("default_group_by attribute with 2 fields", async () => {
         arch: `<gantt date_start="start" date_stop="stop" default_group_by="user_id,project_id"/>`,
     });
 
+    expect(`.o_searchview_facet`).toHaveCount(1);
+    expect(`.o_searchview_facet`).toHaveText("Assign To\n>\nProject");
     const { rows } = getGridContent();
     expect(rows).toEqual([
         {
@@ -853,7 +1394,11 @@ test("default_group_by attribute with 2 fields", async () => {
             isGroup: true,
             pills: [
                 {
-                    colSpan: "Out of bounds (8)  -> 19 December 2018",
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    title: "2",
+                },
+                {
+                    colSpan: "04 (1/2) December 2018 -> 19 December 2018",
                     title: "1",
                 },
                 {
@@ -861,7 +1406,7 @@ test("default_group_by attribute with 2 fields", async () => {
                     title: "2",
                 },
                 {
-                    colSpan: "20 (1/2) December 2018 -> 31 December 2018",
+                    colSpan: "20 (1/2) December 2018 -> Out of bounds (63) ",
                     title: "1",
                 },
             ],
@@ -870,7 +1415,7 @@ test("default_group_by attribute with 2 fields", async () => {
             title: "Project 1",
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     level: 0,
                     title: "Task 1",
                 },
@@ -882,6 +1427,13 @@ test("default_group_by attribute with 2 fields", async () => {
             ],
         },
         {
+            pills: [
+                {
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    level: 0,
+                    title: "Task 5",
+                },
+            ],
             title: "Project 2",
         },
         {
@@ -901,7 +1453,7 @@ test("default_group_by attribute with 2 fields", async () => {
                     title: "1",
                 },
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     title: "1",
                 },
             ],
@@ -915,7 +1467,7 @@ test("default_group_by attribute with 2 fields", async () => {
                     title: "Task 2",
                 },
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     level: 0,
                     title: "Task 3",
                 },
@@ -939,15 +1491,14 @@ test("default_range attribute", async () => {
         resModel: "tasks",
         arch: `<gantt date_start="start" date_stop="stop" default_range="day"/>`,
     });
-    expect(getActiveScale()).toBe(2); // month scale
     const { columnHeaders, range } = getGridContent();
-    expect(range).toBe("12/20/2018");
-    expect(columnHeaders).toHaveLength(1);
-    await click(SELECTORS.rangeMenuToggler);
+    expect(range).toBe("Day");
+    expect(columnHeaders).toHaveLength(42);
+    await click(SELECTORS.scaleSelectorToggler);
     await animationFrame();
-    const firstRangeMenuItem = queryFirst(`${SELECTORS.rangeMenu} .dropdown-item`);
-    expect(firstRangeMenuItem).toHaveClass("selected");
-    expect(firstRangeMenuItem).toHaveText("Today");
+    const firstRangeMenuItem = queryFirst(`${SELECTORS.scaleSelectorMenu} .dropdown-item`);
+    expect(firstRangeMenuItem).toHaveClass("active");
+    expect(firstRangeMenuItem).toHaveText("Day");
 });
 
 test("consolidation and unavailabilities", async () => {
@@ -957,9 +1508,9 @@ test("consolidation and unavailabilities", async () => {
             stop: "2018-12-20 14:00:00",
         },
     ];
-    onRpc("get_gantt_data", async ({ parent, kwargs }) => {
+    onRpc("get_gantt_data", ({ parent, kwargs }) => {
         expect.step("get_gantt_data");
-        const result = await parent();
+        const result = parent();
         expect(kwargs.unavailability_fields).toEqual(["user_id"]);
         result.unavailabilities.user_id = { 1: unavailabilities };
         return result;
@@ -980,19 +1531,19 @@ test("consolidation and unavailabilities", async () => {
     });
     expect.verifySteps(["get_gantt_data"]);
     // Normal day / unavailability
-    expect(getCellColorProperties("18 December 2018", "", { num: 2 })).toEqual([
+    expect(getCellColorProperties("18", "December 2018", "", { num: 2 })).toEqual([
         "--Gantt__Day-background-color",
         "--Gantt__DayOff-background-color",
     ]);
 
     // Full unavailability
-    expect(getCellColorProperties("19 December 2018", "", { num: 2 })).toEqual([
+    expect(getCellColorProperties("19", "December 2018", "", { num: 2 })).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
 
     // Unavailability / today
-    expect(getCell("20 December 2018")).toHaveClass("o_gantt_today");
-    expect(getCellColorProperties("20 December 2018", "", { num: 2 })).toEqual([
+    expect(getCell("20", "December 2018")).toHaveClass("o_gantt_today");
+    expect(getCellColorProperties("20", "December 2018", "", { num: 2 })).toEqual([
         "--Gantt__DayOff-background-color",
         "--Gantt__DayOffToday-background-color",
     ]);
@@ -1004,5 +1555,128 @@ test("default_range not in scales", async () => {
         arch: `<gantt date_start="start" date_stop="stop" scales="month" default_range="year"/>`,
     });
     const { range } = getGridContent();
-    expect(range).toBe("2018");
+    expect(range).toBe("Year");
+
+    await contains(SELECTORS.scaleSelectorToggler).click();
+    await animationFrame();
+    expect(`${SELECTORS.scaleSelectorMenu} .dropdown-item`).toHaveCount(3);
+    expect(queryAllTexts(`${SELECTORS.scaleSelectorMenu} .dropdown-item`)).toEqual([
+        "Month",
+        "Year",
+        "From\n01/01/2017\nto\n12/31/2019\nApply",
+    ]);
+});
+
+test("kanban_view_id attribute", async () => {
+    Tasks._views["kanban,42"] = `
+        <kanban>
+            <templates>
+                <t t-name="card">
+                    Allocated Hours: <field name="allocated_hours"/>
+                </t>
+            </templates>
+        </kanban>
+    `;
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `<gantt date_start="start" date_stop="stop" kanban_view_id="42"/>`,
+    });
+    expect(`.o_popover`).toHaveCount(0);
+    await contains(SELECTORS.pill).click();
+    expect(`.o_popover`).toHaveCount(1);
+    expect(`.o_popover .popover-header`).toHaveCount(0);
+    await contains(`.o_popover .popover-footer i.fa.fa-close`).click();
+    expect(`.o_popover`).toHaveCount(0);
+});
+
+test("template in arch get favors vs kanban_view_id attribute", async () => {
+    Tasks._views["kanban,42"] = `
+        <kanban>
+            <templates>
+                <t t-name="card">
+                    Allocated Hours: <field name="allocated_hours"/>
+                </t>
+            </templates>
+        </kanban>
+    `;
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `
+            <gantt date_start="start" date_stop="stop" kanban_view_id="42">
+                <templates>
+                    <t t-name="gantt-popover">
+                        <div t-esc="display_name"/>
+                    </t>
+                </templates>
+            </gantt>
+        `,
+    });
+    expect(`.o_popover`).toHaveCount(0);
+    await contains(SELECTORS.pill).click();
+    expect(`.o_popover`).toHaveCount(1);
+    expect(`.o_popover .popover-body .o_kanban_record`).toHaveCount(0);
+    expect(`.o_popover .popover-header`).toHaveText("Task 5");
+    expect(`.o_popover .popover-body div`).toHaveText("Task 5");
+    expect(`.o_popover .popover-footer i.fa.fa-close`).toHaveCount(0);
+    await contains(`.o_popover .popover-header i.fa.fa-close`).click();
+    expect(`.o_popover`).toHaveCount(0);
+});
+
+test("if kanban_view_id attribute is not set, kanban view id is retrieved from config", async () => {
+    Tasks._views.kanban = `
+        <kanban>
+            <templates>
+                <t t-name="card">
+                    Allocated Hours: <field name="allocated_hours"/>
+                </t>
+            </templates>
+        </kanban>
+    `;
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `<gantt date_start="start" date_stop="stop"/>`,
+        config: {
+            views: [
+                [false, "kanban"],
+                [false, "gantt"],
+            ],
+        },
+    });
+    expect(`.o_popover`).toHaveCount(0);
+    await contains(SELECTORS.pill).click();
+    expect(`.o_popover`).toHaveCount(1);
+    expect(`.o_popover .popover-header`).toHaveCount(0);
+    expect(`.o_popover .popover-body .o_kanban_record`).toHaveText("Allocated Hours:\n0.00");
+    await contains(`.o_popover .popover-footer i.fa.fa-close`).click();
+    expect(`.o_popover`).toHaveCount(0);
+});
+
+test("verifies context-driven text visibility in Kanban view", async () => {
+    Tasks._views.kanban = `
+        <kanban>
+            <templates>
+                <t t-name="card">
+                    Allocated Hours: <field name="allocated_hours"/>
+                    <div invisible="context.get('isProjectNameHidden')">Project A</div>
+                    <div invisible="context.get('isTaskNameHidden')">Test 5</div>
+                </t>
+            </templates>
+        </kanban>
+    `;
+
+    await mountGanttView({
+        resModel: "tasks",
+        arch: `<gantt date_start="start" date_stop="stop"/>`,
+        config: {
+            views: [
+                [false, "kanban"],
+                [false, "gantt"],
+            ],
+        },
+        context: { isTaskNameHidden: true, isProjectNameHidden: false },
+    });
+    await contains(SELECTORS.pill).click();
+    expect(`.o_popover .popover-body .o_kanban_record`).toHaveText(
+        "Allocated Hours:\n0.00\nProject A"
+    );
 });

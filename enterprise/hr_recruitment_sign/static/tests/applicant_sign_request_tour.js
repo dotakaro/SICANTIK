@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 
 registry.category("web_tour.tours").add('applicant_sign_request_tour', {
@@ -18,11 +16,6 @@ registry.category("web_tour.tours").add('applicant_sign_request_tour', {
         {
             content: "Go on all applications",
             trigger: 'a[data-menu-xmlid="hr_recruitment.menu_crm_case_categ_all_app"]',
-            run: 'click',
-        },
-        {
-            content: "Open group",
-            trigger: 'tr.o_group_has_content:contains("None")',
             run: 'click',
         },
         {

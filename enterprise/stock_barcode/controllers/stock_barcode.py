@@ -1,5 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import re
+
 from collections import defaultdict
 
 from odoo import fields, http, _
@@ -8,11 +10,12 @@ from odoo.exceptions import UserError
 from odoo.osv import expression
 from odoo.tools import pdf, split_every
 from odoo.tools.misc import file_open
+from odoo.addons.stock_barcode.models.epc_encoder import EpcScheme
 
 
 class StockBarcodeController(http.Controller):
 
-    @http.route('/stock_barcode/scan_from_main_menu', type='json', auth='user')
+    @http.route('/stock_barcode/scan_from_main_menu', type='jsonrpc', auth='user')
     def main_menu(self, barcode):
         """ Receive a barcode scanned from the main menu and return the appropriate
             action (open an existing / new picking) or warning.
@@ -68,7 +71,7 @@ class StockBarcodeController(http.Controller):
         else:
             return {'warning': _('No picking or product corresponding to barcode %(barcode)s', barcode=barcode)}
 
-    @http.route('/stock_barcode/save_barcode_data', type='json', auth='user')
+    @http.route('/stock_barcode/save_barcode_data', type='jsonrpc', auth='user')
     def save_barcode_data(self, model, res_id, write_field, write_vals):
         if not res_id:
             return request.env[model].barcode_write(write_vals)
@@ -76,7 +79,7 @@ class StockBarcodeController(http.Controller):
         target_record.write({write_field: write_vals})
         return target_record._get_stock_barcode_data()
 
-    @http.route('/stock_barcode/get_barcode_data', type='json', auth='user')
+    @http.route('/stock_barcode/get_barcode_data', type='jsonrpc', auth='user')
     def get_barcode_data(self, model, res_id):
         """ Returns a dict with values used by the barcode client:
         {
@@ -90,7 +93,7 @@ class StockBarcodeController(http.Controller):
             target_record = request.env[model].browse(res_id).with_context(allowed_company_ids=self._get_allowed_company_ids())
         data = target_record._get_stock_barcode_data()
         data['records'].update(self._get_barcode_nomenclature())
-        data['precision'] = request.env['decimal.precision'].precision_get('Product Unit of Measure')
+        data['precision'] = request.env['decimal.precision'].precision_get('Product Unit')
         mute_sound = request.env['ir.config_parameter'].sudo().get_param('stock_barcode.mute_sound_notifications')
         data['config'] = data.get('config', {})
         data['config']['play_sound'] = bool(not mute_sound or mute_sound == "False")
@@ -104,7 +107,7 @@ class StockBarcodeController(http.Controller):
             'groups': self._get_groups_data(),
         }
 
-    @http.route('/stock_barcode/get_main_menu_data', type='json', auth='user')
+    @http.route('/stock_barcode/get_main_menu_data', type='jsonrpc', auth='user')
     def get_main_menu_data(self):
         user = request.env.user
         groups = {
@@ -125,21 +128,7 @@ class StockBarcodeController(http.Controller):
             'quant_count': quant_count,
         }
 
-    def _get_records_fields_stock_barcode(self, records):
-        result = defaultdict(list)
-        result[records._name] = records.read(records._get_fields_stock_barcode(), load=False)
-        if hasattr(records, '_get_stock_barcode_specific_data'):
-            records_data_by_model = records._get_stock_barcode_specific_data()
-            for res_model in records_data_by_model:
-                result[res_model] += records_data_by_model[res_model]
-        return result
-
-    @http.route('/stock_barcode/get_quants', type='json', auth='user')
-    def get_existing_quant_and_related_data(self, domain):
-        quants = request.env['stock.quant'].search(domain)
-        return quants.get_stock_barcode_data_records()
-
-    @http.route('/stock_barcode/get_specific_barcode_data', type='json', auth='user')
+    @http.route('/stock_barcode/get_specific_barcode_data', type='jsonrpc', auth='user')
     def get_specific_barcode_data(self, **kwargs):
         """ This method gets multiple records data from different models for the given barcode(s).
         The goal is to do one search by model (plus the additional record, e.g. the UOM records when
@@ -151,7 +140,10 @@ class StockBarcodeController(http.Controller):
             ''domains_by_model'': a dict of model_name -> domain
             ''fetch_quant'': Fetch extra quants based on products (used in inventory)
         """
-        request.env.context = {**kwargs.get('context', {}), **request.env.context, 'display_default_code': False}
+        context = kwargs.get('context', {})
+        context.update(request.env.context)
+        context['display_default_code'] = False
+        request.update_env(context=context)
         barcodes_by_model = kwargs.get('barcodes_by_model')
         domains_by_model = kwargs.get('domains_by_model', {})
         universal_domain = domains_by_model.get('all')
@@ -225,52 +217,21 @@ class StockBarcodeController(http.Controller):
                 result[f_model_name] = result[f_model_name] + fetched_data[f_model_name]
         return result
 
-    @http.route('/stock_barcode/get_specific_barcode_data_batch', type='json', auth='user')
-    def get_specific_barcode_data_batch(self, kwargs):
-        """ Batched version of `get_specific_barcode_data`, where its purpose is to get multiple
-        records data from different models. The goal is to do one search by model (plus the
-        additional record, e.g. the UOM records when fetching product's records.)
-        """
-        nomenclature = request.env.company.nomenclature_id
+    def _get_records_fields_stock_barcode(self, records):
         result = defaultdict(list)
-
-        for model_name, barcodes in kwargs.items():
-            barcode_field = request.env[model_name]._barcode_field
-            domain = [(barcode_field, 'in', barcodes)]
-
-            if nomenclature.is_gs1_nomenclature:
-                # If we use GS1 nomenclature, the domain might need some adjustments.
-                converted_barcodes_domain = []
-                unconverted_barcodes = []
-                for barcode in barcodes:
-                    try:
-                        # If barcode is digits only, cut off the padding to keep the original barcode only.
-                        barcode = str(int(barcode))
-                        if converted_barcodes_domain:
-                            converted_barcodes_domain = expression.OR([
-                                converted_barcodes_domain,
-                                [(barcode_field, 'ilike', barcode)]
-                            ])
-                        else:
-                            converted_barcodes_domain = [(barcode_field, 'ilike', barcode)]
-                    except ValueError:
-                        unconverted_barcodes.append(barcode)
-                        pass  # Barcode isn't digits only.
-                if converted_barcodes_domain:
-                    domain = converted_barcodes_domain
-                    if unconverted_barcodes:
-                        domain = expression.OR([
-                            domain,
-                            [(barcode_field, 'in', unconverted_barcodes)]
-                        ])
-
-            records = request.env[model_name].search(domain)
-            fetched_data = self._get_records_fields_stock_barcode(records)
-            for f_model_name in fetched_data:
-                result[f_model_name] = result[f_model_name] + fetched_data[f_model_name]
+        result[records._name] = records.read(records._get_fields_stock_barcode(), load=False)
+        if hasattr(records, '_get_stock_barcode_specific_data'):
+            records_data_by_model = records._get_stock_barcode_specific_data()
+            for res_model in records_data_by_model:
+                result[res_model] += records_data_by_model[res_model]
         return result
 
-    @http.route('/stock_barcode/rid_of_message_demo_barcodes', type='json', auth='user')
+    @http.route('/stock_barcode/get_quants', type='jsonrpc', auth='user')
+    def get_existing_quant_and_related_data(self, domain):
+        quants = request.env['stock.quant'].search(domain)
+        return quants.get_stock_barcode_data_records()
+
+    @http.route('/stock_barcode/rid_of_message_demo_barcodes', type='jsonrpc', auth='user')
     def rid_of_message_demo_barcodes(self, **kw):
         """ Edit the main_menu client action so that it doesn't display the 'print demo barcodes sheet' message """
         if not request.env.user.has_group('stock.group_stock_user'):
@@ -323,22 +284,29 @@ class StockBarcodeController(http.Controller):
         return False
 
     def _try_open_product_location(self, barcode):
-        """ If barcode represent a product, open a list/kanban view to show all
-        the locations of this product.
+        """ If the barcode represents a product or its UoM, open a list/kanban view
+        to show all the locations of this product.
         """
-        result = request.env['product.product'].search_read([
-            ('barcode', '=', barcode),
-        ], ['id', 'display_name'], limit=1)
+        if result := request.env['product.product'].search_read(
+                [('barcode', '=', barcode)],
+                ['id', 'display_name'], limit=1):
+            product_id, product_display_name = result[0]['id'], result[0]['display_name']
+        # Ignore UoM barcode if the UoM setting is toggled off.
+        elif result := self.env.user.has_group('uom.group_uom') and \
+             request.env['product.uom'].search_read(
+                 [('barcode', '=', barcode)],
+                 ['product_id'], limit=1):
+            product_id, product_display_name = result[0]['product_id']
         if result:
             tree_view_id = request.env.ref('stock.view_stock_quant_tree').id
             kanban_view_id = request.env.ref('stock_barcode.stock_quant_barcode_kanban_2').id
             return {
                 'action': {
-                    'name': result[0]['display_name'],
+                    'name': product_display_name,
                     'res_model': 'stock.quant',
                     'views': [(tree_view_id, 'list'), (kanban_view_id, 'kanban')],
                     'type': 'ir.actions.act_window',
-                    'domain': [('product_id', '=', result[0]['id'])],
+                    'domain': [('product_id', '=', product_id)],
                     'context': {
                         'search_default_internal_loc': True,
                     },
@@ -467,7 +435,6 @@ class StockBarcodeController(http.Controller):
             'group_tracking_lot': request.env.user.has_group('stock.group_tracking_lot'),
             'group_production_lot': request.env.user.has_group('stock.group_production_lot'),
             'group_uom': request.env.user.has_group('uom.group_uom'),
-            'group_stock_packaging': request.env.user.has_group('product.group_stock_packaging'),
             'group_stock_sign_delivery': request.env.user.has_group('stock.group_stock_sign_delivery'),
         }
 
@@ -483,9 +450,38 @@ class StockBarcodeController(http.Controller):
         list_model = [
             'stock.location',
             'product.product',
-            'product.packaging',
+            'uom.uom',
+            'product.uom',
             'stock.picking',
             'stock.lot',
             'stock.quant.package',
         ]
         return {model: request.env[model]._barcode_field for model in list_model if hasattr(request.env[model], '_barcode_field')}
+
+    @http.route('/stock_barcode/get_epc', type='jsonrpc', auth='user')
+    def get_epc(self, scheme_name, element_string_list, company_prefix_length=None, filter=None):
+        scheme = EpcScheme(scheme_name)
+        return {element_string: scheme.encode(element_string, filter, company_prefix_length) for element_string in element_string_list}
+
+    @http.route('/stock_barcode/get_epc_sgtin', type='jsonrpc', auth='user')
+    def get_epc_sgtin(self, gtin, tracking_number_list, filter, company_prefix_length, alphanumeric_tracking=False):
+        """Get a batch of SGTIN EPC for a defined product with a list of tracking numbers
+        :param gtin: GTIN of the product
+        :param tracking_number_list: List of tracking numbers
+        :param alphanumeric_tracking: True if any tracking number is alphanumeric
+        :param filter: Filter value for SGTIN EPC as defined in [TDS2.1]§10.2
+        :param company_prefix_length: Length of the company prefix
+        """
+        if not re.match(r"^\d+$", gtin):
+            raise Exception(_("A GTIN can only contains digits"))
+
+        scheme_name, field_name = ('sgtin-198', 'serial_string') if alphanumeric_tracking else ('sgtin-96', 'serial_integer')
+        scheme = EpcScheme(scheme_name)
+        results = {}
+        element_string = f"(01) {gtin} (21) {tracking_number_list[0]}"
+        # First call to encode may raise an exception if technical fields (header, partition, filter...) are invalid
+        results[tracking_number_list[0]] = scheme.encode(element_string, filter, company_prefix_length)
+        # Since we operate on a single product, we can reuse the base encoding for all the tracking numbers to fasten the process
+        for tracking_number in tracking_number_list[1:]:
+            results[tracking_number] = scheme.encode_partial(field_name, tracking_number)
+        return results

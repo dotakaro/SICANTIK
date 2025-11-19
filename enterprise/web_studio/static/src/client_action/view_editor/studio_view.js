@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { WithSearch } from "@web/search/with_search/with_search";
 import { cleanClickedElements } from "@web_studio/client_action/view_editor/editors/utils";
 import { Component, onError, onMounted, toRaw, useRef, xml, useSubEnv, useEffect } from "@odoo/owl";
@@ -29,6 +27,7 @@ export class StudioView extends Component {
             searchViewFields: this.props.searchViewFields,
             irFilters: this.props.searchViewIrFilters,
             display: this.props.display,
+            defaultGroupBy: this.props.defaultGroupBy,
         };
         this.viewEditorModel = this.env.viewEditorModel;
 

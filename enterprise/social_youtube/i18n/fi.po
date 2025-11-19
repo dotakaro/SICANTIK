@@ -3,24 +3,16 @@
 # 	* social_youtube
 # 
 # Translators:
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
-# Tiffany Chang, 2024
-# Mikko Salmela <salmemik@gmail.com>, 2024
-# Jesse Järvi <me@jessejarvi.net>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Miku Laitinen <miku.laitinen@gmail.com>, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Martin Trigaux, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024
+# Wil Odoo, 2025
+# Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:28+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:12+0000\n"
+"PO-Revision-Date: 2025-07-01 13:07+0000\n"
+"Last-Translator: Jessica Jakara, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -34,8 +26,8 @@ msgid ""
 "'Uploads' Playlist ID provided by the YouTube API, this should never be set "
 "manually."
 msgstr ""
-"'Uploads' YouTube API:n tarjoama soittolistan ID, tätä ei pitäisi koskaan "
-"asettaa manuaalisesti."
+"'Uploads' soittolistan tunnus, jonka YouTube API tarjoaa; tätä ei pitäisi "
+"koskaan asettaa manuaalisesti."
 
 #. module: social_youtube
 #: model_terms:ir.ui.view,arch_db:social_youtube.youtube_preview
@@ -71,7 +63,7 @@ msgstr "Tilisi käyttöoikeus voidaan peruuttaa milloin tahansa osoitteesta"
 msgid ""
 "Access token provided by the YouTube API, this should never be set manually."
 msgstr ""
-"YouTuben API:n tarjoama käyttöoikeustunniste, jota ei saa koskaan asettaa "
+"YouTuben API:n tarjoama pääsytunniste, jota ei tule koskaan asettaa "
 "manuaalisesti."
 
 #. module: social_youtube
@@ -123,16 +115,6 @@ msgid "Comments"
 msgstr "Kommentit"
 
 #. module: social_youtube
-#. odoo-python
-#: code:addons/social_youtube/models/social_stream_post.py:0
-msgid ""
-"Comments are marked as 'disabled' for this video. It could have been set as "
-"'private'."
-msgstr ""
-"Kommentit on merkitty tämän videon kohdalla 'poistettu käytöstä'. Se olisi "
-"voinut olla asetettu 'yksityiseksi'."
-
-#. module: social_youtube
 #: model:ir.model,name:social_youtube.model_res_config_settings
 msgid "Config Settings"
 msgstr "Asetukset"
@@ -147,12 +129,15 @@ msgstr "Vahvistus"
 #: model:ir.model.fields,help:social_youtube.field_social_live_post__youtube_video_id
 #: model:ir.model.fields,help:social_youtube.field_social_post__youtube_video_id
 msgid "Contains the ID of the video as returned by the YouTube API"
-msgstr "Sisältää videon ID:n, jonka YouTube API palauttaa"
+msgstr ""
+"Sisältää videon tunnuksen, jonka YouTube ohjelmointirajapinta (API) "
+"palauttaa"
 
 #. module: social_youtube
 #: model:ir.model.fields,help:social_youtube.field_social_post__youtube_video_category_id
 msgid "Contains the ID of the video category as returned by the YouTube API"
-msgstr "Sisältää YouTube API:n palauttaman videoluokan ID:n"
+msgstr ""
+"Sisältää YouTube ohjelmointirajapinnan palauttaman videokategorian tunnuksen"
 
 #. module: social_youtube
 #. odoo-python
@@ -187,7 +172,15 @@ msgid "Description should not contain > or < symbol."
 msgstr "Kuvaus ei saa sisältää >- tai <-symbolia."
 
 #. module: social_youtube
+#: model:ir.model.fields,field_description:social_youtube.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:social_youtube.field_social_account__display_name
 #: model:ir.model.fields,field_description:social_youtube.field_social_account_revoke_youtube__display_name
+#: model:ir.model.fields,field_description:social_youtube.field_social_live_post__display_name
+#: model:ir.model.fields,field_description:social_youtube.field_social_media__display_name
+#: model:ir.model.fields,field_description:social_youtube.field_social_post__display_name
+#: model:ir.model.fields,field_description:social_youtube.field_social_post_template__display_name
+#: model:ir.model.fields,field_description:social_youtube.field_social_stream__display_name
+#: model:ir.model.fields,field_description:social_youtube.field_social_stream_post__display_name
 msgid "Display Name"
 msgstr "Näyttönimi"
 
@@ -203,8 +196,8 @@ msgid ""
 "Expiration date of the Access Token provided by the YouTube API, this should"
 " never be set manually."
 msgstr ""
-"YouTube API:n tarjoaman pääsytunnisteen viimeinen voimassaolopäivä, tätä ei "
-"saa koskaan asettaa manuaalisesti."
+"YouTube ohjelmointirajapinnan tarjoaman pääsytunnisteen viimeinen "
+"voimassaolopäivä; tätä ei saa koskaan asettaa manuaalisesti."
 
 #. module: social_youtube
 #: model:ir.model.fields,field_description:social_youtube.field_social_account__youtube_access_token
@@ -222,7 +215,15 @@ msgid "Google Refresh Token"
 msgstr "Google virkistyspoletti"
 
 #. module: social_youtube
+#: model:ir.model.fields,field_description:social_youtube.field_res_config_settings__id
+#: model:ir.model.fields,field_description:social_youtube.field_social_account__id
 #: model:ir.model.fields,field_description:social_youtube.field_social_account_revoke_youtube__id
+#: model:ir.model.fields,field_description:social_youtube.field_social_live_post__id
+#: model:ir.model.fields,field_description:social_youtube.field_social_media__id
+#: model:ir.model.fields,field_description:social_youtube.field_social_post__id
+#: model:ir.model.fields,field_description:social_youtube.field_social_post_template__id
+#: model:ir.model.fields,field_description:social_youtube.field_social_stream__id
+#: model:ir.model.fields,field_description:social_youtube.field_social_stream_post__id
 msgid "ID"
 msgstr "ID"
 
@@ -280,6 +281,16 @@ msgstr ""
 "Kun video on julkaistu, aseta se julkiseksi/yksityiseksi/luetteloimattomaksi"
 
 #. module: social_youtube
+#. odoo-python
+#: code:addons/social_youtube/models/social_media.py:0
+msgid ""
+"Oops! You currently don't have an active subscription. No worries, though! You can easily get one here: %s.\n"
+"Grab a subscription and unlock a world of amazing features!"
+msgstr ""
+"Oho! Sinulla ei ole aktiivista tilausta. Ei hätää – voit helposti hankkia sellaisen täältä: %s.\n"
+"Nappaa itsellesi tilaus ja saat pääsyn mahtaviin ominaisuuksiin!"
+
+#. module: social_youtube
 #: model_terms:ir.ui.view,arch_db:social_youtube.social_account_view_form
 msgid ""
 "Our YouTube Social application uses YouTube API Services.\n"
@@ -329,8 +340,8 @@ msgid ""
 "Refresh token provided by the YouTube API, this should never be set "
 "manually."
 msgstr ""
-"YouTube API:n tarjoama päivitystunniste, jota ei koskaan pidä asettaa "
-"manuaalisesti."
+"YouTube ohjelmointirajapinnan tarjoama päivitystunniste, jota ei koskaan "
+"tule asettaa manuaalisesti."
 
 #. module: social_youtube
 #: model_terms:ir.ui.view,arch_db:social_youtube.social_account_view_form
@@ -584,12 +595,6 @@ msgstr "Et voi käyttää '>' tai '<' sekä otsikossa että kuvauksessa."
 
 #. module: social_youtube
 #. odoo-python
-#: code:addons/social_youtube/models/social_media.py:0
-msgid "You don't have an active subscription. Please buy one here: %s"
-msgstr "Sinulla ei ole aktiivista tilausta. Osta se täältä: %s"
-
-#. module: social_youtube
-#. odoo-python
 #: code:addons/social_youtube/models/social_post.py:0
 msgid "You have to upload a video when posting on YouTube."
 msgstr "Sinun on ladattava video, kun julkaiset videon YouTubessa."
@@ -634,8 +639,8 @@ msgid ""
 "YouTube Channel ID provided by the YouTube API, this should never be set "
 "manually."
 msgstr ""
-"YouTube-kanavan tunniste, jonka YouTube API tarjoaa, tätä ei saa koskaan "
-"asettaa manuaalisesti."
+"YouTube-kanavan tunniste, jonka YouTube ohjelmointirajapinta tarjoaa. Tätä "
+"ei saa koskaan asettaa manuaalisesti."
 
 #. module: social_youtube
 #. odoo-javascript

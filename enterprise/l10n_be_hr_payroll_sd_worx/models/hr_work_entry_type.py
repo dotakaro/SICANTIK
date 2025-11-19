@@ -3,6 +3,7 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
+
 class HrWorkEntryType(models.Model):
     _inherit = 'hr.work.entry.type'
 

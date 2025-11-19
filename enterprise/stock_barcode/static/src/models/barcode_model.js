@@ -1,9 +1,7 @@
-/** @odoo-module **/
-
 import { BarcodeParser } from "@barcodes/js/barcode_parser";
 import { Mutex } from "@web/core/utils/concurrency";
 import { formatFloat } from "@web/core/utils/numbers";
-import LazyBarcodeCache from '@stock_barcode/lazy_barcode_cache';
+import LazyBarcodeCache from "@stock_barcode/lazy_barcode_cache";
 import { _t } from "@web/core/l10n/translation";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
@@ -14,7 +12,7 @@ import { BarcodeObject } from "../barcode_object";
 export default class BarcodeModel extends EventBus {
     constructor(resModel, resId, services) {
         super();
-        this.dialogService = useService('dialog');
+        this.dialogService = useService("dialog");
         this.orm = services.orm;
         this.notificationService = services.notification;
         this.action = services.action;
@@ -37,10 +35,13 @@ export default class BarcodeModel extends EventBus {
     setData(data) {
         this.actionId = data.actionId;
         this.cache = new LazyBarcodeCache(data.data.records);
-        const nomenclature = this.cache.getRecord('barcode.nomenclature', data.data.nomenclature_id);
+        const nomenclature = this.cache.getRecord(
+            "barcode.nomenclature",
+            data.data.nomenclature_id
+        );
         nomenclature.rules = [];
         for (const ruleId of nomenclature.rule_ids) {
-            nomenclature.rules.push(this.cache.getRecord('barcode.rule', ruleId));
+            nomenclature.rules.push(this.cache.getRecord("barcode.rule", ruleId));
         }
         this.parser = new BarcodeParser({ nomenclature });
         BarcodeObject.setEnv(this.cache, this.parser);
@@ -52,8 +53,9 @@ export default class BarcodeModel extends EventBus {
         this.groupingLinesEnabled = this.groups.group_production_lot;
 
         this.packageTypes = [];
-        if (this.groups.group_tracking_lot) { // Get the package types by barcode.
-            const packageTypes = this.cache.dbBarcodeCache['stock.package.type'] || {};
+        if (this.groups.group_tracking_lot) {
+            // Get the package types by barcode.
+            const packageTypes = this.cache.dbBarcodeCache["stock.package.type"] || {};
             for (const [barcode, ids] of Object.entries(packageTypes)) {
                 this.packageTypes.push([barcode, ids[0]]);
             }
@@ -72,11 +74,11 @@ export default class BarcodeModel extends EventBus {
     // GETTER
 
     getQtyDone(line) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     getQtyDemand(line) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     getDisplayIncrementBtn(line) {
@@ -87,19 +89,15 @@ export default class BarcodeModel extends EventBus {
         return !(line.lot_id || line.lot_name) || this.getQtyDone(line) === 0;
     }
 
-    getDisplayIncrementPackagingBtn(line) {
-        return false;
-    }
-
     getActionRefresh(newId) {
         return {
-            route: '/stock_barcode/get_barcode_data',
-            params: {model: this.resModel, res_id: this.resId || false},
+            route: "/stock_barcode/get_barcode_data",
+            params: { model: this.resModel, res_id: this.resId || false },
         };
     }
 
     getIncrementQuantity(line) {
-        let remainingQty = this.getLineRemainingQuantity(line);
+        const remainingQty = this.getLineRemainingQuantity(line);
         const params = { digits: [false, this.precision], thousandsSep: "", decimalPoint: "." };
         return parseFloat(formatFloat(remainingQty, params));
     }
@@ -117,11 +115,11 @@ export default class BarcodeModel extends EventBus {
     }
 
     async apply() {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     get barcodeInfo() {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     get canCreateNewLot() {
@@ -129,10 +127,6 @@ export default class BarcodeModel extends EventBus {
     }
 
     get canBeProcessed() {
-        return true;
-    }
-
-    get isValidForBarcodeLookup() {
         return true;
     }
 
@@ -206,7 +200,7 @@ export default class BarcodeModel extends EventBus {
 
     lineCannotBeGrouped(line) {
         // Don't try to group a line who is not tracked or is already grouped.
-        return line.product_id.tracking === 'none' || line.lines;
+        return line.product_id.tracking === "none" || line.lines;
     }
 
     /**
@@ -216,26 +210,31 @@ export default class BarcodeModel extends EventBus {
      */
     get groupedLines() {
         this.groupLines();
-        return this._groupedLines;
+        // Before to return the line, we sort them to have new lines always on
+        // top and complete lines always on the bottom.
+        return this._sortLine(this._groupedLines);
     }
 
     groupLines() {
-        if (!this.groupingLinesEnabled) {
-            this._groupedLines = this._sortLine(this.pageLines);
-            return this._groupedLines;
+        this._groupedLines = [...this.pageLines];
+        if (this.groupingLinesEnabled) {
+            this._groupedLines = this._groupLines(this._groupedLines, "parentLine", this.groupKey);
         }
-        const lines = [...this.pageLines];
+        return this._groupedLines;
+    }
+
+    _groupLines(lines, parentKeyString, groupKeyMethod, conditionalGrouping = true) {
         const groupedLinesByKey = {};
         for (let index = lines.length - 1; index >= 0; index--) {
             const line = lines[index];
-            if (line.parentLine) {
+            if (line[parentKeyString]) {
                 // Remove previous parent line's link.
-                delete line.parentLine;
+                delete line[parentKeyString];
             }
-            if (this.lineCannotBeGrouped(line)) {
+            if (conditionalGrouping && this.lineCannotBeGrouped(line)) {
                 continue;
             }
-            const key = this.groupKey(line);
+            const key = groupKeyMethod(line);
             if (!groupedLinesByKey[key]) {
                 groupedLinesByKey[key] = [];
             }
@@ -246,22 +245,10 @@ export default class BarcodeModel extends EventBus {
                 lines.push(...sublines);
                 continue;
             }
-            const ids = [];
-            const virtual_ids = [];
-            let [qtyDemand, qtyDone] = [0, 0];
-            for (const subline of sublines) {
-                ids.push(subline.id);
-                virtual_ids.push(subline.virtual_id);
-                qtyDemand += this.getQtyDemand(subline);
-                qtyDone += this.getQtyDone(subline);
-            }
-            const groupedLine = this._groupSublines(sublines, ids, virtual_ids, qtyDemand, qtyDone);
+            const groupedLine = this._groupSublines(sublines, parentKeyString);
             lines.push(groupedLine);
         }
-        // Before to return the line, we sort them to have new lines always on
-        // top and complete lines always on the bottom.
-        this._groupedLines = this._sortLine(lines);
-        return this._groupedLines;
+        return lines;
     }
 
     getLineLocation(line) {
@@ -271,7 +258,7 @@ export default class BarcodeModel extends EventBus {
 
     get groupedLinesByLocation() {
         const lines = [].concat(this.groupedLines, this.packageLines);
-        const linesByLocations = []
+        const linesByLocations = [];
         const linesByLocation = {};
         for (const line of lines) {
             const lineLoc = this.getLineLocation(line);
@@ -291,7 +278,7 @@ export default class BarcodeModel extends EventBus {
             const [locNameA, locNameB] = [lblA.location.display_name, lblB.location.display_name];
             return locNameA < locNameB ? -1 : locNameA > locNameB ? 1 : 0;
         });
-        return linesByLocations
+        return linesByLocations;
     }
 
     get highlightValidateButton() {
@@ -323,7 +310,7 @@ export default class BarcodeModel extends EventBus {
     get lastScannedLine() {
         if (this.scannedLinesVirtualId.length) {
             const virtualId = this.scannedLinesVirtualId[this.scannedLinesVirtualId.length - 1];
-            return this.currentState.lines.find(l => l.virtual_id === virtualId);
+            return this.currentState.lines.find((l) => l.virtual_id === virtualId);
         }
         return false;
     }
@@ -333,16 +320,17 @@ export default class BarcodeModel extends EventBus {
     }
 
     lineIsFaulty(line) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     lineIsTracked(line) {
-        return this.useTrackingNumber && line.product_id.tracking !== 'none';
+        return this.useTrackingNumber && line.product_id.tracking !== "none";
     }
 
     get location() {
-        if (this.lastScanned.sourceLocation) { // Get last scanned location.
-            return this.cache.getRecord('stock.location', this.lastScanned.sourceLocation.id);
+        if (this.lastScanned.sourceLocation) {
+            // Get last scanned location.
+            return this.cache.getRecord("stock.location", this.lastScanned.sourceLocation.id);
         }
         // Get last defined source location (if applicable) or the default location.
         return this._currentLocation || this._defaultLocation();
@@ -368,7 +356,7 @@ export default class BarcodeModel extends EventBus {
                 continue;
             }
             alreadyDone.push(virtualId);
-            const foundLine = this.currentState.lines.find(l => l.virtual_id === virtualId);
+            const foundLine = this.currentState.lines.find((l) => l.virtual_id === virtualId);
             if (foundLine) {
                 lines.push(foundLine);
             }
@@ -381,13 +369,15 @@ export default class BarcodeModel extends EventBus {
 
     get previousScannedLinesByPackage() {
         if (this.lastScanned.packageId) {
-            return this.currentState.lines.filter(l => l.package_id && l.package_id.id === this.lastScanned.packageId);
+            return this.currentState.lines.filter(
+                (l) => l.package_id && l.package_id.id === this.lastScanned.packageId
+            );
         }
         return [];
     }
 
     get printButtons() {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     get recordIds() {
@@ -395,8 +385,11 @@ export default class BarcodeModel extends EventBus {
     }
 
     get selectedLine() {
-        return this.selectedLineVirtualId && this.currentState.lines.find(
-            l => (l.dummy_id || l.virtual_id) === this.selectedLineVirtualId
+        return (
+            this.selectedLineVirtualId &&
+            this.currentState.lines.find(
+                (l) => (l.dummy_id || l.virtual_id) === this.selectedLineVirtualId
+            )
         );
     }
 
@@ -414,13 +407,16 @@ export default class BarcodeModel extends EventBus {
      * @param {integer} [lineId] if provided it checks if the line still exist (selects it or removes it from the lines' list)
      */
     async displayBarcodeLines(lineId) {
-        if (lineId) { // If we pass a record id checks if the record still exist.
-            const res = await this.orm.search(this.lineModel, [['id', '=', lineId]]);
-            if (!res.length) { // The record was deleted, we remove the corresponding line.
-                const lineIndex = this.currentState.lines.findIndex(l => l.id == lineId);
+        if (lineId) {
+            // If we pass a record id checks if the record still exist.
+            const res = await this.orm.search(this.lineModel, [["id", "=", lineId]]);
+            if (!res.length) {
+                // The record was deleted, we remove the corresponding line.
+                const lineIndex = this.currentState.lines.findIndex((l) => l.id == lineId);
                 this.currentState.lines.splice(lineIndex, 1);
-            } else { // If it still exist, selects the record's line.
-                const line = this.currentState.lines.find(line => line.id === lineId);
+            } else {
+                // If it still exist, selects the record's line.
+                const line = this.currentState.lines.find((line) => line.id === lineId);
                 this.selectLine(line);
             }
         }
@@ -440,7 +436,7 @@ export default class BarcodeModel extends EventBus {
             if (line.location_id.id != this.lastScanned.sourceLocation.id) {
                 continue; // Not the same location.
             }
-            const [ qtyDone, qtyDemand ] = [this.getQtyDone(line), this.getQtyDemand(line)];
+            const [qtyDone, qtyDemand] = [this.getQtyDone(line), this.getQtyDemand(line)];
             if (qtyDone == 0 || (qtyDemand && qtyDone < qtyDemand)) {
                 return line.lot_id ? this._getParentLine(line) : line; // If the line still need to be processed, returns it immediately.
             }
@@ -454,7 +450,7 @@ export default class BarcodeModel extends EventBus {
      * @param {String} message
      * @param {Object} options
      */
-    notification(message, options={}) {
+    notification(message, options = {}) {
         if (this.notificationCache.has(message)) {
             return; // Don't display the notification if it's already displayed.
         }
@@ -484,7 +480,10 @@ export default class BarcodeModel extends EventBus {
     }
 
     selectLine(line) {
-        if (this.lineCanBeSelected(line) && (!line.virtual_ids || !line.virtual_ids.includes(this.selectedLineVirtualId))) {
+        if (
+            this.lineCanBeSelected(line) &&
+            (!line.virtual_ids || !line.virtual_ids.includes(this.selectedLineVirtualId))
+        ) {
             this._selectLine(line);
         }
     }
@@ -498,10 +497,13 @@ export default class BarcodeModel extends EventBus {
     toggleSublines(line) {
         const lineKey = this.groupKey(line);
         this.unfoldLineKey = this.unfoldLineKey === lineKey ? false : lineKey;
-        if (this.unfoldLineKey === lineKey && (!this.selectedLine || this.unfoldLineKey != this.groupKey(this.selectedLine))) {
+        if (
+            this.unfoldLineKey === lineKey &&
+            (!this.selectedLine || this.unfoldLineKey != this.groupKey(this.selectedLine))
+        ) {
             this.selectLine(line);
         }
-        this.trigger('update');
+        this.trigger("update");
     }
 
     createSingleLinesForPackaging(barcodeData) {
@@ -515,33 +517,33 @@ export default class BarcodeModel extends EventBus {
     async updateLine(line, args) {
         let { location_id, lot_id, owner_id, package_id } = args;
         if (!line) {
-            throw new Error('No line found');
+            throw new Error("No line found");
         }
         if (!line.product_id && args.product_id) {
             line.product_id = args.product_id;
-            line.product_uom_id = this.cache.getRecord('uom.uom', args.product_id.uom_id);
+            line.product_uom_id = this.cache.getRecord("uom.uom", args.uom?.id || args.product_id.uom_id);
         }
         if (location_id) {
-            if (typeof location_id === 'number') {
-                location_id = this.cache.getRecord('stock.location', args.location_id);
+            if (typeof location_id === "number") {
+                location_id = this.cache.getRecord("stock.location", args.location_id);
             }
             line.location_id = location_id;
         }
         if (lot_id) {
-            if (typeof lot_id === 'number') {
-                lot_id = this.cache.getRecord('stock.lot', args.lot_id);
+            if (typeof lot_id === "number") {
+                lot_id = this.cache.getRecord("stock.lot", args.lot_id);
             }
             line.lot_id = lot_id;
         }
         if (owner_id) {
-            if (typeof owner_id === 'number') {
-                owner_id = this.cache.getRecord('res.partner', args.owner_id);
+            if (typeof owner_id === "number") {
+                owner_id = this.cache.getRecord("res.partner", args.owner_id);
             }
             line.owner_id = owner_id;
         }
         if (package_id) {
-            if (typeof package_id === 'number') {
-                package_id = this.cache.getRecord('stock.quant.package', args.package_id);
+            if (typeof package_id === "number") {
+                package_id = this.cache.getRecord("stock.quant.package", args.package_id);
             }
             line.package_id = package_id;
         }
@@ -560,14 +562,17 @@ export default class BarcodeModel extends EventBus {
      * @param {number} qty Quantity to increment (1 by default)
      */
     updateLineQty(virtualId, qty = 1) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     async updateLotName(line, lotName) {
         // Checks if the tracking number isn't already used.
         for (const l of this.pageLines) {
-            if (line.virtual_id === l.virtual_id ||
-                line.product_id.tracking !== 'serial' || line.product_id.id !== l.product_id.id) {
+            if (
+                line.virtual_id === l.virtual_id ||
+                line.product_id.tracking !== "serial" ||
+                line.product_id.id !== l.product_id.id
+            ) {
                 continue;
             }
             if (lotName === l.lot_name || (l.lot_id && lotName === l.lot_id.name)) {
@@ -581,19 +586,16 @@ export default class BarcodeModel extends EventBus {
     async validate() {
         await this.save();
         const context = this.validateContext;
-        context['barcode_trigger'] = true;
-        const action = await this.orm.call(
-            this.resModel,
-            this.validateMethod,
-            [this.recordIds],
-            { context },
-        );
+        context["barcode_trigger"] = true;
+        const action = await this.orm.call(this.resModel, this.validateMethod, [this.recordIds], {
+            context,
+        });
         const options = {
-            onClose: ev => this._closeValidate(ev)
+            onClose: (ev) => this._closeValidate(ev),
         };
         if (action && (action.res_model || action.type == "ir.actions.client")) {
             if (action.type == "ir.actions.client") {
-                action.params = Object.assign(action.params || {}, options)
+                action.params = Object.assign(action.params || {}, options);
             }
             this.trigger("playSound");
             return this.action.doAction(action, options);
@@ -620,18 +622,18 @@ export default class BarcodeModel extends EventBus {
         // If the barcode has multiple URI, separate them.
         const matchedURI = [...barcode.matchAll(/urn:(?:[a-z0-9 -]+:){3} ?[0-9.]+/g)];
         if (matchedURI.length > 1) {
-            return matchedURI.map(uri => uri[0]);
+            return matchedURI.map((uri) => uri[0]);
         }
         // If the barcode contains the separator, split it.
         const sepRegex = RegExp(this.config.barcode_separator_regex);
-        const splitBarcodes = barcode.split(sepRegex).filter(bc => bc);
+        const splitBarcodes = barcode.split(sepRegex).filter((bc) => bc);
         if (splitBarcodes.length > 1) {
             return [...splitBarcodes];
         }
         return [barcode];
     }
 
-    async processBarcode(barcode, options={}) {
+    async processBarcode(barcode, options = {}) {
         if (!barcode) {
             return; // Do nothing if no barcode given.
         }
@@ -658,7 +660,7 @@ export default class BarcodeModel extends EventBus {
         }
 
         if (barcodes.length > 1 && !readingRFID) {
-            this.trigger("addBarcodesCountToProcess", filteredBarcodes.length)
+            this.trigger("addBarcodesCountToProcess", filteredBarcodes.length);
         }
         // Parse all barcodes.
         const parsedBarcodes = [];
@@ -675,8 +677,11 @@ export default class BarcodeModel extends EventBus {
         for (const barcodeObject of parsedBarcodes) {
             if (barcodeObject.hasMissingRecords) {
                 await barcodeObject.setRecords();
-                if (barcodeObject.isURN && barcodeObject.hasMissingRecords &&
-                    barcodeObject.missingRecords.find(mr => mr.type === "product")) {
+                if (
+                    barcodeObject.isURN &&
+                    barcodeObject.hasMissingRecords &&
+                    barcodeObject.missingRecords.find((mr) => mr.type === "product")
+                ) {
                     // This barcode is linked to a product we don't have => We ignore it.
                     // TODO: what to do with those barcodes ? Missing product => Barcode Lookup ?
                     // TODO: already scanned SN should be managed here too ?
@@ -708,7 +713,7 @@ export default class BarcodeModel extends EventBus {
 
     _getMissingRecordsParams() {
         return {
-            context: { allowed_company_ids: [this._getCompanyId()], },
+            context: { allowed_company_ids: [this._getCompanyId()] },
             forceUnrestrictedSearch: !this.parser.nomenclature.is_gs1_nomenclature,
         };
     }
@@ -720,11 +725,14 @@ export default class BarcodeModel extends EventBus {
 
     async getGs1Filters(gs1RulesData) {
         const gs1Filters = {};
-        const productRule = gs1RulesData.find(bc => bc.type === "product");
+        const productRule = gs1RulesData.find((bc) => bc.type === "product");
         if (productRule) {
             let product = await this.cache.getRecordByBarcode(productRule.value, "product.product");
             if (!product) {
-                const packaging = await this.cache.getRecordByBarcode(productRule.value, "product.packaging");
+                const packaging = await this.cache.getRecordByBarcode(
+                    productRule.value,
+                    "product.uom"
+                );
                 if (packaging) {
                     product = this.cache.getRecord("product.product", packaging.product_id);
                 }
@@ -753,12 +761,12 @@ export default class BarcodeModel extends EventBus {
         if (ev === undefined) {
             // If all is OK, displays a notification and goes back to the previous page.
             this.notification(this.validateMessage, { type: "success" });
-            this.trigger('history-back');
+            this.trigger("history-back");
         }
     }
 
     _convertDataToFieldsParams(args) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     createNewLine(params) {
@@ -775,19 +783,6 @@ export default class BarcodeModel extends EventBus {
      * @returns {Object} the newly created line
      */
     async _createNewLine(params) {
-        if (params.fieldsParams && params.fieldsParams.uom && params.fieldsParams.product_id) {
-            let productUOM = this.cache.getRecord('uom.uom', params.fieldsParams.product_id.uom_id);
-            let paramsUOM = params.fieldsParams.uom;
-            if (paramsUOM.category_id !== productUOM.category_id) {
-                // Not the same UoM's category -> Can't be converted.
-                const message = _t(
-                    "Scanned quantity uses %(unit)s as its Unit of Measure (UoM), but it is not compatible with the product's UoM (%(productUnit)s).",
-                    { unit: paramsUOM.name, productUnit: productUOM.name }
-                );
-                this.notification(message, { title: _t("Wrong Unit of Measure"), type: "danger" });
-                return false;
-            }
-        }
         const newLine = Object.assign(
             {},
             params.copyOf,
@@ -816,13 +811,15 @@ export default class BarcodeModel extends EventBus {
     async deleteLine(line) {
         if (!line.id) {
             // The line doesn't exist in the DB yet => Delete it only in the frontend.
-            const index = this.currentState.lines.findIndex(l => l.virtual_id === line.virtual_id);
+            const index = this.currentState.lines.findIndex(
+                (l) => l.virtual_id === line.virtual_id
+            );
             this.currentState.lines.splice(index, 1);
-            this.linesToSave = this.linesToSave.filter(vId => vId !== line.virtual_id);
+            this.linesToSave = this.linesToSave.filter((vId) => vId !== line.virtual_id);
         } else {
             await this.save();
             await this.orm.call(this.lineModel, this.deleteLineMethod, [line.id]);
-            this.trigger('refresh');
+            this.trigger("refresh");
         }
     }
 
@@ -830,9 +827,13 @@ export default class BarcodeModel extends EventBus {
         return true;
     }
 
+    _shouldBeExpressedInPackagingUom() {
+        return true;
+    }
+
     _defaultLocation() {
         const lastScannedLocation = this.lastScanned.sourceLocation;
-        return lastScannedLocation || Object.values(this.cache.dbIdCache['stock.location'])[0];
+        return lastScannedLocation || Object.values(this.cache.dbIdCache["stock.location"])[0];
     }
 
     _defaultDestLocation() {
@@ -840,9 +841,9 @@ export default class BarcodeModel extends EventBus {
     }
 
     _getCommands() {
-        const commands = {'OCDMENU': this._goToMainMenu.bind(this)};
+        const commands = { OCDMENU: this._goToMainMenu.bind(this) };
         if (!this.isDone) {
-            commands['OBTVALI'] = () => {
+            commands["OBTVALI"] = () => {
                 if (this.canBeValidate) {
                     this.validate();
                 } else {
@@ -873,7 +874,7 @@ export default class BarcodeModel extends EventBus {
     }
 
     _getNewLineDefaultContext() {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     _getParentLine(line) {
@@ -881,29 +882,34 @@ export default class BarcodeModel extends EventBus {
     }
 
     _getFieldToWrite() {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     _fieldToValue(fieldValue) {
-        return typeof fieldValue === 'object' ? fieldValue.id : fieldValue;
+        return typeof fieldValue === "object" ? fieldValue.id : fieldValue;
     }
 
     _getSaveLineCommand() {
         const commands = [];
         const fields = this._getFieldToWrite();
         for (const virtualId of this.linesToSave) {
-            const line = this.currentState.lines.find(l => l.virtual_id === virtualId);
-            if (line.id) { // Update an existing line.
-                const initialLine = this.initialState.lines.find(l => l.virtual_id === line.virtual_id);
+            const line = this.currentState.lines.find((l) => l.virtual_id === virtualId);
+            if (line.id) {
+                // Update an existing line.
+                const initialLine = this.initialState.lines.find(
+                    (l) => l.virtual_id === line.virtual_id
+                );
                 const changedValues = {};
                 let somethingToSave = false;
                 for (const field of fields) {
                     const fieldValue = line[field];
                     const initialValue = initialLine[field];
-                    if (fieldValue !== undefined && (
-                        (['boolean', 'number', 'string'].includes(typeof fieldValue) && fieldValue !== initialValue) ||
-                        (typeof fieldValue === 'object' && fieldValue.id !== initialValue.id)
-                    )) {
+                    if (
+                        fieldValue !== undefined &&
+                        ((["boolean", "number", "string"].includes(typeof fieldValue) &&
+                            fieldValue !== initialValue) ||
+                            (typeof fieldValue === "object" && fieldValue.id !== initialValue.id))
+                    ) {
                         changedValues[field] = this._fieldToValue(fieldValue);
                         somethingToSave = true;
                     }
@@ -911,7 +917,8 @@ export default class BarcodeModel extends EventBus {
                 if (somethingToSave) {
                     commands.push([1, line.id, changedValues]);
                 }
-            } else { // Create a new line.
+            } else {
+                // Create a new line.
                 commands.push([0, 0, this._createCommandVals(line)]);
             }
         }
@@ -919,38 +926,48 @@ export default class BarcodeModel extends EventBus {
     }
 
     _getSaveCommand() {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
-    _groupSublines(sublines, ids, virtual_ids, _qtyDemand, _qtyDone) {
+    _groupSublines(sublines, parentKey = "parentLine") {
+        const [ids, virtual_ids] = [[], []];
+        let [totalQtyDemand, totalQtyDone] = [0, 0];
         const sortedSublines = this._sortLine(sublines);
         // Use the line with lowest ID as the reference (info shown on summary
         // line and also the move line opened for the form view.)
-        const referenceLine = sortedSublines.reduce((result, line) => {
-            return line.id && (!result.id || (result.id > line.id)) ? line : result;
-        })
+        const referenceLine = sortedSublines.reduce((result, line) =>
+            line.id && (!result.id || result.id > line.id) ? line : result
+        );
+        for (const subline of sublines) {
+            ids.push(subline.id);
+            virtual_ids.push(subline.virtual_id);
+            totalQtyDemand += this.getQtyDemand(subline);
+            totalQtyDone += this.getQtyDone(subline);
+        }
         const groupedLine = Object.assign({}, referenceLine, {
             ids,
             lines: sortedSublines,
             opened: false,
             virtual_ids,
+            totalQtyDemand,
+            totalQtyDone,
         });
         for (const subline of sublines) {
-            subline.parentLine = groupedLine;
+            subline[parentKey] = groupedLine;
         }
         return groupedLine;
     }
 
     async _goToMainMenu() {
         await this.save();
-        this.action.doAction('stock_barcode.stock_barcode_action_main_menu', {
+        this.action.doAction("stock_barcode.stock_barcode_action_main_menu", {
             clearBreadcrumbs: true,
         });
     }
 
     _createLinesState() {
         /* Basic lines structure */
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     /**
@@ -963,7 +980,7 @@ export default class BarcodeModel extends EventBus {
     }
 
     _lineIsNotComplete(line) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     /**
@@ -1012,11 +1029,12 @@ export default class BarcodeModel extends EventBus {
         } catch (err) {
             // The barcode can't be parsed but the error is caught to fallback
             // on the classic way to handle barcodes.
-            console.log(`%cWarning: error about ${barcode}`, 'text-weight: bold;');
+            console.log(`%cWarning: error about ${barcode}`, "text-weight: bold;");
             console.log(err.message);
         }
         if (parsedBarcode) {
-            if (parsedBarcode.length) { // With the GS1 nomenclature, the parsed result is a list.
+            if (parsedBarcode.length) {
+                // With the GS1 nomenclature, the parsed result is a list.
                 const gs1Filters = await this.getGs1Filters(parsedBarcode);
                 for (const data of parsedBarcode) {
                     if (data.type === "lot" && result.product?.tracking === "none") {
@@ -1025,14 +1043,14 @@ export default class BarcodeModel extends EventBus {
                     const parsedData = await this._processGs1Data(data, gs1Filters);
                     Object.assign(result, parsedData);
                 }
-                if(result.match) {
+                if (result.match) {
                     return result;
                 }
-            } else if (parsedBarcode.type === 'weight') {
+            } else if (parsedBarcode.type === "weight") {
                 result.weight = parsedBarcode;
                 result.match = true;
                 barcode = parsedBarcode.base_code;
-            } else if (parsedBarcode.type === 'product' && parsedBarcode.code !== barcode) {
+            } else if (parsedBarcode.type === "product" && parsedBarcode.code !== barcode) {
                 // The scanned barcode should match a product but was either an
                 // alias, either converted from UPC-A to EAN-13 (or vice versa.)
                 barcode = parsedBarcode.code;
@@ -1059,7 +1077,7 @@ export default class BarcodeModel extends EventBus {
         }
 
         if (this.groups.group_stock_multi_locations) {
-            const location = recordByData.get('stock.location');
+            const location = recordByData.get("stock.location");
             if (location) {
                 this._setLocationFromBarcode(result, location);
                 result.match = true;
@@ -1067,8 +1085,8 @@ export default class BarcodeModel extends EventBus {
         }
 
         if (this.groups.group_tracking_lot) {
-            const packageType = recordByData.get('stock.package.type');
-            const stockPackage = recordByData.get('stock.quant.package');
+            const packageType = recordByData.get("stock.package.type");
+            const stockPackage = recordByData.get("stock.quant.package");
             if (stockPackage) {
                 // TODO: should take packages only in current (sub)location.
                 result.package = stockPackage;
@@ -1080,20 +1098,20 @@ export default class BarcodeModel extends EventBus {
             }
         }
 
-        const product = recordByData.get('product.product');
+        const product = recordByData.get("product.product");
         if (product) {
             result.product = product;
             result.match = true;
         }
-        if (this.groups.group_stock_packaging) {
-            const packaging = recordByData.get('product.packaging');
+        if (this.groups.group_uom) {
+            const packaging = recordByData.get("product.uom");
             if (packaging) {
                 result.match = true;
                 result.packaging = packaging;
             }
         }
         if (this.useExistingLots) {
-            const lot = recordByData.get('stock.lot');
+            const lot = recordByData.get("stock.lot");
             if (lot) {
                 result.lot = lot;
                 result.match = true;
@@ -1104,7 +1122,10 @@ export default class BarcodeModel extends EventBus {
             // If no match, check if the barcode begins with a package type's barcode.
             for (const [packageTypeBarcode, packageTypeId] of this.packageTypes) {
                 if (barcode.indexOf(packageTypeBarcode) === 0) {
-                    result.packageType = await this.cache.getRecord('stock.package.type', packageTypeId);
+                    result.packageType = await this.cache.getRecord(
+                        "stock.package.type",
+                        packageTypeId
+                    );
                     result.packageName = barcode;
                     result.match = true;
                     break;
@@ -1121,11 +1142,7 @@ export default class BarcodeModel extends EventBus {
             return this.notification(options.warning, { type: "warning" });
         }
         if (!action && method) {
-            action = await this.orm.call(
-                this.resModel,
-                method,
-                [[this.resId]]
-            );
+            action = await this.orm.call(this.resModel, method, [[this.resId]]);
         }
         this.action.doAction(action, options);
     }
@@ -1134,7 +1151,7 @@ export default class BarcodeModel extends EventBus {
         const result = {};
         const { rule, type, value } = data;
         if (["location", "location_dest"].includes(type)) {
-            const location = await this.cache.getRecordByBarcode(value, 'stock.location');
+            const location = await this.cache.getRecordByBarcode(value, "stock.location");
             if (!location) {
                 return;
             } else {
@@ -1143,16 +1160,17 @@ export default class BarcodeModel extends EventBus {
             }
         } else if (type === "lot") {
             if (this.useExistingLots) {
-                result.lot = await this.cache.getRecordByBarcode(value, 'stock.lot', { filters });
+                result.lot = await this.cache.getRecordByBarcode(value, "stock.lot", { filters });
             }
-            if (!result.lot) { // No existing lot found, set a lot name.
+            if (!result.lot) {
+                // No existing lot found, set a lot name.
                 result.lotName = value;
             }
             if (result.lot || result.lotName) {
                 result.match = true;
             }
         } else if (type === "package") {
-            const stockPackage = await this.cache.getRecordByBarcode(value, 'stock.quant.package');
+            const stockPackage = await this.cache.getRecordByBarcode(value, "stock.quant.package");
             if (stockPackage) {
                 result.package = stockPackage;
             } else {
@@ -1161,21 +1179,23 @@ export default class BarcodeModel extends EventBus {
             }
             result.match = true;
         } else if (type === "package_type") {
-            const packageType = await this.cache.getRecordByBarcode(value, 'stock.package.type');
+            const packageType = await this.cache.getRecordByBarcode(value, "stock.package.type");
             if (packageType) {
                 result.packageType = packageType;
                 result.match = true;
             } else {
-                const message = _t("An unexisting package type was scanned. This part of the barcode can't be processed.");
+                const message = _t(
+                    "An unexisting package type was scanned. This part of the barcode can't be processed."
+                );
                 this.notification(message, { type: "warning" });
             }
         } else if (type === "product") {
-            const product = await this.cache.getRecordByBarcode(value, 'product.product');
+            const product = await this.cache.getRecordByBarcode(value, "product.product");
             if (product) {
                 result.product = product;
                 result.match = true;
-            } else if (this.groups.group_stock_packaging) {
-                const packaging = await this.cache.getRecordByBarcode(value, 'product.packaging');
+            } else if (this.groups.group_uom) {
+                const packaging = await this.cache.getRecordByBarcode(value, "product.uom");
                 if (packaging) {
                     result.packaging = packaging;
                     result.match = true;
@@ -1186,7 +1206,7 @@ export default class BarcodeModel extends EventBus {
             // The quantity is usually associated to an UoM, but we
             // ignore this info if the UoM setting is disabled.
             if (this.groups.group_uom && rule?.associated_uom_id) {
-                result.uom = await this.cache.getRecord('uom.uom', rule.associated_uom_id);
+                result.uom = await this.cache.getRecord("uom.uom", rule.associated_uom_id);
             }
             result.match = result.quantity ? true : false;
         }
@@ -1205,13 +1225,13 @@ export default class BarcodeModel extends EventBus {
         // Creates a filter if needed, which can help to get the right record
         // when multiple records have the same model and barcode.
         const filters = {};
-        if (this.selectedLine && this.selectedLine.product_id.tracking !== 'none') {
-            filters['stock.lot'] = {
+        if (this.selectedLine && this.selectedLine.product_id.tracking !== "none") {
+            filters["stock.lot"] = {
                 product_id: this.selectedLine.product_id.id,
             };
         }
         // Constrain DB reads to records which belong to the company defined on the open operation
-        filters['all'] = {
+        filters["all"] = {
             company_id: [false].concat(this._getCompanyId() || []),
         };
         try {
@@ -1219,7 +1239,7 @@ export default class BarcodeModel extends EventBus {
             if (this._shouldSearchForAnotherLot(barcodeData, filters)) {
                 // Retry to parse the barcode without filters in case it matches an existing
                 // record that can't be found because of the filters
-                const lot = await this.cache.getRecordByBarcode(barcode, 'stock.lot');
+                const lot = await this.cache.getRecordByBarcode(barcode, "stock.lot");
                 if (lot) {
                     Object.assign(barcodeData, { lot, match: true });
                 }
@@ -1231,12 +1251,14 @@ export default class BarcodeModel extends EventBus {
         // Keep in memory every scans.
         this.scanHistory.unshift(barcodeData);
 
-        if (barcodeData.match) { // Makes flash the screen if the scanned barcode was recognized.
-            this.trigger('flash');
+        if (barcodeData.match) {
+            // Makes flash the screen if the scanned barcode was recognized.
+            this.trigger("flash");
         }
 
         // Process each data in order, starting with non-ambiguous data type.
-        if (barcodeData.action) { // As action is always a single data, call it and do nothing else.
+        if (barcodeData.action) {
+            // As action is always a single data, call it and do nothing else.
             return await barcodeData.action();
         }
 
@@ -1250,7 +1272,8 @@ export default class BarcodeModel extends EventBus {
             return this.notification(check.message, { title: check.title, type: "danger" });
         }
 
-        if (barcodeData.product) { // Remembers the product if a (packaging) product was scanned.
+        if (barcodeData.product) {
+            // Remembers the product if a (packaging) product was scanned.
             this.lastScanned.product = barcodeData.product;
         }
 
@@ -1266,7 +1289,8 @@ export default class BarcodeModel extends EventBus {
             return;
         }
 
-        if (barcodeData.weight) { // Convert the weight into quantity.
+        if (barcodeData.weight) {
+            // Convert the weight into quantity.
             barcodeData.quantity = barcodeData.weight.value;
         }
 
@@ -1274,23 +1298,29 @@ export default class BarcodeModel extends EventBus {
         if (!barcodeData.product) {
             if (barcodeData.quantity) {
                 currentLine = this.selectedLine || this.lastScannedLine;
-            } else if (this.selectedLine && this.selectedLine.product_id.tracking !== 'none') {
+            } else if (this.selectedLine && this.selectedLine.product_id.tracking !== "none") {
                 currentLine = this.selectedLine;
-            } else if (this.lastScannedLine && this.lastScannedLine.product_id.tracking !== 'none') {
+            } else if (
+                this.lastScannedLine &&
+                this.lastScannedLine.product_id.tracking !== "none"
+            ) {
                 currentLine = this.lastScannedLine;
             }
-            if (currentLine) { // If we can, get the product from the previous line.
+            if (currentLine) {
+                // If we can, get the product from the previous line.
                 const previousProduct = currentLine.product_id;
                 // If the current product is tracked and the barcode doesn't fit
                 // anything else, we assume it's a new lot/serial number.
-                if (previousProduct.tracking !== 'none' &&
-                    !barcodeData.match && this.canCreateNewLot) {
-                    this.trigger('flash');
+                if (
+                    previousProduct.tracking !== "none" &&
+                    !barcodeData.match &&
+                    this.canCreateNewLot
+                ) {
+                    this.trigger("flash");
                     barcodeData.lotName = barcode;
                     barcodeData.product = previousProduct;
                 }
-                if (barcodeData.lot || barcodeData.lotName ||
-                    barcodeData.quantity) {
+                if (barcodeData.lot || barcodeData.lotName || barcodeData.quantity) {
                     barcodeData.product = previousProduct;
                 }
             }
@@ -1315,13 +1345,15 @@ export default class BarcodeModel extends EventBus {
                 }
             }
         }
-        if (!product) { // Product is mandatory, if no product, raises a warning.
+        if (!product) {
+            // Product is mandatory, if no product, raises a warning.
             return this.noProductToast(barcodeData);
         } else if (barcodeData.lot && barcodeData.lot.product_id !== product.id) {
             delete barcodeData.lot; // The product was scanned alongside another product's lot.
         }
-        if (barcodeData.weight) { // the encoded weight is based on the product's UoM
-            barcodeData.uom = this.cache.getRecord('uom.uom', product.uom_id);
+        if (barcodeData.weight) {
+            // the encoded weight is based on the product's UoM
+            barcodeData.uom = this.cache.getRecord("uom.uom", product.uom_id);
         }
 
         // Searches and selects a line if needed.
@@ -1331,16 +1363,28 @@ export default class BarcodeModel extends EventBus {
 
         // Default quantity set to 1 by default if the product is untracked or
         // if there is a scanned tracking number.
-        if (product.tracking === 'none' || barcodeData.lot || barcodeData.lotName || this._incrementTrackedLine()) {
-            const hasUnassignedQty = currentLine && currentLine.qty_done && !currentLine.lot_id && !currentLine.lot_name;
+        if (
+            product.tracking === "none" ||
+            barcodeData.lot ||
+            barcodeData.lotName ||
+            this._incrementTrackedLine()
+        ) {
+            const hasUnassignedQty =
+                currentLine && currentLine.qty_done && !currentLine.lot_id && !currentLine.lot_name;
             const isTrackingNumber = barcodeData.lot || barcodeData.lotName;
             const defaultQuantity = isTrackingNumber && hasUnassignedQty ? 0 : 1;
             barcodeData.quantity = barcodeData.quantity || defaultQuantity;
-            if (product.tracking === 'serial' && barcodeData.quantity > 1 && (barcodeData.lot || barcodeData.lotName)) {
+            if (
+                product.tracking === "serial" &&
+                barcodeData.quantity > 1 &&
+                (barcodeData.lot || barcodeData.lotName)
+            ) {
                 barcodeData.quantity = 1;
                 this.notification(
-                    _t(`A product tracked by serial numbers can't have multiple quantities for the same serial number.`),
-                    { type: 'danger' }
+                    _t(
+                        `A product tracked by serial numbers can't have multiple quantities for the same serial number.`
+                    ),
+                    { type: "danger" }
                 );
             }
         }
@@ -1351,20 +1395,33 @@ export default class BarcodeModel extends EventBus {
                 if (line.product_id.id !== product.id) {
                     continue; // The same SN can be scanned for different product.
                 }
-                if (line.product_id.tracking === "serial" && this.getQtyDone(line) !== 0 &&
-                    this.getlotName(line) === lotName) {
+                if (
+                    line.product_id.tracking === "serial" &&
+                    this.getQtyDone(line) !== 0 &&
+                    this.getlotName(line) === lotName
+                ) {
                     return this.notification(
                         _t("The scanned serial number %s is already used.", lotName),
-                        { type: 'danger' }
+                        { type: "danger" }
                     );
                 }
             }
             // Prefills `owner_id` and `package_id` if possible.
-            const prefilledOwner = (!currentLine || (currentLine && !currentLine.owner_id)) && this.groups.group_tracking_owner && !barcodeData.owner;
-            const prefilledPackage = (!currentLine || (currentLine && !currentLine.package_id)) && this.groups.group_tracking_lot && !barcodeData.package;
+            const prefilledOwner =
+                (!currentLine || (currentLine && !currentLine.owner_id)) &&
+                this.groups.group_tracking_owner &&
+                !barcodeData.owner;
+            const prefilledPackage =
+                (!currentLine || (currentLine && !currentLine.package_id)) &&
+                this.groups.group_tracking_lot &&
+                !barcodeData.package;
             if (this.useExistingLots && (prefilledOwner || prefilledPackage)) {
-                const lotId = (barcodeData.lot && barcodeData.lot.id) || (currentLine && currentLine.lot_id && currentLine.lot_id.id) || false;
-                const locationId = (currentLine && currentLine.location_id && currentLine.location_id.id) || false;
+                const lotId =
+                    (barcodeData.lot && barcodeData.lot.id) ||
+                    (currentLine && currentLine.lot_id && currentLine.lot_id.id) ||
+                    false;
+                const locationId =
+                    (currentLine && currentLine.location_id && currentLine.location_id.id) || false;
                 const params = {
                     lot_id: lotId,
                     lot_name: (!lotId && barcodeData.lotName) || false,
@@ -1373,15 +1430,18 @@ export default class BarcodeModel extends EventBus {
                 if (quants.length && quants.length > 1 && (prefilledPackage || prefilledOwner)) {
                     // If we have multiple matching quants and we use package and/or consigment,
                     // give priority to the quants with a package or an owner.
-                    const filteredQuants = quants.filter((quant) => {
-                        return quant.package_id || quant.owner_id;
-                    });
+                    const filteredQuants = quants.filter(
+                        (quant) => quant.package_id || quant.owner_id
+                    );
                     quants = filteredQuants.length ? filteredQuants : quants;
                 }
                 if (quants && quants.length === 1) {
                     const quant = quants[0];
                     if (prefilledPackage && quant.package_id) {
-                        barcodeData.package = this.cache.getRecord("stock.quant.package", quant.package_id);
+                        barcodeData.package = this.cache.getRecord(
+                            "stock.quant.package",
+                            quant.package_id
+                        );
                     }
                     if (prefilledOwner && quant.owner_id) {
                         barcodeData.owner = this.cache.getRecord("res.partner", quant.owner_id);
@@ -1390,21 +1450,43 @@ export default class BarcodeModel extends EventBus {
             }
         }
 
-        // Updates or creates a line based on barcode data.
-        if (currentLine) { // If line found, can it be incremented ?
-            let exceedingQuantity = 0;
-            if (product.tracking !== 'serial' && barcodeData.uom && barcodeData.uom.category_id == currentLine.product_uom_id.category_id) {
-                // convert to current line's uom
-                barcodeData.quantity = (barcodeData.quantity / barcodeData.uom.factor) * currentLine.product_uom_id.factor;
+        // If line found is expressed in an different unit than its packaging adapt the
+        // barcodeData to update the line properly or force the creation of a new line
+        const barcodeDataUom = this.cache.getRecord(
+            "uom.uom",
+            barcodeData.uom ? barcodeData.uom.id : barcodeData.product?.uom_id
+        );
+        const expressedInPackagingUom =
+            currentLine && barcodeDataUom && barcodeDataUom.id !== currentLine.product_uom_id.id;
+        if (expressedInPackagingUom) {
+            if (!this._lineIsNotComplete(currentLine)) {
+                currentLine = false;
+            } else {
+                barcodeData.quantity =
+                    (barcodeData.quantity * barcodeDataUom.factor) /
+                    currentLine.product_uom_id.factor;
                 barcodeData.uom = currentLine.product_uom_id;
             }
+        }
+
+        // Updates or creates a line based on barcode data.
+        if (currentLine) {
+            // If line found, can it be incremented ?
+            let exceedingQuantity = 0;
             // Checks the quantity doesn't exceed the line's remaining quantity.
-            if (currentLine.reserved_uom_qty && product.tracking === 'none') {
+            if (currentLine.reserved_uom_qty && product.tracking === "none") {
                 const remainingQty = currentLine.reserved_uom_qty - currentLine.qty_done;
-                if (barcodeData.quantity > remainingQty && this._shouldCreateLineOnExceed(currentLine)) {
+                if (
+                    barcodeData.quantity > remainingQty &&
+                    this._shouldCreateLineOnExceed(currentLine)
+                ) {
                     // In this case, lowers the increment quantity and keeps
                     // the excess quantity to create a new line.
-                    exceedingQuantity = barcodeData.quantity - remainingQty;
+                    exceedingQuantity = parseFloat(
+                        formatFloat(barcodeData.quantity - remainingQty, {
+                            digits: [false, this.precision],
+                        })
+                    );
                     barcodeData.quantity = remainingQty;
                 }
             }
@@ -1416,7 +1498,8 @@ export default class BarcodeModel extends EventBus {
                 await this.updateLine(currentLine, fieldsParams);
                 this.trigger("playSound", "success");
             }
-            if (exceedingQuantity) { // Creates a new line for the excess quantity.
+            if (exceedingQuantity) {
+                // Creates a new line for the excess quantity.
                 barcodeData.quantity = exceedingQuantity;
                 const fieldsParams = this._convertDataToFieldsParams(barcodeData);
                 if (barcodeData.uom) {
@@ -1426,20 +1509,35 @@ export default class BarcodeModel extends EventBus {
                     copyOf: currentLine,
                     fieldsParams,
                 });
+                if (expressedInPackagingUom) {
+                    currentLine.packaging_uom_id = undefined;
+                    currentLine.packaging_uom_qty = 0;
+                }
             }
-        } else { // No line found, so creates a new one.
+        } else {
+            // No line found, so creates a new one.
             const fieldsParams = this._convertDataToFieldsParams(barcodeData);
             if (barcodeData.uom) {
                 fieldsParams.uom = barcodeData.uom;
             }
             if (this.createSingleLinesForPackaging(barcodeData)) {
-                for (let lineCount = 0; lineCount < barcodeData.packaging.qty; lineCount++) {
-                    currentLine = await this.createNewLine({fieldsParams});
+                const productUoM = await this.cache.getRecord(
+                    "uom.uom",
+                    barcodeData.product.uom_id
+                );
+                const qtyUoM = barcodeData.uom;
+                let { quantity } = barcodeData;
+                if (productUoM.factor !== qtyUoM.factor) {
+                    quantity *= qtyUoM.factor / productUoM.factor;
+                    fieldsParams.uom = productUoM;
+                }
+                for (let lineCount = 0; lineCount < quantity; lineCount++) {
+                    currentLine = await this.createNewLine({ fieldsParams });
                 }
             } else {
-                currentLine = await this.createNewLine({fieldsParams});
+                currentLine = await this.createNewLine({ fieldsParams });
             }
-            if(currentLine){
+            if (currentLine) {
                 this.trigger("playSound", "success");
             }
         }
@@ -1455,13 +1553,15 @@ export default class BarcodeModel extends EventBus {
             // it to the cache to avoid scanning it a second time.
             this.uriCache.add(barcode);
         }
-        this.trigger('update');
+        this.trigger("update");
     }
 
     noProductToast(barcodeData) {
         if (!barcodeData.error) {
             if (this.groups.group_tracking_lot) {
-                barcodeData.error = _t("You are expected to scan one or more products or a package available at the picking location");
+                barcodeData.error = _t(
+                    "You are expected to scan one or more products or a package available at the picking location"
+                );
             } else {
                 barcodeData.error = _t("This product doesn't exist.");
             }
@@ -1473,7 +1573,7 @@ export default class BarcodeModel extends EventBus {
         if (barcodeData.location) {
             await this._processLocationSource(barcodeData);
             this.trigger("playSound", "success");
-            this.trigger('update');
+            this.trigger("update");
         }
     }
 
@@ -1486,7 +1586,7 @@ export default class BarcodeModel extends EventBus {
     }
 
     async _processPackage(barcodeData) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     /**
@@ -1497,7 +1597,7 @@ export default class BarcodeModel extends EventBus {
      * @param {string} barcode
      * @returns {string} barcode
      */
-    cleanBarcode (barcode) {
+    cleanBarcode(barcode) {
         if (this.parser.nomenclature.is_gs1_nomenclature) {
             barcode = barcode.replace(/[( ]([0-9]+)[)]/g, `${FNC1_CHAR}$1`);
             if (barcode[0] === FNC1_CHAR) {
@@ -1528,28 +1628,28 @@ export default class BarcodeModel extends EventBus {
     lineIsInTheCurrentLocation(line) {
         return Boolean(
             !this.groups.group_stock_multi_locations ||
-            !this.lastScanned.sourceLocation || // No current location so we don't care.
-            this.lastScanned.sourceLocation.id == line.location_id.id // Line at the right location.
+                !this.lastScanned.sourceLocation || // No current location so we don't care.
+                this.lastScanned.sourceLocation.id == line.location_id.id // Line at the right location.
         );
     }
 
     _retrievePackagingData(barcodeData) {
-        const product = this.cache.getRecord('product.product', barcodeData.packaging.product_id);
-        const uom = this.cache.getRecord('uom.uom', product.uom_id);
+        const { packaging } = barcodeData;
+        const product = this.cache.getRecord("product.product", packaging.product_id);
+        const packagingUom = this.cache.getRecord("uom.uom", packaging.uom_id);
+        const uom = this._shouldBeExpressedInPackagingUom()
+            ? packagingUom
+            : this.cache.getRecord("uom.uom", product.uom_id);
         let quantity = "quantity" in barcodeData ? barcodeData.quantity : 1;
-        if (barcodeData.uom && barcodeData.uom.category_id !== uom.category_id) {
-            // In case the scanned quantity uses an UoM not compatible with the
-            // product UoM, we drop it and uses the packaging quantity instead.
-            quantity = barcodeData.packaging.qty
-        } else {
-            // Otherwise, multiply the scanned quantity (or 1 by default) by the package quantity.
-            quantity *= barcodeData.packaging.qty;
+        if (!this._shouldBeExpressedInPackagingUom() && packagingUom !== uom) {
+            const factor = packagingUom.factor / uom.factor;
+            quantity *= factor;
         }
         return { product, quantity, uom };
     }
 
     _retrieveTrackingNumberInfo(lot) {
-        return { product: this.cache.getRecord('product.product', lot.product_id) };
+        return { product: this.cache.getRecord("product.product", lot.product_id) };
     }
 
     _selectLine(line) {
@@ -1629,20 +1729,21 @@ export default class BarcodeModel extends EventBus {
      * @returns {Array<Object>}
      */
     _sortLine(lines) {
-        return lines.sort((l1, l2) => {
-            return l1.sortIndex > l2.sortIndex ? 1 : -1;
-        });
+        return lines.sort((l1, l2) => (l1.sortIndex > l2.sortIndex ? 1 : -1));
     }
 
     _findLine(barcodeData) {
         let foundLine = false;
-        const {lot, lotName, product} = barcodeData;
+        const { lot, lotName, product } = barcodeData;
         const quantPackage = barcodeData.package;
+        const uomId = barcodeData.uom ? barcodeData.uom.id : barcodeData.product?.uom_id;
         const dataLotName = lotName || (lot && lot.name) || false;
-        let pageLines = [...this.pageLines]
+        const pageLines = [...this.pageLines];
         // If a line is selected, unshift it to the first position to start the search by it
         if (this.selectedLineVirtualId) {
-            const selectedLineIndex = pageLines.findIndex(line => line.virtual_id == this.selectedLineVirtualId);
+            const selectedLineIndex = pageLines.findIndex(
+                (line) => line.virtual_id == this.selectedLineVirtualId
+            );
             if (selectedLineIndex > -1) {
                 pageLines.splice(selectedLineIndex, 1);
                 pageLines.unshift(this.pageLines[selectedLineIndex]);
@@ -1653,29 +1754,43 @@ export default class BarcodeModel extends EventBus {
             if (line.product_id.id !== product.id) {
                 continue; // Not the same product.
             }
+            if (
+                line.packaging_uom_id &&
+                line.packaging_uom_id.id !== line.product_uom_id.id &&
+                line.packaging_uom_id.id !== uomId &&
+                line.product_uom_id.id !== uomId
+            ) {
+                // If the packaging UoM is different from the UoM of the move we should
+                // only find the line if the barcode Uom is either of these
+                continue; // Not the same UoM.
+            }
             if (quantPackage && (!line.package_id || line.package_id.id !== quantPackage.id)) {
                 continue; // Not the expected package.
             }
-            if (line.product_id.tracking !== "none" && !this._canOverrideTrackingNumber(line, dataLotName)) {
+            if (
+                line.product_id.tracking !== "none" &&
+                !this._canOverrideTrackingNumber(line, dataLotName)
+            ) {
                 continue; // Not the same lot.
             }
-            if (line.product_id.tracking === 'serial') {
+            if (line.product_id.tracking === "serial") {
                 if (this.getQtyDone(line) >= 1 && lineLotName) {
                     continue; // Line tracked by serial numbers with quantity & SN.
                 } else if (dataLotName && this.getQtyDone(line) > 1) {
                     continue; // Can't add a SN on a line where multiple qty. was previously added.
                 }
             }
-            if ((
-                    !dataLotName || !lineLotName || dataLotName !== lineLotName
-                ) && (
-                    line.qty_done && line.qty_done >= line.reserved_uom_qty &&
-                    (line.product_id.tracking === "none" || lineLotName) &&
-                    line.id && (!this.selectedLine || line.virtual_id != this.selectedLine.virtual_id)
-                )) {
-                    // Has enough quantity (and another lot is set if the line's product is tracked)
-                    // and the line wasn't explicitly selected.
-                    continue;
+            if (
+                (!dataLotName || !lineLotName || dataLotName !== lineLotName) &&
+                line.qty_done &&
+                line.qty_done >= line.reserved_uom_qty &&
+                (line.product_id.tracking === "none" || lineLotName) &&
+                line.id &&
+                (!this.selectedLine || line.virtual_id != this.selectedLine.virtual_id)
+            ) {
+                // Has enough quantity (and another lot is set if the line's product is tracked)
+                // and the line wasn't explicitly selected.
+                continue;
             }
             if (this._lineCannotBeTaken(line)) {
                 continue;
@@ -1685,13 +1800,22 @@ export default class BarcodeModel extends EventBus {
                     // Found a uncompleted compatible line, stop searching if it has the same location
                     // than the scanned one (or if no location was scanned).
                     foundLine = line;
-                    if ((this.lineIsInTheCurrentLocation(line)) &&
-                        (line.product_id.tracking === 'none' || !dataLotName || dataLotName === lineLotName)) {
+                    if (
+                        this.lineIsInTheCurrentLocation(line) &&
+                        (line.product_id.tracking === "none" ||
+                            !dataLotName ||
+                            dataLotName === lineLotName) &&
+                        line.product_uom_id.id === uomId
+                    ) {
                         // In case of tracked product, stop searching only if no
                         // LN/SN was scanned or if it's the same.
                         break;
                     }
-                } else if (this.needSourceConfirmation && foundLine && !this._lineIsNotComplete(foundLine)) {
+                } else if (
+                    this.needSourceConfirmation &&
+                    foundLine &&
+                    !this._lineIsNotComplete(foundLine)
+                ) {
                     // Found a empty line in another location, we should take it but depending of
                     // the config, maybe we can't (location should be confirmed first).
                     // That said, we already found another line but if it's completed, forget we
@@ -1708,13 +1832,22 @@ export default class BarcodeModel extends EventBus {
                 // The line matches but there could be a better candidate, so keep searching.
                 // If multiple lines can match, prioritises the one at the right location (if a
                 // location source was previously selected) or the selected one if relevant.
-                const currentLocationId = this.lastScanned.sourceLocation && this.lastScanned.sourceLocation.id;
-                if (this.selectedLine && this.selectedLine.virtual_id === line.virtual_id && (
-                    !currentLocationId || !foundLine || foundLine.location_id.id != currentLocationId)) {
+                const currentLocationId =
+                    this.lastScanned.sourceLocation && this.lastScanned.sourceLocation.id;
+                if (
+                    this.selectedLine &&
+                    this.selectedLine.virtual_id === line.virtual_id &&
+                    (!currentLocationId ||
+                        !foundLine ||
+                        foundLine.location_id.id != currentLocationId)
+                ) {
                     foundLine = this.lineCanBeTakenFromTheCurrentLocation(line) ? line : foundLine;
-                } else if (!foundLine || (currentLocationId &&
+                } else if (
+                    !foundLine ||
+                    (currentLocationId &&
                         foundLine.location_id.id != currentLocationId &&
-                        line.location_id.id == currentLocationId)) {
+                        line.location_id.id == currentLocationId)
+                ) {
                     foundLine = this.lineCanBeTakenFromTheCurrentLocation(line) ? line : foundLine;
                 }
             } else if (this._lineIsNotComplete(foundLine)) {
@@ -1723,7 +1856,11 @@ export default class BarcodeModel extends EventBus {
             } else if (this._lineIsNotComplete(line)) {
                 // If previous line is completed and current one is not, prioritize the current one.
                 foundLine = line;
-            } else if (this.lineIsSelected(line) ||
+            } else if (foundLine.product_uom_id.id !== uomId && line.product_uom_id.id === uomId) {
+                // If previous line does not have the perfect uom and the current does, prioritize the current one.
+                foundLine = line;
+            } else if (
+                this.lineIsSelected(line) ||
                 (!this.lineIsSelected(foundLine) && this.lineBelongsToSelectedLine(line))
             ) {
                 // If both previous found line and current line are completed, prioritize the
@@ -1758,18 +1895,22 @@ export default class BarcodeModel extends EventBus {
     }
 
     _shouldSearchForAnotherLot(barcodeData, filters) {
-        return !barcodeData.match && filters['stock.lot'] &&
-            !this.canCreateNewLot && this.useExistingLots
+        return (
+            !barcodeData.match &&
+            filters["stock.lot"] &&
+            !this.canCreateNewLot &&
+            this.useExistingLots
+        );
     }
 
     _shouldSearchForAnotherLine(line, barcodeData) {
         if (line.product_id.id !== barcodeData.product.id) {
             return true;
         }
-        if (barcodeData.product.tracking === 'serial' && this.getQtyDone(line) > 0) {
+        if (barcodeData.product.tracking === "serial" && this.getQtyDone(line) > 0) {
             return true;
         }
-        const {lot, lotName} = barcodeData;
+        const { lot, lotName } = barcodeData;
         const dataLotName = lotName || (lot && lot.name) || false;
         const lineLotName = this.getlotName(line);
         if (dataLotName && lineLotName && dataLotName !== lineLotName) {
@@ -1787,11 +1928,11 @@ export default class BarcodeModel extends EventBus {
     }
 
     _updateLineQty(line, qty) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     _updateLotName(line, lotName) {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     _getName() {
@@ -1821,7 +1962,7 @@ export default class BarcodeModel extends EventBus {
     }
 
     _getCompanyId() {
-        throw new Error('Not Implemented');
+        throw new Error("Not Implemented");
     }
 
     _onExit() {

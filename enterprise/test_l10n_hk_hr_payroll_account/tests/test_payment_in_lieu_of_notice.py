@@ -15,8 +15,9 @@ class TestPaymentInLieuOfNotice(TestL10NHkHrPayrollAccountCommon):
     def setUpClass(cls):
         super().setUpClass()
         cls.contract.write({
-            'date_start': date(2022, 1, 1),
-            'date_end': date(2023, 4, 21),
+            'date_version': date(2022, 1, 1),
+            'contract_date_start': date(2022, 1, 1),
+            'contract_date_end': date(2023, 4, 21),
         })
 
     def test_regular(self):
@@ -83,11 +84,11 @@ class TestPaymentInLieuOfNotice(TestL10NHkHrPayrollAccountCommon):
 
     def test_unpaid_and_non_full_pay_leave(self):
         leaves_to_create = [
-            (datetime(2023, 2, 21), datetime(2023, 2, 22), 'l10n_hk_hr_payroll.holiday_type_hk_unpaid_leave'),
-            (datetime(2023, 3, 13), datetime(2023, 3, 15), 'l10n_hk_hr_payroll.holiday_type_hk_sick_leave_80'),
+            (datetime(2023, 2, 21), datetime(2023, 2, 22), self.env.ref('hr_holidays.l10n_hk_leave_type_unpaid_leave')),
+            (datetime(2023, 3, 13), datetime(2023, 3, 15), self.env.ref('hr_holidays.l10n_hk_leave_type_sick_leave_80')),
         ]
-        for leave in leaves_to_create:
-            self._generate_leave(leave[0], leave[1], leave[2])
+        for date_from, date_to, leave_type in leaves_to_create:
+            self._generate_leave(date_from, date_to, leave_type)
         for dt in rrule(MONTHLY, dtstart=datetime(2022, 1, 1), until=datetime(2023, 4, 1)):
             payslip = self._generate_payslip(dt.date(), dt.date() + relativedelta(day=31))
             payslip.action_payslip_done()

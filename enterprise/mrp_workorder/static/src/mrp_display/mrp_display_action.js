@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { WithSearch } from "@web/search/with_search/with_search";
@@ -26,7 +24,6 @@ export class MrpDisplayAction extends Component {
                 "company_id",
                 "employee_ids",
                 "lot_producing_id",
-                "manual_consumption",
                 "move_byproduct_ids",
                 "move_raw_ids",
                 "move_finished_ids",
@@ -42,6 +39,7 @@ export class MrpDisplayAction extends Component {
                 "product_description_variants",
                 "priority",
                 "log_note",
+                "picking_type_auto_close",
             ],
             "mrp.workorder": [
                 "id",
@@ -52,7 +50,6 @@ export class MrpDisplayAction extends Component {
                 "move_raw_ids",
                 "name",
                 "operation_id",
-                "has_operation_note",
                 "product_id",
                 "production_id",
                 "qty_producing",
@@ -60,8 +57,7 @@ export class MrpDisplayAction extends Component {
                 "state",
                 "workcenter_id",
                 "working_state",
-                "has_worksheet",
-                "worksheet_google_slide",
+                "worksheet",
                 "check_ids",
                 "employee_ids",
                 "product_uom_id",
@@ -76,7 +72,6 @@ export class MrpDisplayAction extends Component {
             ],
             "stock.move": [
                 "id",
-                "manual_consumption",
                 "operation_id",
                 "product_id",
                 "product_uom",
@@ -87,13 +82,19 @@ export class MrpDisplayAction extends Component {
                 "raw_material_production_id",
                 "should_consume_qty",
                 "workorder_id",
+                "check_id",
+                "product_barcode",
+                "has_tracking",
+                "move_line_ids",
+                "picking_type_prefill_shop_floor_lots",
+                "bom_line_id",
             ],
+            "stock.move.line": ["id", "lot_id", "location_id", "quantity", "picked"],
             "quality.check": [
                 "id",
                 "display_name",
                 "company_id",
                 "component_id",
-                "component_remaining_qty",
                 "component_tracking",
                 "component_uom_id",
                 "lot_id",
@@ -103,29 +104,18 @@ export class MrpDisplayAction extends Component {
                 "product_id",
                 "product_tracking",
                 "production_id",
-                "qty_done",
                 "quality_state",
-                "source_document",
                 "test_type",
                 "title",
                 "workcenter_id",
                 "workorder_id",
                 "worksheet_document",
-                "worksheet_url",
-                "worksheet_page",
                 "write_date",
                 "measure",
                 "norm_unit",
                 "previous_check_id",
                 "next_check_id",
-            ],
-        };
-    }
-
-    get fieldsManuallyFetched() {
-        return {
-            "mrp.workorder": [
-                {"operation_note": "html"},
+                "component_barcode",
             ],
         };
     }
@@ -154,19 +144,12 @@ export class MrpDisplayAction extends Component {
                     delete fields[fName].context;
                 }
 
-                if (this.fieldsManuallyFetched[resModel]) {
-                    this.fieldsManuallyFetched[resModel].forEach(field => {
-                        for (const [fieldName, fieldType] of Object.entries(field)) {
-                            fields[fieldName] = { type : fieldType };
-                        }
-                    });
-                }
-
                 this.models.push({ fields, resModel });
             }
             const searchViews = await this.viewService.loadViews(
                 {
                     resModel: this.resModel,
+                    context: this.props.action.context,
                     views: [[false, "search"]],
                 },
                 {

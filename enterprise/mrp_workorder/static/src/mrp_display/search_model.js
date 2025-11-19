@@ -1,4 +1,3 @@
-/** @odoo-module **/
 import { _t } from "@web/core/l10n/translation";
 import { SearchModel } from "@web/search/search_model";
 import { useState } from "@odoo/owl";
@@ -10,54 +9,22 @@ export class MrpDisplaySearchModel extends SearchModel {
             workorderFilters: [
                 {
                     name: "ready",
-                    string: _t("Ready"),
-                    isActive: !args.show_progress_workorders,
+                    string: _t("To Do"),
+                    isActive: !!args.search_default_ready,
+                },
+                {
+                    name: "blocked",
+                    string: _t("Blocked"),
+                    isActive: !!args.search_default_blocked,
                 },
                 {
                     name: "progress",
                     string: _t("In Progress"),
-                    isActive: !args.show_ready_workorders,
-                },
-                {
-                    name: "waiting",
-                    string: _t("Waiting"),
-                    isActive: false,
-                },
-                {
-                    name: "pending",
-                    string: _t("Pending"),
-                    isActive: false,
-                },
-                {
-                    name: "done",
-                    string: _t("Finished"),
-                    isActive: false,
+                    isActive: !!args.search_default_progress,
                 },
             ],
         });
         this.workorders = true;
-    }
-
-    _getFacets() {
-        // Add workorder filter facet to the search bar if applicable
-        const facets = super._getFacets();
-        if (this.workorders && !facets.some((f) => f.type === "favorite")) {
-            const values = this.state.workorderFilters.reduce(
-                (acc, i) => (i.isActive ? [...acc, i.string] : acc),
-                []
-            );
-            if (values.length) {
-                facets.push({
-                    groupId: 0,
-                    type: "filter",
-                    values: values,
-                    separator: "or",
-                    icon: "fa fa-filter",
-                    color: "info",
-                });
-            }
-        }
-        return facets;
     }
 
     _getIrFilterDescription(params = {}) {
@@ -87,19 +54,6 @@ export class MrpDisplaySearchModel extends SearchModel {
             }
         }
         return super.toggleSearchItem(searchItemId);
-    }
-
-    async deleteFavorite(favoriteId) {
-        // Reset WO filters when deleting a currently enabled favorite
-        if (
-            this.workorders &&
-            this.query.some((queryElem) => queryElem.searchItemId === favoriteId)
-        ) {
-            for (const filter of this.state.workorderFilters) {
-                filter.isActive = false;
-            }
-        }
-        return super.deleteFavorite(favoriteId);
     }
 
     setWorkcenterFilter(workcenters) {

@@ -4,7 +4,7 @@
 from odoo import api, models
 
 
-class QualityCustomReport(models.AbstractModel):
+class ReportQuality_ControlQuality_Worksheet(models.AbstractModel):
     _inherit = "report.quality_control.quality_worksheet"
 
     @api.model

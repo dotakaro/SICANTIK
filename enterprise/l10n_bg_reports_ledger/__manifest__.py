@@ -15,6 +15,7 @@ Module for ledger reports
         'views/res_company_views.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'installable': True,
     'license': 'OEEL-1',
 }

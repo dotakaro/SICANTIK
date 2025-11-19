@@ -8,6 +8,7 @@ _logger = logging.getLogger(__name__)
 # Tag id should be a 17 characters string composed of a letter followed by 16 digits
 PRICER_TAG_ID_LENGTH = 17
 
+
 class PricerTag(models.Model):
     _name = 'pricer.tag'
     _description = 'Pricer electronic tag'
@@ -21,6 +22,7 @@ class PricerTag(models.Model):
         comodel_name='product.product',
         string='Associated Product',
         required=True,
+        index=True,
         ondelete='cascade',
     )
     pricer_store_id = fields.Many2one(
@@ -37,10 +39,10 @@ class PricerTag(models.Model):
     # ------------------------- CONSTRAINS -------------------------
 
     # Avoid creating multiple Pricer tags with the same id
-    _sql_constraints = [
-        ('name_unique', 'unique (name)',
-         "A Pricer tag with this barcode id already exists"),
-    ]
+    _name_unique = models.Constraint(
+        'unique (name)',
+        "A Pricer tag with this barcode id already exists",
+    )
 
     @api.constrains('name')
     def _check_tag_id(self):

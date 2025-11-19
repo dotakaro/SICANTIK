@@ -1,4 +1,4 @@
-/** @odoo-module **/
+import { ProjectTaskControlPanel } from "@project/views/project_task_control_panel/project_task_control_panel";
 
 import { registry } from "@web/core/registry";
 import { mapView } from "@web_map/map_view/map_view";
@@ -8,6 +8,7 @@ import { HighlightProjectTaskSearchModel } from "../highlight_project_task_searc
 
 export const projectTaskMapView = {
     ...mapView,
+    ControlPanel: ProjectTaskControlPanel,
     Model: ProjectTaskMapModel,
     Renderer: ProjectTaskMapRenderer,
     SearchModel: HighlightProjectTaskSearchModel,

@@ -3,7 +3,7 @@
 from odoo.addons.mail.controllers.thread import ThreadController
 from odoo.addons.mail.tests.common import mail_new_test_user
 from odoo.addons.test_whatsapp.tests.common import WhatsAppFullCase
-from odoo.addons.website.tools import MockRequest
+from odoo.addons.http_routing.tests.common import MockRequest
 from odoo.addons.whatsapp.tests.common import MockIncomingWhatsApp
 from odoo.tests import tagged, users
 
@@ -137,6 +137,30 @@ class WhatsAppWebhookCase(WhatsAppFullCase, MockIncomingWhatsApp):
             "mail_message_id": sent_message,
             "mobile_number": "+32499123456",
         })
+
+    @users('user_wa_admin')
+    def test_conversation_name(self):
+        """Test conversation name with or without sender name given to the process."""
+        with self.mockWhatsappGateway():
+            self._receive_whatsapp_message(self.whatsapp_account, "Hello! I have no name.", "32476012987")
+        discuss_channel = self.assertWhatsAppDiscussChannel("32476012987")
+        self.assertEqual(discuss_channel.name, "32476012987")
+        self.assertEqual(discuss_channel.display_name, "32476012987")
+
+        discuss_channel.whatsapp_partner_id.name = "Bob"
+        discuss_channel.invalidate_recordset(["display_name"])
+        self.assertEqual(
+            discuss_channel.display_name, "Bob (32476012987)",
+            "Channel display name should match current name of the partner"
+        )
+
+        with self.mockWhatsappGateway():
+            self._receive_whatsapp_message(self.whatsapp_account,
+                                           "Hello! I'm Sarah Croche. So don't call, because I won't pickup. lolilol",
+                                           "32476012654",
+                                           sender_name="Sarah Croche")
+        discuss_channel = self.assertWhatsAppDiscussChannel("32476012654")
+        self.assertEqual(discuss_channel.name, "%s (32476012654)" % "Sarah Croche")
 
     @users('user_wa_admin')
     def test_conversation_match(self):
@@ -315,9 +339,8 @@ class WhatsAppWebhookCase(WhatsAppFullCase, MockIncomingWhatsApp):
         new_partner = self.env['res.partner'].search([('id', 'not in', existing_partners.ids)])
         self.assertEqual(len(new_partner), 1)
         self.assertEqual(discuss_channel.channel_partner_ids, self.user_wa_admin.partner_id + new_partner)
-        self.assertEqual(new_partner.mobile, "+32499123456")
         self.assertEqual(new_partner.name, "+32499123456")
-        self.assertFalse(new_partner.phone)
+        self.assertEqual(new_partner.phone, "+32499123456")
 
     def test_responsible_with_template(self):
         """ Test various use cases of receiving a message that is linked to a

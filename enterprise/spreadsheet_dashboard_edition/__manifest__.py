@@ -3,12 +3,13 @@
 {
     'name': "Spreadsheet dashboard edition",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Productivity/Dashboard',
     'summary': 'Spreadsheet Dashboard edition',
     'description': 'Spreadsheet Dashboard edition',
     'depends': ['spreadsheet_dashboard', 'spreadsheet_edition'],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'data': [
         "views/spreadsheet_dashboard_views.xml",

@@ -3,26 +3,34 @@
 # 	* account_batch_payment
 # 
 # Translators:
-# Pernille Kristensen <pernillekristensen1994@gmail.com>, 2024
-# lhmflexerp <lhm@flexerp.dk>, 2024
-# Mads Søndergaard, 2024
-# Sanne Kristensen <sanne@vkdata.dk>, 2024
-# Martin Trigaux, 2024
-# Mads Søndergaard, 2024
+# Wil Odoo, 2025
+# Kira Petersen, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-23 18:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:43+0000\n"
-"Last-Translator: Mads Søndergaard, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:10+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Kira Petersen, 2025\n"
 "Language-Team: Danish (https://app.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: da\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: account_batch_payment
+#. odoo-python
+#: code:addons/account_batch_payment/wizard/create_batch_error.py:0
+msgid "\"In Process\""
+msgstr ""
+
+#. module: account_batch_payment
+#. odoo-python
+#: code:addons/account_batch_payment/wizard/create_batch_error.py:0
+msgid "\"In Process, and Paid\""
+msgstr ""
 
 #. module: account_batch_payment
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.print_batch_payment
@@ -43,11 +51,6 @@ msgstr "2023-08-15"
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.print_batch_payment
 msgid "3956012345678"
 msgstr "3956012345678"
-
-#. module: account_batch_payment
-#: model_terms:ir.ui.view,arch_db:account_batch_payment.view_account_move_kanban
-msgid "<i class=\"fa fa-clock-o\" aria-label=\"Date\" role=\"img\" title=\"Date\"/>"
-msgstr "<i class=\"fa fa-clock-o\" aria-label=\"Date\" role=\"img\" title=\"Date\"/>"
 
 #. module: account_batch_payment
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.view_account_payment_form_inherit_account_batch_payment
@@ -104,7 +107,7 @@ msgstr "Aktivitet undtagelse markering"
 #. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__activity_state
 msgid "Activity State"
-msgstr "Aktivitetstilstand"
+msgstr "Aktivitetsstatus"
 
 #. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__activity_type_icon
@@ -240,6 +243,11 @@ msgid "Check Payments"
 msgstr ""
 
 #. module: account_batch_payment
+#: model_terms:ir.ui.view,arch_db:account_batch_payment.create_batch_error_wizard
+msgid "Check them."
+msgstr ""
+
+#. module: account_batch_payment
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.batch_error_wizard_form
 msgid "Close"
 msgstr "Luk"
@@ -265,6 +273,9 @@ msgid "Company related to this journal"
 msgstr "Virksomhed knyttet til denne konto"
 
 #. module: account_batch_payment
+#. odoo-python
+#: code:addons/account_batch_payment/models/account_payment.py:0
+#: model_terms:ir.ui.view,arch_db:account_batch_payment.create_batch_error_wizard
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.view_account_payment_tree_inherit_account_batch_payment
 msgid "Create Batch"
 msgstr ""
@@ -272,8 +283,14 @@ msgstr ""
 #. module: account_batch_payment
 #. odoo-python
 #: code:addons/account_batch_payment/models/account_journal.py:0
+#: model_terms:ir.ui.view,arch_db:account_batch_payment.create_batch_error_wizard
 msgid "Create Batch Payment"
 msgstr "Opret parti betaling"
+
+#. module: account_batch_payment
+#: model:ir.model,name:account_batch_payment.model_account_create_batch_error_wizard
+msgid "Create Batch Payment Error Wizard"
+msgstr ""
 
 #. module: account_batch_payment
 #: model_terms:ir.actions.act_window,help:account_batch_payment.action_batch_payment_in
@@ -294,6 +311,7 @@ msgstr "Opret parti betaling"
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard__create_uid
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__create_uid
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__create_uid
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__create_uid
 msgid "Created by"
 msgstr "Oprettet af"
 
@@ -301,6 +319,7 @@ msgstr "Oprettet af"
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard__create_date
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__create_date
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__create_date
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__create_date
 msgid "Created on"
 msgstr "Oprettet den"
 
@@ -341,9 +360,19 @@ msgid "Description"
 msgstr "Beskrivelse"
 
 #. module: account_batch_payment
+#: model_terms:ir.ui.view,arch_db:account_batch_payment.create_batch_error_wizard
+msgid "Discard"
+msgstr "Kassér"
+
+#. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard__display_name
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__display_name
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__display_name
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__display_name
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_journal__display_name
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_payment__display_name
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_payment_method__display_name
+#: model:ir.model.fields,field_description:account_batch_payment.field_report_account_batch_payment_print_batch_payment__display_name
 msgid "Display Name"
 msgstr "Vis navn"
 
@@ -351,6 +380,11 @@ msgstr "Vis navn"
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard__error_line_ids
 msgid "Error Line"
 msgstr "Fejllinje"
+
+#. module: account_batch_payment
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__error_message
+msgid "Error Message"
+msgstr "Fejlbesked"
 
 #. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__error_wizard_id
@@ -395,7 +429,7 @@ msgstr "Følgere (partnere)"
 #. module: account_batch_payment
 #: model:ir.model.fields,help:account_batch_payment.field_account_batch_payment__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr "Skrifttype awesome icon f.eks. fa-opgaver"
+msgstr "Font Awesome-ikon, f.eks. fa-opgaver"
 
 #. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__export_file_create_date
@@ -413,6 +447,11 @@ msgid "Has Message"
 msgstr "Har besked"
 
 #. module: account_batch_payment
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__has_valid_payments
+msgid "Has Valid Payments"
+msgstr ""
+
+#. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__help_message
 msgid "Help"
 msgstr "Hjælp"
@@ -421,6 +460,11 @@ msgstr "Hjælp"
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard__id
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__id
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__id
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__id
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_journal__id
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_payment__id
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_payment_method__id
+#: model:ir.model.fields,field_description:account_batch_payment.field_report_account_batch_payment_print_batch_payment__id
 msgid "ID"
 msgstr "ID"
 
@@ -457,6 +501,12 @@ msgid "Inbound Batch Payments Sequence"
 msgstr "Indgående parti betalingers sekvens"
 
 #. module: account_batch_payment
+#. odoo-python
+#: code:addons/account_batch_payment/wizard/create_batch_error.py:0
+msgid "Invalid Payments"
+msgstr ""
+
+#. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__message_is_follower
 msgid "Is Follower"
 msgstr "Er følger"
@@ -475,6 +525,7 @@ msgstr "Journal"
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard__write_uid
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__write_uid
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__write_uid
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__write_uid
 msgid "Last Updated by"
 msgstr "Sidst opdateret af"
 
@@ -482,6 +533,7 @@ msgstr "Sidst opdateret af"
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard__write_date
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__write_date
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__write_date
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__write_date
 msgid "Last Updated on"
 msgstr "Sidst opdateret den"
 
@@ -538,7 +590,7 @@ msgstr "Ny"
 #. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__activity_calendar_event_id
 msgid "Next Activity Calendar Event"
-msgstr "Næste aktivitet for kalenderarrangement"
+msgstr "Næste aktivitet i kalenderen"
 
 #. module: account_batch_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__activity_date_deadline
@@ -557,7 +609,7 @@ msgstr "Næste aktivitetstype"
 
 #. module: account_batch_payment
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.view_account_payment_search_inherit_account_batch_payment
-msgid "Not Batch Payments"
+msgid "Not in batch"
 msgstr ""
 
 #. module: account_batch_payment
@@ -588,6 +640,13 @@ msgstr "Antal beskeder med leveringsfejl"
 #. module: account_batch_payment
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.print_batch_payment
 msgid "Odoo Payments LLC"
+msgstr ""
+
+#. module: account_batch_payment
+#. odoo-python
+#: code:addons/account_batch_payment/wizard/create_batch_error.py:0
+msgid ""
+"Only %s payments can be added to a batch. Invalid ones will be ignored."
 msgstr ""
 
 #. module: account_batch_payment
@@ -643,6 +702,7 @@ msgstr ""
 #: model:ir.model,name:account_batch_payment.model_account_payment
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_error_wizard_line__payment_ids
 #: model:ir.model.fields,field_description:account_batch_payment.field_account_batch_payment__payment_ids
+#: model:ir.model.fields,field_description:account_batch_payment.field_account_create_batch_error_wizard__payment_ids
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.view_batch_payment_form
 msgid "Payments"
 msgstr "Betalinger"
@@ -845,7 +905,7 @@ msgstr ""
 #. module: account_batch_payment
 #: model:ir.model.fields,help:account_batch_payment.field_account_batch_payment__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr "Type af undtagelsesaktivitet registreret "
+msgstr "Type registreret undtagelsesaktivitet."
 
 #. module: account_batch_payment
 #: model_terms:ir.ui.view,arch_db:account_batch_payment.view_batch_payment_search
@@ -885,7 +945,7 @@ msgstr "Beskeder fra hjemmesiden"
 #. module: account_batch_payment
 #: model:ir.model.fields,help:account_batch_payment.field_account_batch_payment__website_message_ids
 msgid "Website communication history"
-msgstr "Hjemmesidens kommunikations historik"
+msgstr "Hjemmesidens kommunikationshistorik"
 
 #. module: account_batch_payment
 #: model:ir.model.fields,help:account_batch_payment.field_account_batch_payment__file_generation_enabled

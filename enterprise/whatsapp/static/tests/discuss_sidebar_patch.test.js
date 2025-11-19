@@ -7,6 +7,7 @@ import {
     startServer,
 } from "@mail/../tests/mail_test_helpers";
 import { describe, test } from "@odoo/hoot";
+import { press } from "@odoo/hoot-dom";
 import { mockDate } from "@odoo/hoot-mock";
 import { deserializeDateTime } from "@web/core/l10n/dates";
 import { getOrigin } from "@web/core/utils/urls";
@@ -16,7 +17,7 @@ import { defineWhatsAppModels } from "@whatsapp/../tests/whatsapp_test_helpers";
 describe.current.tags("desktop");
 defineWhatsAppModels();
 
-test("Join whatsapp channels from add channel button", async () => {
+test("Can join whatsapp channels from search conversation button", async () => {
     const pyEnv = await startServer();
     pyEnv["discuss.channel"].create([
         {
@@ -37,10 +38,10 @@ test("Join whatsapp channels from add channel button", async () => {
     ]);
     await start();
     await openDiscuss();
-    await click(".o-mail-DiscussSidebarCategory-whatsapp .o-mail-DiscussSidebarCategory-add");
-    await insertText(".o-discuss-ChannelSelector input", "WhatsApp 2");
-    await click(".o-mail-ChannelSelector-suggestion", { text: "WhatsApp 2" });
-    await contains(".o-mail-DiscussSidebarChannel", { text: "WhatsApp 2" });
+    await click("input[placeholder='Find or start a conversation']");
+    await insertText("input[placeholder='Search a conversation']", "WhatsApp 2");
+    await click("a", { text: "WhatsApp 2" });
+    await contains(".o-mail-DiscussSidebar-item", { text: "WhatsApp 2" });
 });
 
 test("Clicking on cross icon in whatsapp sidebar category item unpins the channel", async () => {
@@ -51,7 +52,7 @@ test("Clicking on cross icon in whatsapp sidebar category item unpins the channe
     });
     await start();
     await openDiscuss();
-    await click("[title='Unpin Conversation']", {
+    await click("[title='Chat Actions']", {
         parent: [
             ".o-mail-DiscussSidebarChannel",
             {
@@ -59,12 +60,10 @@ test("Clicking on cross icon in whatsapp sidebar category item unpins the channe
             },
         ],
     });
+    await click(".o-dropdown-item:contains('Unpin Conversation')");
     await contains(".o-mail-DiscussSidebarChannel", {
         count: 0,
         contains: ["span", { text: "WhatsApp 1" }],
-    });
-    await contains(".o_notification", {
-        text: "You unpinned your conversation with WhatsApp 1",
     });
 });
 
@@ -73,7 +72,6 @@ test("Message unread counter in whatsapp channels", async () => {
     const channelId = pyEnv["discuss.channel"].create({
         name: "WhatsApp 1",
         channel_type: "whatsapp",
-        channel_member_ids: [Command.create({ partner_id: serverState.partnerId })],
     });
     pyEnv["mail.message"].create({
         author_id: serverState.partnerId,
@@ -130,7 +128,7 @@ test("whatsapp are sorted by last activity time in the sidebar: most recent at t
     });
     await click(".o-mail-DiscussSidebarChannel", { text: "WhatsApp 1" });
     await insertText(".o-mail-Composer-input", "Blabla");
-    await click(".o-mail-Composer-send:enabled");
+    await press("Enter");
     await contains(":nth-child(1 of .o-mail-DiscussSidebarChannel-container)", {
         text: "WhatsApp 1",
     });

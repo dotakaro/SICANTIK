@@ -3,16 +3,16 @@
 # 	* helpdesk
 # 
 # Translators:
-# Wil Odoo, 2024
 # Thi Huong Nguyen, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Thi Huong Nguyen, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Vietnamese (https://app.transifex.com/odoo/teams/41243/vi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -103,13 +103,9 @@ msgstr "<b>Kéo &amp; thả</b> thẻ để thay đổi giai đoạn của phi�
 #. odoo-javascript
 #: code:addons/helpdesk/static/src/js/tours/helpdesk.js:0
 msgid ""
-"<b>Log notes</b> for internal communications (you will only notify the "
-"persons you specifically tag). Use <b>@ mentions</b> to ping a colleague or "
-"<b># mentions</b> to contact a group of people."
+"<b>Log internal notes</b> and use @<b>mentions</b> to notify your "
+"colleagues."
 msgstr ""
-"<b>Tạo ghi chú</b> cho liên lạc nội bộ (bạn sẽ chỉ gửi thông báo cho những "
-"người bạn gắn thẻ). Sử dụng <b>@ nhắc tên</b> để thông báo cho một đồng "
-"nghiệp hoặc <b># nhắc tên</b> để liên lạc với một nhóm."
 
 #. module: helpdesk
 #: model:mail.template,body_html:helpdesk.solved_ticket_request_email_template
@@ -173,17 +169,17 @@ msgid ""
 "                        <tr>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/5\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\"/>\n"
+"                                    <img alt=\"Happy\" src=\"/rating/static/src/img/rating_5.png\" title=\"Happy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/3\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\"/>\n"
+"                                    <img alt=\"Neutral\" src=\"/rating/static/src/img/rating_3.png\" title=\"Neutral\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/1\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\"/>\n"
+"                                    <img alt=\"Unhappy\" src=\"/rating/static/src/img/rating_1.png\" title=\"Unhappy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                        </tr>\n"
@@ -231,17 +227,17 @@ msgstr ""
 "                        <tr>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/5\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Satisfied\" src=\"/rating/static/src/img/rating_5.png\" title=\"Satisfied\"/>\n"
+"                                    <img alt=\"Happy\" src=\"/rating/static/src/img/rating_5.png\" title=\"Happy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/3\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Okay\" src=\"/rating/static/src/img/rating_3.png\" title=\"Okay\"/>\n"
+"                                    <img alt=\"Neutral\" src=\"/rating/static/src/img/rating_3.png\" title=\"Neutral\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                            <td>\n"
 "                                <a t-attf-href=\"/rate/{{ access_token }}/1\" t-att-class=\"'pe-none' if object._rating_get_operator() else ''\">\n"
-"                                    <img alt=\"Dissatisfied\" src=\"/rating/static/src/img/rating_1.png\" title=\"Dissatisfied\"/>\n"
+"                                    <img alt=\"Unhappy\" src=\"/rating/static/src/img/rating_1.png\" title=\"Unhappy\"/>\n"
 "                                </a>\n"
 "                            </td>\n"
 "                        </tr>\n"
@@ -281,19 +277,19 @@ msgid ""
 "\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.use_website_helpdesk_form\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">View Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">View Ticket</a>\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">View Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">View Ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
 "        </t>\n"
 "        <t t-elif=\"object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Close Ticket</a>\n"
 "        </t>\n"
 "        <t t-if=\"object.team_id.use_website_helpdesk_forum or object.team_id.use_website_helpdesk_knowledge or object.team_id.use_website_helpdesk_slides\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visit Help Center</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Visit Help Center</a>\n"
 "        </t><br/><br/>\n"
 "    </div>\n"
 "\n"
@@ -322,19 +318,19 @@ msgstr ""
 "\n"
 "    <div style=\"text-align: center; padding: 16px 0px 16px 0px;\">\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.use_website_helpdesk_form\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">Xem phiếu hỗ trợ</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size: 13px;\" t-att-href=\"'%s%s' % (object.team_id.website_id.domain or '', object.get_portal_url())\" target=\"_blank\">Xem phiếu hỗ trợ</a>\n"
 "        </t>\n"
 "        <t t-else=\"\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">Xem phiếu hỗ trợ</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.get_portal_url()\" target=\"_blank\">Xem phiếu hỗ trợ</a>\n"
 "        </t>\n"
 "        <t t-if=\"hasattr(object.team_id, 'website_id') and object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Đóng phiếu hỗ trợ</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'%s/my/ticket/close/%s/%s' % (object.team_id.website_id.domain or '', object.id, object.access_token)\" target=\"_blank\">Đóng phiếu hỗ trợ</a>\n"
 "        </t>\n"
 "        <t t-elif=\"object.team_id.allow_portal_ticket_closing\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Đóng phiếu hỗ trợ</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"'/my/ticket/close/%s/%s' % (object.id, object.access_token)\" target=\"_blank\">Đóng phiếu hỗ trợ</a>\n"
 "        </t>\n"
 "        <t t-if=\"object.team_id.use_website_helpdesk_forum or object.team_id.use_website_helpdesk_knowledge or object.team_id.use_website_helpdesk_slides\">\n"
-"            <a style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Truy cập Trung tâm Trợ giúp</a>\n"
+"            <a t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\" t-att-href=\"object.team_id.feature_form_url\" target=\"_blank\">Truy cập Trung tâm Trợ giúp</a>\n"
 "        </t><br/><br/>\n"
 "    </div>\n"
 "\n"
@@ -356,9 +352,9 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_form
 msgid ""
-"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Satisfied\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Okay\"/>\n"
-"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Dissatisfied\"/>"
+"<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg &lt; 3.66\" title=\"Happy\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg &lt; 2.33 or rating_avg &gt;= 3.66\" title=\"Neutral\"/>\n"
+"                            <i class=\"fa fa-fw o_button_icon fa-frown-o text-danger\" invisible=\"rating_avg &gt;= 2.33\" title=\"Unhappy\"/>"
 msgstr ""
 "<i class=\"fa fa-fw o_button_icon fa-smile-o text-success\" invisible=\"rating_avg < 3.66\" title=\"Hài lòng\"/>\n"
 "                            <i class=\"fa fa-fw o_button_icon fa-meh-o text-warning\" invisible=\"rating_avg < 2.33 or rating_avg >= 3.66\" title=\"Bình thường\"/>\n"
@@ -594,6 +590,11 @@ msgstr ""
 " ghi mới cho bí danh này. "
 
 #. module: helpdesk
+#: model:ir.model.constraint,message:helpdesk.constraint_helpdesk_tag_assignment_tag_team_unique
+msgid "A tag can only be used once per team."
+msgstr "Mỗi thẻ chỉ được sử dụng một lần cho mỗi bộ phận."
+
+#. module: helpdesk
 #: model:ir.model.constraint,message:helpdesk.constraint_helpdesk_tag_name_uniq
 msgid "A tag with the same name already exists."
 msgstr "Thẻ có cùng tên đã tồn tại."
@@ -686,6 +687,11 @@ msgid ""
 msgstr ""
 "Thêm giai đoạn và đặt vào đúng bước trong quy trình làm việc của bạn bằng "
 "cách kéo và thả."
+
+#. module: helpdesk
+#: model:ir.actions.act_window,name:helpdesk.action_edit_followers_helpdesk_ticket
+msgid "Add/remove followers"
+msgstr "Thêm/xoá người theo dõi"
 
 #. module: helpdesk
 #: model:res.groups,name:helpdesk.group_helpdesk_manager
@@ -803,6 +809,15 @@ msgid "Are you sure you want to delete these stages?"
 msgstr "Bạn có chắc chắn muốn xóa các giai đoạn này không?"
 
 #. module: helpdesk
+#: model_terms:ir.actions.act_window,help:helpdesk.action_helpdesk_tag_assignment
+msgid ""
+"Assign tickets to the appropriate team members by defining who can work on "
+"tickets with certain tags."
+msgstr ""
+"Gán phiếu hỗ trợ cho các thành viên phù hợp bằng cách xác định ai có thể xử "
+"lý phiếu với các thẻ nhất định."
+
+#. module: helpdesk
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_graph_main
@@ -883,11 +898,6 @@ msgid "Automatic Closing"
 msgstr "Đóng tự động"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Average"
-msgstr "Trung bình"
-
-#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__avg_response_hours
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__avg_response_hours
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__avg_response_hours
@@ -919,20 +929,20 @@ msgstr "Đánh giá trung bình trong 7 ngày qua"
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Dissatisfied"
-msgstr "Đánh giá trung bình: Không hài lòng"
+msgid "Average Rating: Happy"
+msgstr ""
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Okay"
-msgstr "Đánh giá trung bình: Bình thường"
+msgid "Average Rating: Neutral"
+msgstr ""
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Average Rating: Satisfied"
-msgstr "Đánh giá trung bình: Hài lòng"
+msgid "Average Rating: Unhappy"
+msgstr ""
 
 #. module: helpdesk
 #. odoo-javascript
@@ -956,11 +966,6 @@ msgstr "Trung bình trong 7 ngày qua"
 #: code:addons/helpdesk/static/src/components/helpdesk_team_dashboard/helpdesk_team_dashboard.xml:0
 msgid "Avg Open Hours"
 msgstr "Giờ mở TB"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Bad"
-msgstr "Tệ"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
@@ -1149,6 +1154,16 @@ msgid "Configuration"
 msgstr "Cấu hình"
 
 #. module: helpdesk
+#: model:ir.actions.act_window,name:helpdesk.action_helpdesk_tag_assignment
+msgid "Configure Tags Handled by Team Members"
+msgstr "Cấu hình thẻ được xử lý bởi các thành viên bộ phận"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_form
+msgid "Configure tags handled by team members"
+msgstr "Cấu hình thẻ được xử lý bởi các thành viên bộ phận"
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_delete_confirmation_wizard
 #: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_stage_unarchive_wizard
 msgid "Confirm"
@@ -1180,6 +1195,16 @@ msgstr "Phiếu giảm giá"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 msgid "Create Date"
 msgstr "Tạo ngày"
+
+#. module: helpdesk
+#: model:ir.model,website_form_label:helpdesk.model_res_partner
+msgid "Create a Customer"
+msgstr "Tạo một khách hàng"
+
+#. module: helpdesk
+#: model:ir.model,website_form_label:helpdesk.model_helpdesk_ticket
+msgid "Create a Ticket"
+msgstr "Tạo một phiếu hỗ trợ"
 
 #. module: helpdesk
 #: model_terms:ir.actions.act_window,help:helpdesk.email_template_action_helpdesk
@@ -1218,6 +1243,7 @@ msgstr "Tạo phiếu hỗ trợ để lấy số liệu thống kê."
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__create_uid
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__create_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__create_uid
 msgid "Created by"
@@ -1229,6 +1255,7 @@ msgstr "Được tạo bởi"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__create_date
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__create_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__create_date
 msgid "Created on"
@@ -1259,7 +1286,6 @@ msgstr "Tin nhắn bị trả lại tuỳ chỉnh"
 #. module: helpdesk
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
-#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_id
@@ -1276,8 +1302,6 @@ msgid "Customer Care"
 msgstr "Chăm sóc khách hàng"
 
 #. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__partner_email
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__partner_email
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__partner_email
@@ -1351,11 +1375,8 @@ msgid "Deadline"
 msgstr "Thời hạn"
 
 #. module: helpdesk
-#. odoo-javascript
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_graph/helpdesk_ticket_graph_model.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_kanban/helpdesk_ticket_kanban_header.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_list/helpdesk_ticket_list_renderer.js:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_pivot/helpdesk_ticket_pivot_model.js:0
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "Deadline reached"
 msgstr "Đã đến thời hạn"
 
@@ -1412,23 +1433,30 @@ msgid "Discard"
 msgstr "Huỷ bỏ"
 
 #. module: helpdesk
+#: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_team__assign_method__tags
+msgid "Dispatch tickets based on tags"
+msgstr "Phân phối phiếu hỗ trợ dựa trên thẻ"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_digest_digest__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__display_name
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_ir_module_module__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_ir_ui_menu__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_mail_message__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_company__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_partner__display_name
+#: model:ir.model.fields,field_description:helpdesk.field_res_users__display_name
 msgid "Display Name"
 msgstr "Tên hiển thị"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Dissatisfied"
-msgstr "Không hài lòng"
 
 #. module: helpdesk
 #. odoo-python
@@ -1447,11 +1475,6 @@ msgstr "Mỗi người dùng có số lượng phiếu hỗ trợ mở bằng nh
 #: model:ir.model.fields.selection,name:helpdesk.selection__helpdesk_team__assign_method__randomly
 msgid "Each user is assigned an equal number of tickets"
 msgstr "Mỗi người dùng được phân công số lượng phiếu hỗ trợ bằng nhau"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Edit"
-msgstr "Chỉnh sửa"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__alias_email
@@ -1696,6 +1719,7 @@ msgid "Group By"
 msgstr "Nhóm theo"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
 msgid "Happy"
 msgstr "Vui vẻ"
@@ -1734,6 +1758,7 @@ msgstr "Trung tâm Trợ giúp"
 
 #. module: helpdesk
 #: model:ir.ui.menu,name:helpdesk.menu_helpdesk_root
+#: model:res.groups.privilege,name:helpdesk.res_groups_privilege_helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.digest_digest_view_form
 msgid "Helpdesk"
 msgstr "Hỗ trợ"
@@ -1757,6 +1782,11 @@ msgstr "Giai đoạn hỗ trợ"
 #: model:ir.model,name:helpdesk.model_helpdesk_stage_delete_wizard
 msgid "Helpdesk Stage Delete Wizard"
 msgstr "Công cụ xóa giai đoạn hỗ trợ"
+
+#. module: helpdesk
+#: model:ir.model,name:helpdesk.model_helpdesk_tag_assignment
+msgid "Helpdesk Tag Assignment"
+msgstr "Gán thẻ hỗ trợ"
 
 #. module: helpdesk
 #: model:ir.model,name:helpdesk.model_helpdesk_tag
@@ -1861,15 +1891,23 @@ msgid "Hours to First Response"
 msgstr "Số giờ tới lần phản hồi đầu tiên"
 
 #. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_digest_digest__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_report_analysis__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__id
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__id
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket_report_analysis__id
+#: model:ir.model.fields,field_description:helpdesk.field_ir_module_module__id
+#: model:ir.model.fields,field_description:helpdesk.field_ir_ui_menu__id
+#: model:ir.model.fields,field_description:helpdesk.field_mail_message__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_company__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_partner__id
+#: model:ir.model.fields,field_description:helpdesk.field_res_users__id
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
 msgid "ID"
 msgstr "ID"
@@ -1881,6 +1919,11 @@ msgid ""
 " creation alias)"
 msgstr ""
 "ID của bản ghi chính chứa bí danh (ví dụ: dự án chứa bí danh tạo nhiệm vụ)"
+
+#. module: helpdesk
+#: model:helpdesk.team,name:helpdesk.helpdesk_team2
+msgid "IT Support (Auto Assignment by Tags)"
+msgstr "Hỗ trợ CNTT (Tự động phân công theo thẻ)"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__activity_exception_icon
@@ -2045,6 +2088,7 @@ msgstr "Cập nhật giai đoạn lần cuối"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__write_uid
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__write_uid
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__write_uid
 msgid "Last Updated by"
@@ -2056,6 +2100,7 @@ msgstr "Cập nhật lần cuối bởi"
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_stage_delete_wizard__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag__write_date
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__write_date
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__write_date
 msgid "Last Updated on"
@@ -2220,6 +2265,12 @@ msgid "Move to Stage"
 msgstr "Chuyển tới giai đoạn"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
+msgid "My Activities"
+msgstr "Hoạt động của tôi"
+
+#. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_ticket__my_activity_date_deadline
 msgid "My Activity Deadline"
 msgstr "Thời hạn hoạt động của tôi"
@@ -2256,6 +2307,12 @@ msgstr "Phiếu hỗ trợ của tôi"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_tree
 msgid "Name"
 msgstr "Tên"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
+#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
+msgid "Neutral"
+msgstr "Trung tính"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
@@ -2349,6 +2406,11 @@ msgid "No tags found. Let's create one!"
 msgstr "Không tìm thấy thẻ nào. Hãy tạo mới!"
 
 #. module: helpdesk
+#: model_terms:ir.actions.act_window,help:helpdesk.action_helpdesk_tag_assignment
+msgid "No tags or team members found. Let's create them!"
+msgstr "Không tìm thấy thẻ hay thành viên nào. Hãy tạo mới!"
+
+#. module: helpdesk
 #: model_terms:ir.actions.act_window,help:helpdesk.helpdesk_team_dashboard_action_main
 msgid "No teams found"
 msgstr "Không tìm thấy bộ phận nào"
@@ -2430,12 +2492,6 @@ msgstr "Số lượng phiếu hỗ trợ khác của cùng một đối tác"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
 msgid "Number of tickets closed in the past 7 days."
 msgstr "Số phiếu hỗ trợ đã đóng trong 7 ngày qua."
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Okay"
-msgstr "Bình thường"
 
 #. module: helpdesk
 #: model:helpdesk.stage,name:helpdesk.stage_on_hold
@@ -2771,12 +2827,6 @@ msgid "Red Kanban Label"
 msgstr "Nhãn kanban đỏ"
 
 #. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/controllers/portal.py:0
-msgid "Reference"
-msgstr "Tham chiếu"
-
-#. module: helpdesk
 #: model:mail.message.subtype,name:helpdesk.mt_ticket_refund_status
 msgid "Refund Status"
 msgstr "Trạng thái hoàn tiền"
@@ -2960,22 +3010,10 @@ msgid "SMS Delivery error"
 msgstr "Lỗi gửi SMS"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
-msgid "Sad face"
-msgstr "Mặt buồn"
-
-#. module: helpdesk
 #. odoo-javascript
 #: code:addons/helpdesk/static/src/components/helpdesk_team_dashboard/helpdesk_team_dashboard.xml:0
 msgid "Sample"
 msgstr "Mẫu"
-
-#. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
-msgid "Satisfied"
-msgstr "Hài lòng"
 
 #. module: helpdesk
 #. odoo-javascript
@@ -3117,8 +3155,8 @@ msgstr "Hiển thị chính sách SLA"
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
-msgid "Show all records which has next action date is before today"
-msgstr "Hiển thị tất cả bản ghi có ngày xử lý tiếp theo trước ngày hôm nay"
+msgid "Show all records whose next activity date is past"
+msgstr "Hiển thị tất cả các bản ghi có ngày hoạt động tiếp theo đã quá hạn"
 
 #. module: helpdesk
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_sla_status__sla_id
@@ -3270,6 +3308,12 @@ msgid "Team"
 msgstr "Bộ phận"
 
 #. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.view_helpdesk_tag_assignment_search
+msgid "Team Member"
+msgstr "Thành viên"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__user_ids
 #: model:ir.model.fields,field_description:helpdesk.field_helpdesk_team__member_ids
 msgid "Team Members"
 msgstr "Thành viên"
@@ -3317,16 +3361,6 @@ msgid ""
 "calculation of the SLA."
 msgstr ""
 "Thời gian dành cho các giai đoạn này sẽ không được tính đến khi tính SLA."
-
-#. module: helpdesk
-#. odoo-python
-#: code:addons/helpdesk/models/helpdesk_team.py:0
-msgid ""
-"The visibility of the team needs to be set as \"Invited portal users and all"
-" internal users\" in order to use the website form."
-msgstr ""
-"Khả năng hiển thị bộ phận cần được đặt là \"Người dùng cổng thông tin được "
-"mời và tất cả người dùng nội bộ\" để sử dụng biểu mẫu trang web."
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
@@ -3486,6 +3520,11 @@ msgstr "Phiếu hỗ trợ đã đánh giá"
 #: model:ir.model,name:helpdesk.model_helpdesk_sla_status
 msgid "Ticket SLA Status"
 msgstr "Trạng thái SLA phiếu hỗ trợ"
+
+#. module: helpdesk
+#: model:ir.model.fields,field_description:helpdesk.field_helpdesk_tag_assignment__tag_id
+msgid "Ticket Tag"
+msgstr "Thẻ phiếu hỗ trợ"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.quick_create_ticket_form
@@ -3665,10 +3704,8 @@ msgid "Unarchive Tickets"
 msgstr "Bỏ lưu trữ phiếu hỗ trợ"
 
 #. module: helpdesk
-#. odoo-javascript
 #. odoo-python
 #: code:addons/helpdesk/controllers/portal.py:0
-#: code:addons/helpdesk/static/src/views/helpdesk_ticket_graph/helpdesk_ticket_graph_model.js:0
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
 #: model_terms:ir.ui.view,arch_db:helpdesk.portal_helpdesk_ticket
 msgid "Unassigned"
@@ -3680,6 +3717,18 @@ msgstr "Chưa phân công"
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_search_analysis_closed
 msgid "Unassigned Tickets"
 msgstr "Phiếu hỗ trợ chưa phân công"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search_base
+#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_progress_data
+msgid "Unhappy"
+msgstr "Không hài lòng"
+
+#. module: helpdesk
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_team_view_kanban
+#: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_ticket_view_kanban
+msgid "Unhappy face"
+msgstr "Mặt không vui"
 
 #. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_tickets_view_search
@@ -3757,6 +3806,17 @@ msgstr ""
 " Hỗ trợ để bắt đầu.</i>"
 
 #. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_team.py:0
+msgid ""
+"Want to use the website form? Just adjust your team's visibility to "
+"\"Invited portal users and all internal users\" and watch the magic happen!"
+msgstr ""
+"Bạn muốn sử dụng biểu mẫu trên trang web? Chỉ cần điều chỉnh chế độ hiển thị"
+" của bộ phận thành \"Người dùng cổng thông tin được mời và tất cả người dùng"
+" nội bộ\" và chờ điều kỳ diệu xảy ra!"
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.tickets_followup
 msgid ""
 "We hope to have addressed your request satisfactorily. If you no longer need"
@@ -3768,6 +3828,7 @@ msgstr ""
 
 #. module: helpdesk
 #: model_terms:helpdesk.team,description:helpdesk.helpdesk_team1
+#: model_terms:helpdesk.team,description:helpdesk.helpdesk_team2
 #: model_terms:helpdesk.team,description:helpdesk.helpdesk_team3
 msgid ""
 "We provide 24/7 support, Monday through Friday. Ticket responses are usually provided within 2 working days.<br>\n"
@@ -3900,6 +3961,12 @@ msgid "alias"
 msgstr "bí danh"
 
 #. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/controllers/portal.py:0
+msgid "close_date"
+msgstr "close_date"
+
+#. module: helpdesk
 #: model_terms:ir.ui.view,arch_db:helpdesk.helpdesk_sla_view_form
 msgid "e.g. Close urgent tickets within 36 hours"
 msgstr "VD: Đóng các phiếu hỗ trợ khẩn cấp trong vòng 36 giờ"
@@ -3952,9 +4019,21 @@ msgstr "tìm kiếm bộ phận"
 
 #. module: helpdesk
 #. odoo-python
+#: code:addons/helpdesk/models/helpdesk_team.py:0
+msgid "team_id"
+msgstr "team_id"
+
+#. module: helpdesk
+#. odoo-python
 #: code:addons/helpdesk/models/helpdesk_ticket.py:0
 msgid "tickets"
 msgstr "phiếu hỗ trợ"
+
+#. module: helpdesk
+#. odoo-python
+#: code:addons/helpdesk/controllers/portal.py:0
+msgid "user_id"
+msgstr "user_id"
 
 #. module: helpdesk
 #: model:mail.template,subject:helpdesk.rating_ticket_request_email_template
@@ -3971,6 +4050,7 @@ msgid "{{ object.name }}"
 msgstr "{{ object.name }}"
 
 #. module: helpdesk
-#: model_terms:ir.ui.view,arch_db:helpdesk.team_rating_data
-msgid "{{rating.res_name if t['is_helpdesk_user'] else ''}}"
-msgstr "{{rating.res_name if t['is_helpdesk_user'] else ''}}"
+#. odoo-python
+#: code:addons/helpdesk/models/helpdesk_ticket.py:0
+msgid "👤 Unassigned"
+msgstr "👤 Chưa được phân công"

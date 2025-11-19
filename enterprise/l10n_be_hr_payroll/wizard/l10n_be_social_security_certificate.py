@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import base64
+from io import BytesIO
 
 from dateutil.relativedelta import relativedelta
-from odoo.tools.misc import xlsxwriter, format_date
-from io import BytesIO
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from odoo.tools.misc import format_date
 
 
 class L10nBeSocialSecurityCertificate(models.TransientModel):
@@ -18,7 +17,7 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
     @api.model
     def default_get(self, field_list=None):
         if self.env.company.country_id.code != "BE":
-            raise UserError(_('You must be logged in a Belgian company to use this feature'))
+            raise UserError(_('This feature seems to be as exclusive as Belgian chocolates. You must be logged in to a Belgian company to use it.'))
         return super().default_get(field_list)
 
     date_from = fields.Date(default=lambda s: fields.Date.today() + relativedelta(day=1, month=1, years=-1))
@@ -58,6 +57,7 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
         thirteen_pay = self.env.ref('l10n_be_hr_payroll.hr_payroll_structure_cp200_thirteen_month')
         student_pay = self.env.ref('l10n_be_hr_payroll.hr_payroll_structure_student_regular_pay')
         warrant_pay = self.env.ref('l10n_be_hr_payroll.hr_payroll_structure_cp200_structure_warrant')
+        salary_advance_pay = self.env.ref('l10n_be_hr_payroll.hr_payroll_structure_cp200_salary_advance')
 
         all_payslips = self.env['hr.payslip'].search([
             ('state', 'in', ['done', 'paid']),
@@ -84,6 +84,7 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
             double_slips = aggregate_payslips.filtered(lambda p: p.struct_id == double_pay)
             thirteen_slips = aggregate_payslips.filtered(lambda p: p.struct_id == thirteen_pay)
             student_slips = aggregate_payslips.filtered(lambda p: p.struct_id == student_pay)
+            salary_advance_slips = aggregate_payslips.filtered(lambda p: p.struct_id == salary_advance_pay)
             unclassified_slips = aggregate_payslips - monthly_slips - termination_slips - holiday_slips - double_slips - thirteen_slips - student_slips
             monthly_slips += unclassified_slips
 
@@ -94,7 +95,7 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
                 'PAY DOUBLE COMPLEMENTARY', 'SALARY', 'SALARY', 'ONSSTOTAL', 'ONSSEMPLOYER', 'ONSS1',
                 'ONSS2', 'ONSS', 'ONSS', 'ONSS', 'REP.FEES', 'REP.FEES.VOLATILE', 'CAR.PRIV', 'P.P', 'M.ONSS',
                 'ATTACH_SALARY', 'ATN.CAR.2', 'ATN.MOB.2', 'ATN.INT.2', 'ATN.LAP.2', 'MEAL_V_EMP',
-                'IMPULSION25', 'IMPULSION12', 'ASSIG_SALARY', 'ADVANCE', 'NET', 'P.P.DED',
+                'IMPULSION25', 'IMPULSION12', 'ASSIG_SALARY', 'SALARYADVREC', 'NET', 'P.P.DED',
                 'ONSSEMPLOYERBASIC', 'ONSSEMPLOYERFFE', 'ONSSEMPLOYERMFFE', 'ONSSEMPLOYERCPAE',
                 'ONSSEMPLOYERRESTREINT', 'ONSSEMPLOYERUNEMP', 'CYCLE', 'CANTEEN']
             all_values = aggregate_payslips._get_line_values(code_list, vals_list=['total', 'quantity'])
@@ -135,9 +136,10 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
             meal_voucher_employee = _get_total(monthly_slips + student_slips, all_values, ['MEAL_V_EMP'])
             net_third_party = _get_total(monthly_slips, all_values, ['IMPULSION25', 'IMPULSION12'])
             salary_assignment = _get_total(aggregate_payslips, all_values, ['ASSIG_SALARY'])
-            salary_advance = _get_total(monthly_slips, all_values, ['ADVANCE'])
-            net = _get_total(aggregate_payslips, all_values, ['NET'])
-            total_net = net + salary_advance
+            salary_advance = _get_total(salary_advance_slips, all_values, ['NET'])
+            salary_advance_recovery = _get_total(monthly_slips, all_values, ['SALARYADVREC'])
+            net = _get_total(aggregate_payslips, all_values, ['NET']) - salary_advance + (-salary_advance_recovery)
+            total_net = net + salary_advance - (-salary_advance_recovery)
 
             # Cotisation patronnale de base =
             # Global Rate (without employee part) + FFE + Special FFE + CPAE + Modération Salariale + Chomage temporaire
@@ -148,11 +150,14 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
             charges_redistribution = 0
 
             if 'vehicle_id' in self.env['hr.payslip']:
-                co2_fees = sum(p.vehicle_id.with_context(co2_fee_date=p.date_from)._get_co2_fee(p.vehicle_id.co2, p.vehicle_id.fuel_type) for p in monthly_slips)
+                co2_fees = sum(
+                    p.vehicle_id.with_context(co2_fee_date=p.date_from)._get_co2_fee(
+                        p.vehicle_id.co2, p.vehicle_id.co2_emission_unit, p.vehicle_id.fuel_type
+                    ) for p in monthly_slips)
             else:
                 co2_fees = 0
             structural_reductions = 0
-            meal_voucher_employer = sum(all_values['MEAL_V_EMP'][p.id]['quantity'] * p.contract_id.meal_voucher_paid_by_employer for p in monthly_slips + student_slips)
+            meal_voucher_employer = sum(all_values['MEAL_V_EMP'][p.id]['quantity'] * p.version_id.meal_voucher_paid_by_employer for p in monthly_slips + student_slips)
             withholding_taxes_deduction = _get_total(monthly_slips, all_values, ['P.P.DED'])
             total_employer_cost = emp_onss + emp_termination_onss + closure_fund + charges_redistribution + co2_fees + structural_reductions + meal_voucher_employer + withholding_taxes_deduction
             holiday_pay_provision = 0
@@ -220,6 +225,7 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
                 'net_third_party': net_third_party,
                 'salary_assignment': salary_assignment,
                 'salary_advance': salary_advance,
+                'salary_advance_recovery': salary_advance_recovery,
                 'net': net,
                 'total_net': total_net,
                 'emp_onss': emp_onss,
@@ -268,6 +274,7 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
     def export_report_xlsx(self):
         reports_data = self._get_report_data()
         output = BytesIO()
+        import xlsxwriter  # noqa: PLC0415
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         company_worksheet = workbook.add_worksheet(_('Identification Of The Company And Infos'))
 
@@ -336,7 +343,7 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
             company_worksheet.write(current_line, 0, aggregation_header, style_vertical_header)
             current_line += 1
             company_worksheet.write(current_line, 0, aggregation_data, style_vertical_header)
-            for department, dummy in reports_data:
+            for department, _dummy in reports_data:
                 current_line += 1
                 company_worksheet.write(current_line, 0, department, style_normal)
         else:
@@ -344,7 +351,7 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
             company_worksheet.write(current_line, 0, aggregation_header, style_vertical_header)
             current_line += 1
             company_worksheet.write(current_line, 0, aggregation_data, style_vertical_header)
-            for employee, dummy in reports_data:
+            for employee, _dummy in reports_data:
                 current_line += 1
                 company_worksheet.write(current_line, 0, employee, style_normal)
 
@@ -657,14 +664,6 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
                         '',
                     ],
                 },
-                'salary_advance': {
-                    'header': _('Salary Advance'),
-                    'values': [
-                        report_data['salary_advance'],
-                        report_data['salary_advance'],
-                        '',
-                    ],
-                },
                 'net': {
                     'header': _('Net Salary'),
                     'values': [
@@ -673,8 +672,24 @@ class L10nBeSocialSecurityCertificate(models.TransientModel):
                         '',
                     ],
                 },
+                'salary_advance': {
+                    'header': _('Salary Advance'),
+                    'values': [
+                        report_data['salary_advance'],
+                        report_data['salary_advance'],
+                        '',
+                    ],
+                },
+                'salary_advance_recovery': {
+                    'header': _('Salary Advance Recovery'),
+                    'values': [
+                        report_data['salary_advance_recovery'],
+                        report_data['salary_advance_recovery'],
+                        '',
+                    ],
+                },
                 'total_net': {
-                    'header': _('Total Net'),
+                    'header': _('Total Net (Advance included)'),
                     'values': [
                         report_data['total_net'],
                         report_data['total_net'],

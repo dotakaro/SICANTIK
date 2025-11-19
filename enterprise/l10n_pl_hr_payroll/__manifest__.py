@@ -5,7 +5,7 @@
     'name': 'Poland - Payroll',
     'countries': ['pl'],
     'category': 'Human Resources/Payroll',
-    'depends': ['hr_payroll', 'hr_contract_reports', 'hr_work_entry_holidays', 'hr_payroll_holidays'],
+    'depends': ['hr_payroll', 'hr_work_entry_holidays', 'hr_payroll_holidays'],
     'auto_install': ['hr_payroll'],
     'version': '1.0',
     'description': """
@@ -32,5 +32,6 @@ Polish Payroll Rules.
     'demo': [
         'data/l10n_pl_hr_payroll_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

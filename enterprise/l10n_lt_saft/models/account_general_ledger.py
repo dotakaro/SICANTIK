@@ -5,7 +5,7 @@ from odoo import api, fields, models, _
 from odoo.tools import SQL
 
 
-class GeneralLedgerCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -37,7 +37,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
 
         template_vals.update({
             # Special LT SAF-T date format: YYYY-MM-DDThh:mm:ss
-            'today_str': fields.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+            'today_str': fields.Datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
             'xmlns': 'https://www.vmi.lt/cms/saf-t',
             'file_version': '2.01',
             'accounting_basis': 'K',  # K (accrual - when recorded) or P (cash - when received)
@@ -150,6 +150,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             'income': 'P',
             'income_other': 'P',
             'expense': 'S',
+            'expense_other': 'S',
             'expense_depreciation': 'S',
             'expense_direct_cost': 'S',
             'off_balance': 'KT',

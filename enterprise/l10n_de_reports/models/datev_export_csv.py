@@ -16,7 +16,7 @@ import os
 BalanceKey = namedtuple('BalanceKey', ['from_code', 'to_code', 'partner_id', 'tax_id'])
 
 
-class GeneralLedgerCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -214,13 +214,13 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             vat_is_valid = False
             if partner.vat and len(partner.vat) > 2:
                 vat_country, vat_id_no = partner._split_vat(partner.vat)
-                vat_is_valid = partner.simple_vat_check(vat_country, vat_id_no)
+                vat_is_valid = vat_country and partner._check_vat_number(vat_country, vat_id_no)
             line_value = {
                 'code': code,
                 'company_name': partner.name if partner.is_company else '',
                 'person_name': '' if partner.is_company else partner.name,
                 'natural': partner.is_company and '2' or '1',
-                'vat_country': vat_country.upper() if vat_is_valid and vat_country.isalpha() else '',
+                'vat_country': vat_country if vat_is_valid else '',
                 'vat_id_no': vat_id_no if vat_is_valid else partner.vat or '',
             }
             # Idiotic program needs to have a line with 243 elements ordered in a given fashion as it

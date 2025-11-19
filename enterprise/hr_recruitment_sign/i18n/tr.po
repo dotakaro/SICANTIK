@@ -3,25 +3,15 @@
 # 	* hr_recruitment_sign
 # 
 # Translators:
-# emre oktem, 2024
-# Levent Karakaş <levent@mektup.at>, 2024
-# Halil, 2024
-# Martin Trigaux, 2024
-# Ediz Duman <neps1192@gmail.com>, 2024
-# abc Def <hdogan1974@gmail.com>, 2024
-# Tugay Hatıl <tugayh@projetgrup.com>, 2024
-# Umur Akın <umura@projetgrup.com>, 2024
-# Murat Kaplan <muratk@projetgrup.com>, 2024
-# Ertuğrul Güreş <ertugrulg@projetgrup.com>, 2025
-# Deniz Guvener_Odoo <degu@odoo.com>, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-25 09:14+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Deniz Guvener_Odoo <degu@odoo.com>, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Turkish (https://app.transifex.com/odoo/teams/41243/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -47,7 +37,6 @@ msgstr "<span class=\"o_stat_text\">İmza İstekleri</span>"
 
 #. module: hr_recruitment_sign
 #: model:ir.model,name:hr_recruitment_sign.model_hr_applicant
-#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__applicant_id
 msgid "Applicant"
 msgstr "Aday"
 
@@ -66,6 +55,17 @@ msgstr ""
 "bulunmalıdır"
 
 #. module: hr_recruitment_sign
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__applicant_ids
+#: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.hr_recruitment_sign_view
+msgid "Applicants"
+msgstr "Adaylar"
+
+#. module: hr_recruitment_sign
+#: model:ir.model,website_form_label:hr_recruitment_sign.model_hr_applicant
+msgid "Apply for a Job"
+msgstr ""
+
+#. module: hr_recruitment_sign
 #: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.hr_recruitment_sign_view
 msgid "Attach a file"
 msgstr "Bir dosya ekle"
@@ -74,16 +74,6 @@ msgstr "Bir dosya ekle"
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__attachment_ids
 msgid "Attachment"
 msgstr "Ek"
-
-#. module: hr_recruitment_sign
-#: model:ir.model,name:hr_recruitment_sign.model_hr_candidate
-msgid "Candidate"
-msgstr "Aday"
-
-#. module: hr_recruitment_sign
-#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__partner_id
-msgid "Contact"
-msgstr "Kontak"
 
 #. module: hr_recruitment_sign
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__cc_partner_ids
@@ -106,7 +96,9 @@ msgid "Discard"
 msgstr "Sil"
 
 #. module: hr_recruitment_sign
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_applicant__display_name
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__display_name
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_sign_send_request__display_name
 msgid "Display Name"
 msgstr "İsim Göster"
 
@@ -127,6 +119,9 @@ msgid ""
 "        Documents with 1 responsible will only have to be signed by the applicant while documents with 2 different responsible will have to be signed by both the applicant and the responsible.\n"
 "        "
 msgstr ""
+"İmzalanacak belgeler. Sadece 1 veya 2 farklı sorumluya sahip belgeler seçilebilir.\n"
+"        1 sorumlu olan belgelerin sadece başvuru sahibi tarafından imzalanması gerekirken, 2 farklı sorumluya sahip belgelerin hem başvuru sahibi hem de sorumlu tarafından imzalanması gerekecektir.\n"
+"        "
 
 #. module: hr_recruitment_sign
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__has_both_template
@@ -134,7 +129,9 @@ msgid "Has Both Template"
 msgstr "Her iki şablona da sahiptir"
 
 #. module: hr_recruitment_sign
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_applicant__id
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__id
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_sign_send_request__id
 msgid "ID"
 msgstr "ID"
 
@@ -185,19 +182,9 @@ msgid "Optional Message..."
 msgstr "İsteğe Bağlı Mesaj..."
 
 #. module: hr_recruitment_sign
-#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__partner_name
-msgid "Partner Name"
-msgstr "İş Ortağı Adı"
-
-#. module: hr_recruitment_sign
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__possible_template_ids
 msgid "Possible Template"
 msgstr "Olası Şablon"
-
-#. module: hr_recruitment_sign
-#: model:ir.actions.server,name:hr_recruitment_sign.action_request_signature
-msgid "Request Signature"
-msgstr "İmza İste"
 
 #. module: hr_recruitment_sign
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__responsible_id
@@ -225,6 +212,14 @@ msgid "Sign document in recruitment"
 msgstr "İşe alımda belgeyi imzalama"
 
 #. module: hr_recruitment_sign
+#: model:ir.model,name:hr_recruitment_sign.model_sign_send_request
+msgid "Sign send request"
+msgstr "İşaret gönderme isteği"
+
+#. module: hr_recruitment_sign
+#. odoo-python
+#: code:addons/hr_recruitment_sign/models/hr_applicant.py:0
+#: model:ir.actions.server,name:hr_recruitment_sign.action_signature_request_multi
 #: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.hr_recruitment_sign_view
 msgid "Signature Request"
 msgstr "İmza Talebi"
@@ -255,12 +250,6 @@ msgstr "Şablon Uyarısı"
 #: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.hr_recruitment_sign_view
 msgid "Write email or search contact..."
 msgstr "Mail ya da arama içeriği yazın."
-
-#. module: hr_recruitment_sign
-#. odoo-python
-#: code:addons/hr_recruitment_sign/models/hr_applicant.py:0
-msgid "You must define a Contact Name for this applicant."
-msgstr "Bu başvuru sahibi için bir Kişi Adı tanımlamanız gerekir."
 
 #. module: hr_recruitment_sign
 #: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.message_signature_request

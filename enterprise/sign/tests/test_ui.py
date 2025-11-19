@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import base64
@@ -6,11 +5,16 @@ import base64
 from .sign_request_common import SignRequestCommon
 import odoo.tests
 
-from odoo.tools.misc import mute_logger, file_open
+from odoo.tools.misc import file_open
 
 
 @odoo.tests.tagged('-at_install', 'post_install')
 class TestUi(odoo.tests.HttpCase, SignRequestCommon):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.env.ref('base.user_admin').email = "admin@yourcompany.example.com"
+
     def test_ui(self):
         # If not enabled (like in demo data), landing on res.config will try
         # to disable module_sale_quotation_builder and raise an issue
@@ -23,7 +27,7 @@ class TestUi(odoo.tests.HttpCase, SignRequestCommon):
         self.env['sign.template'].search([('name', '!=', 'template_1_role')]).write({'active': False})
 
         self.start_tour("/odoo", 'shared_sign_request_tour', login='admin')
-        shared_sign_request = self.env['sign.request'].search([('reference', '=', 'template_1_role-Shared'), ('state', '=', 'shared')])
+        shared_sign_request = self.env['sign.request'].search([('reference', '=', 'template_1_role'), ('state', '=', 'shared')])
         self.assertTrue(shared_sign_request.exists(), 'A shared sign request should be created')
         signed_sign_request = self.env['sign.request'].search([('reference', '=', 'template_1_role'), ('state', '=', 'signed')])
         self.assertTrue(signed_sign_request.exists(), 'A signed sign request should be created')
@@ -43,43 +47,60 @@ class TestUi(odoo.tests.HttpCase, SignRequestCommon):
         self.start_tour(url, 'translate_sign_instructions', login=None)
 
     def test_sign_flow(self):
-        flow_template = self.template_1_role.copy()
-        self.env['sign.item'].create({
+        self.env['sign.item'].create([{
             'type_id': self.env.ref('sign.sign_item_type_signature').id,
             'required': True,
             'responsible_id': self.env.ref('sign.sign_item_role_customer').id,
             'page': 1,
             'posX': 0.144,
             'posY': 0.716,
-            'template_id': flow_template.id,
+            'document_id': self.document_2.id,
             'width': 0.200,
             'height': 0.050,
+        }])
+        self.env['sign.template'].search([('id', '!=', self.template_1_role.id)]).write({'active': False})
+        type_id = self.env['sign.item.type'].create({
+            'name': "Issuer",
+            'item_type': "text",
+            'placeholder': "Issued by Mitchell Admin",
         })
+        self.env['sign.item'].create([{
+            'type_id': type_id.id,
+            'required': False,
+            'constant': True,
+            'responsible_id': self.env.ref('sign.sign_item_role_customer').id,
+            'page': 1,
+            'posX': 0.144,
+            'posY': 0.716,
+            'document_id': self.document_2.id,
+            'width': 0.200,
+            'height': 0.050,
+        }])
         with file_open('sign/static/demo/signature.png', "rb") as f:
             img_content = base64.b64encode(f.read())
 
         self.env.ref('base.user_admin').write({
             'name': 'Mitchell Admin',
             'sign_signature': img_content,
+            'email': 'mitchell.admin@example.com',
         })
         self.start_tour("/odoo", 'test_sign_flow_tour', login='admin')
 
     def test_template_edition(self):
         blank_template = self.env['sign.template'].create({
             'name': 'blank_template',
-            'attachment_id': self.attachment.id,
         })
 
+        document = self.env['sign.document'].create({
+            'attachment_id': self.attachment.id,
+            'template_id': blank_template.id,
+        })
         self.start_tour("/odoo", "sign_template_creation_tour", login="admin")
-
-        self.assertEqual(blank_template.name, 'filled_template', 'The tour should have changed the template name')
-        self.assertEqual(len(blank_template.sign_item_ids), 4)
-        self.assertEqual(blank_template.responsible_count, 2)
-        self.assertEqual(set(blank_template.sign_item_ids.mapped("type_id.item_type")), {"text", "signature", "selection"})
-        selection_sign_item = blank_template.sign_item_ids.filtered(lambda item: item.type_id.item_type == 'selection')
-        self.assertEqual(len(selection_sign_item.option_ids), 1)
-        self.assertEqual(selection_sign_item.option_ids[0].value, "option")
-        self.assertEqual(set(blank_template.sign_item_ids.mapped("name")), set(["Name", "Signature", "placeholder", "Selection"]))
+        self.assertEqual(document.name, 'new-document-name', 'The tour should have changed the document name')
+        self.assertEqual(len(blank_template.sign_item_ids), 5)
+        self.assertEqual(blank_template.responsible_count, 1)
+        self.assertEqual(set(blank_template.sign_item_ids.mapped("type_id.item_type")), {"text", "signature"})
+        self.assertEqual(set(blank_template.sign_item_ids.mapped("name")), set(["Text", "Name", "Signature"]))
 
     def test_report_modal(self):
         self.start_tour("/odoo", "sign_report_modal_tour", login="admin")

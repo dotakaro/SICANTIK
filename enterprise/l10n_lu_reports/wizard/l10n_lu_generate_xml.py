@@ -7,7 +7,7 @@ from odoo import models, fields, tools, _
 from odoo.exceptions import RedirectWarning, ValidationError
 
 
-class L10nLuGenerateXML(models.TransientModel):
+class L10n_LuGenerateXml(models.TransientModel):
     """
     This wizard is used to generate xml reports for Luxembourg
     according to the xml 2.0 standard.

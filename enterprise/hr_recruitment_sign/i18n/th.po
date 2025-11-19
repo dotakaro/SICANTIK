@@ -3,16 +3,15 @@
 # 	* hr_recruitment_sign
 # 
 # Translators:
-# Wil Odoo, 2024
-# Rasareeyar Lappiam, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-25 09:14+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Rasareeyar Lappiam, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Thai (https://app.transifex.com/odoo/teams/41243/th/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -38,7 +37,6 @@ msgstr "<span class=\"o_stat_text\">ร้องขอลายเซ็น</spa
 
 #. module: hr_recruitment_sign
 #: model:ir.model,name:hr_recruitment_sign.model_hr_applicant
-#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__applicant_id
 msgid "Applicant"
 msgstr "ผู้สมัคร"
 
@@ -56,6 +54,17 @@ msgstr ""
 "บทบาทของผู้สมัครในเทมเพลตที่จะลงนาม จะต้องมีบทบาทเดียวกันในเทมเพลตทั้งหมด"
 
 #. module: hr_recruitment_sign
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__applicant_ids
+#: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.hr_recruitment_sign_view
+msgid "Applicants"
+msgstr "ผู้สมัคร"
+
+#. module: hr_recruitment_sign
+#: model:ir.model,website_form_label:hr_recruitment_sign.model_hr_applicant
+msgid "Apply for a Job"
+msgstr ""
+
+#. module: hr_recruitment_sign
 #: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.hr_recruitment_sign_view
 msgid "Attach a file"
 msgstr "แนบเอกสาร"
@@ -64,16 +73,6 @@ msgstr "แนบเอกสาร"
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__attachment_ids
 msgid "Attachment"
 msgstr "การแนบ"
-
-#. module: hr_recruitment_sign
-#: model:ir.model,name:hr_recruitment_sign.model_hr_candidate
-msgid "Candidate"
-msgstr "ผู้สมัคร"
-
-#. module: hr_recruitment_sign
-#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__partner_id
-msgid "Contact"
-msgstr "ติดต่อ"
 
 #. module: hr_recruitment_sign
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__cc_partner_ids
@@ -96,7 +95,9 @@ msgid "Discard"
 msgstr "ละทิ้ง"
 
 #. module: hr_recruitment_sign
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_applicant__display_name
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__display_name
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_sign_send_request__display_name
 msgid "Display Name"
 msgstr "แสดงชื่อ"
 
@@ -127,7 +128,9 @@ msgid "Has Both Template"
 msgstr "มีทั้งสองเทมเพลต"
 
 #. module: hr_recruitment_sign
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_applicant__id
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__id
+#: model:ir.model.fields,field_description:hr_recruitment_sign.field_sign_send_request__id
 msgid "ID"
 msgstr "ไอดี"
 
@@ -177,19 +180,9 @@ msgid "Optional Message..."
 msgstr "ตัวเลือกข้อความ..."
 
 #. module: hr_recruitment_sign
-#: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__partner_name
-msgid "Partner Name"
-msgstr "ชื่อคู่ค้า"
-
-#. module: hr_recruitment_sign
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__possible_template_ids
 msgid "Possible Template"
 msgstr "เทมเพลตที่เป็นไปได้"
-
-#. module: hr_recruitment_sign
-#: model:ir.actions.server,name:hr_recruitment_sign.action_request_signature
-msgid "Request Signature"
-msgstr "คำขอลายเซ็น"
 
 #. module: hr_recruitment_sign
 #: model:ir.model.fields,field_description:hr_recruitment_sign.field_hr_recruitment_sign_document_wizard__responsible_id
@@ -217,6 +210,14 @@ msgid "Sign document in recruitment"
 msgstr "ลงนามในเอกสารในการรับสมัคร"
 
 #. module: hr_recruitment_sign
+#: model:ir.model,name:hr_recruitment_sign.model_sign_send_request
+msgid "Sign send request"
+msgstr "เซ็นและร้องขอ"
+
+#. module: hr_recruitment_sign
+#. odoo-python
+#: code:addons/hr_recruitment_sign/models/hr_applicant.py:0
+#: model:ir.actions.server,name:hr_recruitment_sign.action_signature_request_multi
 #: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.hr_recruitment_sign_view
 msgid "Signature Request"
 msgstr "คำร้องขอรายเซ็น"
@@ -247,12 +248,6 @@ msgstr "เทมเพลตการเตือน"
 #: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.hr_recruitment_sign_view
 msgid "Write email or search contact..."
 msgstr "เขียนอีเมลหรือค้นหาผู้ติดต่อ..."
-
-#. module: hr_recruitment_sign
-#. odoo-python
-#: code:addons/hr_recruitment_sign/models/hr_applicant.py:0
-msgid "You must define a Contact Name for this applicant."
-msgstr "คุณต้องกำหนดชื่อผู้ติดต่อสำหรับผู้สมัครรายนี้"
 
 #. module: hr_recruitment_sign
 #: model_terms:ir.ui.view,arch_db:hr_recruitment_sign.message_signature_request

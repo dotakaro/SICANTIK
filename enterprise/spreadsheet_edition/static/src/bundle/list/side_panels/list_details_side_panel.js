@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { Domain } from "@web/core/domain";
 import { EditListSortingSection } from "./edit_list_sorting_section/edit_list_sorting_section";
 import { useService } from "@web/core/utils/hooks";
@@ -11,16 +9,16 @@ import { hooks, components } from "@odoo/o-spreadsheet";
 import { SidePanelDomain } from "../../components/side_panel_domain/side_panel_domain";
 
 const { useHighlights } = hooks;
-const { ValidationMessages, EditableName, CogWheelMenu, Section } = components;
+const { ValidationMessages, CogWheelMenu, Section, TextInput } = components;
 
 export class ListDetailsSidePanel extends Component {
     static template = "spreadsheet_edition.ListDetailsSidePanel";
     static components = {
-        EditableName,
         ValidationMessages,
         CogWheelMenu,
         Section,
         SidePanelDomain,
+        TextInput,
         EditListSortingSection,
     };
     static props = {
@@ -142,6 +140,10 @@ export class ListDetailsSidePanel extends Component {
         const result = this.env.model.dispatch("DUPLICATE_ODOO_LIST", {
             listId: this.props.listId,
             newListId,
+            duplicatedListName: _t(
+                "%s (copy)",
+                this.getters.getListDefinition(this.props.listId).name
+            ),
         });
         const msg = result.isSuccessful
             ? _t('List duplicated. Use the "Re-insert list" menu item to insert it in a sheet.')

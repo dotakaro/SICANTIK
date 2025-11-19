@@ -3,7 +3,7 @@
 
 {
     'name': 'Social Demo Module',
-    'category': 'Hidden',
+    'category': 'Marketing/Social Marketing',
     'summary': 'Get demo data for the social module',
     'version': '1.0',
     'description': """Get demo data for the social module.
@@ -27,5 +27,6 @@
             'social_demo/static/src/js/stream_post_comments_reply.js',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

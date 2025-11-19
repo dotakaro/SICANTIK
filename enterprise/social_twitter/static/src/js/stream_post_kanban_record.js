@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { StreamPostKanbanRecord } from '@social/js/stream_post_kanban_record';
 import { StreamPostCommentsTwitter } from './stream_post_comments';
@@ -8,9 +6,9 @@ import { StreamPostTwitterQuote } from './stream_post_twitter_quote';
 import { debounce } from "@web/core/utils/timing";
 import { rpc } from "@web/core/network/rpc";
 import { patch } from "@web/core/utils/patch";
-import { sprintf } from '@web/core/utils/strings';
+import { escape, sprintf } from "@web/core/utils/strings";
 import { useService } from '@web/core/utils/hooks';
-import { useEffect } from "@odoo/owl";
+import { markup, useEffect } from "@odoo/owl";
 
 patch(StreamPostKanbanRecord.prototype, {
 
@@ -79,13 +77,20 @@ patch(StreamPostKanbanRecord.prototype, {
                 });
             })
             .catch((error) => {
+                const postLink = escape(this.record.post_link.value);
+                const escapedError = escape(error.data.message);
+                const errorBody = /\bx\.com\b/.test(escapedError)
+                    ? markup(
+                        `<a href="${postLink}" target="_blank" class="text-info text-opacity-100">${escapedError}</a>`
+                    )
+                    : error.data.message;
                 this.dialog.add(StreamPostCommentsTwitter, {
                     ...modalInfo,
                     commentsCount: 0,
                     allComments: [],
                     comments: [],
                     isReplyLimited: true,
-                    error: error.data.message,
+                    error: errorBody,
                 });
             });
     },
@@ -96,7 +101,17 @@ patch(StreamPostKanbanRecord.prototype, {
             tweet_id: this.record.twitter_tweet_id.raw_value,
             like: !userLikes
         });
-        await this._updateLikesCount("twitter_user_likes", "twitter_likes_count");
+        const promises = this.props.group.model.root.groups.map((group) =>
+            group.list.records
+                .filter(
+                    (record) =>
+                        record.data.twitter_tweet_id === this.props.record.data.twitter_tweet_id
+                )
+                .map((record) =>
+                    this._updateLikesCount("twitter_user_likes", "twitter_likes_count", record)
+                )
+        );
+        await Promise.all(promises.flat());
     },
 
     _onTwitterRetweet(ev) {

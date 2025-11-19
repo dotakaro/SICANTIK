@@ -37,8 +37,8 @@ PRODUCTION_URL = {
 
 DEFAULT_TIMEOUT_WS = 20
 
-class AccountEdiFormat(models.Model):
 
+class AccountEdiFormat(models.Model):
     _inherit = 'account.edi.format'
 
     def _is_compatible_with_journal(self, journal):
@@ -124,10 +124,9 @@ class AccountEdiFormat(models.Model):
                         errors.append(_("Wrong tax (%(tax)s) for document %(document)s", tax=line.tax_ids[0].name, document=move.display_name))
             else:
                 unsupported_tax_types = set()
-                vat_subtaxes = (lambda l: L10N_EC_VAT_SUBTAXES[l.tax_group_id.l10n_ec_type])
                 tax_groups = self.env['account.move']._l10n_ec_map_tax_groups
                 for line in move.line_ids.filtered(lambda l: l.tax_group_id.l10n_ec_type):
-                    if not (vat_subtaxes(line) and tax_groups(line)):
+                    if not ((L10N_EC_VAT_SUBTAXES.get(line.tax_group_id.l10n_ec_type) or line.tax_group_id.l10n_ec_type == 'ice') and tax_groups(line)):
                         unsupported_tax_types.add(line.tax_group_id.l10n_ec_type)
                 for tax_type in unsupported_tax_types:
                     errors.append(_("Tax type not supported: %s", tax_type))
@@ -192,7 +191,7 @@ class AccountEdiFormat(models.Model):
             if not move.company_id.l10n_ec_production_env:
                 # In test environment, act as if invoice had already been cancelled for the govt
                 auth_num, auth_date, errors, warnings = False, False, [], []
-                move.with_context(no_new_invoice=True).message_post(
+                move.message_post(
                     body=escape(
                         _(
                             "{}This is a DEMO environment, for which SRI has no portal.{}"
@@ -262,6 +261,10 @@ class AccountEdiFormat(models.Model):
             'currency_round': move.company_currency_id.round,
             'clean_str': self._l10n_ec_remove_newlines,
             'strftime': partial(datetime.strftime, format='%d/%m/%Y'),
+            'is_dividend_withhold': move.l10n_ec_is_dividend_withhold,
+            'dividend_payment_date': move.l10n_ec_dividend_payment_date,
+            'dividend_income_tax': move.l10n_ec_dividend_income_tax,
+            'dividend_fiscal_year': move.l10n_ec_dividend_fiscal_year,
         }
 
     def l10n_ec_merge_negative_and_positive_line(self, negative_line_tax_data, tax_data, precision_digits):
@@ -411,7 +414,7 @@ class AccountEdiFormat(models.Model):
             'mimetype': 'application/xml',
             'description': f"Ecuadorian electronic document generated for document {move.display_name}."
         })
-        move.with_context(no_new_invoice=True).message_post(
+        move.message_post(
             body=escape(
                 _(
                     "{}This is a DEMO response, which means this document was not sent to the SRI.{}If you want your document to be processed by the SRI, please set an {}Electronic Certificate File{} in the settings.{}Demo electronic document.{}Authorization num:{}%(authorization_num)s{}Authorization date:{}%(authorization_date)s",
@@ -446,7 +449,7 @@ class AccountEdiFormat(models.Model):
                 'mimetype': 'application/xml',
                 'description': f"Ecuadorian electronic document generated for document {move.display_name}."
             })
-            move.with_context(no_new_invoice=True).message_post(
+            move.message_post(
                 body=escape(
                     _(
                         "Electronic document authorized.{}Authorization num:{}%(authorization_num)s{}Authorization date:{}%(authorization_date)s",
@@ -469,7 +472,7 @@ class AccountEdiFormat(models.Model):
             try:
                 response_state = response['estado']
                 response_checks = response['comprobantes'] and response['comprobantes']['comprobante'] or []
-            except AttributeError as err:
+            except (AttributeError, TypeError) as err:
                 return warnings or [_("SRI response unexpected: %s", err)], 'warning' if warnings else 'error', None, None
 
             # Parse govt's response for errors or response state
@@ -523,7 +526,7 @@ class AccountEdiFormat(models.Model):
             return auth_state, auth_num, auth_date, zeep_errors, zeep_warnings
         try:
             response_auth_list = response['autorizaciones'] and response['autorizaciones']['autorizacion'] or []
-        except AttributeError as err:
+        except (AttributeError, TypeError) as err:
             return auth_state, auth_num, auth_date, [_("SRI response unexpected: %s", err)], zeep_warnings
 
         errors = []

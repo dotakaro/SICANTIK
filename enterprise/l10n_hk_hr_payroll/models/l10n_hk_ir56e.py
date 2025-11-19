@@ -5,16 +5,20 @@ from odoo import api, models, _
 from odoo.tools import format_date
 
 
-class L10nHkIr56e(models.Model):
+class L10n_HkIr56e(models.Model):
     _name = 'l10n_hk.ir56e'
-    _inherit = 'l10n_hk.ird'
+    _inherit = ['l10n_hk.ird']
     _description = 'IR56E Sheet'
     _order = 'submission_date'
 
     @api.depends('submission_date')
     def _compute_display_name(self):
+        lang_code = self.env.user.lang or 'en_US'
         for sheet in self:
-            sheet.display_name = format_date(self.env, sheet.submission_date, date_format="MMMM y", lang_code=self.env.user.lang)
+            if sheet.submission_date:
+                sheet.display_name = format_date(self.env, sheet.submission_date, date_format="MMMM y", lang_code=lang_code)
+            else:
+                sheet.display_name = _("IR56E Sheet")
 
     def _get_rendering_data(self, employees):
         self.ensure_one()
@@ -31,7 +35,7 @@ class L10nHkIr56e(models.Model):
                 **self._get_employee_data(employee),
                 **self._get_employee_spouse_data(employee),
                 'TypeOfForm': self.type_of_form,
-                'monthly_salary': employee.contract_id.wage,
+                'monthly_salary': employee.version_id.wage,
                 'PlaceOfResInd': int(bool(employee.l10n_hk_rental_id)),
             }
 
@@ -61,4 +65,4 @@ class L10nHkIr56e(models.Model):
         return result
 
     def _get_posted_document_owner(self, employee):
-        return employee.contract_id.hr_responsible_id or self.env.user
+        return employee.version_id.hr_responsible_id or self.env.user

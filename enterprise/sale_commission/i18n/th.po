@@ -3,23 +3,33 @@
 # 	* sale_commission
 # 
 # Translators:
-# Wichanon Jamwutthipreecha, 2024
 # Wil Odoo, 2025
-# Rasareeyar Lappiam, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-27 13:57+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Rasareeyar Lappiam, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:13+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Thai (https://app.transifex.com/odoo/teams/41243/th/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: th\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/model/commission_plan_achievement.py:0
+msgid "%(plan)s - %(type)s %(product)s %(categ)s"
+msgstr ""
+
+#. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/model/commission_plan_user.py:0
+msgid "%(user)s - %(plan)s"
+msgstr "%(user)s - %(plan)s"
 
 #. module: sale_commission
 #. odoo-python
@@ -33,6 +43,7 @@ msgid "<span class=\"o_stat_text\">Commissions</span>"
 msgstr ""
 
 #. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__achieved
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__achieved
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__achieved
 msgid "Achieved"
@@ -109,6 +120,11 @@ msgid "Add a new commission level"
 msgstr ""
 
 #. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__add_user_id
+msgid "Add to"
+msgstr "เพิ่มไปที่"
+
+#. module: sale_commission
 #. odoo-python
 #: code:addons/sale_commission/model/commission_achievement.py:0
 msgid "Adjustment %s"
@@ -164,18 +180,11 @@ msgstr ""
 "              ในช่วงเวลาที่กำหนดและแผนคอมมิชชั่นได้"
 
 #. module: sale_commission
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__amount
-msgid "Amount"
-msgstr "จำนวน"
-
-#. module: sale_commission
-#: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_achievement__type__amount_invoiced
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan_achievement__type__amount_invoiced
 msgid "Amount Invoiced"
 msgstr "จำนวนการแจ้งหนี้"
 
 #. module: sale_commission
-#: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_achievement__type__amount_sold
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan_achievement__type__amount_sold
 msgid "Amount Sold"
 msgstr "จำนวนที่จำหน่าย"
@@ -228,6 +237,8 @@ msgid "Category"
 msgstr "หมวดหมู่"
 
 #. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/controllers/main.py:0
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_commission__amount
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__commission
 msgid "Commission"
@@ -278,6 +289,7 @@ msgstr "แผนคอมมิชชั่น การคาดการณ�
 
 #. module: sale_commission
 #: model:ir.model,name:sale_commission.model_sale_commission_plan_user
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
 msgid "Commission Plan User"
 msgstr ""
 
@@ -295,6 +307,11 @@ msgstr ""
 #. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_res_users__commission_plan_users_ids
 msgid "Commission plans"
+msgstr ""
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_view_form
+msgid "Commission table"
 msgstr ""
 
 #. module: sale_commission
@@ -377,6 +394,8 @@ msgid "Created on"
 msgstr "สร้างเมื่อ"
 
 #. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/controllers/main.py:0
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__currency_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__currency_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__currency_id
@@ -400,8 +419,20 @@ msgstr ""
 #. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__date
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__date
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_achievement_report_view_search
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_view_form
 msgid "Date"
 msgstr "วันที่"
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
+msgid "Date From"
+msgstr "จากวันที่"
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
+msgid "Date To"
+msgstr "ถึงวันที่"
 
 #. module: sale_commission
 #: model:ir.model.fields,help:sale_commission.field_crm_team__commission_plan_ids
@@ -414,6 +445,9 @@ msgid "Details"
 msgstr "รายละเอียด"
 
 #. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_crm_team__display_name
+#: model:ir.model.fields,field_description:sale_commission.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:sale_commission.field_res_users__display_name
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__display_name
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__display_name
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__display_name
@@ -465,6 +499,12 @@ msgstr ""
 "ตรวจสอบให้แน่ใจว่าคุณได้รับมอบหมายให้รับแผนคอมมิชชั่นและได้ทำยอดขายที่เข้าเกณฑ์สำหรับคอมมิชชั่น"
 
 #. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/model/commission_plan.py:0
+msgid "Exporting targets is only available for plans based on targets"
+msgstr ""
+
+#. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_res_users__filtered_commission_plan_users_ids
 msgid "Filtered Commission Plan Users"
 msgstr ""
@@ -506,6 +546,7 @@ msgstr ""
 #. module: sale_commission
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_achievement_report_view_search
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_target_forecast_view_search
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_view_search
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_search
 msgid "Group By"
@@ -517,6 +558,9 @@ msgid "Has Message"
 msgstr "มีข้อความ"
 
 #. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_crm_team__id
+#: model:ir.model.fields,field_description:sale_commission.field_res_config_settings__id
+#: model:ir.model.fields,field_description:sale_commission.field_res_users__id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__id
@@ -581,7 +625,6 @@ msgid "Last Year"
 msgstr "ปีที่แล้ว"
 
 #. module: sale_commission
-#: model:ir.model.fields,help:sale_commission.field_sale_commission_achievement__team_id
 #: model:ir.model.fields,help:sale_commission.field_sale_commission_plan_target_forecast__team_id
 msgid ""
 "Main user sales team. Used notably for pipeline, or to set sales team in "
@@ -631,11 +674,6 @@ msgstr ""
 #: model:ir.actions.act_window,name:sale_commission.sale_commission_action_my_forecast
 msgid "My Forecast"
 msgstr ""
-
-#. module: sale_commission
-#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_search
-msgid "My Team"
-msgstr "ทีมของฉัน"
 
 #. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__name
@@ -705,6 +743,12 @@ msgid "Payment Date"
 msgstr "วันที่ชําระเงิน"
 
 #. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/controllers/main.py:0
+msgid "Performance"
+msgstr "ประสิทธิภาพ"
+
+#. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__target_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target__name
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_forecast__target_id
@@ -733,6 +777,7 @@ msgstr "ระยะเวลา"
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_commission__plan_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_forecast__plan_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_user__plan_id
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
 msgid "Plan"
 msgstr "แผน"
 
@@ -742,13 +787,11 @@ msgid "Product"
 msgstr "สินค้า"
 
 #. module: sale_commission
-#: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_achievement__type__qty_invoiced
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan_achievement__type__qty_invoiced
 msgid "Quantity Invoiced"
 msgstr "ปริมาณที่ออกใบแจ้งหนี้"
 
 #. module: sale_commission
-#: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_achievement__type__qty_sold
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan_achievement__type__qty_sold
 msgid "Quantity Sold"
 msgstr "จำนวนที่ขายแล้ว"
@@ -767,6 +810,11 @@ msgstr "อัตรา"
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__rating_ids
 msgid "Ratings"
 msgstr "การให้คะแนน"
+
+#. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__reduce_user_id
+msgid "Reduce From"
+msgstr ""
 
 #. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__related_res_id
@@ -815,7 +863,6 @@ msgid "Sales People"
 msgstr ""
 
 #. module: sale_commission
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__user_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__user_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__user_id
 msgid "Sales Person"
@@ -824,11 +871,9 @@ msgstr "พนักงานขาย"
 #. module: sale_commission
 #: model:ir.model,name:sale_commission.model_crm_team
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__team_id
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__team_id
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan__user_type__team
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_achievement_report_view_search
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_target_forecast_view_search
-#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_search
 msgid "Sales Team"
 msgstr "ทีมขาย"
 
@@ -925,12 +970,17 @@ msgstr ""
 #. module: sale_commission
 #: model:ir.model.constraint,message:sale_commission.constraint_sale_commission_plan_user_user_uniq
 msgid "The user is already present in the plan"
-msgstr "มีผู้ใช้รายนี้อยู่ในแผนแล้ว"
+msgstr "ผู้ใช้มีอยู่ในแผนแล้ว"
 
 #. module: sale_commission
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_target_forecast_view_search
 msgid "This Month"
 msgstr "เดือนนี้"
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_search
+msgid "This Quarter"
+msgstr "ไตรมาสนี้"
 
 #. module: sale_commission
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_target_forecast_view_search
@@ -944,6 +994,12 @@ msgstr "ปีนี้"
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__date_to
 msgid "To"
 msgstr "ถึง"
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_achievement_report_view_list
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_achievement_view_list
+msgid "Total Achieved"
+msgstr "บรรลุผลรวม"
 
 #. module: sale_commission
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_list
@@ -961,7 +1017,6 @@ msgid "Total commission"
 msgstr ""
 
 #. module: sale_commission
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__type
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__type
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_achievement__type
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_view_search
@@ -985,11 +1040,11 @@ msgstr "กำลังจะมาถึง"
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__user_ids
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_forecast__user_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_user_wizard__user_ids
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
 msgid "User"
 msgstr "ผู้ใช้"
 
 #. module: sale_commission
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__team_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_forecast__team_id
 msgid "User Sales Team"
 msgstr "ผู้ใช้ทีมขาย"

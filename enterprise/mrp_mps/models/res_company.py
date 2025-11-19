@@ -7,7 +7,7 @@ from odoo.tools.date_utils import start_of, end_of, add, subtract
 from odoo.tools.misc import format_date
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = "res.company"
 
     manufacturing_period = fields.Selection([
@@ -65,7 +65,7 @@ class Company(models.Model):
         if not years:
             years = 0
         first_day = start_of(subtract(fields.Date.today(), years=years), period)
-        for columns in range(self['manufacturing_period_to_display_%s' % period]):
+        for _i in range(self['manufacturing_period_to_display_%s' % period]):
             last_day = end_of(first_day, period)
             date_range.append((first_day, last_day))
             first_day = add(last_day, days=1)
@@ -100,7 +100,7 @@ class Company(models.Model):
         if len(vals) == 1:
             fname, = vals.keys()
             if self._is_field_mps_display_group(fname) and self.env.user.has_group('mrp.group_mrp_manager'):
-                return super(Company, self.sudo()).write(vals)
+                return super(ResCompany, self.sudo()).write(vals)
         return super().write(vals)
 
     def save_company_settings(self, vals):

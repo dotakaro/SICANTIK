@@ -10,7 +10,7 @@ from odoo.tools import float_repr
 from odoo.tools.safe_eval import const_eval
 
 
-class Providerdhl(models.Model):
+class DeliveryCarrier(models.Model):
     _inherit = 'delivery.carrier'
 
     delivery_type = fields.Selection(selection_add=[
@@ -106,13 +106,13 @@ class Providerdhl(models.Model):
             raise UserError(_('You cannot delete the commercial invoice sequence.'))
 
     def _compute_can_generate_return(self):
-        super(Providerdhl, self)._compute_can_generate_return()
+        super()._compute_can_generate_return()
         for carrier in self:
             if carrier.delivery_type == 'dhl':
                 carrier.can_generate_return = True
 
     def _compute_supports_shipping_insurance(self):
-        super(Providerdhl, self)._compute_supports_shipping_insurance()
+        super()._compute_supports_shipping_insurance()
         for carrier in self:
             if carrier.delivery_type == 'dhl':
                 carrier.supports_shipping_insurance = True

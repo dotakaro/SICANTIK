@@ -1,9 +1,8 @@
-import * as Dialog from "@point_of_sale/../tests/tours/utils/dialog_util";
-import * as Chrome from "@point_of_sale/../tests/tours/utils/chrome_util";
-import * as Notification from "@point_of_sale/../tests/tours/utils/generic_components/notification_util";
-import * as ProductScreen from "@point_of_sale/../tests/tours/utils/product_screen_util";
-import * as PaymentScreen from "@point_of_sale/../tests/tours/utils/payment_screen_util";
-import * as TicketScreen from "@point_of_sale/../tests/tours/utils/ticket_screen_util";
+import * as Dialog from "@point_of_sale/../tests/generic_helpers/dialog_util";
+import * as Chrome from "@point_of_sale/../tests/pos/tours/utils/chrome_util";
+import * as ProductScreen from "@point_of_sale/../tests/pos/tours/utils/product_screen_util";
+import * as PaymentScreen from "@point_of_sale/../tests/pos/tours/utils/payment_screen_util";
+import * as TicketScreen from "@point_of_sale/../tests/pos/tours/utils/ticket_screen_util";
 
 function checkReceipt(invoiceNumber) {
     return [
@@ -35,7 +34,11 @@ function checkNoExcludedTaxesProducts() {
             trigger: ".search-more-button > button",
             run: "click",
         },
-        Notification.has("No other products found"),
+        Chrome.isSynced(), // wait for async search to complete
+        {
+            content: "Should still find no products",
+            trigger: ".product-screen:contains('No products found for')",
+        },
     ].flat();
 }
 
@@ -53,8 +56,7 @@ export function generateTour(invoiceNumber, customerName) {
         PaymentScreen.clickPaymentMethod("Cash"),
         PaymentScreen.clickValidate(),
         checkReceipt(invoiceNumber),
-        Chrome.clickMenuOption("Orders"),
-        TicketScreen.selectFilter("All active orders"),
+        Chrome.clickOrders(),
         TicketScreen.selectFilter("Paid"),
         {
             content: "Reprint the receipt",

@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { inputFiles } from "@web/../tests/utils";
 import { redirect } from "@web/core/utils/urls";
@@ -20,6 +18,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_job_change", {
             content: "Log into Belgian Company",
             trigger: ".dropdown-menu .dropdown-item div span:contains('My Belgian Company - TEST')",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             trigger:
@@ -33,11 +32,6 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_job_change", {
         {
             content: "Go on Employee Page",
             trigger: 'span:contains("Jean Jasse")',
-            run: "click",
-        },
-        {
-            content: "Go on contract",
-            trigger: "button[name='action_open_contract']",
             run: "click",
         },
         {
@@ -81,6 +75,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_job_change", {
                 localStorage.setItem("url", url);
                 redirect("/web/session/logout");
             },
+            expectUnloadPage: true,
         },
         {
             content: "Log as employee - input login",
@@ -104,6 +99,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_job_change", {
                 const url = localStorage.getItem("url");
                 window.location.href = url;
             },
+            expectUnloadPage: true,
         },
         /*
          * We only modify the IP to check if the change is correctly made

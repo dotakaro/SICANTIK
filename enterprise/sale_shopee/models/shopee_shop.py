@@ -23,6 +23,7 @@ class ShopeeShop(models.Model):
         string="Shopee Account",
         comodel_name='shopee.account',
         ondelete='cascade',
+        index=True,
         readonly=True,
         required=True,
     )
@@ -136,7 +137,7 @@ class ShopeeShop(models.Model):
 
     def _compute_order_count(self):
         for shop in self:
-            order_count = self.env['sale.order'].search_count([('shopee_shop_id', '=', shop.id)])
+            order_count = self.env['sale.order'].search_count([('shopee_shop_id', 'in', shop.ids)])
             shop.order_count = order_count
 
     @api.depends('shopee_item_ids')
@@ -887,7 +888,7 @@ class ShopeeShop(models.Model):
             'name': kwargs.get('description', ''),
             'product_id': kwargs.get('product_id'),
             'price_unit': original_subtotal / quantity if quantity else 0,
-            'tax_id': tax_ids if tax_ids else [],
+            'tax_ids': tax_ids if tax_ids else [],
             'product_uom_qty': quantity,
             'discount': diff / original_subtotal * 100 if original_subtotal else 0,
         }
@@ -940,11 +941,10 @@ class ShopeeShop(models.Model):
         customers_location = self.env.ref('stock.stock_location_customers')
         for order_line in order.order_line.filtered(lambda l: l.product_id.type == 'consu'):
             stock_move = self.env['stock.move'].create({
-                'name': _("Shopee move: %(name)s", name=order.name),
                 'company_id': self.company_id.id,
                 'product_id': order_line.product_id.id,
                 'product_uom_qty': order_line.product_uom_qty,
-                'product_uom': order_line.product_uom.id,
+                'product_uom': order_line.product_uom_id.id,
                 'location_id': self.fbs_location_id.id,
                 'location_dest_id': customers_location.id,
                 'state': 'confirmed',

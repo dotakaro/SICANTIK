@@ -4,7 +4,7 @@
 {
     'name': 'Barcode for Batch Transfer',
     'version': '1.0',
-    'category': 'Inventory/Inventory',
+    'category': 'Supply Chain/Inventory',
     'summary': "Add the support of batch transfers into the barcode view",
     'depends': ['stock_barcode', 'stock_picking_batch'],
     'data': [
@@ -27,5 +27,6 @@
             'stock_barcode_picking_batch/static/tests/tours/**/*.js',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

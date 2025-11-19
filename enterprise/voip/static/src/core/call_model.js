@@ -1,10 +1,11 @@
-import { Record } from "@mail/core/common/record";
+import { fields, Record } from "@mail/core/common/record";
 
 import { deserializeDateTime } from "@web/core/l10n/dates";
 import { _t } from "@web/core/l10n/translation";
 
 export class Call extends Record {
     static id = "id";
+    static _name = "voip.call";
     /** @type {Object.<number, Call>} */
     static records = {};
 
@@ -14,86 +15,82 @@ export class Call extends Record {
      */
     update(data) {
         super.update(...arguments);
-        if (data.partner) {
-            this.partner = this.store.Persona.insert({ ...data.partner, type: "partner" });
+        if (data.partner_id) {
+            this.partner_id = this.store.Persona.insert({ ...data.partner_id, type: "partner" });
         }
-        if (data.creationDate) {
-            this.creationDate = deserializeDateTime(data.creationDate);
+        if (data.create_date) {
+            this.create_date = deserializeDateTime(data.create_date);
         }
-        if (data.startDate) {
-            this.startDate = deserializeDateTime(data.startDate);
+        if (data.start_date) {
+            this.start_date = deserializeDateTime(data.start_date);
         }
-        if (data.endDate) {
-            this.endDate = deserializeDateTime(data.endDate);
+        if (data.end_date) {
+            this.end_date = deserializeDateTime(data.end_date);
         }
     }
 
     activity;
+    /** @type {string} */
+    country_code_from_phone;
     /** @type {luxon.DateTime} */
-    creationDate;
+    create_date;
     /** @type {"incoming"|"outgoing"} */
     direction;
     /** @type {string} */
-    displayName;
+    display_name;
     /** @type {luxon.DateTime} */
-    endDate;
+    end_date;
     /** @type {import("@mail/core/persona_model").Persona | undefined} */
-    partner;
+    partner_id;
     /** @type {string} */
-    phoneNumber;
+    phone_number;
     /** @type {luxon.DateTime} */
-    startDate;
+    start_date;
     /** @type {"aborted"|"calling"|"missed"|"ongoing"|"rejected"|"terminated"} */
-    state;
+    state = fields.Attr("calling", {
+        onUpdate() {
+            const currentCall = this.store.env.services["voip.user_agent"].session?.call;
+            if (!currentCall) {
+                return;
+            }
+            if (!this.eq(currentCall)) {
+                return;
+            }
+            switch (this.state) {
+                case "aborted":
+                case "missed":
+                case "rejected":
+                case "terminated": {
+                    this.onCallEnd();
+                    break;
+                }
+                default:
+                    return;
+            }
+        },
+    });
     /** @type {{ interval: number, time: number }} */
     timer;
 
     /** @returns {string} */
     get callDate() {
         if (this.state === "terminated") {
-            return this.startDate.toLocaleString(luxon.DateTime.DATETIME_SHORT);
+            return this.start_date.toLocaleString(luxon.DateTime.TIME_SIMPLE);
         }
-        return this.creationDate.toLocaleString(luxon.DateTime.DATETIME_SHORT);
+        return this.create_date.toLocaleString(luxon.DateTime.TIME_SIMPLE);
     }
 
     /** @returns {number} */
     get duration() {
-        if (!this.startDate || !this.endDate) {
+        if (!this.start_date || !this.end_date) {
             return 0;
         }
-        return (this.endDate - this.startDate) / 1000;
+        return (this.end_date - this.start_date) / 1000;
     }
 
     /** @returns {string} */
     get durationString() {
-        if (!this.duration) {
-            return "";
-        }
-        const minutes = Math.floor(this.duration / 60);
-        const seconds = this.duration % 60;
-        if (minutes === 0) {
-            switch (seconds) {
-                case 0:
-                    return _t("less than a second");
-                case 1:
-                    return _t("1 second");
-                case 2:
-                    return _t("2 seconds");
-                default:
-                    return _t("%(seconds)s seconds", { seconds });
-            }
-        }
-        if (seconds === 0) {
-            switch (minutes) {
-                case 1:
-                    return _t("1 minute");
-                case 2:
-                    return _t("2 minutes");
-                default:
-                    return _t("%(minutes)s minutes", { minutes });
-            }
-        }
-        return _t("%(minutes)s min %(seconds)s sec", { minutes, seconds });
+        return this._formatTimerText(this.duration);
     }
 
     /** @returns {boolean} */
@@ -105,10 +102,44 @@ export class Call extends Record {
                 // example), the call may be stuck in the “calling” or “ongoing”
                 // state, meaning we can't rely on the state alone, hence the
                 // need to also check for the session.
-                return Boolean(this.store.env.services["voip.user_agent"].session);
+                return Boolean(this.store.env.services["voip.user_agent"].session?.call.eq(this));
             default:
                 return false;
         }
+    }
+
+    /** @returns {string} */
+    get timerText() {
+        return this._formatTimerText(this.timer?.time);
+    }
+
+    onCallEnd() {
+        const softphone = this.store.env.services.voip.softphone;
+        this.store.env.services["voip.user_agent"].session = null;
+        softphone.showSummary(this);
+        softphone.dialer.reset();
+        softphone.inCallView.reset();
+    }
+
+    /**
+     * @param {number|undefined} seconds
+     * @returns {string}
+     */
+    _formatTimerText(seconds) {
+        if (!seconds) {
+            return _t("%(minutes)s:%(seconds)s", { minutes: "00", seconds: "00" });
+        }
+        if (seconds < 3600) {
+            return _t("%(minutes)s:%(seconds)s", {
+                minutes: String(Math.floor(seconds / 60)).padStart(2, "0"),
+                seconds: String(seconds % 60).padStart(2, "0"),
+            });
+        }
+        return _t("%(hours)s:%(minutes)s:%(seconds)s", {
+            hours: String(Math.floor(seconds / 3600)).padStart(2, "0"),
+            minutes: String(Math.floor((seconds % 3600) / 60)).padStart(2, "0"),
+            seconds: String(seconds % 60).padStart(2, "0"),
+        });
     }
 }
 

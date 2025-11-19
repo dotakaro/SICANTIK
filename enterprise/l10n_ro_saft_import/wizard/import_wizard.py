@@ -5,7 +5,7 @@
 from odoo import models
 
 
-class SaftImportWizard(models.TransientModel):
+class AccountSaftImportWizard(models.TransientModel):
     """ SAF-T import wizard to import RO specific files """
     _inherit = 'account.saft.import.wizard'
 

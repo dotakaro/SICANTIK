@@ -3,14 +3,14 @@
 import copy
 import io
 import zipfile
+
 from odoo import api, models, _
 from odoo.exceptions import UserError
 from odoo.tools import SQL
-from odoo.tools.misc import xlsxwriter
 
 
-class IntrastatReportCustomHandler(models.AbstractModel):
-    _inherit = 'account.intrastat.report.handler'
+class AccountIntrastatGoodsReportHandler(models.AbstractModel):
+    _inherit = 'account.intrastat.goods.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
         super()._custom_options_initializer(report, options, previous_options)
@@ -111,6 +111,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
         this address https://www.dst.dk/en/Indberet/hjaelp-til-indberetning/om-idep-web/intrastat
         in the file examples 'Intrastat eksport/import Excel Line'
         """
+        import xlsxwriter  # noqa: PLC0415
         with io.BytesIO() as output:
             with xlsxwriter.Workbook(output, {
                 'in_memory': True,

@@ -1,12 +1,16 @@
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 from odoo import fields
 from odoo.tests.common import tagged
-from odoo.tools.misc import formatLang
-from odoo.addons.account_avatax.tests.common import TestAccountAvataxCommon
+
+from odoo.addons.sale.tests.common import TestTaxCommonSale
+from odoo.addons.account_avatax_sale.tests.common import TestAccountAvataxSaleCommon
+
 from .mocked_so_response import generate_response
 
 
 @tagged("-at_install", "post_install")
-class TestSaleAvalara(TestAccountAvataxCommon):
+class TestSaleAvalara(TestTaxCommonSale, TestAccountAvataxSaleCommon):
     @classmethod
     def setUpClass(cls):
         res = super().setUpClass()
@@ -27,7 +31,7 @@ class TestSaleAvalara(TestAccountAvataxCommon):
             'name': 'Sales user',
             'login': 'sales',
             'email': 'sale_user@test.com',
-            'groups_id': [(6, 0, [cls.env.ref('base.group_user').id, cls.env.ref('sales_team.group_sale_salesman').id])],
+            'group_ids': [(6, 0, [cls.env.ref('base.group_user').id, cls.env.ref('sales_team.group_sale_salesman').id])],
         })
         cls.env = cls.env(user=cls.sales_user)
         cls.cr = cls.env.cr
@@ -41,29 +45,25 @@ class TestSaleAvalara(TestAccountAvataxCommon):
                 'amount_untaxed': 90.0,
                 'amount_tax': 7.68,
             }])
-            totals = order.tax_totals
-            subtotals = totals['subtotals']
-            self.assertEqual(len(subtotals), 1)
-            subtotal = subtotals[0]
-            self.assertEqual(subtotal['base_amount_currency'], order.amount_untaxed)
-            self.assertEqual(subtotal['tax_amount_currency'], order.amount_tax)
-            self.assertEqual(totals['total_amount_currency'], order.amount_total)
 
-            tax_groups = subtotal['tax_groups']
-            self.assertEqual(len(tax_groups), 1, "There should be one tax group on the invoice containing all taxes.")
-            self.assertEqual(tax_groups[0]['group_name'], 'Taxes')
+            self.assert_sale_order_tax_totals_summary(order, {
+                'base_amount_currency': order.amount_untaxed,
+                'tax_amount_currency': order.amount_tax,
+                'total_amount_currency': order.amount_total,
+            }, soft_checking=True)
 
             for avatax_line in mocked_response['lines']:
                 so_line = order.order_line.filtered(lambda l: str(l.id) == avatax_line['lineNumber'].split(',')[1])
                 self.assertRecordValues(so_line, [{
                     'price_subtotal': avatax_line['taxableAmount'],
-                    'price_tax': avatax_line['tax'],
                     'price_total': avatax_line['taxableAmount'] + avatax_line['tax'],
                 }])
+                # no digits= specified on this Float field, so assertRecordValues would do an exact comparison of floats
+                self.assertAlmostEqual(so_line.price_tax, avatax_line['tax'])
         else:
             for line in order.order_line:
                 product_name = line.product_id.display_name
-                self.assertGreater(len(line.tax_id), 0, "Line with %s did not get any taxes set." % product_name)
+                self.assertGreater(len(line.tax_ids), 0, "Line with %s did not get any taxes set." % product_name)
 
             self.assertGreater(order.amount_tax, 0.0, "Invoice has a tax_amount of 0.0.")
 
@@ -76,27 +76,27 @@ class TestSaleAvalara(TestAccountAvataxCommon):
             'order_line': [
                 (0, 0, {
                     'product_id': self.product_user.id,
-                    'tax_id': None,
+                    'tax_ids': None,
                     'price_unit': self.product_user.list_price,
                 }),
                 (0, 0, {
                     'product_id': self.product_user_discound.id,
-                    'tax_id': None,
+                    'tax_ids': None,
                     'price_unit': self.product_user_discound.list_price,
                 }),
                 (0, 0, {
                     'product_id': self.product_accounting.id,
-                    'tax_id': None,
+                    'tax_ids': None,
                     'price_unit': self.product_accounting.list_price,
                 }),
                 (0, 0, {
                     'product_id': self.product_expenses.id,
-                    'tax_id': None,
+                    'tax_ids': None,
                     'price_unit': self.product_expenses.list_price,
                 }),
                 (0, 0, {
                     'product_id': self.product_invoicing.id,
-                    'tax_id': None,
+                    'tax_ids': None,
                     'price_unit': self.product_invoicing.list_price,
                 }),
             ]
@@ -121,32 +121,6 @@ class TestSaleAvalara(TestAccountAvataxCommon):
             order = self._create_sale_order()
             order.button_external_tax_calculation()
             self.assertOrder(order)
-
-    def test_tax_round_globally(self):
-        """The total amount of sale orders elligible for Avatax should never be computed with
-        the 'round_globally' option but should instead use the 'round_per_line' mechanism"""
-        self.env.company.sudo().tax_calculation_rounding_method = 'round_globally'
-        order = self.env['sale.order'].create({
-            'user_id': self.sales_user.id,
-            'partner_id': self.partner.id,
-            'fiscal_position_id': self.fp_avatax.id,
-            'date_order': '2021-01-01',
-            'order_line': [
-                (0, 0, {
-                    'product_id': self.product.id,
-                    'product_uom_qty': 1,
-                    'price_unit': 1.48,
-                    'tax_id': self.tax_with_diff_amount.ids,
-                }),
-                (0, 0, {
-                    'product_id': self.product.id,
-                    'product_uom_qty': 1,
-                    'price_unit': 1.48,
-                    'tax_id': self.tax_with_diff_amount.ids,
-                }),
-            ],
-        })
-        self.assertEqual(order.amount_total, 2.98)
 
     def test_sale_order_downpayment(self):
         """ Test the expected down payment flow. Down payments are not sent to Avalara. We invoice everything on the final "regular"
@@ -178,11 +152,6 @@ class TestSaleAvalara(TestAccountAvataxCommon):
             downpayment_invoice.sudo().action_post()
 
         self.assertIsNone(capture.val, "Shouldn't call Avatax when posting a down payment invoice.")
-        self.assertEqual(len(order.order_line.filtered(lambda line: not line.display_type)), 6, "Should have generated a new down payment line.")
-        self.assertFalse(order.order_line.filtered('is_downpayment').tax_id, "Down payment lines on the quotation shouldn't have taxes.")
-        self.assertAlmostEqual(downpayment_invoice.amount_total, order.amount_total * downpayment_pct / 100, msg="Down payment has the wrong amount.")
-        self.assertEqual(downpayment_invoice.amount_tax, 0, "Down payment shouldn't have taxes.")
-
         wizard = (
             self.env["sale.advance.payment.inv"]
                 .with_context(**payment_ctx)
@@ -191,15 +160,30 @@ class TestSaleAvalara(TestAccountAvataxCommon):
                 })
         )
 
-        with self._capture_request(return_value={'lines': [], 'summary': []}) as capture:
+        with self._capture_request(return_value={'lines': [], 'summary': []}):
             wizard.sudo().create_invoices()
 
-        sent_lines = capture.val['json']['createTransactionModel']['lines']
-        self.assertEqual(len(sent_lines), 5, "Should send only the regular lines.")
+        final_invoice = order.invoice_ids - downpayment_invoice
+        self.assertEqual(len(final_invoice.invoice_line_ids.filtered(lambda line: line.display_type == "product")), 6, "Should include an extra down payment line.")
+
+        self.assertRecordValues(final_invoice.invoice_line_ids, [
+            {'price_unit': 35.0, 'price_total': 37.98},
+            {'price_unit': -5.0, 'price_total': -5.42},
+            {'price_unit': 30.0, 'price_total': 32.56},
+            {'price_unit': 15.0, 'price_total': 16.28},
+            {'price_unit': 15.0, 'price_total': 16.28},
+            {'price_unit': 0.0, 'price_total': 0.00},
+            {'price_unit': 42.33, 'price_total': -50.01},
+        ])
+
+        with self._capture_request(return_value={'lines': [], 'summary': []}) as capture:
+            final_invoice.sudo().button_external_tax_calculation()
+            sent_lines = capture.val['json']['createTransactionModel']['lines']
+            self.assertEqual(len(sent_lines), 5, "Should send only the regular lines.")
 
 
 @tagged("-at_install", "post_install")
-class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
+class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxSaleCommon):
     """https://developer.avalara.com/certification/avatax/sales-tax-badge/"""
 
     @classmethod
@@ -223,7 +207,7 @@ class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
                 'order_line': [
                     (0, 0, {
                         'product_id': cls.product.id,
-                        'tax_id': None,
+                        'tax_ids': None,
                         'price_unit': cls.product.list_price,
                     }),
                 ]
@@ -326,7 +310,7 @@ class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
 
         with self._capture_request({'lines': [], 'summary': []}) as capture:
             invoice.action_post()
-        self.assertTrue(capture.val['json']['createTransactionModel']['commit'])
+        self.assertTrue(capture.val['json']['commit'])
 
     def test_commit_tax(self):
         """Ensure that invoices are committed/posted for reporting appropriately."""
@@ -335,7 +319,7 @@ class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
             self.sale_order.action_confirm()
             invoice = self.sale_order._create_invoices()
             invoice.action_post()
-        self.assertTrue(capture.val['json']['createTransactionModel']['commit'])
+        self.assertTrue(capture.val['json']['commit'])
 
     def test_merge_sale_orders(self):
         """Ensure sale orders with different shipping partner are not merged
@@ -359,7 +343,7 @@ class TestAccountAvalaraSalesTaxItemsIntegration(TestAccountAvataxCommon):
                 'order_line': [
                     (0, 0, {
                         'product_id': self.product.id,
-                        'tax_id': None,
+                        'tax_ids': None,
                         'price_unit': self.product.list_price,
                     }),
                 ]

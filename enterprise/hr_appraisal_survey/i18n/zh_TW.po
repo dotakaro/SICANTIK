@@ -3,16 +3,15 @@
 # 	* hr_appraisal_survey
 # 
 # Translators:
-# Wil Odoo, 2024
-# Tony Ng, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:52+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Tony Ng, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -66,7 +65,7 @@ msgid ""
 "                        Thank you!\n"
 "                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                Give your feedback\n"
 "                            </a>\n"
 "                        </div>\n"
@@ -88,7 +87,7 @@ msgstr ""
 "                        謝謝！\n"
 "                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                提供你的意見\n"
 "                            </a>\n"
 "                        </div>\n"
@@ -241,7 +240,9 @@ msgstr "評核人"
 #. module: hr_appraisal_survey
 #. odoo-python
 #: code:addons/hr_appraisal_survey/models/hr_appraisal.py:0
+#: model:ir.actions.act_window,name:hr_appraisal_survey.appraisal_ask_feedback_action
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.appraisal_ask_feedback_view_form
+#: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_user_input_view_tree
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_view_form
 msgid "Ask Feedback"
 msgstr "詢問回應"
@@ -398,6 +399,13 @@ msgstr "未有達到標準及期望"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__display_name
 msgid "Display Name"
 msgstr "顯示名稱"
 
@@ -485,6 +493,13 @@ msgstr "我指的是你。"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__id
 msgid "ID"
 msgstr "識別號"
 
@@ -593,7 +608,7 @@ msgstr "從不"
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_2_1
 msgid "Objectives"
-msgstr "目標"
+msgstr "主題"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.x_360_5_4
@@ -630,6 +645,12 @@ msgstr "該使用者之合作夥伴相關的資料"
 #: model:survey.question,title:hr_appraisal_survey.appraisal_4_2
 msgid "Personal Performance Objectives"
 msgstr "個人表現目標"
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
+msgid "Please set an Answer Deadline in the future"
+msgstr "請將答覆期限設為未來日期"
 
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_1_2
@@ -679,7 +700,7 @@ msgstr "呈現模型"
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__requested_by
 msgid "Requested by"
-msgstr "提出請求者"
+msgstr "Requested by"
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_user_input_view_tree
@@ -816,8 +837,10 @@ msgstr "問券使用者輸入"
 
 #. module: hr_appraisal_survey
 #: model:mail.template,subject:hr_appraisal_survey.mail_template_appraisal_ask_feedback
-msgid "Take part in {{ object.employee_id.name or 'this' }} appraisal"
-msgstr "參與 {{ object.employee_id.name or '此' }} 評核"
+msgid ""
+"Take part in {{ ctx.get('employee_id') and ctx['employee_id'].name or 'this'"
+" }} appraisal"
+msgstr "參與 {{ ctx.get('employee_id') and ctx['employee_id'].name or '此' }} 評核"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_4
@@ -988,6 +1011,18 @@ msgid ""
 msgstr ""
 "你可建立用於評核的調查。輕鬆設計評核、\n"
 "                發送邀請，並分析答案。"
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected feedback linked to multiples appraisals."
+msgstr "你不可選取已連結至多項評核的回應。"
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected multiple feedback template."
+msgstr "不可選取多個回應範本。"
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_button_form_view

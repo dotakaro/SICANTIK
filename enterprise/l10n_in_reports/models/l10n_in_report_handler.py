@@ -9,9 +9,10 @@ from odoo import api, models, osv, _
 
 _logger = logging.getLogger(__name__)
 
-class IndianTaxReportCustomHandler(models.AbstractModel):
+
+class L10n_InReportHandler(models.AbstractModel):
     _name = 'l10n_in.report.handler'
-    _inherit = 'account.generic.tax.report.handler'
+    _inherit = ['account.generic.tax.report.handler']
     _description = 'Indian Tax Report Custom Handler'
 
     @api.model
@@ -143,10 +144,28 @@ class IndianTaxReportCustomHandler(models.AbstractModel):
                 ('state', '=', 'posted'),
                 ('reversed_entry_id', '!=', False),
                 ('line_ids.tax_tag_ids', '!=', False),
-                ('reversed_entry_id.invoice_date', '<', AccountMove.get_fiscal_year_start_date(self.env.company, datetime.strptime(options['date']['date_to'], '%Y-%m-%d')))
+                ('reversed_entry_id.invoice_date', '<', AccountMove._l10n_in_get_fiscal_year_start_date(self.env.company, datetime.strptime(options['date']['date_to'], '%Y-%m-%d')))
             ]
         ).ids
         return 'l10n_in_reports.out_of_fiscal_year_reversed_moves_warning', out_of_fiscal_year_reversed_moves
+
+    @api.model
+    def _get_invalid_tds_tcs_moves(self, options, report):
+        AccountMove = self.env['account.move']
+        domain = [
+            ('date', '>=', options['date']['date_from']),
+            ('date', '<=', options['date']['date_to']),
+            ('state', '=', 'posted'),
+            ('commercial_partner_id.l10n_in_pan', '=', False),
+        ]
+        invalid_move_ids = []
+        if report.id == self.env.ref("l10n_in.tds_report").id:
+            domain += [('invoice_line_ids.tax_ids.l10n_in_tds_tax_type', '=', 'purchase')]
+            invalid_move_ids = AccountMove.search(domain).l10n_in_withholding_ref_move_id.ids
+        if report.id == self.env.ref("l10n_in.tcs_report").id:
+            domain += [('invoice_line_ids.tax_ids.l10n_in_section_id.tax_source_type', '=', 'tcs')]
+            invalid_move_ids = AccountMove.search(domain).ids
+        return 'l10n_in_reports.missing_pan_tds_tcs_warning', invalid_move_ids
 
     def _dynamic_lines_generator(self, report, options, all_column_groups_expression_totals, warnings=None):
         if warnings is not None:
@@ -163,15 +182,21 @@ class IndianTaxReportCustomHandler(models.AbstractModel):
                 hsn_base_line_expression_domain,
             ])
 
-            all_checks = [
-                self._get_invalid_intra_state_tax_on_lines(aml_domain),
-                self._get_invalid_inter_state_tax_on_lines(aml_domain),
-                self._get_invalid_no_hsn_products(aml_domain),
-                self._get_invalid_service_hsn_products(aml_domain),
-                self._get_invalid_goods_hsn_products(aml_domain),
-                self._get_invalid_uqc_codes(aml_domain),
-                self._get_out_of_fiscal_year_reversed_moves(options)
-            ]
+            all_checks = []
+            if report.id == self.env.ref("l10n_in_reports.account_report_gstr1").id:
+                all_checks = [
+                    self._get_invalid_intra_state_tax_on_lines(aml_domain),
+                    self._get_invalid_inter_state_tax_on_lines(aml_domain),
+                    self._get_invalid_no_hsn_products(aml_domain),
+                    self._get_invalid_service_hsn_products(aml_domain),
+                    self._get_invalid_goods_hsn_products(aml_domain),
+                    self._get_invalid_uqc_codes(aml_domain),
+                    self._get_out_of_fiscal_year_reversed_moves(options),
+                ]
+            elif report.id in (self.env.ref("l10n_in.tds_report").id, self.env.ref("l10n_in.tcs_report").id):
+                all_checks = [
+                    self._get_invalid_tds_tcs_moves(options, report),
+                ]
 
             for warning_template_ref, wrong_data in all_checks:
                 if wrong_data:
@@ -219,3 +244,7 @@ class IndianTaxReportCustomHandler(models.AbstractModel):
     @api.model
     def open_out_of_fiscal_year_reversed_moves(self, options, params):
         return self._l10n_in_open_action(_('Credit Notes'), 'account.move', [(False, 'list'), (False, 'form')], params)
+
+    @api.model
+    def open_missing_pan_tds_tcs_moves(self, options, params):
+        return self._l10n_in_open_action(_('Journal Entries'), 'account.move', [(False, 'list'), (False, 'form')], params)

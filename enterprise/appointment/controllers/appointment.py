@@ -5,6 +5,7 @@ import pytz
 import re
 
 from pytz.exceptions import UnknownTimeZoneError
+from werkzeug.exceptions import BadRequest
 
 from babel.dates import format_datetime, format_date, format_time
 from datetime import datetime, date
@@ -50,7 +51,7 @@ class AppointmentController(http.Controller):
 
     @route(['/book/<string:short_code>'],
             type='http', auth="public", website=True)
-    def appointment_invite(self, short_code):
+    def appointment_invite(self, short_code, **kwargs):
         """
         Invitation link that simplify the URL sent or shared to partners.
         This will redirect to a correct URL with the params selected with the
@@ -59,7 +60,10 @@ class AppointmentController(http.Controller):
         invitation = request.env['appointment.invite'].sudo().search([('short_code', '=', short_code)])
         if not invitation:
             raise NotFound()
-        return request.redirect(invitation.redirect_url)
+        return request.redirect('{redirect_url}&{params}'.format(
+            redirect_url=invitation.redirect_url,
+            params=url_encode(kwargs),
+        ))
 
     # ------------------------------------------------------------
     # APPOINTMENT INDEX PAGE
@@ -274,7 +278,7 @@ class AppointmentController(http.Controller):
         :param page_values: dict containing common appointment page values. See _prepare_appointment_type_page_values for details.
         :param state: the type of message that will be displayed in case of an error/info. See appointment_type_page.
         """
-        request.session.timezone = self._get_default_timezone(appointment_type)
+        request.session['timezone'] = self._get_default_timezone(appointment_type)
         asked_capacity = int(kwargs.get('asked_capacity', 1))
         filter_prefix = 'user' if appointment_type.schedule_based_on == "users" else 'resource'
         slots_values = self._get_slots_values(appointment_type,
@@ -321,9 +325,10 @@ class AppointmentController(http.Controller):
             - hide_select_dropdown: True if the user select dropdown should be hidden. (e.g. an operator has been selected before)
             Even if hidden, it can still be in the view and used to update availabilities according to the selected user in the js.
         """
-        filter_staff_user_ids = json.loads(kwargs.get('filter_staff_user_ids') or '[]')
-        filter_resource_ids = json.loads(kwargs.get('filter_resource_ids') or '[]')
+        filter_staff_user_ids = json.loads(unquote_plus(kwargs.get('filter_staff_user_ids') or '[]'))
+        filter_resource_ids = json.loads(unquote_plus(kwargs.get('filter_resource_ids') or '[]'))
         users_possible = self._get_possible_staff_users(appointment_type, filter_staff_user_ids)
+        user_forced = self._get_forced_staff_user(appointment_type, users_possible)
         resources_possible = self._get_possible_resources(appointment_type, filter_resource_ids)
         user_default = user_selected = request.env['res.users']
         resource_default = resource_selected = request.env['appointment.resource']
@@ -342,8 +347,14 @@ class AppointmentController(http.Controller):
                 resource_selected = request.env['appointment.resource'].sudo().browse(resource_selected_id)
             elif appointment_type.assign_method == 'resource_time':
                 resource_default = resources_possible[0]
-        possible_combinations = (resource_selected or resource_default or resources_possible)._get_filtered_possible_capacity_combinations(1, {})
-        max_capacity_possible = possible_combinations[-1][1] if possible_combinations else 1
+        if appointment_type.manage_capacity:
+            if appointment_type.schedule_based_on == 'users':
+                max_capacity_possible = appointment_type.user_capacity
+            else:
+                possible_combinations = (resource_selected or resource_default or resources_possible)._get_filtered_possible_capacity_combinations(1, {})
+                max_capacity_possible = possible_combinations[-1][1] if possible_combinations else 1
+        else:
+            max_capacity_possible = 1
 
         return {
             'asked_capacity': int(kwargs['asked_capacity']) if kwargs.get('asked_capacity') else False,
@@ -358,6 +369,7 @@ class AppointmentController(http.Controller):
             'resource_selected': resource_selected,
             'resources_possible': resources_possible,
             'user_default': user_default,
+            'user_forced': user_forced,
             'user_selected': user_selected,
             'users_possible': users_possible,
         }
@@ -396,18 +408,25 @@ class AppointmentController(http.Controller):
             return appointment_type.resource_ids
         return appointment_type.resource_ids.filtered(lambda resource: resource.id in filter_resource_ids)
 
+    def _get_forced_staff_user(self, appointment_type, possible_staff_users):
+        """ This method is meant to be overridden to force the selection of the staff user for the appointment_type. """
+        return self.env['res.users']
+
     def _get_possible_staff_users(self, appointment_type, filter_staff_user_ids):
         """
-        This method filters the staff members of given appointment_type using filter_staff_user_ids that are possible to pick.
-        If no filter exist and assign method is different than 'time_auto_assign', we allow all users existing on the appointment type.
+        This method get all the possible staff users of a given appointment_type according filter_staff_user_ids
+        if this filter exists. If there is no specific staff user required among all the possibilities,
+        those are returned.
 
-        :param appointment_type_id: the appointment_type_id of the appointment type that we want to access
+        :param appointment_type_id: the appointment_type_id of the appointment type that we want to access.
         :param filter_staff_user_ids: list of user ids used to filter the ones of the appointment_type.
-        :return: a res.users recordset containing all possible staff users to choose from.
+        :return: a specific record or a recordset of res.users containing all possible staff users to choose from.
         """
         if not filter_staff_user_ids:
-            return appointment_type.staff_user_ids
-        return appointment_type.staff_user_ids.filtered(lambda staff_user: staff_user.id in filter_staff_user_ids)
+            possible_staff_users = appointment_type.staff_user_ids
+        else:
+            possible_staff_users = appointment_type.staff_user_ids.filtered(lambda staff_user: staff_user.id in filter_staff_user_ids)
+        return self._get_forced_staff_user(appointment_type, possible_staff_users) or possible_staff_users
 
     # Resource tools
     # ------------------------------------------------------------
@@ -610,7 +629,7 @@ class AppointmentController(http.Controller):
         return appointment_type._check_appointment_is_valid_slot(staff_user, resources, asked_capacity, session_tz, start_dt_utc, duration)
 
     @http.route(['/appointment/<int:appointment_type_id>/submit'],
-                type='http', auth="public", website=True, methods=["POST"])
+                type='http', auth="public", website=True, methods=["POST"], csrf=False)
     def appointment_form_submit(self, appointment_type_id, datetime_str, duration_str, name, phone, email, staff_user_id=None, available_resource_ids=None, asked_capacity=1,
                                 guest_emails_str=None, **kwargs):
         """
@@ -628,6 +647,14 @@ class AppointmentController(http.Controller):
         :param str guest_emails: optional line-separated guest emails. It will
           fetch or create partners to add them as event attendees;
         """
+        # Partial CSRF check, only performed when session is authenticated, as there
+        # is no real risk for unauthenticated sessions here. It's a common case for
+        # embedded forms now: SameSite policy rejects the cookies, so the session
+        # is lost, and the CSRF check fails, breaking the post for no good reason.
+        csrf_token = request.params.pop('csrf_token', None)
+        if request.session.uid and not request.validate_csrf(csrf_token):
+            raise BadRequest('Session expired (invalid CSRF token)')
+
         domain = self._appointments_base_domain(
             filter_appointment_type_ids=kwargs.get('filter_appointment_type_ids'),
             search=kwargs.get('search'),
@@ -658,6 +685,7 @@ class AppointmentController(http.Controller):
         resource_ids = None
         asked_capacity = int(asked_capacity)
         resources_remaining_capacity = None
+        users_remaining_capacity = None
         if appointment_type.schedule_based_on == 'resources':
             resource_ids = json.loads(unquote_plus(available_resource_ids))
             # Check if there is still enough capacity (in case someone else booked with a resource in the meantime)
@@ -672,7 +700,9 @@ class AppointmentController(http.Controller):
             staff_user = request.env['res.users'].sudo().search([('id', '=', int(staff_user_id))])
             if staff_user not in appointment_type.staff_user_ids:
                 raise NotFound()
-            if staff_user and not staff_user.partner_id.calendar_verify_availability(date_start, date_end):
+            users_remaining_capacity = appointment_type._get_users_remaining_capacity(staff_user, date_start, date_end)
+            if (staff_user and not staff_user.partner_id.calendar_verify_availability(date_start, date_end, appointment_type)) or \
+                users_remaining_capacity['total_remaining_capacity'] < asked_capacity:
                 return request.redirect('/appointment/%s?%s' % (appointment_type.id, keep_query('*', state='failed-staff-user')))
 
         guests = None
@@ -680,7 +710,8 @@ class AppointmentController(http.Controller):
             if guest_emails_str:
                 guests = request.env['calendar.event'].sudo()._find_or_create_partners(guest_emails_str)
 
-        customer = self._get_customer_partner()
+        # avoid doing anything based on visitor if csrf isn't checked to avoid leaking last-login info
+        customer = self._get_customer_partner() if csrf_token else self.env['res.partner']
 
         # email is mandatory
         new_customer = not customer.email
@@ -751,8 +782,16 @@ class AppointmentController(http.Controller):
                 booking_line_values.append({
                     'appointment_resource_id': resource.id,
                     'capacity_reserved': new_capacity_reserved,
-                    'capacity_used': new_capacity_reserved if resource.shareable and appointment_type.resource_manage_capacity else resource.capacity,
+                    'capacity_used': new_capacity_reserved if resource.shareable and appointment_type.manage_capacity else resource.capacity,
                 })
+        else:
+            user_remaining_capacity = users_remaining_capacity['total_remaining_capacity']
+            new_capacity_reserved = min(user_remaining_capacity, asked_capacity, appointment_type.user_capacity)
+            # appointment_user_id is filled with the organizer of the event automatically.
+            booking_line_values.append({
+                'capacity_reserved': new_capacity_reserved,
+                'capacity_used': new_capacity_reserved,
+            })
 
         if invite_token:
             appointment_invite = request.env['appointment.invite'].sudo().search([('access_token', '=', invite_token)])
@@ -761,14 +800,19 @@ class AppointmentController(http.Controller):
 
         return self._handle_appointment_form_submission(
             appointment_type, date_start, date_end, duration, answer_input_values, name,
-            customer, appointment_invite, guests, staff_user, asked_capacity, booking_line_values
+            customer, appointment_invite, guests, staff_user, asked_capacity, booking_line_values,
+            self._get_extra_calendar_event_params(**kwargs),
         )
+
+    def _get_extra_calendar_event_params(self, **kwargs):
+        return {}
 
     def _handle_appointment_form_submission(
         self, appointment_type,
         date_start, date_end, duration,  # appointment boundaries
         answer_input_values, name, customer, appointment_invite, guests=None,  # customer info
-        staff_user=None, asked_capacity=1, booking_line_values=None  # appointment staff / resources
+        staff_user=None, asked_capacity=1, booking_line_values=None,  # appointment staff / resources
+        extra_calendar_event_params=None,  # misc params for use in bridges
     ):
         """ This method takes the output of the processing of appointment's form submission and
             creates the event corresponding to those values. Meant for overrides to set values
@@ -786,7 +830,8 @@ class AppointmentController(http.Controller):
             **appointment_type._prepare_calendar_event_values(
                 asked_capacity, booking_line_values, duration,
                 appointment_invite, guests, name, customer, staff_user, date_start, date_end
-            )
+            ),
+            **(extra_calendar_event_params or {}),
         })
         return request.redirect(f"/calendar/view/{event.access_token}?partner_id={customer.id}&{keep_query('*', state='new')}")
 
@@ -826,7 +871,7 @@ class AppointmentController(http.Controller):
             timezone of the appointment type.
         """
         if 'timezone' in request.session:
-            return request.session.timezone
+            return request.session['timezone']
         if appointment_type.location_id:
             return appointment_type.appointment_tz
         cookie = request.cookies.get('tz')
@@ -838,7 +883,7 @@ class AppointmentController(http.Controller):
     # APPOINTMENT TYPE JSON DATA
     # ------------------------------------------------------------
 
-    @http.route(['/appointment/get_upcoming_appointments'], type="json", auth="public")
+    @http.route(['/appointment/get_upcoming_appointments'], type="jsonrpc", auth="public")
     def get_upcoming_appointments(self, calendar_event_access_tokens=False):
         """ Get up to the next 20 upcoming appointments data based on either logged user or info given by list of calendar event tokens
         :param <list> calendar_event_access_tokens: list of booked appointment access tokens.
@@ -871,7 +916,7 @@ class AppointmentController(http.Controller):
         }
 
     @http.route(['/appointment/<int:appointment_type_id>/get_message_intro'],
-                type="json", auth="public", methods=['POST'], website=True)
+                type="jsonrpc", auth="public", methods=['POST'], website=True)
     def get_appointment_message_intro(self, appointment_type_id, **kwargs):
         domain = self._appointments_base_domain(
             filter_appointment_type_ids=kwargs.get('filter_appointment_type_ids'),
@@ -894,7 +939,7 @@ class AppointmentController(http.Controller):
         return appointment_type.message_intro or ''
 
     @http.route(['/appointment/<int:appointment_type_id>/update_available_slots'],
-                type="json", auth="public", website=True)
+                type="jsonrpc", auth="public", website=True)
     def appointment_update_available_slots(self, appointment_type_id, staff_user_id=None, resource_selected_id=None, asked_capacity=1, timezone=None, **kwargs):
         """
             Route called when the selected user or resource or asked_capacity or the timezone is modified to adapt the possible slots accordingly

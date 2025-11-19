@@ -3,7 +3,8 @@
 
 from odoo import fields, models
 
-class RealEstate(models.Model):
+
+class L10n_Es_ReportsRealEstate(models.Model):
     """ Model to contain the information related to a real estate, when making an
     invoice linked to it. These data are useful for mod347 report's BOE export."""
 

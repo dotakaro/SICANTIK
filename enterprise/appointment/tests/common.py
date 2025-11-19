@@ -6,14 +6,14 @@ from contextlib import contextmanager
 from datetime import date, datetime
 from unittest.mock import patch
 
-from odoo.addons.appointment.models.res_partner import Partner
-from odoo.addons.calendar.models.calendar_event import Meeting
+from odoo.addons.appointment.models.res_partner import ResPartner
+from odoo.addons.calendar.models.calendar_event import CalendarEvent
 from odoo.addons.resource.models.resource_calendar import ResourceCalendar
-from odoo.addons.mail.tests.common import mail_new_test_user, MailCommon
+from odoo.addons.mail.tests.common import mail_new_test_user, MailCase
 from odoo.tests import common, tagged
 
 
-class AppointmentCommon(MailCommon, common.HttpCase):
+class AppointmentCommon(MailCase, common.HttpCase):
 
     @classmethod
     def setUpClass(cls):
@@ -104,13 +104,34 @@ class AppointmentCommon(MailCommon, common.HttpCase):
             'staff_user_ids': [(4, cls.staff_user_bxls.id)],
         })
 
+        cls.apt_type_manage_capacity_users = cls.env['appointment.type'].create({
+            'appointment_tz': 'Europe/Brussels',
+            'appointment_duration': 1,
+            'assign_method': 'time_resource',
+            'category': 'recurring',
+            'location_id': cls.staff_user_bxls.partner_id.id,
+            'name': 'Bxls Appt Type with capacity',
+            'max_schedule_days': 15,
+            'min_cancellation_hours': 1,
+            'schedule_based_on': 'users',
+            'manage_capacity': True,
+            'min_schedule_hours': 1,
+            'staff_user_ids': [(6, 0, [cls.staff_user_aust.id, cls.staff_user_bxls.id])],
+            'slot_ids': [(0, 0, {
+                'weekday': str(cls.reference_monday.isoweekday()),
+                'start_hour': 15,
+                'end_hour': 16,
+            })],
+            'user_capacity': 5,
+        })
+
         cls.apt_type_resource = cls.env['appointment.type'].create({
             'appointment_tz': 'UTC',
             'assign_method': 'time_auto_assign',
             'min_schedule_hours': 1.0,
             'max_schedule_days': 5,
             'name': 'Test',
-            'resource_manage_capacity': True,
+            'manage_capacity': True,
             'schedule_based_on': 'resources',
             'slot_ids': [(0, 0, {
                 'weekday': str(cls.reference_monday.isoweekday()),
@@ -262,15 +283,15 @@ class AppointmentCommon(MailCommon, common.HttpCase):
 
     @contextmanager
     def mockAppointmentCalls(self):
-        _original_search = Meeting.search
-        _original_search_count = Meeting.search_count
-        _original_calendar_verify_availability = Partner.calendar_verify_availability
+        _original_search = CalendarEvent.search
+        _original_search_count = CalendarEvent.search_count
+        _original_calendar_verify_availability = ResPartner.calendar_verify_availability
         _original_work_intervals_batch = ResourceCalendar._work_intervals_batch
-        with patch.object(Meeting, 'search',
+        with patch.object(CalendarEvent, 'search',
                           autospec=True, side_effect=_original_search) as mock_ce_search, \
-             patch.object(Meeting, 'search_count',
+             patch.object(CalendarEvent, 'search_count',
                           autospec=True, side_effect=_original_search_count) as mock_ce_sc, \
-             patch.object(Partner, 'calendar_verify_availability',
+             patch.object(ResPartner, 'calendar_verify_availability',
                           autospec=True, side_effect=_original_calendar_verify_availability) as mock_partner_cal, \
              patch.object(ResourceCalendar, '_work_intervals_batch',
                           autospec=True, side_effect=_original_work_intervals_batch) as mock_cal_wit:

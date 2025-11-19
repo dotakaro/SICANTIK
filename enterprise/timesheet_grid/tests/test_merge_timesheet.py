@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import timedelta
 
 from odoo import fields
 from odoo.tests import Form
-
 from odoo.addons.hr_timesheet.tests.test_timesheet import TestCommonTimesheet
 
-class TestTimesheetMerge(TestCommonTimesheet):
 
+class TestTimesheetMerge(TestCommonTimesheet):
     def setUp(self):
-        super(TestTimesheetMerge, self).setUp()
+        super().setUp()
 
         yesterday = fields.Date.today() - timedelta(days=1)
         self.timesheet1 = self.env['account.analytic.line'].with_user(self.user_employee).create({

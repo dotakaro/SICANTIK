@@ -1958,7 +1958,7 @@ class TestCFDIInvoiceWorkflow(TestMxEdiCommon):
             second_user = self.env['res.users'].create({
                 'login': 'seconduser',
                 'partner_id': second_partner.id,
-                'groups_id': [self.env.ref('account.group_account_manager').id]
+                'group_ids': [self.env.ref('account.group_account_manager').id]
             })
 
             invoice = create_invoice()
@@ -1969,10 +1969,10 @@ class TestCFDIInvoiceWorkflow(TestMxEdiCommon):
                 invoice_for_global._l10n_mx_edi_cfdi_global_invoice_try_send()
 
             self.env.invalidate_all()  # remove values from cache to check access rights
-            request_list = ['followers', 'attachments', 'suggestedRecipients', 'activities']
+            request_list = ['activities', 'attachments', 'followers', 'scheduledMessages', 'suggestedRecipients']
             store = Store()
-            invoice.with_user(second_user)._thread_to_store(store, request_list=request_list)
-            invoice_for_global.with_user(second_user)._thread_to_store(store, request_list=request_list)
+            store.add(invoice.with_user(second_user), [], as_thread=True, request_list=request_list)
+            store.add(invoice_for_global.with_user(second_user), [], as_thread=True, request_list=request_list)
             checksums = [attachment_data['checksum'] for attachment_data in store.data['ir.attachment'].values()]
             self.assertTrue(invoice.l10n_mx_edi_cfdi_attachment_id.checksum in checksums)
             self.assertTrue(invoice_for_global.l10n_mx_edi_cfdi_attachment_id.checksum in checksums)

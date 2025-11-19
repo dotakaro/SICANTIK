@@ -6,7 +6,7 @@ from odoo.osv import expression
 from odoo.exceptions import ValidationError
 
 
-class Article(models.Model):
+class KnowledgeArticle(models.Model):
     _inherit = 'knowledge.article'
 
     @api.model

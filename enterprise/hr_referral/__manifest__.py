@@ -30,6 +30,7 @@
         'views/hr_referral_views.xml',
         'views/res_config_settings_views.xml',
         'report/hr_referral_report_views.xml',
+        'report/hr_referral_reward_report_views.xml',
     ],
     'demo': ['data/hr_referral_demo.xml'],
     'installable': True,
@@ -45,6 +46,7 @@
             'hr_referral/static/src/scss/hr_referral.scss',
             'hr_referral/static/src/scss/hr_onboarding.scss',
             'hr_referral/static/src/scss/progress_bar.scss',
+            'hr_referral/static/src/scss/many2one_avatar_field.scss',
             'hr_referral/static/src/**/*.xml',
         ],
         "web.assets_web_dark": [
@@ -52,5 +54,6 @@
         ],
 
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

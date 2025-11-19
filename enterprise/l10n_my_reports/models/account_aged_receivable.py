@@ -4,7 +4,7 @@ from odoo import _, api, models
 from odoo.exceptions import UserError
 
 
-class AgedReceiableCustomHandler(models.AbstractModel):
+class AccountAgedReceivableReportHandler(models.AbstractModel):
     _inherit = "account.aged.receivable.report.handler"
 
     @api.model

@@ -4,7 +4,7 @@ from odoo import _, models
 from odoo.exceptions import UserError
 
 
-class ReturnPicking(models.TransientModel):
+class StockReturnPicking(models.TransientModel):
     _inherit = 'stock.return.picking'
 
     def action_create_returns(self):

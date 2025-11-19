@@ -11,7 +11,7 @@ class TestAnalyticReport(TestAccountReportsCommon):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.env.user.groups_id += cls.env.ref(
+        cls.env.user.group_ids += cls.env.ref(
             'analytic.group_analytic_accounting')
         cls.report = cls.env.ref('account_reports.profit_and_loss')
         cls.report.write({'filter_analytic': True})
@@ -514,12 +514,12 @@ class TestAnalyticReport(TestAccountReportsCommon):
         self.assertLinesValues(
             general_ledger_report._get_lines(options),
             #   Name                                    Debit           Credit          Balance
-            [   0,                                      5,              6,              7],
+            [   0,                                      4,              5,              6],
             [
                 ['400000 Product Sales',                0.00,           100.00,         -100.00],
-                ['INV/2023/00001',                      0.00,           100.00,         -100.00],
+                ['INV/2023/00001 test line',            0.00,           100.00,         -100.00],
                 ['Total 400000 Product Sales',          0.00,           100.00,         -100.00],
-                ['Total',                               0.00,           100.00,         -100.00],
+                ['Total General Ledger',                0.00,           100.00,         -100.00],
             ],
             options,
         )
@@ -677,3 +677,32 @@ class TestAnalyticReport(TestAccountReportsCommon):
             ],
             options,
         )
+
+    def test_profit_and_loss_multicompany_access_rights(self):
+        branch = self.env['res.company'].create([{
+            'name': "My Test Branch",
+            'parent_id': self.env.company.id,
+        }])
+        other_currency = self.setup_other_currency('EUR', rounding=0.001)
+        test_journal = self.env['account.journal'].create({
+            'name': 'Test Journal',
+            'code': 'TEST',
+            'type': 'sale',
+            'company_id': self.env.company.id,
+            'currency_id': other_currency.id,
+        })
+        test_user = self.env['res.users'].create({
+            'login': 'test',
+            'name': 'The King',
+            'email': 'noop@example.com',
+            'group_ids': [Command.link(self.env.ref('account.group_account_manager').id)],
+            'company_ids': [Command.link(self.env.company.id), Command.link(branch.id)],
+        })
+        self.env.invalidate_all()
+
+        options = self._generate_options(
+            self.report.with_user(test_user).with_company(branch), '2019-01-01', '2019-12-31',
+        )
+        lines = self.report._get_lines(options)
+        self.assertTrue(lines)
+        self.assertEqual(test_journal.display_name, "Test Journal (EUR)")

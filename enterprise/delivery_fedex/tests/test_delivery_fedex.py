@@ -70,7 +70,7 @@ class TestDeliveryFedex(TransactionCase):
         wiz_action = picking.action_put_in_pack()
         self.assertEqual(wiz_action['res_model'], 'choose.delivery.package', 'Wrong wizard returned')
         wiz = Form.from_action(self.env, wiz_action)
-        wiz.delivery_package_type_id: picking.carrier_id.fedex_default_package_type_id
+        wiz.delivery_package_type_id = picking.carrier_id.fedex_default_package_type_id
         wiz.save().action_put_in_pack()
 
     def test_01_fedex_basic_us_domestic_flow(self):
@@ -80,7 +80,6 @@ class TestDeliveryFedex(TransactionCase):
 
             sol_vals = {'product_id': self.iPadMini.id,
                         'name': "[A1232] iPad Mini",
-                        'product_uom': self.uom_unit.id,
                         'product_uom_qty': 1.0,
                         'price_unit': self.iPadMini.lst_price}
 
@@ -129,7 +128,6 @@ class TestDeliveryFedex(TransactionCase):
 
             sol_vals = {'product_id': self.iPadMini.id,
                         'name': "[A1232] Large Cabinet",
-                        'product_uom': self.uom_unit.id,
                         'product_uom_qty': 1.0,
                         'price_unit': self.iPadMini.lst_price}
 
@@ -178,12 +176,10 @@ class TestDeliveryFedex(TransactionCase):
 
             sol_1_vals = {'product_id': self.iPadMini.id,
                           'name': "[A1232] iPad Mini",
-                          'product_uom': self.uom_unit.id,
                           'product_uom_qty': 1.0,
                           'price_unit': self.iPadMini.lst_price}
             sol_2_vals = {'product_id': self.large_desk.id,
                           'name': "[A1090] Large Desk",
-                          'product_uom': self.uom_unit.id,
                           'product_uom_qty': 1.0,
                           'price_unit': self.large_desk.lst_price}
 
@@ -237,7 +233,6 @@ class TestDeliveryFedex(TransactionCase):
 
         order1_vals = {
                     'product_id': self.iPadMini.id,
-                    'name': "[A1232] iPad Mini",
                     'product_uom': self.uom_unit.id,
                     'product_uom_qty': 1.0,
                     'location_id': self.stock_location.id,
@@ -323,7 +318,6 @@ class TestMockDeliveryFedex(TestDeliveryFedex):
                 'order_line': [(0, None, {
                     'product_id': self.iPadMini.id,
                     'name': "[A1232] iPad Mini",
-                    'product_uom': self.uom_unit.id,
                     'product_uom_qty': 1.0,
                     'price_unit': self.iPadMini.lst_price,
                 })],

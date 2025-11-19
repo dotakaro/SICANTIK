@@ -39,7 +39,7 @@ class TestDocumentRequest(MailCommon, HttpCase):
             'folder_id': cls.folder_a.id,
         })
         cls.user_employee.write({
-            'groups_id': [Command.link(cls.env.ref('documents.group_documents_user').id)]
+            'group_ids': [Command.link(cls.env.ref('documents.group_documents_user').id)]
         })
         cls.folder_a.action_update_access_rights('none', partners={
             cls.user_employee.partner_id.id: ('edit', False),
@@ -175,7 +175,7 @@ class TestDocumentRequest(MailCommon, HttpCase):
         self.assertEqual(message.subject, 'Example of document required')
 
     def test_request_document_upload_through_activity_popover(self):
-        wizard = self.env['documents.request_wizard'].create({
+        wizard = self.env['documents.request_wizard'].with_user(self.user_employee).create({
             'name': 'Wizard Request',
             'requestee_id': self.doc_partner_1.id,
             'activity_type_id': self.activity_type.id,
@@ -185,12 +185,12 @@ class TestDocumentRequest(MailCommon, HttpCase):
             document = wizard.request_document()
 
         self.assertEqual(document.request_activity_id.user_id, self.doc_user, "Activity assigned to the requestee")
-        self.assertEqual(document.owner_id, self.env.user, "Owner of the document is the requester")
+        self.assertEqual(document.owner_id, self.user_employee, "Owner of the document is the requester")
         document.action_update_access_rights(partners={self.user_admin.partner_id: ('edit', False)})
 
         self.authenticate("admin", "admin")
         with io.StringIO("Hello world!") as file:
-            response = self.opener.post(
+            response = self.url_open(
                 url=f"{self.base_url()}/mail/attachment/upload",
                 files={"ufile": file},
                 data={

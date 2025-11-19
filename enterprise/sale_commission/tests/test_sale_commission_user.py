@@ -66,6 +66,7 @@ class TestSaleCommissionUser(TestSaleCommissionCommon):
         self.assertEqual(sum(commissions.mapped('commission')), 80)
 
         AM = SO._create_invoices()
+        AM._post()
         self.env.invalidate_all()
 
         achievements = self.env['sale.commission.achievement.report'].search([('plan_id', '=', self.commission_plan_user.id)]).\
@@ -99,6 +100,7 @@ class TestSaleCommissionUser(TestSaleCommissionCommon):
         self.assertEqual(sum(commissions.mapped('commission')), 480, '200 + 280')
 
         AM2 = SO2._create_invoices()
+        AM2._post()
         self.env.invalidate_all()
 
         achievements = self.env['sale.commission.achievement.report'].search([('plan_id', '=', self.commission_plan_user.id)]).\
@@ -111,12 +113,12 @@ class TestSaleCommissionUser(TestSaleCommissionCommon):
         self.assertEqual(sum(commissions.mapped('commission')), 600)
 
         # Check that a refund invoice creates a negative achievement
-        AM.action_post()
         refund_wizard = self.env['account.move.reversal'].with_context(active_model="account.move", active_ids=AM.ids).create({
             'journal_id': AM.journal_id.id,
         })
         refund_result = refund_wizard.reverse_moves()
         refund_move_id = refund_result['res_id']
+        self.env["account.move"].browse(refund_move_id)._post()
         self.env.invalidate_all()
 
         refund_achievement = self.env['sale.commission.achievement.report'].search([
@@ -130,7 +132,7 @@ class TestSaleCommissionUser(TestSaleCommissionCommon):
         self.assertEqual(sum(commissions.mapped('commission')), 480, '600 - 120 = 480')
 
     @freeze_time('2024-02-02')
-    def test_commission_user_target(self):
+    def test_commission_user_target2(self):
         self.commission_plan_user.write({
             'periodicity': 'month',
             'type': 'target',
@@ -196,6 +198,7 @@ class TestSaleCommissionUser(TestSaleCommissionCommon):
         self.assertEqual(sum(commissions.mapped('commission')), 0, 'Achieved Rate(0.4) < 0.5')
 
         AM = SO._create_invoices()
+        AM._post()
         self.env.invalidate_all()
 
         achievements = self.env['sale.commission.achievement.report'].search([('plan_id', '=', self.commission_plan_user.id)]).\
@@ -233,6 +236,7 @@ class TestSaleCommissionUser(TestSaleCommissionCommon):
                                                        'Amount = 3500 (AR = 2) + 200 (AR-2 * 500)')
 
         AM2 = SO2._create_invoices()
+        AM2._post()
         self.env.invalidate_all()
 
         achievements = self.env['sale.commission.achievement.report'].search([('plan_id', '=', self.commission_plan_user.id)]).\
@@ -334,16 +338,19 @@ class TestSaleCommissionUser(TestSaleCommissionCommon):
 
         self.assertEqual(sum(commissions.mapped('forecast')), 0)
         commissions.write({'forecast': 100})
+
         self.assertEqual(sum(commissions.mapped('forecast')), 2400, "Each forecast line has a value equal to 100")
 
         self.env.invalidate_all()
+        # Once the cache is invalidated, the plan values are still updated and the report provide the right values
         commissions = self.env['sale.commission.report'].search([('plan_id', '=', self.commission_plan_user.id)])
+        self.assertEqual(sum(commissions.mapped('forecast')), 2400, "Each forecast line has a value equal to 100, writing forecast update the plan values")
 
-        self.assertEqual(sum(commissions.mapped('forecast')), 2400)
         commissions.write({'forecast': 200})
         self.assertEqual(sum(commissions.mapped('forecast')), 4800)
 
         self.env.invalidate_all()
+        # Same, all forecast are identical
         commissions = self.env['sale.commission.report'].search([('plan_id', '=', self.commission_plan_user.id)])
         self.assertEqual(sum(commissions.mapped('forecast')), 4800)
 
@@ -407,3 +414,14 @@ class TestSaleCommissionUser(TestSaleCommissionCommon):
             })],
         })
         self.assertEqual(commission_2023_normal.user_ids.other_plans, commission_2023_overflow)
+
+    def test_salesperson_date_from_matches_plan(self):
+        """
+        When updating `date_from` on an existing commission plan (`commission_plan_user`),
+        all linked salesperson records should automatically update their `date_from` to match the plan.
+        """
+        for user in self.commission_plan_user.user_ids:
+            user.date_from = datetime.date(year=2024, month=1, day=2)
+        self.commission_plan_user.date_from = datetime.date(year=2024, month=1, day=3)
+        for user in self.commission_plan_user.user_ids:
+            self.assertEqual(user.date_from, self.commission_plan_user.date_from)

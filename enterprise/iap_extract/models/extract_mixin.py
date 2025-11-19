@@ -4,7 +4,6 @@
 import logging
 
 from dateutil.relativedelta import relativedelta
-from psycopg2 import IntegrityError, OperationalError
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
@@ -27,13 +26,14 @@ ERROR_MESSAGES = {
     'error_unsupported_size': _lt("The document has been rejected because it is too small"),
     'error_no_page_count': _lt("Invalid PDF (Unable to get page count)"),
     'error_pdf_conversion_to_images': _lt("Invalid PDF (Conversion error)"),
+    'error_unsupported_version': _lt("Version is unsupported"),
 }
 
 
 class ExtractMixin(models.AbstractModel):
     """ Base model to inherit from to add extract functionality to a model. """
     _name = 'extract.mixin'
-    _inherit = 'mail.thread.main.attachment'
+    _inherit = ['mail.thread.main.attachment']
     _description = 'Base class to extract data from documents'
 
     extract_state = fields.Selection([
@@ -135,12 +135,10 @@ class ExtractMixin(models.AbstractModel):
         This is meant to be used for batch uploading where we don't want that an error rollbacks the whole transaction.
         """
         try:
-            with self.env.cr.savepoint():
-                self.with_company(self.company_id)._upload_to_extract()
+            self.with_company(self.company_id)._upload_to_extract()
         except Exception as e:
-            if not isinstance(e, (IntegrityError, OperationalError)):
-                self.extract_state = 'error_status'
-                self.extract_status = 'error_internal'
+            self.extract_state = 'error_status'
+            self.extract_status = 'error_internal'
             self.env['iap.account']._send_error_notification(
                 message=self._get_iap_bus_notification_error(),
             )
@@ -338,6 +336,7 @@ class ExtractMixin(models.AbstractModel):
         if result['status'] == 'success':
             self.extract_state = 'waiting_validation'
             ocr_results = result['results'][0]
+            self._on_ocr_results(ocr_results)
             self.with_company(self.company_id)._fill_document_with_results(ocr_results)
             # Set OdooBot as the author of the tracking message
             self._track_set_author(self.env.ref('base.partner_root'))
@@ -356,6 +355,10 @@ class ExtractMixin(models.AbstractModel):
     def _fill_document_with_results(self, ocr_results):
         """ Fill the document with the results of the OCR. This method is meant to be overridden """
         raise NotImplementedError()
+
+    def _on_ocr_results(self, ocr_results):
+        """ Function called when the OCR results are received. This method is meant to be extended """
+        return None
 
     def _get_cron_ocr(self, ocr_action):
         """ Return the cron used to validate the documents, based on the module name.

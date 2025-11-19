@@ -3,41 +3,16 @@
 # 	* hr_contract_salary
 # 
 # Translators:
-# Tiffany Chang, 2024
-# Mikko Virtanen <mikko.virtanen2013@gmail.com>, 2024
-# Mikko Närjänen <mikko.narjanen@web-veistamo.fi>, 2024
-# Kari Lindgren <karisatu@gmail.com>, 2024
-# Iipponen <erno@web-veistamo.fi>, 2024
-# Konsta Aavaranta, 2024
-# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
-# Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2024
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Sari Mäyrä <sari.mayra@sv-oy.fi>, 2024
-# Sanna Edelman <direct@generare.com>, 2024
-# Johanna Valkonen <miujohanna@gmail.com>, 2024
-# Teija Hölttä <teija.holtta@gmail.com>, 2024
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
-# Simo Suurla <simo@suurla.fi>, 2024
-# Jenni Heikkilä <jenni.heikkila@sv-oy.fi>, 2024
-# Topi Aura <topi@aurat.fi>, 2024
-# Timo Koukkari <ti.ko@netikka.fi>, 2024
-# Eino Mäkitalo <eino.makitalo@netitbe.fi>, 2024
-# Mikko Salmela <salmemik@gmail.com>, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Martin Trigaux, 2024
-# Pekko Tuomisto <pekko.tuomisto@web-veistamo.fi>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Miku Laitinen <miku.laitinen@gmail.com>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2025
+# Jessica Jakara, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:53+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:43+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -55,7 +30,8 @@ msgstr ""
 "brutto->nettopalkan laskennan."
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__signatures_count
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__signatures_count
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__signatures_count
 msgid "# Signatures"
 msgstr "# Allekirjoitukset"
 
@@ -77,6 +53,11 @@ msgid "(Lastname Firstname)"
 msgstr "(Sukunimi Etunimi)"
 
 #. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+msgid "/ month"
+msgstr "/ kuukausi"
+
+#. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info,placeholder:hr_contract_salary.hr_contract_salary_personal_info_identification_id
 msgid "00.00.00-000.00"
 msgstr "00.00.00-000.00"
@@ -89,17 +70,17 @@ msgid ""
 "    You can configure your salary package by clicking on the link below.<br/>\n"
 "    The link will expire on the <t t-out=\"ctx.get('validity_end')\"/>.\n"
 "    <div style=\"padding: 16px 0px 16px 0px;\">\n"
-"        <a t-attf-href=\"/salary_package/simulation/offer/{{ctx.get('offer_id')}}\" target=\"_blank\" style=\"background-color: #875a7b; text-decoration: none; color: #fff; padding: 8px 16px 8px 16px; border-radius: 5px;\">Configure your package</a>\n"
+"        <a t-attf-href=\"/salary_package/simulation/offer/{{ctx.get('offer_id')}}\" target=\"_blank\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; padding: 8px 16px 8px 16px; border-radius: 5px;\">Configure your package</a>\n"
 "    </div>\n"
 "</div>\n"
 "        "
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
-"   <h2>Onnittelut!</h2>\n"
+"    <h2>Onneksi olkoon!</h2>\n"
 "    Voit määrittää palkkapakettisi klikkaamalla alla olevaa linkkiä.<br/>\n"
 "    Linkki vanhenee <t t-out=\"ctx.get('validity_end')\"/>.\n"
 "    <div style=\"padding: 16px 0px 16px 0px;\">\n"
-"        <a t-attf-href=\"/salary_package/simulation/offer/{{ctx.get('offer_id')}}\" target=\"_blank\" style=\"background-color: #875a7b; text-decoration: none; color: #fff; padding: 8px 16px 8px 16px; border-radius: 5px;\">Määritä palkkapakettisi</a>\n"
+"        <a t-attf-href=\"/salary_package/simulation/offer/{{ctx.get('offer_id')}}\" target=\"_blank\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; padding: 8px 16px 8px 16px; border-radius: 5px;\">Määritä palkkapakettisi</a>\n"
 "    </div>\n"
 "</div>\n"
 "        "
@@ -112,17 +93,17 @@ msgid ""
 "    You can configure your salary package by clicking on the link below.<br/>\n"
 "    The link will expire on the <t t-out=\"ctx.get('validity_end')\"/>.\n"
 "    <div style=\"padding: 16px 0px 16px 0px;\">\n"
-"        <a t-attf-href=\"/salary_package/simulation/offer/{{ctx.get('offer_id')}}?token={{ctx.get('access_token')}}\" target=\"_blank\" style=\"background-color: #875a7b; text-decoration: none; color: #fff; padding: 8px 16px 8px 16px; border-radius: 5px;\">Configure your package</a>\n"
+"        <a t-attf-href=\"/salary_package/simulation/offer/{{ctx.get('offer_id')}}?token={{ctx.get('access_token')}}\" target=\"_blank\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; padding: 8px 16px 8px 16px; border-radius: 5px;\">Configure your package</a>\n"
 "    </div>\n"
 "</div>\n"
 "        "
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
-"   <h2>Onnittelut!</h2>\n"
+"    <h2>Onneksi olkoon!</h2>\n"
 "    Voit määrittää palkkapakettisi klikkaamalla alla olevaa linkkiä.<br/>\n"
 "    Linkki vanhenee <t t-out=\"ctx.get('validity_end')\"/>.\n"
 "    <div style=\"padding: 16px 0px 16px 0px;\">\n"
-"        <a t-attf-href=\"/salary_package/simulation/offer/{{ctx.get('offer_id')}}?token={{ctx.get('access_token')}}\" target=\"_blank\" style=\"background-color: #875a7b; text-decoration: none; color: #fff; padding: 8px 16px 8px 16px; border-radius: 5px;\">Määritä palkkapakettisi</a>\n"
+"        <a t-attf-href=\"/salary_package/simulation/offer/{{ctx.get('offer_id')}}?token={{ctx.get('access_token')}}\" target=\"_blank\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; padding: 8px 16px 8px 16px; border-radius: 5px;\">Määritä palkkapakettisi</a>\n"
 "    </div>\n"
 "</div>\n"
 "        "
@@ -143,19 +124,9 @@ msgid "<i class=\"fa fa-comment\"/> Feedback"
 msgstr "<i class=\"fa fa-comment\"/> Palaute"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
-msgid "<span class=\"ms-3\">/ month</span>"
-msgstr "<span class=\"ms-3\">/ kuukausi</span>"
-
-#. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
-msgid "<span class=\"ms-3\">/ year</span>"
-msgstr "<span class=\"ms-3\">/ vuosi</span>"
-
-#. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
-msgid "<span class=\"o_stat_text ml4\">Previous Contract</span>"
-msgstr "<span class=\"o_stat_text ml4\">Edellinen sopimus</span>"
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+msgid "<span class=\"mb-3 text-muted\">/ month</span>"
+msgstr "<span class=\"mb-3 text-muted\">/ kuukausi</span>"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_applicant_view_form
@@ -164,8 +135,7 @@ msgstr "<span class=\"o_stat_text\">Sopimukset</span>"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_applicant_view_form
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_candidate_view_form
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
 msgid "<span class=\"o_stat_text\">Offers</span>"
 msgstr "<span class=\"o_stat_text\">Tarjoukset</span>"
 
@@ -175,7 +145,7 @@ msgid "<span class=\"o_stat_text\">Requested Signature</span>"
 msgstr "<span class=\"o_stat_text\">Pyydetty allekirjoitus</span>"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
 msgid "<span class=\"o_stat_text\">Reviews</span>"
 msgstr "<span class=\"o_stat_text\">Arvostelut</span>"
 
@@ -200,33 +170,32 @@ msgid ""
 "                                </span>"
 msgstr ""
 "<span>\n"
-"                                    Tätä kenttää voi muokata vain palvelimen ylläpitäjä, ota yhteyttä häneen, jos kenttää on muutettava.\n"
+"                                    Tätä kenttää voi muokata vain palvelimen ylläpitäjä; ota yhteyttä häneen, jos kenttää on muutettava.\n"
 "                                </span>\n"
 "                                <span invisible=\"requested_documents_fields_string\">\n"
 "                                    Tällä hetkellä ei ole pyydettyjä kenttiä.\n"
 "                                </span>"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_form
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.res_config_settings_view_form
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.res_config_settings_view_form_hr
 msgid "<span> days</span>"
 msgstr "<span> päivää</span>"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
 msgid "<span>/ month</span>"
 msgstr "<span>/ kuukausi</span>"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
-msgid "<span>days / year</span>"
-msgstr "<span>päivää / vuosi</span>"
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+msgid "<span>/ year</span>"
+msgstr ""
 
 #. module: hr_contract_salary
 #: model:ir.model.constraint,message:hr_contract_salary.constraint_hr_contract_salary_benefit_required_fold_res_field_id
 msgid "A folded field is required"
-msgstr "Tarvitaan laskostettu kenttä"
+msgstr "Tarvitaan taitettuja kenttä"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -282,7 +251,7 @@ msgstr "Toiminnan luomisen tyyppi"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr "Toimenpiteen poikkeuksen tyyli"
+msgstr "Poikkeustoimenpiteen tyyli"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__activity_state
@@ -297,7 +266,7 @@ msgstr "Toimenpidetyyppi"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__activity_type_icon
 msgid "Activity Type Icon"
-msgstr "Toimenpiteen ikoni"
+msgstr "Toimenpiteen kuvake"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_benefit_view_form
@@ -326,6 +295,11 @@ msgid "Always Show Description"
 msgstr "Näytä aina kuvaus"
 
 #. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_form
+msgid "Always valid"
+msgstr "Aina voimassa"
+
+#. module: hr_contract_salary
 #. odoo-python
 #: code:addons/hr_contract_salary/models/hr_applicant.py:0
 msgid ""
@@ -334,15 +308,11 @@ msgstr "%(user)s on lähettänyt %(offer)s hakijalle (posti: %(email)s)"
 
 #. module: hr_contract_salary
 #. odoo-python
-#: code:addons/hr_contract_salary/models/hr_contract.py:0
+#: code:addons/hr_contract_salary/models/hr_employee.py:0
+#: code:addons/hr_contract_salary/models/hr_version.py:0
 msgid ""
 "An %(offer)s has been sent by %(user)s to the employee (mail: %(email)s)"
 msgstr "%(user)s on lähettänyt %(offer)s työntekijälle (posti: %(email)s)"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_employee_report__final_yearly_costs
-msgid "Annual Employee Budget"
-msgstr "Henkilöstön vuotuinen budjetti"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -352,13 +322,23 @@ msgstr "Vuotuiset työnantajan kustannukset"
 
 #. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_hr_applicant
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__applicant_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__applicant_id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__applicant_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__applicant_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__applicant_id
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_search
 msgid "Applicant"
 msgstr "Hakija"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__applicant_name
+msgid "Applicant's Name"
+msgstr "Hakijan nimi"
+
+#. module: hr_contract_salary
+#. odoo-python
+#: code:addons/hr_contract_salary/report/hr_contract_recruitment_report.py:0
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_search
 msgid "Applicants"
 msgstr "Hakijat"
@@ -375,9 +355,9 @@ msgid "Apply Now"
 msgstr "Hae nyt"
 
 #. module: hr_contract_salary
-#: model:ir.actions.server,name:hr_contract_salary.ir_cron_clean_redundant_salary_data_ir_actions_server
-msgid "Archive/Delete redundant generated salary data"
-msgstr "Arkistoi/poista tarpeettomat palkkatiedot"
+#: model:ir.model,website_form_label:hr_contract_salary.model_hr_applicant
+msgid "Apply for a Job"
+msgstr "Hae työpaikkaa"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_resume_view_search
@@ -455,9 +435,13 @@ msgid "Birthdate"
 msgstr "Syntymäpäivä"
 
 #. module: hr_contract_salary
-#: model:ir.model,name:hr_contract_salary.model_hr_candidate
-msgid "Candidate"
-msgstr "Ehdokas"
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__cancelled
+#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_recruitment_report__offer_state__cancelled
+#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_offer__state__cancelled
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_form
+msgid "Cancelled"
+msgstr "Peruttu"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_resume__category_id
@@ -483,7 +467,7 @@ msgstr "Valintaruutu"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info__child_ids
 msgid "Child"
-msgstr "Lapsi"
+msgstr "Osa"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_benefit__activity_creation
@@ -494,7 +478,7 @@ msgid ""
 msgstr ""
 "Valitse, milloin toiminto luodaan:\n"
 "- Toiminto luodaan heti, kun työntekijä on allekirjoittanut sopimuksen\n"
-"- Sopimus on allekirjoitettu: Henkilöstöhallinnosta vastaavat ovat allekirjoittaneet sopimuksen ja päättäneet prosessin."
+"- Sopimus on allekirjoitettu: Henkilöstöhallinnon vastaavat ovat allekirjoittaneet sopimuksen ja päättäneet prosessin."
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_city
@@ -528,24 +512,6 @@ msgid "Confirm"
 msgstr "Vahvista"
 
 #. module: hr_contract_salary
-#. odoo-python
-#: code:addons/hr_contract_salary/models/hr_contract_salary_offer.py:0
-msgid "Contact"
-msgstr "Kontakti"
-
-#. module: hr_contract_salary
-#. odoo-python
-#: code:addons/hr_contract_salary/models/hr_contract_salary_offer.py:0
-msgid "Contact Email"
-msgstr "Kontaktin sähköpostiosoite"
-
-#. module: hr_contract_salary
-#. odoo-python
-#: code:addons/hr_contract_salary/models/hr_contract_salary_offer.py:0
-msgid "Contract"
-msgstr "Sopimus"
-
-#. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_hr_contract_salary_benefit_type
 msgid "Contract Benefit Type"
 msgstr "Sopimuksen etuustyyppi"
@@ -567,6 +533,11 @@ msgid "Contract Related Field"
 msgstr "Sopimukseen liittyvä kenttä"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee_public__contract_reviews_count
+msgid "Contract Reviews Count"
+msgstr "Sopimuksen tarkistusten määrä"
+
+#. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_signatory__sign_role_id
 msgid "Contract Role"
 msgstr "Sopimuksen rooli"
@@ -582,20 +553,14 @@ msgid "Contract Start Date"
 msgstr "Sopimuksen alkamispäivä"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__default_contract_id
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_history__default_contract_id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__contract_template_id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_signatory__contract_template_id
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_job__default_contract_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__contract_template_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_job__contract_template_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__contract_template_id
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_search
 msgid "Contract Template"
 msgstr "Sopimusmalli"
-
-#. module: hr_contract_salary
-#: model:ir.actions.act_window,name:hr_contract_salary.action_hr_contract_templates
-#: model:ir.ui.menu,name:hr_contract_salary.hr_recruitment_menu_contract_templates
-msgid "Contract Templates"
-msgstr "Sopimusmallit"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -604,30 +569,23 @@ msgid "Contract Type"
 msgstr "Sopimustyyppi"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__contract_update_template_id
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__contract_update_template_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__contract_update_template_id
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_template_form_view
 msgid "Contract Update"
 msgstr "Sopimuksen päivitys"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_history__contract_update_template_id
-msgid "Contract Update Document Template"
-msgstr "Sopimuksen päivitysasiakirjan malli"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__contract_update_signatories_ids
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__contract_update_signatories_ids
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__contract_update_signatories_ids
 msgid "Contract Update Signatories"
 msgstr "Sopimuksen päivityksen allekirjoittajat"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_resume__value_type__contract
-msgid "Contract Value"
-msgstr "Sopimuksen arvo"
-
-#. module: hr_contract_salary
-#: model:ir.model,name:hr_contract_salary.model_hr_contract_employee_report
-msgid "Contract and Employee Analysis Report"
-msgstr "Sopimusten ja työntekijöiden analyysiraportti"
+#: model:ir.model,name:hr_contract_salary.model_hr_contract_recruitment_report
+msgid "Contract and Recruitment Analysis Report"
+msgstr "Sopimuksen ja rekrytoinnin analyysin raportti"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_benefit__manual_res_field_id
@@ -636,14 +594,9 @@ msgstr ""
 "Sopimuskenttä, jota käytetään etuuden arvon manuaaliseen koodaamiseen."
 
 #. module: hr_contract_salary
-#: model:ir.model,name:hr_contract_salary.model_hr_contract_history
-msgid "Contract history"
-msgstr "Sopimushistoria"
-
-#. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__activity_creation__countersigned
 msgid "Contract is countersigned"
-msgstr "Sopimus on vahvistettu"
+msgstr "Sopimus on allekirjoitettu molemminpuolisesti"
 
 #. module: hr_contract_salary
 #: model:ir.ui.menu,name:hr_contract_salary.menu_hr_recruitment_config_contract_templates
@@ -651,9 +604,9 @@ msgid "Contracts"
 msgstr "Sopimukset"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
 msgid "Contracts Reviews"
-msgstr "Sopimukset arvostelut"
+msgstr "Sopimusten arvostelut"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__cost_res_field_id
@@ -687,12 +640,18 @@ msgid "Country of Birth"
 msgstr "Syntymämaa"
 
 #. module: hr_contract_salary
+#: model_terms:ir.actions.act_window,help:hr_contract_salary.hr_contract_salary_offer_action
+msgid "Create a Offer"
+msgstr "Luo työtarjous"
+
+#. module: hr_contract_salary
 #: model_terms:ir.actions.act_window,help:hr_contract_salary.hr_contract_salary_offer_recruitment_action
 msgid "Create new offer"
 msgstr "Luo uusi tarjous"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__hash_token
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__hash_token
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__hash_token
 msgid "Created From Token"
 msgstr "Luotu pääsytunnisteesta"
 
@@ -738,7 +697,7 @@ msgstr "Valuutta"
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package
 msgid "Customize your salary"
-msgstr "Mukauta palkkaasi"
+msgstr "Räätälöi palkkasi"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__display_type__date
@@ -757,32 +716,25 @@ msgstr "Päivää"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_res_config_settings__access_token_validity
 msgid "Default Access Token Validity Duration"
-msgstr "Oletusarvoinen pääsytunnisteen voimassaoloaika"
+msgstr "Pääsytunnisteen oletusvoimassaoloaika"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_res_config_settings__employee_salary_simulator_link_validity
 msgid "Default Salary Configurator Link Validity Duration For Employees"
-msgstr "Oletuspalkkamäärityksen linkin voimassaolon kesto työntekijöille"
+msgstr "Oletuspalkkakonfiguraattorin linkin voimassaolon kesto työntekijöille"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_job__default_contract_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_job__contract_template_id
 msgid ""
 "Default contract used to generate an offer. If empty, benefits will be taken"
 " from current contract of the employee/nothing for an applicant."
 msgstr ""
 "Oletussopimus, jota käytetään tarjouksen luomiseen. Jos tämä kenttä on "
-"tyhjä, etuudet otetaan työntekijän nykyisestä sopimuksesta / hakijalle ei "
-"mitään."
+"tyhjä, etuudet siirretään työntekijän nykyisestä sopimuksesta / ei etuuksia."
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__default_contract_id
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_history__default_contract_id
-msgid "Default contract used when making an offer to an applicant."
-msgstr "Oletussopimus, jota käytetään tehtäessä tarjousta hakijalle."
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__sign_template_id
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_history__sign_template_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_employee__sign_template_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_version__sign_template_id
 msgid ""
 "Default document that the applicant will have to sign to accept a contract "
 "offer."
@@ -791,8 +743,8 @@ msgstr ""
 "sopimustarjouksen."
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__contract_update_template_id
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_history__contract_update_template_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_employee__contract_update_template_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_version__contract_update_template_id
 msgid ""
 "Default document that the employee will have to sign to update his contract."
 msgstr ""
@@ -847,7 +799,7 @@ msgid ""
 "                Why don't you try? They're listed"
 msgstr ""
 "Tiesitkö, että voit laatia tarjouksen kenelle tahansa hakijalle?<br>\n"
-"                Mikset kokeilisi? Ne on lueteltu"
+"                Mikset kokeilisi? Luettelo"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.refuse_offer_wizard_view_form
@@ -856,6 +808,8 @@ msgid "Discard"
 msgstr "Hylkää"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_applicant__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__display_name
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__display_name
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit_type__display_name
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit_value__display_name
@@ -865,8 +819,16 @@ msgstr "Hylkää"
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info_value__display_name
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_resume__display_name
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_resume_category__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_sign_document_wizard__display_name
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_signatory__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee_public__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_job__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_payroll_structure_type__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__display_name
 #: model:ir.model.fields,field_description:hr_contract_salary.field_refuse_offer_wizard__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary.field_sign_request__display_name
 msgid "Display Name"
 msgstr "Näyttönimi"
 
@@ -880,7 +842,7 @@ msgstr "Näyttötyyppi"
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info.value,name:hr_contract_salary.hr_contract_salary_personal_info_certificate_doctor
 msgid "Doctor"
-msgstr "Doctor"
+msgstr "Lääkäri"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__display_type__document
@@ -894,25 +856,14 @@ msgid ""
 "signatures related to the benefit. eg: A company car policy to approve if "
 "you choose a company car."
 msgstr ""
-"Tässä valitut asiakirjat pyydetään työntekijältä etuuteen liittyviä "
-"lisäkirjoituksia varten. esim. seuraavat: Työsuhdeautopolitiikka "
+"Tässä valittuja asiakirjoja pyydetään työntekijältä etuuteen liittyviä "
+"lisäallekirjoituksia varten. Esimerkiksi seuraavat: Työsuhdeautopolitiikka "
 "hyväksyttäväksi, jos valitset työsuhdeauton."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_sign_document_wizard__sign_template_ids
 msgid "Documents to sign"
 msgstr "Allekirjoitettavat asiakirjat"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_sign_document_wizard__sign_template_ids
-msgid ""
-"Documents to sign. Only documents with 1 or 2 different responsible are selectable.\n"
-"        Documents with 1 responsible will only have to be signed by the employee while documents with 2 different responsible will have to be signed by both the employee and the responsible.\n"
-"        "
-msgstr ""
-"Allekirjoitettavat asiakirjat. Vain asiakirjat, joissa on 1 tai 2 eri vastuuhenkilöä, ovat valittavissa.\n"
-"        Asiakirjat, joissa on yksi vastuuhenkilö, on vain työntekijän allekirjoitettava, kun taas asiakirjat, joissa on kaksi eri vastuuhenkilöä, on sekä työntekijän että vastuuhenkilön allekirjoitettava.\n"
-"        "
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_benefit_view_form
@@ -922,7 +873,7 @@ msgstr "Ei vaikuta nettopalkkaan"
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__display_type__dropdown
 msgid "Dropdown"
-msgstr "Alasveto"
+msgstr "Pudotus"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__display_type__dropdown-group
@@ -941,6 +892,7 @@ msgid "Email address to which to transfer the signature."
 msgstr "Sähköpostiosoite, johon allekirjoitus siirretään."
 
 #. module: hr_contract_salary
+#: model:ir.model,name:hr_contract_salary.model_hr_employee
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__employee_id
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__applies_on__employee
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_signatory__signatory__employee
@@ -949,8 +901,7 @@ msgid "Employee"
 msgstr "Työntekijä"
 
 #. module: hr_contract_salary
-#: model:ir.model,name:hr_contract_salary.model_hr_contract
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__employee_contract_id
+#: model:ir.model,name:hr_contract_salary.model_hr_version
 msgid "Employee Contract"
 msgstr "Työsopimus"
 
@@ -963,12 +914,17 @@ msgstr "Työntekijän työ"
 #. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 msgid "Employee Name"
-msgstr "Employee Name"
+msgstr "Työntekijän nimi"
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_image_1920
 msgid "Employee Photo"
 msgstr "Työntekijän kuva"
+
+#. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__employee_version_id
+msgid "Employee Version"
+msgstr "Työntekijän versio"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__activity_creation__running
@@ -988,7 +944,12 @@ msgstr "Työntekijät"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__final_yearly_costs
 msgid "Employer Budget"
-msgstr "Työnantajan talousarvio"
+msgstr "Työnantajan budjetti"
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+msgid "Employer Costs"
+msgstr ""
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1008,19 +969,23 @@ msgid "Existing file:"
 msgstr "Olemassa oleva tiedosto:"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__expired
+#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_recruitment_report__offer_state__expired
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_offer__state__expired
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_search
 msgid "Expired"
-msgstr "Vanhentunut"
+msgstr "Voimassaolo päättynyt"
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.benefit,name:hr_contract_salary.benefit_extra_time_off
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__holidays
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__holidays
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__holidays
 msgid "Extra Time Off"
-msgstr "Ylimääräinen vapaa-aika"
+msgstr "Ylimääräiset vapaat ja lomat"
 
 #. module: hr_contract_salary
-#: model:hr.contract.salary.personal.info.value,name:hr_contract_salary.hr_contract_salary_personal_info_gender_female
+#: model:hr.contract.salary.personal.info.value,name:hr_contract_salary.hr_contract_salary_personal_info_sex_female
 msgid "Female"
 msgstr "Nainen"
 
@@ -1044,7 +1009,7 @@ msgstr "Kiinteä arvo"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__fold_res_field_id
 msgid "Fold Condition"
-msgstr "Laskosta tila"
+msgstr "Taittoehto"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__fold_field
@@ -1054,12 +1019,12 @@ msgstr "Taita kentän nimi"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__fold_label
 msgid "Fold Label"
-msgstr "Taita etiketti"
+msgstr "Taita otsikko"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__folded
 msgid "Folded"
-msgstr "Laskostettu"
+msgstr "Taitettu"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__message_follower_ids
@@ -1074,29 +1039,28 @@ msgstr "Seuraajat (kumppanit)"
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_offer__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr "Font awesome -ikoni esim.. fa-tasks"
+msgstr "Font awesome -kuvake, esim. fa-tasks"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__fully_signed
+#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_recruitment_report__offer_state__full_signed
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_offer__state__full_signed
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
 msgid "Fully Signed"
-msgstr "Kaikkien hyväksymä"
-
-#. module: hr_contract_salary
-#: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_gender
-msgid "Gender"
-msgstr "Sukupuoli"
+msgstr "Kaikkien allekirjoittama"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_applicant_view_form
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
 msgid "Generate Offer"
 msgstr "Luo tarjous"
 
 #. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_benefit_view_search
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_search
 msgid "Group By"
-msgstr "Ryhmittely"
+msgstr "Ryhmittele"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_signatory__signatory__hr
@@ -1105,23 +1069,23 @@ msgstr "HR-vastaava"
 
 #. module: hr_contract_salary
 #. odoo-python
-#: code:addons/hr_contract_salary/models/hr_contract.py:0
+#: code:addons/hr_contract_salary/models/hr_version.py:0
 msgid ""
 "HR Responsible %s should be a user of Sign when New Contract Document "
 "Template is specified"
 msgstr ""
-"Henkilöstöasioista vastaavan %s on oltava Sign-käyttäjä, kun uusi "
-"sopimusdokumentin malli on määritetty"
+"HR-vastaavan %s on oltava Allekirjoita-sovelluksen käyttäjä, kun uusi "
+"sopimusasiakirjamalli on määritetty"
 
 #. module: hr_contract_salary
 #. odoo-python
-#: code:addons/hr_contract_salary/models/hr_contract.py:0
+#: code:addons/hr_contract_salary/models/hr_version.py:0
 msgid ""
 "HR Responsible %s should have a valid email address when New Contract "
 "Document Template is specified"
 msgstr ""
-"Henkilöstöasioista vastaavalla %s on oltava voimassa oleva sähköpostiosoite,"
-" kun Uusi sopimusasiakirjamalli on määritetty"
+"HR-vastaavalla %s on oltava voimassa oleva sähköpostiosoite, kun Uusi "
+"sopimusasiakirjamalli on määritetty"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__has_admin_access
@@ -1154,6 +1118,8 @@ msgid "Hide children personal info when checked."
 msgstr "Kun valittuna, piilota lasten henkilökohtaiset tiedot."
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_applicant__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit_type__id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit_value__id
@@ -1164,8 +1130,16 @@ msgstr "Kun valittuna, piilota lasten henkilökohtaiset tiedot."
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info_value__id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_resume__id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_resume_category__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_sign_document_wizard__id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_signatory__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee_public__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_job__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_payroll_structure_type__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__id
 #: model:ir.model.fields,field_description:hr_contract_salary.field_refuse_offer_wizard__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_sign_request__id
 msgid "ID"
 msgstr "ID"
 
@@ -1178,7 +1152,7 @@ msgstr "Kuvake"
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_offer__activity_exception_icon
 msgid "Icon to indicate an exception activity."
-msgstr "Kuvake joka kertoo poikkeustoiminnosta."
+msgstr "Kuvake, joka kertoo poikkeustoiminnosta."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_offer__message_needaction
@@ -1197,8 +1171,8 @@ msgid ""
 "If checked, the value of this information will be computed in all "
 "information set as Monthly Total"
 msgstr ""
-"Jos valintamerkki on valittuna, tämän tiedon arvo lasketaan kaikissa "
-"tietokokonaisuuksissa muodossa Kuukausittainen kokonaismäärä"
+"Jos valittu, tämän tiedon arvo lasketaan kaikkien tietojen kohdalla, jotka "
+"on asetettu \"Kuukausittainen kokonaismäärä\""
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_benefit__always_show_description
@@ -1206,19 +1180,20 @@ msgid "If unchecked, Description will only be shown when Benefit is selected"
 msgstr "Jos ei valittu, kuvaus näytetään vain, kun etuus on valittu"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__image_1920
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__image_1920
 msgid "Image"
 msgstr "Kuva"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__image_1920_filename
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__image_1920_filename
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__image_1920_filename
 msgid "Image 1920 Filename"
-msgstr "Kuva 1920 tiedostonimi"
+msgstr "Kuva 1920 -tiedostonimi"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_resume__impacts_monthly_total
 msgid "Impacts Monthly Total"
-msgstr "Vaikutukset kuukausittain yhteensä"
+msgstr "Vaikutukset kuukausittaista summaa"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info__impacts_net_salary
@@ -1226,7 +1201,10 @@ msgid "Impacts Net Salary"
 msgstr "Vaikutukset nettopalkkaan"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__in_progress
+#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_recruitment_report__offer_state__open
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_offer__state__open
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
 msgid "In Progress"
 msgstr "Käynnissä"
 
@@ -1276,9 +1254,16 @@ msgid "Is Required"
 msgstr "Vaaditaan"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__is_origin_contract_template
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__is_origin_contract_template
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__is_origin_contract_template
 msgid "Is origin contract a contract template?"
 msgstr "Onko alkuperäinen sopimus sopimusmalli?"
+
+#. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__job_id
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
+msgid "Job"
+msgstr "Työtehtävä"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1286,7 +1271,7 @@ msgstr "Onko alkuperäinen sopimus sopimusmalli?"
 #: model:ir.model,name:hr_contract_salary.model_hr_job
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_search
 msgid "Job Position"
-msgstr "Tehtävänimike"
+msgstr "Työtehtävä"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1299,6 +1284,11 @@ msgstr "Tehtävänimike"
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__dropdown_selection__lang
 msgid "Languages"
 msgstr "Kielet"
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
+msgid "Last 365 Days Offers"
+msgstr "Viimeisten 365 päivän tarjoukset"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__write_uid
@@ -1333,11 +1323,6 @@ msgid "Last Updated on"
 msgstr "Viimeksi päivitetty"
 
 #. module: hr_contract_salary
-#: model_terms:ir.actions.act_window,help:hr_contract_salary.action_hr_contract_templates
-msgid "Let's create one"
-msgstr "Luodaan sellainen"
-
-#. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit_value__display_type__line
 msgid "Line"
 msgstr "Rivi"
@@ -1353,9 +1338,14 @@ msgid "Main Panel"
 msgstr "Pääpaneeli"
 
 #. module: hr_contract_salary
-#: model:hr.contract.salary.personal.info.value,name:hr_contract_salary.hr_contract_salary_personal_info_gender_male
+#: model:hr.contract.salary.personal.info.value,name:hr_contract_salary.hr_contract_salary_personal_info_sex_male
 msgid "Male"
 msgstr "Mies"
+
+#. module: hr_contract_salary
+#: model_terms:ir.actions.act_window,help:hr_contract_salary.hr_contract_salary_offer_action
+msgid "Manage your Offers"
+msgstr "Hallinnoi tarjouksiasi"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__benefit_ids
@@ -1399,24 +1389,20 @@ msgid ""
 "Mismatch between res_field_id %(field)s and model %(model)s for info "
 "%(personal_info)s"
 msgstr ""
-"Epäsuhta res_field_id %(field)s ja model %(model)s välillä info "
+"Epäsopu res_field_id %(field)s ja mallin %(model)s välillä tietojen "
 "%(personal_info)s kohdalla"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit_type__periodicity__monthly
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_resume_category__periodicity__monthly
 msgid "Monthly"
-msgstr "Kuukausittain"
+msgstr "Kuukausittainen"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_history_view_form
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__monthly_yearly_costs
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__monthly_yearly_costs
 msgid "Monthly Cost"
 msgstr "Kuukausittaiset kustannukset"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__monthly_yearly_costs
-msgid "Monthly Cost (Real)"
-msgstr "Kuukausittaiset kustannukset (todelliset)"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1427,13 +1413,7 @@ msgstr "Kuukausittainen bruttopalkka"
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_resume__value_type__monthly_total
 msgid "Monthly Total"
-msgstr "Kuukausittainen yhteensä"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_history__reference_monthly_wage
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_history_view_form
-msgid "Monthly Wage"
-msgstr "Kuukausipalkka"
+msgstr "Kuukausittainen summa"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__my_activity_date_deadline
@@ -1459,7 +1439,8 @@ msgid "Name of the field related to this personal info."
 msgstr "Tähän henkilötietoon liittyvän kentän nimi."
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_template_form_view
 msgid "Name or email..."
 msgstr "Nimi tai sähköpostiosoite..."
 
@@ -1479,17 +1460,14 @@ msgid "Net calculation"
 msgstr "Nettolaskelma"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_template_form_view
 msgid "New Contract"
 msgstr "Uusi sopimus"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_history__sign_template_id
-msgid "New Contract Document Template"
-msgstr "Uusi sopimusasiakirjamalli"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__sign_template_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__sign_template_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__sign_template_id
 msgid "New Contract Template"
 msgstr "Uusi sopimusmalli"
 
@@ -1501,12 +1479,12 @@ msgstr "Seuraavan toimenpiteen kalenterimerkintä"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr "Seuraavan toimenpiteen eräpäivä"
+msgstr "Seuraavan toimenpiteen määräaika"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__activity_summary
 msgid "Next Activity Summary"
-msgstr "Seuraavan toimenpiteen kuvaus"
+msgstr "Seuraavan toimenpiteen yhteenveto"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__activity_type_id
@@ -1526,12 +1504,12 @@ msgid ""
 "No HR responsible defined on the job position. Please contact an "
 "administrator."
 msgstr ""
-"Työpaikalla ei ole määritelty HR-vastuuhenkilöä. Ota yhteyttä ylläpitäjään."
+"Työtehtävään ei ole määritelty HR-vastuuhenkilöä. Ota yhteyttä ylläpitäjään."
 
 #. module: hr_contract_salary
-#: model_terms:ir.actions.act_window,help:hr_contract_salary.action_hr_contract_templates
-msgid "No Template found"
-msgstr "Mallia ei löydy"
+#: model_terms:ir.actions.act_window,help:hr_contract_salary.contract_recruitment_report_action
+msgid "No data to display"
+msgstr "Ei näytettävää dataa"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1543,11 +1521,18 @@ msgstr "Ei valittua tarjousta"
 #. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 msgid ""
-"No signature template defined on the contract. Please contact the HR "
+"No signature template defined on the version. Please contact the HR "
 "responsible."
 msgstr ""
-"Sopimuksessa ei ole määritetty allekirjoitusmallia. Ota yhteyttä "
-"henkilöstöhallinnosta vastaavaan henkilöön."
+"Versiossa ei ole määritetty allekirjoituspohjaa. Ota yhteyttä "
+"henkilöstö­vastaavaan."
+
+#. module: hr_contract_salary
+#. odoo-python
+#: code:addons/hr_contract_salary/models/hr_version.py:0
+msgid "No templates are configured yet. Do you want to set up first one?"
+msgstr ""
+"Yhtään mallipohjaa ei ole vielä määritetty. Haluatko luoda ensimmäisen?"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit_value__selector_highlight__none
@@ -1558,13 +1543,13 @@ msgstr "Ei mitään"
 #. odoo-javascript
 #: code:addons/hr_contract_salary/static/src/js/hr_contract_salary.js:0
 msgid "Not a valid e-mail address"
-msgstr "Ei kelvollinen sähköpostiosoite"
+msgstr "Ei-kelvollinen sähköpostiosoite"
 
 #. module: hr_contract_salary
 #. odoo-javascript
 #: code:addons/hr_contract_salary/static/src/js/hr_contract_salary.js:0
 msgid "Not a valid input in integer field"
-msgstr "Kokonaislukukentän syöttö ei ole kelvollinen"
+msgstr "Kokonaislukukentän syöte ei ole kelvollinen"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__message_needaction_counter
@@ -1572,10 +1557,10 @@ msgid "Number of Actions"
 msgstr "Toimenpiteiden määrä"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__holidays
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_employee__holidays
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_version__holidays
 msgid "Number of days of paid leaves the employee gets per year."
-msgstr ""
-"Työntekijälle vuosittain myönnettävien palkallisten vapaapäivien määrä."
+msgstr "Työntekijälle vuosittain myönnettävien palkallisten vapaiden määrä."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__message_has_error_counter
@@ -1593,20 +1578,45 @@ msgid "Number of messages with delivery error"
 msgstr "Toimitusvirheellisten viestien määrä"
 
 #. module: hr_contract_salary
+#: model:ir.actions.act_window,name:hr_contract_salary.action_hr_offer_new
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__offer_id
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
+msgid "Offer"
+msgstr "Tarjous"
+
+#. module: hr_contract_salary
+#: model:ir.actions.act_window,name:hr_contract_salary.contract_recruitment_report_action
+#: model:ir.ui.menu,name:hr_contract_salary.menu_report_contract_recruitment_all
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_graph
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_list
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_pivot
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
+msgid "Offer Analysis"
+msgstr "Tarjousten analyysi"
+
+#. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__offer_create_date
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__offer_create_date
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
 msgid "Offer Create Date"
 msgstr "Tarjouksen luontipäivämäärä"
+
+#. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__offer_end_date
+msgid "Offer Expiration"
+msgstr "Tarjouksen vanheneminen"
 
 #. module: hr_contract_salary
 #: model:ir.actions.act_window,name:hr_contract_salary.hr_contract_salary_offer_refusal_reasons
 #: model:ir.ui.menu,name:hr_contract_salary.menu_hr_contract_salary_offer_refusal_reasons
 msgid "Offer Refusal Reasons"
-msgstr "Tarjouksen hylkäämisen syyt"
+msgstr "Tarjouksen hylkäämissyyt"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__offer_end_date
-msgid "Offer Validity Date"
-msgstr "Tarjouksen voimassaoloaika"
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__offer_state
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
+msgid "Offer State"
+msgstr "Tarjouksen tila"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -1632,13 +1642,23 @@ msgid "Offers"
 msgstr "Tarjoukset"
 
 #. module: hr_contract_salary
+#: model_terms:ir.actions.act_window,help:hr_contract_salary.hr_contract_salary_offer_action
+msgid ""
+"Offers are sent to employee with a predefined selection of data.\n"
+"                It allows to reflect on the propositon and discuss it.<br><br>"
+msgstr ""
+"Tarjoukset lähetetään työntekijälle ennalta määritellyillä tiedoilla.\n"
+"                Tämä mahdollistaa ehdotuksen tarkastelun ja siitä keskustelemisen.<br><br>"
+
+#. module: hr_contract_salary
 #. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 msgid "Oops"
 msgstr "Oho"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__origin_contract_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__origin_version_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__origin_version_id
 msgid "Origin Contract"
 msgstr "Alkuperäsopimus"
 
@@ -1649,20 +1669,28 @@ msgid "Original Link"
 msgstr "Alkuperäinen linkki"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__originated_offer_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__originated_offer_id
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__originated_offer_id
 msgid "Originated Offer"
 msgstr "Alkuperäinen tarjous"
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info.value,name:hr_contract_salary.hr_contract_salary_personal_info_certificate_other
-#: model:hr.contract.salary.personal.info.value,name:hr_contract_salary.hr_contract_salary_personal_info_gender_other
+#: model:hr.contract.salary.personal.info.value,name:hr_contract_salary.hr_contract_salary_personal_info_sex_other
 msgid "Other"
 msgstr "Muu"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_template_form_view
 msgid "PDF Template"
-msgstr "PDF malli"
+msgstr "PDF-malli"
+
+#. module: hr_contract_salary
+#. odoo-python
+#: code:addons/hr_contract_salary/controllers/main.py:0
+msgid "Package Simulation"
+msgstr "Palkkapaketin simulaatio"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info__parent_id
@@ -1670,7 +1698,10 @@ msgid "Parent"
 msgstr "Ylätaso"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__partially_signed
+#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_recruitment_report__offer_state__half_signed
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_offer__state__half_signed
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
 msgid "Partially Signed"
 msgstr "Osittain allekirjoitettu"
 
@@ -1678,11 +1709,6 @@ msgstr "Osittain allekirjoitettu"
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_signatory__partner_id
 msgid "Partner"
 msgstr "Kumppani"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__applicant_name
-msgid "Partner Name"
-msgstr "Kumppanin nimi"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__uom__percent
@@ -1700,11 +1726,6 @@ msgstr "Jaksotus"
 #: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_emergency_contact
 msgid "Person to call"
 msgstr "Henkilö, jolle soitetaan"
-
-#. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
-msgid "Personal Documents"
-msgstr "Henkilökohtaiset asiakirjat"
 
 #. module: hr_contract_salary
 #: model:ir.actions.act_window,name:hr_contract_salary.hr_contract_salary_personal_info_action
@@ -1732,7 +1753,7 @@ msgstr "Puhelinnumero"
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_resume__category_id
 msgid "Pick a category to display this information"
-msgstr "Valitse luokka, jossa nämä tiedot näytetään"
+msgstr "Valitse kategoria, jossa nämä tiedot näytetään"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_resume__value_type
@@ -1742,14 +1763,14 @@ msgid ""
 "Contract value: Get the value from a field on the contract record\n"
 "Payslip value: Get the value from a field on the payslip record\n"
 "Sum of Benefits value: You can pick in all benefits and compute a sum of them\n"
-"Monthly Total: The information will be a total of all the informations in the category Monthly Benefits"
+"Monthly Total: The information will be a total of all the information in the category Monthly Benefits"
 msgstr ""
 "Valitse, miten tiedon arvo lasketaan:\n"
-"Kiinteä arvo: Aseta määritetty arvo staattiseksi kaikille linkeille\n"
-"Sopimusarvo: Hae arvo sopimustietueen kentästä\n"
-"Palkkalaskelman arvo: Hae arvo palkkalaskelmatietueen kentästä\n"
-"Etuuksien summa-arvo: Voit valita kaikki etuudet ja laskea niiden summan\n"
-"Kuukausietuudet yhteensä: Tieto on kaikkien kuukausietuudet-luokan tietojen summa"
+"Kiinteä arvo: Aseta määritetty arvo muuttumattomaksi kaikille linkeille\n"
+"Sopimusarvo: Hae arvo sopimuskirjauksessa olevasta kentästä\n"
+"Palkkalaskelman arvo: Hae arvo palkkalaskelmassa olevasta kirjauksen kentästä\n"
+"Etuuksien arvon summa: Voit valita kaikki etuudet ja laskea niiden summan\n"
+"Yhteensä kuukaudessa: Tieto on kaikkien kuukausietuudeksien kategoriassa olevien tietojen summa"
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_place_of_birth
@@ -1759,17 +1780,12 @@ msgstr "Syntymäpaikka"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info__placeholder
 msgid "Placeholder"
-msgstr "Paikanpitäjä"
+msgstr "Paikkamerkki"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_personal_info__position
 msgid "Position"
 msgstr "Asema"
-
-#. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
-msgid "Previous Contract"
-msgstr "Edellinen sopimus"
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_private_license_plate
@@ -1782,13 +1798,19 @@ msgstr "Yksityinen rekisterikilpi"
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_applicant__proposed_contracts
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_applicant_view_form
 msgid "Proposed Contracts"
-msgstr "Sopimusehdotukset"
+msgstr "Ehdotetut sopimukset"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_applicant__proposed_contracts_count
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__contract_reviews_count
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__contract_reviews_count
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__contract_reviews_count
 msgid "Proposed Contracts Count"
 msgstr "Ehdotettujen sopimusten määrä"
+
+#. module: hr_contract_salary
+#: model:ir.model,name:hr_contract_salary.model_hr_employee_public
+msgid "Public Employee"
+msgstr "Julkinen työntekijä"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__display_type__radio
@@ -1846,15 +1868,18 @@ msgstr "Hylkää tarjous"
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_refusal_reasons_view_tree
 msgid "Refuse Reason"
-msgstr "Kieltäytyminen syy"
+msgstr "Hylkäyssyy"
 
 #. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_refuse_offer_wizard
 msgid "Refuse an Offer"
-msgstr "Kieltäydy tarjouksesta"
+msgstr "Hylkää tarjous"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_recruitment_report__refused
+#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_recruitment_report__offer_state__refused
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_offer__state__refused
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.contract_recruitment_report_view_search
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_form
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_search
 msgid "Refused"
@@ -1878,18 +1903,12 @@ msgstr "Pyydetyt asiakirjat"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__requested_documents_field_ids
 msgid "Requested Documents (IDs)"
-msgstr "Pyydetyt asiakirjat (id)"
+msgstr "Pyydetyt asiakirjat (ID:t)"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__requested_documents
 msgid "Requested Documents Fields"
 msgstr "Pyydetyt asiakirjojen kentät"
-
-#. module: hr_contract_salary
-#. odoo-python
-#: code:addons/hr_contract_salary/models/hr_contract_salary_offer.py:0
-msgid "Requested Signature"
-msgstr "Pyydetty allekirjoitus"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__sign_request_ids
@@ -1916,7 +1935,7 @@ msgstr "Jatka"
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_next_step_button
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_sidebar
 msgid "Review Contract &amp; Sign"
-msgstr "Tarkista sopimus ja allekirjoita"
+msgstr "Tarkista sopimus &amp; Allekirjoita"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__message_has_sms_error
@@ -1926,18 +1945,18 @@ msgstr "Tekstiviestin toimitusvirhe"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_payroll_structure_type__salary_benefits_ids
 msgid "Salary Benefits"
-msgstr "Palkan etuudet"
+msgstr "Palkkaetuudet"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_form
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.res_config_settings_view_form_hr
 msgid "Salary Configurator"
-msgstr "Palkkamääritysohjelma"
+msgstr "Palkkakonfiguraattori"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_benefit_view_form
 msgid "Salary Configurator Display"
-msgstr "Palkanmuodostajan näyttö"
+msgstr "Palkkakonfiguraattorin näyttö"
 
 #. module: hr_contract_salary
 #: model:ir.actions.server,name:hr_contract_salary.ir_cron_update_offer_state_ir_actions_server
@@ -1946,7 +1965,8 @@ msgstr "Palkkakonfiguraattori: Päivitä tarjouksen tila"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_applicant__salary_offer_ids
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__salary_offer_ids
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__salary_offer_ids
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__salary_offer_ids
 msgid "Salary Offer"
 msgstr "Palkkatarjous"
 
@@ -1957,8 +1977,9 @@ msgstr "Palkkatarjouksen hylkäämisen syyt"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_applicant__salary_offers_count
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_candidate__salary_offers_count
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__salary_offers_count
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__salary_offers_count
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee_public__salary_offers_count
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__salary_offers_count
 msgid "Salary Offers Count"
 msgstr "Palkkatarjousten määrä"
 
@@ -2014,7 +2035,7 @@ msgstr "Palkkapaketti ansioluettelo"
 #. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_hr_contract_salary_resume_category
 msgid "Salary Package Resume Category"
-msgstr "Palkkapaketti ansioluokka"
+msgstr "Palkkapaketti ansioluettelon kategoria"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -2043,7 +2064,7 @@ msgstr "Etsi tarjouksia"
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit_value__display_type__section
 msgid "Section"
-msgstr "Osa"
+msgstr "Osio"
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info,placeholder:hr_contract_salary.hr_contract_salary_personal_info_country
@@ -2058,17 +2079,47 @@ msgid "Select a State"
 msgstr "Valitse osavaltio"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_employee__contract_template_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_version__contract_template_id
+msgid ""
+"Select a contract template to auto-fill the contract form with predefined "
+"values. You can still edit the fields as needed after applying the template."
+msgstr ""
+"Valitse sopimusmalli täyttääksesi sopimuslomakkeen automaattisesti ennalta "
+"määritellyillä arvoilla. Voit silti muokata kenttiä tarpeen mukaan mallin "
+"käyttämisen jälkeen."
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_form
+msgid "Select an applicant..."
+msgstr "Valitse hakija..."
+
+#. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_form
+msgid "Select an employee..."
+msgstr "Valitse työntekijä..."
+
+#. module: hr_contract_salary
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_sign_document_wizard__sign_template_ids
+msgid ""
+"Select only documents with either 1 or 2 different signatories.\n"
+"        Documents with 1 signatory require only the employee's signature, while those with 2 signatories require signatures from both the employee and the HR responsible.\n"
+"        "
+msgstr ""
+"Valitse vain asikirja, jolla on 1 tai 2 eri allekirjoittajaa.\n"
+"      Asiakirjoihin, joilla on yksi allekirjoittaja, tarvitaan vain työntekijän allekirjoitus, kun taas niihin, joilla on kaksi allekirjoittajaa, tarvitaan sekä työntekijän että HR-henkilön allekirjoitukset."
+
+#. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_benefit__benefit_ids
 msgid ""
 "Select other Benefits that need to be selected to make this Benefit "
 "available"
-msgstr ""
-"Valitse muut etuudet, jotka on valittava, jotta tämä etuus on käytettävissä"
+msgstr "Valitse muut vaadittavat etuudet, jotta tämä etuus on käytettävissä"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_benefit__cost_res_field_id
 msgid "Select the contract's field to consider in salary computation"
-msgstr "Valitse sopimuksen kenttä, joka otetaan huomioon palkanlaskennassa"
+msgstr "Valitse sopimuksen kenttä, joka huomioidaan palkanlaskennassa"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_benefit__res_field_id
@@ -2108,8 +2159,7 @@ msgstr "Lähetä kopio"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_applicant_view_form
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_candidate_view_form
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
 msgid "Sent Offers"
 msgstr "Lähetetyt tarjoukset"
 
@@ -2139,6 +2189,11 @@ msgid "Sequence"
 msgstr "Järjestys"
 
 #. module: hr_contract_salary
+#: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_sex
+msgid "Sex"
+msgstr "Sukupuoli"
+
+#. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_personal_information
 msgid "Show <i class=\"oi oi-chevron-down\"/>"
 msgstr "Näytä <i class=\"oi oi-chevron-down\"/>"
@@ -2166,12 +2221,13 @@ msgstr "Allekirjoituksen luontityyppi"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_signatory__order
 msgid "Sign Order"
-msgstr "Allekirjoituspyyntö"
+msgstr "Allekirjoitusjärjestys"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__sign_template_signatories_ids
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__sign_template_signatories_ids
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__sign_template_signatories_ids
 msgid "Sign Template Signatories"
-msgstr "Sign-mallin allekirjoittajat"
+msgstr "Allekirjoita-mallin allekirjoittajat"
 
 #. module: hr_contract_salary
 #: model:ir.model,name:hr_contract_salary.model_hr_contract_sign_document_wizard
@@ -2179,7 +2235,8 @@ msgid "Sign document in contract"
 msgstr "Allekirjoita sopimusasiakirja"
 
 #. module: hr_contract_salary
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_view_employee_form
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_template_form_view
 msgid "Signatories"
 msgstr "Allekirjoittajat"
 
@@ -2187,8 +2244,13 @@ msgstr "Allekirjoittajat"
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_signatory__signatory
 msgid "Signatory"
 msgstr ""
-"<small>Nimi: Allekirjoittaja on ilmoittanut henkilöllisyytensä itsme®:n "
-"kautta</small>"
+"<small>Nimi: Allekirjoittaja on ilmoittanut henkilöllisyytensä "
+"itsme®-palvelun kautta</small>"
+
+#. module: hr_contract_salary
+#: model:ir.model,name:hr_contract_salary.model_sign_request
+msgid "Signature Request"
+msgstr "Allekirjoituspyyntö"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -2214,7 +2276,7 @@ msgstr "Liukusäädin Min"
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__slider_step
 msgid "Slider Step"
-msgstr "Liukusäätimen askel"
+msgstr "Liukusäätimen vaihe"
 
 #. module: hr_contract_salary
 #. odoo-javascript
@@ -2225,7 +2287,7 @@ msgstr "Joitakin pakollisia kenttiä ei ole täytetty"
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_signatory__signatory__partner
 msgid "Specific Partner"
-msgstr "Erityinen kumppani"
+msgstr "Erityiskumppani"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_personal_info__dropdown_selection__specific
@@ -2255,7 +2317,7 @@ msgstr ""
 "Tila aktiviteetin perusteella\n"
 "Myöhässä: Eräpäivä on menneisyydessä\n"
 "Tänään: Eräpäivä on tänään\n"
-"Suunniteltu: Tulevaisuudessa."
+"Suunniteltu: Toimenpiteitä tulevaisuudessa."
 
 #. module: hr_contract_salary
 #: model:hr.contract.salary.personal.info,name:hr_contract_salary.hr_contract_salary_personal_info_street
@@ -2279,12 +2341,18 @@ msgid "Sum of Benefits Values"
 msgstr "Etuuksien arvojen summa"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__template_warning
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__template_warning
+msgid "Template Warning"
+msgstr "Mallivaroitus"
+
+#. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__sign_template_id
 msgid "Template to Sign"
 msgstr "Allekirjoitettava malli"
 
 #. module: hr_contract_salary
-#: model:ir.ui.menu,name:hr_contract_salary.hr_menu_contract_templates
+#: model:ir.ui.menu,name:hr_contract_salary.hr_recruitment_menu_contract_templates
 msgid "Templates"
 msgstr "Mallit"
 
@@ -2295,7 +2363,8 @@ msgid "Text"
 msgstr "Teksti"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__origin_contract_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_employee__origin_version_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_version__origin_version_id
 msgid "The contract from which this contract has been duplicated."
 msgstr "Sopimus, josta tämä sopimus on kopioitu."
 
@@ -2318,8 +2387,7 @@ msgstr ""
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_benefit__fold_res_field_id
 msgid ""
 "The field here needs to be set for this benefit to be folded by default."
-msgstr ""
-"Kenttä on määritettävä, jotta tämä etu voidaan taittaa oletusarvoisesti."
+msgstr "Kenttä on määritettävä, jotta etu voidaan taittaa oletuksena."
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -2330,10 +2398,18 @@ msgstr ""
 "Liukusäätimen pienimmän arvon tulisi olla pienempi kuin suurimman arvon."
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__signatures_count
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_employee__signatures_count
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_version__signatures_count
 msgid "The number of signatures on the pdf contract with the most signatures."
 msgstr ""
-"Eniten allekirjoituksia saaneen pdf-sopimuksen allekirjoitusten määrä."
+"Eniten allekirjoituksia saaneen PDF-sopimuksen allekirjoitusten määrä."
+
+#. module: hr_contract_salary
+#. odoo-python
+#: code:addons/hr_contract_salary/models/sign_request.py:0
+msgid ""
+"The offer has been cancelled due to the signature request cancellation."
+msgstr "Tarjous on peruttu allekirjoituspyynnön peruuttamisen vuoksi."
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -2343,7 +2419,8 @@ msgid ""
 msgstr "Tarjous on merkitty hylätyksi, kun linkitetty hakija on hylätty."
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__originated_offer_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_employee__originated_offer_id
+#: model:ir.model.fields,help:hr_contract_salary.field_hr_version__originated_offer_id
 msgid "The original offer"
 msgstr "Alkuperäinen tarjous"
 
@@ -2384,6 +2461,15 @@ msgstr ""
 "Tämä linkki on virheellinen. Ota yhteyttä HR-vastaavaan saadaksesi uuden..."
 
 #. module: hr_contract_salary
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_salary_offer_view_form
+msgid ""
+"This offer has been fully signed and can no longer be edited. However, you "
+"can still make changes to the Signed Contract if needed."
+msgstr ""
+"Tämä tarjous on allekirjoitettu kokonaan, eikä sitä voi enää muokata. Voit "
+"kuitenkin yhä tehdä muutoksia allekirjoitettuun sopimukseen tarvittaessa."
+
+#. module: hr_contract_salary
 #. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 msgid "This offer has been updated, please request an updated link.."
@@ -2406,25 +2492,9 @@ msgid "Token"
 msgstr "Pääsytunniste"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__monthly_yearly_costs
-msgid "Total real monthly cost of the employee for the employer."
-msgstr ""
-"Työntekijän todelliset kuukausittaiset kokonaiskustannukset työnantajalle."
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__final_yearly_costs
-msgid "Total real yearly cost of the employee for the employer."
-msgstr "Työntekijän todelliset vuotuiset kokonaiskustannukset työnantajalle."
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_history__reference_yearly_cost
-msgid "Total yearly cost of the employee for the employer."
-msgstr "Työntekijän vuotuiset kokonaiskustannukset työnantajalle."
-
-#. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_offer__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr "Poikkeusaktiviteetin tyyppi tietueella."
+msgstr "Kirjattu poikkeustoimenpiteen tyyppi."
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_benefit__uom
@@ -2467,57 +2537,54 @@ msgid "Value Type"
 msgstr "Arvon tyyppi"
 
 #. module: hr_contract_salary
+#: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_resume__value_type__version
+msgid "Version Value"
+msgstr "Version arvo"
+
+#. module: hr_contract_salary
 #. odoo-python
 #: code:addons/hr_contract_salary/controllers/main.py:0
 msgid "Wage"
 msgstr "Palkka"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__wage_on_signature
-msgid "Wage on Payroll"
-msgstr "Palkkalistoilla oleva palkka"
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__wage_on_signature
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__wage_on_signature
+msgid "Wage on Signature"
+msgstr "Palkka allekirjoituksen yhteydessä"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract__wage_on_signature
-msgid "Wage on contract signature"
-msgstr "Palkka sopimuksen allekirjoittamisen yhteydessä"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_history__reference_monthly_wage
-msgid "Wage update with holidays retenues"
-msgstr "Palkkojen päivitys lomakorvauksineen"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__wage_with_holidays
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__wage_with_holidays
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__wage_with_holidays
 msgid "Wage with Holidays"
 msgstr "Palkka lomineen"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_salary_offer__website_message_ids
 msgid "Website Messages"
-msgstr "Verkkosivun ilmoitukset"
+msgstr "Verkkosivun viestit"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_offer__website_message_ids
 msgid "Website communication history"
-msgstr "Verkkosivun viestihistoria"
+msgstr "Verkkosivun viestintähistoria"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__activity_creation_type__onchange
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__sign_frenquency__always
 msgid "When the benefit is modified"
-msgstr "Kun etuutta muutetaan"
+msgstr "Kun etuutta muutetaan,"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__activity_creation_type__always
 #: model:ir.model.fields.selection,name:hr_contract_salary.selection__hr_contract_salary_benefit__sign_frenquency__onchange
 msgid "When the benefit is set"
-msgstr "Kun etuus on asetettu"
+msgstr "Kun etuus on asetettu,"
 
 #. module: hr_contract_salary
 #: model:ir.model.fields,help:hr_contract_salary.field_hr_contract_salary_benefit__show_name
 msgid "Whether the name should be displayed in the Salary Configurator"
-msgstr "Näytetäänkö nimi palkkalaskurissa"
+msgstr "Näytetäänkö nimi palkkakonfiguraattorissa"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_sidebar
@@ -2531,15 +2598,10 @@ msgid "Yearly"
 msgstr "Vuosittainen"
 
 #. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract_history__reference_yearly_cost
-#: model_terms:ir.ui.view,arch_db:hr_contract_salary.hr_contract_history_view_form
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_employee__final_yearly_costs
+#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_version__final_yearly_costs
 msgid "Yearly Cost"
 msgstr "Vuosittaiset kustannukset"
-
-#. module: hr_contract_salary
-#: model:ir.model.fields,field_description:hr_contract_salary.field_hr_contract__final_yearly_costs
-msgid "Yearly Cost (Real)"
-msgstr "Vuosittaiset kustannukset (todelliset)"
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -2549,9 +2611,23 @@ msgstr "Kyllä"
 
 #. module: hr_contract_salary
 #. odoo-python
-#: code:addons/hr_contract_salary/models/hr_contract.py:0
-msgid "You cannot have multiple person responsible for the same role"
-msgstr "Samasta roolista ei voi vastata useampi henkilö"
+#: code:addons/hr_contract_salary/models/hr_version.py:0
+msgid ""
+"You cannot have multiple person responsible for the same role on contract "
+"signature template."
+msgstr ""
+"Et voi määrittää useita vastuuhenkilöitä samaan rooliin sopimuksen "
+"allekirjoituspohjassa."
+
+#. module: hr_contract_salary
+#. odoo-python
+#: code:addons/hr_contract_salary/models/hr_version.py:0
+msgid ""
+"You cannot have multiple person responsible for the same role on contract "
+"update signature template."
+msgstr ""
+"Et voi määrittää useita vastuuhenkilöitä samaan rooliin sopimuksen "
+"päivityksen allekirjoituspohjassa."
 
 #. module: hr_contract_salary
 #. odoo-python
@@ -2561,8 +2637,7 @@ msgid ""
 "Configuration / Contract Templates to define a contract template"
 msgstr ""
 "Sinun on määriteltävä tarjouksissa käytettävät sopimusmallit. Mene kohtaan "
-"Configuration / Contract Templates (Määritykset / Sopimusmallit) "
-"määritelläksesi sopimusmallin"
+"Kokoonpano / Sopimusmallit määritelläksesi sopimusmallin"
 
 #. module: hr_contract_salary
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary.salary_package_personal_information
@@ -2598,7 +2673,7 @@ msgstr "esim. lounassetelit"
 #. module: hr_contract_salary
 #: model_terms:ir.actions.act_window,help:hr_contract_salary.hr_contract_salary_offer_recruitment_action
 msgid "here"
-msgstr "tänne"
+msgstr "täällä"
 
 #. module: hr_contract_salary
 #: model:mail.template,subject:hr_contract_salary.mail_template_send_offer_applicant
@@ -2612,8 +2687,8 @@ msgstr ""
 #. module: hr_contract_salary
 #: model:mail.template,subject:hr_contract_salary.mail_template_send_offer
 msgid ""
-"{{ object.company_id.name }}: Job Offer - {{ "
-"object.employee_contract_id.name }}"
+"{{ object.company_id.name }}: Job Offer - {{ object.employee_version_id.name"
+" }}"
 msgstr ""
 "{{ object.company_id.name }}: Työtarjous - {{ "
-"object.employee_contract_id.name }}"
+"object.employee_version_id.name }}"

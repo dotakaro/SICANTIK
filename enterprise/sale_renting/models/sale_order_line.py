@@ -1,15 +1,22 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from pytz import timezone, UTC
+from pytz import UTC, timezone
 
 from odoo import _, api, fields, models
 from odoo.fields import Command
-from odoo.tools import format_datetime, format_time
+from odoo.tools import (
+    babel_locale_parse,
+    format_datetime,
+    format_time,
+    get_lang,
+    posix_to_ldml,
+)
 
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
+
+    order_is_rental = fields.Boolean(related='order_id.is_rental_order', depends=['order_id'])
 
     # Stored because a product could have been rent_ok when added to the SO but then updated
     is_rental = fields.Boolean(compute='_compute_is_rental', store=True, precompute=True, readonly=False, copy=True)
@@ -21,6 +28,10 @@ class SaleOrderLine(models.Model):
         string="Pickup date - padding time", compute='_compute_reservation_begin', store=True)
 
     is_product_rentable = fields.Boolean(related='product_id.rent_ok', depends=['product_id'])
+
+    def _domain_product_id(self):
+        super_part = ','.join(str(leaf) for leaf in super()._domain_product_id())
+        return f"['|', ('rent_ok', '=', order_is_rental), {super_part}]"
 
     @api.depends('order_id.rental_start_date')
     def _compute_reservation_begin(self):
@@ -70,11 +81,10 @@ class SaleOrderLine(models.Model):
         super(SaleOrderLine, self - rental_lines)._compute_pricelist_item_id()
         rental_lines.pricelist_item_id = False
 
-    _sql_constraints = [
-        ('rental_stock_coherence',
-            "CHECK(NOT is_rental OR qty_returned <= qty_delivered)",
-            "You cannot return more than what has been picked up."),
-    ]
+    _rental_stock_coherence = models.Constraint(
+        'CHECK(NOT is_rental OR qty_returned <= qty_delivered)',
+        "You cannot return more than what has been picked up.",
+    )
 
     def _get_sale_order_line_multiline_description_sale(self):
         """Add Rental information to the SaleOrderLine name."""
@@ -89,14 +99,15 @@ class SaleOrderLine(models.Model):
         start_date = self.order_id.rental_start_date
         return_date = self.order_id.rental_return_date
         env = self.with_context(use_babel=True).env
+
         if start_date and return_date\
            and start_date.replace(tzinfo=UTC).astimezone(timezone(tz)).date()\
                == return_date.replace(tzinfo=UTC).astimezone(timezone(tz)).date():
             # If return day is the same as pickup day, don't display return_date Y/M/D in description.
-            return_date_part = format_time(env, return_date, tz=tz, time_format=False)
+            return_date_part = format_time(env, return_date, tz=tz, time_format='short')
         else:
-            return_date_part = format_datetime(env, return_date, tz=tz, dt_format=False)
-        start_date_part = format_datetime(env, start_date, tz=tz, dt_format=False)
+            return_date_part = format_datetime(env, return_date, tz=tz, dt_format='short')
+        start_date_part = format_datetime(env, start_date, tz=tz, dt_format='short')
         return _(
             "\n%(from_date)s to %(to_date)s", from_date=start_date_part, to_date=return_date_part
         )
@@ -156,7 +167,7 @@ class SaleOrderLine(models.Model):
         :param float delay_price: Price of the delay line
 
         :return: sale.order.line creation values
-        :rtype dict:
+        :rtype: dict
         """
         delay_line_description = self._get_delay_line_description()
         return {
@@ -195,7 +206,7 @@ class SaleOrderLine(models.Model):
                 self.product_id.with_context(**self._get_product_price_context()),
                 self.product_uom_qty or 1.0,
                 currency=self.currency_id,
-                uom=self.product_uom,
+                uom=self.product_uom_id,
                 date=self.order_id.date_order or fields.Date.today(),
                 start_date=self.start_date,
                 end_date=self.return_date,

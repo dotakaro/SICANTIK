@@ -16,7 +16,6 @@ class ResPartner(models.Model):
     forms_281_50 = fields.One2many(
         comodel_name='l10n_be.form.281.50',
         string='281.50 forms',
-        check_company=True,
         inverse_name='partner_id',
         copy=False,
         help="List of 281.50 forms for this partner"
@@ -26,7 +25,7 @@ class ResPartner(models.Model):
         tag_281_50 = self.env.ref('l10n_be_reports.res_partner_tag_281_50', raise_if_not_found=False)
         if (
             tag_281_50
-            and any(cmd[0] == Command.UNLINK and cmd[1] == tag_281_50.id for cmd in vals.get('category_id', []))
+            and any(cmd[0] == Command.UNLINK and cmd[1] == tag_281_50.id for cmd in vals.get('category_id') or [])
             and tag_281_50 in self.category_id  # only raise when removing the tag, adding is allowed for everyone
             and not self.env.user.has_group('account.group_account_user')
         ):

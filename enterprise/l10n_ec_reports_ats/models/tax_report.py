@@ -19,7 +19,7 @@ ATS_SALE_DOCUMENT_TYPE = {
 }
 
 
-class L10nECTaxReportATSCustomHandler(models.AbstractModel):
+class AccountTaxReportHandler(models.AbstractModel):
     _inherit = 'account.tax.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -294,13 +294,15 @@ class L10nECTaxReportATSCustomHandler(models.AbstractModel):
                     withhold_taxes_without_ats_code |= income_withhold_base_lines.tax_ids.filtered(
                         lambda t: not t.l10n_ec_code_ats or len(t.l10n_ec_code_ats) < 3
                     )
-
                     air_vals = [
                         {
                             'codRetAir': tax.l10n_ec_code_ats or 'NA',
                             'porcentajeAir': abs(tax.amount),
                             'baseImpAir': abs(sum(base_line.balance for base_line in base_lines)),
-                            'valRetAir': abs(withhold_lines.filtered(lambda l: l.tax_line_id == tax).balance or 0.0)
+                            'valRetAir': abs(withhold_lines.filtered(lambda l: l.tax_line_id == tax).balance or 0.0),
+                            'fechaPagoDiv': base_lines[0].move_id.l10n_ec_dividend_payment_date.strftime('%d/%m/%Y') if base_lines[0].move_id.l10n_ec_is_dividend_withhold else None,
+                            'imRentaSoc': (base_lines[0].move_id.l10n_ec_dividend_income_tax or 0.0) if base_lines[0].move_id.l10n_ec_is_dividend_withhold else None,
+                            'anioUtDiv': base_lines[0].move_id.l10n_ec_dividend_fiscal_year if base_lines[0].move_id.l10n_ec_is_dividend_withhold else None,
                         }
                         for tax, base_lines in groupby(income_withhold_base_lines, lambda l: l.tax_ids)
                     ]
@@ -316,15 +318,11 @@ class L10nECTaxReportATSCustomHandler(models.AbstractModel):
                         'fechaEmiRet1': withhold.l10n_ec_withhold_date.strftime('%d/%m/%Y'),
                     })
 
-                # 2.4. DIVIDEND WITHHOLDINGS ARE NOT SUPPORTED
-                #   - Dividend Payment Date
-                #   - Income tax paid by the company corresponding to the dividend
-                #   - Year in which the profits attributable to the dividend were generated
-
-                # 2.5. WITHHOLDS FOR BANANA IMPORTS ARE NOT SUPPORTED
+                # 2.4. WITHHOLDS FOR BANANA IMPORTS ARE NOT SUPPORTED
                 #   - Quantity of standard banana boxes
                 #   - Price of standard banana boxes
                 #   - Banana box price
+
                 self._get_reimbursements_values(in_inv, values, errors)
 
                 purchase_vals.append(values)
@@ -364,7 +362,7 @@ class L10nECTaxReportATSCustomHandler(models.AbstractModel):
         reimbursements_vals = []
         # Whether there are more than one reimbursement with the same document_number, it's because this invoice has multiple vat tax
         # In the ATS we must group by document number and accumulate the tax bases
-        for number_and_partner, reimburs_move in groupby(in_inv.l10n_ec_reimbursement_ids.sorted(lambda l: l.document_number), lambda i: (i.document_number, i.partner_id.commercial_partner_id)):
+        for _number_and_partner, reimburs_move in groupby(in_inv.l10n_ec_reimbursement_ids.sorted(lambda l: l.document_number), lambda i: (i.document_number, i.partner_id.commercial_partner_id)):
             amounts_vals = defaultdict(float)
             reimburs_list = list(reimburs_move)
             reimbursement_val = {}
@@ -494,6 +492,10 @@ class L10nECTaxReportATSCustomHandler(models.AbstractModel):
             ('tax_group_id.l10n_ec_type', 'not in', (False, 'ice', 'irbpnr', 'other')),
             ('company_id', '=', self.env.company.id),
         ])
+        ec_ice_taxes = self.env['account.tax'].with_context(active_test=False).search([
+            ('tax_group_id.l10n_ec_type', '=', 'ice'),
+            ('company_id', '=', self.env.company.id),
+        ])
 
         errors = []
         invoices = self.env['account.move'].search(
@@ -509,10 +511,10 @@ class L10nECTaxReportATSCustomHandler(models.AbstractModel):
         )
 
         invoices_values = []
-        error_template = _("%s: Invoice lines should have exactly one VAT tax.")
+        error_template = _("%s: Each invoice line must include at least one IVA or ICE tax, and no more than one tax per VAT or ICE category.")
         for invoice in invoices:
             invoice_lines = invoice.invoice_line_ids.filtered(lambda line: line.display_type not in ('line_section', 'line_note'))
-            if any(len(l.tax_ids & ec_vat_taxes) != 1 for l in invoice_lines):
+            if any((len(l.tax_ids & ec_vat_taxes) > 1 or len(l.tax_ids & ec_ice_taxes) > 1) or len(l.tax_ids) == 0 for l in invoice_lines):
                 errors.append(error_template % invoice.name)
 
             # This will create base_amounts and tax_amounts dicts with this structure:

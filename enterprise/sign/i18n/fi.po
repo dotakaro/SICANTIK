@@ -3,47 +3,17 @@
 # 	* sign
 # 
 # Translators:
-# Tiffany Chang, 2024
-# Tuomas Lyyra <tuomas.lyyra@legenda.fi>, 2024
-# Pekka Ikonen, 2024
-# Anni Saarelainen, 2024
-# Kim Asplund <kim.asplund@gmail.com>, 2024
-# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
-# Mikko Virtanen <mikko.virtanen2013@gmail.com>, 2024
-# Topi Aura <topi@aurat.fi>, 2024
-# Sanna Edelman <direct@generare.com>, 2024
-# Teemu Ahonen <teemu.ahonen@web-veistamo.fi>, 2024
-# Konsta Aavaranta, 2024
-# Tommi Rintala <tommi.rintala@gmail.com>, 2024
-# Mikko Salmela <salmemik@gmail.com>, 2024
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Sari Mäyrä <sari.mayra@sv-oy.fi>, 2024
-# Jukka Paulin <jukka.paulin@gmail.com>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
-# Johanna Valkonen <miujohanna@gmail.com>, 2024
-# Kari Lindgren <karisatu@gmail.com>, 2024
-# Miku Laitinen <miku.laitinen@gmail.com>, 2024
-# Jenni Heikkilä <jenni.heikkila@sv-oy.fi>, 2024
-# Teija Hölttä <teija.holtta@gmail.com>, 2024
-# Eino Mäkitalo <eino.makitalo@netitbe.fi>, 2024
-# Miika Nissi <miika.nissi@tawasta.fi>, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Joakim Weckman, 2024
-# Pekko Tuomisto <pekko.tuomisto@web-veistamo.fi>, 2024
-# Martin Trigaux, 2024
-# Heikki Katajisto <heikki.katajisto@myyntivoima.fi>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Svante <svante@svante.fi>, 2024
 # Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
+# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2025
+# Wil Odoo, 2025
 # Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:07+0000\n"
 "Last-Translator: Jessica Jakara, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
@@ -75,6 +45,12 @@ msgstr ""
 
 #. module: sign
 #. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "%s Company"
+msgstr "%s yritys"
+
+#. module: sign
+#. odoo-python
 #: code:addons/sign/controllers/main.py:0
 msgid "%s couldn't sign the document due to an insufficient credit error."
 msgstr "%s ei voinut allekirjoittaa asiakirjaa - ei tarpeeksi krediittejä."
@@ -99,9 +75,25 @@ msgstr "%s on allekirjoitettu"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_document.py:0
+msgid "%s's name"
+msgstr "%s:n nimi"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "%s: missing credits for extra-authentication"
 msgstr "%s: ylimääräisen todentamisen hyvitykset puuttuvat"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
+msgid "&gt;"
+msgstr "&gt;"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
+msgid "&lt;"
+msgstr "&lt;"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -112,10 +104,10 @@ msgstr "(UTC)"
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_refused
 msgid ""
 ")\n"
-"            has refused the document"
+"            has refused to sign the document"
 msgstr ""
 ")\n"
-"            on hylännyt asiakirjan"
+"            on kieltäytynyt asiakirjan allekirjoittamisesta"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_request
@@ -134,18 +126,24 @@ msgstr "******1234"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 msgid ""
-"- <em>\n"
-"                                            Waiting Signature\n"
-"                                        </em>"
+"-\n"
+"                                            <em>\n"
+"                                                Waiting Signature\n"
+"                                            </em>"
 msgstr ""
-"- <em>\n"
-"                                            Odottaa allekirjoitusta\n"
-"                                       </em>"
+"-\n"
+"                                            <em>\n"
+"                                                Odottaa allekirjoitusta\n"
+"                                            </em>"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
-msgid "- <em>Cancelled</em>"
-msgstr "- <em>Peruutettu</em>"
+msgid ""
+"-\n"
+"                                            <em>Cancelled</em>"
+msgstr ""
+"-\n"
+"                                            <em>Peruutettu</em>"
 
 #. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_template_action
@@ -196,6 +194,11 @@ msgstr "<b>Luojan IP-osoite:</b>"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "<b>Document ID:</b>"
 msgstr "<b>Dokumentin ID:</b>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
+msgid "<b>Documents:</b>"
+msgstr "<b>Asiakirjat:</b>"
 
 #. module: sign
 #. odoo-javascript
@@ -320,6 +323,33 @@ msgstr ""
 "puhelinnumeroa tekstiviestillä lähetetyn yksilöllisen koodin avulla</small>"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
+msgid ""
+"<span class=\"badge rounded-pill text-bg-success ms-2 mb-1\" title=\"Shared\" invisible=\"state != 'shared'\">\n"
+"                                    Shared\n"
+"                                </span>"
+msgstr ""
+"<span class=\"badge rounded-pill text-bg-success ms-2 mb-1\" title=\"Shared\" invisible=\"state != 'shared'\">\n"
+"                                    Jaettu\n"
+"                                </span>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid ""
+"<span class=\"badge rounded-pill text-bg-success\" title=\"Shared\" invisible=\"not is_sharing\">\n"
+"                                    Shared\n"
+"                                </span>"
+msgstr ""
+"<span class=\"badge rounded-pill text-bg-success\" title=\"Shared\" invisible=\"not is_sharing\">\n"
+"                                    Jaettu\n"
+"                                </span>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
+msgid "<span class=\"ms-1 text-nowrap\">Add certificate on each page</span>"
+msgstr "Lisää sertifikaatti jokaiselle sivulle<span class=\"ms-1 text-nowrap\">"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_partner_view_form
 msgid "<span class=\"o_stat_text\">Signature Requested</span>"
 msgstr "<span class=\"o_stat_text\">Pyydetty allekirjoitus</span>"
@@ -328,21 +358,6 @@ msgstr "<span class=\"o_stat_text\">Pyydetty allekirjoitus</span>"
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
 msgid "<span class=\"o_stat_text\">Signed Document</span>"
 msgstr "<span class=\"o_stat_text\">Allekirjoitettu asiakirja</span>"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
-msgid ""
-"<span class=\"text-muted\" invisible=\"not share_link\">Sharing will create "
-"a copy of the file to sign. That file can be reached by the link below. "
-"Every public user using the link will generate a document when the Signature"
-" is complete. The link is private, only those that receive the link will be "
-"able to sign it.</span>"
-msgstr ""
-"<span class=\"text-muted\" invisible=\"not share_link\">Jakaminen luo kopion"
-" allekirjoitettavasta tiedostosta. Kyseiseen tiedostoon pääset alla olevan "
-"linkin kautta. Jokainen linkkiä käyttävä julkinen käyttäjä luo asiakirjan, "
-"kun allekirjoitus on valmis. Linkki on yksityinen, vain linkin saaneet "
-"voivat allekirjoittaa sen.</span>"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -355,21 +370,39 @@ msgid "<span>(1.0 = full page size)</span>"
 msgstr "<span>(1.0 = koko sivu)</span>"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "<span>In Progress</span>"
+msgstr "<span>Kesken</span>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "<span>Signed</span>"
+msgstr "<span>Allekirjoitettu</span>"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_terms_conditions_setting_banner
 msgid "<span>This is a preview of your Terms &amp; Conditions.</span>"
 msgstr "<span>Tämä on esikatselu käyttöehdoistasi &amp; ehdot</span>"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.cancel_sign_request_item_with_confirmation
-msgid ""
-"<span>You won't receive any notification for this signature request "
-"anymore.</span>"
-msgstr "<span>Et saa enää ilmoituksia tästä allekirjoituspyynnöstä.</span>"
-
-#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 msgid "<strong>Creation Date:</strong>"
 msgstr "<strong>Luontipäivämäärä:</strong>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
+msgid "<strong>Expiry Date: </strong>"
+msgstr "<strong>Vanhentumispäivämäärä: </strong>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
+msgid "<strong>Sent by: </strong>"
+msgstr "<strong>Lähettäjä: </strong>"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
+msgid "<strong>Signed on: </strong>"
+msgstr "<strong>Allekirjoitettu: </strong>"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_refused
@@ -415,15 +448,6 @@ msgstr ""
 "on tyhjä kumppani"
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid ""
-"A shared sign request should only have one signer with an empty partner"
-msgstr ""
-"Jaetussa allekirjoituspyynnössä pitäisi olla vain yksi allekirjoittaja, "
-"jolla on tyhjä kumppani"
-
-#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
 msgid "A shower uses approximately 65 L of water"
 msgstr "Suihku kuluttaa noin 65 litraa vettä"
@@ -453,6 +477,13 @@ msgid "Access Logs"
 msgstr "Pääsylokit"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_access_rights.xml:0
+msgid "Access Rights"
+msgstr "Käyttöoikeudet"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__access_warning
 msgid "Access warning"
 msgstr "Käyttöoikeusvaroitus"
@@ -470,7 +501,6 @@ msgstr "Pääsy pääsytunnisteen kautta"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_mail_activity_type__category
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Action"
 msgstr "Toiminto"
 
@@ -510,8 +540,6 @@ msgid "Activity Exception Decoration"
 msgstr "Toimenpiteen poikkeuksen tyyli"
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
 #: model:ir.actions.report,name:sign.action_sign_request_print_logs
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 msgid "Activity Logs"
@@ -539,15 +567,16 @@ msgstr "Tähän pyyntöön liittyvät toimintalokit"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/initials_all_pages_dialog.js:0
-msgid "Add Initials"
-msgstr "Lisää nimikirjaimet"
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+#: code:addons/sign/static/src/views/common.xml:0
+msgid "Add"
+msgstr "Lisää"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/initial_all_pages_dialog.xml:0
-msgid "Add Once"
-msgstr "Lisää kerran"
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "Add Initials"
+msgstr "Lisää nimikirjaimet"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
@@ -555,10 +584,9 @@ msgid "Add document tags here"
 msgstr "Lisää asiakirjan tunnisteet tähän"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/initial_all_pages_dialog.xml:0
-msgid "Add to all pages"
-msgstr "Lisää kaikille sivuille"
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid "Add terms & conditions to the signature request email"
+msgstr "Lisää ehdot ja edellytykset allekirjoituspyyntösähköpostiin"
 
 #. module: sign
 #: model:res.groups,name:sign.group_sign_manager
@@ -596,26 +624,42 @@ msgid "All Documents"
 msgstr "Kaikki asiakirjat"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/sign_request_documents_dropdown.xml:0
+msgid "All Documents (zip)"
+msgstr "Kaikki asiakirjat (zip)"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_status_indicator/sign_status_indicator.xml:0
+msgid "All changes saved"
+msgstr "Kaikki muutokset tallennettu"
+
+#. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "All signers must have valid email addresses"
 msgstr "Kaikilla allekirjoittajilla on oltava voimassa oleva sähköpostiosoite"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid ""
-"Allow signatories to provide their identity using itsme® (available in "
-"Belgium and the Netherlands)."
-msgstr ""
-"Salli allekirjoittajien ilmoittaa henkilöllisyytensä käyttämällä "
-"itsme®-järjestelmää (saatavilla Belgiassa ja Alankomaissa)."
+msgid "Allow signatories to provide their identity using itsme®"
+msgstr "Salli allekirjoittajien suorittaa allekirjoitus itsme®:n avulla"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid ""
-"Allow users to define the users or groups which have access to the template."
+"Allow users to define the users or groups which have access to the template"
 msgstr ""
-"Salli käyttäjien määritellä käyttäjät tai ryhmät, joilla on pääsy malliin."
+"Salli käyttäjien määritellä käyttäjät tai ryhmät, joilla on pääsy malliin"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid ""
+"Allow users to provide the files used in the cryptographic signature "
+"process."
+msgstr ""
+"Salli käyttäjien toimittaa suojatussa allekirjoituksessa käytetyt tiedostot."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -637,13 +681,15 @@ msgstr "Arkistoi"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_search
 msgid "Archived"
 msgstr "Arkistoitu"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.cancel_sign_request_item_with_confirmation
-msgid "Are you sure you want to cancel the sign request?"
-msgstr "Haluatko varmasti peruuttaa allekirjoituspyynnön?"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.js:0
+msgid "Are you sure you want to cancel this sign request?"
+msgstr "Oletko varma, että haluat peruuttaa tämän allekirjoituspyynnön?"
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_request__start_sign
@@ -651,12 +697,7 @@ msgid "At least one signer has signed the document."
 msgstr "Ainakin yksi allekirjoittaja on allekirjoittanut asiakirjan."
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
-msgid "Attach a file"
-msgstr "Liitä tiedosto"
-
-#. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_template__attachment_id
+#: model:ir.model.fields,field_description:sign.field_sign_document__attachment_id
 msgid "Attachment"
 msgstr "Liite"
 
@@ -664,6 +705,12 @@ msgstr "Liite"
 #: model:ir.model.fields,field_description:sign.field_sign_request__message_attachment_count
 msgid "Attachment Count"
 msgstr "Liitteiden määrä"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "Attachment not found."
+msgstr "Liitettä ei löytynyt."
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__attachment_ids
@@ -677,13 +724,18 @@ msgid "Authenticate by SMS"
 msgstr "Tunnistautuminen tekstiviestillä"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_form
+msgid "Authentication"
+msgstr "Tunnistautuminen"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__group_ids
 msgid "Authorized Groups"
 msgstr "Valtuutetut ryhmät"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_access_rights.xml:0
 msgid "Authorized Groups:"
 msgstr "Valtuutetut ryhmät:"
 
@@ -694,19 +746,19 @@ msgstr "Valtuutetut käyttäjät"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_access_rights.xml:0
 msgid "Authorized Users:"
 msgstr "Valtuutetut käyttäjät:"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_type__auto_field
-msgid "Auto-fill Partner Field"
-msgstr "Automaattinen kumppanikentän täyttäminen"
+msgid "Auto-fill Field"
+msgstr "Automaattisesti täytettävä kenttä"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_item_option__available
-msgid "Available in new templates"
-msgstr "Saatavilla uusissa malleissa"
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid "Available in supported countries"
+msgstr "Saatavilla tuetuissa maissa"
 
 #. module: sign
 #. odoo-python
@@ -735,6 +787,11 @@ msgid "By"
 msgstr "Kirjoittanut"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_form
+msgid "By Email"
+msgstr "Sähköpostitse"
+
+#. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/sign_name_and_signature_dialog.xml:0
 msgid ""
@@ -743,7 +800,7 @@ msgid ""
 " all purposes when it is used on documents, including legally binding "
 "contracts."
 msgstr ""
-"Napsauttamalla Adopt ja Sign hyväksyn, että valittu "
+"Napsauttamalla Omaksu & Allekirjoita hyväksyn, että valittu "
 "allekirjoitus/alkukirjaimet ovat pätevä sähköinen esitys käsin "
 "kirjoittamastani allekirjoituksesta/alkukirjaimista kaikissa tarkoituksissa,"
 " kun sitä käytetään asiakirjoissa, mukaan lukien oikeudellisesti sitovat "
@@ -755,13 +812,16 @@ msgid "CC Message"
 msgstr "CC-viesti"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_form
+msgid "Can delegate"
+msgstr "Voi delegoida"
+
+#. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
 #: code:addons/sign/static/src/dialogs/public_signer_dialog.xml:0
 #: code:addons/sign/static/src/dialogs/sign_name_and_signature_dialog.xml:0
 #: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__cancel
-#: model_terms:ir.ui.view,arch_db:sign.sign_duplicate_template_with_pdf_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
 #: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
@@ -769,9 +829,10 @@ msgid "Cancel"
 msgstr "Peruuta"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.cancel_sign_request_item_with_confirmation
-msgid "Cancel Sign Request"
-msgstr "Peruuta allekirjoituspyyntö"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
+msgid "Cancel request"
+msgstr "Peruuta pyyntö"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
@@ -786,6 +847,13 @@ msgstr "Peruttu"
 #: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
 msgid "Cancelled"
 msgstr "Peruttu"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request_item_value.py:0
+msgid "Cannot update the value of a read-only sign item"
+msgstr ""
+"Vain-luku -tilassa olevan allekirjoitettavan kohteen arvoa ei voi päivittää"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_container
@@ -805,9 +873,21 @@ msgid "Certificate <i class=\"fa fa-download\"/>"
 msgstr "Todistus <i class=\"fa fa-download\"/>"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_request__certificate_reference
+#: model:ir.model.fields,field_description:sign.field_sign_send_request__certificate_reference
+msgid "Certificate Reference"
+msgstr "Sertifikaatin viite"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "Certificate of Completion<br/>"
 msgstr "Valmistumistodistus<br/>"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request.py:0
+msgid "Certificate of completion - %s.pdf"
+msgstr "Suoritustodistus - %s.pdf"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_role__change_authorized
@@ -837,6 +917,7 @@ msgstr "Klikkaa aloittaaksesi"
 #. odoo-python
 #: code:addons/sign/models/sign_request.py:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_access_rights.xml:0
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.js:0
 #: code:addons/sign/static/src/js/tours/sign.js:0
 #: model:sign.template,redirect_url_text:sign.template_sign_1
@@ -844,17 +925,20 @@ msgstr "Klikkaa aloittaaksesi"
 #: model:sign.template,redirect_url_text:sign.template_sign_3
 #: model:sign.template,redirect_url_text:sign.template_sign_4
 #: model:sign.template,redirect_url_text:sign.template_sign_5
+#: model:sign.template,redirect_url_text:sign.template_sign_6
 #: model:sign.template,redirect_url_text:sign.template_sign_tour
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_preview_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_terms_conditions_setting_banner
 msgid "Close"
 msgstr "Sulje"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_item_role__color
 #: model:ir.model.fields,field_description:sign.field_sign_request__color
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__color
 #: model:ir.model.fields,field_description:sign.field_sign_template__color
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Color"
 msgstr "Väri"
 
@@ -893,7 +977,8 @@ msgid "Completed"
 msgstr "Valmis"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_request__completed_document
+#: model:ir.model,name:sign.model_sign_completed_document
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__file
 msgid "Completed Document"
 msgstr "Valmis asiakirja"
 
@@ -901,6 +986,11 @@ msgstr "Valmis asiakirja"
 #: model:ir.model.fields,field_description:sign.field_sign_request__completed_document_attachment_ids
 msgid "Completed Documents"
 msgstr "Valmiit asiakirjat"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_request__completed_document_ids
+msgid "Completed Documents Binaries"
+msgstr "Valmiiden asiakirjojen binaaritiedostot"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__nb_closed
@@ -918,25 +1008,18 @@ msgid "Config Settings"
 msgstr "Asetukset"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
 #: model:ir.ui.menu,name:sign.menu_sign_configuration
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Configuration"
 msgstr "Asetukset"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid ""
-"Configure the field types that can be used to sign documents (placeholder, "
-"auto-completion, ...), as well as the values for selection fields in "
-"signable documents."
-msgstr ""
-"Määritä kenttätyypit, joita voidaan käyttää asiakirjojen allekirjoittamiseen"
-" (paikkamerkki, automaattinen täydennys, ...), sekä allekirjoitettavissa "
-"asiakirjoissa olevien valintakenttien arvot."
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_duplicate_template_with_pdf_view_form
-msgid "Confirm"
-msgstr "Vahvista"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+msgid "Confirmation"
+msgstr "Vahvistus"
 
 #. module: sign
 #. odoo-javascript
@@ -952,16 +1035,14 @@ msgstr "Onneksi olkoon, olet allekirjoittanut ensimmäisen asiakirjasi!"
 #. module: sign
 #: model:ir.model,name:sign.model_res_partner
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__partner_id
-#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 msgid "Contact"
-msgstr "Kontakti"
+msgstr "KontaktiYhteystiedot"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 #: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 msgid "Contacts"
-msgstr "Yhteystiedot"
+msgstr "YhteystiedotYhteystiedot"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
@@ -990,12 +1071,25 @@ msgid "Create Sign Tags"
 msgstr "Luo allekirjoituksen tunnisteet"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
-msgid "Create date"
-msgstr "Luontipäivä"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_save_template_dialog.xml:0
+msgid "Create Template!"
+msgstr "Luo mallipohja!"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__create_uid
+#: model:ir.model,website_form_label:sign.model_res_partner
+msgid "Create a Customer"
+msgstr "Luo asiakas"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "Create a new signer for signing the fields"
+msgstr "Luo uusi allekirjoittaja allekirjoittamaan kentät"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__create_uid
+#: model:ir.model.fields,field_description:sign.field_sign_document__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__create_uid
@@ -1005,15 +1099,18 @@ msgstr "Luontipäivä"
 #: model:ir.model.fields,field_description:sign.field_sign_request__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__create_uid
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_template__create_uid
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__create_uid
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__create_uid
 msgid "Created by"
 msgstr "Luonut"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__create_date
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__create_date
+#: model:ir.model.fields,field_description:sign.field_sign_document__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_item__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__create_date
@@ -1023,9 +1120,11 @@ msgstr "Luonut"
 #: model:ir.model.fields,field_description:sign.field_sign_request__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__create_date
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_template__create_date
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__create_date
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__create_date
 msgid "Created on"
 msgstr "Luotu"
@@ -1036,9 +1135,20 @@ msgid "Creation"
 msgstr "Luonti"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid "Cryptographic signature"
+msgstr "Kryptografinen allekirjoitus"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 msgid "Current status of the signature request"
 msgstr "Allekirjoituspyynnön tämänhetkinen tila"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "Currently in"
+msgstr "Tällä hetkellä"
 
 #. module: sign
 #: model:sign.item.role,name:sign.sign_item_role_customer
@@ -1055,6 +1165,7 @@ msgstr "Asiakasportaalin osoite"
 #: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
 #: model:sign.item.type,name:sign.sign_item_type_date
 #: model:sign.item.type,placeholder:sign.sign_item_type_date
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Date"
 msgstr "Päivämäärä"
 
@@ -1062,6 +1173,25 @@ msgstr "Päivämäärä"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "Date (UTC)"
 msgstr "Päivämäärä (UTC)"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+msgid "Decline"
+msgstr "Hylkää"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.doc_sign
+msgid "Decline To Sign"
+msgstr "Kieltäydy allekirjoittamasta"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/signable_sign_request_control_panel.xml:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
+#: model_terms:ir.ui.view,arch_db:sign.doc_sign
+msgid "Decline to sign"
+msgstr "Kieltäydy allekirjoittamasta"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_role__default
@@ -1089,7 +1219,10 @@ msgid "Default order"
 msgstr "Oletusjärjestys"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.xml:0
 msgid "Delete"
 msgstr "Poista"
 
@@ -1106,13 +1239,19 @@ msgid "Delete sign item"
 msgstr "Poista allekirjoituksen kohde"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.js:0
+msgid "Delete signer \"%s\""
+msgstr "Poista allekirjoittaja \"%s\""
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid ""
 "Deliver one-time codes by SMS to identify signatories when signing a "
-"document."
+"document"
 msgstr ""
-"Toimita tekstiviestillä kertakäyttökoodit allekirjoittajien tunnistamiseksi "
-"asiakirjan allekirjoittamisen yhteydessä."
+"Lähetä kertakäyttöisiä koodeja tekstiviestillä allekirjoittajien "
+"tunnistamiseksi asiakirjaa allekirjoitettaessa"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -1142,6 +1281,7 @@ msgstr "Demo Partner"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.doc_sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Details"
 msgstr "Tiedot"
 
@@ -1172,12 +1312,33 @@ msgid "Digital Signatures"
 msgstr "Digitaaliset allekirjoitukset"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+#: model_terms:ir.ui.view,arch_db:sign.res_company_view_form_sign_terms
+msgid "Discard"
+msgstr "Hylkää"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_status_indicator/sign_status_indicator.xml:0
+msgid "Discard all changes"
+msgstr "Hylkää kaikki muutokset"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_item_view_form
 msgid "Display"
 msgstr "Näytä"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__display_name
+#: model:ir.model.fields,field_description:sign.field_ir_http__display_name
+#: model:ir.model.fields,field_description:sign.field_mail_activity_type__display_name
+#: model:ir.model.fields,field_description:sign.field_report_sign_green_savings_report__display_name
+#: model:ir.model.fields,field_description:sign.field_res_company__display_name
+#: model:ir.model.fields,field_description:sign.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:sign.field_res_partner__display_name
+#: model:ir.model.fields,field_description:sign.field_res_users__display_name
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__display_name
+#: model:ir.model.fields,field_description:sign.field_sign_document__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_item__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__display_name
@@ -1187,9 +1348,11 @@ msgstr "Näytä"
 #: model:ir.model.fields,field_description:sign.field_sign_request__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__display_name
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_template__display_name
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__display_name
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__display_name
 msgid "Display Name"
 msgstr "Näyttönimi"
@@ -1200,8 +1363,21 @@ msgid "Display sign preview button"
 msgstr "Näytä merkin esikatselupainike"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.js:0
+msgid "Do you really want to delete this signer?"
+msgstr "Haluatko varmasti poistaa tämän allekirjoittajan?"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "Do you want to add initials to all pages?"
+msgstr "Haluatko lisätä nimikirjaimet kaikille sivuille?"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__document_id
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__document_id
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
 msgid "Document"
 msgstr "Dokumentti"
 
@@ -1218,8 +1394,6 @@ msgstr "Asiakirjan tiedot"
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__reference
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__reference
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_search
 msgid "Document Name"
 msgstr "Dokumentin nimi"
 
@@ -1229,13 +1403,19 @@ msgid "Document Page"
 msgstr "Dokumentin sivu"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_item__template_id
+#: model:ir.model.fields,field_description:sign.field_sign_item__document_id
 msgid "Document Template"
 msgstr "Dokumenttipohja"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.js:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
+msgid "Document refusal submitted."
+msgstr "Asiakirjan allekirjoituksesta kieltäytyminen on lähetetty."
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
 msgid "Document saved as Template."
 msgstr "Asiakirja tallennettu mallina."
 
@@ -1257,36 +1437,37 @@ msgid "Document/Signer"
 msgstr "Asiakirja/allekirjoittaja"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
 #: model:ir.actions.act_window,name:sign.sign_request_action
+#: model:ir.model.fields,field_description:sign.field_sign_request__template_document_ids
+#: model:ir.model.fields,field_description:sign.field_sign_template__document_ids
 #: model:ir.ui.menu,name:sign.sign_request_menu
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_graph
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_pivot
 msgid "Documents"
-msgstr "Dokumentit"
+msgstr "Asiakirjat"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/controllers/main.py:0
+msgid "Documents of Request %s"
+msgstr "Pyynnön asiakirjat %s"
 
 #. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/sign_request_documents_dropdown.xml:0
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Download"
 msgstr "Lataa"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
-msgid "Download Certificate"
-msgstr "Lataa Todistus"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-msgid "Download Document"
-msgstr "Lataa asiakirja"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_type_buttons.xml:0
-msgid "Drag & Drop a field in the PDF"
-msgstr "Vedä ja pudota kenttä PDF-tiedostossa"
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.xml:0
+msgid "Drag and Drop a field in the PDF"
+msgstr "Raahaa ja pudota kenttä PDF:ään"
 
 #. module: sign
 #. odoo-javascript
@@ -1305,15 +1486,28 @@ msgstr ""
 "automaattisesti tai ladata allekirjoituksen tietokoneeltasi."
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_request/signable_sign_request_control_panel.xml:0
 #: model_terms:ir.ui.view,arch_db:sign.doc_sign
 msgid "Dropdown menu"
 msgstr "Alasvetovalikko"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "Duplicate"
+msgstr "Kopioi"
+
+#. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_document.py:0
 msgid "ERROR: Invalid PDF file!"
 msgstr "VIRHE: Virheellinen PDF-tiedosto!"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "Each item must contain 'name' and 'datas' keys."
+msgstr "Jokaisella kirjauksella on oltava 'nimi'- ja 'tiedot'-avaimet."
 
 #. module: sign
 #: model:ir.actions.report,name:sign.sign_report_green_savings_action
@@ -1322,34 +1516,22 @@ msgstr "Luontoystävälliset säästöt sähköisiä allekirjoituksia käyttäm�
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/signable_sign_request_control_panel.xml:0
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.xml:0
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Edit"
 msgstr "Muokkaa"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
 msgid "Edit Template"
 msgstr "Muokkaa mallia"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid "Edit field types"
-msgstr "Muokkaa kenttätyyppejä"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid "Edit selection values"
-msgstr "Muokkaa valinta-arvoja"
-
-#. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
-msgid "Edit template name"
-msgstr "Muokkaa mallin nimeä"
-
-#. module: sign
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__signer_email
 #: model:sign.item.type,name:sign.sign_item_type_email
 #: model:sign.item.type,placeholder:sign.sign_item_type_email
@@ -1380,13 +1562,19 @@ msgstr "Energia"
 
 #. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
+msgid "Enter options separated by Enter."
+msgstr "Anna vaihtoehdot eroteltuna enterillä."
+
+#. module: sign
+#. odoo-javascript
 #: code:addons/sign/static/src/dialogs/sms_signer_dialog.xml:0
 msgid "Enter the code received through SMS to complete your signature"
 msgstr "Kirjoita tekstiviestillä saatu koodi allekirjoitusta varten"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
+#: code:addons/sign/static/src/components/sign_request/document_signable.js:0
 #: code:addons/sign/static/src/dialogs/sms_signer_dialog.js:0
 msgid "Error"
 msgstr "Virhe"
@@ -1395,12 +1583,6 @@ msgstr "Virhe"
 #: model_terms:ir.ui.view,arch_db:sign.deleted_sign_request
 msgid "Error 404"
 msgstr "Virhe 404"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "Existing sign items are not allowed to be changed"
-msgstr "Olemassa olevia merkkejä ei saa muuttaa"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__request_state__expired
@@ -1436,13 +1618,10 @@ msgstr "Kentän nimi"
 
 #. module: sign
 #: model:ir.ui.menu,name:sign.sign_item_type_menu
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid "Field Types"
 msgstr "Kenttätyypit"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_type_buttons.xml:0
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
 msgid "Fields"
 msgstr "Kentät"
@@ -1453,7 +1632,7 @@ msgid "Fields to be sign on Document"
 msgstr "Asiakirjaan allekirjoitettavat kentät"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_template__datas
+#: model:ir.model.fields,field_description:sign.field_sign_document__datas
 msgid "File Content (base64)"
 msgstr "Tiedoston sisältö (base64)"
 
@@ -1464,20 +1643,9 @@ msgid "File Error"
 msgstr "Tiedoston virhe"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__new_pdf
-msgid "File name"
-msgstr "Tiedostonimi"
-
-#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__filename
 msgid "Filename"
 msgstr "Tiedostonnimi"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
-msgid "Filled by"
-msgstr "Täyttänyt"
 
 #. module: sign
 #. odoo-javascript
@@ -1548,9 +1716,6 @@ msgstr "Kehyksen arvo"
 #. module: sign
 #. odoo-python
 #: code:addons/sign/controllers/portal.py:0
-#: model:ir.model.fields.selection,name:sign.selection__sign_request__state__signed
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "Fully Signed"
 msgstr "Kaikkien hyväksymä"
 
@@ -1558,12 +1723,6 @@ msgstr "Kaikkien hyväksymä"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "Future Activities"
 msgstr "Tulevat toimenpiteet"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/encrypted_dialog.xml:0
-msgid "Generate PDF"
-msgstr "Luo PDF"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -1659,7 +1818,15 @@ msgid "I've got a total weight, and now?"
 msgstr "Minulla on kokonaispaino, ja nyt?"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__id
+#: model:ir.model.fields,field_description:sign.field_ir_http__id
+#: model:ir.model.fields,field_description:sign.field_mail_activity_type__id
+#: model:ir.model.fields,field_description:sign.field_report_sign_green_savings_report__id
+#: model:ir.model.fields,field_description:sign.field_res_company__id
+#: model:ir.model.fields,field_description:sign.field_res_config_settings__id
+#: model:ir.model.fields,field_description:sign.field_res_partner__id
+#: model:ir.model.fields,field_description:sign.field_res_users__id
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__id
+#: model:ir.model.fields,field_description:sign.field_sign_document__id
 #: model:ir.model.fields,field_description:sign.field_sign_item__id
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__id
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__id
@@ -1669,9 +1836,11 @@ msgstr "Minulla on kokonaispaino, ja nyt?"
 #: model:ir.model.fields,field_description:sign.field_sign_request__id
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__id
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__id
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__id
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__id
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__id
 #: model:ir.model.fields,field_description:sign.field_sign_template__id
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__id
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__id
 msgid "ID"
 msgstr "ID"
@@ -1731,6 +1900,15 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Jos valittu, joitakin viestejä ei ole toimitettu."
 
 #. module: sign
+#: model:ir.model.fields,help:sign.field_sign_send_request__certificate_reference
+msgid ""
+"If checked, the unique certificate reference will be added on the final "
+"signed document."
+msgstr ""
+"Jos valittuna, yksilöllinen sertifikaattiviite lisätään lopulliseen "
+"allekirjoitettuun asiakirjaan."
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_not_enough_credits
 msgid ""
 "If you do not want to receive these notifications anymore, you can disable the extra-authentication step in the\n"
@@ -1765,10 +1943,10 @@ msgid "In Progress Count"
 msgstr "Käynnissä oleva määrä"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "In favorites, remove it"
-msgstr "On suosikeissa, poista tämä"
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "In Progress Requests"
+msgstr "Käsittelyssä olevat pyynnöt"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_log__log_hash
@@ -1818,6 +1996,11 @@ msgid "Is Mail Sent"
 msgstr "Onko posti lähetetty"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__is_shared
+msgid "Is Shared"
+msgstr "On jaettu"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__is_sharing
 msgid "Is Sharing"
 msgstr "Onko jakaminen"
@@ -1860,7 +2043,8 @@ msgid "Last Action Date"
 msgstr "Viimeisin toimintapäivä"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__write_uid
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__write_uid
+#: model:ir.model.fields,field_description:sign.field_sign_document__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__write_uid
@@ -1870,15 +2054,18 @@ msgstr "Viimeisin toimintapäivä"
 #: model:ir.model.fields,field_description:sign.field_sign_request__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__write_uid
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_template__write_uid
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__write_uid
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__write_uid
 msgid "Last Updated by"
 msgstr "Viimeksi päivittänyt"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__write_date
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__write_date
+#: model:ir.model.fields,field_description:sign.field_sign_document__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_item__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__write_date
@@ -1888,9 +2075,11 @@ msgstr "Viimeksi päivittänyt"
 #: model:ir.model.fields,field_description:sign.field_sign_request__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__write_date
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_send_request_signer__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_template__write_date
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__write_date
 #: model:ir.model.fields,field_description:sign.field_sign_template_tag__write_date
 msgid "Last Updated on"
 msgstr "Viimeksi päivitetty"
@@ -2000,7 +2189,7 @@ msgstr "Mail-päivitys"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/models/sign_item_type.py:0
 msgid "Malformed expression: %(exp)s"
 msgstr "Virheellinen ilmaisu: %(exp)s"
 
@@ -2015,11 +2204,6 @@ msgstr "Hallitse mallien käyttöoikeuksia"
 #: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
 msgid "Mandatory field"
 msgstr "Pakollinen kenttä"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
-msgid "Marc Demo"
-msgstr "Marc Demo"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__message
@@ -2048,24 +2232,30 @@ msgid "Messages"
 msgstr "Viestit"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.encrypted_ask_password
-msgid "Missing Password"
-msgstr "Puuttuva salasana"
+#: model:ir.model.fields,field_description:sign.field_sign_item_type__model_name
+msgid "Model"
+msgstr "Malli"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_request_item__sms_number
-msgid "Mobile"
-msgstr "Matkapuhelin"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "Move Down"
+msgstr "Siirrä alas"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Modify Template"
-msgstr "Muokkaa mallia"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "Move Up"
+msgstr "Siirrä ylös"
+
+#. module: sign
+#: model:sign.item.type,name:sign.sign_item_type_multiline_text
+#: model:sign.item.type,placeholder:sign.sign_item_type_multiline_text
+msgid "Multiline"
+msgstr "Monirivinen"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__textarea
-#: model:sign.item.type,name:sign.sign_item_type_multiline_text
-#: model:sign.item.type,placeholder:sign.sign_item_type_multiline_text
 msgid "Multiline Text"
 msgstr "Monirivinen teksti"
 
@@ -2073,6 +2263,11 @@ msgstr "Monirivinen teksti"
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
 msgid "Multiple Signature Requests"
 msgstr "Useita allekirjoituspyyntöjä"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
+msgid "My Activities"
+msgstr "Toimenpiteeni"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__my_activity_date_deadline
@@ -2083,7 +2278,7 @@ msgstr "Toimenpiteeni määräaika"
 #: model:ir.ui.menu,name:sign.sign_request_my_documents
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "My Documents"
-msgstr "Omat tiedostot"
+msgstr "Omat asiakirjani"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
@@ -2099,7 +2294,7 @@ msgstr "Omat pyyntöni"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_search
 msgid "My Templates"
-msgstr "Omat mallipohjat"
+msgstr "Omat mallipohjani"
 
 #. module: sign
 #: model:sign.template.tag,name:sign.sign_template_tag_2
@@ -2107,34 +2302,21 @@ msgid "NDA"
 msgstr "Vaitiolositoumus (NDA)"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+#: model:ir.model.fields,field_description:sign.field_sign_document__name
 #: model:ir.model.fields,field_description:sign.field_sign_item_role__name
 #: model:ir.model.fields,field_description:sign.field_sign_template__name
 #: model:sign.item.type,name:sign.sign_item_type_name
 #: model:sign.item.type,placeholder:sign.sign_item_type_name
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Name"
 msgstr "Nimi"
-
-#. module: sign
-#: model:ir.model.constraint,message:sign.constraint_sign_item_role_name_uniq
-msgid "Name already exists!"
-msgstr "Samanniminen suodatin on jo olemassa!"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
-msgid "Name for the file"
-msgstr "Tiedoston nimi"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
 msgid "Name of the file"
 msgstr "Tiedoston nimi"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/js/tours/sign.js:0
-msgid "Nearly there, keep going!"
-msgstr "Melkein perillä, jatka vielä vähän!"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__need_my_signature
@@ -2160,9 +2342,10 @@ msgid "New Signature Request"
 msgstr "Uusi allekirjoituspyyntö"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__new_template
-msgid "New Template Name"
-msgstr "Uusi mallin nimi"
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "New Template"
+msgstr "Uusi mallipohja"
 
 #. module: sign
 #. odoo-python
@@ -2194,6 +2377,7 @@ msgstr "Seuraavan toimenpiteen tyyppi"
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.xml:0
+#: model_terms:ir.ui.view,arch_db:sign._doc_sign
 msgid "Next Document"
 msgstr "Seuraava asiakirja"
 
@@ -2204,12 +2388,6 @@ msgid "Next signatory ("
 msgstr "Seuraava allekirjoittaja ("
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_template.py:0
-msgid "No attachment was provided"
-msgstr "Liitettä ei toimitettu"
-
-#. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_all_request_action
 #: model_terms:ir.actions.act_window,help:sign.sign_request_action
 msgid "No document yet"
@@ -2217,7 +2395,7 @@ msgstr "Ei vielä asiakirjaa"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "No specified reason"
 msgstr "Ei erityistä syytä"
 
@@ -2227,21 +2405,16 @@ msgid "No template yet"
 msgstr "Ei vielä mallia"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "No, add only once"
+msgstr "Ei, lisää vain kerran"
+
+#. module: sign
 #. odoo-python
 #: code:addons/sign/controllers/portal.py:0
 msgid "None"
 msgstr "Ei mitään"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Not in favorites, add it"
-msgstr "Ei suosikeissa, lisää se"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Not in favorites, set it"
-msgstr "Ei suosikeissa, aseta se"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__message_needaction_counter
@@ -2280,7 +2453,7 @@ msgid "Number of messages with delivery error"
 msgstr "Toimitusvirheellisten viestien määrä"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_template__num_pages
+#: model:ir.model.fields,field_description:sign.field_sign_document__num_pages
 msgid "Number of pages"
 msgstr "Sivujen lukumäärä"
 
@@ -2288,7 +2461,22 @@ msgstr "Sivujen lukumäärä"
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
 msgid "Odoo Sign"
-msgstr "Odoo Sign"
+msgstr "Odoo Allekirjoitus"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid ""
+"Odoo is a suite of open source business apps\n"
+"that cover all your company needs:\n"
+"CRM, eCommerce, accounting, inventory, point of sale,\n"
+"project management, etc.\n"
+"            "
+msgstr ""
+"Odoo on avoimen lähdekoodin yrityssovellusten kokoelma,\n"
+"joka kattaa kaikki yrityksesi tarpeet:\n"
+"CRM, Verkkokauppa, Kirjanpito, Varastointi, Kassajärjestelmä,\n"
+"Projektinhallinta jne."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -2302,16 +2490,16 @@ msgstr "Yksi litra kaasupolttoainetta tuottaa 8,9 kg hiilidioksidia"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
-msgid "One or more selection items have no associated options"
-msgstr "Yhteen tai useampaan valintakohteeseen ei ole liitetty vaihtoehtoja"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/models/sign_document.py:0
 msgid "One uploaded file cannot be read. Is it a valid PDF?"
 msgstr ""
 "Yhtä ladattua tiedostoa ei voida lukea. Onko se kelvollinen PDF-tiedosto?"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/views/hooks.js:0
+msgid "Only PDF files are allowed."
+msgstr "Vain PDF-tiedostot ovat sallittuja."
 
 #. module: sign
 #. odoo-python
@@ -2321,9 +2509,15 @@ msgid "Oops"
 msgstr "Oho"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
-msgid "Operation successful"
-msgstr "Operaatio onnistui"
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid ""
+"Oops! You can’t delete a template that has signature requests. It would be "
+"like asking your users to autograph air! How about archiving it instead?"
+msgstr ""
+"Oho! Et voi poistaa mallipohjaa, jota on käytetty allekirjoituspyyntöihin. "
+"Se olisi kuin pyytäisit asiakkaitasi allekirjoittamaan ilmaa! Mitäpä, jos "
+"arkistoisit sen mieluummin?"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_option__value
@@ -2358,16 +2552,10 @@ msgid "Options"
 msgstr "Vaihtoehdot"
 
 #. module: sign
-#: model:ir.model.fields,field_description:sign.field_sign_duplicate_template_pdf__original_template_id
-msgid "Original File"
-msgstr "Alkuperäinen tiedosto"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/encrypted_dialog.js:0
-#: model_terms:ir.ui.view,arch_db:sign.encrypted_ask_password
-msgid "PDF is encrypted"
-msgstr "PDF on salattu"
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "PDF File is corrupted. Please try with another file."
+msgstr "PDF-tiedosto on vioittunut. Yritä toisella tiedostolla."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_container
@@ -2386,12 +2574,12 @@ msgid "Partner"
 msgstr "Kumppani"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/encrypted_dialog.js:0
-msgid "Password is incorrect."
-msgstr "Salasana on väärin."
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__pdf_data
+msgid "Pdf Data"
+msgstr "Pdf-tiedot"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_request_item__sms_number
 #: model:sign.item.type,name:sign.sign_item_type_phone
 #: model:sign.item.type,placeholder:sign.sign_item_type_phone
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -2415,11 +2603,17 @@ msgstr "Paikanpitäjä"
 #. odoo-python
 #: code:addons/sign/models/sign_request.py:0
 msgid "Please configure senders'(%s) email addresses"
-msgstr "Määritä lähettäjien(%s) sähköpostiosoitteet"
+msgstr "Määritä lähettäjien (%s) sähköpostiosoitteet"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+msgid "Please provide a reason for refusal"
+msgstr "Anna syy kieltäytymiselle"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/wizard/sign_send_request.py:0
+#: code:addons/sign/wizard/sign_send_request_signer.py:0
 msgid "Please select recipients for the following roles: %(roles)s"
 msgstr "Valitse vastaanottajat seuraaviin rooleihin: %(roles)s"
 
@@ -2439,6 +2633,8 @@ msgid "Position Y"
 msgstr "Sijainti Y"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 msgid "Preview"
 msgstr "Esikatselu"
@@ -2455,15 +2651,15 @@ msgstr "Edistyminen"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "Public User"
 msgstr "Julkinen käyttäjä"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__radio
 #: model:sign.item.type,name:sign.sign_item_type_radio
-msgid "Radio Buttons"
-msgstr "Radiopainikkeet"
+msgid "Radio"
+msgstr "Radio"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item_radio_set__radio_items
@@ -2492,13 +2688,36 @@ msgid "Re-send SMS"
 msgstr "Lähetä tekstiviesti uudelleen"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
+#: model:ir.model.fields,field_description:sign.field_sign_item__constant
+msgid "Read-only"
+msgstr "Vain luku"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_item.py:0
+msgid ""
+"Read-only can only be applied to items of the following types: 'Text', "
+"'Name', 'Email', 'Phone', 'Company', 'Multiline', 'Date', 'Strikethrough'"
+msgstr ""
+"Vain-luku -tila voidaan asettaa vain seuraavan tyyppisille kentille: "
+"'Teksti', 'Nimi', 'Sähköposti', 'Puhelin', 'Yritys', 'Monirivi', "
+"'Päivämäärä', 'Yliviivaus'"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+msgid "Reason"
+msgstr "Syy"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_template__redirect_url
 msgid "Redirect Link"
 msgstr "Ohjauslinkki"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__refuse
 msgid "Refuse"
@@ -2506,16 +2725,9 @@ msgstr "Hylkää"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/signable_sign_request_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:sign.doc_sign
-msgid "Refuse Document"
-msgstr "Hylkää asiakirja"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
-msgid "Refuse to sign"
-msgstr "Kieltäydy allekirjoittamasta"
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
+msgid "Refused"
+msgstr "Hylätty"
 
 #. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__request_state__refused
@@ -2526,7 +2738,6 @@ msgstr "Kieltäytynyt allekirjoituksesta"
 #: model:ir.model.fields,field_description:sign.field_sign_request__reminder
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__reminder
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 msgid "Reminder"
 msgstr "Muistutus"
 
@@ -2535,6 +2746,22 @@ msgstr "Muistutus"
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__reminder_enabled
 msgid "Reminder Enabled"
 msgstr "Muistutus on käytössä"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
+msgid "Reminders"
+msgstr "Muistutukset"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "Remove from favorites"
+msgstr "Poista suosikeista"
+
+#. module: sign
+#: model:sign.template.tag,name:sign.sign_template_tag_4
+msgid "Rental"
+msgstr "Vuokraus"
 
 #. module: sign
 #: model:ir.ui.menu,name:sign.sign_reports
@@ -2550,8 +2777,6 @@ msgstr "Pyydä kohteen tietoja"
 #. odoo-javascript
 #: code:addons/sign/static/src/activity/activity_patch.xml:0
 #: code:addons/sign/static/src/backend_components/cog_menu/sign_request_cog_menu.xml:0
-#: model:ir.model.fields.selection,name:sign.selection__mail_activity_type__category__sign_request
-#: model:mail.activity.type,name:sign.mail_activity_data_signature_request
 msgid "Request Signature"
 msgstr "Pyynnön allekirjoitus"
 
@@ -2560,6 +2785,12 @@ msgstr "Pyynnön allekirjoitus"
 #: code:addons/sign/wizard/sign_send_request.py:0
 msgid "Request expiration date must be set in the future."
 msgstr "Pyynnön viimeinen voimassaolopäivä on asetettava tulevaisuuteen."
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/wizard/sign_send_request.py:0
+msgid "Request sent successfully"
+msgstr "Pyyntö lähetetty onnistuneesti"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__nb_total
@@ -2592,8 +2823,6 @@ msgid "Resent!"
 msgstr "Lähetä uudelleen!"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/initial_all_pages_dialog.xml:0
 #: model:ir.model.fields,field_description:sign.field_sign_item__responsible_id
 #: model:ir.model.fields,field_description:sign.field_sign_template__user_id
 msgid "Responsible"
@@ -2628,16 +2857,6 @@ msgid "Role"
 msgstr "Rooli"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_item_role_view_tree
-msgid "Role Name"
-msgstr "Roolin nimi"
-
-#. module: sign
-#: model:ir.ui.menu,name:sign.sign_item_role_menu
-msgid "Roles"
-msgstr "Roolit"
-
-#. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_iframe.js:0
 msgid "Rotate Clockwise"
@@ -2665,21 +2884,41 @@ msgid "Sales"
 msgstr "Myynti"
 
 #. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "Sample generated by Odoo for %s."
+msgstr "Odoo on luonut näytteen %s:ää varten."
+
+#. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.xml:0
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__save
+#: model_terms:ir.ui.view,arch_db:sign.res_company_view_form_sign_terms
 msgid "Save"
 msgstr "Tallenna"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+msgid "Save & close"
+msgstr "Tallenna & sulje"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/cog_menu/sign_template_custom_cog_menu.xml:0
 msgid "Save as Template"
 msgstr "Tallenna mallina"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_body.js:0
+#: code:addons/sign/static/src/backend_components/sign_status_indicator/sign_status_indicator.xml:0
+msgid "Save manually"
+msgstr "Tallenna manuaalisesti"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
 msgid "Saved"
 msgstr "Tallennettu"
 
@@ -2719,9 +2958,16 @@ msgid "Selection"
 msgstr "Valinta"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_iframe.js:0
+msgid "Selection field cannot be empty. Please add at least one option."
+msgstr "Valintakenttä ei voi olla tyhjä. Lisää ainakin yksi vaihtoehto."
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item__option_ids
 msgid "Selection options"
-msgstr "Valintavaihtoehdot"
+msgstr "Vaihtoehdot"
 
 #. module: sign
 #. odoo-javascript
@@ -2752,7 +2998,6 @@ msgstr "Lähetä uusi linkki"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
-#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 msgid "Send a reminder"
 msgstr "<span>Lähetä muistutus joka </span>"
 
@@ -2775,8 +3020,20 @@ msgstr "Lähetetyt pyynnöt"
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Sent by"
 msgstr "Lähettäjä"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_document__sequence
+msgid "Sequence"
+msgstr "Järjestys"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
+msgid "Set as favorite"
+msgstr "Aseta suosikiksi"
 
 #. module: sign
 #: model:ir.actions.act_window,name:sign.sign_settings_action
@@ -2787,36 +3044,38 @@ msgstr "Asetukset"
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.xml:0
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
 msgid "Share"
 msgstr "Jaa"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
-msgid "Share & Close"
-msgstr "Jaa ja sulje"
-
-#. module: sign
 #. odoo-python
 #: code:addons/sign/models/sign_template.py:0
-msgid "Share Document by Link"
-msgstr "Jaa asiakirja linkillä"
+msgid "Share Document"
+msgstr "Jaa dokumentti"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__share_link
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__share_link
 msgid "Share Link"
 msgstr "Jaa linkki"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
-msgid "Shareable"
-msgstr "Jaettavissa"
+#: model:ir.model.fields,field_description:sign.field_sign_request__is_shared
+msgid "Share Request Button"
+msgstr "Jaa pyyntö -painike"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/js/sign_share_button_action.js:0
+msgid "Share link copied to clipboard"
+msgstr "Jaettava linkki kopioitu leikepöydälle"
 
 #. module: sign
 #. odoo-python
 #: code:addons/sign/controllers/main.py:0
-#: code:addons/sign/models/sign_template.py:0
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__request_state__shared
 #: model:ir.model.fields.selection,name:sign.selection__sign_request__state__shared
 msgid "Shared"
@@ -2824,24 +3083,30 @@ msgstr "Jaettu"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
-msgid "Show all records which has next action date is before today"
-msgstr "Näytä kaikki tietueet joissa on toimenpide myöhässä"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
-msgid "Show standard terms & conditions on signature requests"
-msgstr "Näytä vakioehdot allekirjoituspyynnöissä"
+msgid "Show all records whose next activity date is past"
+msgstr ""
+"Näytä kaikki kirjaukset, joiden seuraavan toimenpiteen päivä on "
+"menneisyydessä"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.js:0
 #: code:addons/sign/static/src/dialogs/next_direct_sign_dialog.js:0
 #: code:addons/sign/static/src/dialogs/sign_name_and_signature_dialog.xml:0
+#: code:addons/sign/static/src/file_viewer/file_viewer.xml:0
 #: model:ir.ui.menu,name:sign.menu_document
+#: model:res.groups.privilege,name:sign.res_groups_privilege_sign
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Sign"
 msgstr "Allekirjoita"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_activity
+msgid "Sign Activity"
+msgstr "Allekirjoita toiminta"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_res_config_settings__use_sign_terms
@@ -2859,9 +3124,10 @@ msgid "Sign Default Terms and Conditions as a Web page"
 msgstr "Allekirjoituksen oletusehdot verkkosivuna"
 
 #. module: sign
-#: model:ir.model,name:sign.model_sign_duplicate_template_pdf
-msgid "Sign Duplicate Template with new PDF"
-msgstr "Allekirjoita kopioitu malli uudella PDF-tiedostolla"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "Sign Items Copied"
+msgstr "Allekirjoitettavat kohteet kopioitu"
 
 #. module: sign
 #. odoo-javascript
@@ -2873,7 +3139,6 @@ msgstr "Allekirjoita seuraava asiakirja"
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.xml:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
@@ -2886,7 +3151,9 @@ msgid "Sign Order"
 msgstr "Allekirjoituspyyntö"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_completed_document__sign_request_id
 #: model:ir.model.fields,field_description:sign.field_sign_log__sign_request_id
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__sign_request_id
 msgid "Sign Request"
 msgstr "Allekirjoituspyyntö"
 
@@ -2904,6 +3171,11 @@ msgstr "Lähetä allekirjoituspyyntö"
 #: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
 msgid "Sign Settings"
 msgstr "Allekirjoituksen asetukset"
+
+#. module: sign
+#: model:ir.model,name:sign.model_sign_template_preview
+msgid "Sign Tempate Preview"
+msgstr "Allekirjoita mallipohjan esikatselu"
 
 #. module: sign
 #: model:ir.model,name:sign.model_sign_template_tag
@@ -2928,6 +3200,12 @@ msgstr "Allekirjoita käyttöehtojen muoto"
 
 #. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/dialogs/thank_you_dialog.js:0
+msgid "Sign Up for free"
+msgstr "Rekisteröidy ilmaiseksi"
+
+#. module: sign
+#. odoo-javascript
 #: code:addons/sign/static/src/dialogs/sign_name_and_signature_dialog.xml:0
 msgid "Sign all"
 msgstr "Allekirjoita kaikki"
@@ -2942,6 +3220,11 @@ msgstr "Allekirjoita asiakirja"
 #: code:addons/sign/static/src/dialogs/thank_you_dialog.xml:0
 msgid "Sign now"
 msgstr "Allekirjoita nyt"
+
+#. module: sign
+#: model:ir.model,name:sign.model_sign_request_share
+msgid "Sign request share wizard"
+msgstr "Allekirjoituspyynnön ohjattu jakamistoiminto"
 
 #. module: sign
 #. odoo-python
@@ -2965,13 +3248,12 @@ msgid "Sign send request signer"
 msgstr "Allekirjoita lähetä pyyntö allekirjoittajalle"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
 #: model_terms:ir.ui.view,arch_db:sign.deleted_sign_request
 msgid ""
 "Sign up for Odoo Sign to manage your own documents and signature requests!"
 msgstr ""
-"Rekisteröidy Odoo Signiin ja hallitse omia asiakirjojasi ja "
-"allekirjoituspyyntöjäsi!"
+"Rekisteröidy Odoo Allekirjoita -sovellukseen ja hallitse omia asiakirjojasi "
+"ja allekirjoituspyyntöjäsi!"
 
 #. module: sign
 #: model:ir.actions.server,name:sign.sign_reminder_cron_ir_actions_server
@@ -2994,14 +3276,17 @@ msgstr "Allekirjoittajan hash:"
 #. odoo-javascript
 #. odoo-python
 #: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 #: code:addons/sign/static/src/components/sign_request/sign_items.xml:0
 #: code:addons/sign/static/src/js/tours/sign.js:0
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__signature
+#: model:ir.model.fields.selection,name:sign.selection__mail_activity_type__category__sign_request
 #: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__signature
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__sign
+#: model:mail.activity.type,name:sign.mail_activity_data_signature_request
+#: model:mail.activity.type,summary:sign.mail_activity_data_signature_request
 #: model:sign.item.type,name:sign.sign_item_type_signature
 #: model:sign.item.type,placeholder:sign.sign_item_type_signature
-#: model_terms:ir.ui.view,arch_db:sign._doc_sign
 #: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
 msgid "Signature"
 msgstr "Allekirjoitus"
@@ -3010,6 +3295,11 @@ msgstr "Allekirjoitus"
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
 msgid "Signature Date"
 msgstr "Allekirjoituksen päiväys"
+
+#. module: sign
+#: model:ir.model,name:sign.model_sign_document
+msgid "Signature Document"
+msgstr "Allekirjoitusasiakirja"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__sign_item_id
@@ -3023,11 +3313,6 @@ msgstr "Allekirjoituskohteen vaihtoehdot"
 
 #. module: sign
 #: model:ir.model,name:sign.model_sign_item_role
-msgid "Signature Item Party"
-msgstr "Allekirjoituskohteen osapuoli"
-
-#. module: sign
-#: model:ir.actions.act_window,name:sign.sign_item_role_action
 msgid "Signature Item Role"
 msgstr "Allekirjoituskohteen rooli"
 
@@ -3043,6 +3328,7 @@ msgid "Signature Item Value"
 msgstr "Allekirjoituskohteen arvo"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_document__sign_item_ids
 #: model:ir.model.fields,field_description:sign.field_sign_template__sign_item_ids
 msgid "Signature Items"
 msgstr "Allekirjoituskohteet"
@@ -3101,10 +3387,9 @@ msgid "Signature Template"
 msgstr "Allekirjoitusmalli"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/sign_items.xml:0
-msgid "Signature configuration"
-msgstr "Allekirjoituksen asetukset"
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+msgid "Signature fields"
+msgstr "Allekirjoituskentät"
 
 #. module: sign
 #. odoo-python
@@ -3115,6 +3400,12 @@ msgid ""
 msgstr ""
 "Mallia varten pyydetty allekirjoitus: %(template)s\n"
 "Allekirjoittajat: %(signatories)s"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.portal_my_home_menu_sign
+#: model_terms:ir.ui.view,arch_db:sign.portal_my_home_sign
+msgid "Signature requests"
+msgstr "Allekirjoituspyynnöt"
 
 #. module: sign
 #. odoo-python
@@ -3128,14 +3419,15 @@ msgid "Signature:"
 msgstr "Allekirjoitus:"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.portal_my_home_menu_sign
-#: model_terms:ir.ui.view,arch_db:sign.portal_my_home_sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
 msgid "Signatures"
 msgstr "Allekirjoitukset"
 
 #. module: sign
+#: model:ir.model.fields.selection,name:sign.selection__sign_request__state__signed
 #: model_terms:ir.ui.view,arch_db:sign.doc_sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "Signed"
 msgstr "Hyväksytty"
 
@@ -3145,9 +3437,10 @@ msgid "Signed Count"
 msgstr "Allekirjoittajien määrä"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Signed Documents"
-msgstr "Allekirjoitetut asiakirjat"
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "Signed Requests"
+msgstr "Allekirjoituspyynnöt"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__signed_without_extra_auth
@@ -3160,11 +3453,21 @@ msgid "Signed document"
 msgstr "Allekirjoitettu asiakirja"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+msgid "Signed documents"
+msgstr "Allekirjoitetut asiakirjat"
+
+#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__signing_date
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
 #: model_terms:ir.ui.view,arch_db:sign.signer_status_wrapper
 msgid "Signed on"
 msgstr "Hyväksytty"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+msgid "Signees"
+msgstr "Allekirjoittajat"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__partner_id
@@ -3173,14 +3476,23 @@ msgstr "Allekirjoittaja"
 
 #. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar_role_items.js:0
+msgid "Signer Edition"
+msgstr "Allekirjoittajan versio"
+
+#. module: sign
+#. odoo-javascript
 #: code:addons/sign/static/src/fields/signer_x2many.js:0
 msgid "Signer One 2 Many"
 msgstr "Allekirjoittaja One 2 Many"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
 #: model:ir.model.fields,field_description:sign.field_sign_request__request_item_ids
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__signer_ids
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Signers"
 msgstr "Allekirjoittajat"
 
@@ -3188,6 +3500,11 @@ msgstr "Allekirjoittajat"
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__signers_count
 msgid "Signers Count"
 msgstr "Allekirjoittajien määrä"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_res_company__signing_certificate_id
+msgid "Signing Certificate"
+msgstr "Allekirjoitustodistus"
 
 #. module: sign
 #. odoo-python
@@ -3206,6 +3523,11 @@ msgid "Signing Order"
 msgstr "Allekirjoituspyyntö"
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_res_config_settings__signing_certificate_id
+msgid "Signing certificate"
+msgstr "Allekirjoitustodistus"
+
+#. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/js/tours/sign.js:0
 msgid ""
@@ -3217,34 +3539,33 @@ msgstr ""
 "lähetettyä linkkiä."
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
-msgid "Some fields have still to be completed"
-msgstr "Joitakin kenttiä on vielä täydennettävä"
-
-#. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "Some required items are not filled"
 msgstr "Joitakin vaadittuja kohtia ei ole täytetty"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_send_request_view_form
+msgid "Some signers have no related sign items."
+msgstr "Joillakin allekirjoittajilla ei ole liittyviä allekirjoituskohteita."
+
+#. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "Some unauthorised items are filled"
 msgstr "Jotkin luvattomat tuotteet täytetään"
 
 #. module: sign
 #. odoo-javascript
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/models/sign_document.py:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_body.js:0
 msgid "Somebody is already filling a document which uses this template"
 msgstr "Joku on jo täyttämässä asiakirjaa, jossa käytetään tätä mallia"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
+#: code:addons/sign/static/src/components/sign_request/document_signable.js:0
 msgid "Sorry, an error occurred, please try to fill the document again."
 msgstr "Valitettavasti tapahtui virhe, yritä täyttää asiakirja uudelleen."
 
@@ -3253,6 +3574,11 @@ msgstr "Valitettavasti tapahtui virhe, yritä täyttää asiakirja uudelleen."
 #: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
 msgid "Sorry, you cannot refuse this document"
 msgstr "Valitettavasti ette voi kieltäytyä vastaanottamasta tätä asiakirjaa"
+
+#. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_item_type__model_id
+msgid "Specific Model Linked"
+msgstr "Erityinen malli linkitetty"
 
 #. module: sign
 #: model:ir.model.fields,help:sign.field_sign_send_request__set_sign_order
@@ -3285,6 +3611,7 @@ msgstr "Pyynnön tila toimintalokissa"
 #. odoo-python
 #: code:addons/sign/controllers/portal.py:0
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 msgid "Status"
 msgstr "Tila"
 
@@ -3303,10 +3630,27 @@ msgstr ""
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
 msgid "Stop Sharing"
 msgstr "Lopeta jakaminen"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_share_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
+msgid "Stop sharing"
+msgstr "Lopeta jakaminen"
+
+#. module: sign
+#: model:ir.model.fields.selection,name:sign.selection__sign_item_type__item_type__strikethrough
+#: model:sign.item.type,name:sign.sign_item_type_strikethrough
+#: model:sign.item.type,placeholder:sign.sign_item_type_strikethrough
+msgid "Strikethrough"
+msgstr "Yliviivaus"
+
+#. module: sign
+#: model:sign.item.type,tip:sign.sign_item_type_strikethrough
+msgid "Strikethrough the highlighted area"
+msgstr "Yliviivaa korostettu alue"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__subject
@@ -3337,12 +3681,13 @@ msgstr "Tunniste on jo olemassa!"
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_tag_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_tag_view_tree
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_view_form
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_tree
 msgid "Tags"
 msgstr "Tunnisteet"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_header_tags.xml:0
 msgid "Tags:"
 msgstr "Tunnisteet:"
 
@@ -3356,8 +3701,13 @@ msgstr ""
 "allekirjoituskenttä täytetään automaattisesti allekirjoitushetkellä."
 
 #. module: sign
+#: model:ir.model.fields,field_description:sign.field_sign_document__template_id
+#: model:ir.model.fields,field_description:sign.field_sign_item__template_id
 #: model:ir.model.fields,field_description:sign.field_sign_request__template_id
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__template_id
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__template_id
+#: model:ir.model.fields,field_description:sign.field_sign_template_preview__template_id
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_form
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_kanban
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
 msgid "Template"
@@ -3366,16 +3716,22 @@ msgstr "Malli"
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_request/sign_request_control_panel.js:0
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_body.js:0
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_control_panel.js:0
 #: code:addons/sign/static/src/views/hooks.js:0
 msgid "Template %s"
 msgstr "Malli %s"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_template_top_bar.xml:0
-msgid "Template Properties"
-msgstr "Mallin ominaisuudet"
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_search
+msgid "Template Name"
+msgstr "Mallin nimi"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "Template Preview"
+msgstr "Mallin esikatselu"
 
 #. module: sign
 #: model:ir.actions.server,name:sign.sign_template_tour_trigger_action
@@ -3388,8 +3744,6 @@ msgid "Template or Tag"
 msgstr "Malli tai etiketti"
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
 #: model:ir.actions.act_window,name:sign.sign_template_action
 #: model:ir.ui.menu,name:sign.sign_template_menu
 msgid "Templates"
@@ -3457,9 +3811,10 @@ msgstr ""
 "Allekirjoituspyyntö on ehkä poistettu tai sitä on muutettu."
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.encrypted_ask_password
-msgid "The PDF's password is required to generate the final document."
-msgstr "PDF:n salasana tarvitaan lopullisen asiakirjan luomiseen."
+#. odoo-python
+#: code:addons/sign/models/sign_document.py:0
+msgid "The attachment data list cannot be empty."
+msgstr "Liitedatalista ei voi olla tyhjä."
 
 #. module: sign
 #. odoo-python
@@ -3478,7 +3833,7 @@ msgstr "Laskelma perustuu verkkosivustoon"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid ""
 "The contact of %(role)s has been changed from %(old_partner)s to "
 "%(new_partner)s."
@@ -3495,26 +3850,14 @@ msgstr "Asiakirja"
 #. module: sign
 #. odoo-python
 #: code:addons/sign/models/sign_request.py:0
+msgid "The document %(template_name)s has been rejected by %(partner_name)s"
+msgstr "%(partner_name)s hylkäsi asiakirjan %(template_name)s"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request.py:0
 msgid "The document %s has been fully signed."
 msgstr "Asiakirja %s on allekirjoitettu kokonaisuudessaan."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "The document (%s) has been rejected by one of the signers"
-msgstr "Yksi allekirjoittajista on hylännyt asiakirjan (%s)"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
-msgid "The document has been refused"
-msgstr "Asiakirja on hylätty"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "The document has been signed by a signer and cannot be edited"
-msgstr "Allekirjoittaja on allekirjoittanut asiakirjan, eikä sitä voi muokata"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
@@ -3554,13 +3897,19 @@ msgstr "Posti on lähetetty kopioituihin yhteystietoihin: %(contacts)s"
 
 #. module: sign
 #. odoo-python
+#: code:addons/sign/models/sign_request_item.py:0
+msgid "The public user must identify itself for the refusal."
+msgstr "Julkisen käyttäjän on tunnistauduttava kieltäytyäkseen."
+
+#. module: sign
+#. odoo-python
 #: code:addons/sign/controllers/terms.py:0
 msgid "The requested page is invalid, or doesn't exist anymore."
 msgstr "Pyydetty sivu on virheellinen tai sitä ei ole enää olemassa."
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/models/sign_item_role.py:0
 msgid "The role %s is required by the Sign application and cannot be deleted."
 msgstr "Sign-sovellus tarvitsee roolin %s, eikä sitä voi poistaa."
 
@@ -3572,19 +3921,45 @@ msgstr "Allekirjoituspyyntöä ei ole allekirjoitettu kokonaan"
 
 #. module: sign
 #. odoo-python
+#: code:addons/sign/wizard/sign_request_share.py:0
+msgid "The sign request validity cannot be set in the past."
+msgstr "Allekirjoituspyynnön voimassaoloa ei voi asettaa menneisyyteen."
+
+#. module: sign
+#. odoo-python
 #: code:addons/sign/controllers/main.py:0
-msgid "The signature has been canceled by %(partner)s(%(role)s)"
-msgstr "Allekirjoitus on peruutettu %(partner)s(%(role)s)"
+msgid "The signature has been canceled by %(partner)s (%(role)s)"
+msgstr "Allekirjoituksen perui %(partner)s (%(role)s) "
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "The signature has been refused by %(partner)s(%(role)s)"
-msgstr "Allekirjoitus on hylätty %(partner)s(%(role)s)"
+#: code:addons/sign/controllers/main.py:0
+msgid "The signature has been canceled by %(partner)s with email (%(email)s)"
+msgstr ""
+"Allekirjoitus on peruttu käyttäjän %(partner)s toimesta (sähköposti: "
+"%(email)s)"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
+msgid ""
+"The signature has been refused by %(name)s with email (%(email)s), refusal "
+"reason:"
+msgstr ""
+"Allekirjoitus on peruttu käyttäjän %(name)s toimesta (sähköposti: "
+"%(email)s). Kieltäytymisen syy:"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request_item.py:0
+msgid ""
+"The signature has been refused by %(partner)s (%(role)s), refusal reason:"
+msgstr ""
+"%(partner)s kieltäytyi allekirjoittamasta (%(role)s). Kieltäytymisen syy:"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "The signature mail has been sent to: "
 msgstr "Allekirjoitusposti on lähetetty osoitteeseen: "
 
@@ -3594,30 +3969,10 @@ msgid "The signature mail has been sent."
 msgstr "Allekirjoitusposti on lähetetty."
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
-msgid "The signature request has been cancelled"
-msgstr "Allekirjoituspyyntö on peruutettu"
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "The signature request has been edited by: %s."
-msgstr "Allekirjoituspyyntöä on muokannut: %s."
-
-#. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
 msgid "The template doesn't exist anymore."
 msgstr "Mallia ei ole enää olemassa."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/wizard/sign_duplicate_template_with_pdf.py:0
-msgid ""
-"The template has more pages than the current file, it can't be applied."
-msgstr ""
-"Mallissa on enemmän sivuja kuin nykyisessä tiedostossa, sitä ei voida "
-"soveltaa."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -3634,17 +3989,23 @@ msgstr ""
 "sivujen kokonaismäärä. Oletamme, että yksi sivu painaa 0,005 kiloa."
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/wizard/sign_duplicate_template_with_pdf.py:0
-msgid "The uploaded file is not a valid PDF. Please upload a valid PDF file."
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/template_alert_dialog/template_alert_dialog.xml:0
+msgid "The uploaded files cannot be read, they may be corrupted or encrypted."
 msgstr ""
-"Ladattu tiedosto ei ole kelvollinen PDF-tiedosto. Lataa kelvollinen PDF-"
-"tiedosto."
+"Ladattuja tiedostoja ei voida lukea, ne saattavat olla vioittuneita tai "
+"salattuja."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
 msgid "There are no signatures request."
 msgstr "Allekirjoituspyyntöjä ei ole."
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/sign_template.py:0
+msgid "There are no values in selection field."
+msgstr "Valintakentässä ei ole arvoja."
 
 #. module: sign
 #. odoo-javascript
@@ -3654,7 +4015,7 @@ msgstr "Muut asiakirjat odottavat allekirjoitustasi:"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_document.py:0
 msgid ""
 "There was an issue downloading your document. Please contact an "
 "administrator."
@@ -3671,20 +4032,13 @@ msgstr ""
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/backend_components/template_alert_dialog/template_alert_dialog.xml:0
-msgid "These files cannot be read, they may be corrupted or encrypted."
-msgstr ""
-"Näitä tiedostoja ei voi lukea, ne voivat olla vioittuneita tai salattuja."
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/template_alert_dialog/template_alert_dialog.xml:0
-msgid "They will be removed from the uploaded files"
-msgstr "Ne poistetaan ladatuista tiedostoista"
+#: code:addons/sign/static/src/backend_components/sign_template/sign_save_template_dialog.xml:0
+msgid "This document has been used"
+msgstr "Tätä asiakirjaa on käytetty"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This function can only be called with sudo."
 msgstr "Tätä toimintoa voi kutsua vain sudo-tunnuksella."
 
@@ -3713,25 +4067,25 @@ msgstr "Tätä allekirjoituspyyntöä ei voida allekirjoittaa"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This sign request is not valid anymore"
 msgstr "Tämä allekirjoituspyyntö ei ole enää voimassa"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This sign request item cannot be filled"
 msgstr "Tätä allekirjoituspyyntöä ei voida täyttää"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This sign request item cannot be refused"
 msgstr "Tätä allekirjoituspyyntöä ei voida hylätä"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "This sign request item cannot be signed"
 msgstr "Tätä allekirjoituspyyntöä ei voida allekirjoittaa"
 
@@ -3777,7 +4131,6 @@ msgid "Transaction"
 msgstr "Tapahtuma"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
 #: model_terms:ir.ui.view,arch_db:sign.deleted_sign_request
 msgid "Try Odoo Sign"
 msgstr "Kokeile Odoo Signia"
@@ -3851,9 +4204,25 @@ msgid "Unique Code via SMS"
 msgstr "Ainutlaatuinen koodi tekstiviestillä"
 
 #. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
+msgid "Unknown Partner"
+msgstr "Tuntematon kumppani"
+
+#. module: sign
 #: model:ir.model.fields.selection,name:sign.selection__sign_log__action__update
 msgid "Update"
 msgstr "Päivitä"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.res_config_settings_view_form
+msgid "Update Terms"
+msgstr "Päivitä ehdot"
+
+#. module: sign
+#. odoo-python
+#: code:addons/sign/models/res_config_settings.py:0
+msgid "Update Terms & Conditions"
+msgstr "Päivitä ehdot & edellytykset"
 
 #. module: sign
 #. odoo-javascript
@@ -3868,16 +4237,12 @@ msgid "Upload PDF"
 msgstr "Lataa PDF"
 
 #. module: sign
+#. odoo-javascript
 #. odoo-python
 #: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/static/src/views/common.xml:0
 msgid "Upload a PDF"
 msgstr "Lataa PDF-tiedosto"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/views/common.xml:0
-msgid "Upload a PDF & Sign"
-msgstr "Lataa PDF ja allekirjoita"
 
 #. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_all_request_action
@@ -3903,9 +4268,10 @@ msgid "Upload a pdf that you want to sign directly"
 msgstr "Lataa pdf-tiedosto, jonka haluat allekirjoittaa suoraan"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_template_view_kanban
-msgid "Use Layout"
-msgstr "Käytä asettelua"
+#. odoo-javascript
+#: code:addons/sign/static/src/views/common.xml:0
+msgid "Upload documents"
+msgstr "Lataa asiakirjat"
 
 #. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_template_tag_action
@@ -3913,11 +4279,6 @@ msgid "Use Tags to manage your Sign Templates and Sign Requests"
 msgstr ""
 "Käytä tunnisteita hallitaksesi omia allekirjoitusmallejasi ja "
 "allekirjoituspyyntöjäsi"
-
-#. module: sign
-#: model:ir.actions.act_window,name:sign.action_sign_duplicate_template_with_pdf
-msgid "Use the layout of fields on a new PDF"
-msgstr "Käytä kenttien asettelua uudessa PDF-tiedostossa"
 
 #. module: sign
 #: model:ir.model,name:sign.model_res_users
@@ -3938,15 +4299,10 @@ msgstr "Käyttäjä: Omat mallit"
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__validity
+#: model:ir.model.fields,field_description:sign.field_sign_request_share__validity
 #: model:ir.model.fields,field_description:sign.field_sign_send_request__validity
 msgid "Valid Until"
 msgstr "Voimassaolo"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
-msgid "Validate"
-msgstr "Vahvista"
 
 #. module: sign
 #. odoo-javascript
@@ -3955,15 +4311,13 @@ msgid "Validate & Send"
 msgstr "Vahvista ja lähetä"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/sign_request/edit_while_signing_signable_pdf_iframe.js:0
-msgid "Validate & the next signatory is “%s”"
-msgstr "Vahvista ja seuraava allekirjoittaja on \"%s\""
-
-#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign._doc_sign
-msgid "Validate &amp; Send Completed Document"
-msgstr "Vahvista ja lähetä valmis asiakirja"
+msgid ""
+"Validate <span class=\"o_sign_validate_text\"> &amp; Send Completed "
+"Document</span>"
+msgstr ""
+"Vahvista<span class=\"o_sign_validate_text\"> &amp; Lähetä valmis "
+"asiakirja</span>"
 
 #. module: sign
 #. odoo-javascript
@@ -3972,6 +4326,8 @@ msgid "Validation Code"
 msgstr "Vahvistuskoodi"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_item_custom_popover.xml:0
 #: model:ir.model.fields,field_description:sign.field_sign_request_item__sign_item_value_ids
 #: model:ir.model.fields,field_description:sign.field_sign_request_item_value__value
 msgid "Value"
@@ -3987,6 +4343,11 @@ msgstr "Arvo on jo olemassa!"
 #: code:addons/sign/static/src/dialogs/sms_signer_dialog.xml:0
 msgid "Verify"
 msgstr "Vahvista"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_requests
+msgid "View"
+msgstr "Näytä"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
@@ -4021,7 +4382,6 @@ msgstr "Odottaa muita"
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
 msgid "Warning"
 msgstr "Varoitus"
 
@@ -4070,13 +4430,13 @@ msgstr ""
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.js:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 msgid ""
-"We'll send an email to warn other contacts in copy & signers with the reason"
-" you provided."
+"We'll notify the sender, signer and copied contacts by email.\n"
+"                Your refusal reason will be included to keep things clear and transparent for everyone."
 msgstr ""
-"Lähetämme sähköpostiviestin, jossa varoitamme muita copy & signers "
-"-osoitteen yhteyshenkilöitä antamallasi syyllä."
+"Ilmoitamme lähettäjälle, allekirjoittajalle ja kopioiduissa kentissä oleville yhteystiedoille sähköpostilla.\n"
+"                   Kieltäytymisen syy lisätään, jotta asiat pysyvät selkeinä ja läpinäkyvinä kaikille."
 
 #. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_request__website_message_ids
@@ -4104,12 +4464,6 @@ msgid "What about those conversions I see?"
 msgstr "Entä nuo näkemäni konversiot?"
 
 #. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
-msgid "Why do you refuse to sign this document?"
-msgstr "Miksi kieltäydytte allekirjoittamasta tätä asiakirjaa?"
-
-#. module: sign
 #: model:ir.model.fields,field_description:sign.field_sign_item__width
 msgid "Width"
 msgstr "Leveys"
@@ -4126,15 +4480,15 @@ msgid "Write email or search contact..."
 msgstr "Kirjoita sähköpostia tai etsi yhteystiedot..."
 
 #. module: sign
-#. odoo-python
-#: code:addons/sign/controllers/main.py:0
-msgid "Wrong password"
-msgstr "Väärä salasana"
-
-#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "XYZ123456"
 msgstr "XYZ123456"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/editable_pdf_iframe_mixin.js:0
+msgid "Yes"
+msgstr "Kyllä"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.deleted_sign_request
@@ -4144,12 +4498,6 @@ msgid ""
 msgstr ""
 "Voit pyytää apua sähköpostitse henkilöltä, joka kutsui sinut "
 "allekirjoittamaan asiakirjan."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
-msgid "You can only add new items for the current role"
-msgstr "Voit lisätä uusia kohteita vain nykyiseen rooliin"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_expired
@@ -4162,23 +4510,13 @@ msgstr ""
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
-msgid ""
-"You can't delete a template for which signature requests exist but you can "
-"archive it instead."
-msgstr ""
-"Et voi poistaa mallia, jolle on olemassa allekirjoituspyyntöjä, mutta voit "
-"sen sijaan arkistoida sen."
-
-#. module: sign
-#. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "You cannot reassign this signatory"
 msgstr "Tätä allekirjoittajaa ei voi siirtää uudelleen"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_template.py:0
+#: code:addons/sign/wizard/sign_request_share.py:0
 msgid ""
 "You cannot share this document by link, because it has fields to be filled "
 "by different roles. Use Send button instead."
@@ -4193,8 +4531,8 @@ msgid ""
 "You do not have access to these documents, please contact a Sign "
 "Administrator."
 msgstr ""
-"Jos sinulla ei ole pääsyä näihin asiakirjoihin, ota yhteyttä Sign "
-"Administratoriin."
+"Jos sinulla ei ole pääsyä näihin asiakirjoihin, ota yhteyttä Allekirjoitus-"
+"sovelluksen ylläpitäjään."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_refused
@@ -4216,7 +4554,7 @@ msgstr ""
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "You need to define a signatory"
 msgstr "Sinun on määriteltävä allekirjoittaja"
 
@@ -4233,11 +4571,6 @@ msgid "You will get the signed document by email."
 msgstr "Saat allekirjoitetun asiakirjan sähköpostitse."
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.canceled_sign_request_item
-msgid "You won't receive any notification for this signature request anymore."
-msgstr "Et saa enää mitään ilmoitusta tästä allekirjoituspyynnöstä."
-
-#. module: sign
 #: model_terms:ir.actions.act_window,help:sign.sign_all_request_action
 #: model_terms:ir.actions.act_window,help:sign.sign_request_action
 #: model_terms:ir.actions.act_window,help:sign.sign_template_action
@@ -4246,35 +4579,29 @@ msgstr ""
 "Olet yhden klikkauksen päässä allekirjoitusprosessin automatisoinnista!"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_portal_my_request
-msgid "Your Information"
-msgstr "Sinun tiedot"
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_action.js:0
+msgid ""
+"Your changes will be discarded. Would you like to save them as a template?"
+msgstr "Muutoksesi hylätään. Haluatko tallentaa ne mallipohjaksi?"
 
 #. module: sign
 #. odoo-python
-#: code:addons/sign/models/sign_request.py:0
+#: code:addons/sign/models/sign_request_item.py:0
 msgid "Your confirmation code is %s"
 msgstr "Vahvistuskoodisi on %s"
 
 #. module: sign
 #. odoo-javascript
 #: code:addons/sign/static/src/dialogs/public_signer_dialog.xml:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 msgid "Your email"
 msgstr "Sähköpostisi"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/dialogs/encrypted_dialog.xml:0
-msgid ""
-"Your file is encrypted, PDF's password is required to generate final "
-"document. The final document will be encrypted with the same password."
-msgstr ""
-"Tiedostosi on salattu, PDF:n salasana tarvitaan lopullisen asiakirjan "
-"luomiseen. Lopullinen asiakirja salataan samalla salasanalla."
-
-#. module: sign
-#. odoo-javascript
 #: code:addons/sign/static/src/dialogs/public_signer_dialog.xml:0
+#: code:addons/sign/static/src/dialogs/sign_refusal_dialog.xml:0
 msgid "Your name"
 msgstr "Nimesi"
 
@@ -4286,7 +4613,7 @@ msgstr "Allekirjoituksesi on tallennettu. Seuraava allekirjoittaja on"
 
 #. module: sign
 #. odoo-javascript
-#: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
+#: code:addons/sign/static/src/components/sign_request/document_signable.js:0
 msgid ""
 "Your signature was not submitted. Ensure the SMS validation code is correct."
 msgstr ""
@@ -4294,15 +4621,15 @@ msgstr ""
 "validointikoodi on oikea."
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/views/helper/sign_action_helper.xml:0
+msgid "a file"
+msgstr "tiedosto"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_completed
 msgid "and"
 msgstr "ja"
-
-#. module: sign
-#. odoo-javascript
-#: code:addons/sign/static/src/backend_components/template_alert_dialog/template_alert_dialog.xml:0
-msgid "and the process will continue"
-msgstr "ja prosessi jatkuu"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
@@ -4345,6 +4672,11 @@ msgstr "päivää."
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "demo@email.com"
 msgstr "demo@email.com"
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
+msgid "document1.pdf, document2.pdf"
+msgstr "document1.pdf, document2.pdf"
 
 #. module: sign
 #. odoo-javascript
@@ -4420,6 +4752,12 @@ msgid "https://c.environmentalpaper.org/"
 msgstr "https://c.environmentalpaper.org/"
 
 #. module: sign
+#. odoo-python
+#: code:addons/sign/models/res_partner.py:0
+msgid "id"
+msgstr "tunniste"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_request_logs_user
 msgid "ip"
 msgstr "ip"
@@ -4479,6 +4817,12 @@ msgstr "merkitse se"
 
 #. module: sign
 #. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "mode."
+msgstr "tila."
+
+#. module: sign
+#. odoo-javascript
 #: code:addons/sign/static/src/components/sign_request/signable_PDF_iframe.js:0
 msgid "next"
 msgstr "seuraava"
@@ -4514,11 +4858,6 @@ msgid "showers"
 msgstr "suihkut"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_tree
-msgid "sign"
-msgstr "kirjaudu"
-
-#. module: sign
 #: model:sign.item.type,tip:sign.sign_item_type_signature
 msgid "sign it"
 msgstr "allekirjoita"
@@ -4534,15 +4873,16 @@ msgid "sign.message_cc"
 msgstr "sign.message_cc"
 
 #. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.sign_request_view_search
-msgid "tags"
-msgstr "tunnisteet"
-
-#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_el
 #: model_terms:ir.ui.view,arch_db:sign.green_report_el_pdf
 msgid "that's"
 msgstr "se on"
+
+#. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_save_template_dialog.xml:0
+msgid "times."
+msgstr "kertaa."
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_request
@@ -4567,9 +4907,20 @@ msgid "trees"
 msgstr "puut"
 
 #. module: sign
+#. odoo-javascript
+#: code:addons/sign/static/src/backend_components/sign_template/sign_template_sidebar.xml:0
+msgid "visualization"
+msgstr "visualisointi"
+
+#. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_savings_report
 msgid "we've got a list of consumption for 1000 kg of paper usage."
 msgstr "meillä on luettelo kulutuksesta 1 000 kg:n paperinkäytölle."
+
+#. module: sign
+#: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_refused
+msgid "with the following reason"
+msgstr "seuraavasta syystä"
 
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.sign_template_mail_not_enough_credits
@@ -4584,11 +4935,5 @@ msgstr "sinä"
 #. module: sign
 #: model_terms:ir.ui.view,arch_db:sign.green_report_el
 #: model_terms:ir.ui.view,arch_db:sign.green_report_el_pdf
-msgid "{{green_report_el_title}}"
-msgstr "{{green_report_el_title}}"
-
-#. module: sign
-#: model_terms:ir.ui.view,arch_db:sign.green_report_el
-#: model_terms:ir.ui.view,arch_db:sign.green_report_el_pdf
-msgid "{{green_report_el_title}} Summary"
-msgstr "{{green_report_el_title}} Yhteenveto"
+msgid "{{0}} Summary"
+msgstr "{{0}} Yhteenveto"

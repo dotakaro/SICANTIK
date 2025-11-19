@@ -1,6 +1,7 @@
-from odoo import models, Command, _
-from odoo.exceptions import UserError
+from odoo import Command, _, api, models
+from odoo.exceptions import RedirectWarning, UserError
 
+import json
 import re
 
 from math import copysign
@@ -28,33 +29,34 @@ class AccountReconcileModelLine(models.Model):
             'name': self.label,
             'partner_id': partner.id,
             'analytic_distribution': self.analytic_distribution,
-            'tax_ids': [Command.set(taxes.ids)],
             'reconcile_model_id': self.model_id.id,
         }
+        if taxes:
+            values['tax_ids'] = [Command.set(taxes.ids)]
         if self.account_id:
             values['account_id'] = self.account_id.id
         return values
 
-    def _apply_in_manual_widget(self, residual_amount_currency, partner, currency):
+    def _apply_in_manual_widget(self, residual_amount_currency, residual_balance, partner, st_line):
         """ Prepare a dictionary that will be used later to create a new journal item (account.move.line) for the
         given reconcile model line used by the manual reconciliation widget.
 
-        Note: 'journal_id' is added to the returned dictionary even if it is a related readonly field.
-        It's a hack for the manual reconciliation widget. Indeed, a single journal entry will be created for each
-        journal.
-
-        :param residual_amount_currency:    The current balance expressed in the account's currency.
+        :param residual_amount_currency:    The current amount currency expressed in the account's currency.
+        :param residual_balance:            The current balance expressed in the company currency.
         :param partner:                     The partner to be linked to the journal item.
-        :param currency:                    The currency set on the account in the manual reconciliation widget.
+        :param st_line:                     The statement line.
         :return:                            A python dictionary.
         """
         self.ensure_one()
 
+        currency = st_line.foreign_currency_id or st_line.journal_id.currency_id or st_line.company_currency_id
         if self.amount_type == 'percentage':
             amount_currency = currency.round(residual_amount_currency * (self.amount / 100.0))
+            balance = st_line.company_currency_id.round(residual_balance * (self.amount / 100.0))
         elif self.amount_type == 'fixed':
             sign = 1 if residual_amount_currency > 0.0 else -1
             amount_currency = currency.round(self.amount * sign)
+            balance = st_line.company_currency_id.round(self.amount * sign)
         else:
             raise UserError(_("This reconciliation model can't be used in the manual reconciliation widget because its "
                               "configuration is not adapted"))
@@ -62,15 +64,16 @@ class AccountReconcileModelLine(models.Model):
         return {
             **self._prepare_aml_vals(partner),
             'currency_id': currency.id,
+            'balance': balance,
             'amount_currency': amount_currency,
-            'journal_id': self.journal_id.id,
         }
 
-    def _apply_in_bank_widget(self, residual_amount_currency, partner, st_line):
+    def _apply_in_bank_widget(self, residual_amount_currency, residual_balance, partner, st_line):
         """ Prepare a dictionary that will be used later to create a new journal item (account.move.line) for the
         given reconcile model line used by the bank reconciliation widget.
 
-        :param residual_amount_currency:    The current balance expressed in the statement line's currency.
+        :param residual_amount_currency:    The current amount currency expressed in the statement line's currency.
+        :param residual_balance:            The current balance expressed in the company currency.
         :param partner:                     The partner to be linked to the journal item.
         :param st_line:                     The statement line mounted inside the bank reconciliation widget.
         :return:                            A python dictionary.
@@ -81,33 +84,22 @@ class AccountReconcileModelLine(models.Model):
         aml_values = {'currency_id': currency.id}
 
         if self.amount_type == 'percentage_st_line':
-            transaction_amount, transaction_currency, journal_amount, journal_currency, _company_amount, _company_currency \
+            _transaction_amount, _transaction_currency, journal_amount, journal_currency, company_amount, company_currency \
                 = st_line._get_accounting_amounts_and_currencies()
-            if self.model_id.rule_type == 'writeoff_button' and self.model_id.counterpart_type in ('sale', 'purchase'):
-                # The invoice should be created using the transaction currency.
-                aml_values['amount_currency'] = currency.round(-transaction_amount * self.amount / 100.0)
-                aml_values['percentage_st_line'] = self.amount / 100.0
-                aml_values['currency_id'] = transaction_currency.id
-            else:
-                # The additional journal items follow the journal currency.
-                aml_values['amount_currency'] = currency.round(-journal_amount * self.amount / 100.0)
-                aml_values['currency_id'] = journal_currency.id
+            aml_values['amount_currency'] = currency.round(-journal_amount * self.amount / 100.0)
+            aml_values['balance'] = company_currency.round(-company_amount * self.amount / 100.0)
+            aml_values['currency_id'] = journal_currency.id
         elif self.amount_type == 'regex':
-            match = re.search(self.amount_string, st_line.payment_ref)
-            if match:
-                sign = 1 if residual_amount_currency > 0.0 else -1
-                decimal_separator = self.model_id.decimal_separator
-                try:
-                    extracted_match_group = re.sub(r'[^\d' + decimal_separator + ']', '', match.group(1))
-                    extracted_balance = float(extracted_match_group.replace(decimal_separator, '.'))
-                    aml_values['amount_currency'] = copysign(extracted_balance * sign, residual_amount_currency)
-                except ValueError:
-                    aml_values['amount_currency'] = 0.0
-            else:
-                aml_values['amount_currency'] = 0.0
+            aml_values['amount_currency'] = self._get_amount_currency_by_regex(st_line, residual_amount_currency, self.amount_string)
+            aml_values['balance'] = self._get_amount_currency_by_regex(st_line, residual_balance, self.amount_string)
 
-        if 'amount_currency' not in aml_values:
-            aml_values.update(self._apply_in_manual_widget(residual_amount_currency, partner, currency))
+        if 'amount_currency' not in aml_values or 'balance' not in aml_values:
+            aml_values.update(self._apply_in_manual_widget(
+                residual_amount_currency=residual_amount_currency,
+                residual_balance=residual_balance,
+                partner=partner,
+                st_line=st_line,
+            ))
         else:
             aml_values.update(self._prepare_aml_vals(partner))
 
@@ -115,3 +107,30 @@ class AccountReconcileModelLine(models.Model):
             aml_values['name'] = st_line.payment_ref
 
         return aml_values
+
+    @api.model
+    def _get_amount_currency_by_regex(self, st_line, residual_amount_currency, amount_string):
+        sign = 1 if residual_amount_currency > 0.0 else -1
+        transaction_details = json.dumps(st_line.transaction_details) if st_line.transaction_details else False
+        for target_field in (st_line.payment_ref, transaction_details, st_line.narration):
+            if not target_field:
+                continue
+            if match := re.search(amount_string, target_field):
+                try:
+                    extracted_match_group = re.search(r'\d+[,.]?\d*', match.group(1))
+                    extracted_balance = float(extracted_match_group.group().replace(',', '.'))
+                    return copysign(extracted_balance * sign, residual_amount_currency)
+                except IndexError:         # from .group(1) if the regex doesn't contain a parenthesis part
+                    raise RedirectWarning(_("The regular expression for capturing the counterpart amount appears to be incorrectly formatted.\n"
+                        "Please make sure that the part of the regex capturing the amount is the first (or only) one in parentheses, for example: BRT: ([\\d,.]+)."),
+                        self.model_id._get_records_action(),
+                        _("Open reconcile model")
+                    )
+                except AttributeError:     # from an inconclusive search -> None.group().replace(...)
+                    raise RedirectWarning(_("The regular expression for capturing the counterpart amount appears to be incorrectly formatted.\n"
+                        "Please make sure that the part of the regex capturing the amount (in parentheses) cannot capture an empty value (usually by an incorrect use of ? or *) "
+                        "or any value with no digit. For example: BRT: ([\\d,.]+)."),
+                        self.model_id._get_records_action(),
+                        _("Open reconcile model")
+                    )
+        return 0.0

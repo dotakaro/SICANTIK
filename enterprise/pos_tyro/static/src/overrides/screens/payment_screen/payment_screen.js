@@ -4,7 +4,7 @@ import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment
 
 patch(PaymentScreen.prototype, {
     get refundLines() {
-        const order = this.pos.get_order();
+        const order = this.pos.getOrder();
         const orderLinesToRefund = order.lines
             .map((line) => line.refunded_orderline_id)
             .filter((line) => line != null);
@@ -12,7 +12,7 @@ patch(PaymentScreen.prototype, {
             orderLinesToRefund.flatMap((line) => line.order_id?.payment_ids ?? []),
             (line) => line.id
         );
-        const amountDue = -order.get_due();
+        const amountDue = -order.getDue();
         const validLinesToRefund = paymentLinesToRefund.filter(
             (line) =>
                 this.payment_methods_from_config.some(
@@ -39,7 +39,7 @@ patch(PaymentScreen.prototype, {
     async addPaymentLineFromRefundLine(refundLine) {
         if (await this.addNewPaymentLine(refundLine.payment_method_id)) {
             const newPaymentLine = this.paymentLines.at(-1);
-            newPaymentLine.set_amount(-refundLine.amount);
+            newPaymentLine.setAmount(-refundLine.amount);
             newPaymentLine.refundedPaymentId = refundLine.id;
         }
     },

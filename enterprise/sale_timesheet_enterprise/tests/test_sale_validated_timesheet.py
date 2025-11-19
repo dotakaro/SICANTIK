@@ -29,7 +29,6 @@ class TestSaleValidatedTimesheet(TestCommonSaleTimesheet):
             'partner_id': cls.partner_a.id,
             'partner_invoice_id': cls.partner_a.id,
             'partner_shipping_id': cls.partner_a.id,
-            'pricelist_id': cls.company_data['default_pricelist'].id,
         })
         cls.ordered_so_line = cls.env['sale.order.line'].with_context(tracking_disable=True).create({
             'product_id': cls.product_order_timesheet3.id,
@@ -281,6 +280,7 @@ class TestSaleValidatedTimesheet(TestCommonSaleTimesheet):
         self.assertEqual(validated_timesheet.so_line, ordered_task.sale_line_id)  # sale order line is not updated
 
     def test_create_invoice_for_past_validated_timesheet(self):
+        self.env.user.group_ids += self.quick_ref('hr_timesheet.group_timesheet_manager')
         self.env['ir.config_parameter'].sudo().set_param('sale.invoiced_timesheet', 'approved')
         self.employee_user.timesheet_manager_id = self.user_manager_company_B
         sale_order_2 = self.env['sale.order'].with_context(tracking_disable=True).create({
@@ -288,7 +288,6 @@ class TestSaleValidatedTimesheet(TestCommonSaleTimesheet):
             'partner_id': self.partner_a.id,
             'partner_invoice_id': self.partner_a.id,
             'partner_shipping_id': self.partner_a.id,
-            'pricelist_id': self.company_data['default_pricelist'].id,
         })
 
         delivered_so_line = self.env['sale.order.line'].with_context(tracking_disable=True).create({
@@ -312,12 +311,12 @@ class TestSaleValidatedTimesheet(TestCommonSaleTimesheet):
             'date': month_before,
         })
         delivered_timesheet1.action_validate_timesheet()
-        self.employee_user.last_validated_timesheet_date = date.today()
+        self.employee_user.sudo().last_validated_timesheet_date = date.today()
         user = self.env['res.users'].create({
             'name': 'Basic User',
             'login': 'basic_user',
             'password': 'password',
-            'groups_id': [(6, 0, [
+            'group_ids': [(6, 0, [
                 self.env.ref('project.group_project_user').id,
                 self.env.ref('hr_timesheet.group_hr_timesheet_approver').id,
                 self.env.ref('sales_team.group_sale_manager').id,

@@ -5,7 +5,8 @@ from odoo.exceptions import AccessError
 from odoo.tests.common import TransactionCase
 
 GIF = b"R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs="
-TEXT = base64.b64encode(bytes("TEST", 'utf-8'))
+TEXT = base64.b64encode(b"TEST")
+WEBP = b"UklGRjoAAABXRUJQVlA4IC4AAAAwAQCdASoBAAEAAUAmJaAAA3AA/u/uY//8s//2W/7LeM///5Bj/dl/pJxGAAAA"
 
 
 class TransactionCaseDocuments(TransactionCase):
@@ -26,29 +27,28 @@ class TransactionCaseDocuments(TransactionCase):
         cls.document_manager, cls.doc_user, cls.internal_user, cls.portal_user, cls.public_user, = cls.env['res.users'].create([
             {
                 'email': "dtdm@yourcompany.com",
-                'groups_id': [Command.link(cls.env.ref('documents.group_documents_manager').id)],
+                'group_ids': [Command.link(cls.env.ref('documents.group_documents_manager').id)],
                 'login': "dtdm",
                 'name': "Documents Manager",
             }, {
                 'email': 'documents@example.com',
-                'groups_id': [Command.link(cls.env.ref('documents.group_documents_user').id)],
+                'group_ids': [Command.link(cls.env.ref('documents.group_documents_user').id)],
                 'login': 'documents@example.com',
                 'name': 'Documents User',
             }, {
                 'login': 'internal_user',
-                'groups_id': [Command.link(cls.env.ref('base.group_user').id)],
+                'group_ids': [Command.link(cls.env.ref('base.group_user').id)],
                 'name': 'Internal user'
             }, {
                 'login': 'portal_user',
-                'groups_id': [Command.link(cls.env.ref('base.group_portal').id)],
+                'group_ids': [Command.link(cls.env.ref('base.group_portal').id)],
                 'name': 'Portal user'
             }, {
                 'login': 'public_user',
-                'groups_id': [Command.link(cls.env.ref('base.group_public').id)],
+                'group_ids': [Command.link(cls.env.ref('base.group_public').id)],
                 'name': 'Public user',
             },
         ])
-        cls.odoobot = cls.env.ref('base.user_root')
         cls.folder_a, cls.folder_b = cls.env['documents.document'].create([
             {
                 'type': 'folder',
@@ -92,7 +92,7 @@ class TransactionCaseDocuments(TransactionCase):
             'name': 'Add tag_a',
             'model_id': cls.env.ref('documents.model_documents_document').id,
             'type': 'ir.actions.server',
-            'groups_id': cls.env.ref('base.group_user').ids,
+            'group_ids': cls.env.ref('base.group_user').ids,
             'update_path': 'tag_ids',
             'usage': 'ir_actions_server',
             'state': 'object_write',

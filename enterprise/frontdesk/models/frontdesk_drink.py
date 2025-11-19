@@ -3,6 +3,7 @@
 
 from odoo import models, fields
 
+
 class FrontdeskDrink(models.Model):
     _name = 'frontdesk.drink'
     _description = 'Frontdesk Drink'

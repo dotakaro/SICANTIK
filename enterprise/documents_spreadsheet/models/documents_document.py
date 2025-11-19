@@ -11,7 +11,8 @@ from lxml import etree
 from odoo import _, Command, fields, models, api
 from odoo.exceptions import UserError, AccessError, ValidationError
 from odoo.osv import expression
-from odoo.tools import format_list, image_process, consteq
+from odoo.tools import consteq
+from odoo.tools.image import image_process
 from odoo.tools.misc import DEFAULT_SERVER_DATE_FORMAT
 
 
@@ -38,8 +39,8 @@ XLSX_MIME_TYPES = [
 ]
 
 
-class Document(models.Model):
-    _name = "documents.document"
+class DocumentsDocument(models.Model):
+    _name = 'documents.document'
     _inherit = ["documents.document", "spreadsheet.mixin"]
 
     spreadsheet_binary_data = fields.Binary(compute='_compute_spreadsheet_binary_data', inverse='_inverse_spreadsheet_binary_data', default=None)
@@ -55,17 +56,15 @@ class Document(models.Model):
         ("frozen_spreadsheet", "Frozen Spreadsheet"),
     ], ondelete={"spreadsheet": "cascade", "frozen_folder": "cascade", "frozen_spreadsheet": "cascade"})
 
-    _sql_constraints = [(
-        'spreadsheet_access_via_link',
+    _spreadsheet_access_via_link = models.Constraint(
         "CHECK((handler != 'spreadsheet') OR access_via_link != 'edit')",
-        "To share a spreadsheet in edit mode, add the user in the accesses"
-    ), (
-        'frozen_spreadsheet_access_via_link_access_internal',
+        "To share a spreadsheet in edit mode, add the user in the accesses",
+    )
+    _frozen_spreadsheet_access_via_link_access_internal = models.Constraint(
         "CHECK((handler != 'frozen_spreadsheet') OR (access_via_link != 'edit' AND access_internal != 'edit'))",
-        "A frozen spreadsheet can not be editable"
-    )]
+        "A frozen spreadsheet can not be editable",
+    )
 
-    @api.returns('documents.document', lambda d: {'id': d.id, 'shortcut_document_id': d.shortcut_document_id.id})
     def action_freeze_and_copy(self, spreadsheet_data, excel_files):
         """Render the spreadsheet in JS, and then make a copy to share it.
 
@@ -96,13 +95,13 @@ class Document(models.Model):
                 'access_via_link': 'none',
                 'access_internal': 'none',
                 'access_ids': False,
-                'owner_id': self.env.ref('base.user_root').id,
+                'owner_id': False,
             })
 
         if isinstance(spreadsheet_data, dict):
             spreadsheet_data = json.dumps(spreadsheet_data)
 
-        return self.sudo().copy({
+        document = self.sudo().copy({
             'name': _('Frozen at %(date)s: %(name)s',
                       date=fields.Date.today().strftime(DEFAULT_SERVER_DATE_FORMAT), name=self.name),
             'access_internal': 'none' if self.access_internal == 'none' else 'view',
@@ -117,6 +116,7 @@ class Document(models.Model):
                 'role': 'view' if access.role == 'edit' else access.role,
             }) for access in self.access_ids if access.role],
         })
+        return {'id': document.id, 'shortcut_document_id': document.shortcut_document_id.id}
 
     def _get_access_update_domain(self):
         """Allow to change the access of the frozen folders / spreadsheets only if we open their share panel."""
@@ -128,25 +128,8 @@ class Document(models.Model):
             ]),
         ])
 
-    @api.constrains('company_id')
-    def _check_company_id(self):
-        domain = expression.OR([
-            [('document_spreadsheet_folder_id', '=', folder.id), ('id', '!=', folder.company_id.id)]
-            for folder in self
-            if folder.company_id and folder.type == 'folder'
-        ])
-        companies = self.env['res.company'].search(domain)
-        if companies:
-            errors = format_list(self.env, [
-                self.env._("%(folder)s is used by %(company)s", folder=comp.document_spreadsheet_folder_id.display_name, company=comp.display_name)
-                for comp in companies
-            ])
-            raise ValidationError(_("The company for a folder cannot be changed if it is already used as the "
-                                    "spreadsheet workspace for at least one other company: %s", errors))
-
     @api.model_create_multi
     def create(self, vals_list):
-        vals_list = self._assign_spreadsheet_default_values(vals_list)
         vals_list = self._resize_spreadsheet_thumbnails(vals_list)
         documents = super().create(vals_list)
         documents._update_spreadsheet_contributors()
@@ -166,10 +149,15 @@ class Document(models.Model):
             return False
         return super().dispatch_spreadsheet_message(message, access_token)
 
-    def join_spreadsheet_session(self, access_token=None):
+    def _get_serialized_spreadsheet_data_body(self, access_token=None):
+        body = super()._get_serialized_spreadsheet_data_body(access_token)
+        self._update_spreadsheet_contributors()
+        return body
+
+    def _get_spreadsheet_metadata(self, access_token=None):
         if self.sudo().handler not in ("spreadsheet", "frozen_spreadsheet"):
             raise ValidationError(_("The spreadsheet you are trying to access does not exist."))
-        data = super().join_spreadsheet_session(access_token)
+        data = super()._get_spreadsheet_metadata(access_token)
         self._update_spreadsheet_contributors()
         sudo_self = self.sudo()
         return {
@@ -201,7 +189,7 @@ class Document(models.Model):
         """ Spreadsheet documents do not have file extension. """
         spreadsheet_docs = self.filtered(lambda rec: rec.handler in ("spreadsheet", "frozen_spreadsheet"))
         spreadsheet_docs.file_extension = False
-        super(Document, self - spreadsheet_docs)._compute_file_extension()
+        super(DocumentsDocument, self - spreadsheet_docs)._compute_file_extension()
 
     @api.depends("attachment_id", "handler")
     def _compute_spreadsheet_data(self):
@@ -250,21 +238,21 @@ class Document(models.Model):
         # Spreadsheet thumbnails cannot be computed from their binary data.
         # They should be saved independently.
         spreadsheets = self.filtered(lambda d: d.handler in ("spreadsheet", "frozen_spreadsheet"))
-        super(Document, self - spreadsheets)._compute_thumbnail()
+        super(DocumentsDocument, self - spreadsheets)._compute_thumbnail()
 
     def _copy_spreadsheet_image_attachments(self):
         spreadsheets = self.filtered(lambda d: d.handler in ("spreadsheet", "frozen_spreadsheet"))
-        super(Document, spreadsheets)._copy_spreadsheet_image_attachments()
+        super(DocumentsDocument, spreadsheets)._copy_spreadsheet_image_attachments()
 
     def _copy_attachment_filter(self, default):
         return super()._copy_attachment_filter(default).filtered(
             lambda d: d.handler not in ("spreadsheet", "frozen_spreadsheet"))
 
     def _resize_thumbnail_value(self, vals):
-        if 'thumbnail' in vals:
+        if 'display_thumbnail' in vals:
             return dict(
                 vals,
-                thumbnail=base64.b64encode(image_process(base64.b64decode(vals['thumbnail'] or ''), size=(750, 750), crop='center')),
+                display_thumbnail=base64.b64encode(image_process(base64.b64decode(vals['display_thumbnail'] or ''), size=(150, 150), crop='center')),
             )
         return vals
 
@@ -275,24 +263,6 @@ class Document(models.Model):
                 if vals.get('handler') in ('spreadsheet', 'frozen_spreadsheet')
                 else vals
             )
-            for vals in vals_list
-        ]
-
-    def _assign_spreadsheet_default_values(self, vals_list):
-        """Make sure spreadsheet values have a `folder_id`. Assign the
-        default spreadsheet folder if there is none.
-        """
-        # Use the current company's spreadsheet workspace, since `company_id` on `documents.document` is a related field
-        # on `folder_id` we do not need to check vals_list for different companies.
-        default_folder = self.env.company.document_spreadsheet_folder_id
-        if not default_folder:
-            default_folder = self.env['documents.document'].search([], limit=1)
-        return [
-            {
-                'folder_id': default_folder.id,
-                **vals,
-            }
-            if vals.get('handler') == 'spreadsheet' else vals
             for vals in vals_list
         ]
 
@@ -320,15 +290,7 @@ class Document(models.Model):
         })
         action_open = spreadsheet.action_open_spreadsheet()
         action_open['params']['is_new_spreadsheet'] = True
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'type': 'info',
-                'message': self._creation_msg(),
-                'next': action_open
-            }
-        }
+        return action_open
 
     @api.model
     def _get_spreadsheets_to_display(self, domain, offset=0, limit=None):
@@ -360,9 +322,8 @@ class Document(models.Model):
     def _get_shortcuts_copy_fields(self):
         return super()._get_shortcuts_copy_fields() | {'handler'}
 
-    def clone_xlsx_into_spreadsheet(self, archive_source=False):
+    def _clone_xlsx_into_spreadsheet(self, archive_source=False):
         """Clone an XLSX document into a new document with its content unzipped, and return the new document id"""
-        self.ensure_one()
 
         unzipped, attachments = self._unzip_xlsx()
 
@@ -370,17 +331,68 @@ class Document(models.Model):
             "attachment_id": False,
             "handler": "spreadsheet",
             "mimetype": "application/o-spreadsheet",
-            "name": self.name.rstrip(".xlsx"),
+            "name": self.name.removesuffix(".xlsx"),
             "spreadsheet_data": json.dumps(unzipped),
         })
 
         for attachment in attachments:
             attachment.write({'res_id': doc.id})
 
-        if archive_source:
-            self.action_archive()
+        return doc.id
+
+    def _clone_csv_into_spreadsheet(self):
+        csv_data = self._read_csv()
+        spreadsheet_data = self._convert_csv_to_spreadsheet_data(csv_data)
+
+        doc = self.copy({
+            'attachment_id': False,
+            'handler': 'spreadsheet',
+            'mimetype': 'application/o-spreadsheet',
+            'name': self.name.removesuffix('.csv'),
+            'spreadsheet_data': json.dumps(spreadsheet_data),
+        })
 
         return doc.id
+
+    def import_to_spreadsheet(self, archive_source=False):
+        self.ensure_one()
+        if self.mimetype == 'text/csv':
+            document_id = self._clone_csv_into_spreadsheet()
+        else:
+            document_id = self._clone_xlsx_into_spreadsheet()
+        if archive_source:
+            self.action_archive()
+        return document_id
+
+    def _read_csv(self):
+        base_import_record = self.env['base_import.import'].create({
+            'file': self.attachment_id.raw,
+            'file_type': 'text/csv',
+        })
+        _, csv_content = base_import_record._read_csv({'encoding': 'utf-8', 'quoting': '"'})
+        return csv_content
+
+    def _convert_csv_to_spreadsheet_data(self, csv_data):
+        def get_column_name(n):
+            """Helper function to get the spreadsheet column
+            name in letters (A -> Z) from the column index.
+            Example: 1 -> A, 2 -> B, 27 -> AA, 28 -> AB, etc.
+            """
+            res = []
+            while n > 0:
+                n, remainder = divmod(n - 1, 26)
+                res.append(chr(65 + remainder))
+            return ''.join(res[::-1])
+
+        data = {'sheets': [{'cells': {}}]}
+
+        for row_index, row in enumerate(csv_data):
+            for col_index, cell_content in enumerate(row):
+                if cell_content:
+                    col_name = get_column_name(col_index + 1)
+                    cell_ref = f'{col_name}{row_index + 1}'
+                    data['sheets'][0]['cells'][cell_ref] = cell_content
+        return data
 
     def _get_is_multipage(self):
         """Override for spreadsheets and xlsx."""
@@ -477,10 +489,6 @@ class Document(models.Model):
         attachment._post_add_create()
         return attachment
 
-    @api.autovacuum
-    def _gc_spreadsheet(self):
-        """TODO: remove in master"""
-
     def action_open_spreadsheet(self):
         self.ensure_one()
         return {
@@ -491,6 +499,7 @@ class Document(models.Model):
             }
         }
 
+    @api.readonly
     @api.model
     def get_spreadsheets(self, domain=(), offset=0, limit=None):
         domain = expression.AND([domain, [("handler", "=", "spreadsheet")]])
@@ -498,13 +507,6 @@ class Document(models.Model):
             "records": self._get_spreadsheets_to_display(domain, offset, limit),
             "total": self.search_count(domain),
         }
-
-    def _creation_msg(self):
-        return (
-            _("New spreadsheet created in My Drive")
-            if not self.folder_id and self.owner_id == self.env.user
-            else  _("New spreadsheet created in Documents")
-        )
 
     @api.model
     def _get_spreadsheet_selector(self):
@@ -528,7 +530,7 @@ class Document(models.Model):
         if self.handler != 'spreadsheet':
             return False
 
-        snapshot = self._get_spreadsheet_snapshot()
+        snapshot = json.loads(self._get_spreadsheet_serialized_snapshot())
         if snapshot.get("lists") or snapshot.get("pivots") or snapshot.get("chartOdooMenusReferences"):
             return True
 
@@ -537,15 +539,13 @@ class Document(models.Model):
                 if figure.get("data", {}).get("type", "").startswith("odoo_"):
                     return True
 
-        revisions = self._build_spreadsheet_messages()
         return any(
-            command.get("type") in ("INSERT_ODOO_LIST", "ADD_PIVOT", "LINK_ODOO_MENU_TO_CHART")
-            or (
-                command.get("type") == "CREATE_CHART"
-                and command.get("definition", {}).get("type", "").startswith("odoo_")
+            command.get("type") in ("INSERT_ODOO_LIST", "ADD_PIVOT", "LINK_ODOO_MENU_TO_CHART") or (
+                command.get("type") == "CREATE_CHART" and
+                command.get("definition", {}).get("type", "").startswith("odoo_")
             )
-            for revision in revisions
-            for command in revision.get("commands", [])
+            for revision in self.spreadsheet_revision_ids
+            for command in json.loads(revision.commands).get("commands", [])
         )
 
     def _get_writable_record_name_field(self):

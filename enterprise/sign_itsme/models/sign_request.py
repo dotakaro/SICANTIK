@@ -5,7 +5,6 @@ from odoo import models
 
 
 class SignRequest(models.Model):
-
     _inherit = "sign.request"
 
     def go_to_signable_document(self, request_items=None):

@@ -4,7 +4,7 @@
 from odoo import fields, models
 
 
-class HelpdeskTicketReport(models.Model):
+class HelpdeskTicketReportAnalysis(models.Model):
     _inherit = 'helpdesk.ticket.report.analysis'
 
     remaining_hours_so = fields.Float(

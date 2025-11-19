@@ -5,7 +5,7 @@ from cryptography import x509
 from odoo import models
 
 
-class Certificate(models.Model):
+class CertificateCertificate(models.Model):
     _inherit = 'certificate.certificate'
 
     def _get_issuer_string(self):

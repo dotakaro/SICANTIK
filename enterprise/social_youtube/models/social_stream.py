@@ -9,7 +9,7 @@ from werkzeug.urls import url_join
 from odoo import fields, models
 
 
-class SocialStreamYoutube(models.Model):
+class SocialStream(models.Model):
     _inherit = 'social.stream'
 
     def _apply_default_name(self):
@@ -17,11 +17,11 @@ class SocialStreamYoutube(models.Model):
             if stream.media_id.media_type == 'youtube' and stream.account_id:
                 stream.write({'name': '%s: %s' % (stream.stream_type_id.name, stream.account_id.name)})
             else:
-                super(SocialStreamYoutube, stream)._apply_default_name()
+                super(SocialStream, stream)._apply_default_name()
 
     def _fetch_stream_data(self):
         if self.media_id.media_type != 'youtube':
-            return super(SocialStreamYoutube, self)._fetch_stream_data()
+            return super()._fetch_stream_data()
 
         self.account_id._refresh_youtube_token()
         if self.stream_type_id.stream_type == 'youtube_channel_videos':

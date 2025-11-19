@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, Command, fields, models, _
+from odoo import Command, _, api, fields, models
 from odoo.exceptions import ValidationError
-from odoo.tools import format_list
 
 
 class SaleOrder(models.Model):
@@ -51,23 +49,30 @@ class SaleOrder(models.Model):
                 _(
                     "The following bookings are not available anymore during the selected period"
                     " and your cart must be updated. We are sorry for the inconvenience.\n\n%(bookings)s",
-                    bookings=format_list(self.env, [booking._get_description() for booking in unavailable_bookings]),
+                    bookings=[booking._get_description() for booking in unavailable_bookings],
                 ),
             )
         return super()._check_cart_is_ready_to_be_paid()
 
-    def _cart_find_product_line(self, product_id=None, line_id=None, calendar_booking_id=False, **kwargs):
+    def _cart_find_product_line(self, *args, calendar_booking_id=False, **kwargs):
         """ Avoid returning the lines in case of an appointment if the same product exists in
             the cart, as one could take many different slots from the same appointment, or even from
             different appointments with the same booking fees product. One line per booking, with a
             unique description, is meant to be in this case. """
         if calendar_booking_id:
             return self.env['sale.order.line']
-        return super()._cart_find_product_line(product_id, line_id, **kwargs)
+        return super()._cart_find_product_line(
+            *args, calendar_booking_id=calendar_booking_id, **kwargs,
+        )
 
-    def _prepare_order_line_values(self, product_id, quantity, calendar_booking_id=False, calendar_booking_tz=False, **kwargs):
+    def _prepare_order_line_values(self, *args, calendar_booking_id=False, calendar_booking_tz=False, **kwargs):
         """ Add calendar booking values to the SOL creation values (if a booking id is provided). """
-        values = super()._prepare_order_line_values(product_id, quantity, **kwargs)
+        values = super()._prepare_order_line_values(
+            *args,
+            calendar_booking_id=calendar_booking_id,
+            calendar_booking_tz=calendar_booking_tz,
+            **kwargs,
+        )
         if not calendar_booking_id:
             return values
         booking_sudo = self.env['calendar.booking'].sudo().browse(calendar_booking_id)

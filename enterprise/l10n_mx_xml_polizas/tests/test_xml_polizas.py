@@ -19,6 +19,10 @@ class AccountXmlPolizasWizard(TestMxEdiCommon, TestAccountReportsCommon):
         # Setup the company
         cls.company = cls.company_data['company']
         cls.company_2 = cls.company_data_2['company']
+        # Enforce old default expence account
+        cls.company_data['default_account_expense'] = cls.env.ref(f'account.{cls.company.id}_cuenta601_84')
+        cls.company_data_2['default_account_expense'] = cls.env.ref(f'account.{cls.company_2.id}_cuenta601_84')
+
         cls.company.vat = 'AAAA611013AAA'
         cls.company_2.vat = 'P&G851223B24'
         cls.wizard = cls.env['l10n_mx_xml_polizas.xml_polizas_wizard'].create({
@@ -268,17 +272,17 @@ class AccountXmlPolizasWizard(TestMxEdiCommon, TestAccountReportsCommon):
                     <PLZ:Transaccion Concepto="Miscellaneous Operations - 2017_1_9" DesCta="___ignore___" NumCta="601.84.01" Haber="8000.00" Debe="0.00">
                       </PLZ:Transaccion>
                 </PLZ:Poliza>
-                <PLZ:Poliza Fecha="2017-01-01" Concepto="Customer Invoices" NumUnIdenPol="INV/2017/00001">
-                    <PLZ:Transaccion Concepto="Customer Invoices - 10% WH L I" DesCta="___ignore___" NumCta="216.03.01" Haber="0.00" Debe="800.00">
+                <PLZ:Poliza Fecha="2017-01-01" Concepto="Sales" NumUnIdenPol="INV/2017/00001">
+                    <PLZ:Transaccion Concepto="Sales - 10% WH L I" DesCta="___ignore___" NumCta="216.03.01" Haber="0.00" Debe="800.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="800.00"></PLZ:CompNal>
                       </PLZ:Transaccion>
-                    <PLZ:Transaccion Concepto="Customer Invoices - 16%" DesCta="___ignore___" NumCta="208.01.01" Haber="1280.00" Debe="0.00">
+                    <PLZ:Transaccion Concepto="Sales - 16%" DesCta="___ignore___" NumCta="208.01.01" Haber="1280.00" Debe="0.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="-1280.00"></PLZ:CompNal>
                       </PLZ:Transaccion>
-                    <PLZ:Transaccion Concepto="Customer Invoices - INV/2017/00001" DesCta="___ignore___" NumCta="105.01.01" Haber="0.00" Debe="8480.00">
+                    <PLZ:Transaccion Concepto="Sales - INV/2017/00001" DesCta="___ignore___" NumCta="105.01.01" Haber="0.00" Debe="8480.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="8480.00"></PLZ:CompNal>
                       </PLZ:Transaccion>
-                    <PLZ:Transaccion Concepto="Customer Invoices - [product_mx] product_mx" DesCta="___ignore___" NumCta="401.01.01" Haber="8000.00" Debe="0.00">
+                    <PLZ:Transaccion Concepto="Sales - [product_mx] product_mx" DesCta="___ignore___" NumCta="401.01.01" Haber="8000.00" Debe="0.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="-8000.00"></PLZ:CompNal>
                       </PLZ:Transaccion>
                 </PLZ:Poliza>
@@ -310,6 +314,7 @@ class AccountXmlPolizasWizard(TestMxEdiCommon, TestAccountReportsCommon):
                 'quantity': 5,
                 'discount': 20.0,
                 'tax_ids': [],
+                'account_id': self.company_data['default_account_expense'].id,
             })],
         })
 
@@ -339,11 +344,11 @@ class AccountXmlPolizasWizard(TestMxEdiCommon, TestAccountReportsCommon):
                     <PLZ:Transaccion Concepto="Miscellaneous Operations - 2017_1_9" DesCta="___ignore___" NumCta="601.84.01" Haber="8000.00" Debe="0.00">
                       </PLZ:Transaccion>
                 </PLZ:Poliza>
-                <PLZ:Poliza Fecha="2017-01-01" Concepto="Vendor Bills" NumUnIdenPol="BILL/2017/01/0001">
-                    <PLZ:Transaccion Concepto="Vendor Bills" DesCta="___ignore___" NumCta="201.01.01" Haber="8000.00" Debe="0.00">
+                <PLZ:Poliza Fecha="2017-01-01" Concepto="Purchases" NumUnIdenPol="BILL/2017/01/0001">
+                    <PLZ:Transaccion Concepto="Purchases" DesCta="___ignore___" NumCta="201.01.01" Haber="8000.00" Debe="0.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XAXX010101000" MontoTotal="-8000.00"></PLZ:CompNal>
                       </PLZ:Transaccion>
-                    <PLZ:Transaccion Concepto="Vendor Bills - [product_mx] product_mx" DesCta="___ignore___" NumCta="601.84.01" Haber="0.00" Debe="8000.00">
+                    <PLZ:Transaccion Concepto="Purchases - [product_mx] product_mx" DesCta="___ignore___" NumCta="601.84.01" Haber="0.00" Debe="8000.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XAXX010101000" MontoTotal="8000.00"></PLZ:CompNal>
                       </PLZ:Transaccion>
                 </PLZ:Poliza>
@@ -421,22 +426,22 @@ class AccountXmlPolizasWizard(TestMxEdiCommon, TestAccountReportsCommon):
                     <PLZ:Transaccion Concepto="Miscellaneous Operations - 2017_1_9" DesCta="___ignore___" NumCta="601.84.01" Haber="8000.00" Debe="0.00">
                       </PLZ:Transaccion>
                 </PLZ:Poliza>
-                <PLZ:Poliza Fecha="2017-01-01" Concepto="Customer Invoices" NumUnIdenPol="INV/2017/00001">
-                    <PLZ:Transaccion Concepto="Customer Invoices - 10% WH L I" DesCta="___ignore___" NumCta="216.03.01" Haber="0.00" Debe="10000.00">
+                <PLZ:Poliza Fecha="2017-01-01" Concepto="Sales" NumUnIdenPol="INV/2017/00001">
+                    <PLZ:Transaccion Concepto="Sales - 10% WH L I" DesCta="___ignore___" NumCta="216.03.01" Haber="0.00" Debe="10000.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="500.00" Moneda="EUR" TipCamb="20.00000"/>
                       </PLZ:Transaccion>
-                    <PLZ:Transaccion Concepto="Customer Invoices - 16%" DesCta="___ignore___" NumCta="208.01.01" Haber="16000.00" Debe="0.00">
+                    <PLZ:Transaccion Concepto="Sales - 16%" DesCta="___ignore___" NumCta="208.01.01" Haber="16000.00" Debe="0.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="-800.00" Moneda="EUR" TipCamb="20.00000"/>
                       </PLZ:Transaccion>
-                    <PLZ:Transaccion Concepto="Customer Invoices - INV/2017/00001" DesCta="___ignore___" NumCta="105.01.01" Haber="0.00" Debe="106000.00">
+                    <PLZ:Transaccion Concepto="Sales - INV/2017/00001" DesCta="___ignore___" NumCta="105.01.01" Haber="0.00" Debe="106000.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="5300.00" Moneda="EUR" TipCamb="20.00000"/>
                       </PLZ:Transaccion>
-                    <PLZ:Transaccion Concepto="Customer Invoices - [product_mx] product_mx" DesCta="___ignore___" NumCta="401.01.01" Haber="100000.00" Debe="0.00">
+                    <PLZ:Transaccion Concepto="Sales - [product_mx] product_mx" DesCta="___ignore___" NumCta="401.01.01" Haber="100000.00" Debe="0.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="-5000.00" Moneda="EUR" TipCamb="20.00000"/>
                       </PLZ:Transaccion>
                 </PLZ:Poliza>
                 <PLZ:Poliza Fecha="2017-01-02" Concepto="Bank" NumUnIdenPol="PBNK1/2017/00001">
-                    <PLZ:Transaccion Concepto="Bank - Manual Payment: INV/2017/00001" DesCta="___ignore___" NumCta="OSTR00" Haber="0.00" Debe="1820.00">
+                    <PLZ:Transaccion Concepto="Bank - Manual Payment: INV/2017/00001" DesCta="___ignore___" NumCta="102.01.04" Haber="0.00" Debe="1820.00">
                         <PLZ:CompNal UUID_CFDI="AAAAAAAA-ABCD-ABCD-ABCD-AAAAAAAAAAAA" RFC="XEXX010101000" MontoTotal="1820.00"/>
                       </PLZ:Transaccion>
                     <PLZ:Transaccion Concepto="Bank - Manual Payment: INV/2017/00001" DesCta="___ignore___" NumCta="105.01.01" Haber="1820.00" Debe="0.00">

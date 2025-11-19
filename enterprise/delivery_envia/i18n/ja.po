@@ -4,15 +4,14 @@
 # 
 # Translators:
 # Wil Odoo, 2025
-# Junko Augias, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.2+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-10 15:40+0000\n"
-"PO-Revision-Date: 2025-02-02 01:20+0000\n"
-"Last-Translator: Junko Augias, 2025\n"
+"POT-Creation-Date: 2025-02-20 10:30+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -49,7 +48,8 @@ msgid ""
 "doorstep. To enable this feature, enable Returned at Shippers Expense "
 "otherwise it will be abandoned at the customer's door."
 msgstr ""
-"注：一部の国では、パレット出荷やボックス出荷に対する独自の追加サービスが提供されています。例えば、カナダでは、配送の不在時に、倉庫に返送するか、玄関先に放置するかのオプションが提供されています。この機能を有効にするには、「Returned"
+"注: "
+"一部の国では、パレット輸送や箱輸送に対する独自の追加サービスが提供されています。例えば、カナダでは、配送の不在時に、倉庫に返送するか、玄関先に放置するかのオプションが提供されています。この機能を有効にするには、「Returned"
 " at Shippers Expense(出荷元負担で返送)」を有効にして下さい。そうでないと、顧客の玄関先に放置されます。"
 
 #. module: delivery_envia
@@ -81,7 +81,7 @@ msgstr "配送業者"
 #. module: delivery_envia
 #: model:ir.model.fields,field_description:delivery_envia.field_stock_package_type__shipper_package_code
 msgid "Carrier Code"
-msgstr "配送コード"
+msgstr "配送業者コード"
 
 #. module: delivery_envia
 #. odoo-javascript
@@ -188,7 +188,9 @@ msgid "Delivery Service"
 msgstr "配送サービス"
 
 #. module: delivery_envia
+#: model:ir.model.fields,field_description:delivery_envia.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_envia.field_envia_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_envia.field_stock_package_type__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -320,7 +322,7 @@ msgstr "配送をキャンセルするためのEnviaオーダが見つかりま�
 msgid ""
 "Envia requires package dimensions for getting accurate rate, you can define "
 "these in a package type that you set as default"
-msgstr "Enviaは正確なレート獲得のために梱包の寸法が必要です。デフォルトとして設定した梱包タイプで定義できます。"
+msgstr "Enviaでの正確なレート獲得のために梱包の寸法が必要です。デフォルトとして設定した梱包タイプで定義できます。"
 
 #. module: delivery_envia
 #. odoo-python
@@ -355,6 +357,12 @@ msgid "Envia.com Service Name"
 msgstr "Envia.comサービス名"
 
 #. module: delivery_envia
+#: model_terms:ir.ui.view,arch_db:delivery_envia.res_config_settings_view_form_sale_envia
+#: model_terms:ir.ui.view,arch_db:delivery_envia.res_config_settings_view_form_stock_envia
+msgid "Envia.com Shipping Methods"
+msgstr "Envia.com配送方法"
+
+#. module: delivery_envia
 #. odoo-python
 #: code:addons/delivery_envia/models/delivery_carrier.py:0
 msgid "Failed to fetch Envia Carriers, Please try again later."
@@ -368,7 +376,7 @@ msgid ""
 " order to send the required information you need to set the UNSPSC code in "
 "the following product: %(product_name)s"
 msgstr ""
-"メキシコへの小口貨物輸送には、仕入先請求書（Carta Porte）が必要です。必要な情報を送信するには、以下のプロダクトで UNSPSC "
+"メキシコへの小口貨物輸送には、仕入先請求書(Carta Porte)が必要です。必要な情報を送信するには、以下のプロダクトで UNSPSC "
 "コードを設定する必要があります: %(product_name)s"
 
 #. module: delivery_envia
@@ -397,7 +405,9 @@ msgid "Generate an Access Token from within the Sandbox Portal of Envia"
 msgstr "Enviaのサンドボックスポータルからアクセストークンを生成します。"
 
 #. module: delivery_envia
+#: model:ir.model.fields,field_description:delivery_envia.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_envia.field_envia_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_envia.field_stock_package_type__id
 msgid "ID"
 msgstr "ID"
 
@@ -411,7 +421,7 @@ msgstr "配送業者が荷物を配達できない場合、荷物は発送人に
 #. module: delivery_envia
 #: model_terms:ir.ui.view,arch_db:delivery_envia.view_delivery_carrier_form_inherit_delivery_envia
 msgid "If you don't have an account"
-msgstr "アカウントがない場合"
+msgstr "アカウントをお持ちでない場合"
 
 #. module: delivery_envia
 #: model_terms:ir.ui.view,arch_db:delivery_envia.view_delivery_carrier_form_inherit_delivery_envia
@@ -436,7 +446,7 @@ msgid ""
 " later."
 msgstr ""
 "最後に、「開発者 / API キー」セクションに移動し、新しい API キーを生成します。これは Odoo が Envia "
-"と通信するため、後で必要になりますのでメモして。"
+"と通信するため、後で必要になりますのでメモして下さい。"
 
 #. module: delivery_envia
 #. odoo-python
@@ -481,7 +491,7 @@ msgid ""
 "to sync your carriers with your account."
 msgstr ""
 "\"%(delivery_method)s\" "
-"には配送業者が設定されていません。Envia.comを利用するには、お客様の配送業者情報をアカウントと同期させる必要があります。"
+"には配送業者が設定されていません。Envia.comを利用するには、配送業者情報をアカウントと同期させる必要があります。"
 
 #. module: delivery_envia
 #. odoo-python
@@ -672,7 +682,7 @@ msgstr "選択済サービス"
 #. odoo-javascript
 #: code:addons/delivery_envia/static/src/components/envia_service_selection_widget.xml:0
 msgid "Service:"
-msgstr "サーイス:"
+msgstr "サービス:"
 
 #. module: delivery_envia
 #: model_terms:ir.ui.view,arch_db:delivery_envia.view_delivery_carrier_form_inherit_delivery_envia
@@ -760,7 +770,7 @@ msgstr "追跡番号:"
 #. odoo-python
 #: code:addons/delivery_envia/models/delivery_carrier.py:0
 msgid "Unable to cancel order: %(order_number)s"
-msgstr "オーダを取消できません: %(order_number)s"
+msgstr "オーダをキャンセルできません: %(order_number)s"
 
 #. module: delivery_envia
 #: model_terms:ir.ui.view,arch_db:delivery_envia.view_delivery_carrier_form_inherit_delivery_envia
@@ -784,7 +794,7 @@ msgid ""
 "intend to use in this region. Note that each service can have different "
 "pricing and availability."
 msgstr ""
-"この地域で利用する予定の特定のEnvia配送業者とサービスを指定することができます。各サービスには、異なる価格設定と利用可能状況が適用される場合があります。"
+"この地域で利用する予定の特定のEnvia配送業者とサービスを指定することができます。各サービスには、異なる価格設定と利用可能条件が適用される場合があります。"
 
 #. module: delivery_envia
 #: model_terms:ir.ui.view,arch_db:delivery_envia.view_delivery_carrier_form_inherit_delivery_envia

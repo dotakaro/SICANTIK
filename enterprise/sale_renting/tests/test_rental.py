@@ -1,12 +1,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import timedelta
+
 from dateutil.relativedelta import relativedelta
 
 from odoo import fields
 from odoo.fields import Command
-from odoo.tools import float_compare
-from odoo.tests import Form, HttpCase, tagged, TransactionCase
+from odoo.tests import Form, HttpCase, TransactionCase, tagged
 
 
 class TestRentalCommon(TransactionCase):
@@ -22,7 +22,6 @@ class TestRentalCommon(TransactionCase):
 
         cls.product_id = cls.env['product.product'].create({
             'name': 'Projector',
-            'categ_id': cls.env.ref('product.product_category_all').id,
             'type': 'consu',
             'rent_ok': True,
             'extra_hourly': 7.0,
@@ -360,7 +359,7 @@ class TestRentalCommon(TransactionCase):
         self.assertEqual(price, 7, "Contextual price should take pickup and return date into account")
 
     def test_discount_on_sol_remains(self):
-        now = fields.date.today()
+        now = fields.Date.today()
         one_day_later = now + relativedelta(days=1)
         discount = 10
 
@@ -395,10 +394,9 @@ class TestRentalCommon(TransactionCase):
     def test_renting_taxes_inc2ex(self):
 
         fiscal_position_inc2ex = self.env['account.fiscal.position'].create({'name': 'inc2ex'})
-        self.env['account.fiscal.position.tax'].create({
-            'position_id': fiscal_position_inc2ex.id,
-            'tax_src_id': self.tax_included.id,
-            'tax_dest_id': self.tax_excluded.id
+        self.tax_excluded.write({
+            'fiscal_position_ids': [Command.set(fiscal_position_inc2ex.ids)],
+            'original_tax_ids': [Command.set(self.tax_included.ids)],
         })
         self.product_id.taxes_id = self.tax_included
 
@@ -413,21 +411,21 @@ class TestRentalCommon(TransactionCase):
         })
         sol.update({'is_rental': True})
         sale_order._rental_set_dates()  # not triggered automatically here
+        sale_order._recompute_prices()
 
         self.assertEqual(sale_order.duration_days, 1, 'Default duration should be one day')
         self.assertEqual(sale_order.remaining_hours, 0, 'Default duration should be one day')
 
-        self.assertTrue(
-            float_compare(sol.price_total, 60/1.1, precision_rounding=2),
-            "Price with 10% taxes should be equal to basic pricing"
+        self.assertEqual(
+            sol.price_total, sol.currency_id.round(sol.currency_id.round(60 / 1.1) * 1.1),
+            "Price with 10% taxes should be almost equal to basic pricing (rounding difference)"
         )
 
     def test_renting_taxes_ex2inc(self):
         fiscal_position_ex2inc = self.env['account.fiscal.position'].create({'name': 'ex2inc'})
-        self.env['account.fiscal.position.tax'].create({
-            'position_id': fiscal_position_ex2inc.id,
-            'tax_src_id': self.tax_excluded.id,
-            'tax_dest_id': self.tax_included.id
+        self.tax_included.write({
+            'fiscal_position_ids': [Command.set(fiscal_position_ex2inc.ids)],
+            'original_tax_ids': [Command.set(self.tax_excluded.ids)],
         })
         self.product_id.taxes_id = self.tax_excluded
 
@@ -440,9 +438,12 @@ class TestRentalCommon(TransactionCase):
             'product_id': self.product_id.id,
             'order_id': sale_order.id,
         })
+        sol.update({'is_rental': True})
+        sale_order._rental_set_dates()  # not triggered automatically here
+        sale_order._recompute_prices()
 
-        self.assertTrue(
-            float_compare(sol.price_unit, 60*1.1, precision_rounding=2),
+        self.assertEqual(
+            sol.price_unit, 60,
             "Price with included taxes should be equal to basic pricing(tax excluded) + 10% taxes"
         )
 
@@ -457,10 +458,12 @@ class TestRentalCommon(TransactionCase):
             'product_id': self.product_id.id,
             'order_id': sale_order.id,
         })
-
-        self.assertTrue(
-            float_compare(sol.price_unit, 60*1.1, precision_rounding=2),
-            "unit price should be equal to basic pricing + 10% (tax included)"
+        sol.update({'is_rental': True})
+        sale_order._rental_set_dates()
+        sale_order._recompute_prices()
+        self.assertEqual(
+            sol.price_total, 60.0,
+            "Price should be equal to basic pricing (10% tax included)"
         )
 
     def test_renting_taxes_excluded(self):
@@ -474,15 +477,18 @@ class TestRentalCommon(TransactionCase):
             'product_id': self.product_id.id,
             'order_id': sale_order.id,
         })
+        sol.update({'is_rental': True})
+        sale_order._rental_set_dates()
+        sale_order._recompute_prices()
 
-        self.assertTrue(
-            float_compare(sol.price_unit, 60, precision_rounding=2),
-            "Unit price should be equal to basic pricing (without tax excluded)"
+        self.assertEqual(
+            sol.price_total, sol.currency_id.round(60 * 1.1),
+            "Price should be equal to basic pricing + 10% tax"
         )
 
     def test_renting_taxes_ex_inc(self):
         self.product_id.taxes_id = self.tax_excluded + self.tax_included
-
+        self.tax_included.include_base_amount = True
         sale_order = self.env['sale.order'].create({
             'partner_id': self.env['res.partner'].create({'name': 'A partner'}).id,
         })
@@ -491,10 +497,13 @@ class TestRentalCommon(TransactionCase):
             'product_id': self.product_id.id,
             'order_id': sale_order.id,
         })
+        sol.update({'is_rental': True})
+        sale_order._rental_set_dates()
+        sale_order._recompute_prices()
 
-        self.assertTrue(
-            float_compare(sol.price_unit, 60*1.1, precision_rounding=2),
-            "Price in wizard should be equal to basic pricing + 10% (tax included)"
+        self.assertEqual(
+            sol.price_total, 60 * 1.1,
+            "Price should be equal to basic pricing (tax included) + 10% (tax excluded)"
         )
 
     def test_renting_taxes_included_multicompany(self):
@@ -512,9 +521,12 @@ class TestRentalCommon(TransactionCase):
             'product_id': self.product_id.id,
             'order_id': sale_order.id,
         })
+        sol.update({'is_rental': True})
+        sale_order._rental_set_dates()
+        sale_order._recompute_prices()
 
-        self.assertTrue(
-            float_compare(sol.price_unit, 60, precision_rounding=2),
+        self.assertEqual(
+            sol.price_total, 60,
             "Included tax related to another company should not apply"
         )
 
@@ -660,11 +672,25 @@ class TestRentalCommon(TransactionCase):
         self.assertEqual(dupe_order.order_line[0].is_rental, sol_rent.is_rental)
         self.assertEqual(dupe_order.order_line[1].is_rental, sol_buy.is_rental)
 
+    def test_product_display_price(self):
+        # There was a bug in the ORM when currency is given along display_price
+        # in the first onchange. Fixed in https://github.com/odoo/odoo/pull/209587
+        product = self.env["product.template"].with_context(default_rent_ok=True)
+        changes = product.onchange({}, [], {
+            "display_price": {},
+            "currency_id": {},
+        })
+        self.assertEqual(changes["value"]["display_price"], '$\xa01.00 (fixed)')
+
 
 @tagged('post_install', '-at_install')
 class TestUi(HttpCase):
 
     def test_rental_flow(self):
+        self.env.ref('base.user_admin').write({
+            'email': 'mitchell.admin@example.com',
+        })
+
         # somehow, the name_create and onchange of the partner_id
         # in a quotation trigger a re-rendering that loses
         # the focus of some fields, preventing the tour to

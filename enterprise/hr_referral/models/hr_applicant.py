@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
@@ -8,12 +7,18 @@ from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError
 from odoo.tools.misc import str2bool
 
+REFERRAL_FIELDS = {
+    'sequence', 'partner_name', 'job_id', 'referral_points_ids', 'earned_points', 'max_points', 'active', 'response_id',
+    'shared_item_infos', 'referral_state', 'user_id', 'friend_id', 'write_date', 'ref_user_id', 'id',
+}
 
-class Applicant(models.Model):
-    _inherit = ["hr.applicant"]
+
+class HrApplicant(models.Model):
+    _inherit = "hr.applicant"
 
     ref_user_id = fields.Many2one('res.users', string='Referred By User', tracking=True,
-        compute='_compute_ref_user_id', inverse='_inverse_ref_user_id', store=True, copy=False)
+        compute='_compute_ref_user_id', readonly=False, store=True, copy=False)
+    source_id = fields.Many2one(compute="_compute_source_id", store=True, readonly=False)
     referral_points_ids = fields.One2many('hr.referral.points', 'applicant_id', copy=False)
     earned_points = fields.Integer(compute='_compute_earned_points')
     referral_state = fields.Selection([
@@ -29,8 +34,8 @@ class Applicant(models.Model):
         search='_search_is_accessible_to_current_user')
 
     def _search_is_accessible_to_current_user(self, operator, value):
-        if not isinstance(value, bool) or operator not in ['=', '!=']:
-            raise UserError(_("Unsupported search on field is_accessible_to_current_user: %(operator)s operator & %(value)s value. Only = and != operator and boolean values are supported.", operator=operator, value=value))
+        if operator not in ('in', 'not in'):
+            return NotImplemented
         if self.env.user.has_group('hr_recruitment.group_hr_recruitment_user'):
             return []
         applications = self.env['hr.applicant'].with_context(active_test=False).search([
@@ -38,8 +43,7 @@ class Applicant(models.Model):
                 ('job_id', 'any', [('interviewer_ids', 'in', self.env.user.id)]),
                 ('interviewer_ids', 'in', self.env.user.id),
         ])
-        domain_operator = 'in' if value ^ (operator == '!=') else 'not in'
-        return [('id', domain_operator, applications.ids)]
+        return [('id', operator, applications.ids)]
 
     @api.depends_context('uid')
     def _compute_is_accessible_to_current_user(self):
@@ -55,19 +59,21 @@ class Applicant(models.Model):
 
     @api.depends('source_id')
     def _compute_ref_user_id(self):
+        utm_source_referral = self.env.ref('utm.utm_source_referral', raise_if_not_found=False)
         for applicant in self:
-            if applicant.source_id:
-                applicant.ref_user_id = self.env['res.users'].search([('utm_source_id', '=', applicant.source_id.id)], limit=1)
-            else:
+            if applicant.source_id != utm_source_referral:
                 applicant.ref_user_id = False
 
-    def _inverse_ref_user_id(self):
+    @api.depends('ref_user_id')
+    def _compute_source_id(self):
+        utm_source_referral = self.env.ref('utm.utm_source_referral', raise_if_not_found=False)
         for applicant in self:
-            applicant.source_id = applicant.ref_user_id.utm_source_id
+            if applicant.ref_user_id and utm_source_referral:
+                applicant.source_id = utm_source_referral.id
 
+    @api.model
     def check_field_access_rights(self, operation, field_names):
-        referral_fields = {'partner_name', 'job_id', 'referral_points_ids', 'earned_points', 'max_points', 'active', 'response_id',
-                           'shared_item_infos', 'referral_state', 'user_id', 'friend_id', 'write_date', 'ref_user_id', 'id'}
+        referral_fields = REFERRAL_FIELDS
 
         result = super().check_field_access_rights(operation, field_names)
         if field_names:
@@ -78,6 +84,22 @@ class Applicant(models.Model):
                 raise AccessError(_('You are not allowed to access applicant records.'))
             return result
         return [field_name for field_name in result if field_name not in referral_fields]
+
+    def _has_field_access(self, field, operation):
+        return super()._has_field_access(field, operation) and (
+            self.env.is_admin()
+            or self.env.user.has_group('hr_referral.group_hr_recruitment_referral_user')
+            or operation != 'read'
+            or field.name in REFERRAL_FIELDS
+        )
+
+    def _check_field_access(self, field, operation):
+        try:
+            return super()._check_field_access(field, operation)
+        except AccessError as e:
+            if field.name in REFERRAL_FIELDS:
+                raise AccessError(_('You are not allowed to access applicant records.')) from e
+            raise
 
     @api.depends('referral_points_ids')
     def _compute_shared_item_infos(self):
@@ -96,7 +118,7 @@ class Applicant(models.Model):
             applicant.earned_points = sum(applicant.referral_points_ids.mapped('points'))
 
     def write(self, vals):
-        res = super(Applicant, self).write(vals)
+        res = super().write(vals)
         if 'ref_user_id' in vals or 'stage_id' in vals or 'date_closed' in vals:
             for applicant in self.filtered(lambda a: a.ref_user_id):
                 if 'ref_user_id' in vals:
@@ -120,34 +142,26 @@ class Applicant(models.Model):
                     applicant.last_valuable_stage_id = applicant.stage_id
         return applicants
 
-    def archive_applicant(self):
-        for applicant in self:
-            if applicant.ref_user_id:
-                applicant._send_notification(
-                    body=_("Sorry, your referral %s has been refused in the recruitment process.", applicant.partner_name),
-                    action_value='hr_referral.action_hr_refused_applicant_employee_referral'
-                )
-        self.write({'referral_state': 'closed'})
-        return super(Applicant, self).archive_applicant()
-
     def _send_notification(self, body, action_value='hr_referral.action_hr_applicant_employee_referral'):
-        if self.partner_name:
-            subject = _('Referral: %(partner)s (%(applicant)s)', partner=self.partner_name, applicant=self.display_name)
-        else:
-            subject = _('Referral: %s', self.display_name)
-        action_url = f'/odoo/action-{action_value}?active_model={self._name}'
-        body = Markup("<a class='o_document_link' href=%s>%s</a><br>%s") % (action_url, subject, body)
-        odoobot = self.env.ref('base.partner_root')
-        # Do *not* notify on `self` as it will lead to unintended behavior.
-        # See opw-3285752
-        self.env['mail.thread'].sudo().message_notify(
-            model=self._name,
-            subject=subject,
-            body=body,
-            author_id=odoobot.id,
-            partner_ids=[self.ref_user_id.partner_id.id],
-            email_layout_xmlid='mail.mail_notification_light',
-        )
+        if referrer := self.ref_user_id:
+            if self.partner_name:
+                subject = _('Referral: %(partner)s (%(applicant)s)', partner=self.partner_name, applicant=self.display_name)
+            else:
+                subject = _('Referral: %s', self.display_name)
+            action_url = f'/odoo/action-{action_value}?active_model={self._name}'
+            body = Markup("<a class='o_document_link' href=%s>%s</a><br>%s") % (action_url, subject, body)
+            odoobot = self.env.ref('base.partner_root')
+            # Do *not* notify on `self` as it will lead to unintended behavior.
+            # See opw-3285752 -> we attach it on the referrer's user
+            self.env['mail.thread'].sudo().message_notify(
+                model=referrer._name,
+                res_id=referrer.id,
+                subject=subject,
+                body=body,
+                author_id=odoobot.id,
+                partner_ids=[self.ref_user_id.partner_id.id],
+                email_layout_xmlid='mail.mail_notification_light',
+            )
 
     def _update_points(self, new_state_id, old_state_id):
         if not self.company_id:
@@ -352,13 +366,27 @@ class Applicant(models.Model):
         if next_referral_level:
             user_id.write({'hr_referral_level_id': next_referral_level.id})
 
+    @api.model
+    def default_get(self, fields):
+        # To set the source_id as "Referral" instead of utm_source that was generated for every individual referrer
+        values = super().default_get(fields)
+        utm_source_referral = self.env.ref('utm.utm_source_referral', raise_if_not_found=False)
+        if (
+            'ref_user_id' in fields
+            and (utm_source := values.get('source_id'))
+            and (user := self.env['res.users'].search([('utm_source_id', '=', utm_source)], limit=1))
+        ):
+            values['ref_user_id'] = user.id
+            values['source_id'] = utm_source_referral.id if utm_source_referral else False
+        return values
+
     def reset_applicant(self):
         """ Reset the applicant state to progress """
         super().reset_applicant()
         self.write({'referral_state': 'progress'})
 
 
-class RecruitmentStage(models.Model):
+class HrRecruitmentStage(models.Model):
     _inherit = "hr.recruitment.stage"
 
     points = fields.Integer('Points', help="Amount of points that the referent will receive when the applicant will reach this stage")

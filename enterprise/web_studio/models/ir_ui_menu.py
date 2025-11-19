@@ -5,6 +5,7 @@ from ast import literal_eval
 from odoo import api, models, fields, _
 from odoo.http import request
 
+
 class IrUiMenu(models.Model):
     _name = 'ir.ui.menu'
     _description = 'Menu'
@@ -39,10 +40,13 @@ class IrUiMenu(models.Model):
     def customize(self, to_move, to_delete):
         """ Apply customizations on menus. The deleted elements will no longer be active.
             When moving a menu, we needed to resequence it. Note that this customization will
-                not be kept when upgrading the module (we don't put the ir.model.data in noupdate)
+            not be kept when upgrading the module (we don't put the ir.model.data in noupdate)
 
-            :param to_move: a dict of modifications with menu ids as keys
-                ex: {10: {'parent_id': 1, 'sequence': 0}, 11: {'sequence': 1}}
+            :param to_move: a dict of modifications with menu ids as keys,
+                example::
+
+                    {10: {'parent_id': 1, 'sequence': 0}, 11: {'sequence': 1}}
+
             :param to_delete: a list of ids
         """
 
@@ -76,9 +80,7 @@ class IrUiMenu(models.Model):
         )
         # look for a studio config menu in the submenus
         parent_path = '%s/' % root_id
-        new_context = dict(self._context)
-        new_context.update({'ir.ui.menu.full_list': True})  # allows to create a menu without action
-        config_menu = self.with_context(new_context).search([
+        config_menu = self.with_context(self._context).search([
             ('parent_path', 'like', parent_path), ('is_studio_configuration', '=', True)
         ])
         if not config_menu:

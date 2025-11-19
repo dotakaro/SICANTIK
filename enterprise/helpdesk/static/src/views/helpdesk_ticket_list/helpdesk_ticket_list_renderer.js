@@ -1,14 +1,13 @@
-/** @odoo-module */
-
-import { _t } from "@web/core/l10n/translation";
-import { ListRenderer } from "@web/views/list/list_renderer";
+import { ListRenderer } from '@web/views/list/list_renderer';
+import { HelpdeskTicketGroupConfigMenu } from '../helpdesk_ticket_group_config_menu';
 
 export class HelpdeskTicketListRenderer extends ListRenderer {
-    getGroupDisplayName(group) {
-        if (group.groupByField.name === "sla_deadline" && !group.value) {
-            return _t("Deadline reached");
-        } else {
-            return super.getGroupDisplayName(group);
-        }
+    static components = {
+        ...ListRenderer.components,
+        GroupConfigMenu: HelpdeskTicketGroupConfigMenu,
+    };
+
+    get canCreateGroup() {
+        return super.canCreateGroup && !!this.props.list.context.default_team_id;
     }
 }

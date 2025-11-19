@@ -56,9 +56,9 @@ COUNTRY_CODES = {
 }
 
 
-class L10nBe28145(models.Model):
+class L10n_Be281_45(models.Model):
     _name = 'l10n_be.281_45'
-    _inherit = 'hr.payroll.declaration.mixin'
+    _inherit = ['hr.payroll.declaration.mixin']
     _description = 'HR Payroll 281.45 Wizard'
     _order = 'year'
 
@@ -132,14 +132,19 @@ class L10nBe28145(models.Model):
     def _check_employees_configuration(self, employees):
         invalid_employees = employees.filtered(lambda e: not (e.company_id and e.company_id.street and e.company_id.zip and e.company_id.city and e.company_id.phone and e.company_id.vat))
         if invalid_employees:
-            raise UserError(_("The company is not correctly configured on your employees. Please be sure that the following pieces of information are set: street, zip, city, phone and vat") + '\n' + '\n'.join(invalid_employees.mapped('name')))
+            raise UserError(
+                self.env._(
+                    "The company is not correctly configured on your employees. Please be sure that the following pieces of information are set: street, zip, city, phone, and VAT:\n%(employees)s",
+                    employees="\n".join(invalid_employees.mapped("name")),
+                )
+            )
 
         invalid_employees = employees.filtered(
             lambda e: not e.private_street or not e.private_zip or not e.private_city or not e.private_country_id)
         if invalid_employees:
             raise UserError(_("The following employees don't have a valid private address (with a street, a zip, a city and a country):\n%s", '\n'.join(invalid_employees.mapped('name'))))
 
-        invalid_employees = employees.filtered(lambda emp: not emp.contract_ids or not emp.contract_id)
+        invalid_employees = employees.filtered(lambda emp: not emp.version_ids or not emp.version_id)
         if invalid_employees:
             raise UserError(_('Some employee has no contract:\n%s', '\n'.join(invalid_employees.mapped('name'))))
 

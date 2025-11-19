@@ -1,6 +1,7 @@
 from odoo import models
 
-class WhatsAppTemplate(models.Model):
+
+class WhatsappTemplate(models.Model):
     _inherit = 'whatsapp.template'
 
     def _get_sample_record(self):

@@ -19,14 +19,14 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
             'company_id': cls.australian_company.id,
             'l10n_au_leave_type': 'long_service',
             'leave_validation_type': 'no_validation',
-            'work_entry_type_id': cls.env.ref('l10n_au_hr_payroll.l10n_au_work_entry_long_service_leave').id,
+            'work_entry_type_id': cls.env.ref('hr_work_entry.l10n_au_work_entry_type_long_service_leave').id,
         })
         cls.annual = cls.env['hr.leave.type'].create({
             'name': 'Annual Leave',
             'company_id': cls.australian_company.id,
             'l10n_au_leave_type': 'annual',
             'leave_validation_type': 'no_validation',
-            'work_entry_type_id': cls.env.ref('l10n_au_hr_payroll.l10n_au_work_entry_paid_time_off').id,
+            'work_entry_type_id': cls.env.ref('hr_work_entry.l10n_au_work_entry_type_paid_time_off').id,
         })
 
     # Unused leaves tests
@@ -91,13 +91,13 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
                     'date_from': start_date,
                     'date_to': end_date,
                 }])
-                allocation.action_validate()
+                allocation.action_approve()
 
                 self.assertAlmostEqual(allocation.number_of_days, number_of_days)
 
     # AL only + non-genuine + TFN
     def test_01_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1995-6-8', '2022-1-3', '2024-3-12')
+        employee, contract = self.get_unused_leaves_employee('1995-06-08', '2022-01-03', '2024-03-12')
         self.create_leaves(
             employee,
             contract,
@@ -142,7 +142,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
         )
 
     def test_02_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1976-1-1', '1992-8-17', '2024-3-12')
+        employee, contract = self.get_unused_leaves_employee('1976-01-01', '1992-08-17', '2024-03-12')
         self.create_leaves(
             employee,
             contract,
@@ -186,7 +186,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # AL only + genuine + TFN
     def test_03_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1976-1-1', '1992-8-17', '2024-3-12')
+        employee, contract = self.get_unused_leaves_employee('1976-01-01', '1992-08-17', '2024-03-12')
         self.create_leaves(
             employee,
             contract,
@@ -230,7 +230,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # AL only + non-genuine + TFN + loading
     def test_04_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1995-6-8', '2022-1-3', '2024-3-12', ('regular', 17.5))
+        employee, contract = self.get_unused_leaves_employee('1995-06-08', '2022-01-03', '2024-03-12', ('regular', 17.5))
         self.create_leaves(
             employee,
             contract,
@@ -273,7 +273,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # AL only + non-genuine + TFN + loading
     def test_05_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1976-1-1', '1992-01-1', '2024-3-12', ('regular', 17.5))
+        employee, contract = self.get_unused_leaves_employee('1976-01-01', '1992-01-01', '2024-03-12', ('regular', 17.5))
         self.create_leaves(
             employee,
             contract,
@@ -317,7 +317,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # AL only + genuine + TFN + loading
     def test_06_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1976-1-1', '1992-08-1', '2024-3-12', ('regular', 17.5))
+        employee, contract = self.get_unused_leaves_employee('1976-01-01', '1992-08-01', '2024-03-12', ('regular', 17.5))
         self.create_leaves(
             employee,
             contract,
@@ -361,7 +361,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # < $300 + > 1993 + 32% is smaller
     def test_07_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1995-6-8', '2022-1-3', '2024-3-12')
+        employee, contract = self.get_unused_leaves_employee('1995-06-08', '2022-01-03', '2024-03-12')
         self.create_leaves(
             employee,
             contract,
@@ -404,7 +404,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # < $300 + > 1993 + standard is smaller
     def test_08_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1995-6-8', '2022-1-3', '2024-3-12')
+        employee, contract = self.get_unused_leaves_employee('1995-06-08', '2022-01-03', '2024-03-12')
         self.create_leaves(
             employee,
             contract,
@@ -447,7 +447,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # No TFN + Resident
     def test_09_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1995-6-8', '2022-1-3', '2024-3-12', tfn_provided=False)
+        employee, contract = self.get_unused_leaves_employee('1995-06-08', '2022-01-03', '2024-03-12', tfn_provided=False)
         self.create_leaves(
             employee,
             contract,
@@ -492,7 +492,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # No TFN + Foreign Resident
     def test_10_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1995-6-8', '2022-1-3', '2024-3-12', tfn_provided=False, resident=False)
+        employee, contract = self.get_unused_leaves_employee('1995-06-08', '2022-01-03', '2024-03-12', tfn_provided=False, resident=False)
         self.create_leaves(
             employee,
             contract,
@@ -536,7 +536,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # Withholding Var. + impact leaves
     def test_11_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1976-1-1', '1992-08-1992', '2024-3-12')
+        employee, contract = self.get_unused_leaves_employee('1976-01-01', '1992-08-1992', '2024-03-12')
         employee.l10n_au_withholding_variation = "leaves"
         employee.l10n_au_withholding_variation_amount = 30
 
@@ -581,7 +581,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # Withholding Var. + does not impact leaves
     def test_12_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1976-1-1', '1992-08-1992', '2024-3-12')
+        employee, contract = self.get_unused_leaves_employee('1976-01-01', '1992-08-1992', '2024-03-12')
         employee.l10n_au_withholding_variation = "salaries"
         employee.l10n_au_withholding_variation_amount = 30
         self.create_leaves(
@@ -625,7 +625,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # LSL only + non-genuine + > 1993
     def test_13_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1980-1-1', '2002-1-1', '2024-1-1')
+        employee, contract = self.get_unused_leaves_employee('1980-01-01', '2002-01-01', '2024-01-01')
         self.create_leaves(
             employee,
             contract,
@@ -671,26 +671,26 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
     # LSL ATO > 93
     def test_23_termination_unused_leaves(self):
         # TODO: Check rule parameter
-        employee, contract = self.get_unused_leaves_employee('1958-1-1', '2005-1-1', '2015-1-14')
+        employee, contract = self.get_unused_leaves_employee('1958-01-01', '2005-01-01', '2015-01-14')
         contract.schedule_pay = "weekly"
         contract.wage = 1000
-        self.env.ref("l10n_au_hr_payroll.rule_parameter_withholding_schedule_1_2023").date_from = fields.Date.from_string("2014-1-1")
-        self.env.ref("l10n_au_hr_payroll.rule_parameter_study_loan_coefficients_2023").date_from = fields.Date.from_string("2014-1-1")
-        self.env.ref("l10n_au_hr_payroll.rule_parameter_super_2023").date_from = fields.Date.from_string("2014-1-1")
+        self.env.ref("l10n_au_hr_payroll.rule_parameter_withholding_schedule_1_2023").date_from = fields.Date.from_string("2014-01-01")
+        self.env.ref("l10n_au_hr_payroll.rule_parameter_study_loan_coefficients_2023").date_from = fields.Date.from_string("2014-01-01")
+        self.env.ref("l10n_au_hr_payroll.rule_parameter_super_2023").date_from = fields.Date.from_string("2014-01-01")
 
         self.env['hr.rule.parameter.value'].create({
             "rule_parameter_id": self.env.ref("l10n_au_hr_payroll.rule_parameter_leave_withholding").id,
-            "date_from": fields.Date.from_string("2014-1-1"),
+            "date_from": fields.Date.from_string("2014-01-01"),
             "parameter_value": 32,
         })
         self.env['hr.rule.parameter.value'].create({
             "rule_parameter_id": self.env.ref("l10n_au_hr_payroll.rule_parameter_leaves_low_threshold").id,
-            "date_from": fields.Date.from_string("2014-1-1"),
+            "date_from": fields.Date.from_string("2014-01-01"),
             "parameter_value": 300,
         })
         self.env['hr.rule.parameter.value'].create({
             "rule_parameter_id": self.env.ref("l10n_au_hr_payroll.rule_parameter_leaves_low_withhold").id,
-            "date_from": fields.Date.from_string("2014-1-1"),
+            "date_from": fields.Date.from_string("2014-01-01"),
             "parameter_value": 32,
         })
 
@@ -731,7 +731,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
                 ("NET", 600.1 + expected_gross + (normal_withholding + expected_withhold)),
                 ("SUPER", 66.01),
             ],
-            payslip_date_from=fields.Date.from_string("2015-1-12"),
+            payslip_date_from=fields.Date.from_string("2015-01-12"),
             payslip_date_to=contract.date_end,
             termination_type="genuine"
         )
@@ -740,7 +740,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
     # Matt's Retirement
     def test_24_termination_unused_leaves(self):
         # TODO: Check rule parameter
-        employee, contract = self.get_unused_leaves_employee('1958-1-1', '1977-1-1', '2014-12-31')
+        employee, contract = self.get_unused_leaves_employee('1958-01-01', '1977-01-01', '2014-12-31')
         contract.schedule_pay = "weekly"
         contract.wage = 1200
         # Tax tables 2014
@@ -749,7 +749,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
         self.env["hr.rule.parameter.value"].create(
             {
                 "rule_parameter_id": self.env.ref("l10n_au_hr_payroll.rule_parameter_withholding_schedule_1").id,
-                "date_from": fields.datetime(2014, 7, 1).date(),
+                "date_from": date(2014, 7, 1),
                 "parameter_value": {
                     "tax-free": [
                         (355, 0.0, 0.0),
@@ -787,27 +787,27 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
             }
         )
 
-        self.env.ref("l10n_au_hr_payroll.rule_parameter_study_loan_coefficients_2023").date_from = fields.Date.from_string("2014-1-1")
+        self.env.ref("l10n_au_hr_payroll.rule_parameter_study_loan_coefficients_2023").date_from = fields.Date.from_string("2014-01-01")
         self.env["hr.rule.parameter.value"].create(
             {
                 "rule_parameter_id": self.env.ref("l10n_au_hr_payroll.rule_parameter_super").id,
-                "date_from": fields.datetime(2014, 7, 1).date(),
+                "date_from": date(2014, 7, 1),
                 "parameter_value": 9.50,
             }
         )
         self.env['hr.rule.parameter.value'].create({
             "rule_parameter_id": self.env.ref("l10n_au_hr_payroll.rule_parameter_leave_withholding").id,
-            "date_from": fields.Date.from_string("2014-1-1"),
+            "date_from": fields.Date.from_string("2014-01-01"),
             "parameter_value": 32,
         })
         self.env['hr.rule.parameter.value'].create({
             "rule_parameter_id": self.env.ref("l10n_au_hr_payroll.rule_parameter_leaves_low_threshold").id,
-            "date_from": fields.Date.from_string("2014-1-1"),
+            "date_from": fields.Date.from_string("2014-01-01"),
             "parameter_value": 300,
         })
         self.env['hr.rule.parameter.value'].create({
             "rule_parameter_id": self.env.ref("l10n_au_hr_payroll.rule_parameter_leaves_low_withhold").id,
-            "date_from": fields.Date.from_string("2014-1-1"),
+            "date_from": fields.Date.from_string("2014-01-01"),
             "parameter_value": 32,
         })
 
@@ -834,7 +834,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
         payslip = self.env["hr.payslip"].create({
             "name": "payslip",
             "employee_id": employee.id,
-            "contract_id": contract.id,
+            "version_id": contract.id,
             "struct_id": self.default_payroll_structure.id,
             "date_from": fields.Date.from_string("2014-12-25"),
             "date_to": contract.date_end,
@@ -900,7 +900,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
 
     # Causal Employee + Casual Loading
     def test_25_termination_unused_leaves(self):
-        employee, contract = self.get_unused_leaves_employee('1976-1-1', '2010-1-1', '2024-3-15')
+        employee, contract = self.get_unused_leaves_employee('1976-01-01', '2010-01-01', '2024-03-15')
         contract.schedule_pay = 'weekly'
         contract.wage_type = 'hourly'
         contract.hourly_wage = 40
@@ -942,7 +942,7 @@ class TestPayrollUnusedLeaves(TestPayrollCommon):
                 ("NET", 1900 + expected_gross + (normal_withholding + expected_withhold - 114)),
                 ("SUPER", 209),
             ],
-            payslip_date_from=fields.Date.from_string('2024-3-11'),
+            payslip_date_from=fields.Date.from_string('2024-03-11'),
             payslip_date_to=contract.date_end,
             termination_type="normal"
         )

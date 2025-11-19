@@ -2,12 +2,16 @@ from lxml import etree
 from odoo import Command
 from odoo.tests import tagged
 from odoo.tests.common import BaseCase, HttpCase
-from odoo.addons.web_studio.controllers import export
+from odoo.addons.web_studio.controllers.export import StudioExporter
 from odoo.addons.web_studio.wizard.studio_export_wizard import _find_circular_dependencies
-from odoo.addons.website.tools import MockRequest
+from odoo.addons.http_routing.tests.common import MockRequest
 
 
 class TestExport(HttpCase):
+    def setUp(self):
+        super().setUp()
+        self.exporter = StudioExporter()
+
     def test_export_currency_field(self):
         base_currency_field = self.env["res.partner"]._fields.get("currency_id")
         IrModelFields = self.env["ir.model.fields"].with_context(studio=True)
@@ -33,7 +37,7 @@ class TestExport(HttpCase):
             "currency_field": currency_field.name,
         })
 
-        studio_module = self.env["ir.module.module"].get_studio_module()
+        studio_module = self.env['ir.module.module'].get_studio_module()
         data = self.env['ir.model.data'].search([
             ('studio', '=', True), ("model", "=", "ir.model.fields"), ("res_id", "in", (currency_field | monetary).ids)
         ])
@@ -44,8 +48,8 @@ class TestExport(HttpCase):
             "default_export_data": [Command.set(data.ids)],
             "additional_models": [],
         })
-        export_info = wizard._get_export_info()
-        content_iter = iter(export.generate_module(studio_module, export_info))
+        export_info = wizard.get_export_info()
+        content_iter = iter(self.exporter.generate_module_files(studio_module, export_info))
 
         file_name = content = None
         with MockRequest(self.env):
@@ -63,8 +67,8 @@ class TestExport(HttpCase):
         self.assertEqual(monetary_field.find("./field[@name='currency_field']").text, "x_test_currency")
 
         monetary.currency_field = False
-        export_info = wizard._get_export_info()
-        content_iter = iter(export.generate_module(studio_module, export_info))
+        export_info = wizard.get_export_info()
+        content_iter = iter(self.exporter.generate_module_files(studio_module, export_info))
 
         file_name = content = None
         with MockRequest(self.env):
@@ -101,8 +105,8 @@ class TestExport(HttpCase):
         wizard = self.env['studio.export.wizard'].create({
             "default_export_data": [Command.set(data.ids)],
         })
-        export_info = wizard._get_export_info()
-        content_iter = iter(export.generate_module(studio_module, export_info))
+        export_info = wizard.get_export_info()
+        content_iter = iter(self.exporter.generate_module_files(studio_module, export_info))
         file_name = content = None
         with MockRequest(self.env):
             while file_name != "data/base_automation.xml":
@@ -120,6 +124,49 @@ class TestExport(HttpCase):
             "trigger"
         })
 
+    def test_export_unarchived_records(self):
+        IrFilter = self.env['ir.filters'].with_context(studio=True)
+        filter_1 = IrFilter.create({
+            'name': 'Filter 1',
+            'model_id': self.env['ir.model']._get('res.partner').id,
+            'domain': '[]',
+        })
+
+        filter_2 = IrFilter.create({
+            'name': 'Filter 2',
+            'model_id': self.env['ir.model']._get('res.partner').id,
+            'domain': '[]',
+        })
+
+        self.assertTrue(filter_1.active, "Filter 1 should be active initially")
+        self.assertTrue(filter_2.active, "Filter 2 should be active initially")
+
+        filter_1.active = False
+        self.assertFalse(filter_1.active, "Filter should be archived")
+
+        filter_data = self.env['ir.model.data'].search([
+            ('studio', '=', True),
+            ('model', '=', 'ir.filters'),
+        ])
+        self.assertEqual(len(filter_data), 2, "Should have two ir.model.data records: one archived and one active filter")
+
+        wizard = self.env['studio.export.wizard'].create({})
+        default_data = wizard._default_studio_export_data()
+        wizard.default_export_data = [Command.set(default_data.ids)]
+        export_info = wizard.get_export_info()
+
+        studio_module = self.env['ir.module.module'].get_studio_module()
+        content_iter = iter(self.exporter.generate_module_files(studio_module, export_info))
+
+        file_name = content = None
+        with MockRequest(self.env):
+            while file_name != "data/ir_filters.xml":
+                file_name, content = next(content_iter)
+
+            arch_filters = etree.fromstring(content)
+            records = arch_filters.findall('record')
+            self.assertEqual(len(records), 1, "Only the active filter should be exported.")
+
 
 @tagged("post_install", "-at_install")
 class TestExportTours(HttpCase):
@@ -127,7 +174,7 @@ class TestExportTours(HttpCase):
         self.start_tour("/odoo?debug=tests", 'can_export_new_module', login="admin")
         # check the export result made by the tour
         wizard = self.env['studio.export.wizard'].search([], limit=1, order='id desc')
-        data, files, circular_dependencies = wizard._get_export_info()
+        data, files, circular_dependencies = wizard.get_export_info()
         self.assertEqual(circular_dependencies, [])
         self.assertEqual(data, wizard.default_export_data)
         self.assertEqual(len(wizard.additional_export_data), 0)

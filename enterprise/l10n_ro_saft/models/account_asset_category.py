@@ -1,15 +1,16 @@
 from odoo import api, fields, models
 
 
-class AccountAssetCategory(models.Model):
+class L10n_Ro_SaftAccountAssetCategory(models.Model):
     _name = 'l10n_ro_saft.account.asset.category'
     _description = "Asset categories for Romania's saft"
     _order = "code"
     _rec_names_search = ['code', 'description']
 
-    _sql_constraints = [
-        ('code_unique', 'unique (code)', 'The code of the asset category must be unique !'),
-    ]
+    _code_unique = models.Constraint(
+        'unique (code)',
+        "The code of the asset category must be unique !",
+    )
 
     description = fields.Char(string="Description", required=True, translate=True)
     code = fields.Char(string="Code", required=True)

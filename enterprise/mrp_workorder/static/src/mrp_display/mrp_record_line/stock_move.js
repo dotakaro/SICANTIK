@@ -1,46 +1,65 @@
-/** @odoo-module */
-
 import { _t } from "@web/core/l10n/translation";
+import { useActiveActions, useOpenMany2XRecord } from "@web/views/fields/relational_utils";
+import { useService } from "@web/core/utils/hooks";
+import { QualityCheck } from "./quality_check";
+import { MrpQuantityDialog } from "../dialog/mrp_quantity_dialog";
+import { MrpSelectQuantDialog } from "../dialog/mrp_select_quant_dialog";
 
-import { Component } from "@odoo/owl";
-
-export class StockMove extends Component {
+export class StockMove extends QualityCheck {
     static props = {
-        clickable: Boolean,
+        ...QualityCheck.props,
         displayUOM: Boolean,
+        check: { optional: true, type: Object },
         label: { optional: true, type: String },
-        parent: Object,
-        record: Object,
-        uom: { optional: true, type: Object },
     };
     static template = "mrp_workorder.StockMove";
 
     setup() {
-        this.fieldState = "state";
-        this.isLongPressable = false;
-        this.longPressed = false;
-        this.resModel = this.props.record.resModel;
-        this.resId = this.props.record.resId;
+        this.dialog = useService("dialog");
+        this.props.record.component = this;
+        if (this.props.check) {
+            this.props.check.component = this;
+        }
+        const activeActions = useActiveActions({
+            fieldType: "one2many",
+            getEvalParams: (props) => ({
+                readonly: props.record.data.has_tracking === "none",
+            }),
+        });
+        this.openQuantRecord = useOpenMany2XRecord({
+            resModel: "stock.quant",
+            activeActions: activeActions,
+            onRecordSaved: (record) => this.selectQuant([record.resId]),
+            fieldString: "Move Line",
+            is2Many: true,
+        });
     }
 
-    get cssClass() {
-        let cssClass = this.isLongPressable ? "o_longpressable" : "";
-        if (this.isComplete) {
-            cssClass += " text-muted";
+    get label() {
+        const productName = this.props.record.data.product_id.display_name;
+        if (this.props.record.data.production_id) {
+            return _t("Register %(productName)s", { productName });
         }
-        return cssClass;
+        return this.check ? super.label : productName;
+    }
+
+    get icon() {
+        if (this.isTracked) {
+            return this.displayCheck ? "check" : "plus"; // Make sure to display check for prefilled quality check moves
+        }
+        return this.isComplete ? "undo" : "pencil"; // No move lines for untracked moves, work directly on the move
     }
 
     get isComplete() {
-        return Boolean(this.props.record.data.picked);
+        return this.check ? super.isComplete : Boolean(this.props.record.data.picked);
     }
 
     get toConsumeQuantity() {
         const move = this.props.record.data;
-        const parent = this.props.parent.data;
+        const parent = this.props.record._parentRecord.data;
         let toConsumeQuantity = move.should_consume_qty || move.product_uom_qty;
-        if (parent.product_tracking == "serial") {
-            toConsumeQuantity /= this.props.parent.data.product_qty;
+        if (parent.product_tracking === "serial") {
+            toConsumeQuantity /= parent.product_qty;
         }
         return toConsumeQuantity;
     }
@@ -51,60 +70,124 @@ export class StockMove extends Component {
 
     get uom() {
         if (this.props.displayUOM) {
-            return this.props.record.data.product_uom[1];
+            return this.props.record.data.product_uom.display_name;
         }
         return this.toConsumeQuantity === 1 ? _t("Unit") : _t("Units");
     }
 
-    longPress() {}
+    get check() {
+        return this.props.check ? this.props.check.data : false;
+    }
 
-    onAnimationEnd(ev) {
-        if (ev.animationName === "longpress") {
-            this.longPressed = true;
-            this.longPress();
+    get hasInstruction() {
+        return this.check ? super.hasInstruction : false;
+    }
+
+    get visibleMoveLines() {
+        if (!this.isTracked) {
+            return [];
+        }
+        const { move_line_ids, picking_type_prefill_shop_floor_lots } = this.props.record.data;
+        return picking_type_prefill_shop_floor_lots
+            ? move_line_ids.records
+            : move_line_ids.records.filter((ml) => ml.data.picked);
+    }
+
+    get displayCheck() {
+        return (
+            this.check &&
+            !this.isComplete &&
+            this.props.record.data.picking_type_prefill_shop_floor_lots &&
+            this.props.record.data.move_line_ids.records.length
+        );
+    }
+
+    get isTracked() {
+        return this.props.record.data.has_tracking !== "none";
+    }
+
+    addMoveLine() {
+        const product = this.props.record.data.product_id;
+        this.dialog.add(MrpSelectQuantDialog, {
+            resModel: "stock.quant",
+            noCreate: !this.isTracked,
+            multiSelect: false,
+            domain: [["product_id", "=", product.id]],
+            title: _t("Add line: %(productName)s", { productName: product.display_name }),
+            context: {
+                single_product: true,
+                list_view_ref: "stock.view_stock_quant_tree_simple",
+                search_default_on_hand: true,
+                search_default_in_stock: true,
+                hide_lot: !this.isTracked,
+                hide_available: true,
+            },
+            onSelected: (resIds) => this.selectQuant(resIds),
+            onCreateEdit: () => this.createQuant(),
+            record: this.props.record,
+        });
+    }
+
+    async markAsDone() {
+        const { model, resModel, resId, _parentRecord } = this.props.check;
+        const result = await model.orm.call(resModel, "action_next", [resId]);
+        if ("next_check_id" in result) {
+            this.check.quality_state = "pass";
+            this.props.record.data.picked = true;
+            _parentRecord.data.current_quality_check_id = [result.next_check_id];
         }
     }
 
-    onClick() {
-        if (!this.props.clickable) {
-            return;
-        }
-        if (this.longPressed) {
-            this.longPressed = false;
-            return; // Do nothing since the longpress event was already called.
-        }
-        this.clicked();
+    async undo() {
+        const { resModel, resId, _parentRecord } = this.props.record;
+        await this.props.record.model.orm.call(resModel, "action_undo", [[resId]]);
+        await this.env.reload(_parentRecord);
+    }
+
+    editUntrackedMove() {
+        this.dialog.add(MrpQuantityDialog, {
+            record: this.props.record,
+            confirm: this.env.reload.bind(this, this.props.record._parentRecord),
+        });
     }
 
     async clicked() {
-        const action = await this.props.record.model.orm.call(
-            this.resModel,
-            "action_show_details",
-            [this.resId]
-        );
-        const options = {
-            onClose: async () => {
-                this.props.record.load();
-            },
-        };
-        this.props.record.model.action.doAction(action, options);
-    }
-
-    async toggleQuantityDone() {
-        if (!this.props.clickable) {
-            return;
-        } else if (!this.toConsumeQuantity) {
-            return this.clicked();
+        if (this.isTracked) {
+            if (this.displayCheck) {
+                await this.markAsDone(); // check button: accept prefilled values and confirm QC
+            } else {
+                this.addMoveLine(); // plus button: add a move line by selecting quant
+            }
+        } else {
+            if (this.isComplete) {
+                await this.undo(); // undo button: reset move data for untracked move
+            } else {
+                this.editUntrackedMove(); // pencil button: edit untracked move quantity
+            }
         }
-        const quantity = this.quantityDone ? this.quantityDone : this.toConsumeQuantity;
-        this.props.record.update({
-            quantity: quantity,
-            picked: !this.isComplete,
-        });
-        this.props.record.save({ reload: false });
+        return this.props.startWorking();
     }
 
-    get state() {
-        return this.props.record.data[this.fieldState];
+    async selectQuant(quantIds) {
+        const { resId, model } = this.props.record;
+        await model.orm.call("stock.move", "action_add_from_quant", [resId, quantIds[0]]);
+        await this.env.reload(this.props.record._parentRecord);
+    }
+
+    createQuant() {
+        return this.openQuantRecord({
+            context: {
+                form_view_ref: "stock.view_stock_quant_form",
+                default_product_id: this.props.record.data.product_id.id,
+            },
+            immediate: true,
+        });
+    }
+
+    editQuantity(record) {
+        this.dialog.add(MrpQuantityDialog, {
+            record,
+            confirm: this.env.reload.bind(this, this.props.record._parentRecord),
+        });
     }
 }

@@ -20,6 +20,8 @@ class TestApprovalsCommon(TransactionCase):
             'login': 'yesman',
             'email': 'yesman@example.com',
             'name': 'Carl Allen',
+            # TODO: Check why this is necessary
+            'group_ids': cls.env.ref('purchase.group_purchase_manager'),
         })
         cls.payment_terms = cls.env.ref("account.account_payment_term_end_following_month")
         # Create partners to use as seller.
@@ -54,6 +56,13 @@ class TestApprovalsCommon(TransactionCase):
                 }),
             ],
         })
+        # Find UoM unit and create the 'fortnight' unit.
+        cls.uom_unit = cls.env.ref('uom.product_uom_unit')
+        cls.uom_fortnight = cls.env['uom.uom'].create({
+            'name': 'Fortnights',
+            'relative_factor': 15.0,
+            'relative_uom_id': cls.env.ref('uom.product_uom_day').id,
+        })
         cls.product_earphone = cls.env['product.product'].create({
             'name': 'Earphone',
             'seller_ids': [
@@ -61,16 +70,9 @@ class TestApprovalsCommon(TransactionCase):
                     'partner_id': cls.partner_seller_1.id,
                     'min_qty': 1,
                     'price': 8,
+                    'product_uom_id': cls.uom_fortnight.id,
                 }),
             ],
-        })
-        # Find UoM unit and create the 'fortnight' unit.
-        cls.uom_unit = cls.env.ref('uom.product_uom_unit')
-        cls.uom_fortnight = cls.env['uom.uom'].create({
-            'category_id': cls.uom_unit.category_id.id,
-            'name': 'Fortnights',
-            'uom_type': 'bigger',
-            'factor_inv': 15.0,
         })
 
     def create_request_form(self, approver=False, category=False):
@@ -120,7 +122,7 @@ class TestApprovalsCommon(TransactionCase):
                     'price_unit': line['price'],
                     'product_id': product.id,
                     'product_qty': line.get('quantity', 1),
-                    'product_uom': line.get('uom', product.uom_id.id),
+                    'product_uom_id': line.get('uom', product.uom_id.id),
                 })
                 vals['order_line'].append(order_line_vals)
 

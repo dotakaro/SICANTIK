@@ -4,12 +4,12 @@
 from odoo import fields, models
 
 
-class DataMergeRule(models.Model):
+class Data_MergeRule(models.Model):
     _name = 'data_merge.rule'
     _description = 'Deduplication Rule'
     _order = 'sequence, field_id'
 
-    model_id = fields.Many2one('data_merge.model', string='Deduplication Model', ondelete='cascade', required=True)
+    model_id = fields.Many2one('data_merge.model', string='Deduplication Model', ondelete='cascade', required=True, index=True)
     res_model_id = fields.Many2one(related='model_id.res_model_id', readonly=True, store=True)
     field_id = fields.Many2one('ir.model.fields', string='Unique ID Field',
         domain="[('model_id', '=', res_model_id), ('ttype', 'in', ('char', 'text', 'many2one')), ('store', '=', True)]",
@@ -19,9 +19,10 @@ class DataMergeRule(models.Model):
         default='exact', string='Merge If', required=True)
     sequence = fields.Integer(string='Sequence', default=1)
 
-    _sql_constraints = [
-        ('uniq_model_id_field_id', 'unique(model_id, field_id)', 'A field can only appear once!'),
-    ]
+    _uniq_model_id_field_id = models.Constraint(
+        'unique(model_id, field_id)',
+        "A field can only appear once!",
+    )
 
     def _available_match_modes(self):
         modes = [('exact', self.env._("Exact Match"))]

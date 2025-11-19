@@ -103,7 +103,9 @@ class L10nItMonthlyTaxReportXmlExportWizard(models.TransientModel):
     def _compute_show_method(self):
         self.show_method = False
 
-        submissions_periodicity = hasattr(self.env.company, "account_tax_periodicity") and self.env.company.account_tax_periodicity
+        if 'l10n_it_xml_export_monthly_tax_report_options' not in self.env.context:
+            return
+        submissions_periodicity = hasattr(self.env.company, "account_return_periodicity") and self.env.company.account_return_periodicity
         date_to = fields.Date.from_string(self.env.context['l10n_it_xml_export_monthly_tax_report_options']['date']['date_to'])
         for wizard in self:
             if submissions_periodicity == "trimester" and (date_to.month - 1) // 3 == 3:
@@ -114,13 +116,22 @@ class L10nItMonthlyTaxReportXmlExportWizard(models.TransientModel):
     def action_generate_export(self):
         self.ensure_one()
         ctx = self._context
-        report_id = ctx.get("l10n_it_xml_export_monthly_tax_report_options", {}).get("report_id")
+        ctx_options = ctx.get("l10n_it_xml_export_monthly_tax_report_options", {})
+        report_id = ctx_options.get("report_id")
         if report_id:
             options = self.env["account.report"].browse(report_id).get_options({})
         else:
-            move = self.env['account.move'].browse(ctx["l10n_it_moves_to_post"])
-            options = move._get_tax_closing_report_options(move.company_id, move.fiscal_position_id, move.tax_closing_report_id, move.date)
-        options.update(ctx.get("l10n_it_xml_export_monthly_tax_report_options", {}))
+            account_return = self.env["account.return"]
+            match model := ctx.get("active_model"):
+                case "account.return":
+                    account_return = self.env[model].browse(ctx["active_id"])
+                case "account.return.check":
+                    account_return = self.env[model].browse(ctx["active_id"]).return_id
+                case "account.move":
+                    account_return = self.env[model].browse(ctx["active_id"]).closing_return_id
+            options = account_return._get_closing_report_options() if account_return else {}
+
+        options.update(ctx_options)
         options.update(self._get_wizard_field_dict())
 
         if ctx.get("l10n_it_moves_to_post"):

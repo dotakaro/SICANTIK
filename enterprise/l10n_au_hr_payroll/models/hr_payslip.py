@@ -57,7 +57,7 @@ class HrPayslip(models.Model):
     l10n_au_exempt_foreign_income = fields.Float(
         string="Exempt Foreign Income",
         help="Exempt foreign income for the current financial year")
-    l10n_au_schedule_pay = fields.Selection(related="contract_id.schedule_pay", store=True, index=True)
+    l10n_au_schedule_pay = fields.Selection(related="version_id.schedule_pay", store=True, index=True)
     l10n_au_termination_type = fields.Selection([
         ("normal", "Non-Genuine Redundancy"),
         ("genuine", "Genuine Redundancy"),
@@ -74,6 +74,7 @@ class HrPayslip(models.Model):
             'l10n_au_hr_payroll', [
                 'data/hr_payslip_input_type_data.xml',
                 'data/salary_rules/hr_salary_rule_regular_data.xml',
+                'data/hr_rule_parameters_data.xml',
             ])]
 
     def _get_base_local_dict(self):
@@ -90,10 +91,10 @@ class HrPayslip(models.Model):
         return res
 
     def _get_daily_wage(self):
-        schedule_pay = self.contract_id.schedule_pay
-        wage = self.contract_id.wage
-        if self.contract_id.wage_type == 'hourly':
-            wage *= (1 + self.contract_id.l10n_au_casual_loading)
+        schedule_pay = self.version_id.schedule_pay
+        wage = self.version_id.wage
+        if self.version_id.wage_type == 'hourly':
+            wage *= (1 + self.version_id.l10n_au_casual_loading)
 
         if schedule_pay == "daily":
             return wage
@@ -135,41 +136,41 @@ class HrPayslip(models.Model):
 
     # Computed here to keep individual values for each payslip without a separate salary rule
     # Only recompute when payslip is recomputed or when contract is changed
-    @api.depends('contract_id')
+    @api.depends('version_id')
     def _compute_l10n_au_extra_negotiated_super(self):
         for payslip in self:
             if payslip.country_code != "AU":
                 continue
             if payslip.state not in ['draft', 'verify']:
                 continue
-            payslip.l10n_au_extra_negotiated_super = payslip.contract_id.l10n_au_extra_negotiated_super
+            payslip.l10n_au_extra_negotiated_super = payslip.version_id.l10n_au_extra_negotiated_super
 
-    @api.depends('contract_id')
+    @api.depends('version_id')
     def _compute_l10n_au_extra_compulsory_super(self):
         for payslip in self:
             if payslip.country_code != "AU":
                 continue
             if payslip.state not in ['draft', 'verify']:
                 continue
-            payslip.l10n_au_extra_compulsory_super = payslip.contract_id.l10n_au_extra_compulsory_super
+            payslip.l10n_au_extra_compulsory_super = payslip.version_id.l10n_au_extra_compulsory_super
 
-    @api.depends('contract_id')
+    @api.depends('version_id')
     def _compute_l10n_au_salary_sacrifice_superannuation(self):
         for payslip in self:
             if payslip.country_code != "AU":
                 continue
             if payslip.state not in ['draft', 'verify']:
                 continue
-            payslip.l10n_au_salary_sacrifice_superannuation = payslip.contract_id.l10n_au_salary_sacrifice_superannuation
+            payslip.l10n_au_salary_sacrifice_superannuation = payslip.version_id.l10n_au_salary_sacrifice_superannuation
 
-    @api.depends('contract_id')
+    @api.depends('version_id')
     def _compute_l10n_au_salary_sacrifice_other(self):
         for payslip in self:
             if payslip.country_code != "AU":
                 continue
             if payslip.state not in ['draft', 'verify']:
                 continue
-            payslip.l10n_au_salary_sacrifice_other = payslip.contract_id.l10n_au_salary_sacrifice_other
+            payslip.l10n_au_salary_sacrifice_other = payslip.version_id.l10n_au_salary_sacrifice_other
 
     @api.depends("employee_id")
     def _compute_income_stream_type(self):
@@ -300,6 +301,8 @@ class HrPayslip(models.Model):
     @api.constrains('input_line_ids', 'employee_id')
     def _check_input_lines(self):
         for payslip in self:
+            if payslip.country_code != "AU":
+                continue
             employee = payslip.employee_id
             input_director_fees = self.env.ref("l10n_au_hr_payroll.input_gross_director_fee")
             if input_director_fees in payslip.input_line_ids.mapped("input_type_id") \
@@ -309,7 +312,7 @@ class HrPayslip(models.Model):
                     employee.l10n_au_income_stream_type,
                 ))
 
-            if (payslip.contract_id.l10n_au_salary_sacrifice_superannuation or payslip.contract_id.l10n_au_salary_sacrifice_other)\
+            if (payslip.version_id.l10n_au_salary_sacrifice_superannuation or payslip.version_id.l10n_au_salary_sacrifice_other)\
                 and employee.l10n_au_income_stream_type in ["OSP", "LAB", "VOL"]:
                 raise ValidationError(_(
                     "Salary sacrifice is not allowed for income stream type '%s'.",
@@ -364,7 +367,7 @@ class HrPayslip(models.Model):
             Current slip is included if it is done. Else it can be forced to be included using
             'l10n_au_include_current_slip=True'
         """
-        start_year = self.contract_id._l10n_au_get_financial_year_start(self.date_from)
+        start_year = self.version_id._l10n_au_get_financial_year_start(self.date_from)
         year_slips = self.env["hr.payslip"].search([
             ("employee_id", "=", self.employee_id.id),
             ("company_id", "=", self.company_id.id),
@@ -558,7 +561,7 @@ class HrPayslip(models.Model):
         if self.employee_id.l10n_au_tax_free_threshold and self.employee_id.l10n_au_medicare_reduction != "X":
             weekly_earning = self._l10n_au_compute_weekly_earning(period_earning, period)
             child_reduction = params["ADDC"] * int(self.employee_id.l10n_au_medicare_reduction)
-            weekly_family_threshold = (child_reduction + self.contract_id.l10n_au_yearly_wage) / 52
+            weekly_family_threshold = (child_reduction + self.version_id.l10n_au_yearly_wage) / 52
 
             shading_out_point = floor(weekly_family_threshold * params["SOPD"] / params["SOPM"])
             weekly_levy_adjustment = 0
@@ -676,7 +679,7 @@ class HrPayslip(models.Model):
 
         preservation_ages = self._rule_parameter("l10n_au_preservation_age_schedule_11")
         # The preservation age is determined based on the financial year in which the employee was born.
-        birth_financial_year = self.contract_id._l10n_au_get_financial_year_start(employee_id.birthday).year
+        birth_financial_year = self.version_id._l10n_au_get_financial_year_start(employee_id.birthday).year
         years_list = list(preservation_ages['years'].values())
         if birth_financial_year < years_list[0]:
             preservation_age = preservation_ages['before']
@@ -688,7 +691,7 @@ class HrPayslip(models.Model):
         is_of_or_over_preservation_age = relativedelta(date.today(), employee_id.birthday).years >= preservation_age
 
         # b) Some payments have a tax free limit, which depends on the completed years of services.
-        complete_years_of_service = relativedelta(self.date_to, employee_id.first_contract_date).years
+        complete_years_of_service = relativedelta(self.date_to, employee_id._get_first_version_date()).years
         base_tax_free_limit = self._rule_parameter("l10n_au_tax_free_base_schedule_11")
         tax_free_limit = base_tax_free_limit + (complete_years_of_service * self._rule_parameter("l10n_au_tax_free_yearly_schedule_11"))
 
@@ -763,7 +766,7 @@ class HrPayslip(models.Model):
             for allocation in allocations.filtered(
                 lambda x:
                     x.employee_id == self.employee_id and
-                    x.date_from <= (payslip.contract_id.date_end or payslip.date_to)
+                    x.date_from <= (payslip.version_id.date_end or payslip.date_to)
                 ):
                 leave_type = leaves_by_date[payslip.id][allocation.holiday_status_id.l10n_au_leave_type]
                 unused = allocation.number_of_days - allocation.leaves_taken
@@ -829,8 +832,8 @@ class HrPayslip(models.Model):
             daily_wage = payslip._get_daily_wage()
             annual_gross = leaves_totals[payslip.id]['annual'] * daily_wage
             long_service_gross = leaves_totals[payslip.id]['long_service'] * daily_wage
-            if payslip.contract_id.l10n_au_leave_loading == 'regular':
-                annual_gross *= 1 + payslip.contract_id.l10n_au_leave_loading_rate / 100
+            if payslip.version_id.l10n_au_leave_loading == 'regular':
+                annual_gross *= 1 + payslip.version_id.l10n_au_leave_loading_rate / 100
             if annual_gross:
                 input_vals.append({
                     'name': _('Gross Unused Annual Leaves'),
@@ -853,10 +856,10 @@ class HrPayslip(models.Model):
             ("state", "=", "validate"),
             ("holiday_status_id.l10n_au_leave_type", "in", ['annual', 'long_service']),
             ("employee_id", "=", self.employee_id.id),
-            ("date_from", "<=", self.contract_id.date_end or self.date_to),
+            ("date_from", "<=", self.version_id.date_end or self.date_to),
         ])
         unused_days = sum([(leave.number_of_days - leave.leaves_taken) for leave in leaves])
-        return unused_days * self.contract_id.resource_calendar_id.hours_per_day
+        return unused_days * self.version_id.resource_calendar_id.hours_per_day
 
     def _l10n_au_calculate_marginal_withhold(self, leave_amount, coefficients, basic_amount):
         self.ensure_one()
@@ -868,7 +871,7 @@ class HrPayslip(models.Model):
             return withhold
 
         # TFN provided, we apply the normal table to the amount / period.
-        period = self.contract_id.schedule_pay
+        period = self.version_id.schedule_pay
         amount_per_period = leave_amount / PERIODS_PER_YEAR[period]
 
         normal_withhold = self._l10n_au_compute_withholding_amount(basic_amount, period, coefficients, unused_leaves=True)
@@ -920,7 +923,7 @@ class HrPayslip(models.Model):
 
     def _l10n_au_compute_unused_leaves_withhold(self):
         self.ensure_one()
-        basic_amount = self.contract_id.wage
+        basic_amount = self.version_id.wage
         leaves, leaves_total = self._l10n_au_get_leaves_for_withhold()
         if self.employee_id.l10n_au_withholding_variation == 'leaves':
             l10n_au_leave_withholding = self.employee_id.l10n_au_withholding_variation_amount
@@ -971,7 +974,7 @@ class HrPayslip(models.Model):
 
     def _l10n_au_has_extra_pay(self):
         self.ensure_one()
-        return self.contract_id._l10n_au_get_weeks_amount(self.date_to) == 53
+        return self.version_id._l10n_au_get_weeks_amount(self.date_to) == 53
 
     def _l10n_au_compute_backpay_withhold(self, net_salary, backpay, salary_withhold):
         """Compute withhold for back payments
@@ -982,12 +985,12 @@ class HrPayslip(models.Model):
         """
         if self.employee_id.l10n_au_tax_treatment_category == "H":
             return 0
-        backpay_per_period = round(backpay / PERIODS_PER_YEAR[self.contract_id.schedule_pay])
+        backpay_per_period = round(backpay / PERIODS_PER_YEAR[self.version_id.schedule_pay])
         coefficients = self._l10n_au_tax_schedule_parameters()
-        total_withhold = self._l10n_au_compute_withholding_amount(net_salary + backpay_per_period, self.contract_id.schedule_pay, coefficients)
+        total_withhold = self._l10n_au_compute_withholding_amount(net_salary + backpay_per_period, self.version_id.schedule_pay, coefficients)
 
         backpay_withhold = total_withhold - abs(salary_withhold)
-        backpay_withhold *= PERIODS_PER_YEAR[self.contract_id.schedule_pay]
+        backpay_withhold *= PERIODS_PER_YEAR[self.version_id.schedule_pay]
         backpay_withhold = -min(backpay_withhold, backpay * self._rule_parameter('l10n_au_withholding_backpay') / 100)
 
         # Backpay HELP Withholding
@@ -997,9 +1000,9 @@ class HrPayslip(models.Model):
             or self.employee_id.is_non_resident
             else "no-tax-free"
         ]
-        backpay_stsl_per_period = -self._l10n_au_compute_loan_withhold(net_salary + backpay_per_period, self.contract_id.schedule_pay, coefficients)
-        salary_stsl = -self._l10n_au_compute_loan_withhold(net_salary, self.contract_id.schedule_pay, coefficients)
-        backpay_stsl = (backpay_stsl_per_period - salary_stsl) * PERIODS_PER_YEAR[self.contract_id.schedule_pay]
+        backpay_stsl_per_period = -self._l10n_au_compute_loan_withhold(net_salary + backpay_per_period, self.version_id.schedule_pay, coefficients)
+        salary_stsl = -self._l10n_au_compute_loan_withhold(net_salary, self.version_id.schedule_pay, coefficients)
+        backpay_stsl = (backpay_stsl_per_period - salary_stsl) * PERIODS_PER_YEAR[self.version_id.schedule_pay]
 
         return backpay_withhold, backpay_stsl
 
@@ -1031,9 +1034,9 @@ class HrPayslip(models.Model):
                         raise ValidationError(_("In order to process this payslip, a birth date should be set on the private information tab of the employee's form view."))
                     # if age less than 18, use underage
                     if relativedelta(date.today(), employee.birthday).years < 18:
-                        if self.contract_id.schedule_pay not in ["weekly", "fortnightly", "monthly"]:
+                        if self.version_id.schedule_pay not in ["weekly", "fortnightly", "monthly"]:
                             raise ValidationError(_("The pay schedule for this employee is not supported for underage actors."))
-                        return rates["promotional"]["underage"][self.contract_id.schedule_pay]
+                        return rates["promotional"]["underage"][self.version_id.schedule_pay]
                     # if age greater than 18
                     tfn_status = 'tfn' if employee.l10n_au_tfn_declaration != "000000000" else 'no-tfn'
                     return rates["promotional"][tfn_status]
@@ -1102,3 +1105,11 @@ class HrPayslip(models.Model):
             "The Employee '%(employee)s' with tax treatment category '%(category)s' has no valid tax schedule.",
             employee=employee.name, category=employee.l10n_au_tax_treatment_category
         ))
+
+    def _get_regular_worked_hours(self):
+        """
+        Get the worked hours for the payslip except for the overtime hours.
+        """
+        self.ensure_one()
+        overtime_days = self.worked_days_line_ids.filtered(lambda d: d.work_entry_type_id.l10n_au_work_stp_code == 'T')
+        return self.sum_worked_hours - sum(overtime_days.mapped("number_of_hours"))

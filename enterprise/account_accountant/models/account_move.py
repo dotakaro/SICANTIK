@@ -3,12 +3,14 @@ from contextlib import contextmanager
 from itertools import chain
 from dateutil.relativedelta import relativedelta
 import logging
+import markupsafe
 import re
 
 from odoo import fields, models, api, _, Command
 from odoo.exceptions import UserError
 from odoo.osv import expression
 from odoo.tools import SQL, float_compare
+from odoo.tools.misc import formatLang
 
 
 _logger = logging.getLogger(__name__)
@@ -192,7 +194,7 @@ class AccountMove(models.Model):
                 period_start, period_end = period_start + reset_day_1, period_end + reset_day_1
             line_diff = self._get_deferred_diff_dates(line_end, line_start)
             period_diff = self._get_deferred_diff_dates(period_end, period_start)
-            return period_diff / line_diff * balance if line_diff >= 1 else balance
+            return period_diff / line_diff * balance if line_diff else balance
 
     @api.model
     def _get_deferred_amounts_by_line(self, lines, periods, deferred_type):
@@ -262,8 +264,7 @@ class AccountMove(models.Model):
         self.ensure_one()
         if self.state != 'posted':
             return
-        if self.is_entry():
-            raise UserError(_("You cannot generate deferred entries for a miscellaneous journal entry."))
+
         deferred_type = "expense" if self.is_purchase_document() else "revenue"
         deferred_account = self.company_id.deferred_expense_account_id if deferred_type == "expense" else self.company_id.deferred_revenue_account_id
         deferred_journal = self.company_id.deferred_expense_journal_id if deferred_type == "expense" else self.company_id.deferred_revenue_journal_id
@@ -395,11 +396,13 @@ class AccountMove(models.Model):
                 'search_default_journal_id': self.statement_line_id.journal_id.id,
                 'search_default_statement_line_id': self.statement_line_id.id,
                 'default_st_line_id': self.statement_line_id.id,
+                'hide_current_balance': True,
             }
         )
 
     def action_open_bank_reconciliation_widget_statement(self):
         return self.statement_line_id._action_open_bank_reconciliation_widget(
+            default_context={'hide_current_balance': True},
             extra_domain=[('statement_id', 'in', self.statement_id.ids)],
         )
 
@@ -418,6 +421,7 @@ class AccountMove(models.Model):
     def _get_mail_thread_data_attachments(self):
         res = super()._get_mail_thread_data_attachments()
         res += self.statement_line_id.statement_id.attachment_ids
+        res += self.line_ids.reconciled_lines_ids.move_attachment_ids
         return res
 
     @contextmanager
@@ -430,7 +434,6 @@ class AccountMove(models.Model):
 
 
 class AccountMoveLine(models.Model):
-    _name = "account.move.line"
     _inherit = "account.move.line"
 
     move_attachment_ids = fields.One2many('ir.attachment', compute='_compute_attachment')
@@ -451,6 +454,8 @@ class AccountMoveLine(models.Model):
     )
     has_deferred_moves = fields.Boolean(compute='_compute_has_deferred_moves')
     has_abnormal_deferred_dates = fields.Boolean(compute='_compute_has_abnormal_deferred_dates')
+
+    full_amount_switch_html = fields.Html(compute='_compute_full_amount_switch_html')
 
     def _order_to_sql(self, order, query, alias=None, reverse=False):
         sql_order = super()._order_to_sql(order, query, alias, reverse)
@@ -499,6 +504,58 @@ class AccountMoveLine(models.Model):
                     ))
         return super().write(vals)
 
+    @api.depends('balance')
+    def _compute_full_amount_switch_html(self):
+        for line in self:
+            if not (reconciled_lines := line.reconciled_lines_excluding_exchange_diff_ids):
+                line.full_amount_switch_html = False
+                continue
+
+            is_invoice = reconciled_lines.move_id.is_invoice(include_receipts=True)
+            btn_start = markupsafe.Markup("<a name='apply_full_amount' type='object' class='btn btn-link p-0 align-baseline'>")
+
+            if reconciled_lines.currency_id.is_zero(reconciled_lines.amount_currency + line.amount_currency):
+                lines = [
+                    _("%(display_name_html)s will be entirely paid by the transaction.")
+                    if is_invoice else
+                    _("%(display_name_html)s will be fully reconciled by the transaction.")
+                ]
+                liquidity_line_amount_currency = line.move_id.line_ids.filtered(lambda line: line.account_id == line.move_id.journal_id.default_account_id).amount_currency
+                # Means that we possibly want to come back to partial
+                if float_compare(liquidity_line_amount_currency, reconciled_lines.amount_currency, 2) < 0:
+                    btn_start = markupsafe.Markup("<a name='apply_partial_amount' type='object' class='btn btn-link p-0 align-baseline'>")
+                    lines.append(
+                        _("You might want to record a %(btn_start)spartial payment%(btn_end)s.")
+                        if is_invoice else
+                        _("You might want to make a %(btn_start)spartial reconciliation%(btn_end)s instead.")
+                    )
+            else:
+                if is_invoice:
+                    lines = [
+                        _("%(display_name_html)s will be reduced by %(amount)s."),
+                        _("You might want to set the invoice as %(btn_start)sfully paid%(btn_end)s."),
+                    ]
+                else:
+                    lines = [
+                        _("%(display_name_html)s will be reduced by %(amount)s."),
+                        _("You might want to %(btn_start)sfully reconcile%(btn_end)s the document."),
+                    ]
+
+            # We need to use span instead of button here because button is not displayed otherwise
+            display_name_html = markupsafe.Markup("""
+                    <a name='action_redirect_to_move' type='object' class="btn btn-link p-0 align-baseline fst-italic">%(display_name)s</a>
+                """) % {
+                'display_name': reconciled_lines.move_id.display_name,
+            }
+
+            extra_text = markupsafe.Markup("<br/>").join(lines) % {
+                'amount': formatLang(self.env, line.amount_currency, currency_obj=line.currency_id),
+                'display_name_html': display_name_html,
+                'btn_start': btn_start,
+                'btn_end': markupsafe.Markup("</a>"),
+            }
+            line.full_amount_switch_html = markupsafe.Markup("<div class='text-muted'>%s</div>") % extra_text
+
     # ============================= START - Deferred management ====================================
     def _compute_has_deferred_moves(self):
         for line in self:
@@ -528,11 +585,15 @@ class AccountMoveLine(models.Model):
         return (
             self.move_id.is_purchase_document()
             and
-            self.account_id.account_type in ('expense', 'expense_depreciation', 'expense_direct_cost')
+            self.account_id.internal_group == 'expense'
         ) or (
             self.move_id.is_sale_document()
             and
-            self.account_id.account_type in ('income', 'income_other')
+            self.account_id.internal_group == 'income'
+        ) or (
+            self.move_id.is_entry()
+            and
+            self.account_id.internal_group in ('expense', 'income')
         )
 
     @api.onchange('deferred_start_date')
@@ -622,8 +683,17 @@ class AccountMoveLine(models.Model):
         return super()._get_computed_taxes()
 
     def _compute_attachment(self):
+        id_model2attachments = {
+            (res_model, res_id): attachments
+            for res_model, res_id, attachments in self.env['ir.attachment']._read_group(
+                domain=expression.OR(self._get_attachment_domains()),
+                groupby=['res_model', 'res_id'],
+                aggregates=['id:recordset'],
+            )
+        }
+
         for record in self:
-            record.move_attachment_ids = self.env['ir.attachment'].search(expression.OR(record._get_attachment_domains()))
+            record.move_attachment_ids = self._get_attachment_by_record(id_model2attachments, record)
 
     def action_reconcile(self):
         """ This function is called by the 'Reconcile' button of account.move.line's
@@ -681,12 +751,12 @@ class AccountMoveLine(models.Model):
         this validation set based on the previous entries.
         The result is roughly 90% of success.
 
-        :param field (str): the sql column that has to be predicted.
+        :param str field: the sql column that has to be predicted.
             /!\ it is injected in the query without any checks.
-        :param query (osv.Query): the query object on account.move.line that is
-            used to do the ranking, containing the right domain, limit, etc. If
-            it is omitted, a default query is used.
-        :param additional_queries (list<str>): can be used in addition to the
+        :param odoo.tools.query.Query query: the query object on
+            account.move.line that is used to do the ranking, containing the
+            right domain, limit, etc. If it is omitted, a default query is used.
+        :param list[str] additional_queries: can be used in addition to the
             default query on account.move.line to fetch data coming from other
             tables, to have starting values for instance.
             /!\ it is injected in the query without any checks.
@@ -788,7 +858,6 @@ class AccountMoveLine(models.Model):
             excluded_group = 'expense'
         account_query = self.env['account.account']._where_calc([
             *self.env['account.account']._check_company_domain(self.move_id.company_id or self.env.company),
-            ('deprecated', '=', False),
             ('internal_group', 'not in', (excluded_group, 'off')),
             ('account_type', 'not in', ('liability_payable', 'asset_receivable')),
         ])

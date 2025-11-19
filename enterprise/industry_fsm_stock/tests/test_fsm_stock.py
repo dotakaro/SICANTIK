@@ -28,6 +28,7 @@ class TestFsmFlowStock(TestFsmFlowSaleCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.env.user.group_ids += cls.quick_ref('industry_fsm.group_fsm_manager')
         cls.product_lot = cls.env['product.product'].create({
             'name': 'Acoustic Magic Bloc',
             'list_price': 2950.0,
@@ -390,7 +391,7 @@ class TestFsmFlowStock(TestFsmFlowSaleCommon):
         product_tracked_by_sn_wizard_id.generate_lot()
         self.assertEqual(self.task.material_line_product_count, expected_product_count, f"{expected_product_count} product should be linked to the task")
         # the connected user must have the inventory access right to be able to add/update the quantity of a serial product
-        self.project_user.groups_id += self.env.ref('stock.group_stock_user')
+        self.project_user.group_ids += self.env.ref('stock.group_stock_user')
         product_tracked_by_sn.with_user(self.project_user).with_context({'fsm_task_id': self.task.id}).set_fsm_quantity(2)
         self.assertEqual(self.task.material_line_product_count, expected_product_count, f"{expected_product_count} product should be linked to the task, you should validate Lot Number before")
         product_tracked_by_sn_wizard_id.write({
@@ -1425,6 +1426,9 @@ class TestFsmFlowStock(TestFsmFlowSaleCommon):
         # Give user access of company A + B, with default A
         company_A = self.env.company
         company_B = self.env['res.company'].search([('id', '!=', company_A.id)], limit=1)
+        warehouse_B = self.env['stock.warehouse'].search([('company_id', '=', company_B.id)], limit=1)
+        if not warehouse_B:
+            warehouse_B = self.env['stock.warehouse'].sudo().create({'name': 'WH', 'code': 'WH-B', 'company_id': company_B.id})
         self.env.user.write({'company_ids': [(6, 0, [company_A.id, company_B.id])], 'company_id': company_A.id})
         warehouse_B = self.env.user.with_company(company_B)._get_default_warehouse_id()
         if not warehouse_B:
@@ -1570,7 +1574,7 @@ class TestFsmFlowStock(TestFsmFlowSaleCommon):
         """ This test ensure that when the 'report' setting is enabled for the inventory app, it does not prevent the correct use case of 'mark as done' for
         an fsm task """
 
-        self.project_user.groups_id += self.env.ref('stock.group_reception_report')
+        self.project_user.group_ids += self.env.ref('stock.group_reception_report')
         self.warehouse.delivery_steps = 'pick_pack_ship'
         self.task.partner_id = self.partner_1.id
         self.consu_product_ordered.with_user(self.project_user).with_context({'fsm_task_id': self.task.id}).fsm_add_quantity()
@@ -1705,10 +1709,10 @@ class TestFsmFlowStock(TestFsmFlowSaleCommon):
         self.assertDictEqual(
             products_catalog,
             {
-                self.product_lot_no_stock.id: {'quantity': 3.0, 'readOnly': False, 'deliveredQty': 0.0, 'tracking': True, 'minimumQuantityOnProduct': 0.0, 'price': 60, 'productType': 'consu'},
-                self.storable_product_ordered.id: {'quantity': 4.0, 'readOnly': False, 'deliveredQty': 0.0, 'tracking': False, 'minimumQuantityOnProduct': 0.0, 'price': 60, 'productType': 'consu'},
-                self.storable_product_delivered.id: {'quantity': 0, 'readOnly': False, 'deliveredQty': 0, 'tracking': False, 'minimumQuantityOnProduct': 0, 'price': 75.6, 'productType': 'consu'},
-                self.product_sn_no_stock.id: {'quantity': 0, 'readOnly': False, 'deliveredQty': 0, 'tracking': True, 'minimumQuantityOnProduct': 0, 'price': 60, 'productType': 'consu'}
+                self.product_lot_no_stock.id: {'quantity': 3.0, 'readOnly': False, 'deliveredQty': 0.0, 'tracking': True, 'minimumQuantityOnProduct': 0.0, 'price': 60, 'productType': 'consu', 'uomDisplayName': 'Units', 'code': ''},
+                self.storable_product_ordered.id: {'quantity': 4.0, 'readOnly': False, 'deliveredQty': 0.0, 'tracking': False, 'minimumQuantityOnProduct': 0.0, 'price': 60, 'productType': 'consu', 'uomDisplayName': 'Units', 'code': ''},
+                self.storable_product_delivered.id: {'quantity': 0, 'readOnly': False, 'deliveredQty': 0, 'tracking': False, 'minimumQuantityOnProduct': 0, 'price': 75.6, 'productType': 'consu', 'uomDisplayName': 'Units', 'code': ''},
+                self.product_sn_no_stock.id: {'quantity': 0, 'readOnly': False, 'deliveredQty': 0, 'tracking': True, 'minimumQuantityOnProduct': 0, 'price': 60, 'productType': 'consu', 'uomDisplayName': 'Units', 'code': ''}
             },
             "The tracked product should have the 'tracking' key set to True, even if the product was not added to the task."
         )
@@ -1793,3 +1797,54 @@ class TestFsmFlowStock(TestFsmFlowSaleCommon):
         })
         wizard.generate_lot()
         self.assertEqual(so.amount_total, 0)
+
+    def test_kit_product_delivery_validate_when_mark_as_done(self):
+        """
+        check that when the product added to the sale order is a kit, clicking on mark as done on the task
+        still validates the delivery (as it would with a non kit product)
+        """
+        if self.env['ir.module.module']._get('sale_mrp').state != 'installed':
+            self.skipTest("If the 'sale_mrp' module isn't installed, we can't test bom!")
+        # create BOM
+        product_a, product_b, final_product = self.env['product.product'].create([{
+            'name': p_name,
+            'type': 'consu',
+            'is_storable': True,
+            'seller_ids': [
+                Command.create({
+                    'partner_id': self.partner_1.id,
+                })
+            ],
+        } for p_name in ['Comp 1', 'Comp 2', 'Final Product']]).with_context({'fsm_task_id': self.task.id})
+        self.env['mrp.bom'].create({
+            'product_id': final_product.id,
+            'product_tmpl_id': final_product.product_tmpl_id.id,
+            'product_qty': 1,
+            'consumption': 'flexible',
+            'type': 'phantom',
+            'bom_line_ids': [
+                Command.create({
+                    'product_id': product_a.id,
+                    'product_qty': 1
+                }),
+                Command.create({
+                    'product_id': product_b.id,
+                    'product_qty': 1
+                }),
+            ]
+        })
+        # add a product to the task's sale order
+        self.task.write({'partner_id': self.partner_1.id})
+        self.task.with_user(self.project_user)._fsm_ensure_sale_order()
+        so = self.task.sale_order_id
+        so.write({
+            'order_line': [
+                Command.create({
+                    'product_id': final_product.id,
+                    'product_uom_qty': 1,
+                    'task_id': self.task.id,
+                }),
+            ],
+        })
+        self.task.with_user(self.project_user).action_fsm_validate()
+        self.assertEqual(so.picking_ids.state, 'done')

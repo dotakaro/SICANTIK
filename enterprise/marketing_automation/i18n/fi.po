@@ -3,32 +3,15 @@
 # 	* marketing_automation
 # 
 # Translators:
-# Tiffany Chang, 2024
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Joakim Weckman, 2024
-# Miku Laitinen <miku.laitinen@gmail.com>, 2024
-# Mikko Salmela <salmemik@gmail.com>, 2024
-# Konsta Aavaranta, 2024
-# Johanna Valkonen <miujohanna@gmail.com>, 2024
-# Janne Rättyä <janne.rattya@web-veistamo.fi>, 2024
-# Simo Suurla <simo@suurla.fi>, 2024
-# Sanna Edelman <direct@generare.com>, 2024
-# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
-# Miika Nissi <miika.nissi@tawasta.fi>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Martin Trigaux, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
+# Wil Odoo, 2025
 # Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-16 20:44+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Jessica Jakara, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
@@ -375,6 +358,12 @@ msgid "Allows us to filter relevant Campaigns"
 msgstr "Mahdollistaa merkityksellisten kampanjoiden suodattamisen"
 
 #. module: marketing_automation
+#. odoo-python
+#: code:addons/marketing_automation/wizard/marketing_campaign_test.py:0
+msgid "Another test has been launched for this participant"
+msgstr "Toinen testi, joka on käynnistetty tälle osallistujalle"
+
+#. module: marketing_automation
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__domain
 msgid "Applied Filter"
 msgstr "Sovellettu suodatin"
@@ -665,11 +654,17 @@ msgid "Discard"
 msgstr "Hylkää"
 
 #. module: marketing_automation
+#: model:ir.model.fields,field_description:marketing_automation.field_mail_compose_message__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_mailing__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_trace__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_trace_report__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign_test__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_participant__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_trace__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_utm_campaign__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_utm_source__display_name
 msgid "Display Name"
 msgstr "Näyttönimi"
 
@@ -716,7 +711,7 @@ msgstr "Sähköposti peruutettu"
 #. module: marketing_automation
 #: model:ir.model,name:marketing_automation.model_mail_compose_message
 msgid "Email composition wizard"
-msgstr "Sähköpostin ohjattu koostaminen"
+msgstr "Ohjattu sähköpostin koostaminen"
 
 #. module: marketing_automation
 #. odoo-python
@@ -821,11 +816,17 @@ msgid "Hours"
 msgstr "Tunnit"
 
 #. module: marketing_automation
+#: model:ir.model.fields,field_description:marketing_automation.field_mail_compose_message__id
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_mailing__id
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_trace__id
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_trace_report__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign_test__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_participant__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_trace__id
+#: model:ir.model.fields,field_description:marketing_automation.field_utm_campaign__id
+#: model:ir.model.fields,field_description:marketing_automation.field_utm_source__id
 msgid "ID"
 msgstr "ID"
 
@@ -1032,8 +1033,8 @@ msgid "Marketing Activity"
 msgstr "Markkinointitoiminta"
 
 #. module: marketing_automation
-#: model:ir.module.category,name:marketing_automation.module_marketing_automation_category
 #: model:ir.ui.menu,name:marketing_automation.marketing_automation_menu
+#: model:res.groups.privilege,name:marketing_automation.res_groups_privilege_automation
 msgid "Marketing Automation"
 msgstr "Markkinointiautomaatio"
 
@@ -1336,7 +1337,7 @@ msgstr "Valitse palvelimen toiminto..."
 #. module: marketing_automation
 #: model_terms:ir.ui.view,arch_db:marketing_automation.marketing_participant_view_form
 msgid "Pick a record..."
-msgstr "Valitse tietue..."
+msgstr "Valitse kirjaus..."
 
 #. module: marketing_automation
 #: model_terms:ir.ui.view,arch_db:marketing_automation.marketing_activity_view_form
@@ -1368,25 +1369,25 @@ msgstr "Vastaanottosuhde"
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign_test__resource_ref
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_participant__resource_ref
 msgid "Record"
-msgstr "Tietue"
+msgstr "Kirjaus"
 
 #. module: marketing_automation
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign_test__res_id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_participant__res_id
 msgid "Record ID"
-msgstr "Tietue ID"
+msgstr "Kirjauksen tunnus"
 
 #. module: marketing_automation
 #. odoo-python
 #: code:addons/marketing_automation/models/marketing_participant.py:0
 msgid "Record deleted"
-msgstr "Tiedot poistettiin"
+msgstr "Kirjaus poistettiin"
 
 #. module: marketing_automation
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign_test__model_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_participant__model_name
 msgid "Record model"
-msgstr "Tietuemalli"
+msgstr "Kirjausmalli"
 
 #. module: marketing_automation
 #. odoo-python
@@ -1394,7 +1395,7 @@ msgstr "Tietuemalli"
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__rejected
 #: model:ir.model.fields.selection,name:marketing_automation.selection__marketing_trace__state__rejected
 msgid "Rejected"
-msgstr "Rechazado"
+msgstr "Hylätty"
 
 #. module: marketing_automation
 #. odoo-python
@@ -1633,8 +1634,8 @@ msgstr "Alue"
 
 #. module: marketing_automation
 #: model_terms:ir.ui.view,arch_db:marketing_automation.marketing_participant_view_form
-msgid "State: #{record.state.raw_value}"
-msgstr "Tila: #{record.state.raw_value}"
+msgid "State: {{0}}"
+msgstr "Tila: {{0}}"
 
 #. module: marketing_automation
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__statistics_graph_data
@@ -2018,6 +2019,12 @@ msgstr "esim. sähköisen kaupankäynnin tarjoukset"
 #: model_terms:ir.ui.view,arch_db:marketing_automation.marketing_campaign_view_form
 msgid "e.g. eCommerce Offers Plan"
 msgstr "esim. verkkokaupan tarjoussuunnitelma"
+
+#. module: marketing_automation
+#. odoo-python
+#: code:addons/marketing_automation/models/marketing_campaign.py:0
+msgid "email"
+msgstr "sähköposti"
 
 #. module: marketing_automation
 #: model_terms:ir.ui.view,arch_db:marketing_automation.marketing_activity_summary_template

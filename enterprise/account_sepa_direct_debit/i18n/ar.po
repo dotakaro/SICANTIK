@@ -3,16 +3,15 @@
 # 	* account_sepa_direct_debit
 # 
 # Translators:
-# Mustafa J. Kadhem <safi2266@gmail.com>, 2024
 # Wil Odoo, 2025
 # Malaz Abuidris <msea@odoo.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-23 18:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:22+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Malaz Abuidris <msea@odoo.com>, 2025\n"
 "Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
@@ -20,6 +19,17 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Language: ar\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: account_sepa_direct_debit
+#: model:ir.actions.report,print_report_name:account_sepa_direct_debit.sdd_mandate_form_report_main
+msgid ""
+"\n"
+"                '%s_sdd_mandate_form_%s' % ((object.partner_id.name).replace(' ', '_'), object.name)\n"
+"            "
+msgstr ""
+"\n"
+"                '%s_sdd_mandate_form_%s' % ((object.partner_id.name).replace(' ', '_'), object.name)\n"
+"            "
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
@@ -30,6 +40,15 @@ msgstr "(إذا كان منطبقاً) "
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "(optional)"
 msgstr "(اختياري)"
+
+#. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sepa_direct_debit_mandate_form
+msgid ""
+".\n"
+"                                Make sure the mandate isn't meant for the parent contact."
+msgstr ""
+".\n"
+"                                Make sure the mandate isn't meant for the parent contact."
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.view_batch_payment_form_inherit
@@ -82,7 +101,7 @@ msgid ""
 "                        Best regards,\n"
 "                        <t t-if=\"not is_html_empty(user.signature)\" data-o-mail-quote-container=\"1\">\n"
 "                            <br/><br/>\n"
-"                            <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
@@ -102,7 +121,7 @@ msgstr ""
 "                        Best regards,\n"
 "                        <t t-if=\"not is_html_empty(user.signature)\" data-o-mail-quote-container=\"1\">\n"
 "                            <br/><br/>\n"
-"                            <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
@@ -135,14 +154,6 @@ msgstr "<strong>مُعرف الدائن:</strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid ""
-"<strong>Date and place of signature:</strong> "
-"......................................"
-msgstr ""
-"<strong>تاريخ ومكان التوقيع:</strong> ......................................"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "<strong>Email:</strong>"
 msgstr "<strong>البريد الإلكتروني:</strong>"
 
@@ -158,21 +169,8 @@ msgstr "<strong>مُعرف التوكيل:</strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid ""
-"<strong>Name of the reference party:</strong> "
-"......................................"
-msgstr ""
-"<strong>اسم الطرف المرجعي:</strong> ......................................"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "<strong>Phone:</strong>"
 msgstr "<strong>رقم الهاتف:</strong>"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid "<strong>Signature:</strong>"
-msgstr "<strong>التوقيع:</strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
@@ -741,6 +739,11 @@ msgid "Could a SDD mandate be used?"
 msgstr "أيمكن استخدام توكيل SDD؟"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model,website_form_label:account_sepa_direct_debit.model_res_partner
+msgid "Create a Customer"
+msgstr "Create a Customer"
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.actions.act_window,help:account_sepa_direct_debit.account_sepa_direct_debit_mandate_tree_act
 msgid "Create a new direct debit customer mandate"
 msgstr "إنشاء توكيل خصم مباشر جديد للعميل"
@@ -844,7 +847,6 @@ msgstr "Demo@email.com"
 
 #. module: account_sepa_direct_debit
 #: model:ir.actions.act_window,name:account_sepa_direct_debit.account_sepa_direct_debit_mandate_tree_act
-#: model:ir.actions.act_window,name:account_sepa_direct_debit.account_sepa_direct_debit_partner_mandates
 #: model:ir.ui.menu,name:account_sepa_direct_debit.account_sepa_direct_debit_customer_mandates_menu
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sdd_res_partner_view
 msgid "Direct Debit Mandates"
@@ -867,6 +869,16 @@ msgid "Direct debit payments to collect"
 msgstr "مدفوعات الخصم المباشر المُراد تحصيلها "
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_batch_payment__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_journal__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_method__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_company__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner_bank__display_name
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__display_name
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate_send__display_name
 msgid "Display Name"
@@ -1000,6 +1012,16 @@ msgid "IBAN"
 msgstr "IBAN"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_batch_payment__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_journal__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_method__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_company__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_config_settings__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner_bank__id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate_send__id
 msgid "ID"
@@ -1188,6 +1210,11 @@ msgid "Next Activity Type"
 msgstr "نوع النشاط التالي"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__no_sdd_mandate_partner_ids
+msgid "No Sdd Mandate Partner"
+msgstr "No Sdd Mandate Partner"
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.actions.act_window,help:account_sepa_direct_debit.action_sdd_payments_to_collect
 msgid "No direct debit payment to collect"
 msgstr "لا توجد دفعات خصم مباشر ليتم تحصيلها "
@@ -1245,8 +1272,6 @@ msgstr ""
 "                    ثم ترسله إلى بنكك لتُدفع قيمة الفاتورة. "
 
 #. module: account_sepa_direct_debit
-#: model:ir.model.fields,help:account_sepa_direct_debit.field_account_bank_statement_line__sdd_mandate_id
-#: model:ir.model.fields,help:account_sepa_direct_debit.field_account_move__sdd_mandate_id
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_account_payment__sdd_mandate_id
 msgid ""
 "Once this invoice has been paid with Direct Debit, contains the mandate that"
@@ -1279,6 +1304,10 @@ msgstr "Only mandates in draft state can be deleted."
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_payment_register_form_inherit_account_sepa_direct_debit
+msgid "Oops! No valid SEPA mandate for the following partner(s):"
+msgstr "Oops! No valid SEPA mandate for the following partner(s):"
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_account_payment_form
 msgid "Oops! No valid SEPA mandate for this customer."
 msgstr "عذراً! لا يوجد توكيل SEPA ساري لهذا العميل. "
@@ -1336,15 +1365,21 @@ msgid "Paid via direct debit"
 msgstr "تم الدفع عن طريق الخصم المباشر "
 
 #. module: account_sepa_direct_debit
-#: model:ir.model,name:account_sepa_direct_debit.model_account_partial_reconcile
-msgid "Partial Reconcile"
-msgstr "التسوية الجزئية "
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__partner_parent_id
+msgid "Parent Partner"
+msgstr "Parent Partner"
 
 #. module: account_sepa_direct_debit
 #. odoo-python
 #: code:addons/account_sepa_direct_debit/wizard/sdd_mandate_send.py:0
 msgid "Partner should have an email address."
 msgstr "Partner should have an email address."
+
+#. module: account_sepa_direct_debit
+#. odoo-python
+#: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
+msgid "Partner's Parent"
+msgstr "Partner's Parent"
 
 #. module: account_sepa_direct_debit
 #: model:ir.model,name:account_sepa_direct_debit.model_account_payment_register
@@ -1614,8 +1649,6 @@ msgid "Sdd Has Usable Mandate"
 msgstr "SDD به توكيل صالح للاستخدام "
 
 #. module: account_sepa_direct_debit
-#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_bank_statement_line__sdd_mandate_id
-#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__sdd_mandate_id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__sdd_mandate_id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__sdd_mandate_ids
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_users__sdd_mandate_ids
@@ -1649,11 +1682,6 @@ msgstr "Sent to the customer"
 #: model:mail.template,description:account_sepa_direct_debit.email_template_sdd_pre_notification
 msgid "Sent to the customer to indicate their account will be charged"
 msgstr "يتم إرساله إلى العميل للإشارة إلى أنه سيتم تقاضي رسوم من حسابه "
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid "Signature"
-msgstr "التوقيع"
 
 #. module: account_sepa_direct_debit
 #. odoo-python
@@ -1811,6 +1839,11 @@ msgid ""
 msgstr ""
 "يجب أن يكون الدفع مرتبطاً بتوكيل خصم SEPA المباشر، حتى تتمكن من إشاء ملفات "
 "XML للخصم المشاشر. "
+
+#. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sepa_direct_debit_mandate_form
+msgid "The selected customer is a child of"
+msgstr "The selected customer is a child of"
 
 #. module: account_sepa_direct_debit
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_sdd_mandate__name

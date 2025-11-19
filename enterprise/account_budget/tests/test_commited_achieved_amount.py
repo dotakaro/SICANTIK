@@ -195,7 +195,7 @@ class TestCommittedAchievedAmount(TestAccountBudgetCommon):
                     'product_qty': 2,
                     'discount': 10,
                     'analytic_distribution': {self.analytic_account_partner_a.id: 100},
-                    'taxes_id': self.tax_purchase_a.ids,
+                    'tax_ids': self.tax_purchase_a.ids,
                 }),
             ]
         })
@@ -292,13 +292,11 @@ class TestCommittedAchievedAmount(TestAccountBudgetCommon):
         gravel_ton = self.env['product.product'].create({
             'name': 'Gravel 1T',
             'uom_id': self.env.ref('uom.product_uom_ton').id,
-            'uom_po_id': self.env.ref('uom.product_uom_ton').id,
             'standard_price': 1000,
         })
         gravel_kilo = self.env['product.product'].create({
             'name': 'Gravel 1kg',
             'uom_id': self.env.ref('uom.product_uom_kgm').id,
-            'uom_po_id': self.env.ref('uom.product_uom_kgm').id,
             'standard_price': 1,
         })
         # Create a new purchase order
@@ -513,8 +511,8 @@ class TestCommittedAchievedAmount(TestAccountBudgetCommon):
         line = budget.budget_line_ids[0]
 
         # === Setup: Two companies ===
-        company_a = self.env.ref('base.main_company')
-        company_b = self.env['res.company'].search([('id', '!=', company_a.id)])[0]
+        company_a = self.company
+        company_b = self.setup_other_company(name="other_company")['company']
 
         # Ensure test user has access to both companies
         self.env.user.write({
@@ -579,3 +577,39 @@ class TestCommittedAchievedAmount(TestAccountBudgetCommon):
         # === Check filtered totals ===
         self.assertEqual(line.committed_amount, 1000.0, "Company A committed should be 1000")
         self.assertEqual(line.achieved_amount, 500.0, "Company A committed should be 1000")
+
+    def test_budget_analytic_expense_committed_amount_negative_price(self):
+        """ Test that po lines with negative unit price does not create committed amount
+            in budget report
+        """
+        # Reset to draft the existing purchase order
+        self.purchase_order.button_draft()
+        purchase_order = self.env['purchase.order'].create({
+            'partner_id': self.partner_a.id,
+            'date_order': '2019-01-10',
+            'order_line': [
+                Command.create({
+                    'product_id': self.product_a.id,
+                    'price_unit': 100,
+                    'analytic_distribution': {self.analytic_account_partner_a.id: 100},
+                }),
+                Command.create({
+                    'product_id': self.product_b.id,
+                    'price_unit': -10,
+                    'analytic_distribution': {self.analytic_account_partner_a.id: 100},
+                })],
+        })
+        purchase_order.button_confirm()
+        purchase_order.write({
+            'order_line': [
+                Command.update(purchase_order.order_line[0].id, {'qty_received': 1}),
+                Command.update(purchase_order.order_line[1].id, {'qty_received': 1}),
+            ]
+        })
+        purchase_order.action_create_invoice()
+        purchase_order.invoice_ids.write({'invoice_date': '2019-01-10'})
+        purchase_order.invoice_ids.action_post()
+
+        # The discount line should impact both amounts of the budget line
+        plan_a_line = self.budget_analytic_expense.budget_line_ids[0]
+        self.assertBudgetLine(plan_a_line, committed=90, achieved=90)

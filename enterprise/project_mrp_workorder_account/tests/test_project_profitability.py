@@ -17,7 +17,7 @@ class TestProjectProfitabilityMrpEmployee(TestProjectProfitabilityCommon):
         # Both groups below are required to make fields `product_uom_id` and
         # `workorder_ids' visible in the view of `mrp.production`. The
         # subviews of`workorder_ids` must be present in the test to create records.
-        cls.env.user.groups_id += cls.env.ref('uom.group_uom') + cls.env.ref('mrp.group_mrp_routings')
+        cls.env.user.group_ids += cls.env.ref('uom.group_uom') + cls.env.ref('mrp.group_mrp_routings')
 
         cls.user = cls.env['res.users'].create([{
             'name': 'Chris Wilson',
@@ -33,7 +33,6 @@ class TestProjectProfitabilityMrpEmployee(TestProjectProfitabilityCommon):
         }])
         cls.workcenter = cls.env['mrp.workcenter'].create([{
             'name': 'Workcenter',
-            'default_capacity': 1,
             'time_efficiency': 100,
             'costs_hour': 30,
         }])

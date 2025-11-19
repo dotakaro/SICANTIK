@@ -4,7 +4,7 @@
 from odoo import models, api
 
 
-class ReportSaleDetails(models.AbstractModel):
+class ReportPoint_Of_SaleReport_Saledetails(models.AbstractModel):
     _inherit = "report.point_of_sale.report_saledetails"
 
     @api.model
@@ -33,8 +33,8 @@ class ReportSaleDetails(models.AbstractModel):
         if len(sessions) == 1:
             session = sessions[0]
             if session.config_id.certified_blackbox_identifier:
-                data = self._set_default_belgian_taxes_if_empty(data, "taxes", session.company_id)
-                data = self._set_default_belgian_taxes_if_empty(data, "refund_taxes", session.company_id)
+                data = self._set_default_belgian_taxes_if_empty(data, "taxes")
+                data = self._set_default_belgian_taxes_if_empty(data, "refund_taxes")
                 report_update = {
                     "isBelgium": bool(session.config_id.certified_blackbox_identifier),
                     "cashier_name": session.user_id.name,
@@ -101,13 +101,10 @@ class ReportSaleDetails(models.AbstractModel):
             res_total['total'] = sum(product['total_paid'] for product in unique_products)
         return res_cat, res_total
 
-    def _set_default_belgian_taxes_if_empty(self, data, taxes_name, company):
+    def _set_default_belgian_taxes_if_empty(self, data, taxes_name):
         for tax in data[taxes_name]:
-            tax_used = self.env['account.tax'].search([
-                *self.env['account.tax']._check_company_domain(company),
-                ('name', '=', tax['name']),
-            ])
-            tax['identification_letter'] = tax_used.tax_group_id.pos_receipt_label
+            tax_used = self.env['account.tax'].search([('name', '=', tax['name'])])
+            tax['identification_letter'] = tax_used.tax_group_id.pos_receipt_label or 'D'
 
         letter_set = ['A', 'B', 'C', 'D']
         for tax in data[taxes_name]:
@@ -127,6 +124,6 @@ class ReportSaleDetails(models.AbstractModel):
             if letter == 'D':
                 data[taxes_name].append({'name': '0%', 'tax_amount': 0.0, 'base_amount': 0.0,
                                          'identification_letter': letter})
-        data[taxes_name] = sorted(data[taxes_name], key=lambda d: d['identification_letter'] or '', reverse=True)
+        data[taxes_name] = sorted(data[taxes_name], key=lambda d: d['identification_letter'], reverse=True)
 
         return data

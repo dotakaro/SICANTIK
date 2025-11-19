@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { patch } from "@web/core/utils/patch";
 import { MrpDisplayRecord } from "@mrp_workorder/mrp_display/mrp_display_record";
 
@@ -13,9 +11,5 @@ patch(MrpDisplayRecord.prototype, {
             }
         }
         return super.validate();
-    },
-
-    get displayCloseProductionButton() {
-        return super.displayCloseProductionButton && !this.props.production.data.quality_check_todo;
     },
 });

@@ -13,14 +13,14 @@ from odoo.exceptions import UserError
 from odoo.tools.misc import format_date
 
 
-class L10nBeExportSDWorxLeavesWizard(models.TransientModel):
+class L10n_BeExportSdworxLeavesWizard(models.TransientModel):
     _name = 'l10n_be.export.sdworx.leaves.wizard'
     _description = 'Export Leaves to SDWorx'
 
     @api.model
     def default_get(self, field_list):
         if self.env.company.country_id.code != "BE":
-            raise UserError(_('You must be logged in a Belgian company to use this feature'))
+            raise UserError(_('This feature seems to be as exclusive as Belgian chocolates. You must be logged in to a Belgian company to use it.'))
         return super().default_get(field_list)
 
     def _get_range_of_years(self):
@@ -92,7 +92,7 @@ class L10nBeExportSDWorxLeavesWizard(models.TransientModel):
         first_day = date(int(self.reference_year), current_month, 1)
         last_day = first_day + relativedelta(day=31)
         employees = self.leave_ids.employee_id
-        employee_contracts = employees.sudo()._get_contracts(
+        employee_contracts = employees.sudo()._get_versions_with_contract_overlap_with_period(
             first_day, last_day, states=['open', 'close'])
         prestations = {employee: {} for employee in employees}
 

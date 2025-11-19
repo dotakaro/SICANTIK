@@ -47,9 +47,9 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         calendar_booking_line_values['calendar_booking_id'] = calendar_booking_1.id
         self.env['calendar.booking.line'].create(calendar_booking_line_values)
         sale_order_1 = self.env['sale.order'].sudo().create({'partner_id': calendar_booking_1.partner_id.id})
-        cart_values = sale_order_1._cart_update(
+        cart_values = sale_order_1._cart_add(
             product_id=appointment_type.product_id.id,
-            set_qty=1,
+            quantity=1,
             calendar_booking_id=calendar_booking_1.id,
         )
         self.assertEqual(cart_values['quantity'], 1)
@@ -68,9 +68,9 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         # In sale_order_1, resource is already booked for max capacity. Line is not added.
         self.assertTrue((sale_order_1.order_line.calendar_booking_ids | calendar_booking_2)._filter_unavailable_bookings())
         self.assertFalse((sale_order_2.order_line.calendar_booking_ids | calendar_booking_2)._filter_unavailable_bookings())
-        cart_values = sale_order_2._cart_update(
+        cart_values = sale_order_2._cart_add(
             product_id=appointment_type.product_id.id,
-            set_qty=1,
+            quantity=1,
             calendar_booking_id=calendar_booking_2.id,
         )
         self.assertEqual(cart_values['quantity'], 1)
@@ -89,7 +89,7 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         resources_remaining_capacity = appointment_type._get_resources_remaining_capacity(appointment_type.resource_ids, start, stop)
         self.assertEqual(resources_remaining_capacity['total_remaining_capacity'], 0)
 
-    @freeze_time('2022-2-13 20:00:00')
+    @freeze_time('2022-02-13 20:00:00')
     @mute_logger('odoo.sql_db')
     @users('apt_manager')
     def test_booking_to_event_collisions_users(self):
@@ -107,6 +107,7 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         booking_values = {
             'appointment_type_id': appointment_type.id,
             'duration': 1.0,
+            'booking_line_ids': [(0, 0, {'appointment_user_id': self.staff_user_bxls.id, 'capacity_reserved': 1, 'capacity_used': 1})],
             'partner_id': self.apt_manager.partner_id.id,
             'product_id': appointment_type.product_id.id,
             'staff_user_id': self.staff_user_bxls.id,
@@ -115,9 +116,9 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         }
         calendar_booking_1 = self.env['calendar.booking'].create(booking_values)
         sale_order_1 = self.env['sale.order'].sudo().create({'partner_id': calendar_booking_1.partner_id.id})
-        cart_values = sale_order_1._cart_update(
+        cart_values = sale_order_1._cart_add(
             product_id=appointment_type.product_id.id,
-            set_qty=1,
+            quantity=1,
             calendar_booking_id=calendar_booking_1.id,
         )
         self.assertEqual(cart_values['quantity'], 1)
@@ -135,9 +136,9 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         # In sale_order_1, apt_manager is already booked for that slot. Line would not be added.
         self.assertTrue((sale_order_1.order_line.calendar_booking_ids | calendar_booking_2)._filter_unavailable_bookings())
         self.assertFalse((sale_order_2.order_line.calendar_booking_ids | calendar_booking_2)._filter_unavailable_bookings())
-        cart_values = sale_order_2._cart_update(
+        cart_values = sale_order_2._cart_add(
             product_id=appointment_type.product_id.id,
-            set_qty=1,
+            quantity=1,
             calendar_booking_id=calendar_booking_2.id,
         )
         self.assertEqual(cart_values['quantity'], 1)
@@ -196,9 +197,9 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         # Create SO and SOL linked to booking
         sale_order = self.env['sale.order'].sudo().create({'partner_id': calendar_booking.partner_id.id})
         self.assertFalse(calendar_booking._filter_unavailable_bookings())
-        cart_values = sale_order._cart_update(
+        cart_values = sale_order._cart_add(
             product_id=appointment_type.product_id.id,
-            set_qty=1,
+            quantity=1,
             calendar_booking_id=calendar_booking.id,
         )
         self.assertEqual(cart_values['quantity'], 1)
@@ -221,8 +222,8 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         self.assertTrue(event.active)
         self.assertEqual(event, calendar_booking.calendar_event_id)
         self.assertEqual(event.appointment_type_id, calendar_booking.appointment_type_id)
-        self.assertEqual(event.resource_total_capacity_reserved, calendar_booking.asked_capacity)
-        self.assertEqual(event.resource_total_capacity_used, calendar_booking.asked_capacity)
+        self.assertEqual(event.total_capacity_reserved, calendar_booking.asked_capacity)
+        self.assertEqual(event.total_capacity_used, calendar_booking.asked_capacity)
         self.assertEqual(event.duration, calendar_booking.duration)
         self.assertEqual(event.partner_ids, calendar_booking.partner_id)
         self.assertEqual(event.start, calendar_booking.start)
@@ -240,7 +241,7 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         self.assertEqual(booking_line.event_start, calendar_booking.start)
         self.assertEqual(booking_line.event_stop, calendar_booking.stop)
 
-    @freeze_time('2022-2-13 20:00:00')
+    @freeze_time('2022-02-13 20:00:00')
     @mute_logger('odoo.sql_db')
     @users('apt_manager')
     def test_booking_to_event_on_so_confirmation_users(self):
@@ -257,6 +258,7 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         # Create Calendar Event Booking and Calendar Booking Lines
         booking_values = {
             'appointment_type_id': appointment_type.id,
+            'booking_line_ids': [(0, 0, {'appointment_user_id': self.staff_user_bxls.id, 'capacity_reserved': 1, 'capacity_used': 1})],
             'duration': 1.0,
             'partner_id': self.apt_manager.partner_id.id,
             'product_id': appointment_type.product_id.id,
@@ -269,9 +271,9 @@ class WebsiteAppointmentSaleTest(AppointmentAccountPaymentCommon):
         # Create SO and SOL linked to booking
         sale_order = self.env['sale.order'].sudo().create({'partner_id': calendar_booking.partner_id.id})
         self.assertFalse(calendar_booking._filter_unavailable_bookings())
-        cart_values = sale_order._cart_update(
+        cart_values = sale_order._cart_add(
             product_id=appointment_type.product_id.id,
-            set_qty=1,
+            quantity=1,
             calendar_booking_id=calendar_booking.id,
         )
         self.assertEqual(cart_values['quantity'], 1)

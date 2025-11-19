@@ -1,11 +1,12 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import timedelta
-from odoo.tests import common
+
 from odoo import fields
-from odoo.addons.mail.tests.common import mail_new_test_user
 from odoo.fields import Datetime
+from odoo.tests import common
+
+from odoo.addons.mail.tests.common import mail_new_test_user
 
 
 class TestRentalCommon(common.TransactionCase):
@@ -21,18 +22,14 @@ class TestRentalCommon(common.TransactionCase):
 
         cls.product_id = cls.env['product.product'].create({
             'name': 'Test1',
-            'categ_id': cls.env.ref('product.product_category_all').id,  # remove category if possible?
             'uom_id': cls.env.ref('uom.product_uom_unit').id,
-            'uom_po_id': cls.env.ref('uom.product_uom_unit').id,
             'rent_ok': True,
             'is_storable': True,
             'extra_daily': 10.0
         })
         cls.tracked_product_id = cls.env['product.product'].create({
             'name': 'Test2',
-            'categ_id': cls.env.ref('product.product_category_all').id,  # remove category if possible?
             'uom_id': cls.env.ref('uom.product_uom_unit').id,
-            'uom_po_id': cls.env.ref('uom.product_uom_unit').id,
             'rent_ok': True,
             'is_storable': True,
             'tracking': 'serial',

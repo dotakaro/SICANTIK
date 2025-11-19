@@ -19,15 +19,12 @@ class TestLuMonthlyDeclaration(TestLuPayrollCommon):
         self.contract_david.generate_work_entries(date(2022, 3, 1), date(2020, 3, 31))
         self.payslip_run = self.env['hr.payslip.run'].create({
             'name': 'March 2022',
-            'date_start': '2022-3-1',
-            'date_end': '2022-3-31',
+            'date_start': '2022-03-01',
+            'date_end': '2022-03-31',
             'company_id': self.lux_company.id,
-            'state': 'verify',
+            'state': '02_verify',
         })
-        self.payslip_employee = self.env['hr.payslip.employees'].create({
-            'employee_ids': [(4, self.employee_david.id)],
-        })
-        self.payslip_employee.with_context(active_id=self.payslip_run.id).compute_sheet()
+        self.payslip_run.generate_payslips(employee_ids=[self.employee_david.id])
 
     def test_01_generate_missing_identification(self):
         wizard = self.env['l10n.lu.monthly.declaration.wizard'].create({
@@ -36,20 +33,20 @@ class TestLuMonthlyDeclaration(TestLuPayrollCommon):
         })
 
         self.employee_david.identification_id = False
-        with self.assertRaisesRegex(UserError, r'missing an identification number'), self.cr.savepoint():
+        with self.assertRaisesRegex(UserError, r'missing an identification number'):
             wizard.action_generate_declaration()
 
         self.employee_david.identification_id = 111111111
         wizard.action_generate_declaration()
 
         self.lux_company.l10n_lu_seculine = False
-        with self.assertRaisesRegex(UserError, r'Missing (.+) SECUline numbers'), self.cr.savepoint():
+        with self.assertRaisesRegex(UserError, r'Missing (.+) SECUline numbers'):
             wizard.action_generate_declaration()
 
         self.lux_company.l10n_lu_seculine = 999999999
 
         self.lux_company.l10n_lu_official_social_security = False
-        with self.assertRaisesRegex(UserError, r'Missing (.+) social security'), self.cr.savepoint():
+        with self.assertRaisesRegex(UserError, r'Missing (.+) social security'):
             wizard.action_generate_declaration()
 
     def test_02_company_identification(self):
@@ -73,45 +70,37 @@ class TestLuMonthlyDeclaration(TestLuPayrollCommon):
             'name': 'Madison',
             'company_id': self.lux_company.id,
             'identification_id': 987654321,
-        })
-        madison_contract1 = self.env['hr.contract'].create({
-            'name': 'Madison Contract',
-            'employee_id': madison_employee.id,
-            'company_id': self.lux_company.id,
             'structure_type_id': self.env.ref('l10n_lu_hr_payroll.structure_type_employee_lux').id,
-            'date_start': '2022-1-1',
-            'date_end': '2022-3-11',
+            'date_version': '2022-01-01',
+            'contract_date_start': '2022-01-01',
+            'contract_date_end': '2022-03-11',
             'wage': 4000.0,
-            'state': 'close',
         })
+        madison_contract1 = madison_employee.version_id
 
         madison_contract2 = madison_contract1.copy({
-            'date_start': '2022-3-21',
-            'date_end': False,
+            'date_version': '2022-03-21',
+            'contract_date_start': '2022-03-21',
+            'contract_date_end': False,
             'wage': 4400.0,
-            'state': 'open',
         })
         laura_employee = self.env['hr.employee'].create({
             'name': 'laura',
             'company_id': self.lux_company.id,
             'identification_id': 143111140,
-        })
-        laura_contract1 = self.env['hr.contract'].create({
-            'name': 'laura Contract',
-            'employee_id': laura_employee.id,
-            'company_id': self.lux_company.id,
             'structure_type_id': self.env.ref('l10n_lu_hr_payroll.structure_type_employee_lux').id,
-            'date_start': '2022-3-4',
-            'date_end': '2022-3-15',
+            'date_version': '2022-03-04',
+            'contract_date_start': '2022-03-04',
+            'contract_date_end': '2022-03-15',
             'wage': 4000.0,
-            'state': 'close',
         })
+        laura_contract1 = laura_employee.version_id
         contracts = madison_contract1 | madison_contract2 | laura_contract1 | self.contract_david
 
         self.env['hr.leave'].create({
             'name': 'such bad weather no work',
             'employee_id': madison_employee.id,
-            'holiday_status_id': self.env.ref('l10n_lu_hr_payroll.holiday_status_situational_unemployment').id,
+            'holiday_status_id': self.env.ref('hr_holidays.l10n_lu_leave_type_situational_unemployment').id,
             'request_date_from': '2022-03-09',
             'request_date_to': '2022-03-09',
         })
@@ -119,22 +108,20 @@ class TestLuMonthlyDeclaration(TestLuPayrollCommon):
 
         batch = self.env['hr.payslip.run'].create({
             'name': 'March 2022',
-            'date_start': '2022-3-1',
-            'date_end': '2022-3-31',
+            'date_start': '2022-03-01',
+            'date_end': '2022-03-31',
             'company_id': self.lux_company.id,
-            'state': 'verify',
+            'state': '02_verify',
         })
-        payslip_employees = self.env['hr.payslip.employees'].create({
-            'employee_ids': [(4, self.employee_david.id), (4, madison_employee.id), (4, laura_employee.id)],
-        })
-        payslip_employees.with_context(active_id=batch.id).compute_sheet()
+
+        batch.generate_payslips(employee_ids=[self.employee_david.id, madison_employee.id, laura_employee.id])
 
         wizard = self.env['l10n.lu.monthly.declaration.wizard'].create({
             'month': '3',
             'year': '2022',
         })
 
-        with self.assertRaisesRegex(UserError, r'^Missing amounts'), self.env.cr.savepoint():
+        with self.assertRaisesRegex(UserError, r'^Missing amounts'):
             wizard.action_generate_declaration()
 
         self.assertEqual(len(wizard.situational_unemployment_ids), 1)
@@ -205,22 +192,19 @@ class TestLuMonthlyDeclaration(TestLuPayrollCommon):
             'name': 'Jade',
             'company_id': self.lux_company.id,
             'identification_id': 987654321,
-        })
-        jade_contract1 = self.env['hr.contract'].create({
-            'name': 'Jade Contract',
-            'employee_id': jade_employee.id,
-            'company_id': self.lux_company.id,
             'structure_type_id': structure_type.id,
-            'date_start': '2022-1-1',
-            'date_end': '2022-3-11',
+            'date_version': '2022-01-01',
+            'contract_date_start': '2022-01-01',
+            'contract_date_end': '2022-03-11',
             'wage': 3000.0,
-            'state': 'close',
         })
+        jade_contract1 = jade_employee.version_id
         jade_contract2 = jade_contract1.copy({
-            'date_start': '2022-3-21',
-            'date_end': False,
+            'name': 'Jade Contract 2',
+            'date_version': '2022-03-21',
+            'contract_date_start': '2022-03-21',
+            'contract_date_end': False,
             'wage': 4400.0,
-            'state': 'open',
             'structure_type_id': self.env.ref('l10n_lu_hr_payroll.structure_type_employee_lux').id,
         })
         contracts = jade_contract1 | jade_contract2
@@ -228,15 +212,12 @@ class TestLuMonthlyDeclaration(TestLuPayrollCommon):
 
         batch = self.env['hr.payslip.run'].create({
             'name': 'March 2022',
-            'date_start': '2022-3-1',
-            'date_end': '2022-3-31',
+            'date_start': '2022-03-01',
+            'date_end': '2022-03-31',
             'company_id': self.lux_company.id,
-            'state': 'verify',
+            'state': '02_verify',
         })
-        payslip_employees = self.env['hr.payslip.employees'].create({
-            'employee_ids': [(4, self.employee_david.id), (4, jade_employee.id)],
-        })
-        payslip_employees.with_context(active_id=batch.id).compute_sheet()
+        batch.generate_payslips(employee_ids=[self.employee_david.id, jade_employee.id])
 
         wizard = self.env['l10n.lu.monthly.declaration.wizard'].create({
             'month': '3',
@@ -264,31 +245,28 @@ class TestLuMonthlyDeclaration(TestLuPayrollCommon):
         self.assertEqual(jade_entries[1][14], "31")
 
     def test_05_hourly_worker(self):
+        structure_type = self.env.ref('l10n_lu_hr_payroll.structure_type_employee_lux')
+        structure_type.wage_type = 'hourly'
         hourly_employee = self.env['hr.employee'].create({
             'name': 'Alice Smith',
             'company_id': self.lux_company.id,
             'identification_id': '1234567890123',
-        })
-
-        structure_type = self.env.ref('l10n_lu_hr_payroll.structure_type_employee_lux')
-        structure_type.wage_type = 'hourly'
-        hourly_contract = self.env['hr.contract'].create({
-            'name': 'Hourly Contract for Alice',
-            'employee_id': hourly_employee.id,
             'structure_type_id': self.env.ref('l10n_lu_hr_payroll.structure_type_employee_lux').id,
             'hourly_wage': 25.0,
             'wage_type': 'hourly',
             'wage': 4000.0,
-            'date_start': '2022-01-01',
-            'state': 'open',
+            'date_version': '2022-01-01',
+            'contract_date_start': '2022-01-01',
         })
+
+        hourly_contract = hourly_employee.version_id
 
         hourly_contract.generate_work_entries(date(2022, 1, 1), date(2022, 1, 31))
 
         payslip = self.env['hr.payslip'].create({
             'name': 'Test Hourly Payslip',
             'employee_id': hourly_employee.id,
-            'contract_id': hourly_contract.id,
+            'version_id': hourly_contract.id,
             'date_from': '2022-01-01',
             'date_to': '2022-01-31',
             'struct_id': self.env.ref('l10n_lu_hr_payroll.hr_payroll_structure_lux_employee_salary').id,

@@ -1,21 +1,20 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 from odoo import api, fields, models, _
 from odoo.addons.phone_validation.tools import phone_validation
 from odoo.exceptions import UserError, ValidationError
-from odoo.models import Constraint
 
 
-class WhatsAppTemplateButton(models.Model):
+class WhatsappTemplateButton(models.Model):
     _name = 'whatsapp.template.button'
     _description = 'WhatsApp Template Button'
     _order = 'sequence,id'
 
     sequence = fields.Integer()
     name = fields.Char(string="Button Text", size=25)
-    wa_template_id = fields.Many2one(comodel_name='whatsapp.template', required=True, ondelete='cascade')
+    wa_template_id = fields.Many2one(comodel_name='whatsapp.template', required=True, index=True, ondelete='cascade')
 
     button_type = fields.Selection([
         ('url', 'Visit Website'),
@@ -32,13 +31,10 @@ class WhatsAppTemplateButton(models.Model):
         compute='_compute_variable_ids', precompute=True, store=True,
         copy=True)
 
-    _constraints = [
-        Constraint(
-            'unique_name_per_template',
-            'UNIQUE(name, wa_template_id)',
-            "Button names must be unique in a given template"
-        )
-    ]
+    _unique_name_per_template = models.Constraint(
+        'UNIQUE(name, wa_template_id)',
+        "Button names must be unique in a given template",
+    )
 
     @api.depends('button_type', 'call_number')
     def _compute_has_invalid_number(self):
@@ -108,6 +104,8 @@ class WhatsAppTemplateButton(models.Model):
     @api.onchange('website_url')
     def _onchange_website_url(self):
         if self.website_url:
-            parsed_url = urlparse(self.website_url)
-            if not (parsed_url.scheme in {'http', 'https'} and parsed_url.netloc):
+            if self.website_url.startswith('/'):
+                if (base_url := self.get_base_url()) and 'localhost' not in base_url:
+                    self.website_url = urljoin(base_url, self.website_url)
+            elif (parsed_url := urlparse(self.website_url)) and not parsed_url.scheme:
                 self.website_url = f"https://{self.website_url}"

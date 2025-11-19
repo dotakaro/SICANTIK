@@ -1,7 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
-    'name': 'Recruitment Integration Website Monster',
+    'name': 'Job Board - Monster.com (Website)',
     'version': '1.0',
     'category': 'Human Resources/Recruitment/Integration',
     'summary': 'Manage Monster Job board integrations with website',
@@ -17,5 +17,6 @@ website from Monster job post.
         'hr_recruitment_integration_monster',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

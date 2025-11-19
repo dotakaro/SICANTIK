@@ -26,8 +26,8 @@ Allow clients to Schedule Appointments through the Portal
         'views/appointment_answer_input_views.xml',
         'views/appointment_invite_views.xml',
         'views/appointment_question_views.xml',
-        'views/appointment_type_views.xml',
         'views/appointment_resource_views.xml',
+        'views/appointment_type_views.xml',
         'views/appointment_slot_views.xml',
         'views/resource_calendar_leaves_views.xml',
         'views/appointment_menus.xml',
@@ -45,17 +45,16 @@ Allow clients to Schedule Appointments through the Portal
     ],
     'installable': True,
     'application': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_frontend': [
-            'mail/static/src/utils/common/html.js',
-            'mail/static/src/utils/common/format.js',
             'appointment/static/src/js/utils.js',
             'appointment/static/src/scss/appointment.scss',
-            'appointment/static/src/js/appointment_select_appointment_type.js',
-            'appointment/static/src/js/appointment_select_appointment_slot.js',
-            'appointment/static/src/js/appointment_validation.js',
-            'appointment/static/src/js/appointment_form.js',
+            'appointment/static/src/interactions/appointment_select_appointment_type.js',
+            'appointment/static/src/interactions/appointment_validation.js',
+            'appointment/static/src/interactions/appointment_select_appointment_slot.js',
+            'appointment/static/src/interactions/appointment_form.js',
             'appointment/static/src/xml/*.xml',
         ],
         'web.assets_backend': [
@@ -68,6 +67,7 @@ Allow clients to Schedule Appointments through the Portal
             'appointment/static/src/appointment_plugin.js',
         ],
         'web.assets_backend_lazy': [
+            'appointment/static/src/xml/*.xml',
             'appointment/static/src/views/gantt/**',
         ],
         'web_editor.backend_assets_wysiwyg': [

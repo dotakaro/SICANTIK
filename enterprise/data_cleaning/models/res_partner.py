@@ -6,7 +6,7 @@ from odoo import models
 import datetime
 
 
-class Partner(models.Model):
+class ResPartner(models.Model):
     _inherit = 'res.partner'
     # As this model has his own data merge, avoid to enable the generic data_merge on that model.
     _disable_data_merge = True

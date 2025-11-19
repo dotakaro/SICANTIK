@@ -5,7 +5,7 @@
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="hr_payroll.payroll_hr_employee_view_form"/>
         <field name="arch" type="xml">
-            <page name="hr_settings" position="after">
+            <page name="payroll_information" position="after">
                 <page name="l10n_lu_tax_withholding_form" string="Tax Withholding Form"
                       invisible="company_country_code != 'LU'" groups="hr_payroll.group_hr_payroll_user">
                     <group>
@@ -100,6 +100,52 @@
                     </group>
                 </page>
             </page>
+            <div name="wage" position="after">
+                <field name="l10n_lu_index_on_contract_signature" string="Index on Contract Signature" invisible="country_code != 'LU'"/>
+                <label for="l10n_lu_indexed_wage" invisible="country_code != 'LU'"/>
+                <div class="o_row" invisible="country_code != 'LU'">
+                    <field name="l10n_lu_indexed_wage" string="Indexed Wage" class="o_hr_narrow_field"/>
+                    <div invisible="wage_type != 'monthly'">/ month</div>
+                    <div invisible="wage_type != 'hourly'">/ hour</div>
+                </div>
+                <field name="l10n_lu_current_index" string="Current Index" invisible="country_code != 'LU'"/>
+            </div>
+            <group name="payroll_group" position="inside">
+                <group name="l10n_lu_bik" string="Benefits in Kind" invisible="country_code != 'LU'">
+                    <label for="l10n_lu_bik_vehicle"/>
+                    <div class="o_row">
+                        <field name="l10n_lu_bik_vehicle" string="Vehicle" class="o_hr_narrow_field"/>
+                        <div>/ month</div>
+                        <field name="l10n_lu_bik_vehicle_vat_included"/>
+                        <div>VAT Included</div>
+                    </div>
+                    <label for="l10n_lu_bik_other_benefits"/>
+                    <div class="o_row">
+                        <field name="l10n_lu_bik_other_benefits" class="o_hr_narrow_field"/>
+                        <div>/ month</div>
+                    </div>
+
+                    <separator string="Allowances"/>
+                    <label for="l10n_lu_alw_vehicle"/>
+                    <div class="o_row">
+                        <field name="l10n_lu_alw_vehicle" string="Vehicle Package" class="o_hr_narrow_field"/>
+                        <div>/ month</div>
+                    </div>
+
+                    <separator string="Meal Vouchers"/>
+                    <label for="l10n_lu_meal_voucher_amount"/>
+                    <div class="o_row">
+                        <field name="l10n_lu_meal_voucher_amount" string="Daily Amount" class="o_hr_narrow_field"/>
+                        <div>/ worked day</div>
+                    </div>
+                    <label for="l10n_lu_meal_voucher_employer_cost"/>
+                    <div class="o_row">
+                        <field name="l10n_lu_meal_voucher_employer_cost" string="Employer Contribution" class="o_hr_narrow_field"/>
+                        <div>/ worked day</div>
+                    </div>
+                    <field name="l10n_lu_meal_voucher_employee_computation" string="Employee Computation" widget="radio"/>
+                </group>
+            </group>
         </field>
     </record>
 </odoo>

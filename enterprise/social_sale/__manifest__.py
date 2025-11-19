@@ -3,7 +3,7 @@
 
 {
     'name': 'Sale statistics on social',
-    'category': 'Hidden',
+    'category': 'Marketing/Social Marketing',
     'version': '1.0',
     'summary': 'Add sale UTM info on social',
     'description': """UTM and post on sale orders""",
@@ -12,5 +12,6 @@
         'views/social_post_views.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

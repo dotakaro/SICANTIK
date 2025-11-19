@@ -5,11 +5,12 @@ import uuid
 
 from datetime import datetime, time, timedelta
 from odoo import fields, models, _, api
+from odoo.tools import SQL
 
 _logger = logging.getLogger(__name__)
 
 
-class Employee(models.Model):
+class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
     def _default_employee_token(self):
@@ -25,10 +26,12 @@ class Employee(models.Model):
              "Leave empty for the employee to be assigned shifts regardless of the role.")
     employee_token = fields.Char('Security Token', default=_default_employee_token, groups='hr.group_hr_user',
                                  copy=False, readonly=True, export_string_translation=False)
+    has_slots = fields.Boolean(compute='_compute_has_slots')
 
-    _sql_constraints = [
-        ('employee_token_unique', 'unique(employee_token)', 'Error: each employee token must be unique')
-    ]
+    _employee_token_unique = models.Constraint(
+        'unique(employee_token)',
+        "Error: each employee token must be unique",
+    )
 
     @api.depends('job_title')
     @api.depends_context('show_job_title')
@@ -54,24 +57,16 @@ class Employee(models.Model):
             """.format(table=self._table)
             self.env.cr.execute_values(query, values_args)
         else:
-            super(Employee, self)._init_column(column_name)
+            super()._init_column(column_name)
 
-    def _planning_get_url(self, planning):
+    def _planning_get_url(self, date_start, date_end, planning_access_token=None):
         result = {}
         for employee in self:
             if employee.user_id:
-                result[employee.id] = f"/odoo/action-planning.planning_action_open_shift?date_start={planning.date_start}&date_end={planning.date_end}"
+                result[employee.id] = f"/odoo/action-planning.planning_action_open_shift?date_start={date_start}&date_end={date_end}"
             else:
-                result[employee.id] = '/planning/%s/%s' % (planning.access_token, employee.employee_token)
+                result[employee.id] = '/planning/%s/%s' % (planning_access_token, employee.employee_token)
         return result
-
-    def _slot_get_url(self, slot):
-        menu_id = self.env.ref('planning.planning_menu_root').id
-        dbname = self.env.cr.dbname or [''],
-        start_date = slot.start_datetime.date() if slot else ''
-        end_date = slot.end_datetime.date() if slot else ''
-        link = f"/odoo/action-planning.planning_action_open_shift?date_start={start_date}&date_end={end_date}&menu_id={menu_id}&db={dbname[0]}"
-        return {employee.id: link for employee in self}
 
     @api.onchange('default_planning_role_id')
     def _onchange_default_planning_role_id(self):
@@ -92,22 +87,19 @@ class Employee(models.Model):
         planning_slots._manage_archived_resources(departure_date)
         return res
 
-class HrEmployeeBase(models.AbstractModel):
-    _inherit = "hr.employee.base"
-
-    has_slots = fields.Boolean(compute='_compute_has_slots')
-
     def _compute_has_slots(self):
-        self.env.cr.execute("""
-        SELECT id, EXISTS(SELECT 1 FROM planning_slot WHERE employee_id = e.id limit 1)
-          FROM hr_employee e
-         WHERE id in %s
-        """, (tuple(self.ids), ))
-
-        result = {eid[0]: eid[1] for eid in self.env.cr.fetchall()}
+        result = set()
+        if self.ids:
+            result.update(id_ for [id_] in self.env.execute_query(SQL(
+                """ SELECT id
+                      FROM hr_employee e
+                     WHERE id IN %s
+                       AND EXISTS(SELECT 1 FROM planning_slot WHERE employee_id = e.id LIMIT 1) """,
+                tuple(self.ids),
+            )))
 
         for employee in self:
-            employee.has_slots = result.get(employee.id, False)
+            employee.has_slots = employee._origin.id in result
 
     def action_view_planning(self):
         action = self.env["ir.actions.actions"]._for_xml_id("planning.planning_action_schedule_by_resource")

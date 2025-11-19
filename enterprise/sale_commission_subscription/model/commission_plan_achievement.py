@@ -4,7 +4,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
 
-class CommissionPlanAchievement(models.Model):
+class SaleCommissionPlanAchievement(models.Model):
     _inherit = 'sale.commission.plan.achievement'
 
     type = fields.Selection(selection_add=[('mrr', "MRR")], ondelete={'mrr': 'cascade'})

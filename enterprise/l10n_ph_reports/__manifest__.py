@@ -7,12 +7,14 @@ Accounting reports for the Philippines
     """,
     "version": "1.0",
     "category": "Accounting/Localizations/Reporting",
+    "author": "Odoo S.A.",
     "license": "OEEL-1",
     "depends": [
         "l10n_ph",
         "account_reports",
     ],
     "data": [
+        "data/account_return_data.xml",
         "data/sawt_qap_report.xml",
         "data/slsp_report.xml",
     ],

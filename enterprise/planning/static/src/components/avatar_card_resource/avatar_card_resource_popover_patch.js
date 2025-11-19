@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 import { patch } from "@web/core/utils/patch";
 import { AvatarCardResourcePopover } from "@resource_mail/components/avatar_card_resource/avatar_card_resource_popover";
 
@@ -25,6 +23,9 @@ export const patchAvatarCardResourcePopover = {
             icon: id === this.record.default_role_id?.[0] && this.roles.length > 1 && "fa-star",
             className: "o_planning_avatar_role_tag",
         }));
+    },
+    get hasFooter() {
+        return this.roles?.length > 0 || super.hasFooter;
     },
 };
 

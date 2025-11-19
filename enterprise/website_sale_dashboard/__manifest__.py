@@ -1,6 +1,6 @@
 {
     'name': 'Website Sales Dashboard',
-    'category': 'Hidden',
+    'category': 'Website/Website',
     'sequence': 55,
     'summary': 'Get a new dashboard view in the Website App',
     'version': '1.0',
@@ -14,5 +14,6 @@ It also provides new tools to analyse your data.
         'views/dashboard_view.xml',
     ],
     'auto_install': ['website_sale'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -4,6 +4,6 @@
 from odoo import models
 
 
-class Groups(models.Model):
+class ResGroups(models.Model):
     _name = 'res.groups'
     _inherit = ['studio.mixin', 'res.groups']

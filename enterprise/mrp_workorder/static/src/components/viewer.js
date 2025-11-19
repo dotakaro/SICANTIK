@@ -1,6 +1,4 @@
-/** @odoo-module **/
-
-import { getGoogleSlideUrl } from "@mrp/views/fields/google_slides_viewer";
+import { getGoogleSlideUrl } from "@web/views/fields/google_slide_viewer/google_slide_viewer";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { url } from "@web/core/utils/urls";
@@ -14,11 +12,10 @@ class DocumentViewer extends Component {
     setup() {
         this.notification = useService("notification");
         this.magicNumbers = {
-            'JVBER': 'pdf',
+            JVBER: "pdf",
             ...fileTypeMagicWordMap,
         };
-        this.pdfIFrame = useRef('pdf_viewer');
-        this.slideIFrame = useRef('slide_viewer');
+        this.pdfIFrame = useRef("pdf_viewer");
         useEffect(() => {
             this.updatePdf();
         });
@@ -27,7 +24,7 @@ class DocumentViewer extends Component {
     updatePdf() {
         if (this.pdfIFrame.el) {
             const iframe = this.pdfIFrame.el.firstElementChild;
-            iframe.removeAttribute('style');
+            iframe.removeAttribute("style");
             // Once the PDF viewer is loaded, hides everything except the page.
             iframe.addEventListener("load", () => {
                 iframe.contentDocument.querySelector("body").style.background = "none";
@@ -46,7 +43,10 @@ class DocumentViewer extends Component {
         if (!this.props || !this.props.value) {
             return false;
         }
-        if (this.props.resField === "worksheet_url" || this.props.resField === "worksheet_google_slide") {
+        if (
+            this.props.resField === "worksheet_url" ||
+            this.props.resField === "worksheet_google_slide"
+        ) {
             return "google_slide";
         }
         for (const [magicNumber, type] of Object.entries(this.magicNumbers)) {

@@ -4,10 +4,10 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
-from markupsafe import Markup
 
 from .common import HelpdeskCommon
 from odoo.exceptions import AccessError
+from odoo.fields import Command
 from odoo.tests import Form
 from odoo.tests.common import users
 
@@ -20,43 +20,6 @@ class TestHelpdeskFlow(HelpdeskCommon):
         - test_team_assignation_[method]: tests the team assignation method work as expected
         - test_automatic_ticket_closing: tests automatic ticket closing after set number of days
     """
-
-    @classmethod
-    def setUpClass(cls):
-        res = super().setUpClass()
-        ticket_model_id = cls.env['ir.model']._get_id('helpdesk.ticket')
-        helpdesk_team_model_id = cls.env['ir.model']._get_id('helpdesk.team')
-
-        cls.mail_alias = cls.env['mail.alias'].create({
-            'alias_name': 'helpdesk_team',
-            'alias_model_id': ticket_model_id,
-            'alias_parent_model_id': helpdesk_team_model_id,
-            'alias_parent_thread_id': cls.test_team.id,
-            'alias_defaults': "{'team_id': %s}" % cls.test_team.id,
-        })
-
-        cls.email_to_alias_from = 'client_a@someprovider.com'
-        cls.email_to_alias = """MIME-Version: 1.0
-Date: Thu, 27 Dec 2018 16:27:45 +0100
-Message-ID: blablabla1
-Subject: helpdesk team 1 in company 1
-From:  Client A <client_a@someprovider.com>
-To: helpdesk_team@test.mycompany.com
-Content-Type: multipart/alternative; boundary="000000000000a47519057e029630"
-
---000000000000a47519057e029630
-Content-Type: text/plain; charset="UTF-8"
-
-
---000000000000a47519057e029630
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div>A good message ter</div>
-
---000000000000a47519057e029630--
-"""
-        return res
 
     def test_access_rights(self):
         # helpdesk user should only be able to:
@@ -169,25 +132,40 @@ Content-Transfer-Encoding: quoted-printable
         # we set the assignation method to randomly (=uniformly distributed)
         self.test_team.update({'assign_method': 'randomly', 'auto_assignment': True})
         # we create a bunch of tickets
-        for i in range(5):
-            self.env['helpdesk.ticket'].create({
-                'name': 'test ticket ' + str(i),
-                'team_id': self.test_team.id,
-            })
+        self.env['helpdesk.ticket'].create([{
+            'name': 'test ticket ' + str(i),
+            'team_id': self.test_team.id,
+        } for i in range(5)])
         # add unassigned ticket to test if the distribution is kept equal.
         self.env['helpdesk.ticket'].create({
             'name': 'ticket unassigned',
             'team_id': self.test_team.id,
             'user_id': False,
         })
-        for i in range(5, 10):
-            self.env['helpdesk.ticket'].create({
-                'name': 'test ticket ' + str(i),
-                'team_id': self.test_team.id,
-            })
+
+        self.env['helpdesk.ticket'].create([{
+            'name': 'test ticket ' + str(i),
+            'team_id': self.test_team.id,
+        } for i in range(5, 12)])
         # ensure both members have the same amount of tickets assigned
-        self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_user.id)]), 5)
-        self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_manager.id)]), 5)
+        self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_user.id)]), 6)
+        self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_manager.id)]), 6)
+
+        # tickets created in a folded stage should not be assigned
+        closed_ticket = self.env['helpdesk.ticket'].create({
+            'name': 'closed ticket',
+            'team_id': self.test_team.id,
+            'stage_id': self.stage_done.id,
+        })
+        self.assertFalse(closed_ticket.user_id, "The ticket should not have been assigned because it was created in a folded stage")
+
+        assigned_closed_ticket = self.env['helpdesk.ticket'].create({
+            'name': 'assigned closed ticket',
+            'team_id': self.test_team.id,
+            'stage_id': self.stage_done.id,
+            'user_id': self.helpdesk_user.id,
+        })
+        self.assertEqual(assigned_closed_ticket.user_id.id, self.helpdesk_user.id, "The ticket should be assigned even though it was created in a folded stage, because the assignee was explicitely given.")
 
     def test_team_assignation_balanced(self):
         # we put the helpdesk user and manager in the test_team's members
@@ -195,11 +173,10 @@ Content-Transfer-Encoding: quoted-printable
         # we set the assignation method to randomly (=uniformly distributed)
         self.test_team.update({'assign_method': 'balanced', 'auto_assignment': True})
         # we create a bunch of tickets
-        for i in range(4):
-            self.env['helpdesk.ticket'].create({
-                'name': 'test ticket ' + str(i),
-                'team_id': self.test_team.id,
-            })
+        self.env['helpdesk.ticket'].create([{
+            'name': 'test ticket ' + str(i),
+            'team_id': self.test_team.id,
+        } for i in range(4)])
         # ensure both members have the same amount of tickets assigned
         self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_user.id)]), 2)
         self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_manager.id)]), 2)
@@ -208,125 +185,185 @@ Content-Transfer-Encoding: quoted-printable
         self.env['helpdesk.ticket'].search([('user_id', '=', self.helpdesk_user.id)]).write({'stage_id': self.stage_done.id})
 
         # we create 4 new tickets
-        for i in range(4):
-            self.env['helpdesk.ticket'].create({
-                'name': 'test ticket ' + str(i),
-                'team_id': self.test_team.id,
-            })
+        self.env['helpdesk.ticket'].create([{
+            'name': 'test ticket ' + str(i),
+            'team_id': self.test_team.id,
+        } for i in range(4)])
 
         # ensure both members have the same amount of tickets assigned
         self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_user.id), ('close_date', '=', False)]), 3)
         self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_manager.id), ('close_date', '=', False)]), 3)
 
-    def test_create_from_email_multicompany(self):
-        company0 = self.env.company
-        company1 = self.env['res.company'].create({'name': 'new_company0'})
-        Partner = self.env['res.partner']
-
-        self.env.user.write({
-            'company_ids': [(4, company0.id, False), (4, company1.id, False)],
+        # tickets created in a folded stage should not be assigned
+        closed_ticket = self.env['helpdesk.ticket'].create({
+            'name': 'closed ticket',
+            'team_id': self.test_team.id,
+            'stage_id': self.stage_done.id,
         })
+        self.assertFalse(closed_ticket.user_id, "The ticket should not have been assigned because it was created in a folded stage")
 
-        helpdesk_team_model = self.env['ir.model'].search([('model', '=', 'helpdesk_team')])
-        ticket_model = self.env['ir.model'].search([('model', '=', 'helpdesk.ticket')])
+    def test_team_assignation_tags(self):
+        self.test_team.update({'assign_method': 'tags', 'auto_assignment': True})
+        tags = self.env['helpdesk.tag'].create([{
+            'name': f"tag_{i}",
+        } for i in range(3)])
 
-        helpdesk_team0 = self.env['helpdesk.team'].create({
-            'name': 'helpdesk team 0',
-            'company_id': company0.id,
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': "Test Ticket",
+            'team_id': self.test_team.id,
+            'tag_ids': [Command.link(tags[2].id)],
         })
-        helpdesk_team1 = self.env['helpdesk.team'].create({
-            'name': 'helpdesk team 1',
-            'company_id': company1.id,
+        self.assertFalse(ticket.user_id, "The ticket should not be assigned since the tag/users map is empty.")
+
+        self.env['helpdesk.tag.assignment'].create([{
+            'team_id': self.test_team.id,
+            'tag_id': tags[0].id,
+            'user_ids': [Command.link(user_id) for user_id in [self.helpdesk_user.id, self.helpdesk_manager.id]],
+        }, {
+            'team_id': self.test_team.id,
+            'tag_id': tags[1].id,
+            'user_ids': [Command.link(self.helpdesk_manager.id)],
+        }])
+
+        self.env['helpdesk.ticket'].create([{
+            'name': f"Test Ticket {i}",
+            'team_id': self.test_team.id,
+            'user_id': self.helpdesk_user.id,
+        } for i in range(3)])
+
+        self.env['helpdesk.ticket'].create([{
+            'name': f"Ticket {i}",
+            'team_id': self.test_team.id,
+            'tag_ids': [Command.link(tags[0].id)],
+        } for i in range(5)])
+        # Both users should now have an equal amount of open tickets
+        self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_user.id)]), 4)
+        self.assertEqual(self.env['helpdesk.ticket'].search_count([('user_id', '=', self.helpdesk_manager.id)]), 4)
+
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': "Test Ticket",
+            'team_id': self.test_team.id,
+            'tag_ids': [Command.link(tags[1].id)],
+            'user_id': self.helpdesk_user.id,
         })
+        self.assertEqual(ticket.user_id, self.helpdesk_user, "The ticket should not get reassigned if it's already assigned.")
 
-        mail_alias0 = self.env['mail.alias'].create({
-            'alias_name': 'helpdesk_team_0',
-            'alias_model_id': ticket_model.id,
-            'alias_parent_model_id': helpdesk_team_model.id,
-            'alias_parent_thread_id': helpdesk_team0.id,
-            'alias_defaults': "{'team_id': %s}" % helpdesk_team0.id,
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': "Test Ticket",
+            'team_id': self.test_team.id,
+            'tag_ids': [Command.link(tags[2].id)],
         })
-        mail_alias1 = self.env['mail.alias'].create({
-            'alias_name': 'helpdesk_team_1',
-            'alias_model_id': ticket_model.id,
-            'alias_parent_model_id': helpdesk_team_model.id,
-            'alias_parent_thread_id': helpdesk_team1.id,
-            'alias_defaults': "{'team_id': %s}" % helpdesk_team1.id,
+        self.assertFalse(ticket.user_id, "The ticket should not get assigned if there is no match in the mapping.")
+
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': "Test Ticket",
+            'team_id': self.test_team.id,
         })
-        self.assertEqual((mail_alias0 + mail_alias1).alias_domain_id, self.mail_alias_domain)
+        self.assertFalse(ticket.user_id, "Ticket should not be assigned yet, as is has no tag.")
+        ticket.write({'tag_ids': [Command.link(tags[1].id)]})
+        self.assertEqual(ticket.user_id, self.helpdesk_manager, "Adding the tag on a existing unassigned ticket should assign it.")
+        ticket.write({'tag_ids': [Command.unlink(tags[1].id)]})
+        self.assertEqual(ticket.user_id, self.helpdesk_manager, "Removing the tag should have no effect.")
 
-        new_message0 = f"""MIME-Version: 1.0
-Date: Thu, 27 Dec 2018 16:27:45 +0100
-Message-ID: blablabla0
-Subject: helpdesk team 0 in company 0
-From:  A client <client_a@someprovider.com>
-To: {mail_alias0.display_name}
-Content-Type: multipart/alternative; boundary="000000000000a47519057e029630"
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': "Test Ticket",
+            'team_id': self.test_team.id,
+            'user_id': self.helpdesk_user.id,
+        })
+        ticket.write({'tag_ids': [Command.link(tags[1].id)]})
+        self.assertEqual(ticket.user_id, self.helpdesk_user, "Adding the tag on a existing assigned ticket should have no effect.")
 
---000000000000a47519057e029630
-Content-Type: text/plain; charset="UTF-8"
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': "Test Ticket",
+            'team_id': self.test_team.id,
+            'tag_ids': [Command.link(tags[1].id)],
+            'stage_id': self.stage_done.id,
+        })
+        self.assertFalse(ticket.user_id, "The tichet should not get assigned if it's created in a folded stage.")
+        ticket.write({'tag_ids': [Command.link(tags[0].id)]})
+        self.assertFalse(ticket.user_id, "The ticket should still not get assigned if the tag is added while it's in a folded stage.")
 
+        # Same tests but with SET command
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': "Test Ticket",
+            'team_id': self.test_team.id,
+            'tag_ids': [Command.set((tags[0] + tags[1]).ids)],
+        })
+        self.assertIn(ticket.user_id, self.helpdesk_user + self.helpdesk_manager, "The ticket should be assigned to one of the users of the mapping.")
 
---000000000000a47519057e029630
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': "Test Ticket",
+            'team_id': self.test_team.id,
+        })
+        ticket.tag_ids = tags[1]
+        self.assertEqual(ticket.user_id, self.helpdesk_manager)
+        ticket.tag_ids = False
+        self.assertEqual(ticket.user_id, self.helpdesk_manager, "Removing the tag should have no effect.")
 
-<div>A good message</div>
+    def test_team_assignation_tags_multiple_teams(self):
+        self.test_team.update({'assign_method': 'tags', 'auto_assignment': True})
+        other_team = self.env['helpdesk.team'].with_user(self.helpdesk_manager).create({
+            'name': "Other Team",
+            'assign_method': 'tags',
+            'auto_assignment': True,
+        }).sudo()
+        tags = self.env['helpdesk.tag'].create([{
+            'name': f"tag_{i}",
+        } for i in range(3)])
 
---000000000000a47519057e029630--
-"""
+        self.env['helpdesk.tag.assignment'].create([{
+            'team_id': self.test_team.id,
+            'tag_id': tags[0].id,
+            'user_ids': [Command.link(self.helpdesk_user.id)],
+        }, {
+            'team_id': self.test_team.id,
+            'tag_id': tags[1].id,
+            'user_ids': [Command.link(self.helpdesk_manager.id)],
+        }, {
+            'team_id': other_team.id,
+            'tag_id': tags[1].id,
+            'user_ids': [Command.link(self.helpdesk_user.id)],
+        }, {
+            'team_id': other_team.id,
+            'tag_id': tags[2].id,
+            'user_ids': [Command.link(self.helpdesk_manager.id)],
+        }])
 
-        new_message1 = f"""MIME-Version: 1.0
-Date: Thu, 27 Dec 2018 16:27:45 +0100
-Message-ID: blablabla1
-Subject: helpdesk team 1 in company 1
-From:  B client <client_b@someprovider.com>
-To: {mail_alias1.display_name}
-Content-Type: multipart/alternative; boundary="000000000000a47519057e029630"
+        tickets = self.env['helpdesk.ticket'].create([{
+            'name': "Ticket",
+            'team_id': team_id,
+            'tag_ids': tag_id and [Command.link(tag_id)],
+        } for team_id, tag_id in [
+            (self.test_team.id, tags[1].id),
+            (other_team.id, tags[1].id),
+            (other_team.id, tags[2].id),
+            (self.test_team.id, False),
+        ]])
+        self.assertEqual(tickets[0].user_id.id, self.helpdesk_manager.id, "The first ticket should be assigned to the manager.")
+        self.assertEqual(tickets[1].user_id.id, self.helpdesk_user.id, "The second ticket should be assigned to the user.")
+        self.assertEqual(tickets[2].user_id.id, self.helpdesk_manager.id, "The third ticket should be assigned to the manager.")
+        self.assertFalse(tickets[3].user_id.id, "The fourth ticket should remain unassigned.")
 
---000000000000a47519057e029630
-Content-Type: text/plain; charset="UTF-8"
+        tickets = self.env['helpdesk.ticket'].create([{
+            'name': "Ticket",
+            'team_id': team_id,
+        } for team_id in [self.test_team.id] * 3 + [other_team.id]])
+        self.assertFalse(tickets.user_id)
+        tickets.write({
+            'tag_ids': [Command.link(tags[1].id)],
+        })
+        for ticket, exepected_user in zip(tickets, [self.helpdesk_manager] * 3 + [self.helpdesk_user]):
+            self.assertEqual(ticket.user_id.id, exepected_user.id, f"The ticket should be assigned to {exepected_user.name}.")
 
-
---000000000000a47519057e029630
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div>A good message bis</div>
-
---000000000000a47519057e029630--
-"""
-        partners_exist = Partner.search([('email', 'in', ['client_a@someprovider.com', 'client_b@someprovider.com'])])
-        self.assertFalse(partners_exist)
-
-        helpdesk_ticket0_id = self.env['mail.thread'].message_process(False, new_message0)
-        helpdesk_ticket1_id = self.env['mail.thread'].message_process(False, new_message1)
-        self.env.cr.flush()  # trigger pre-commit
-        helpdesk_ticket0 = self.env['helpdesk.ticket'].browse(helpdesk_ticket0_id)
-        helpdesk_ticket1 = self.env['helpdesk.ticket'].browse(helpdesk_ticket1_id)
-
-        self.assertEqual(helpdesk_ticket0.team_id, helpdesk_team0)
-        self.assertEqual(helpdesk_ticket1.team_id, helpdesk_team1)
-
-        self.assertEqual(helpdesk_ticket0.company_id, company0)
-        self.assertEqual(helpdesk_ticket1.company_id, company1)
-
-        partner0 = Partner.search([('email', '=', 'client_a@someprovider.com')])
-        partner1 = Partner.search([('email', '=', 'client_b@someprovider.com')])
-        self.assertTrue(partner0)
-        self.assertTrue(partner1)
-
-        self.assertEqual(partner0.company_id, company0)
-        self.assertEqual(partner1.company_id, company1)
-
-        self.assertEqual(partner0.name, "A client")
-        self.assertEqual(partner1.name, "B client")
-
-        self.assertEqual(helpdesk_ticket0.partner_id, partner0)
-        self.assertEqual(helpdesk_ticket1.partner_id, partner1)
-
-        self.assertTrue(partner0 in helpdesk_ticket0.message_follower_ids.mapped('partner_id'))
-        self.assertTrue(partner1 in helpdesk_ticket1.message_follower_ids.mapped('partner_id'))
+        tickets[1:4].user_id = False
+        tickets[2].stage_id = self.stage_done
+        tickets.write({
+            'tag_ids': [Command.link(tags[0].id)],
+        })
+        self.assertEqual(tickets[0].user_id.id, self.helpdesk_manager.id, "The first ticket should remain assigned to the manager.")
+        self.assertEqual(tickets[1].user_id.id, self.helpdesk_user.id, "The second ticket should be assigned to the user.")
+        self.assertFalse(tickets[2].user_id.id, "The third ticket should remain unassigned as it is in a closed stage.")
+        self.assertFalse(tickets[3].user_id.id, "The fourth ticket should remain unassigned as there is no match in the mapping for the added tag in its team.")
 
     def test_ticket_sequence_created_from_multi_company(self):
         """
@@ -438,58 +475,6 @@ Content-Transfer-Encoding: quoted-printable
         self.assertEqual(helpdesk_ticket.partner_id.name, "Client with a §tràÑge name")
         self.assertEqual(helpdesk_ticket.partner_id.email, "client_b@someprovaîdère.com")
         self.assertEqual(helpdesk_ticket.partner_email, "client_b@someprovaîdère.com")
-
-    def test_email_without_mail_template(self):
-        """
-        A mail sent to the alias without mail template on the stage should also create a partner
-        """
-        stage = self.test_team._determine_stage()[self.test_team.id]
-        stage.template_id = False
-
-        helpdesk_ticket = self.env['mail.thread'].message_process('helpdesk.ticket', self.email_to_alias)
-        helpdesk_ticket = self.env['helpdesk.ticket'].browse(helpdesk_ticket)
-
-        self.assertEqual(helpdesk_ticket.partner_id.name, "Client A")
-
-    def test_email_with_mail_template_portal_user(self):
-        """
-        Portal users receive an email when they create a ticket
-        """
-        self.stage_new.template_id = self.env.ref('helpdesk.new_ticket_request_email_template')
-        self.helpdesk_portal.email = self.email_to_alias_from
-
-        helpdesk_ticket = self.env['mail.thread'].message_process('helpdesk.ticket', self.email_to_alias)
-        helpdesk_ticket = self.env['helpdesk.ticket'].browse(helpdesk_ticket)
-        self.assertEqual(helpdesk_ticket.partner_id, self.helpdesk_portal.partner_id)
-
-        self.flush_tracking()
-
-        # check that when a portal user creates a ticket there is two message on the ticket:
-        # - the creation message note
-        # - the mail from the stage mail template
-        template_msg, creation_log = helpdesk_ticket.message_ids
-        self.assertEqual(template_msg.subtype_id, self.env.ref('mail.mt_note'))
-        self.assertEqual(creation_log.subtype_id, self.env.ref('helpdesk.mt_ticket_new'))
-
-    def test_email_with_mail_template_internal_user(self):
-        """
-        Internal users receive an email when they create a ticket by email.
-        """
-        self.stage_new.template_id = self.env.ref('helpdesk.new_ticket_request_email_template')
-        self.helpdesk_user.email = self.email_to_alias_from
-
-        helpdesk_ticket = self.env['mail.thread'].message_process('helpdesk.ticket', self.email_to_alias)
-        helpdesk_ticket = self.env['helpdesk.ticket'].browse(helpdesk_ticket)
-        self.assertEqual(helpdesk_ticket.partner_id, self.helpdesk_user.partner_id)
-
-        self.flush_tracking()
-
-        # check that when an internal user creates a ticket there is two messages on the ticket:
-        # - the creation message note
-        # - the mail from the stage mail template
-        template_msg, creation_log = helpdesk_ticket.message_ids
-        self.assertEqual(template_msg.subtype_id, self.env.ref('mail.mt_note'))
-        self.assertEqual(creation_log.subtype_id, self.env.ref('helpdesk.mt_ticket_new'))
 
     def test_team_assignation_balanced_sla(self):
         #We create an sla policy with minimum priority set as '2'
@@ -704,57 +689,6 @@ Content-Transfer-Encoding: quoted-printable
 
         self.assertEqual(helpdesk.member_ids, self.env.user)
 
-    def test_create_from_email_new_customer_ticket_description(self):
-        Partner = self.env['res.partner']
-
-        new_message = """MIME-Version: 1.0
-Date: Thu, 27 Dec 2018 16:27:45 +0100
-Message-ID: blablabla0
-Subject: new customer
-From:  A client <client_a@someprovider.com>
-To: helpdesk_team@aqualung.com
-Content-Type: multipart/alternative; boundary="000000000000a47519057e029630"
-
---000000000000a47519057e029630
-Content-Type: text/plain; charset="UTF-8"
-
-
---000000000000a47519057e029630
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-should be in the ticket's description
-
---000000000000a47519057e029630--
-"""
-
-        partner_exist = Partner.search([('email', 'in', ['client_a@someprovider.com'])])
-        self.assertFalse(partner_exist, "Partner should not exist")
-
-        helpdesk_ticket_id = self.env['mail.thread'].message_process('helpdesk.ticket', new_message)
-        helpdesk_ticket = self.env['helpdesk.ticket'].browse(helpdesk_ticket_id)
-
-        partner = Partner.search([('email', '=', 'client_a@someprovider.com')])
-        self.assertTrue(partner, "Partner should be created")
-
-        self.assertEqual(helpdesk_ticket.partner_id, partner)
-
-        self.assertEqual(helpdesk_ticket.description, Markup("<p>should be in the ticket's description\n</p>"), "the email body should be in the ticket's description")
-
-    def test_create_ticket_cc(self):
-        ''' Make sure creating a ticket with an email_cc field creates a follower. '''
-        ticket = self.env['helpdesk.ticket'].create({
-            'partner_name': 'Test Name',
-            'partner_email': 'testmail@test.com',
-            'name': 'Ticket Name',
-            'email_cc': 'testcc@test.com',
-        })
-        follow = self.env['mail.followers'].search([
-            ('res_model', '=', 'helpdesk.ticket'),
-            ('res_id', '=', ticket.id),
-        ], limit=1)
-        self.assertTrue(follow)
-
     def test_create_from_internal_for_internal(self):
         """
         Test that we can create a ticket from an internal user for an internal user, without raising any access error.
@@ -764,7 +698,7 @@ should be in the ticket's description
             'name': 'User',
             'login': 'user',
             'email': 'user@user.com',
-            'groups_id': [(6, 0, [self.env.ref('helpdesk.group_helpdesk_manager').id,
+            'group_ids': [(6, 0, [self.env.ref('helpdesk.group_helpdesk_manager').id,
                         self.env.ref('base.group_partner_manager').id])],
         })
 
@@ -866,6 +800,28 @@ should be in the ticket's description
         self.assertEqual(ticket_copy.avg_response_hours, 0.0)
         self.assertEqual(ticket_copy.total_response_hours, 0.0)
 
+    def test_copy_ticket_without_archive_user(self):
+        tickets = self.env['helpdesk.ticket'].create([
+            {
+                'name': "Ticket A",
+                'team_id': self.test_team.id,
+                'user_id': self.helpdesk_user.id,
+            }, {
+                'name': "Ticket B",
+                'team_id': self.test_team.id,
+                'user_id': self.helpdesk_manager.id,
+            },
+        ])
+        self.helpdesk_user.action_archive()
+        ticket_a, ticket_b = tickets.copy()
+        self.assertFalse(ticket_a.user_id, "Archived user should not be assigned to the new ticket.")
+        self.assertEqual(ticket_b.user_id, self.helpdesk_manager)
+
+        # exception if the user gives the archived user in the default parameter
+        ticket2_a, ticket2_b = tickets.copy({'user_id': self.helpdesk_user.id})
+        self.assertEqual(ticket2_a.user_id, self.helpdesk_user)
+        self.assertEqual(ticket2_b.user_id, self.helpdesk_user)
+
     def test_assigned_customer_multicompany(self):
         """
         Test in multicompany that the assigned customer is in the same company as the ticket
@@ -927,3 +883,32 @@ should be in the ticket's description
 
         self.assertEqual(ticket2.partner_id, test_partner2)
         self.assertFalse(ticket2.partner_id.company_id)
+
+    def test_ticket_created_in_closed_stage_sets_close_date(self):
+        """Test that a ticket created directly in a folded (closed) stage sets close_date."""
+        with self._ticket_patch_now("2024-06-01 10:00:00"):
+            ticket = self.env['helpdesk.ticket'].create({
+                'name': 'Closed from start',
+                'team_id': self.test_team.id,
+                'stage_id': self.stage_done.id,
+            })
+        self.assertEqual(
+            ticket.close_date,
+            datetime(2024, 6, 1, 10, 0, 0),
+            "Ticket created in a closed stage should have close_date set to the current datetime"
+        )
+
+    def test_save_ticket_without_tags(self):
+        self.test_team.update({'assign_method': 'tags', 'auto_assignment': True})
+
+        tag = self.env['helpdesk.tag'].create({'name': 'Test Tag'})
+
+        ticket = self.env['helpdesk.ticket'].create({
+            'name': 'Test Ticket',
+            'team_id': self.test_team.id,
+            'tag_ids': [(6, 0, [tag.id])],
+        })
+        self.assertIn(tag, ticket.tag_ids)
+
+        ticket.write({'tag_ids': [(5, 0, 0)]})
+        self.assertFalse(ticket.tag_ids)

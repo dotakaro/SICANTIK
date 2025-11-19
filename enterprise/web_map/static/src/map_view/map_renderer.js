@@ -1,10 +1,9 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 /*global L*/
 
 import { renderToString } from "@web/core/utils/render";
 import { delay } from "@web/core/utils/concurrency";
+import { isMacOS } from "@web/core/browser/feature_detection";
 
 import {
     Component,
@@ -45,10 +44,23 @@ const mapTileAttribution = `
 
 export class MapRenderer extends Component {
     static template = "web_map.MapRenderer";
+    static markerPopupTemplate = "web_map.markerPopup";
     static props = {
         model: Object,
         onMarkerClick: Function,
     };
+    static subTemplates = {
+        PinListContainer: "web_map.MapRenderer.PinListContainer",
+        PinList: "web_map.MapRenderer.PinList",
+        PinListItems: "web_map.MapRenderer.PinListItems",
+        RountingUnavailable: "web_map.MapRenderer.RountingUnavailable",
+        FetchingCoordinates: "web_map.MapRenderer.FetchingCoordinates",
+        NoMapToken: "web_map.MapRenderer.NoMapToken",
+    };
+
+    get subTemplates() {
+        return this.constructor.subTemplates;
+    }
 
     setup() {
         this.leafletMap = null;
@@ -155,6 +167,7 @@ export class MapRenderer extends Component {
                 const key = `${lat_long}${group}`;
                 if (key in markersInfo) {
                     markersInfo[key].record = record;
+                    markersInfo[key].relatedRecords.push(record);
                     markersInfo[key].ids.push(record.id);
                 } else {
                     pinInSamePlace[lat_long] = ++pinInSamePlace[lat_long] || 0;
@@ -162,6 +175,7 @@ export class MapRenderer extends Component {
                         record: record,
                         ids: [record.id],
                         pinInSamePlace: pinInSamePlace[lat_long],
+                        relatedRecords: [],
                     };
                 }
             }
@@ -179,9 +193,9 @@ export class MapRenderer extends Component {
                 const groupId = markerInfo.record.groupId;
                 params.color = this.getGroupColor(groupId);
                 params.number =
-                    this.props.model.data.recordGroups[groupId].records.findIndex((record) => {
-                        return record.id === markerInfo.record.id;
-                    }) + 1;
+                    this.props.model.data.recordGroups[groupId].records.findIndex(
+                        (record) => record.id === markerInfo.record.id
+                    ) + 1;
             }
 
             // Icon creation
@@ -248,11 +262,11 @@ export class MapRenderer extends Component {
      * @param {Number} latLongOffset
      */
     createMarkerPopup(markerInfo, latLongOffset = 0) {
-        const popupFields = this.getMarkerPopupFields(markerInfo);
+        const popupData = this.getMarkerPopupData(markerInfo);
         const partner = markerInfo.record.partner;
         const encodedAddress = encodeURIComponent(partner.contact_address_complete);
-        const popupHtml = renderToString("web_map.markerPopup", {
-            fields: popupFields,
+        const popupHtml = renderToString(this.constructor.markerPopupTemplate, {
+            data: popupData,
             hasFormView: this.props.model.metaData.hasFormView,
             url: `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`,
         });
@@ -269,8 +283,19 @@ export class MapRenderer extends Component {
             .getElement()
             .querySelector("button.o-map-renderer--popup-buttons-open");
         if (openBtn) {
-            openBtn.onclick = () => {
-                this.props.onMarkerClick(markerInfo.ids);
+            openBtn.onclick = (ev) => {
+                if (ev.button === 0 || ev.button === 1) {
+                    const ctrlKey = isMacOS() ? ev.metaKey : ev.ctrlKey;
+                    const isMiddleClick = (ctrlKey && ev.button === 0) || ev.button === 1;
+                    this.props.onMarkerClick(markerInfo.ids, isMiddleClick);
+                }
+            };
+            openBtn.onauxclick = (ev) => {
+                if (ev.button === 0 || ev.button === 1) {
+                    const ctrlKey = isMacOS() ? ev.metaKey : ev.ctrlKey;
+                    const isMiddleClick = (ctrlKey && ev.button === 0) || ev.button === 1;
+                    this.props.onMarkerClick(markerInfo.ids, isMiddleClick);
+                }
             };
         }
         return popup;
@@ -302,27 +327,8 @@ export class MapRenderer extends Component {
         }
         return L.latLngBounds(tabLatLng);
     }
-    /**
-     * Get the fields' name and value to display in the popup.
-     *
-     * @param {Object} markerInfo
-     * @returns {Object} value contains the value of the field and string
-     *                   contains the value of the xml's string attribute
-     */
-    getMarkerPopupFields(markerInfo) {
-        const record = markerInfo.record;
+    getMarkerPopupRecordData(record) {
         const fieldsView = [];
-        // Only display address in multi coordinates marker popup
-        if (markerInfo.ids.length > 1) {
-            if (!this.props.model.metaData.hideAddress) {
-                fieldsView.push({
-                    id: this.nextId++,
-                    value: record.partner.contact_address_complete,
-                    string: _t("Address"),
-                });
-            }
-            return fieldsView;
-        }
         if (!this.props.model.metaData.hideName) {
             fieldsView.push({
                 id: this.nextId++,
@@ -358,27 +364,51 @@ export class MapRenderer extends Component {
         return fieldsView;
     }
     /**
+     * Get the fields' name and value to display in the popup.
+     *
+     * @param {Object} markerInfo
+     * @returns {Object} value contains the value of the field and string
+     *                   contains the value of the xml's string attribute
+     */
+    getMarkerPopupData(markerInfo) {
+        // Only display address in multi coordinates marker popup
+        const record = markerInfo.record;
+        if (markerInfo.ids.length > 1) {
+            const fieldsView = [];
+            if (!this.props.model.metaData.hideAddress) {
+                fieldsView.push({
+                    id: this.nextId++,
+                    value: record.partner.contact_address_complete,
+                    string: _t("Address"),
+                });
+            }
+            return fieldsView;
+        }
+        const fieldsView = this.getMarkerPopupRecordData(record);
+        return fieldsView;
+    }
+    /**
      * @returns {string}
      */
     get googleMapUrl() {
         let url = "https://www.google.com/maps/dir/?api=1";
         if (this.props.model.data.records.length) {
-            const allCoordinates = this.props.model.data.records.filter(
-                ({ partner }) => partner && partner.partner_latitude && partner.partner_longitude
+            const allAddresses = this.props.model.data.records.filter(
+                ({ partner }) => partner && partner.contact_address_complete
             );
-            const uniqueCoordinates = allCoordinates.reduce((coords, { partner }) => {
-                const coord = partner.partner_latitude + "," + partner.partner_longitude;
-                if (!coords.includes(coord)) {
-                    coords.push(coord);
+            const uniqueAddresses = allAddresses.reduce((addrs, { partner }) => {
+                const addr = encodeURIComponent(partner.contact_address_complete);
+                if (!addrs.includes(addr)) {
+                    addrs.push(addr);
                 }
-                return coords;
+                return addrs;
             }, []);
-            if (uniqueCoordinates.length && this.props.model.metaData.routing) {
+            if (uniqueAddresses.length && this.props.model.metaData.routing) {
                 // When routing is enabled, make last record the destination
-                url += `&destination=${uniqueCoordinates.pop()}`;
+                url += `&destination=${uniqueAddresses.pop()}`;
             }
-            if (uniqueCoordinates.length) {
-                url += `&waypoints=${uniqueCoordinates.join("|")}`;
+            if (uniqueAddresses.length) {
+                url += `&waypoints=${uniqueAddresses.join("|")}`;
             }
         }
         return url;
@@ -432,6 +462,7 @@ export class MapRenderer extends Component {
         const popup = this.createMarkerPopup({
             record: record,
             ids: [record.id],
+            relatedRecords: [],
         });
         const px = this.leafletMap.project([
             record.partner.partner_latitude,

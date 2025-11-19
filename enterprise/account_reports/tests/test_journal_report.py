@@ -108,7 +108,7 @@ class TestJournalReport(TestAccountReportsCommon):
             'name': 'Tax report',
             'root_report_id': cls.env.ref('account.generic_tax_report').id,
             'country_id': cls.company_data['company'].country_id.id,
-            'filter_fiscal_position': True,
+            'allow_foreign_vat': True,
             'availability_condition': 'country',
             'column_ids': [Command.create({
                 'name': 'Balance',
@@ -291,8 +291,8 @@ class TestJournalReport(TestAccountReportsCommon):
                 ('400000',         0,       7150,      -7150),
                 ('BNK1',         570,        570,         ''),
                 ('101401',       200,          0,        200),
+                ('101403',       370,          0,        370),
                 ('400000',         0,        570,       -570),
-                ('OSTR00',       370,          0,        370),
             ],
             options_show_payment,
         )

@@ -2,7 +2,8 @@
 
 from odoo import models
 
-class IrActionsAccountReportDownload(models.AbstractModel):
+
+class Ir_Actions_Account_Report_Download(models.AbstractModel):
     # This model is a a hack: it's sole purpose is to override _get_readable_fields
     # of ir.actions.actions to add the 'data' field which, as explained below, contains the
     # necessary parameters for report generation.
@@ -11,6 +12,7 @@ class IrActionsAccountReportDownload(models.AbstractModel):
     # If you plan on modifying this model, think of reading odoo/enterprise#13820 and/or contact
     # the metastorm team.
     _name = 'ir_actions_account_report_download'
+
     _description = 'Technical model for accounting report downloads'
 
     def _get_readable_fields(self):

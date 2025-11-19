@@ -4,15 +4,14 @@
     'name': "Fedex Shipping (Legacy)",
     'description': "This is the legacy integration with FedEx that is no longer supported. \
         Please install the new \"Fedex Shipping\" module and uninstall this one as soon as possible. This integration will stop working in 2024.",
-    'category': 'Inventory/Delivery',
+    'category': 'Shipping Connectors',
     'sequence': 295,
     'version': '1.0',
-    'application': True,
     'depends': ['stock_delivery', 'mail'],
     'data': [
         'data/delivery_fedex.xml',
         'views/delivery_fedex.xml',
-        'views/res_config_settings_views.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

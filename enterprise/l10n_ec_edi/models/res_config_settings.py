@@ -5,7 +5,6 @@ from odoo import fields, models
 
 
 class ResConfigSettings(models.TransientModel):
-
     _inherit = 'res.config.settings'
 
     l10n_ec_legal_name = fields.Char(
@@ -53,13 +52,11 @@ class ResConfigSettings(models.TransientModel):
         comodel_name='account.account',
         related='company_id.l10n_ec_tax_base_sale_account_id',
         readonly=False,
-        domain=[('deprecated', '=', False)],
         string="Sales Tax Base Account",
     )
     l10n_ec_tax_base_purchase_account_id = fields.Many2one(
         comodel_name='account.account',
         related='company_id.l10n_ec_tax_base_purchase_account_id',
         readonly=False,
-        domain=[('deprecated', '=', False)],
         string="Purchase Tax Base Account",
     )

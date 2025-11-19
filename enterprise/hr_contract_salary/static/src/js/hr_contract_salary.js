@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { Component, useState } from "@odoo/owl";
 import { KeepLast } from "@web/core/utils/concurrency";
 import publicWidget from "@web/legacy/js/public/public_widget";
@@ -64,7 +62,7 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
         "change div.invalid_radio": "checkFormValidity",
         "change input.document": "onchangeDocument",
         "input input[type='range']": "onchangeSlider",
-        "change select[name='country_id']": "onchangeCountry",
+        "change select[name='private_country_id']": "onchangeCountry",
         "keydown input[type='number']": "onkeydownInput",
     },
 
@@ -106,15 +104,15 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
             Promise.all(promises).then(() => {
                 for (const [, selectMenuInst] of Object.entries(this.selectMenus)) {
                     if (!whitelisted_fields.includes(selectMenuInst.component.props.el.name)) {
-                        selectMenuInst?.update({
-                            disabled: true,
-                        });
+                        selectMenuInst.component.state.disabled = true;
                     }
                 }
             });
         }
-        this.stateElements = $("select[name='state_id']").find('option');
-        this.onchangeCountry();
+        this.stateElements = document.querySelector("select[name='private_state_id']").querySelectorAll("option");
+        Promise.all(promises).then(() => {
+            this.onchangeCountry();
+        });
 
         // When user use back button, unfold previously unfolded items.
         $('#hr_cs_configurator .hr_cs_control input.folded:checked').closest('div').find('.folded_content').removeClass('d-none')
@@ -199,6 +197,7 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
             appliesOn: $(input).attr('applies-on'),
         }));
         let documentSrcs = {
+            'version_personal': {},
             'employee': {},
             'address': {},
             'bank_account': {}
@@ -213,7 +212,8 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
 
     getBenefits() {
         const benefits = {
-            'contract': {},
+            'version_personal': {},
+            'version': {},
             'employee': {},
             'address': {},
             'bank_account': {},
@@ -290,15 +290,13 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
     },
 
     async onchangeCountry(event) {
-        const stateElement = document.querySelector("select[name='state_id']");
+        const stateElement = document.querySelector("select[name='private_state_id']");
         if (!stateElement) {
             return;
         }
-        const countryID = parseInt(
-            document.querySelector("select[name='country_id'][applies-on='address']")?.value
-        );
+        const countryID = document.querySelector("select[name='private_country_id'][applies-on='version_personal']")?.value
         let enableState = true;
-        const stateSelectMenu = this.selectMenus["state_id"];
+        const stateSelectMenu = this.selectMenus["private_state_id"];
         stateElement.querySelectorAll("option").forEach((option) => option.remove());
         this.stateElements.forEach((option) => stateElement.appendChild(option));
         stateElement.querySelectorAll("option").forEach((option) => {
@@ -310,11 +308,9 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
             }
         });
         const choicesEls = [...stateElement.querySelectorAll("option")];
-        stateSelectMenu?.update({
-            value: "",
-            choices: choicesEls,
-            disabled: enableState,
-        });
+        stateSelectMenu.component.state.value = "";
+        stateSelectMenu.component.state.choices = choicesEls;
+        stateSelectMenu.component.state.disabled = enableState;
     },
 
     onkeydownInput(event) {
@@ -496,7 +492,7 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
             const result = await rpc('/salary_package/onchange_benefit', {
                 'benefit_field': benefitField,
                 'new_value': newValue,
-                'contract_id': parseInt($("input[name='contract']").val()),
+                'version_id': parseInt($("input[name='version']").val()),
                 'benefits': this.getBenefits({includeFiles: false}),
             });
             if (type !== 'select') {
@@ -539,7 +535,7 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
 
         return this.keepLast.add(
             rpc('/salary_package/update_salary', {
-                'contract_id': parseInt($("input[name='contract']").val()),
+                'version_id': parseInt($("input[name='version']").val()),
                 'offer_id': parseInt($("input[name='offer_id']").val()),
                 'benefits': self.getBenefits({includeFiles: false}),
                 'simulation_working_schedule': $("select[name='simulation_working_schedule']").val(),
@@ -690,13 +686,14 @@ publicWidget.registry.SalaryPackageWidget = publicWidget.Widget.extend({
         let benefits = this.getBenefits();
         benefits = {
             'employee': Object.assign(benefits.employee, personalDocuments.employee),
-            'contract': Object.assign(benefits.contract, personalDocuments.contract),
+            'version': Object.assign(benefits.version, personalDocuments.version),
+            'version_personal': Object.assign(benefits.version_personal, personalDocuments.version_personal),
             'address': Object.assign(benefits.address, personalDocuments.address),
             'bank_account': Object.assign(benefits.bank_account, personalDocuments.bank_account),
         }
 
         return {
-            'contract_id': parseInt($("input[name='contract']").val()),  /* YTI TO REMOVE*/
+            'version_id': parseInt($("input[name='version']").val()),  /* YTI TO REMOVE*/
             'token': $("input[name='token']").val(),
             'benefits': benefits,
             'offer_id': parseInt($("input[name='offer_id']").val()) || false,

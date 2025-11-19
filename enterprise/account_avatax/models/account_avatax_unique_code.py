@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 import logging
-from odoo import models, fields, _
-from odoo.exceptions import UserError
-from odoo.osv import expression
+
+from odoo import fields, models
 
 logger = logging.getLogger(__name__)
 
@@ -23,37 +21,27 @@ class AccountAvataxUniqueCode(models.AbstractModel):
         help="Use this code to cross-reference in the Avalara portal."
     )
 
-    def _get_avatax_description(self):
-        """This is used to describe records in Avatax.
-
-        E.g. 'Customer 10' with this function returning 'Customer'.
-
-        :return (string): a name for this model
-        """
-        raise NotImplementedError()
-
     def _compute_avatax_unique_code(self):
         for record in self:
-            record.avatax_unique_code = '%s %s' % (record._get_avatax_description(), record.id)
+            record.avatax_unique_code = '%s %s' % (record._description, record.id)
 
     def _search_avatax_unique_code(self, operator, value):
-        unsupported_operators = ('in', 'not in', '<', '<=', '>', '>=')
-        if operator in unsupported_operators or not isinstance(value, str):
-            raise UserError(_("Search operation not supported"))
-
-        value = value.lower()
+        if operator in ('like', 'ilike'):
+            operator = 'in'
+            value = [value]
+        if operator != 'in':
+            return NotImplemented
 
         # allow searching with or without prefix
-        prefix = self._get_avatax_description().lower() + " "
-        if value.startswith(prefix):
-            value = value[len(prefix):]
-
-        # these require that the value is a digit, if it's not then match nothing
-        if operator in ('=', '!=') and not value.isdigit():
-            return expression.FALSE_DOMAIN
-
-        # to avoid matching every record on like
-        if not value:
-            return expression.FALSE_DOMAIN
-
-        return [('id', operator, value)]
+        prefix = self._description.lower() + " "
+        try:
+            ids = [
+                int(number_v)
+                for v in value
+                if v is not False  # ignore False value
+                if (number_v := (v if not v.lower().startswith(prefix) else v[len(prefix):]))
+                if number_v.isdigit()
+            ]
+        except AttributeError as e:
+            raise ValueError("Invalid avatax_unique_code search value") from e
+        return [('id', 'in', ids)]

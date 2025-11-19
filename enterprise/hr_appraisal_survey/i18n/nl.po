@@ -3,17 +3,16 @@
 # 	* hr_appraisal_survey
 # 
 # Translators:
-# Wil Odoo, 2024
 # Manon Rondou, 2025
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:52+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Erwin van der Ploeg <erwin@odooexperts.nl>, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -67,7 +66,7 @@ msgid ""
 "                        Thank you!\n"
 "                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                Give your feedback\n"
 "                            </a>\n"
 "                        </div>\n"
@@ -79,17 +78,17 @@ msgstr ""
 "                <t t-set=\"employee\" t-value=\"ctx.get('employee')\"/>\n"
 "                <t t-set=\"deadline\" t-value=\"ctx.get('deadline')\"/>\n"
 "                <div style=\"margin: 0px; padding: 0px;\">\n"
-"                   <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
+"                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
 "                        </p><p style=\"margin-left:5px\">Beste <t t-out=\"object.partner_id.name or 'participant'\">[deelnemer]</t></p>\n"
-"                       <span>\n"
-"                           <t t-out=\"logged_user\">[Huidige gebruiker]</t> nodigt je uit om deel te nemen aan een enquête en je feedback te geven over <t t-out=\"employee\">[medewerker]</t>.\n"
-"                            Vul de enquête in voor de <t t-out=\"deadline\">[opgegeven deadline]</t>.\n"
-"                       </span>\n"
-"                       <br/>\n"
-"                        Hartelijk dank!\n"
-"                       <br/><br/>\n"
+"                        <span>\n"
+"                            <t t-out=\"logged_user\">[Huidige gebruiker]</t> nodigt je uit om deel te nemen aan een enquête en feedback te geven over <t t-out=\"employee\">[werknemer]</t>.\n"
+"                            Beantwoord de enquête vóór <t t-out=\"deadline\">[gespecificeerde termijn]</t>.\n"
+"                        </span>\n"
+"                        <br/>\n"
+"                        Bedankt!\n"
+"                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                Geef je feedback\n"
 "                            </a>\n"
 "                        </div>\n"
@@ -249,7 +248,9 @@ msgstr "Beoordelaar"
 #. module: hr_appraisal_survey
 #. odoo-python
 #: code:addons/hr_appraisal_survey/models/hr_appraisal.py:0
+#: model:ir.actions.act_window,name:hr_appraisal_survey.appraisal_ask_feedback_action
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.appraisal_ask_feedback_view_form
+#: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_user_input_view_tree
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_view_form
 msgid "Ask Feedback"
 msgstr "Feedback vragen"
@@ -411,6 +412,13 @@ msgstr "Voldeed niet aan de normen en verwachtingen"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__display_name
 msgid "Display Name"
 msgstr "Schermnaam"
 
@@ -498,6 +506,13 @@ msgstr "Ik verwijs naar jou."
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__id
 msgid "ID"
 msgstr "ID"
 
@@ -658,6 +673,12 @@ msgstr "Partner gerelateerde gegevens van de gebruiker"
 #: model:survey.question,title:hr_appraisal_survey.appraisal_4_2
 msgid "Personal Performance Objectives"
 msgstr "Persoonlijke prestatiedoelen"
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
+msgid "Please set an Answer Deadline in the future"
+msgstr "Stel een antwoorddeadline in die in de toekomst ligt"
 
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_1_2
@@ -848,8 +869,12 @@ msgstr "Enquête gebruikersinvoer"
 
 #. module: hr_appraisal_survey
 #: model:mail.template,subject:hr_appraisal_survey.mail_template_appraisal_ask_feedback
-msgid "Take part in {{ object.employee_id.name or 'this' }} appraisal"
-msgstr "Neem deel aan {{ object.employee_id.name or 'deze' }} evaluatie"
+msgid ""
+"Take part in {{ ctx.get('employee_id') and ctx['employee_id'].name or 'this'"
+" }} appraisal"
+msgstr ""
+"Neem deel aan de evaluatie van {{ ctx.get('employee_id') and "
+"ctx['employee_id'].name or 'this' }}"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_4
@@ -1045,6 +1070,19 @@ msgid ""
 msgstr ""
 "Je kunt enquêtes maken die worden gebruikt voor evaluaties. Ontwerp eenvoudig je evaluatie,\n"
 "                verstuur uitnodigingen en analyseer antwoorden."
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected feedback linked to multiples appraisals."
+msgstr ""
+"Je kunt geen feedback selecteren die gekoppeld is aan meerdere evaluaties."
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected multiple feedback template."
+msgstr "Je kunt niet meerdere feedbacksjablonen selecteren."
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_button_form_view

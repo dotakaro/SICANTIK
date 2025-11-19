@@ -14,8 +14,8 @@ class TestPlanningLeaves(TestCommon):
         leave = self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_bert.id,
-            'request_date_from': '2020-1-1',
-            'request_date_to': '2020-1-1',
+            'request_date_from': '2020-01-01',
+            'request_date_to': '2020-01-01',
         })
 
         slot_1 = self.env['planning.slot'].create({
@@ -31,11 +31,12 @@ class TestPlanningLeaves(TestCommon):
 
         self.assertNotEqual(slot_1.leave_warning, False, "leave is not validated , but warning for requested time off")
 
-        leave.action_validate()
+        leave.action_approve()
 
         self.assertNotEqual(slot_1.leave_warning, False,
                             "employee is on leave, should have a warning")
         # The warning should display the whole concerned leave period
+        (slot_1 + slot_2).invalidate_recordset(fnames=["leave_warning"])
         self.assertEqual(slot_1.leave_warning,
                          "bert is on time off on 01/01/2020. \n")
 
@@ -46,16 +47,16 @@ class TestPlanningLeaves(TestCommon):
         self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_bert.id,
-            'request_date_from': '2020-1-6',
-            'request_date_to': '2020-1-7',
-        }).action_validate()
+            'request_date_from': '2020-01-06',
+            'request_date_to': '2020-01-07',
+        }).action_approve()
 
         self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_bert.id,
-            'request_date_from': '2020-1-8',
-            'request_date_to': '2020-1-10',
-        }).action_validate()
+            'request_date_from': '2020-01-08',
+            'request_date_to': '2020-01-10',
+        }).action_approve()
 
         slot_1 = self.env['planning.slot'].create({
             'resource_id': self.resource_bert.id,
@@ -170,16 +171,16 @@ class TestPlanningLeaves(TestCommon):
         self.assertNotEqual(slot_2.leave_warning, False,
                              "Leave is not validated, but there is a warning for requested time off")
 
-        (leave_1 + leave_2).action_validate()
+        (leave_1 + leave_2).action_approve()
 
         self.assertNotEqual(slot_1.leave_warning, False,
                              "Employee is on leave, there should be a warning")
         self.assertNotEqual(slot_2.leave_warning, False,
                              "Employee is on leave, there should be a warning")
         self.assertEqual(slot_1.leave_warning,
-                         "bert requested time off on 01/01/2020 from 9:00 AM to 1:00 PM. \n")
+                         "bert requested time off on 01/01/2020 from 09:00 to 13:00. \n")
         self.assertEqual(slot_2.leave_warning,
-                         "bert requested time off on 01/02/2020 from 2:00 PM to 6:00 PM. \n")
+                         "bert requested time off on 01/02/2020 from 14:00 to 18:00. \n")
         self.assertEqual(slot_3.leave_warning, False,
                          "Employee is not on leave, there should be no warning")
 
@@ -194,9 +195,9 @@ class TestPlanningLeaves(TestCommon):
         self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_bert.id,
-            'request_date_from': '2020-1-9',
-            'request_date_to': '2020-1-9',
-        }).action_validate()
+            'request_date_from': '2020-01-09',
+            'request_date_to': '2020-01-09',
+        }).action_approve()
 
         self.env['planning.slot'].sudo().create({
             'resource_id': self.resource_bert.id,
@@ -236,7 +237,7 @@ class TestPlanningLeaves(TestCommon):
             'request_date_from_period': 'am',
             'state': 'confirm',
         })
-        leave_am.sudo().action_validate()
+        leave_am.sudo().action_approve()
 
         start_dt_am = datetime.datetime(2025, 3, 5, 8, 0, 0, tzinfo=utc)
         end_dt_am = datetime.datetime(2025, 3, 5, 12, 0, 0, tzinfo=utc)
@@ -259,7 +260,7 @@ class TestPlanningLeaves(TestCommon):
             'request_date_from_period': 'pm',
             'state': 'confirm',
         })
-        leave_pm.sudo().action_validate()
+        leave_pm.sudo().action_approve()
 
         start_dt_pm = datetime.datetime(2025, 3, 6, 12, 0, 0, tzinfo=utc)
         end_dt_pm = datetime.datetime(2025, 3, 6, 16, 0, 0, 0, tzinfo=utc)
@@ -288,15 +289,15 @@ class TestPlanningLeaves(TestCommon):
         self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_bert.id,
-            'request_date_from': '2020-1-6',
-            'request_date_to': '2020-1-7',
+            'request_date_from': '2020-01-06',
+            'request_date_to': '2020-01-07',
         }).action_refuse()
         self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_bert.id,
-            'request_date_from': '2020-1-6',
-            'request_date_to': '2020-1-7',
-        }).action_validate()
+            'request_date_from': '2020-01-06',
+            'request_date_to': '2020-01-07',
+        }).action_approve()
 
         slot_1 = self.env['planning.slot'].create({
             'resource_id': self.resource_bert.id,
@@ -343,11 +344,138 @@ class TestPlanningLeaves(TestCommon):
                 'state': 'confirm',
             },
         ])
-        leave_am.sudo().action_validate()
-        leave_pm.sudo().action_validate()
+        leave_am.sudo().action_approve()
+        leave_pm.sudo().action_approve()
         start_dt = datetime.datetime(2025, 4, 30, 0, 0, 0, tzinfo=utc)
         end_dt = datetime.datetime(2025, 4, 30, 23, 59, 59, 999999, tzinfo=utc)
         intervals = flexible_calendar._leave_intervals_batch(start_dt, end_dt, [self.employee_bert.resource_id])
         interval = next(iter(intervals[self.employee_bert.resource_id.id]))
         self.assertEqual(interval[0], datetime.datetime(2025, 4, 30, 8, 0, 0, tzinfo=utc), "The start of the interval should be 08:00:00")
         self.assertEqual(interval[1], datetime.datetime(2025, 4, 30, 16, 0, 0, tzinfo=utc), "The end of the interval should be 16:00:00")
+
+    def test_batch_creation_from_calendar_with_time_off(self):
+        """
+        This test ensure that when planning slots are created from the "create multi" of the calendar view, the public
+        holidays and time off are correctly computed.
+        If some slots are supposed to be planned on public holidays/weekend, those slots are ignored.
+        If some slots are supposed to be planned on a time off of a resource, those slots are ignored for the
+        resource on time off, the other resource are correctly assigned to a new slot.
+        """
+        template = self.env['planning.slot.template'].create({
+            'start_time': 9,
+            'end_time': 13,
+            'duration_days': 1,
+        })
+        ethan, chris = self.env['hr.employee'].create([{
+            'create_date': datetime.datetime(2020, 4, 20, 8, 0),
+            'name': 'ethan',
+            'tz': 'UTC',
+            'employee_type': 'freelance',
+        }, {
+            'create_date': datetime.datetime(2020, 4, 20, 8, 0),
+            'name': 'Chris',
+            'tz': 'UTC',
+            'employee_type': 'freelance',
+        }])
+
+        # Public time off on Friday
+        self.env['resource.calendar.leaves'].create({
+            'name': 'Public holiday',
+            'calendar_id': ethan.resource_id.calendar_id.id,
+            'date_from': datetime.datetime(2025, 4, 4, 8, 0),
+            'date_to': datetime.datetime(2025, 4, 4, 17, 0),
+        })
+
+        # Ethan is off on Thursday, Chris is off on Wednesday
+        self.env['hr.leave'].sudo().create([
+            {
+                'holiday_status_id': self.leave_type.id,
+                'employee_id': ethan.id,
+                'request_date_from': '2025-4-3',
+                'request_date_to': '2025-4-3',
+            }, {
+                'holiday_status_id': self.leave_type.id,
+                'employee_id': chris.id,
+                'request_date_from': '2025-4-2',
+                'request_date_to': '2025-4-2',
+            }
+        ])._action_validate()
+
+        # Only 2 new slots are expected :
+        # - The slot on the 2nd April is a time off for chris
+        # - The slot on the 3rd April is a time off for ethan
+        # - The slot on the 4th April is a public holiday
+        # - The 2 slots on the 5th April are set on a weekend
+        slot_ethan, slot_chris = self.env['planning.slot'].create_batch_from_calendar(
+            [{
+                'start_datetime': f'2025-04-{day} 09:00:00', 'end_datetime': f'2025-04-{day} 13:00:00',
+                'resource_id': employee.resource_id.id, 'template_id': template.id
+            } for day in ('02', '03', '04', '05') for employee in (chris, ethan)]
+        )
+
+        self.assertEqual(slot_ethan.resource_id, ethan.resource_id)
+        self.assertEqual(slot_ethan.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-02 09:00:00')
+        self.assertEqual(slot_ethan.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-02 13:00:00')
+        self.assertEqual(slot_chris.resource_id, chris.resource_id)
+        self.assertEqual(slot_chris.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-03 09:00:00')
+        self.assertEqual(slot_chris.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-03 13:00:00')
+
+    def test_batch_creation_from_calendar_with_duration_days_template_and_time_off(self):
+        """
+        This test ensure that when planning slots are created from the "create multi" of the calendar view, the public
+        holidays and time off are correctly computed.
+        If some slots are supposed to be planned on public holidays/weekend, those slots are ignored.
+        If some slots are supposed to be planned on a time off of a resource, those slots are ignored for the
+        resource on time off, the other resource are correctly assigned to a new slot.
+        """
+
+        template = self.env['planning.slot.template'].create({
+            'start_time': 8,
+            'end_time': 12,
+            'duration_days': 3,
+        })
+        ethan, chris = self.env['hr.employee'].create([{
+            'create_date': datetime.datetime(2020, 4, 20, 8, 0),
+            'name': 'ethan',
+            'tz': 'UTC',
+            'employee_type': 'freelance',
+        }, {
+            'create_date': datetime.datetime(2020, 4, 20, 8, 0),
+            'name': 'Chris',
+            'tz': 'UTC',
+            'employee_type': 'freelance',
+        }])
+
+        # Wednesday is a public time off
+        self.env['resource.calendar.leaves'].create({
+            'name': 'Public holiday',
+            'calendar_id': ethan.resource_id.calendar_id.id,
+            'date_from': datetime.datetime(2025, 4, 2, 8, 0),
+            'date_to': datetime.datetime(2025, 4, 2, 17, 0),
+        })
+
+        # Ethan is off on Thursday
+        self.env['hr.leave'].sudo().create([
+            {
+                'holiday_status_id': self.leave_type.id,
+                'employee_id': ethan.id,
+                'request_date_from': '2025-4-3',
+                'request_date_to': '2025-4-3',
+            }
+        ])._action_validate()
+
+        # expected end date for Chris : 03 + 1 (public time off)
+        # expected end date for Ethan : 03 + 4 (public time off + personal time off + weekend)
+        slot_ethan, slot_chris = self.env['planning.slot'].create_batch_from_calendar(
+            [{
+                'start_datetime': '2025-04-01 08:00:00', 'end_datetime': '2025-04-03 12:00:00',
+                'resource_id': employee.resource_id.id, 'template_id': template.id
+            } for employee in (ethan, chris)]
+        )
+
+        self.assertEqual(slot_ethan.resource_id, ethan.resource_id)
+        self.assertEqual(slot_ethan.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-01 08:00:00')
+        self.assertEqual(slot_ethan.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-07 12:00:00')
+        self.assertEqual(slot_chris.resource_id, chris.resource_id)
+        self.assertEqual(slot_chris.start_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-01 08:00:00')
+        self.assertEqual(slot_chris.end_datetime.strftime('%Y-%m-%d %H:%M:%S'), '2025-04-04 12:00:00')

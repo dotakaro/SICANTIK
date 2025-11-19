@@ -6,7 +6,7 @@ import ast
 from odoo import api, fields, models, _
 
 
-class HelpdeskStageDelete(models.TransientModel):
+class HelpdeskStageDeleteWizard(models.TransientModel):
     _name = 'helpdesk.stage.delete.wizard'
     _description = 'Helpdesk Stage Delete Wizard'
 

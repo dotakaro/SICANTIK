@@ -13,7 +13,7 @@ LAST_MILE_H = 'Last mile'
 SERVICE_POINT_H = 'Service point'
 
 
-class ProviderSendcloud(models.Model):
+class DeliveryCarrier(models.Model):
     _inherit = 'delivery.carrier'
 
     sendcloud_can_customize_use_locations = fields.Boolean(default=False, compute='_compute_sendcloud_can_customize_use_locations')

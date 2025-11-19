@@ -1,18 +1,18 @@
 import { _t } from "@web/core/l10n/translation";
 
-import { patch } from "@web/core/utils/patch";
+import { AccountReport } from "@account_reports/components/account_report/account_report";
 import { AccountReportFilters } from "@account_reports/components/account_report/filters/filters";
 
-patch(AccountReportFilters.prototype, {
-
+export class InstrastReportFilters extends AccountReportFilters {
     get selectedIntrastatOptions() {
-        const intrastatSelectedType = this.controller.options.intrastat_type
-            .filter((intrastatType) => intrastatType.selected)
-            .map((intrastatType) => intrastatType.name);
-
-        const selectedIntrastatOptions = intrastatSelectedType.length
-            ? intrastatSelectedType
-            : [_t("Arrival"), _t("Dispatch")];
+        let selectedIntrastatOptions = [];
+        // display selected options if any is selected and not all are selected
+        const selected = this.controller.options['intrastat_type']
+            .filter((optType) => optType.selected)
+            .map((optType) => optType.name);
+        if (selected.length && selected.length != this.controller.options['intrastat_type'].length) {
+            selectedIntrastatOptions.push(selected.join(", "));
+        }
 
         selectedIntrastatOptions.push(
             this.controller.options.intrastat_extended ? _t("Extended mode") : _t("Standard mode"),
@@ -23,5 +23,7 @@ patch(AccountReportFilters.prototype, {
                 : _t("All partners"),
         );
         return selectedIntrastatOptions.join(", ");
-    },
-});
+    }
+};
+
+AccountReport.registerCustomComponent(InstrastReportFilters);

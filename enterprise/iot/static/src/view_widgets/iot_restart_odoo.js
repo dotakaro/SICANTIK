@@ -1,21 +1,19 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
-import { IoTConnectionErrorDialog } from "@iot/iot_connection_error_dialog";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
 import { Component } from "@odoo/owl";
+import { formatEndpoint } from "@iot_base/network_utils/http";
 
 let restarting = false;
 
 export class IoTRestartOdoo extends Component {
-    static template = `iot.IoTRestartOdooOrReboot`;
+    static template = `iot.HeaderButton`;
     static props = {
         ...standardWidgetProps,
         btn_name: { type: String },
-        action: { type: String },
+        btn_class: { type: String },
     };
 
     setup() {
@@ -25,8 +23,12 @@ export class IoTRestartOdoo extends Component {
         this.notification = useService("notification");
     }
 
-    get ip_url() {
-        return this.props.record.data.ip_url;
+    get iotIp() {
+        return this.props.record.data.ip;
+    }
+
+    get name() {
+        return this.props.record.data.name;
     }
 
     async onClick() {
@@ -51,7 +53,7 @@ export class IoTRestartOdoo extends Component {
     }
 
     async callRestartMethodOnServer() {
-        /// Call restart method from "hw_posbox_homepage" controller
+        /// Call restart method from "iot_drivers" controller
         try {
             this.showMsgAndClearInterval(
                 null,
@@ -59,10 +61,12 @@ export class IoTRestartOdoo extends Component {
                 _t("Restarting"),
                 "warning"
             );
-            const response = await this.http.get(`${this.ip_url}/hw_posbox_homepage/restart_odoo_service`);
+            const response = await this.http.get(
+                formatEndpoint(this.iotIp, "/iot_drivers/restart_odoo_service")
+            );
             return response.status;
         } catch (error) {
-            this.doWarnFail(this.ip_url);
+            this.doWarnFail();
             return `${error.name} ${error.message}`;
         }
     }
@@ -74,7 +78,10 @@ export class IoTRestartOdoo extends Component {
         const responseInterval = setInterval(async () => {
             let server_response;
             try {
-                server_response = await this.http.get(this.ip_url + "/hw_proxy/hello", "text");
+                server_response = await this.http.get(
+                    formatEndpoint(this.iotIp, "/hw_proxy/hello"),
+                    "text"
+                );
                 if (server_response === "ping" && restarting) {
                     this.showMsgAndClearInterval(
                         responseInterval,
@@ -105,7 +112,7 @@ export class IoTRestartOdoo extends Component {
                     _t("Restart Failed"),
                     "danger"
                 );
-                this.doWarnFail(this.ip_url);
+                this.doWarnFail();
             }
         }, 600000);
     }
@@ -138,8 +145,8 @@ export class IoTRestartOdoo extends Component {
         }
     }
 
-    doWarnFail(url) {
-        this.dialog.add(IoTConnectionErrorDialog, { href: url });
+    doWarnFail() {
+        this.notification.add(_t("Failed to restart Odoo on %s", this.name), { type: "danger" });
     }
 }
 
@@ -148,8 +155,8 @@ export const ioTRestartOdoo = {
     extractProps: ({ attrs }) => {
         return {
             btn_name: attrs.btn_name,
-            action: attrs.action,
+            btn_class: attrs.btn_class,
         };
     },
 };
-registry.category("view_widgets").add("iot_restart_odoo_or_reboot", ioTRestartOdoo);
+registry.category("view_widgets").add("iot_restart_odoo", ioTRestartOdoo);

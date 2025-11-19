@@ -6,12 +6,13 @@ from datetime import datetime
 import logging
 
 from odoo import fields, models, api, _
-from odoo.exceptions import ValidationError, UserError
+from odoo.exceptions import ValidationError
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 
 LOG_FIELDS = ['log_date', 'action', 'partner_id', 'request_state', 'latitude', 'longitude', 'ip',]
+
 
 class SignLog(models.Model):
     _name = 'sign.log'
@@ -20,7 +21,7 @@ class SignLog(models.Model):
 
     # Accessed on ?
     log_date = fields.Datetime(default=fields.Datetime.now, required=True)
-    sign_request_id = fields.Many2one('sign.request', required=True, ondelete="cascade")
+    sign_request_id = fields.Many2one('sign.request', required=True, index=True, ondelete="cascade")
     sign_request_item_id = fields.Many2one('sign.request.item')
     # Accessed as ?
     user_id = fields.Many2one('res.users', groups="sign.group_sign_manager")
@@ -106,9 +107,9 @@ class SignLog(models.Model):
         prev_activity = self.sudo().search(domain, limit=1, order='id desc')
         # Multiple signers lead to multiple creation actions but for them, the hash of the PDF must be calculated.
         previous_hash = ""
-        if not prev_activity:
-            sign_request = self.env['sign.request'].browse(vals['sign_request_id'])
-            body = sign_request.template_id.with_context(bin_size=False).attachment_id.datas
+        sign_request = not prev_activity and self.env['sign.request'].browse(vals['sign_request_id'])
+        if sign_request and sign_request.template_id.document_ids:
+            body = sign_request.template_id.document_ids[0].with_context(bin_size=False).attachment_id.datas
         else:
             previous_hash = prev_activity.log_hash
             body = self._compute_string_to_hash(vals)

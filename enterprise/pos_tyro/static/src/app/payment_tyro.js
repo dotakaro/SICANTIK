@@ -1,8 +1,8 @@
 /* global TYRO */
 
 import { loadJS } from "@web/core/assets";
-import { PaymentInterface } from "@point_of_sale/app/payment/payment_interface";
-import { register_payment_method } from "@point_of_sale/app/store/pos_store";
+import { PaymentInterface } from "@point_of_sale/app/utils/payment/payment_interface";
+import { register_payment_method } from "@point_of_sale/app/services/pos_store";
 import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { TYRO_LIB_URLS } from "@pos_tyro/urls";
 import { FailureDialog } from "@pos_tyro/app/components/failure_dialog";
@@ -17,7 +17,7 @@ export class PaymentTyro extends PaymentInterface {
         this.loadTyroClient();
     }
 
-    get fast_payments() {
+    get fastPayments() {
         return false;
     }
 
@@ -37,36 +37,33 @@ export class PaymentTyro extends PaymentInterface {
     }
 
     get paymentLine() {
-        return this.pos.get_order()?.get_selected_paymentline();
+        return this.pos.getOrder()?.getSelectedPaymentline();
     }
 
     addTip(tip) {
         const tipAmount = parseInt(tip, 10) / 100;
-        if (!this.pos.config.tip_product_id) {
-            this.pos.add_tyro_surcharge(
-                tipAmount,
-                this.payment_method_id.tyro_surcharge_product_id
-            );
+        if (!this.pos.config.tip_product_id || !this.pos.config.iface_tipproduct) {
+            this.pos.addTyroSurcharge(tipAmount, this.payment_method_id.tyro_surcharge_product_id);
             this._showError(
                 "A tip was added on the Tyro terminal, but tipping is not enabled for this Point of Sale. It will instead be recorded as a surcharge.",
                 "Tyro Warning"
             );
         } else {
             const tipProduct = this.pos.config.tip_product_id;
-            const orderLines = this.pos.get_order().lines;
+            const orderLines = this.pos.getOrder().lines;
             const existingTip = orderLines.find((line) => line.product_id.id === tipProduct.id);
-            this.pos.set_tip(tipAmount + (existingTip?.price_unit ?? 0));
+            this.pos.setTip(tipAmount + (existingTip?.price_unit ?? 0));
         }
-        this.paymentLine.set_amount(this.paymentLine.amount + tipAmount);
+        this.paymentLine.setAmount(this.paymentLine.amount + tipAmount);
     }
 
     addSurcharge(surcharge) {
         const surchargeAmount = parseFloat(surcharge);
-        this.pos.add_tyro_surcharge(
+        this.pos.addTyroSurcharge(
             surchargeAmount,
             this.payment_method_id.tyro_surcharge_product_id
         );
-        this.paymentLine.set_amount(this.paymentLine.amount + surchargeAmount);
+        this.paymentLine.setAmount(this.paymentLine.amount + surchargeAmount);
     }
 
     onTransactionComplete(response, resultCallback) {
@@ -75,7 +72,7 @@ export class PaymentTyro extends PaymentInterface {
         this.currentQuestion = null;
 
         if (response.customerReceipt) {
-            line.set_receipt_info(response.customerReceipt);
+            line.setReceiptInfo(response.customerReceipt);
         }
 
         if (response.result === "APPROVED") {
@@ -147,10 +144,10 @@ export class PaymentTyro extends PaymentInterface {
     }
 
     validateRefundAmount() {
-        const order = this.pos.get_order();
+        const order = this.pos.getOrder();
         const totalAmount = order.getTotalDue();
-        const amountDue = order.get_due();
-        const line = order.get_selected_paymentline();
+        const amountDue = order.getDue();
+        const line = order.getSelectedPaymentline();
         if (totalAmount < 0 && amountDue > line.amount) {
             this._showError("You cannot refund more than the original amount.");
             return false;
@@ -162,9 +159,9 @@ export class PaymentTyro extends PaymentInterface {
         const line = this.paymentLine;
         const resolve = (success) => {
             if (success) {
-                line.set_payment_status("done");
+                line.setPaymentStatus("done");
             } else {
-                line.set_payment_status("retry");
+                line.setPaymentStatus("retry");
             }
         };
         const requestCallbacks = {
@@ -177,19 +174,19 @@ export class PaymentTyro extends PaymentInterface {
                 this.onTransactionComplete(response, resolve),
         };
         if (line.payment_status === "waitingCancel") {
-            line.set_payment_status("waitingCard");
+            line.setPaymentStatus("waitingCard");
         }
         this.tyroClient.continueLastTransaction(requestCallbacks);
     }
 
-    async send_payment_request(uuid) {
+    async sendPaymentRequest(uuid) {
         /**
          * Override
          */
-        await super.send_payment_request(...arguments);
+        await super.sendPaymentRequest(...arguments);
         const line = this.paymentLine;
         try {
-            line.set_payment_status("waitingCard");
+            line.setPaymentStatus("waitingCard");
             line.tyro_status = "Initiating...";
 
             return new Promise((resolve) => {
@@ -229,11 +226,11 @@ export class PaymentTyro extends PaymentInterface {
         }
     }
 
-    async send_payment_cancel(order, uuid) {
+    async sendPaymentCancel(order, uuid) {
         /**
          * Override
          */
-        await super.send_payment_cancel(...arguments);
+        await super.sendPaymentCancel(...arguments);
 
         try {
             this.tyroClient.cancelCurrentTransaction();

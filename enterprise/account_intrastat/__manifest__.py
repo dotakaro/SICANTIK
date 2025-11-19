@@ -20,7 +20,8 @@ Intrastat Reports
         'views/res_country_view.xml',
         'views/res_config_settings_view.xml',
         'views/account_invoice_view.xml',
-        'data/intrastat_report.xml',
+        'data/intrastat_goods_report.xml',
+        'data/intrastat_services_report.xml',
         'data/intrastat_menus.xml',
         'views/report_invoice.xml',
         'views/account_move_view.xml',
@@ -29,6 +30,7 @@ Intrastat Reports
         'demo/product_demo.xml',
     ],
     'installable': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

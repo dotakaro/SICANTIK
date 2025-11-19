@@ -14,7 +14,7 @@ from markupsafe import Markup
 from unittest.mock import patch
 
 
-@tagged('mail_enterprise_mobile')
+@tagged('mail_push')
 class TestMailMobile(SMSCommon):
 
     @classmethod
@@ -42,7 +42,7 @@ class TestMailMobile(SMSCommon):
         self.assertFalse(url.startswith('https://redirect-url.email/'))
 
 
-@tagged('post_install', '-at_install')
+@tagged('post_install', '-at_install', 'mail_push')
 class TestPushNotification(SMSCommon):
 
     @classmethod
@@ -72,6 +72,12 @@ class TestPushNotification(SMSCommon):
             cls.user_email.partner_id.id,
             cls.user_inbox.partner_id.id,
         ])
+        cls.alias_gateway = cls.env['mail.alias'].create({
+            'alias_contact': 'everyone',
+            'alias_domain': cls.mail_alias_domain.id,
+            'alias_model_id': cls.env['ir.model']._get_id('mail.test.gateway.company'),
+            'alias_name': 'alias.gateway',
+        })
 
         cls.direct_message_channel = channel.with_user(cls.user_email).create({
             'channel_partner_ids': [
@@ -82,10 +88,10 @@ class TestPushNotification(SMSCommon):
             'name': "Direct Message",
         })
 
-        cls.group_channel = cls.env['discuss.channel'].channel_create(name='Channel', group_id=None)
-        cls.group_channel.add_members((cls.user_email + cls.user_inbox).partner_id.ids)
+        cls.group_channel = cls.env['discuss.channel']._create_channel(name='Channel', group_id=None)
+        cls.group_channel._add_members(users=cls.user_email | cls.user_inbox)
 
-    @patch('odoo.addons.mail_mobile.models.mail_thread.iap_tools.iap_jsonrpc')
+    @patch('odoo.addons.mail_mobile.models.mail_thread.iap_jsonrpc')
     def test_push_notifications(self, jsonrpc):
         # Test No Inbox Condition
         self.record_simple.with_user(self.user_inbox).message_notify(
@@ -154,7 +160,7 @@ class TestPushNotification(SMSCommon):
             'No Tracking Message found'
         )
 
-    @patch('odoo.addons.mail_mobile.models.mail_thread.iap_tools.iap_jsonrpc')
+    @patch('odoo.addons.mail_mobile.models.mail_thread.iap_jsonrpc')
     def test_push_notifications_android_channel(self, jsonrpc):
         # Test Direct Message
         self.direct_message_channel.with_user(self.user_email).message_post(
@@ -212,39 +218,43 @@ class TestPushNotification(SMSCommon):
             'The type of Android channel must be AtMention'
         )
 
-    @patch('odoo.addons.mail_mobile.models.mail_thread.iap_tools.iap_jsonrpc')
+    @patch('odoo.addons.mail_mobile.models.mail_thread.iap_jsonrpc')
     def test_push_notifications_mail_replay(self, jsonrpc):
-        test_record = self.env['mail.test.gateway'].with_context(self._test_context).create({
-            'name': 'Test',
-            'email_from': 'ignasse@example.com',
-        })
+        with self.mock_mail_gateway():
+            test_record = self.format_and_process(
+                MAIL_TEMPLATE, self.user_email.email_formatted,
+                f'{self.alias_gateway.display_name}, {self.user_inbox.email_formatted}',
+                subject='Test Record Creation',
+                target_model='mail.test.gateway.company',
+            )
+        self.assertEqual(len(test_record.message_ids), 1)
+        self.assertEqual(test_record.message_partner_ids, self.user_email.partner_id)
         test_record.message_subscribe(partner_ids=[self.user_inbox.partner_id.id])
 
-        fake_email = self.env['mail.message'].create({
-            'model': 'mail.test.gateway',
-            'res_id': test_record.id,
-            'subject': 'Public Discussion',
-            'message_type': 'email',
-            'subtype_id': self.env.ref('mail.mt_comment').id,
-            'author_id': self.user_email.partner_id.id,
-            'message_id': '<123456-openerp-%s-mail.test.gateway@%s>' % (test_record.id, socket.gethostname()),
-        })
+        for include_as_external, has_notif in ((False, True), (True, False)):
+            with self.mock_mail_gateway():
+                to = f'{self.alias_gateway.display_name}'
+                if include_as_external:
+                    to += f', {self.user_inbox.email_formatted}'
+                self.format_and_process(
+                    MAIL_TEMPLATE, self.user_email.email_formatted, to,
+                    subject='Repy By Email',
+                    extra='In-Reply-To:\r\n\t%s\n' % test_record.message_ids[-1].message_id,
+                )
+            if has_notif:
+                # user_inbox is notified by Odoo, hence receives a push notification
+                jsonrpc.assert_called_once()
+                self.assertEqual(jsonrpc.call_args[1]['params']['data']['author_name'], self.user_email.name)
+                self.assertIn(
+                    "Please call me as soon as possible this afternoon!\n\n--\nSylvie",
+                    jsonrpc.call_args[1]['params']['data']['body'],
+                    'The body must contain the text send by mail'
+                )
+            else:
+                jsonrpc.assert_not_called()
+            jsonrpc.reset_mock()
 
-        self.format_and_process(
-            MAIL_TEMPLATE, self.user_email.email_formatted,
-            self.user_inbox.email_formatted,
-            subject='Test Subject Reply By mail',
-            extra='In-Reply-To:\r\n\t%s\n' % fake_email.message_id,
-        )
-        jsonrpc.assert_called_once()
-        self.assertEqual(jsonrpc.call_args[1]['params']['data']['author_name'], self.user_email.name)
-        self.assertIn(
-            "Please call me as soon as possible this afternoon!\n\n--\nSylvie",
-            jsonrpc.call_args[1]['params']['data']['body'],
-            'The body must contain the text send by mail'
-        )
-
-    @patch('odoo.addons.mail_mobile.models.mail_thread.iap_tools.iap_jsonrpc')
+    @patch('odoo.addons.mail_mobile.models.mail_thread.iap_jsonrpc')
     @patch.object(odoo.addons.mail.models.mail_thread, 'push_to_end_point')
     def test_push_notifications_whatsapp(self, push_to_end_point, iap_jsonrpc):
         """

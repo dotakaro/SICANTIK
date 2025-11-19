@@ -33,12 +33,10 @@ class TestDeliveryFedexInternal(TransactionCase):
         test_product = self.env['product.product'].create({
             'name': 'Product A',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
         })
         test_customer = self.env['res.partner'].create({'name': 'Vlad the Impaler'})
         sol_vals = {'product_id': test_product.id,
                     'name': test_product.name,
-                    'product_uom': self.uom_unit.id,
                     'product_uom_qty': 1.0,
                     'currency_id': self.currency_usd_id.id,
                     'price_unit': 123}

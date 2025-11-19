@@ -31,16 +31,14 @@ class TestPleKardexReport(TestSaleCommon):
                     'name': p.name,
                     'product_id': p.id,
                     'product_uom_qty': 2,
-                    'product_uom': p.uom_id.id,
                     'price_unit': p.list_price,
-                    'tax_id': [Command.set(self.env.ref(f"account.{self.env.company.id}_sale_tax_igv_18").ids)],
+                    'tax_ids': [Command.set(self.env.ref(f"account.{self.env.company.id}_sale_tax_igv_18").ids)],
                 }) for p in (
                     self.company_data['product_order_no'],
                     self.company_data['product_service_delivery'],
                     self.company_data['product_service_order'],
                     self.company_data['product_delivery_no'],
                 )],
-            'pricelist_id': self.company_data['default_pricelist'].id,
             'picking_policy': 'direct',
         })
 
@@ -65,7 +63,7 @@ class TestPleKardexReport(TestSaleCommon):
                     'name': self.company_data['product_order_no'].name,
                     'product_id': self.company_data['product_order_no'].id,
                     'product_qty': 5.0,
-                    'product_uom': self.company_data['product_order_no'].uom_po_id.id,
+                    'product_uom_id': self.company_data['product_order_no'].uom_id.id,
                     'price_unit': 500.0,
                 })],
         })

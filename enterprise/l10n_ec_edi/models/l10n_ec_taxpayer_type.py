@@ -4,7 +4,7 @@
 from odoo import fields, models
 
 
-class L10nEcTaxpayerType(models.Model):
+class L10n_EcTaxpayerType(models.Model):
     _name = 'l10n_ec.taxpayer.type'
     _description = "Taxpayer Type"
     _order = 'sequence, id'

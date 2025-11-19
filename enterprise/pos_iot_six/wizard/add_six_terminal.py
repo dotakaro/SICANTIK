@@ -3,8 +3,8 @@
 from odoo import api, fields, models
 
 
-class AddSixTerminal(models.TransientModel):
-    _name = "pos_iot_six.add_six_terminal"
+class Pos_Iot_SixAdd_Six_Terminal(models.TransientModel):
+    _name = 'pos_iot_six.add_six_terminal'
     _description = "Connect a Six Payment Terminal"
 
     iot_box_id = fields.Many2one(
@@ -14,7 +14,7 @@ class AddSixTerminal(models.TransientModel):
         required=True,
         default=lambda self: self._get_existing_iot_box_id()
     )
-    iot_box_url = fields.Char(related="iot_box_id.ip_url")
+    iot_box_ip = fields.Char(related="iot_box_id.ip")
     six_terminal_id = fields.Char(related="iot_box_id.six_terminal_id", readonly=False)
     terminal_device_id = fields.Many2one("iot.device", string="Terminal Device", required=True, default=lambda self: self._get_existing_terminal_device_id())
 

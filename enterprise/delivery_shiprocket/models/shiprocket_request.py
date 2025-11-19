@@ -75,13 +75,13 @@ class ShipRocket:
             )
         if not self.carrier.shiprocket_access_token or (
             self.carrier.shiprocket_token_valid_upto and
-            self.carrier.shiprocket_token_valid_upto < fields.datetime.today()
+            self.carrier.shiprocket_token_valid_upto < fields.Datetime.today()
         ):
             response_json = self._authorize_generate_token()
             if 'token' in response_json:
                 self.carrier.write({
                     'shiprocket_access_token': response_json['token'],
-                    'shiprocket_token_valid_upto': fields.datetime.today() + timedelta(days=9)
+                    'shiprocket_token_valid_upto': fields.Datetime.today() + timedelta(days=9)
                 })
         return self.carrier.shiprocket_access_token
 
@@ -146,7 +146,7 @@ class ShipRocket:
             'height': dimensions.get('height')
         }
         if is_india:
-            data['cod'] = self.carrier.shiprocket_payment_method == 'cod' and '1' or '0'
+            data['cod'] = self.carrier.allow_cash_on_delivery and '1' or '0'
             rate_json = self._make_api_request('external/courier/serviceability/', data=data, token=self._get_token())
         else:
             data['cod'] = 0
@@ -235,7 +235,7 @@ class ShipRocket:
         Returns the GST tax amount from order lines.
         """
         gst_tax_amount = 0.0
-        tax_ids = stock_move.sale_line_id and stock_move.sale_line_id.sudo().tax_id or stock_move.product_id.sudo().taxes_id
+        tax_ids = stock_move.sale_line_id and stock_move.sale_line_id.sudo().tax_ids or stock_move.product_id.sudo().taxes_id
         for tax in tax_ids.flatten_taxes_hierarchy():
             tax_tag_ids = tax.invoice_repartition_line_ids.tag_ids
             if tax_tag_ids and any(tax.env.ref(f"l10n_in.tax_tag_{gst}gst", False) in tax_tag_ids for gst in ["c", "s", "i"]):
@@ -252,7 +252,7 @@ class ShipRocket:
         """
         Return the mobile/phone for shiprocket requests.
         """
-        matches = re.findall(r"\d+", partner.mobile or partner.phone or '')
+        matches = re.findall(r"\d+", partner.phone or '')
         return "".join(matches)
 
     def _get_shipping_lines(self, package, picking):
@@ -316,7 +316,7 @@ class ShipRocket:
         dimensions = package.dimension
         net_weight_in_kg = self.carrier._shiprocket_convert_weight(package.weight)
         line_vals = self._get_shipping_lines(package, picking).values()
-        payment_method = "Prepaid" if self.carrier.shiprocket_payment_method == "prepaid" else "COD"
+        payment_method = "COD" if self.carrier.allow_cash_on_delivery else "Prepaid"
         discount_order_lines = picking.sale_id.order_line.filtered(lambda ol: ol.product_id == ol.company_id.sale_discount_product_id)
         total_discount = abs(sum(discount_order_lines.mapped('price_unit')))
         return {
@@ -502,8 +502,8 @@ class ShipRocket:
             error_msg['Customer'].append(_("Country is required!"))
         if not recipient.email:
             error_msg['Customer'].append(_("Email is required!"))
-        if not recipient.phone and not recipient.mobile:
-            error_msg['Customer'].append(_("Phone or Mobile is required!"))
+        if not recipient.phone:
+            error_msg['Customer'].append(_("Phone is required!"))
         if not shipper.street:
             error_msg['Shipper'].append(_("Street is required!"))
         if not shipper.zip:
@@ -512,8 +512,8 @@ class ShipRocket:
             error_msg['Shipper'].append(_("Country is required!"))
         if not shipper.email:
             error_msg['Shipper'].append(_("Email is required!"))
-        if not shipper.phone and not shipper.mobile:
-            error_msg['Shipper'].append(_("Phone or Mobile is required!"))
+        if not shipper.phone:
+            error_msg['Shipper'].append(_("Phone is required!"))
         for product in products:
             if not product.weight:
                 error_msg.setdefault(product.name, [])

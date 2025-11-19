@@ -1,16 +1,16 @@
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from datetime import timedelta
+
 from odoo import fields
-
 from odoo.exceptions import AccessError
-
 from odoo.tests.common import new_test_user
 from odoo.addons.hr_timesheet.tests.test_timesheet import TestCommonTimesheet
-from datetime import timedelta
 
 
 class TestAccessRightsTimesheetGrid(TestCommonTimesheet):
-
     def setUp(self):
-        super(TestAccessRightsTimesheetGrid, self).setUp()
+        super().setUp()
 
         self.user_approver = new_test_user(self.env, 'user_approver', groups='hr_timesheet.group_hr_timesheet_approver')
 

@@ -4,10 +4,10 @@ from odoo import fields, models
 from odoo.tools import SQL
 
 
-class RentalSchedule(models.Model):
+class SaleRentalSchedule(models.Model):
     _inherit = 'sale.rental.schedule'
 
-    project_id = fields.Many2one('project.project', readonly=True)
+    project_id = fields.Many2one('project.project', readonly=True, domain=[('is_template', '=', False)])
 
     def _select(self) -> SQL:
         return SQL("""%s,

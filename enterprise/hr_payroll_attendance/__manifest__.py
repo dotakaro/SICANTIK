@@ -9,7 +9,7 @@
     'installable': True,
     'auto_install': True,
     'depends': [
-        'hr_work_entry_contract_attendance',
+        'hr_work_entry_attendance',
         'hr_payroll',
     ],
     'data': [
@@ -20,5 +20,6 @@
     'demo': [
         'data/hr_payroll_attendance_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

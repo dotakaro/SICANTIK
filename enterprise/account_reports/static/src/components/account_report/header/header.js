@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { useService } from "@web/core/utils/hooks"
@@ -44,6 +42,12 @@ export class AccountReportHeader extends Component {
            colspan += 1;
         }
         return colspan;
+    }
+
+    columnHeadersRowspan(header) {
+        return header?.forced_options?.no_subheader_division
+            ? this.controller.options.column_headers.length - 1
+            : 1;
     }
 
     //------------------------------------------------------------------------------------------------------------------

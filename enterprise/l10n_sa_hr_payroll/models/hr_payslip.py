@@ -3,7 +3,7 @@
 from odoo import api, models, fields
 
 
-class HRPayslip(models.Model):
+class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
     l10n_sa_wps_file_reference = fields.Char(string="WPS File Reference", copy=False)
@@ -15,13 +15,6 @@ class HRPayslip(models.Model):
                 'data/hr_salary_rule_saudi_data.xml',
                 'data/hr_salary_rule_expat_data.xml',
             ])]
-
-    @api.model
-    def _l10n_sa_departure_reason_codes(self):
-        return self.env['hr.departure.reason']._get_default_departure_reasons() | {
-            'clause_77': 9661,
-            'end_of_contract': 9662,
-        }
 
     def _l10n_sa_wps_generate_file_reference(self):
         # if all were previously printed together, dont increment sequence
@@ -73,7 +66,7 @@ class HRPayslip(models.Model):
                 employee_id.bank_account_id.acc_number or "",
                 employee_id.name or "",
                 (employee_id.bank_account_id.bank_id.l10n_sa_sarie_code or "") if employee_id.bank_account_id.bank_id != payslip.company_id.l10n_sa_bank_account_id.bank_id else "",
-                employee_id.contract_id.l10n_sa_wps_description or "",
+                employee_id.version_id.l10n_sa_wps_description or "",
                 '',  # [RET-CODE]: Required blank cell
                 self._l10n_sa_format_float(basic),
                 self._l10n_sa_format_float(housing),

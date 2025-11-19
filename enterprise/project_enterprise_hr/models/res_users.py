@@ -3,7 +3,8 @@
 
 from odoo import models
 
-class User(models.Model):
+
+class ResUsers(models.Model):
     _inherit = 'res.users'
 
     # -----------------------------------------

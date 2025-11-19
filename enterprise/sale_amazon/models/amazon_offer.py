@@ -4,6 +4,7 @@ import json
 import logging
 
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 from odoo.tools import split_every
 
 from odoo.addons.sale_amazon import utils as amazon_utils
@@ -16,18 +17,33 @@ class AmazonOffer(models.Model):
     _name = 'amazon.offer'
     _description = "Amazon Offer"
 
-    def _default_marketplace(self):
-        """ Return the single marketplace of this offer's account if it exists. """
-        account_id = self.env.context.get('default_account_id')
-        if account_id:
-            marketplaces = self.env['amazon.account'].browse([account_id]).active_marketplace_ids
-            return len(marketplaces) == 1 and marketplaces[0]
+    @api.model
+    def default_get(self, default_fields):
+        result = super().default_get(default_fields)
+
+        # Default account_id.
+        if not result.get('account_id'):
+            accounts = self.env['amazon.account'].search([
+                ('refresh_token', '!=', False),
+                *self.env['amazon.account']._check_company_domain(self.env.company),
+            ], limit=2)
+            if len(accounts) == 1:
+                result['account_id'] = accounts.id
+
+        # Default marketplace_id.
+        if (account_id := result.get('account_id')) and not result.get('marketplace_id'):
+            account = self.env['amazon.account'].browse(account_id)
+            if len(marketplaces := account.active_marketplace_ids) == 1:
+                result['marketplace_id'] = marketplaces.id
+
+        return result
 
     account_id = fields.Many2one(
         string="Account",
         help="The seller account used to manage this product.",
         comodel_name='amazon.account',
         required=True,
+        index=True,
         ondelete='cascade',
     )  # The default account provided in the context of the list view.
     company_id = fields.Many2one(related='account_id.company_id', readonly=True)
@@ -36,7 +52,6 @@ class AmazonOffer(models.Model):
         string="Marketplace",
         help="The marketplace of this offer.",
         comodel_name='amazon.marketplace',
-        default=_default_marketplace,
         required=True,
         domain="[('id', 'in', active_marketplace_ids)]",
     )
@@ -46,27 +61,59 @@ class AmazonOffer(models.Model):
     product_template_id = fields.Many2one(
         related="product_id.product_tmpl_id", store=True, readonly=True
     )
-    sku = fields.Char(string="SKU", help="The Stock Keeping Unit.", required=True)
+    sku = fields.Char(string="Amazon SKU", help="The Stock Keeping Unit.", required=True)
     amazon_sync_status = fields.Selection(
         string="Amazon Synchronization Status",
         help="The synchronization status of the product's stock level to Amazon:\n"
              "- Processing: The stock level has been sent and is being processed.\n"
              "- Done: The stock level has been processed.\n"
-             "- Error: The synchronization of the stock level failed.",
-        selection=[('processing', "Processing"), ('done', "Done"), ('error', "Error")],
+             "- Error: The synchronization of the stock level failed.\n"
+             "- Reset: The next stock synchronization will reset the FBM stock level to 0.",
+        selection=[
+            ('processing', "Processing"),
+            ('done', "Done"),
+            ('error', "Error"),
+            ('reset', "Reset FBM stock"),
+        ],
         readonly=True,
     )
     amazon_feed_ref = fields.Char(string="Amazon Feed Reference", readonly=True)
+    amazon_channel = fields.Selection(
+        string="Fulfillment Channel",
+        help="The channel will be updated with the incomming orders or during the next stock"
+        " synchronization.",
+        selection=[('fbm', "Fulfilled by Merchant"), ('fba', "Fulfilled by Amazon")],
+        readonly=True,
+    )
+    sync_stock = fields.Boolean(
+        string="Stock Synchronization", compute='_compute_sync_stock', store=True, readonly=False,
+    )
 
-    _sql_constraints = [(
-        'unique_sku', 'UNIQUE(account_id, sku)', "SKU must be unique for a given account."
-    )]
+    _unique_sku = models.Constraint(
+        'UNIQUE(account_id, sku)',
+        "SKU must be unique for a given account.",
+    )
+
+    @api.depends('amazon_channel', 'account_id.synchronize_inventory', 'product_id.is_storable')
+    def _compute_sync_stock(self):
+        for offer in self:
+            offer.sync_stock = (
+                offer.account_id.synchronize_inventory
+                and offer.product_id.is_storable
+                and (not offer.amazon_channel or offer.amazon_channel == 'fbm')
+            )
 
     @api.onchange('product_id')
     def _onchange_product_id(self):
         """ Set the SKU to the internal reference of the product if it exists. """
         for offer in self:
             offer.sku = offer.product_id.default_code
+
+    @api.constrains('sync_stock')
+    def _check_product_is_storable(self):
+        for offer in self.filtered('sync_stock'):
+            if not offer.product_id.is_storable:
+                raise ValidationError(self.env._("Non-storable product cannot be synced."))
 
     def action_view_online(self):
         self.ensure_one()
@@ -78,29 +125,26 @@ class AmazonOffer(models.Model):
         }
 
     def _get_feed_data(self):
-        """Load the necessary data for the inventory feed, and fetch the missing ones.
+        """Load the necessary data for the inventory feed, and fetch the missing ones when possible.
 
-        :return: A dictionary per offer in `self`.
-            Each dictionnary contains at least the `productType` and a flag `is_fbm`.
-            If any of these attributes is missing and fails to be fetch (rate limit), the data for
-            the offer are not returned.
-        :rtype: dict[amazon.offer, dict]
+        :return: A dictionary per offer in `self` containing at least the Amazon product type.
+        :rtype: dict[amazon.offer, dict['productType: str, ...]]
         """
         feed_data_by_offer = {}
         for offer in self:
             try:
                 feed_data = json.loads(offer.amazon_feed_ref)
-            except (json.JSONDecodeError, TypeError):  # field is either incorrect JSON, or False
+            except (json.JSONDecodeError, TypeError):  # Field is either incorrect JSON, or False
                 feed_data = None
             if isinstance(feed_data, dict):  # In case old `amazon_feed_ref` are still stored
                 feed_data_by_offer[offer] = feed_data
 
         feed_data_by_offer.update(
-            self.filtered(lambda o:
-                o not in feed_data_by_offer
-                or 'productType' not in feed_data_by_offer[o]
-                or 'is_fbm' not in feed_data_by_offer[o]
-            )._fetch_and_save_feed_data()  # fetch missing data
+            self.filtered(lambda o: not (
+                o in feed_data_by_offer
+                and 'productType' in feed_data_by_offer[o]
+                and o.amazon_channel
+            ))._fetch_and_save_feed_data()  # Fetch missing data
         )
 
         return feed_data_by_offer
@@ -110,16 +154,16 @@ class AmazonOffer(models.Model):
 
         Necessary data are:
             - productType: Amazon product type
-            - is_fbm: is fulfilled by merchant
+            - amazon_channel: fulfillment channel
 
         :return: A mapping of offer to feed data
         :rtype: dict['amazon.offer', dict]
         """
         feed_data_by_offer = {}
         to_fetch = self.sorted(lambda o:
-            o.amazon_sync_status != 'error'  # previously failed fetch first (rate limit)
+            o.amazon_sync_status in ('reset', 'error')  # Fetch priority offers first
         ).grouped(lambda o: (o.account_id, o.marketplace_id))
-        # searchListingsItems only supports up to 20 SKUs
+        # `searchListingsItems` only supports up to 20 SKUs
         to_fetch = (
             (group, batch)
             for group, offers in to_fetch.items()
@@ -142,21 +186,26 @@ class AmazonOffer(models.Model):
             except amazon_utils.AmazonRateLimitError:
                 _logger.warning("Could not fetch every offers infos due to rate limit from Amazon.")
                 # Mark failed offers, to be prioritized on next try
-                offers.amazon_sync_status = 'error'
+                offers.filtered(
+                    lambda o: o.amazon_sync_status != 'reset'
+                ).amazon_sync_status = 'error'
                 continue
 
             # Parse product data
             offer_by_sku = offers.grouped('sku')
-            feed_data_by_offer.update(
-                {offer: {'productType': False, 'is_fbm': False} for offer in offers}
-            )  # Default to FBA to not fetch the info everytime when the offer isn't found by Amazon
+            # Default to FBA to not fetch the info everytime when the offer isn't found by Amazon
+            offers.amazon_channel = 'fba'
+            feed_data_by_offer.update({offer: {'productType': False} for offer in offers})
             for item in response['items']:
-                feed_data_by_offer[offer_by_sku[item['sku']]] = {
-                    'productType':
-                        item['productTypes'] and item['productTypes'][0]['productType']
-                        or 'PRODUCT',
-                    'is_fbm': 'merchant_shipping_group' in item['attributes'],
-                }
+                offer = offer_by_sku[item['sku']]
+                feed_data_by_offer[offer]['productType'] = (
+                    item['productTypes'] and item['productTypes'][0]['productType']
+                    or 'PRODUCT'
+                )
+                is_fbm = 'merchant_shipping_group' in item['attributes']
+                offer.amazon_channel = 'fbm' if is_fbm else 'fba'
+                if is_fbm and offer.amazon_sync_status == 'reset':
+                    offer.amazon_sync_status = False  # Reset only applies to FBA offers
 
         # Save data to reduce api calls
         AmazonOffer._save_feed_data(feed_data_by_offer)
@@ -176,19 +225,14 @@ class AmazonOffer(models.Model):
     def _update_inventory_availability(self, account):
         """Update the stock quantity of Amazon products to Amazon.
 
-        Note: only synchronizes the stock of FBM offers.
-
-        :param record account: The Amazon account on behalf of which the feed should be
-            built and submitted.
-        :return: None
+        :param amazon.account account: The Amazon account to which the stock update should apply.
         """
-
         feed_data_by_offer = self._get_feed_data()
-        # Filter offers missing feed data and synchronize FBM offers only
-        self = self.filtered(lambda o: o in feed_data_by_offer and feed_data_by_offer[o]['is_fbm'])
+        # `_get_feed_data` can fail for some offers (rate limit)
+        offers_to_sync = self.filtered(lambda o: o in feed_data_by_offer)
 
         # Inventory feed can only apply to one marketplace
-        for marketplace_id, offers in self.grouped('marketplace_id').items():
+        for marketplace_id, offers in offers_to_sync.grouped('marketplace_id').items():
             offers._send_inventory_feed(
                 account,
                 {o: feed_data_by_offer[o] for o in offers},
@@ -206,6 +250,9 @@ class AmazonOffer(models.Model):
             i.e. at least the 'productType' of the offer.
         :param 'amazon.marketplace' marketplace_id: The marketplace to which the feed should apply.
         """
+        if not self:  # Don't send empty feed
+            return
+
         for i, feed_info in enumerate(feed_data_by_offer.values(), start=1):
             # Assign and save the message id to later match error message(s)
             feed_info['messageId'] = i
@@ -254,8 +301,10 @@ class AmazonOffer(models.Model):
                 'attributes': {
                     'fulfillment_availability': [{
                         'fulfillment_channel_code': 'DEFAULT',
-                        'quantity':
-                            (qty := int(offer._get_available_product_qty())) > 0 and qty or 0,
+                        'quantity': (
+                            0 if offer.amazon_sync_status == 'reset'
+                            else max(int(offer._get_available_product_qty()), 0)
+                        ),
                     }]
                 }
             }

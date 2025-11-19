@@ -6,6 +6,7 @@ from markupsafe import Markup
 from itertools import chain
 
 from dateutil.rrule import rrule, MONTHLY
+from datetime import timedelta
 
 from odoo import models, fields, release, _
 from odoo.exceptions import RedirectWarning, UserError
@@ -15,7 +16,7 @@ from odoo.tools import get_lang, SQL
 from odoo.tools.misc import street_split
 
 
-class GeneralLedgerCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -25,23 +26,28 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             return
 
         xaf_export_button = {
-            'name': _('XAF'),
+            'name': "XAF",
             'sequence': 30,
             'action': 'export_file',
-            'action_param': 'l10n_nl_get_xaf',
-            'file_export_type': _('XAF'),
+            'action_param': 'l10n_nl_reports_get_xaf',
+            'file_export_type': 'XAF',
         }
         options['buttons'].append(xaf_export_button)
 
-    def _l10n_nl_compute_period_number(self, date_str):
+    def _l10n_nl_reports_compute_period_number(self, date_str):
         date = fields.Date.from_string(date_str)
         return date.strftime('%y%m')[2:]
 
-    def _l10n_nl_get_opening_balance_query(self, options):
+    def _l10n_nl_reports_get_opening_balance_query(self, options):
         report = self.env['account.report'].browse(options['report_id'])
-        new_options = self._get_options_initial_balance(options)
+
+        # Create options for initial balance
+        opening_balance_options = options.copy()
+        new_date_to = fields.Date.from_string(opening_balance_options['date']['date_from']) - timedelta(days=1)
+        opening_balance_options['date'] = self.env['account.report']._get_dates_period(None, new_date_to, 'single')
+
         query = report._get_report_query(
-            new_options,
+            opening_balance_options,
             'from_beginning',
             domain=[('account_id.include_initial_balance', '=', True)],
         )
@@ -65,7 +71,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             search_condition=query.where_clause,
         )
 
-    def _l10n_nl_get_partner_values_query(self, options):
+    def _l10n_nl_reports_get_partner_values_query(self, options):
         report = self.env['account.report'].browse(options['report_id'])
         query = report._get_report_query(options, 'strict_range')
         return SQL(
@@ -117,7 +123,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             search_condition=query.where_clause,
         )
 
-    def _l10n_nl_get_config_values_query(self, options):
+    def _l10n_nl_reports_get_config_values_query(self, options):
         report = self.env['account.report'].browse(options['report_id'])
         query = report._get_report_query(options, 'strict_range')
         return SQL(
@@ -134,7 +140,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             search_condition=query.where_clause,
         )
 
-    def _l10n_nl_get_transaction_values_query(self, options):
+    def _l10n_nl_reports_get_transaction_values_query(self, options):
         report = self.env['account.report'].browse(options['report_id'])
         query = report._get_report_query(options, 'strict_range')
         account_alias = query.join(lhs_alias='account_move_line', lhs_column='account_id', rhs_table='account_account', rhs_column='id', link='account_id')
@@ -194,7 +200,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             search_condition=query.where_clause,
         )
 
-    def _l10n_nl_get_header_values(self, options):
+    def _l10n_nl_reports_get_header_values(self, options):
         def cust_sup_tp(customer, supplier):
             if supplier and customer:
                 return 'B'
@@ -222,14 +228,14 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             }
 
             if forbidden_country_ids and 'l10n_nl_skip_forbidden_countries' not in options:
-                skip_action = report.export_file(dict(options, l10n_nl_skip_forbidden_countries=True), 'l10n_nl_get_xaf')
+                skip_action = report.export_file(dict(options, l10n_nl_skip_forbidden_countries=True), 'l10n_nl_reports_get_xaf')
                 skip_action['data']['model'] = self._name
                 forbidden_country_names = ''.join([
                     '  •  ' + self.env['res.country'].browse(country_id).name + '\n'
                     for country_id in forbidden_country_ids
                 ])
                 raise RedirectWarning(
-                    _('Some partners are located in countries forbidden in dutch audit reports.\n'
+                    _('Some partners are located in countries forbidden in Dutch audit reports.\n'
                       'Those countries are:\n\n'
                       '%s\n'
                       'If you continue, please note that the fields <country> and <taxRegistrationCountry> '
@@ -264,7 +270,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             period_to = period.replace(day=calendar.monthrange(period.year, period.month)[1])
             period_to = fields.Date.to_string(period_to.date())
             periods.append(Period(
-                number=self._l10n_nl_compute_period_number(period_from),
+                number=self._l10n_nl_reports_compute_period_number(period_from),
                 name=period.strftime('%B') + ' ' + date_from[0:4],
                 date_from=period_from,
                 date_to=period_to
@@ -274,7 +280,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         lines_count = 0
         sum_debit = 0
         sum_credit = 0
-        opening_balance_query = self._l10n_nl_get_opening_balance_query(options)
+        opening_balance_query = self._l10n_nl_reports_get_opening_balance_query(options)
         self.env.cr.execute(opening_balance_query)
         for query_res in self.env.cr.dictfetchall():
             lines_count += query_res['lines_count']
@@ -289,7 +295,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 'type': 'C' if balance < 0 else 'D',
             })
 
-        config_values_query = self._l10n_nl_get_config_values_query(options)
+        config_values_query = self._l10n_nl_reports_get_config_values_query(options)
         self.env.cr.execute(config_values_query)
         moves_count, moves_debit, moves_credit, account_ids, tax_ids = self.env.cr.fetchone()
 
@@ -316,7 +322,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         }
 
         # Aggregate partners' values
-        partner_values_query = self._l10n_nl_get_partner_values_query(options)
+        partner_values_query = self._l10n_nl_reports_get_partner_values_query(options)
         self.env.cr.execute(partner_values_query)
         partner_values = self.env.cr.dictfetchall()
         for row in partner_values:
@@ -378,7 +384,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         return header_values
 
     def _get_xaf_stream(self, options):
-        header_values = self._l10n_nl_get_header_values(options)
+        header_values = self._l10n_nl_reports_get_header_values(options)
         header_content = self.env['ir.qweb']._render('l10n_nl_reports.xaf_audit_file', header_values)
         header, footer = header_content.split('</transactions>')
         return chain(
@@ -411,7 +417,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             batch_size = int(self.env['ir.config_parameter'].sudo().get_param('l10n_nl_reports.general_ledger_batch_size', 10**4))
             # System parameter to allow users to set docRef length (default 999 as per spec) for compatibility with other software
             docref_length = int(self.env['ir.config_parameter'].sudo().get_param('l10n_nl_reports.docref_max_length', 999))
-            transaction_values_query = self._l10n_nl_get_transaction_values_query(options)
+            transaction_values_query = self._l10n_nl_reports_get_transaction_values_query(options)
             self.env.cr.execute(transaction_values_query)
 
             journal_id, move_id = None, None
@@ -448,7 +454,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                             <amnt>{move_amount}</amnt>""").format(
                                 move_id=row['move_id'],
                                 move_name=row['move_name'],
-                                period_number=self._l10n_nl_compute_period_number(row['move_date']),
+                                period_number=self._l10n_nl_reports_compute_period_number(row['move_date']),
                                 move_date=row['move_date'],
                                 move_amount=row['move_amount'])
                     yield Markup("""
@@ -488,7 +494,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                         </transaction>
                     </journal>""")
 
-    def l10n_nl_get_xaf(self, options):
+    def l10n_nl_reports_get_xaf(self, options):
         report = self.env['account.report'].browse(options['report_id'])
         return {
             'file_name': report.get_default_report_filename(options, 'xaf'),

@@ -2,8 +2,8 @@ from odoo import api, Command, fields, models, _
 from odoo.exceptions import UserError
 
 
-class L10nAuStpFfrWizard(models.TransientModel):
-    _name = "l10n_au.stp.ffr.wizard"
+class L10n_AuStpFfrWizard(models.TransientModel):
+    _name = 'l10n_au.stp.ffr.wizard'
     _description = "STP Full File Replacement Wizard"
 
     stp_id = fields.Many2one("l10n_au.stp", string="Report to Replace", required=True)
@@ -39,7 +39,7 @@ class L10nAuStpFfrWizard(models.TransientModel):
             slip.message_post(subject="Single Touch Payroll", body=payslip_reset_message)
 
         if payslips_to_reset.payslip_run_id:
-            payslips_to_reset.payslip_run_id.state = "verify"
+            payslips_to_reset.payslip_run_id.state = "02_verify"
             payslips_to_reset.payslip_run_id.message_post(subject="Single Touch Payroll", body=payslip_reset_message)
         payslips_to_reset.compute_sheet()
         self.stp_id.is_replaced = True
@@ -54,8 +54,8 @@ class L10nAuStpFfrWizard(models.TransientModel):
         return new_stp._get_records_action()
 
 
-class L10nAuStpffrPayslip(models.TransientModel):
-    _name = "l10n_au.stp.ffr.payslip"
+class L10n_AuStpFfrPayslip(models.TransientModel):
+    _name = 'l10n_au.stp.ffr.payslip'
     _description = "STP Full File Replacement Payslips"
 
     ffr_wizard_id = fields.Many2one("l10n_au.stp.ffr.wizard", string="Wizard", required=True, ondelete="cascade")

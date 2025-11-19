@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import {
     registries,
 } from "@odoo/o-spreadsheet";

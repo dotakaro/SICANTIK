@@ -1,7 +1,6 @@
 import {
     defineDocumentSpreadsheetModels,
     defineDocumentSpreadsheetTestAction,
-    DocumentsDocument,
     getBasicServerData,
 } from "@documents_spreadsheet/../tests/helpers/data";
 import {
@@ -103,7 +102,9 @@ test("Reinsert pivot menu item should be hidden if the pivot is invalid", async 
         .getMenuItems()
         .find((item) => item.id === "insert")
         .children(env)
-        .find((item) => item.id === "insert_pivot");
+        .find((item) => item.id === "insert_pivot")
+        .children(env)
+        .find((item) => item.id === "insert_pivot_from_range");
     await pivot.execute(env);
 
     const reinsertDynamicPivot = topbarMenuRegistry
@@ -198,7 +199,6 @@ test("Reinsert an Odoo pivot which has no formula on the sheet (meaning the data
     };
     const serverData = getBasicServerData();
     serverData.models["documents.document"].records = [
-        DocumentsDocument._records[0], // res_company.document_spreadsheet_folder_id
         {
             id: 45,
             spreadsheet_data: JSON.stringify(spreadsheetData),
@@ -228,6 +228,7 @@ test("Keep applying filter when pivot is re-inserted", async function () {
                         <field name="product_id" type="row"/>
                         <field name="probability" type="measure"/>
                     </pivot>`,
+        pivotType: "static",
     });
     await addGlobalFilter(
         model,
@@ -281,7 +282,7 @@ test("undo pivot reinsert", async function () {
 });
 
 test("reinsert pivot with anchor on merge but not top left", async function () {
-    const { model, env } = await createSpreadsheetWithPivot();
+    const { model, env } = await createSpreadsheetWithPivot({ pivotType: "static" });
     const sheetId = model.getters.getActiveSheetId();
     const [pivotId] = model.getters.getPivotIds();
     const pivotZone = getZoneOfInsertedDataSource(model, "pivot", pivotId);
@@ -397,7 +398,7 @@ test("Can rebuild the Odoo domain of records based on the according merged pivot
             action: {
                 doAction: (params) => {
                     expect.step(params.res_model);
-                    expect.step(JSON.stringify(params.domain));
+                    expect.step(params.domain);
                 },
             },
         },
@@ -416,7 +417,7 @@ test("Can rebuild the Odoo domain of records based on the according merged pivot
     await animationFrame();
     const root = cellMenuRegistry.getAll().find((item) => item.id === "pivot_see_records");
     await root.execute(env);
-    expect.verifySteps(["partner", `[["foo","=",2],["bar","=",false]]`]);
+    expect.verifySteps(["partner", ["&", ["foo", "=", 2], ["bar", "=", false]]]);
 });
 
 test("See records is visible even if the formula is lowercase", async function () {
@@ -430,7 +431,7 @@ test("See records is visible even if the formula is lowercase", async function (
 });
 
 test("See records is not visible if the formula is in error", async function () {
-    const { env, model } = await createSpreadsheetWithPivot();
+    const { env, model } = await createSpreadsheetWithPivot({ pivotType: "static" });
     selectCell(model, "B4");
     await animationFrame();
     const root = cellMenuRegistry.getAll().find((item) => item.id === "pivot_see_records");
@@ -459,7 +460,7 @@ test("'See records' loads a specific action if set in the pivot definition", asy
                     expect(params.id).not.toBe(undefined);
                     expect(params.xml_id).not.toBe(undefined);
                     expect.step(params.res_model);
-                    expect.step(JSON.stringify(params.domain));
+                    expect.step(params.domain);
                 },
             },
         },
@@ -468,7 +469,7 @@ test("'See records' loads a specific action if set in the pivot definition", asy
     await animationFrame();
     const root = cellMenuRegistry.getAll().find((item) => item.id === "pivot_see_records");
     await root.execute(env);
-    expect.verifySteps(["partner", `[["foo","=",2],["bar","=",false]]`]);
+    expect.verifySteps(["partner", ["&", ["foo", "=", 2], ["bar", "=", false]]]);
 });
 
 test("Context is passed correctly to the action service", async function () {
@@ -506,10 +507,12 @@ test("Pivot cells are highlighted when hovering their menu item", async function
 
     await hover("div[data-name='item_pivot_1']");
     const pivotId = model.getters.getPivotIds()[0];
-    const zone = getZoneOfInsertedDataSource(model, "pivot", pivotId);
-    expect(getHighlightsFromStore(env)).toEqual([
-        { color: "#37A850", sheetId, zone, noFill: true },
-    ]);
+    const range = model.getters.getRangeFromZone(
+        sheetId,
+        getZoneOfInsertedDataSource(model, "pivot", pivotId)
+    );
+
+    expect(getHighlightsFromStore(env)).toEqual([{ color: "#017E84", range, noFill: true }]);
 
     await leave("div[data-name='item_pivot_1");
     expect(getHighlightsFromStore(env)).toEqual([]);

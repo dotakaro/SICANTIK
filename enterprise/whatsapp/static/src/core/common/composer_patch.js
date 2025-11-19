@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { Composer } from "@mail/core/common/composer";
 import { _t } from "@web/core/l10n/translation";
 import { patch } from "@web/core/utils/patch";
@@ -19,19 +17,55 @@ patch(Composer.prototype, {
         );
         onWillDestroy(() => clearTimeout(this.composerDisableCheckTimeout));
     },
-
-    get placeholder() {
+    get allowUpload() {
         if (
-            this.thread &&
-            this.thread.channel_type === "whatsapp" &&
-            !this.state.active &&
-            this.props.composer.threadExpired
+            this.thread?.channel_type === "whatsapp" &&
+            this.props.composer.attachments.length > 0
         ) {
-            return _t(
-                "Can't send message as it has been 24 hours since the last message of the User."
-            );
+            return false;
+        }
+        return super.allowUpload;
+    },
+    get areAllActionsDisabled() {
+        if (
+            this.thread?.channel_type === "whatsapp" &&
+            !this.state.active &&
+            !this.isRevivingWhatsapp
+        ) {
+            return true;
+        }
+        return super.areAllActionsDisabled;
+    },
+    get isRevivingWhatsapp() {
+        return false;
+    },
+    get isMultiUpload() {
+        if (this.thread?.channel_type === "whatsapp") {
+            return false;
+        }
+        return super.isMultiUpload;
+    },
+    get placeholder() {
+        if (this.thread?.channel_type === "whatsapp") {
+            if (!this.state.active && this.props.composer.threadExpired) {
+                return _t("Conversation closed.");
+            }
+            return _t("Answer as %(whatsapp_account_name)s", {
+                whatsapp_account_name: this.thread.wa_account_id.name,
+            });
         }
         return super.placeholder;
+    },
+    get showQuickAction() {
+        const inactiveActions = ["revive-whatsapp-conversation", "more-actions"];
+        if (
+            this.thread?.channel_type === "whatsapp" &&
+            !this.state.active &&
+            !inactiveActions.includes(this.action.id)
+        ) {
+            return false;
+        }
+        return super.showQuickAction;
     },
 
     checkComposerDisabled() {
@@ -53,18 +87,34 @@ patch(Composer.prototype, {
             }
         }
     },
-    get hasSendButtonNonEditing() {
-        if (this.thread?.channel_type === "whatsapp" && !this.state.active) {
-            return false;
-        }
-        return super.hasSendButtonNonEditing;
-    },
 
     /** @override */
     get isSendButtonDisabled() {
         const whatsappInactive =
             this.thread && this.thread.channel_type === "whatsapp" && !this.state.active;
         return super.isSendButtonDisabled || whatsappInactive;
+    },
+
+    onclickWhatsAppChat() {
+        this.action.doAction(
+            {
+                type: "ir.actions.act_window",
+                name: _t("Send WhatsApp Message"),
+                res_model: "whatsapp.composer",
+                view_mode: "form",
+                views: [[false, "form"]],
+                target: "new",
+                context: {
+                    active_model: "discuss.channel",
+                    active_id: this.thread.id,
+                },
+            },
+            {
+                onClose: () => {
+                    this.thread.fetchMessages();
+                },
+            }
+        );
     },
 
     onDropFile(ev) {

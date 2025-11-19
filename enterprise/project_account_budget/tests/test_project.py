@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import date
@@ -42,13 +41,15 @@ class TestProject(TestProjectCommon):
             'No budget has been created for this project.'
         )
 
+        self.assertEqual(self.project_goats.account_id, self.analytic_account, 'The project and budget line will use the same analytic account on the same plan.')
+        plan_fname = self.analytic_account.plan_id._column_name()
         today = date.today()
         budget = self.env['budget.analytic'].create({
             'name': 'Project Goats Budget',
             'date_from': today.replace(day=1),
             'date_to': today + relativedelta(months=1, days=-1),
             'budget_line_ids': [Command.create({
-                'account_id': self.analytic_account.id,
+                plan_fname: self.analytic_account.id,
                 'budget_amount': 500,
             })],
         })
@@ -72,6 +73,8 @@ class TestProject(TestProjectCommon):
         })
 
     def test_get_budget_items_with_action(self):
+        self.assertEqual(self.project_goats.account_id, self.analytic_account, 'The project and budget line will use the same analytic account on the same plan.')
+        plan_fname = self.analytic_account.plan_id._column_name()
         today = date.today()
         budgets = self.env['budget.analytic']
         for budget_name, planned_amount in [
@@ -84,7 +87,7 @@ class TestProject(TestProjectCommon):
                 'date_to': today + relativedelta(months=1, days=-1),
                 'budget_line_ids': [
                     Command.create({
-                        'account_id': self.analytic_account.id,
+                        plan_fname: self.analytic_account.id,
                         'budget_amount': planned_amount,
                     }),
                 ],
@@ -92,7 +95,7 @@ class TestProject(TestProjectCommon):
             budget.action_budget_confirm()
             budgets += budget
 
-        self.env.user.groups_id += self.env.ref('account.group_account_user')
+        self.env.user.group_ids += self.env.ref('account.group_account_user')
         self.assertTrue(self.env.user.has_group('analytic.group_analytic_accounting'))
         budget_items = self.project_goats.with_context({'allowed_company_ids': [self.env.company.id]})._get_budget_items(with_action=True)
         del budget_items['data'][0]['name']  # remove the name because it is a lazy translation.
@@ -131,3 +134,32 @@ class TestProject(TestProjectCommon):
             'can_add_budget': True,
             'company_id': self.env.company.id,
         })
+
+    def test_get_budget_items_plans_mismatch(self):
+        self.assertTrue(self.env.user.has_group('analytic.group_analytic_accounting'))
+        self.assertEqual(self.project_goats.account_id, self.analytic_account, 'The project and budget line will use the same analytic account.')
+        analytic_plan_2 = self.env['account.analytic.plan'].create({
+            'name': 'Plan 2',
+        })
+        self.assertNotEqual(self.project_goats.account_id.plan_id, analytic_plan_2, 'The project account and budget line will use different analytic plans.')
+        plan_fname = analytic_plan_2._column_name()
+        today = date.today()
+        budget = self.env['budget.analytic'].create({
+            'name': 'Project Goats Budget',
+            'date_from': today.replace(day=1),
+            'date_to': today + relativedelta(months=1, days=-1),
+            'budget_line_ids': [Command.create({
+                plan_fname: self.analytic_account.id,
+                'budget_amount': 500,
+            })],
+        })
+        budget.action_budget_confirm()
+        self.assertDictEqual(
+            self.project_goats._get_budget_items(False),
+            {
+                'data': [],
+                'total': {'allocated': 0, 'progress': 0, 'spent': 0},
+                'can_add_budget': False,
+            },
+            'No budget has been created for this project. Because the plan of the budget line does not match the plan of the account of the project.'
+        )

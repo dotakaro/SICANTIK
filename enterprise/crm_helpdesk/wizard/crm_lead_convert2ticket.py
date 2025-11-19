@@ -4,14 +4,14 @@
 from odoo import api, fields, models, _
 
 
-class CrmLeadConvert2Ticket(models.TransientModel):
+class CrmLeadConvert2ticket(models.TransientModel):
     """ wizard to convert a Lead into a Helpdesk ticket and move the Mail Thread """
-    _name = "crm.lead.convert2ticket"
+    _name = 'crm.lead.convert2ticket'
     _description = 'Lead convert to Ticket'
 
     @api.model
     def default_get(self, fields):
-        result = super(CrmLeadConvert2Ticket, self).default_get(fields)
+        result = super().default_get(fields)
         if 'partner_id' in fields:
             lead_id = result.get('lead_id')
             if lead_id:
@@ -54,7 +54,7 @@ class CrmLeadConvert2Ticket(models.TransientModel):
         if lead.phone:  # lead phone is always sync with partner phone
             vals["partner_phone"] = lead.phone
         else:  # if partner is not on lead -> take partner phone first
-            vals["partner_phone"] = partner.phone or lead.mobile or partner.mobile
+            vals["partner_phone"] = partner.phone
         if lead.email_from:
             vals['partner_email'] = lead.email_from
 
@@ -73,6 +73,7 @@ class CrmLeadConvert2Ticket(models.TransientModel):
         # move attachments
         attachments = self.env['ir.attachment'].search([('res_model', '=', 'crm.lead'), ('res_id', '=', lead.id)])
         attachments.sudo().write({'res_model': 'helpdesk.ticket', 'res_id': ticket_sudo.id})
+        lead._message_log(body=_("Lead converted into ticket %s", ticket_sudo._get_html_link()))
         # archive the lead
         lead.action_archive()
 

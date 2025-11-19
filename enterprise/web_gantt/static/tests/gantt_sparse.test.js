@@ -23,7 +23,7 @@ test("empty sparse gantt", async () => {
     const { viewTitle, range, columnHeaders, rows } = getGridContent();
     expect(viewTitle).toBe("Gantt View");
     expect(range).toBe("From: 12/01/2018 to: 02/28/2019");
-    expect(columnHeaders).toHaveLength(34);
+    expect(columnHeaders).toHaveLength(29);
     expect(rows).toEqual([{ title: "" }]);
     expect(SELECTORS.noContentHelper).toHaveCount(0);
 });
@@ -37,12 +37,12 @@ test("sparse gantt", async () => {
     const { viewTitle, range, columnHeaders, rows } = getGridContent();
     expect(viewTitle).toBe("Gantt View");
     expect(range).toBe("From: 12/01/2018 to: 02/28/2019");
-    expect(columnHeaders).toHaveLength(34);
+    expect(columnHeaders).toHaveLength(29);
     expect(rows).toEqual([
         {
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     level: 0,
                     title: "Task 1",
                 },
@@ -62,13 +62,13 @@ test("sparse grouped gantt", async () => {
     const { viewTitle, range, columnHeaders, rows } = getGridContent();
     expect(viewTitle).toBe("Gantt View");
     expect(range).toBe("From: 12/01/2018 to: 02/28/2019");
-    expect(columnHeaders).toHaveLength(34);
+    expect(columnHeaders).toHaveLength(29);
     expect(rows).toEqual([
         {
             isGroup: true,
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     title: "1",
                 },
             ],
@@ -77,7 +77,7 @@ test("sparse grouped gantt", async () => {
         {
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     level: 0,
                     title: "Task 1",
                 },
@@ -108,6 +108,10 @@ test("sparse grouped gantt", async () => {
             isGroup: true,
             pills: [
                 {
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    title: "1",
+                },
+                {
                     colSpan: "17 (1/2) December 2018 -> 22 (1/2) December 2018",
                     title: "1",
                 },
@@ -115,6 +119,13 @@ test("sparse grouped gantt", async () => {
             title: "Done",
         },
         {
+            pills: [
+                {
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    level: 0,
+                    title: "Task 5",
+                },
+            ],
             title: "Task 5",
         },
         {
@@ -135,7 +146,7 @@ test("sparse grouped gantt", async () => {
                     title: "1",
                 },
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     title: "1",
                 },
             ],
@@ -154,7 +165,7 @@ test("sparse grouped gantt", async () => {
         {
             pills: [
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     level: 0,
                     title: "Task 3",
                 },
@@ -182,13 +193,13 @@ test("sparse gantt with consolidation", async () => {
     const { viewTitle, range, columnHeaders, rows } = getGridContent();
     expect(viewTitle).toBe("Gantt View");
     expect(range).toBe("From: 12/01/2018 to: 02/28/2019");
-    expect(columnHeaders).toHaveLength(34);
+    expect(columnHeaders).toHaveLength(29);
     expect(rows).toEqual([
         {
             isGroup: true,
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     title: "1",
                 },
             ],
@@ -197,7 +208,7 @@ test("sparse gantt with consolidation", async () => {
         {
             pills: [
                 {
-                    colSpan: "Out of bounds (1)  -> 31 December 2018",
+                    colSpan: "01 December 2018 -> Out of bounds (63) ",
                     level: 0,
                     title: "Task 1",
                 },
@@ -228,6 +239,10 @@ test("sparse gantt with consolidation", async () => {
             isGroup: true,
             pills: [
                 {
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    title: "1",
+                },
+                {
                     colSpan: "17 (1/2) December 2018 -> 22 (1/2) December 2018",
                     title: "1",
                 },
@@ -235,6 +250,13 @@ test("sparse gantt with consolidation", async () => {
             title: "Done",
         },
         {
+            pills: [
+                {
+                    colSpan: "01 December 2018 -> 04 (1/2) December 2018",
+                    level: 0,
+                    title: "Task 5",
+                },
+            ],
             title: "Task 5",
         },
         {
@@ -255,7 +277,7 @@ test("sparse gantt with consolidation", async () => {
                     title: "1",
                 },
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     title: "1",
                 },
             ],
@@ -274,7 +296,7 @@ test("sparse gantt with consolidation", async () => {
         {
             pills: [
                 {
-                    colSpan: "27 December 2018 -> 03 (1/2) January 2019",
+                    colSpan: "27 December 2018 -> Out of bounds (68) ",
                     level: 0,
                     title: "Task 3",
                 },
@@ -286,31 +308,29 @@ test("sparse gantt with consolidation", async () => {
 });
 
 test("sparse gantt with a group expand", async () => {
-    onRpc("get_gantt_data", () => {
-        return {
-            groups: [
-                {
-                    stage: "todo",
-                    __record_ids: [],
-                },
-                {
-                    stage: "in_progress",
-                    __record_ids: [4],
-                },
-            ],
-            length: 2,
-            records: [
-                {
-                    display_name: "Task 4",
-                    id: 4,
-                    progress: 0,
-                    stage: "in_progress",
-                    start: "2018-12-20 02:30:00",
-                    stop: "2018-12-20 06:29:59",
-                },
-            ],
-        };
-    });
+    onRpc("get_gantt_data", () => ({
+        groups: [
+            {
+                stage: "todo",
+                __record_ids: [],
+            },
+            {
+                stage: "in_progress",
+                __record_ids: [4],
+            },
+        ],
+        length: 2,
+        records: [
+            {
+                display_name: "Task 4",
+                id: 4,
+                progress: 0,
+                stage: "in_progress",
+                start: "2018-12-20 02:30:00",
+                stop: "2018-12-20 06:29:59",
+            },
+        ],
+    }));
     await mountGanttView({
         resModel: "tasks",
         arch: `
@@ -325,7 +345,7 @@ test("sparse gantt with a group expand", async () => {
     const { viewTitle, range, columnHeaders, rows } = getGridContent();
     expect(viewTitle).toBe("Gantt View");
     expect(range).toBe("From: 12/01/2018 to: 02/28/2019");
-    expect(columnHeaders).toHaveLength(34);
+    expect(columnHeaders).toHaveLength(29);
     expect(rows).toEqual([
         {
             isGroup: true,
@@ -365,9 +385,9 @@ test("empty sparse gantt with unavailabilities", async () => {
             stop: "2018-12-19 23:00:00",
         },
     ];
-    onRpc("get_gantt_data", async ({ parent, kwargs }) => {
-        expect.step("get_gantt_data");
-        const result = await parent();
+    onRpc("get_gantt_data", ({ parent, kwargs, method }) => {
+        expect.step(method);
+        const result = parent();
         expect(kwargs.unavailability_fields).toEqual([]);
         result.unavailabilities.__default = { false: unavailabilities };
         return result;
@@ -379,7 +399,7 @@ test("empty sparse gantt with unavailabilities", async () => {
     });
     expect.verifySteps(["get_gantt_data"]);
     // Full unavailability
-    expect(getCellColorProperties("19 December 2018")).toEqual([
+    expect(getCellColorProperties("19", "December 2018")).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
 });
@@ -391,9 +411,9 @@ test("sparse gantt with unavailabilities", async () => {
             stop: "2018-12-19 23:00:00",
         },
     ];
-    onRpc("get_gantt_data", async ({ parent, kwargs }) => {
-        expect.step("get_gantt_data");
-        const result = await parent();
+    onRpc("get_gantt_data", ({ parent, kwargs, method }) => {
+        expect.step(method);
+        const result = parent();
         expect(kwargs.unavailability_fields).toEqual([]);
         result.unavailabilities.__default = { false: unavailabilities };
         return result;
@@ -405,7 +425,7 @@ test("sparse gantt with unavailabilities", async () => {
     });
     expect.verifySteps(["get_gantt_data"]);
     // Full unavailability
-    expect(getCellColorProperties("19 December 2018")).toEqual([
+    expect(getCellColorProperties("19", "December 2018")).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
 });
@@ -417,9 +437,9 @@ test("sparse grouped gantt with unavailabilities", async () => {
             stop: "2018-12-19 23:00:00",
         },
     ];
-    onRpc("get_gantt_data", async ({ parent, kwargs }) => {
-        expect.step("get_gantt_data");
-        const result = await parent();
+    onRpc("get_gantt_data", ({ parent, kwargs, method }) => {
+        expect.step(method);
+        const result = parent();
         expect(kwargs.unavailability_fields).toEqual(["user_id"]);
         result.unavailabilities.user_id = { 1: unavailabilities };
         return result;
@@ -431,7 +451,7 @@ test("sparse grouped gantt with unavailabilities", async () => {
     });
     expect.verifySteps(["get_gantt_data"]);
     // Full unavailability
-    expect(getCellColorProperties("19 December 2018", "Task 5")).toEqual([
+    expect(getCellColorProperties("19", "December 2018", "Task 5")).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
 });
@@ -443,9 +463,9 @@ test("sparse gantt with consolidation with unavailabilities", async () => {
             stop: "2018-12-19 23:00:00",
         },
     ];
-    onRpc("get_gantt_data", async ({ parent, kwargs }) => {
-        expect.step("get_gantt_data");
-        const result = await parent();
+    onRpc("get_gantt_data", ({ parent, kwargs, method }) => {
+        expect.step(method);
+        const result = parent();
         expect(kwargs.unavailability_fields).toEqual(["user_id"]);
         result.unavailabilities.user_id = { 1: unavailabilities };
         return result;
@@ -466,7 +486,7 @@ test("sparse gantt with consolidation with unavailabilities", async () => {
     });
     expect.verifySteps(["get_gantt_data"]);
     // Full unavailability
-    expect(getCellColorProperties("19 December 2018", "", { num: 2 })).toEqual([
+    expect(getCellColorProperties("19", "December 2018", "", { num: 2 })).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
 });
@@ -498,7 +518,7 @@ test("sparse gantt with a group expand and unavailabilities", async () => {
                     display_name: "Task 4",
                     id: 4,
                     progress: 0,
-                    user_id: 1,
+                    user_id: { id: 1 },
                     start: "2018-12-20 02:30:00",
                     stop: "2018-12-20 06:29:59",
                 },
@@ -521,7 +541,7 @@ test("sparse gantt with a group expand and unavailabilities", async () => {
         groupBy: ["user_id"],
     });
     expect.verifySteps(["get_gantt_data"]);
-    expect(getCellColorProperties("19 December 2018", "", { num: 2 })).toEqual([
+    expect(getCellColorProperties("19", "December 2018", "", { num: 2 })).toEqual([
         "--Gantt__DayOff-background-color",
     ]);
 });

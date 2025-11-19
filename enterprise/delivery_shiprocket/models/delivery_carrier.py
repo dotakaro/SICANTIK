@@ -14,7 +14,7 @@ from .shiprocket_request import ShipRocket
 _logger = logging.getLogger(__name__)
 
 
-class DeliverCarrier(models.Model):
+class DeliveryCarrier(models.Model):
     _inherit = 'delivery.carrier'
 
     delivery_type = fields.Selection(
@@ -53,12 +53,6 @@ class DeliverCarrier(models.Model):
         help="Shiprocket requires package dimensions for getting accurate rate, "
              "you can define these in a package type that you set as default"
     )
-    shiprocket_payment_method = fields.Selection(
-        [('prepaid', 'Prepaid'), ('cod', 'COD')],
-        default="prepaid",
-        string="Payment Method",
-        help="The method of payment. Can be either COD (Cash on delivery) Or Prepaid while creating Shiprocket order."
-    )
     shiprocket_manifests_generate = fields.Boolean(
         string="Generate Manifest",
         help="A manifest is a document that is required by some carriers to streamline the pickup process."
@@ -80,7 +74,7 @@ class DeliverCarrier(models.Model):
             if response_json.get('token'):
                 self.write({
                     'shiprocket_access_token': response_json['token'],
-                    'shiprocket_token_valid_upto': fields.datetime.now() + timedelta(days=9)
+                    'shiprocket_token_valid_upto': fields.Datetime.now() + timedelta(days=9)
                 })
                 message_type = 'success'
                 message = _("Access token is generated successfully!")

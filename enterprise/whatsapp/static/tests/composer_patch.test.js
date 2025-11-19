@@ -1,5 +1,6 @@
 import { Composer } from "@mail/core/common/composer";
 import {
+    click,
     contains,
     dragenterFiles,
     dropFiles,
@@ -43,20 +44,18 @@ test("Allow only single attachment in every message", async () => {
         new File(["hello, world"], "text.txt", { type: "text/plain" }),
         new File(["hello, world"], "text2.txt", { type: "text/plain" }),
     ];
-
     await contains(".o-mail-Composer");
-    await contains("button[title='Attach files']");
-
-    await inputFiles(".o-mail-Composer-coreMain .o_input_file", [file1]);
-    await contains(".o-mail-AttachmentCard", { text: "text.txt", contains: [".fa-check"] });
-    await contains("button[title='Attach files']:disabled");
-
+    await click(".o-mail-Composer button[title='More Actions']"); // open
+    await contains(".dropdown-item:contains('Attach Files')");
+    await click(".o-mail-Composer button[title='More Actions']"); // close
+    await inputFiles(".o-mail-Composer .o_input_file", [file1]);
+    await contains(".o-mail-AttachmentContainer", { text: "text.txt", contains: [".fa-check"] });
+    await contains(".o-mail-Composer button[title='More Actions']", { count: 0 });
     await pasteFiles(".o-mail-Composer-input", [file2]);
-    await contains(".o-mail-AttachmentCard", { text: "text.txt", contains: [".fa-check"] });
-
+    await contains(".o-mail-AttachmentContainer", { text: "text.txt", contains: [".fa-check"] });
     await dragenterFiles(".o-mail-Composer-input", [file2]);
     await dropFiles(".o-Dropzone", [file2]);
-    await contains(".o-mail-AttachmentCard", { text: "text.txt", contains: [".fa-check"] });
+    await contains(".o-mail-AttachmentContainer", { text: "text.txt", contains: [".fa-check"] });
 });
 
 test("Can not add attachment after copy pasting an attachment", async () => {
@@ -72,15 +71,14 @@ test("Can not add attachment after copy pasting an attachment", async () => {
         new File(["hello, world"], "text2.txt", { type: "text/plain" }),
     ];
     await pasteFiles(".o-mail-Composer-input", [file1]);
-    await contains("button[title='Attach files']:disabled");
-    await contains(".o-mail-AttachmentCard", { text: "text.txt", contains: [".fa-check"] });
-
+    await click(".o-mail-Composer button[title='More Actions']");
+    await contains(".dropdown-item:contains('Attach Files')", { count: 0 });
+    await contains(".o-mail-AttachmentContainer", { text: "text.txt", contains: [".fa-check"] });
     await pasteFiles(".o-mail-Composer-input", [file2]);
-    await contains(".o-mail-AttachmentCard", { text: "text.txt", contains: [".fa-check"] });
-
+    await contains(".o-mail-AttachmentContainer", { text: "text.txt", contains: [".fa-check"] });
     await dragenterFiles(".o-mail-Composer-input", [file2]);
     await dropFiles(".o-Dropzone", [file2]);
-    await contains(".o-mail-AttachmentCard", { text: "text.txt", contains: [".fa-check"] });
+    await contains(".o-mail-AttachmentContainer", { text: "text.txt", contains: [".fa-check"] });
 });
 
 test("Can not add attachment after drag dropping an attachment", async () => {
@@ -97,11 +95,11 @@ test("Can not add attachment after drag dropping an attachment", async () => {
     ];
     await dragenterFiles(".o-mail-Composer-input", [file1]);
     await dropFiles(".o-Dropzone", [file1]);
-    await contains("button[title='Attach files']:disabled");
-    await contains(".o-mail-AttachmentCard", { text: "text.txt", contains: [".fa-check"] });
-
+    await click(".o-mail-Composer button[title='More Actions']");
+    await contains(".dropdown-item:contains('Attach Files')", { count: 0 });
+    await contains(".o-mail-AttachmentContainer", { text: "text.txt", contains: [".fa-check"] });
     await pasteFiles(".o-mail-Composer-input", [file2]);
-    await contains(".o-mail-AttachmentCard", { text: "text.txt", contains: [".fa-check"] });
+    await contains(".o-mail-AttachmentContainer", { text: "text.txt", contains: [".fa-check"] });
 });
 
 test("Disabled composer should be enabled after message from whatsapp user", async () => {
@@ -113,11 +111,10 @@ test("Disabled composer should be enabled after message from whatsapp user", asy
     });
     await start();
     await openDiscuss(channelId);
-    await contains(".o-mail-Composer-actions");
-    await contains("button[title='Attach files']");
-    await contains(".o-mail-Composer-send");
+    await click(".o-mail-Composer button[title='More Actions']"); // open
+    await contains(".dropdown-item:contains('Attach Files')");
+    await click(".o-mail-Composer button[title='More Actions']"); // close
     await contains(".o-mail-Composer-input[readonly]");
-
     // stimulate the notification sent after receiving a message from whatsapp user
     const [channel] = pyEnv["discuss.channel"].search_read([["id", "=", channelId]]);
     pyEnv["bus.bus"]._sendone(
@@ -127,10 +124,32 @@ test("Disabled composer should be enabled after message from whatsapp user", asy
             whatsapp_channel_valid_until: DateTime.utc().plus({ days: 1 }).toSQL(),
         }).get_result()
     );
-    await contains(".o-mail-Composer-actions");
-    await contains("button[title='Attach files']");
-    await contains(".o-mail-Composer-send");
+    await click(".o-mail-Composer button[title='More Actions']"); // open
+    await contains(".dropdown-item:contains('Attach Files')");
     await contains(".o-mail-Composer-input:not([readonly])");
+});
+
+test("'Revive WhatsApp Conversation' button must be visible only in deactivated whatsapp channels", async () => {
+    const pyEnv = await startServer();
+    const channelId = pyEnv["discuss.channel"].create({
+        name: "WhatsApp",
+        channel_type: "whatsapp",
+        whatsapp_channel_valid_until: serializeDateTime(DateTime.local().minus({ minutes: 1 })),
+    });
+    await start();
+    await openDiscuss(channelId);
+    await contains("button[title='Revive WhatsApp Conversation']");
+
+    // Active conversation should not have this button
+    const [channel] = pyEnv["discuss.channel"].search_read([["id", "=", channelId]]);
+    pyEnv["bus.bus"]._sendone(
+        channel,
+        "mail.record/insert",
+        new mailDataHelpers.Store(pyEnv["discuss.channel"].browse(channelId), {
+            whatsapp_channel_valid_until: DateTime.utc().plus({ days: 1 }).toSQL(),
+        }).get_result()
+    );
+    await contains("button[title='Revive WhatsApp Conversation']", { count: 0 });
 });
 
 test("Allow channel commands for whatsapp channels", async () => {

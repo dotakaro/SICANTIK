@@ -13,7 +13,6 @@
                 <sheet>
                     <widget name="web_ribbon" title="Done" bg_color="text-bg-success" invisible="progression != '100'"/>
                     <div class="oe_title">
-                        <label for="name" string="Goal"/>
                         <h1>
                             <field name="name" placeholder="e.g. Improve your English level"/>
                         </h1>
@@ -22,22 +21,25 @@
                         <group>
                             <field name="is_manager" invisible="1"/>
                             <field name="employee_autocomplete_ids" invisible="1"/>
-                            <field name="employee_id" domain="[['id', 'in', employee_autocomplete_ids]]"
+                            <field name="employee_ids" domain="[['id', 'in', employee_autocomplete_ids]]"
                                 readonly="not is_manager"
-                                widget="many2one_avatar_employee"/>
+                                widget="many2many_avatar_employee"/>
                             <field name="progression" widget="selection_badge"/>
                         </group>
                         <group>
-                            <field name="manager_id" force_save="1" readonly="not is_manager" widget="many2one_avatar_employee"/>
+                            <field name="manager_ids" force_save="1" readonly="not is_manager" widget="many2many_avatar_employee"/>
                             <field name="deadline"/>
                             <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
                         </group>
                     </group>
-                    <notebook>
-                        <page string="Description" name="description">
-                            <field name="description"/>
-                        </page>
-                    </notebook>
+                    <group>
+                        <label for="description">Description</label>
+                    </group>
+                    <group>
+                        <field name="description" nolabel='1'
+                            placeholder="Provide visible information on the goal, how the employee can achieve it. Which benefit he will get from it.
+                            Maybe some process or steps to help her/him along the way."/>
+                    </group>
                 </sheet>
                 <chatter/>
             </form>
@@ -48,15 +50,16 @@
         <field name="name">hr.appraisal.goal.view.list</field>
         <field name="model">hr.appraisal.goal</field>
         <field name="arch" type="xml">
-            <list sample="1" class="o_goal_list">
-                <field name="name" class="fw-bold"/>
-                <field name="create_date" widget="timeless_date"/>
-                <field name="deadline" widget="remaining_days" optional="hidden"/>
-                <field name="activity_ids" widget="list_activity" optional="hidden"/>
+            <list sample="1" class="o_goal_list" default_order="deadline asc">
+                <field name="name"/>
+                <field name="description" optional="hide"/>
                 <field name="progression" widget="badge" decoration-success="progression == '100'"/>
-                <field name="employee_id" widget="many2one_avatar_employee" options="{'no_open': True}"/>
-                <field name="manager_id" widget="many2one_avatar_employee" optional="hidden" options="{'no_open': True}"/>
-                <field name="tag_ids" widget="many2many_tags" readonly="1" optional="hidden" options="{'color_field': 'color'}"/>
+                <field name="employee_ids" widget="many2many_avatar_employee" options="{'no_open': True}"/>
+                <field name="manager_ids" widget="many2many_avatar_employee" optional="hide" options="{'no_open': True}"/>
+                <field name="activity_ids" widget="list_activity" optional="hide"/>
+                <field name="tag_ids" widget="many2many_tags" readonly="1" optional="hide" options="{'color_field': 'color'}"/>
+                <field name="deadline" widget="remaining_days"/>
+                <field name="create_date" options="{'show_time': False}" optional="hide"/>
             </list>
         </field>
     </record>
@@ -67,25 +70,19 @@
         <field name="arch" type="xml">
             <kanban quick_create="false" class="o_hr_employee_kanban" sample="1">
                 <templates>
-                    <t t-name="menu">
-                        <t t-if="widget.deletable"><a type="delete" class="dropdown-item" role="menuitem">Delete</a></t>
-                        <a type="object" name="action_confirm" class="dropdown-item" invisible="progression == '100'" role="menuitem">Mark as Done</a>
-                    </t>
-                    <t t-name="card">
-                        <widget name="web_ribbon" title="Done" bg_color="text-bg-success" invisible="progression != '100'"/>
-                        <div class="d-flex">
-                            <field name="name" class="fs-4 mb-1"/>
-                            <field t-if="record.progression.raw_value != 100" name="progression" class="fw-bold ms-auto me-2"/>
-                        </div>
-                        <field name="employee_id"/>
-                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
-                        <footer class="pt-1 ms-2 me-2">
-                            <div class="d-flex align-items-center">
-                                <field name="activity_ids" widget="kanban_activity"/>
-                                <field name="create_date" widget="timeless_date" class="ms-2"/>
-                            </div>
-                            <field name="employee_id" widget="many2one_avatar_employee" class="ms-auto"/>
+                    <t t-name="card" class="overflow-hidden">
+                        <field name="name" class="fs-4 mb-1" style="max-width: 70%;"/>
+                        <span t-if="record.progression.raw_value != 100">
+                            Progress:
+                            <field name="progression"/>
+                        </span>
+                        <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}" class="pt-2" invisible="not tag_ids"/>
+                        <footer>
+                            <field name="deadline" />
+                            <field name="activity_ids" widget="kanban_activity" class="ms-auto"/>
+                            <field name="employee_ids" widget="many2many_avatar_employee" />
                         </footer>
+                        <widget name="web_ribbon" title="Done" bg_color="text-bg-success" invisible="progression != '100'"/>
                     </t>
                 </templates>
             </kanban>
@@ -93,11 +90,11 @@
     </record>
 
     <record id="hr_appraisal_goal_view_graph" model="ir.ui.view">
-        <field name="name">hr.appraisal.goal.view.kanban</field>
+        <field name="name">hr.appraisal.goal.view.graph</field>
         <field name="model">hr.appraisal.goal</field>
         <field name="arch" type="xml">
             <graph string="Goals" type="bar" stacked="0" order="asc" sample="1">
-                <field name="employee_id"/>
+                <field name="employee_ids"/>
                 <field name="progression"/>
             </graph>
         </field>
@@ -109,11 +106,12 @@
         <field name="arch" type="xml">
             <search>
                 <field string="Goal" name="name"/>
-                <field name="employee_id"/>
-                <field name="manager_id"/>
+                <field name="employee_ids"/>
+                <field name="manager_ids"/>
                 <field name="tag_ids"/>
-                <filter string="My Goals" name="filter_my_goals" domain="[('employee_id.user_id', '=', uid)]"/>
-                <filter string="People I Manage" name="people_i_manage" domain="[('employee_id.parent_id.user_id', '=', uid)]" groups="hr_appraisal.group_hr_appraisal_user"/>
+                <filter string="My Goals" name="filter_my_goals" domain="[('employee_ids.user_id', '=', uid)]"/>
+                <filter string="People I Manage" name="people_i_manage" domain="[('employee_ids.parent_id.user_id', '=', uid)]" groups="hr_appraisal.group_hr_appraisal_user"/>
+                <separator/>
                 <filter string="In Progress" name="in_progress" domain="[('progression', 'in', ('000','025','050','075'))]"/>
                 <filter string="Done" name="completed" domain="[('progression', '=', '100')]"/>
                 <separator/>
@@ -123,8 +121,8 @@
                 <filter string='Deadline' name="deadline_group"  context="{'group_by': 'deadline'}"/>
                 <filter string="Created On" name="groupby_create_date" context="{'group_by': 'create_date'}"/>
                 <filter string="Created By" name="groupby_create_by" context="{'group_by': 'create_uid'}"/>
-                <filter string='Employee' name="groupby_employee"  context="{'group_by': 'employee_id'}"/>
-                <filter string='Manager' name="manager_id"  context="{'group_by': 'manager_id'}"/>
+                <filter string='Employee' name="groupby_employee"  context="{'group_by': 'employee_ids'}"/>
+                <filter string='Manager' name="manager_ids"  context="{'group_by': 'manager_ids'}"/>
             </search>
         </field>
     </record>
@@ -148,7 +146,7 @@
         <field name="name">Mark as Done</field>
         <field name="model_id" ref="hr_appraisal.model_hr_appraisal_goal"/>
         <field name="binding_model_id" ref="hr_appraisal.model_hr_appraisal_goal"/>
-        <field name="binding_view_types">list</field>
+        <field name="binding_view_types">list,kanban</field>
         <field name="state">code</field>
         <field name="code">records.action_confirm()</field>
     </record>

@@ -1,11 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
-import logging
 import re
 import mimetypes
 
 from markupsafe import Markup
+from urllib.parse import urljoin
 
 from odoo import api, models, fields, _, Command
 from odoo.addons.whatsapp.tools.lang_list import Languages
@@ -14,9 +14,6 @@ from odoo.addons.whatsapp.tools.whatsapp_exception import WhatsAppError
 from odoo.exceptions import UserError, ValidationError, AccessError
 from odoo.tools import plaintext2html
 from odoo.tools.safe_eval import safe_eval
-from odoo.models import Constraint
-
-_logger = logging.getLogger(__name__)
 
 LATITUDE_LONGITUDE_REGEX = r'^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$'
 
@@ -24,21 +21,20 @@ COMMON_WHATSAPP_PHONE_SAFE_FIELDS = {
     'mobile',
     'phone',
     'phone_sanitized',
-    'partner_id.mobile',
     'partner_id.phone',
     'phone_sanitized.phone',
     'x_studio_mobile',
     'x_studio_phone',
-    'x_studio_partner_id.mobile',
     'x_studio_partner_id.phone',
     'x_studio_partner_id.phone_sanitized',
 }
 
-class WhatsAppTemplate(models.Model):
+
+class WhatsappTemplate(models.Model):
     _name = 'whatsapp.template'
     _inherit = ['mail.thread']
     _description = 'WhatsApp Template'
-    _order = 'sequence asc, id'
+    _order = 'sequence asc, write_date desc, id'
 
     @api.model
     def _get_default_wa_account_id(self):
@@ -134,14 +130,15 @@ class WhatsAppTemplate(models.Model):
     button_ids = fields.One2many(
         'whatsapp.template.button', 'wa_template_id', string="Buttons",
         copy=True)  # will copy their variables
-    has_invalid_button_number = fields.Boolean(compute="_compute_has_invalid_button_number")
+    warning_message = fields.Text(compute="_compute_warning_message")
 
     messages_count = fields.Integer(string="Messages Count", compute='_compute_messages_count')
     has_action = fields.Boolean(string="Has Action", compute='_compute_has_action')
 
-    _constraints = [
-        Constraint('unique_name_account_template', 'unique(template_name, lang_code, wa_account_id)', "Duplicate template is not allowed for one Meta account.")
-    ]
+    _unique_name_account_template = models.Constraint(
+        'unique(template_name, lang_code, wa_account_id)',
+        "Duplicate template is not allowed for one Meta account.",
+    )
 
     @api.constrains('header_text')
     def _check_header_text(self):
@@ -254,9 +251,7 @@ class WhatsAppTemplate(models.Model):
         for template in self.filtered('model'):
             if template.phone_field and template.phone_field in self.env[template.model]._fields:
                 continue
-            if 'mobile' in self.env[template.model]._fields:
-                template.phone_field = 'mobile'
-            elif 'phone' in self.env[template.model]._fields:
+            if 'phone' in self.env[template.model]._fields:
                 template.phone_field = 'phone'
 
     @api.depends('name', 'status', 'wa_template_uid')
@@ -326,10 +321,14 @@ class WhatsAppTemplate(models.Model):
             #     to_delete.unlink()
             tmpl.variable_ids = [(3, to_remove.id) for to_remove in to_delete] + [(0, 0, vals) for vals in to_create_values]
 
-    @api.depends('button_ids')
-    def _compute_has_invalid_button_number(self):
+    @api.depends('button_ids.website_url', 'button_ids.has_invalid_number')
+    def _compute_warning_message(self):
         for template in self:
-            template.has_invalid_button_number = any(template.button_ids.mapped('has_invalid_number'))
+            template.warning_message = ''
+            if template.button_ids.filtered(lambda button: button.button_type == 'url' and button.website_url.startswith('/')):
+                template.warning_message += _('- Button URL will be modified to include the domain. (e.g., "/my_path" will be "https://mydomain.odoo.com/my_path")\n')
+            if any(template.button_ids.mapped('has_invalid_number')):
+                template.warning_message += _('- The phone number set in "Buttons" does not look correct.')
 
     def _compute_wa_account_id(self):
         """Set default account unless the template name is already used."""
@@ -497,6 +496,8 @@ class WhatsAppTemplate(models.Model):
         return {'type': 'BUTTONS', 'buttons': buttons}
 
     def _get_url_button_data(self, button):
+        if button.website_url.startswith('/'):
+            button.website_url = urljoin(button.get_base_url(), button.website_url)
         button_data = {'url': button.website_url}
         if button.url_type == 'dynamic':
             button_data['url'] += '{{1}}'
@@ -527,7 +528,7 @@ class WhatsAppTemplate(models.Model):
             else:
                 attachment = self.header_attachment_ids
             if not attachment:
-                raise ValidationError("Header Document is missing")
+                raise ValidationError(self.env._("Header Document is missing"))
         file_handle = False
         if attachment:
             try:
@@ -829,47 +830,6 @@ class WhatsAppTemplate(models.Model):
         for tmpl in self:
             tmpl.write({'status': 'draft'})
 
-    def button_sync_selected_templates(self):
-        """Sync selected templates from WhatsApp Business Account"""
-        templates_to_sync = self.filtered(lambda t: t.wa_template_uid and t.wa_account_id)
-        if not templates_to_sync:
-            raise UserError(_("No templates selected with WhatsApp Template ID. Please select templates that have been submitted to Meta."))
-        
-        synced_count = 0
-        error_count = 0
-        error_messages = []
-        
-        for template in templates_to_sync:
-            try:
-                wa_api = WhatsAppApi(template.wa_account_id)
-                response = wa_api._get_template_data(wa_template_uid=template.wa_template_uid)
-                if response.get('id'):
-                    template._update_template_from_response(response)
-                    synced_count += 1
-            except (WhatsAppError, ValidationError) as e:
-                error_count += 1
-                error_messages.append(f"{template.name}: {str(e)}")
-                _logger.warning("Error syncing template %s: %s", template.name, str(e))
-        
-        message = _("%(synced)s template(s) synchronized successfully.", synced=synced_count)
-        if error_count > 0:
-            message += _("\n%(error)s template(s) failed to sync.", error=error_count)
-            if error_messages:
-                message += "\n\n" + "\n".join(error_messages[:5])  # Show first 5 errors
-                if len(error_messages) > 5:
-                    message += f"\n... and {len(error_messages) - 5} more errors."
-        
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _("Sync Templates"),
-                'type': 'success' if error_count == 0 else 'warning',
-                'message': message,
-                'sticky': error_count > 0,
-            }
-        }
-
     def action_open_messages(self):
         self.ensure_one()
         return {
@@ -950,7 +910,7 @@ class WhatsAppTemplate(models.Model):
 
         :param bool demo_fallback: if true, fallback on demo values instead of blanks
         :param dict variable_values: values to use instead of demo values {'header-{{1}}': 'Hello'}
-        :return Markup:
+        :returns: Markup
         """
         self.ensure_one()
         variable_values = variable_values or {}

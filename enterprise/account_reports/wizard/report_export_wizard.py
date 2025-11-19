@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError
-from odoo.service.model import get_public_method
 
 import json
 import base64
@@ -11,7 +9,7 @@ import types
 from urllib.parse import urlparse, parse_qs
 
 
-class ReportExportWizard(models.TransientModel):
+class Account_ReportsExportWizard(models.TransientModel):
     """ Wizard allowing to export an accounting report in several different formats
     at once, saving them as attachments.
     """
@@ -60,21 +58,17 @@ class ReportExportWizard(models.TransientModel):
         report_options = self.env.context['account_report_generation_options']
         for format in self.export_format_ids:
             # format.fun_to_call is a button function, so it has to be public
-            fun_name = format.fun_to_call
-            report_function_params = [format.fun_param] if format.fun_param else []
-            if self.report_id.custom_handler_model_id and hasattr(self.env[self.report_id.custom_handler_model_name], fun_name):
-                report = self.env[self.report_id.custom_handler_model_name]
-            else:
-                report = self.report_id
-            report_function = get_public_method(report, fun_name)
-            report_action = report_function(report, report_options, *report_function_params)
-
+            report_action = self.report_id.dispatch_report_action(
+                options={**report_options, 'report_id': self.report_id.id},
+                action=format.fun_to_call,
+                action_param=format.fun_param or None,
+            )
             to_create_attachments.append(format.apply_export(report_action))
 
         return to_create_attachments
 
 
-class ReportExportWizardOption(models.TransientModel):
+class Account_ReportsExportWizardFormat(models.TransientModel):
     _name = 'account_reports.export.wizard.format'
     _description = "Export format for accounting's reports"
 
@@ -87,16 +81,12 @@ class ReportExportWizardOption(models.TransientModel):
         self.ensure_one()
 
         if report_action['type'] == 'ir_actions_account_report_download':
-            report_options = json.loads(report_action['data']['options'])
-
             # file_generator functions are always public for ir_actions_account_report_download
+            report_options = json.loads(report_action['data']['options'])
             file_generator = report_action['data']['file_generator']
             report = self.export_wizard_id.report_id
-            if report.custom_handler_model_id and hasattr(self.env[report.custom_handler_model_name], file_generator):
-                report = self.env[report.custom_handler_model_name]
-
-            generation_function = get_public_method(report, file_generator)
-            export_result = generation_function(report, report_options)
+            report_options['report_id'] = report.id
+            export_result = report.dispatch_report_action(report_options, file_generator)
 
             # We use the options from the action, as the action may have added or modified
             # stuff into them (see l10n_es_reports, with BOE wizard)

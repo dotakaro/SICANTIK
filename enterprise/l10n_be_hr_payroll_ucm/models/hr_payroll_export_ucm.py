@@ -6,9 +6,9 @@ from odoo import api, models, fields, _
 from odoo.exceptions import UserError
 
 
-class L10nBeHrPayrollExportUCM(models.Model):
-    _inherit = 'hr.work.entry.export.mixin'
+class L10nBeHrPayrollExportUcm(models.Model):
     _name = 'l10n.be.hr.payroll.export.ucm'
+    _inherit = ['hr.work.entry.export.mixin']
     _description = 'Export Payroll to UCM'
 
     eligible_employee_line_ids = fields.One2many('l10n.be.hr.payroll.export.ucm.employee')
@@ -61,9 +61,9 @@ class L10nBeHrPayrollExportUCM(models.Model):
         return _('Export to UCM')
 
 
-class L10nBeHrPayrollExportUCMEmployee(models.Model):
+class L10nBeHrPayrollExportUcmEmployee(models.Model):
     _name = 'l10n.be.hr.payroll.export.ucm.employee'
     _description = 'UCM Export Employee'
-    _inherit = 'hr.work.entry.export.employee.mixin'
+    _inherit = ['hr.work.entry.export.employee.mixin']
 
     export_id = fields.Many2one('l10n.be.hr.payroll.export.ucm')

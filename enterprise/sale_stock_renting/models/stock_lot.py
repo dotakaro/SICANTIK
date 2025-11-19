@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, models
 from odoo.osv import expression
 
-class ProductionLot(models.Model):
+
+class StockLot(models.Model):
     _inherit = 'stock.lot'
 
     def _get_available_lots(self, product, location=None):

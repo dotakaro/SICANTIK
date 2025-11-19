@@ -3,38 +3,16 @@
 # 	* hr_appraisal
 # 
 # Translators:
-# Tiffany Chang, 2024
-# Mikko Virtanen <mikko.virtanen2013@gmail.com>, 2024
-# Janne Rättyä <janne.rattya@web-veistamo.fi>, 2024
-# Sari Mäyrä <sari.mayra@sv-oy.fi>, 2024
-# Topi Aura <topi@aurat.fi>, 2024
-# Jukka Paulin <jukka.paulin@gmail.com>, 2024
-# Konsta Aavaranta, 2024
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Miku Laitinen <miku.laitinen@gmail.com>, 2024
-# Tommi Rintala <tommi.rintala@gmail.com>, 2024
-# Johanna Valkonen <miujohanna@gmail.com>, 2024
-# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
-# Jenni Heikkilä <jenni.heikkila@sv-oy.fi>, 2024
-# Simo Suurla <simo@suurla.fi>, 2024
-# Marko Happonen <marko.happonen@sprintit.fi>, 2024
-# Eino Mäkitalo <eino.makitalo@netitbe.fi>, 2024
-# Mikko Salmela <salmemik@gmail.com>, 2024
-# Martin Trigaux, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
-# Pekko Tuomisto <pekko.tuomisto@web-veistamo.fi>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
+# Wil Odoo, 2025
+# Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Jessica Jakara, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -50,6 +28,7 @@ msgstr "%(user)s päätti, roolissa %(role)s, julkaista työntekijän palautteen
 
 #. module: hr_appraisal
 #. odoo-python
+#: code:addons/hr_appraisal/models/hr_appraisal_goal.py:0
 #: code:addons/hr_appraisal/models/hr_appraisal_template.py:0
 msgid "%s (copy)"
 msgstr "%s (kopio)"
@@ -61,10 +40,13 @@ msgid "%s's Goals"
 msgstr "%s:n tavoitteet"
 
 #. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "1 Meeting"
-msgstr "1 kokous"
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_campaign_wizard__manager
+msgid ""
+"'Employee's Manager': Each appraisal will be conducted by the direct manager of the employee\n"
+"'Specific Person': All appraisals will be conducted by the specified employees"
+msgstr ""
+"'Työntekijän esimies': Jokainen arviointi suoritetaan työntekijän esimiehen toimesta\n"
+"'Määrätty henkilö': Kaikki arvioinnit suoritetaan siihen määrätyn työntekijän toimesta"
 
 #. module: hr_appraisal
 #: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_goal__progression__100
@@ -80,7 +62,7 @@ msgstr "25%"
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_config_settings__module_hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.res_config_settings_view_employee_form
 msgid "360 Feedback"
-msgstr "360 palaute"
+msgstr "360:n asteen palaute"
 
 #. module: hr_appraisal
 #: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_goal__progression__050
@@ -103,7 +85,7 @@ msgid ""
 "                        <br/><br/>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\"background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                    View Appraisal\n"
 "                                </a>\n"
 "                            </p>\n"
@@ -114,14 +96,14 @@ msgid ""
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"                       <t t-out=\"ctx.get('employee_to_name', 'employee')\">Työntekijän</t> arviointi on vahvistettu.\n"
-"                       <br/><br/>\n"
-"                        Pyydämme, että sovitte yhdessä arviointipäivän.\n"
-"                       <br/><br/>\n"
+"                        Työntekijän <t t-out=\"ctx.get('employee_to_name', 'employee')\">työntekijä</t> arviointi on vahvistettu.\n"
+"                        <br/><br/>\n"
+"                        Sopikaa yhdessä arviointiaika.\n"
+"                        <br/><br/>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\"background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
-"                                    Katso arviointia\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\"background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
+"                                    Näytä arviointi\n"
 "                                </a>\n"
 "                            </p>\n"
 "                        </t>\n"
@@ -144,7 +126,7 @@ msgid ""
 "                        </t>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; padding: 8px 16px 8px 16px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\" margin: auto; background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\" margin: auto; background-color: {{object.employee_id.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.employee_id.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                    View Appraisal\n"
 "                                </a>\n"
 "                            </p>\n"
@@ -157,7 +139,7 @@ msgstr ""
 "                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
 "                        Hyvä <t t-out=\"ctx.get('employee_to_name', 'employee')\">työntekijä</t>,\n"
 "                       <br>\n"
-"                       <t t-out=\"ctx.get('author_name', '')\">Addison Olson</t><t t-out=\"ctx.get('author_mail', '')\">(addison.olson28@example.com)</t> toivoo arviointia.\n"
+"                       <t t-out=\"ctx.get('author_name', '')\">Addison Olson</t><t t-out=\"ctx.get('author_mail', '')\">(addison.olson28@example.com)</t> pyytää arviointia.\n"
 "                        <t t-if=\"ctx.get('user_body')\">\n"
 "                            <div style=\"margin: 16px 0px 16px 0px; padding: 8px 16px 8px 16px; background-color: #F1F1F1;\">\n"
 "                                <t t-out=\"ctx.get('user_body')\">Vuosittainen arviointi.</t>\n"
@@ -165,7 +147,7 @@ msgstr ""
 "                        </t>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; padding: 8px 16px 8px 16px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\" margin: auto; background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\" margin: auto; background-color: {{object.employee_id.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.employee_id.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                    Näytä arviointi\n"
 "                                </a>\n"
 "                            </p>\n"
@@ -191,7 +173,7 @@ msgid ""
 "                        </t>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; padding: 8px 16px 8px 16px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\" margin: auto; background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\" margin: auto; background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                    View Appraisal\n"
 "                                </a>\n"
 "                            </p>\n"
@@ -215,7 +197,7 @@ msgstr ""
 "                        </t>\n"
 "                        <t t-if=\"ctx.get('recipient_users')\">\n"
 "                            <p style=\"margin: 16px 0px 16px 0px; padding: 8px 16px 8px 16px; text-align: center;\">\n"
-"                                <a t-att-href=\"ctx.get('url')\" style=\" margin: auto; background-color:#875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px;\">\n"
+"                                <a t-att-href=\"ctx.get('url')\" t-attf-style=\" margin: auto; background-color: {{object.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{object.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px;\">\n"
 "                                    Näytä arviointi\n"
 "                                </a>\n"
 "                            </p>\n"
@@ -234,8 +216,8 @@ msgid ""
 "                    </em>"
 msgstr ""
 "<em>\n"
-"                Kuvaile jotakin, joka sai sinut ylpeäksi, työstäsi, joka on ollut positiivista\n"
-"                yritykselle.\n"
+"                Kuvaile jotakin, joka sai sinut ylpeäksi, työtäsi, joka on tuonut jotakin positiivista\n"
+"                yritykseen.\n"
 "            </em>"
 
 #. module: hr_appraisal
@@ -247,8 +229,8 @@ msgid ""
 "                    </em>"
 msgstr ""
 "<em>\n"
-"                Kohtasitko uusia vaikeuksia? Ylititkö uusia\n"
-"                esteitä?\n"
+"                Kohtasitko uusia vaikeuksia? Haastoitko\n"
+"                itsesi?\n"
 "            </em>"
 
 #. module: hr_appraisal
@@ -260,8 +242,8 @@ msgid ""
 "                    </em>"
 msgstr ""
 "<em>\n"
-"                Jokaisessa työssä on vahvuuksia, mitkä ovat mielestäsi ne tehtävät, jotka ovat parhaita\n"
-"                joista nautit eniten tai vähiten?\n"
+"                Jokaisessa työssä on etuja, mitkä ovat mielestäsi ne tehtävät, joista\n"
+"                nautit eniten ja vähiten?\n"
 "            </em>"
 
 #. module: hr_appraisal
@@ -286,8 +268,8 @@ msgid ""
 "                    </em>"
 msgstr ""
 "<em>\n"
-"                Miten yritys voi auttaa sinua tarpeidesi ja tavoitteidesi saavuttamisessa, jotta saataisiin\n"
-"                jotta voit saavuttaa tavoitteesi ja etsiä parasta yhteistyötä.\n"
+"                Miten yritys voi auttaa sinua tarpeidesi ja tavoitteidesi saavuttamisessa, jotta\n"
+"                voit saavuttaa tavoitteesi ja etsiä parasta yhteistyötä.\n"
 "            </em>"
 
 #. module: hr_appraisal
@@ -312,7 +294,7 @@ msgid ""
 "                    </em>"
 msgstr ""
 "<em>\n"
-"                Saavutukset tuovat voimaa kohdata työn\n"
+"                Saavutukset antavat voimaa kohdata työn\n"
 "                haasteita.\n"
 "            </em>"
 
@@ -343,13 +325,13 @@ msgstr "<em>Tarvitsetko nopean vastauksen nykytilanteeseen?</em>"
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
 msgid "<em>Give an example of long-term objective (&gt; 6 months)</em>"
 msgstr ""
-"<em>Anna esimerkki pitkän aikavälin tavoitteesta (&gt; 6 kuukautta)</em>"
+"<em>Anna esimerkki pitkäikaisesta tavoitteesta (&gt; 6 kuukautta)</em>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
 msgid "<em>Give an example of short-term objective (&lt; 6 months)</em>"
 msgstr ""
-"<em>Anna esimerkki lyhyen aikavälin tavoitteesta (&lt; 6 kuukautta)</em>"
+"<em>Anna esimerkki lyhytaikaisesta tavoitteesta (&lt; 6 kuukautta)</em>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
@@ -380,7 +362,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_default_template
 msgid "<em>Pro-activity</em>"
-msgstr "<em>Pro-toiminta</em>"
+msgstr "<em>Proaktiivisuus</em>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
@@ -424,54 +406,23 @@ msgstr ""
 "                        </span>"
 
 #. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_employee_base.py:0
-msgid ""
-"<p class=\"o_view_nocontent_smiling_face\">\n"
-"                            Schedule an appraisal\n"
-"                        </p><p>\n"
-"                            Plan appraisals with your colleagues, collect and discuss feedback.\n"
-"                        </p>"
-msgstr ""
-"<p class=\"o_view_nocontent_smiling_face\">\n"
-"                            Aikatauluta arviointi\n"
-"                        </p><p>\n"
-"                            Suunnittele arvioinnit kollegoiden kanssa, kerää palaute ja keskustele siitä.\n"
-"                        </p>"
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
-msgid ""
-"<small role=\"img\" class=\"fa fa-circle text-success\" invisible=\"state !="
-" 'pending' or waiting_feedback\" aria-label=\"Ready\" title=\"Ready\"/>"
-msgstr ""
-"<small role=\"img\" class=\"fa fa-circle text-success\" invisible=\"state !="
-" 'pending' or waiting_feedback\" aria-label=\"Valmis\" title=\"Valmis\"/>"
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
-msgid "<span class=\"fw-bold\">Meeting: </span>"
-msgstr "<span class=\"fw-bold\">Kokous: </span>"
-
-#. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_view_form
 msgid ""
-"<span class=\"o_stat_text\" invisible=\"last_appraisal_state == 'done'\">\n"
+"<span class=\"o_stat_text\" invisible=\"last_appraisal_state == '3_done'\">\n"
 "                            Ongoing\n"
 "                        </span>\n"
-"                        <span class=\"o_stat_text\" invisible=\"last_appraisal_state != 'done'\">\n"
+"                        <span class=\"o_stat_text\" invisible=\"last_appraisal_state != '3_done'\">\n"
 "                            Latest\n"
 "                        </span>\n"
 "                        <span class=\"o_stat_text\">\n"
 "                            Appraisal\n"
 "                        </span>"
 msgstr ""
-"<span class=\"o_stat_text\" invisible=\"last_appraisal_state == 'done'\">\n"
-"                            Jatkuva\n"
+"<span class=\"o_stat_text\" invisible=\"last_appraisal_state == '3_done'\">\n"
+"                            Kesken\n"
 "                        </span>\n"
-"                        <span class=\"o_stat_text\" invisible=\"last_appraisal_state != 'done'\">\n"
-"                            Uusimmat\n"
+"                        <span class=\"o_stat_text\" invisible=\"last_appraisal_state != '3_done'\">\n"
+"                            Viimeisin\n"
 "                        </span>\n"
 "                        <span class=\"o_stat_text\">\n"
 "                            Arviointi\n"
@@ -498,37 +449,6 @@ msgstr "<span class=\"o_stat_text\">Arvioinnit</span>"
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "<span class=\"o_stat_text\">Goals</span>"
 msgstr "<span class=\"o_stat_text\">Tavoitteet</span>"
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
-msgid ""
-"<span class=\"text-end\" invisible=\"employee_feedback_published\">Not Visible to Manager</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not employee_feedback_published or state == 'new'\">Visible to Manager</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not employee_feedback_published or state != 'new'\">Visible &amp; Editable by Manager</span>"
-msgstr ""
-"<span class=\"text-end\" invisible=\"employee_feedback_published\">Esimies ei näe</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not employee_feedback_published or state == 'new'\">Esimiehen nähtävissä</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not employee_feedback_published or state != 'new'\">Esimies voi nähdä ja muokata</span>"
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
-msgid ""
-"<span class=\"text-end\" invisible=\"manager_feedback_published or not can_see_manager_publish\">Not Visible to Employee</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not manager_feedback_published or not can_see_manager_publish\">Visible to Employee</span>"
-msgstr ""
-"<span class=\"text-end\" invisible=\"manager_feedback_published or not can_see_manager_publish\">Ei työntekijän nähtävissä</span>\n"
-"                                            <span class=\"text-end\" invisible=\"not manager_feedback_published or not can_see_manager_publish\">Näkyy työntekijälle</span>"
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_public_view_form
-msgid ""
-"<span invisible=\"not is_manager or (next_appraisal_date or not ongoing_appraisal_count)\">\n"
-"                    Ongoing\n"
-"                </span>"
-msgstr ""
-"<span invisible=\"not is_manager or (next_appraisal_date or not ongoing_appraisal_count)\">\n"
-"                    Jatkuva\n"
-"                </span>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_default_template
@@ -582,7 +502,7 @@ msgid ""
 "                    </span>"
 msgstr ""
 "<span style=\"font-weight: bolder;\">\n"
-"                Oma tulevaisuuteni\n"
+"                Tulevaisuuteni\n"
 "            </span>"
 
 #. module: hr_appraisal
@@ -593,7 +513,7 @@ msgid ""
 "                    </span>"
 msgstr ""
 "<span style=\"font-weight: bolder;\">\n"
-"                Oma työni\n"
+"                Työni\n"
 "            </span>"
 
 #. module: hr_appraisal
@@ -618,19 +538,19 @@ msgid ""
 "                                </strong>"
 msgstr ""
 "<strong class=\"text-o-color-4\">\n"
-"                                    MOST\n"
+"                                    ENITEN\n"
 "                                   <br>\n"
 "                                </strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "<strong>360 feedback :</strong>"
-msgstr "<strong>360 palaute :</strong>"
+msgstr "<strong>360:n asteen palaute:</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_post_training_template
 msgid "<strong>Any particular remark on the training ?</strong>"
-msgstr "<strong>Onko koulutusta koskevia erityisiä huomautuksia?</strong>"
+msgstr "<strong>Onko tätä koulutusta koskevia erityishuomautuksia?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -649,7 +569,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "<strong>Career objective</strong>"
-msgstr "<strong>Uran tavoite</strong>"
+msgstr "<strong>Uratavoite</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
@@ -669,13 +589,13 @@ msgstr "<strong>Voisitteko antaa esimerkkejä?</strong>"
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "<strong>Create your SWOT</strong>"
-msgstr "<strong>Luo SWOT</strong>"
+msgstr "<strong>Luo SWOT-analyysi</strong>"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_report_view_gantt
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_view_gantt
 msgid "<strong>Date — </strong>"
-msgstr "<strong>Päivämäärä - </strong>"
+msgstr "<strong>Päivämäärä — </strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -685,7 +605,7 @@ msgstr "<strong>Tavoitteletko jotain tiettyä urapolkua?</strong>"
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
 msgid "<strong>Feedback on management</strong>"
-msgstr "<strong>Palaute johdosta</strong>"
+msgstr "<strong>Palaute johtoryhmälle</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -703,8 +623,8 @@ msgid ""
 "<strong>Has the employee effectively integrated the new skills or knowledge "
 "into their daily work tasks ?</strong>"
 msgstr ""
-"<strong>Onko työntekijä integroinut uudet taidot tai tiedot tehokkaasti "
-"päivittäisiin työtehtäviinsä?</strong>"
+"<strong>Hyödyntääkö työntekijä uusia taitoja tai tietoja tehokkaasti "
+"päivittäisissä työtehtävissä?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_post_training_template
@@ -761,7 +681,7 @@ msgstr ""
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_post_training_template
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "<strong>Management feedback and assessment</strong>"
-msgstr "<strong>Johdon palaute ja arviointi</strong>"
+msgstr "<strong>Johtoryhmän palaute ja arviointi</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
@@ -785,7 +705,7 @@ msgstr "<strong>Mahdollisuus</strong>"
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
 msgid "<strong>Overall experience feedback</strong>"
-msgstr "<strong>Kokemuksen yleinen palaute</strong>"
+msgstr "<strong>Palaute kokemuksesta yleisesti</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
@@ -798,7 +718,9 @@ msgstr "<strong>Yleinen henkilökohtainen kokemus</strong>"
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
 msgid "<strong>Position succession and candidate suggestion</strong>"
-msgstr "<strong>Asemien seuraaminen ja ehdokkaiden ehdottaminen</strong>"
+msgstr ""
+"<strong>Avointen työpaikkojen seuraaminen ja hakijoiden "
+"ehdottaminen</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -808,12 +730,12 @@ msgstr "<strong>SWOT-tulokset</strong>"
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
 msgid "<strong>SWOT</strong>"
-msgstr "<strong>SWOT</strong>"
+msgstr "<strong>SWOT-analyysi</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_post_training_template
 msgid "<strong>Skills at stakes :</strong>"
-msgstr "<strong>Panoksena olevat taidot :</strong>"
+msgstr "<strong>Panoksena olevat taidot:</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
@@ -823,17 +745,17 @@ msgstr "<strong>Vahvuus</strong>"
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "<strong>Things to keep doing ?</strong>"
-msgstr "<strong>Asioita, joita kannattaa jatkaa ?</strong>"
+msgstr "<strong>Asioita, joita kannattaa tehdä jatkossakin?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "<strong>Things to start doing ?</strong>"
-msgstr "<strong>Asioita, joita kannattaa alkaa tehdä ?</strong>"
+msgstr "<strong>Asioita, joita kannattaa tehdä jatkossa?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "<strong>Things to stop doing ?</strong>"
-msgstr "<strong>Asiat, joiden tekeminen pitäisi lopettaa ?</strong>"
+msgstr "<strong>Asiat, jotka kannattaa lopettaa jatkossa?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
@@ -870,13 +792,13 @@ msgid ""
 "<strong>What advice do you have for improving management's leadership and "
 "support for future employees ?</strong>"
 msgstr ""
-"<strong>Mitä neuvoja sinulla on johdon johtamisen ja tulevien työntekijöiden"
-" tukemisen parantamiseksi?</strong>"
+"<strong>Mitä neuvoja sinulla on johtamisen ja tulevien työntekijöiden "
+"tukemisen parantamiseksi?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
 msgid "<strong>What advice would you give to the successor ?</strong>"
-msgstr "<strong>Mitä neuvoja antaisit seuraajalle?</strong>"
+msgstr "<strong>Mitä neuvoja antaisit asemaan astuvalle?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
@@ -893,7 +815,7 @@ msgid ""
 "you able to adapt ?</strong>"
 msgstr ""
 "<strong>Mitä mieltä olet yrityksessä viime aikoina tapahtuneista "
-"muutoksista? Pystyittekö sopeutumaan ?</strong>"
+"muutoksista? Pystyitkö sopeutumaan ?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -923,13 +845,12 @@ msgstr ""
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
 msgid ""
 "<strong>What aspects of your role have you enjoyed the most/least ?</strong>"
-msgstr ""
-"<strong>Mistä olet nauttinut tehtävässäsi eniten tai vähiten?</strong>"
+msgstr "<strong>Mistä olet nauttinut tehtävässäsi eniten/vähiten?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_probationary_period_template
 msgid "<strong>What change would you see in the company ?</strong>"
-msgstr "<strong>Mitä muutoksia näkisit yrityksessä?</strong>"
+msgstr "<strong>Mitä muutoksia haluaisit nähdä yrityksessä?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_post_training_template
@@ -944,7 +865,7 @@ msgstr ""
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid ""
 "<strong>What is your overall feeling about the previous year ?</strong>"
-msgstr "<strong>Millainen on yleistuntemuksesi edellisestä vuodesta?</strong>"
+msgstr "<strong>Millainen on tuntemuksesi edellisestä vuodesta?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
@@ -962,7 +883,7 @@ msgid ""
 "career aspirations here ?</strong>"
 msgstr ""
 "<strong>Mikä motivoi sinua jatkamaan työskentelyä kanssamme ja mitkä ovat "
-"uratoiveesi täällä?</strong>"
+"uratoiveesi yrityksessä?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
@@ -972,7 +893,7 @@ msgstr "<strong>Mitkä olivat keskeiset haasteet tehtävässäsi?</strong>"
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "<strong>Which emotions were prevalent ?</strong>"
-msgstr "<strong>Mitkä tunteet olivat vallitsevia ?</strong>"
+msgstr "<strong>Mitkä olivat päällimmäist tunteet?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -994,7 +915,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
 msgid "<strong>Who would you see as your successor ?</strong>"
-msgstr "<strong>Kenet voisit nähdä seuraajaksesi?</strong>"
+msgstr "<strong>Kenet voisit nähdä seuraajanasi?</strong>"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_post_training_template
@@ -1034,10 +955,15 @@ msgid "Activities"
 msgstr "Toimenpiteet"
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
+msgid "Activities of"
+msgstr "Toiminnot, jotka liittyvät"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_exception_decoration
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr "Toimenpiteen poikkeuksen tyyli"
+msgstr "Poikkeustoimenpiteen tyyli"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_state
@@ -1049,12 +975,17 @@ msgstr "Toimenpiteen tila"
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_type_icon
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_type_icon
 msgid "Activity Type Icon"
-msgstr "Toimenpiteen ikoni"
+msgstr "Toimenpiteen kuvake"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
+msgid "Activity type"
+msgstr "Toimenpiteiden tyyppi"
 
 #. module: hr_appraisal
 #: model_terms:ir.actions.act_window,help:hr_appraisal.hr_appraisal_config_templates_action
 msgid "Add a new template"
-msgstr "Lisää uusi malli"
+msgstr "Lisää uusi mallipohja"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.request_appraisal_view_form
@@ -1067,6 +998,26 @@ msgid "Administrator"
 msgstr "Ylläpitäjä"
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "All Employees"
+msgstr "Kaikki työntekijät"
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_campaign_wizard__mode
+msgid ""
+"Allow to create appraisals in batches:\n"
+"- By Employee: for specific employees\n"
+"- By Company: all employees of the specified company\n"
+"- By Department: all employees of the specified department\n"
+"- By Employee Tag: all employees of the specific employee group category"
+msgstr ""
+"Mahdollistaa arviointien luomisen erissä:\n"
+"- Työntekijän mukaan: tietyille työntekijöille\n"
+"- Yrityksen mukaan: kaikki tietyn yrityksen työntekijät\n"
+"- Osaston mukaan: kaikki määritetyn osaston työntekijät\n"
+"- Työntekijätunnisteen mukaan: kaikki tietyn työntekijäryhmäluokan työntekijät"
+
+#. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Another appraisal with the same people is already ongoing."
 msgstr "Toinen arviointi samojen henkilöiden kanssa on jo käynnissä."
@@ -1077,6 +1028,7 @@ msgstr "Toinen arviointi samojen henkilöiden kanssa on jo käynnissä."
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__appraisal_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__appraisal_id
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_view_activity
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.res_config_settings_view_employee_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_tree
@@ -1101,9 +1053,23 @@ msgid "Appraisal Assessment Note"
 msgstr "Arvioinnin arvioinnin huomautus"
 
 #. module: hr_appraisal
+#. odoo-javascript
+#. odoo-python
+#: code:addons/hr_appraisal/models/hr_appraisal.py:0
+#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.js:0
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Appraisal Campaign"
+msgstr "Arviointikampanja"
+
+#. module: hr_appraisal
+#: model:ir.model,name:hr_appraisal.model_hr_appraisal_campaign_wizard
+msgid "Appraisal Campaign Wizard"
+msgstr "Ohjattu arviointikampanjatoiminto"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_company__appraisal_confirm_mail_template
 msgid "Appraisal Confirm Mail Template"
-msgstr "Arvioinnin vahvistuksen sähköpostin malli"
+msgstr "Arvioinnin vahvistussähköpostin malli"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__employee_appraisal_count
@@ -1113,6 +1079,7 @@ msgstr "Arviointien määrä"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__date_close
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__appraisal_date
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Appraisal Date"
 msgstr "Arviointipäivä"
@@ -1120,7 +1087,7 @@ msgstr "Arviointipäivä"
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__employee_id
 msgid "Appraisal Employee"
-msgstr "Arvioi työntekijä"
+msgstr "Työntekijän arviointi"
 
 #. module: hr_appraisal
 #. odoo-python
@@ -1147,7 +1114,7 @@ msgstr "Arvioinnista vastaava esimies"
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__appraisal_plan_posted
 msgid "Appraisal Plan Posted"
-msgstr "Arviointisuunnitelma lähetetty"
+msgstr "Arviointisuunnitelma kirjattu"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_department__appraisal_properties_definition
@@ -1163,7 +1130,7 @@ msgstr "Arviointipyyntö"
 #. module: hr_appraisal
 #: model:mail.template,subject:hr_appraisal.mail_template_appraisal_request
 msgid "Appraisal Requested"
-msgstr "Pyydetty arviointi"
+msgstr "Arviointia pyydetty"
 
 #. module: hr_appraisal
 #: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_report__state__pending
@@ -1179,6 +1146,7 @@ msgstr "Arviointitilastot"
 #. module: hr_appraisal
 #: model:ir.actions.act_window,name:hr_appraisal.hr_appraisal_config_templates_action
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__appraisal_template_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__appraisal_template_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_company__appraisal_template_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_config_settings__appraisal_template_id
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_template_view_tree
@@ -1201,37 +1169,37 @@ msgid ""
 "Appraisal for %(appraisal_title)s should be using template "
 "\"%(template_name)s\" instead of \"%(wrong_template_name)s\""
 msgstr ""
-"Arvioinnissa %(appraisal_title)s pitäisi käyttää mallia "
-"\"%(template_name)s\" eikä \"%(wrong_template_name)s\""
+"Arvioinnissa %(appraisal_title)s tulisi käyttää mallia "
+"\"%(template_name)s\", ei \"%(wrong_template_name)s\""
 
 #. module: hr_appraisal
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "Appraisal for %(employee)s on %(date)s"
-msgstr "Arvio %(employee)s:lle %(date)s"
+msgstr "Työntekijän %(employee)s arviointi päivänä %(date)s"
 
 #. module: hr_appraisal
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "Appraisal for %s to fill"
-msgstr "Arviointi %s täyttämistä varten"
+msgstr "Arviointi %s:lle täytettäväksi "
 
 #. module: hr_appraisal
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "Appraisal of %s"
-msgstr "Arviointi %s"
+msgstr "%s:n arviointi"
 
 #. module: hr_appraisal
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "Appraisal to fill"
-msgstr "Arviointi täyttää"
+msgstr "Arviointi täytettäväksi"
 
 #. module: hr_appraisal
 #: model:ir.actions.act_window,name:hr_appraisal.hr_appraisal_action_from_department
 msgid "Appraisal to start"
-msgstr "Arvioinnin aloittaminen"
+msgstr "Arvioinnin aloittamiseksi"
 
 #. module: hr_appraisal
 #: model:ir.actions.server,name:hr_appraisal.ir_cron_scheduler_appraisal_ir_actions_server
@@ -1241,9 +1209,11 @@ msgstr "Arviointi: Suorita työntekijän arviointi"
 #. module: hr_appraisal
 #. odoo-javascript
 #: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.js:0
+#: model:ir.actions.act_window,name:hr_appraisal.hr_appraisal_action_multiple_appraisals
 #: model:ir.actions.act_window,name:hr_appraisal.open_view_hr_appraisal_tree
 #: model:ir.ui.menu,name:hr_appraisal.menu_hr_appraisal_root
 #: model:ir.ui.menu,name:hr_appraisal.menu_open_view_hr_appraisal_tree
+#: model:res.groups.privilege,name:hr_appraisal.res_groups_privilege_appraisals
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_department_view_kanban
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_departure_wizard_view_form
 msgid "Appraisals"
@@ -1257,12 +1227,22 @@ msgstr "Arviointien automatisointi"
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.res_config_settings_view_employee_form
 msgid "Appraisals Plans"
-msgstr "Arvioinnin suunnitelmat"
+msgstr "Arviointien suunnitelmat"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_department__appraisals_to_process_count
 msgid "Appraisals to Process"
-msgstr "Arvioinnit tehtäväksi"
+msgstr "Käsiteltävät arvioinnit"
+
+#. module: hr_appraisal
+#. odoo-python
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid ""
+"Appraisals won't be created for the following employees because they don't "
+"have a manager: %(employees)s"
+msgstr ""
+"Seuraaville työntekijöille ei luoda arviointeja, koska heillä ei ole "
+"esimiestä: %(employees)s"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
@@ -1326,19 +1306,29 @@ msgid "Avatar 128"
 msgstr "Avatar 128"
 
 #. module: hr_appraisal
-#: model:ir.model,name:hr_appraisal.model_hr_employee_base
-msgid "Basic Employee"
-msgstr "Normaali työntekijä"
-
-#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__body_has_template_value
 msgid "Body content is the same as the template"
 msgstr "Rungon sisältö on sama kuin mallissa"
 
 #. module: hr_appraisal
-#: model:ir.model,name:hr_appraisal.model_calendar_event
-msgid "Calendar Event"
-msgstr "Kalenteritapahtuma"
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__mode__company
+msgid "By Company"
+msgstr "Yrityksen perusteella"
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__mode__department
+msgid "By Department"
+msgstr "Osaston mukaan"
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__mode__employee
+msgid "By Employee"
+msgstr "Työntekijöittäin"
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__mode__category
+msgid "By Employee Tag"
+msgstr "Työntekijöiden tunnisteiden perusteella"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__can_edit_body
@@ -1363,26 +1353,8 @@ msgstr "Voi nähdä esimiehen julkaisun"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.request_appraisal_view_form
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Cancel"
 msgstr "Peruuta"
-
-#. module: hr_appraisal
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_departure_wizard__cancel_appraisal
-msgid "Cancel Future Appraisals"
-msgstr "Peruuta tulevat arvioinnit"
-
-#. module: hr_appraisal
-#: model:ir.model.fields,help:hr_appraisal.field_hr_departure_wizard__cancel_appraisal
-msgid "Cancel all appraisal after contract end date."
-msgstr "Peruuta kaikki arvioinnit sopimuksen päättymispäivän jälkeen."
-
-#. module: hr_appraisal
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__cancel
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_report__state__cancel
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
-msgid "Cancelled"
-msgstr "Peruttu"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__date_close
@@ -1407,6 +1379,7 @@ msgstr "Yritykset"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__company_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__company_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__company_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__company_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__company_id
@@ -1434,7 +1407,10 @@ msgid "Confirm"
 msgstr "Vahvista"
 
 #. module: hr_appraisal
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__pending
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__2_pending
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_employee_public__last_appraisal_state__2_pending
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Confirmed"
 msgstr "Vahvistettu"
 
@@ -1499,6 +1475,7 @@ msgstr "Luotu"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__create_uid
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__create_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__create_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__create_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__create_uid
@@ -1509,6 +1486,7 @@ msgstr "Luonut"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__create_date
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__create_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__create_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__create_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__create_date
@@ -1538,7 +1516,7 @@ msgstr "Määräaika"
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "Deadline Date"
-msgstr "Määräaika päivä"
+msgstr "Määräajan päivämäärä"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_view_activity
@@ -1554,7 +1532,7 @@ msgstr "Määräaika: %s"
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.res_config_settings_view_employee_form
 msgid "Default Template"
-msgstr "Oletuspohja"
+msgstr "Oletusmallipohja"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.res_config_settings_view_employee_form
@@ -1565,13 +1543,19 @@ msgstr ""
 "perusteella"
 
 #. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_kanban
-msgid "Delete"
-msgstr "Poista"
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_departure_wizard__delete_appraisal
+msgid "Delete Future Appraisals"
+msgstr "Poista tulevat arvioinnit"
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_departure_wizard__delete_appraisal
+msgid "Delete all appraisal after contract end date."
+msgstr "Poista kaikki työsopimuksen päättymisen jälkeiset arvioinnit."
 
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_hr_department
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__department_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__department_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__department_id
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
@@ -1592,25 +1576,34 @@ msgid "Description"
 msgstr "Kuvaus"
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Discard"
+msgstr "Hylkää"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_department__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_departure_wizard__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_mail_template__display_name
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_users__display_name
 msgid "Display Name"
 msgstr "Näyttönimi"
 
 #. module: hr_appraisal
-#. odoo-javascript
-#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
-msgid "Do you want to"
-msgstr "Haluatko"
-
-#. module: hr_appraisal
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__done
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__3_done
 #: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_report__state__done
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_employee_public__last_appraisal_state__3_done
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_kanban
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
@@ -1628,7 +1621,7 @@ msgstr "Sähköpostimallit"
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_hr_employee
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__employee_id
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__employee_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__employee_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__employee_id
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
@@ -1667,26 +1660,37 @@ msgstr "Työntekijän palaute julkaistu"
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__employee_feedback_template
 msgid "Employee Feedback Template"
-msgstr "Työntekijöiden palautteen malli"
+msgstr "Työntekijöiden palautteen mallipohja"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__name
 msgid "Employee Name"
-msgstr "Employee Name"
+msgstr "Työntekijän nimi"
+
+#. module: hr_appraisal
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__category_id
+msgid "Employee Tag"
+msgstr "Työntekijän tunniste"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__employee_user_id
 msgid "Employee User"
-msgstr "Työntekijän käyttäjä"
+msgstr "Työntekijän käyttäjäprofiili"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Employee's Feedback"
-msgstr "Työntekijän palaute"
+msgstr "Työntekijöiden palaute"
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__manager__employee_manager
+msgid "Employee's Manager"
+msgstr "Työntekijän esimies"
 
 #. module: hr_appraisal
 #. odoo-javascript
 #: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.js:0
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__employee_ids
 msgid "Employees"
 msgstr "Työntekijät"
 
@@ -1706,7 +1710,7 @@ msgstr "Ylittää odotukset"
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "Extended Filters..."
-msgstr "Edistyneet suotimet..."
+msgstr "Laajennetut suodattimet..."
 
 #. module: hr_appraisal
 #: model:hr.appraisal.goal.tag,name:hr_appraisal.hr_appraisal_goal_tag_external
@@ -1717,22 +1721,17 @@ msgstr "Ulkoinen"
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "Fill appraisal for %s"
-msgstr "Täytä arvio %s"
-
-#. module: hr_appraisal
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__date_final_interview
-msgid "Final Interview"
-msgstr "Lopullinen haastattelu"
+msgstr "Täytä arvio työntekijälle %s"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "Final Interview Date"
-msgstr "Lopullinen haastattelupäivä"
+msgstr "Viimeinen haastattelupäivä"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__assessment_note
 msgid "Final Rating"
-msgstr "Lopullinen luokitus"
+msgstr "Lopullinen arviointi"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_follower_ids
@@ -1750,7 +1749,7 @@ msgstr "Seuraajat (kumppanit)"
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__activity_type_icon
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
-msgstr "Font awesome -ikoni esim.. fa-tasks"
+msgstr "Font awesome -kuvake, esim. fa-tasks"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
@@ -1763,11 +1762,10 @@ msgid ""
 "Give one positive achievement that convinced you of the employee's\n"
 "                    value."
 msgstr ""
-"Mainitse yksi myönteinen saavutus, joka vakuutti sinut työntekijän\n"
+"Mainitse yksi positiivinen saavutus, joka vakuutti sinut työntekijän\n"
 "            arvosta."
 
 #. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 msgid "Goal"
 msgstr "Tavoite"
@@ -1792,7 +1790,7 @@ msgstr "Tavoitteiden määrä"
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "Group By"
-msgstr "Ryhmittely"
+msgstr "Ryhmittele"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
@@ -1847,12 +1845,21 @@ msgstr "Mitä mieltä olen yrityksestä..."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_template__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_department__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_departure_wizard__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_mail_template__id
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_company__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_appraisal.field_res_users__id
 msgid "ID"
 msgstr "ID"
 
@@ -1866,7 +1873,7 @@ msgstr "Kuvake"
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__activity_exception_icon
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__activity_exception_icon
 msgid "Icon to indicate an exception activity."
-msgstr "Kuvake joka kertoo poikkeustoiminnosta."
+msgstr "Kuvake, joka kertoo poikkeustoiminnosta."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__message_needaction
@@ -1883,6 +1890,24 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Jos valittu, joitakin viestejä ei ole toimitettu."
 
 #. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__manager_feedback_published
+msgid ""
+"If greened, the employee will be able to see your feedback. Otherwise, your "
+"feedback is blurred and visible only to you."
+msgstr ""
+"Jos vihreänä, työntekijä näkee palautteesi. Muussa tapauksessa palaute on "
+"sumennettu ja näkyy vain sinulle."
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__employee_feedback_published
+msgid ""
+"If greened, the manager will be able to see and edit your feedback. "
+"Otherwise, your feedback is blurred and visible only to you."
+msgstr ""
+"Jos vihreänä, esimies näkee ja voi muokata palautettasi. Muussa tapauksessa "
+"palaute on sumennettu ja näkyy vain sinulle."
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__image_1920
 msgid "Image"
 msgstr "Kuva"
@@ -1895,7 +1920,7 @@ msgstr "Kuva 128"
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 msgid "In Progress"
-msgstr "Käynnissä"
+msgstr "Kesken"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
@@ -1931,8 +1956,14 @@ msgstr "On esimies"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__job_id
-msgid "Job Position"
-msgstr "Tehtävänimike"
+msgid "Job"
+msgstr "Työtehtävä"
+
+#. module: hr_appraisal
+#. odoo-javascript
+#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
+msgid "Keep track of how your employees are doing..."
+msgstr "Seuraa, miten työntekijäsi pärjäävät..."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__lang
@@ -1942,7 +1973,6 @@ msgstr "Kieli"
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__last_appraisal_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__last_appraisal_id
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_base__last_appraisal_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__last_appraisal_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_res_users__last_appraisal_id
 msgid "Last Appraisal"
@@ -1956,13 +1986,13 @@ msgid "Last Appraisal Date"
 msgstr "Viimeisimmän arvioinnin päivämäärä"
 
 #. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "Last Meeting"
-msgstr "Viimeisin kokous"
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__last_appraisal_state
+msgid "Last Appraisal State"
+msgstr "Viimeisimmän arvioinnin tila"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__write_uid
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__write_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__write_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__write_uid
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__write_uid
@@ -1973,6 +2003,7 @@ msgstr "Viimeksi päivittänyt"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__write_date
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__write_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__write_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal_tag__write_date
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__write_date
@@ -1993,6 +2024,14 @@ msgid "Late Activities"
 msgstr "Myöhässä olevat toimenpiteet"
 
 #. module: hr_appraisal
+#: model:ir.actions.server,name:hr_appraisal.action_open_appraisal_campaign_wizard
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_kanban
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_employee_tree
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_tree
+msgid "Launch Campaign"
+msgstr "Käynnistä kampanja"
+
+#. module: hr_appraisal
 #: model:ir.actions.server,name:hr_appraisal.action_load_appraisal_demo_data
 msgid "Load appraisal scenario"
 msgstr "Lataa arviointiskenaario"
@@ -2009,8 +2048,8 @@ msgid ""
 "Long term (&gt; 6 months) career discussion, where does the employee\n"
 "                    wants to go, how to help them reach this path?"
 msgstr ""
-"Pitkän aikavälin (&gt; 6 kuukautta) urakeskustelu, missä työntekijä on\n"
-"            haluaa mennä, miten auttaa häntä pääsemään tälle tielle?"
+"Pitkän aikavälin (&gt; 6 kuukautta) urakeskustelu, mihin suuntaan työntekijä\n"
+"            haluaa kehittyä, miten häntä voidaan auttaa pääsemään tässä?"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__template_id
@@ -2021,10 +2060,12 @@ msgstr "Viestipohja"
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__manager_ids
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__manager_id
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__manager
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__manager_ids
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 msgid "Manager"
-msgstr "Päällikkö"
+msgstr "Esimies"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
@@ -2046,7 +2087,7 @@ msgstr "Esimiehen palaute julkaistu"
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__manager_feedback_template
 msgid "Manager Feedback Template"
-msgstr "Esimiehen palautteen malli"
+msgstr "Esimiehen palautteen mallipohja"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__manager_user_ids
@@ -2059,22 +2100,16 @@ msgid "Manager's Feedback"
 msgstr "Esimiehen palaute"
 
 #. module: hr_appraisal
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__manager_ids
+msgid "Managers"
+msgstr "Esimiehet"
+
+#. module: hr_appraisal
 #: model:ir.actions.server,name:hr_appraisal.action_mark_as_done
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_form
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_kanban
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Mark as Done"
 msgstr "Merkitse tehdyksi"
-
-#. module: hr_appraisal
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__meeting_count_display
-msgid "Meeting Count"
-msgstr "Kokousten lukumäärä"
-
-#. module: hr_appraisal
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__meeting_ids
-msgid "Meetings"
-msgstr "Tapaamiset"
 
 #. module: hr_appraisal
 #. odoo-python
@@ -2095,6 +2130,22 @@ msgid "Messages"
 msgstr "Viestit"
 
 #. module: hr_appraisal
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__mode
+msgid "Mode"
+msgstr "Tila"
+
+#. module: hr_appraisal
+#. odoo-javascript
+#: code:addons/hr_appraisal/static/src/components/multiple_appraisals_cog_menu.xml:0
+msgid "Multiple Appraisals"
+msgstr "Useita arviointeja"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
+msgid "My Activities"
+msgstr "Toimenpiteeni"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__my_activity_date_deadline
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__my_activity_date_deadline
 msgid "My Activity Deadline"
@@ -2104,7 +2155,7 @@ msgstr "Toimenpiteeni määräaika"
 #: model:ir.actions.act_window,name:hr_appraisal.hr_appraisal_action_my
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "My Appraisals"
-msgstr "Omat arvioinnit"
+msgstr "Omat arviointini"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
@@ -2123,11 +2174,11 @@ msgstr "Nimi"
 #. odoo-python
 #: code:addons/hr_appraisal/models/res_company.py:0
 msgid "Needs improvement"
-msgstr "Tarvitsee parannusta"
+msgstr "Kaipaa parannusta"
 
 #. module: hr_appraisal
 #. odoo-python
-#: code:addons/hr_appraisal/models/hr_employee_base.py:0
+#: code:addons/hr_appraisal/models/hr_employee.py:0
 msgid "New and Pending Appraisals"
 msgstr "Uudet ja vireillä olevat arvioinnit"
 
@@ -2141,13 +2192,13 @@ msgstr "Seuraavan toimenpiteen kalenterimerkintä"
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_date_deadline
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_date_deadline
 msgid "Next Activity Deadline"
-msgstr "Seuraavan toimenpiteen eräpäivä"
+msgstr "Seuraavan toimenpiteen määräaika"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_summary
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__activity_summary
 msgid "Next Activity Summary"
-msgstr "Seuraavan toimenpiteen kuvaus"
+msgstr "Seuraavan toimenpiteen yhteenveto"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__activity_type_id
@@ -2169,28 +2220,32 @@ msgid "Next Appraisal Date"
 msgstr "Seuraava arviointipäivä"
 
 #. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "Next Meeting"
-msgstr "Seuraava kokous"
-
-#. module: hr_appraisal
 #. odoo-javascript
 #: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
-msgid "No Appraisals yet ..."
-msgstr "Ei vielä arvioita ..."
+msgid "No Appraisals found!"
+msgstr "Arviointeja ei löytynyt!"
 
 #. module: hr_appraisal
 #. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "No Meeting"
-msgstr "Ei kokousta"
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid "No employees have the tag %(category_name)s"
+msgstr "Yhdelläkään työntekijällä ei ole tunnistetta %(category_name)s"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Not Visible to Employee"
+msgstr "Ei näkyvillä työntekijälle"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Not Visible to Manager"
+msgstr "Ei näkyvillä esimiehelle"
 
 #. module: hr_appraisal
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "Note"
-msgstr "Muistiinpano"
+msgstr "Huomautus"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__message_needaction_counter
@@ -2225,7 +2280,7 @@ msgstr "Esimies: Pääsy kaikkiin arviointeihin"
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_employee_view_form
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Ongoing"
-msgstr "Jatkuva"
+msgstr "Käynnissä"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__ongoing_appraisal_count
@@ -2236,15 +2291,15 @@ msgstr "Käynnissä oleva arviointien määrä"
 
 #. module: hr_appraisal
 #. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal_goal.py:0
-msgid "Operation not supported"
-msgstr "Toiminto ei ole tuettu"
+#: code:addons/hr_appraisal/models/hr_appraisal.py:0
+msgid "Oops! You can only delete draft appraisals."
+msgstr "Hups! Voit poistaa vain luonnosvaiheessa olevia arviointeja."
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "Opportunities"
-msgstr "Mahdollisuudet"
+msgstr "Myyntimahdollisuudet"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_request_appraisal__lang
@@ -2256,17 +2311,22 @@ msgid ""
 msgstr ""
 "Valinnainen käännöskieli (ISO-koodi), joka valitaan sähköpostia "
 "lähetettäessä. Jos sitä ei ole asetettu, käytetään englanninkielistä "
-"versiota. Tämän pitäisi yleensä olla sijoitusilmaus, joka antaa sopivan "
-"kielen, esim. {{ object.partner_id.lang }}."
+"versiota. Tämän pitäisi yleensä olla paikanmerkkilauseke, joka antaa sopivan"
+" kielen, esim. {{ object.partner_id.lang }}."
+
+#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_campaign_wizard__manager__person
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Other"
+msgstr "Muu"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_exit_interview_template
 msgid "Overall experience feedback"
-msgstr "Yleisen kokemuksen palaute"
+msgstr "Palaute yleisestä kokemuksesta"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__parent_user_id
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_base__parent_user_id
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__parent_user_id
 msgid "Parent User"
 msgstr "Ylemmän tason käyttäjä"
@@ -2275,7 +2335,14 @@ msgstr "Ylemmän tason käyttäjä"
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_search
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "People I Manage"
-msgstr "Ihmiset, joiden esimies olen"
+msgstr "Ihmiset, joille toimin esimiehenä"
+
+#. module: hr_appraisal
+#: model_terms:ir.actions.act_window,help:hr_appraisal.hr_appraisal_action_multiple_appraisals
+msgid "Plan appraisals with your colleagues, collect and discuss feedback."
+msgstr ""
+"Suunnittele arvioinnit kollegoiden kanssa, kerää palautetta ja keskustele "
+"siitä."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__previous_appraisal_date
@@ -2289,15 +2356,21 @@ msgid "Previous Appraisals"
 msgstr "Aiemmat arvioinnit"
 
 #. module: hr_appraisal
+#. odoo-javascript
+#: code:addons/hr_appraisal/static/src/component/print_menu.xml:0
+msgid "Print"
+msgstr "Tulosta"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__note
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Private Note"
-msgstr "Yksityinen huomautus"
+msgstr "Yksityinen merkintä"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
 msgid "Private note (only accessible to people set as managers)"
-msgstr "Yksityinen huomautus (vain esimiehiksi määritettyjen käytettävissä)"
+msgstr "Yksityinen merkintä (vain esimiehiksi määritettyjen käytettävissä)"
 
 #. module: hr_appraisal
 #: model:hr.appraisal.goal.tag,name:hr_appraisal.hr_appraisal_goal_tag_programming
@@ -2310,9 +2383,26 @@ msgid "Progress"
 msgstr "Edistyminen"
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_kanban
+msgid "Progress:"
+msgstr "Edistyminen:"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__appraisal_properties
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
 msgid "Properties"
 msgstr "Ominaisuudet"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_goal_view_form
+msgid ""
+"Provide visible information on the goal, how the employee can achieve it. "
+"Which benefit he will get from it.                             Maybe some "
+"process or steps to help her/him along the way."
+msgstr ""
+"Anna konkreettista tietoa tavoitteesta ja siitä, miten työntekijä voi "
+"saavuttaa sen. Mitä hyötyä siitä on hänelle? Ehkä jokin prosessi tai vaihe, "
+"joka auttaa häntä matkan varrella."
 
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_hr_employee_public
@@ -2323,12 +2413,7 @@ msgstr "Julkinen työntekijä"
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__rating_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__rating_ids
 msgid "Ratings"
-msgstr "Arviointi"
-
-#. module: hr_appraisal
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
-msgid "Ready"
-msgstr "Valmis siirrettäväksi"
+msgstr "Arvioinnit"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_request_appraisal__recipient_ids
@@ -2339,6 +2424,12 @@ msgstr "Vastaanottajat"
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__related_partner_id
 msgid "Related Partner"
 msgstr "Liittyvä kumppani"
+
+#. module: hr_appraisal
+#: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__employee_user_id
+#: model:ir.model.fields,help:hr_appraisal.field_hr_employee__parent_user_id
+msgid "Related user name for the resource to manage its access."
+msgstr "Liittyvä käyttäjätunnus resurssille sen oikeuksien määrittämiseksi"
 
 #. module: hr_appraisal
 #. odoo-javascript
@@ -2370,9 +2461,8 @@ msgstr "Pyydä arviointia"
 
 #. module: hr_appraisal
 #: model:ir.actions.server,name:hr_appraisal.action_create_multi_appraisals
-#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_employee_tree
 msgid "Request Appraisals"
-msgstr "Pyydä arvioita"
+msgstr "Pyydä arviointeja"
 
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_request_appraisal
@@ -2390,6 +2480,22 @@ msgstr "Vastuuhenkilö"
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__message_has_sms_error
 msgid "SMS Delivery error"
 msgstr "Tekstiviestin toimitusvirhe"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Schedule"
+msgstr "Aikatauluta"
+
+#. module: hr_appraisal
+#. odoo-javascript
+#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
+msgid "Schedule Appraisals"
+msgstr "Aikatauluta arviointeja"
+
+#. module: hr_appraisal
+#: model_terms:ir.actions.act_window,help:hr_appraisal.hr_appraisal_action_multiple_appraisals
+msgid "Schedule an appraisal"
+msgstr "Aikatauluta arviointi"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
@@ -2430,7 +2536,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model:mail.template,description:hr_appraisal.mail_template_appraisal_request
 msgid "Sent manually to the manager by the employee who wants an appraisal"
-msgstr "Arviointia haluava työntekijä lähettää manuaalisesti esimiehelle"
+msgstr "Arviointia pyytävä työntekijä lähettää manuaalisesti esimiehelle"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_note__sequence
@@ -2465,8 +2571,10 @@ msgstr "Näytä esimiehen täysi palaute"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
-msgid "Show all records which has next action date is before today"
-msgstr "Näytä kaikki tietueet joissa on toimenpide myöhässä"
+msgid "Show all records whose next activity date is past"
+msgstr ""
+"Näytä kaikki kirjaukset, joiden seuraavan toimenpiteen päivä on "
+"menneisyydessä"
 
 #. module: hr_appraisal
 #: model:hr.appraisal.goal.tag,name:hr_appraisal.hr_appraisal_goal_tag_softskills
@@ -2477,8 +2585,6 @@ msgstr "Pehmeät taidot"
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__state
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_report__state
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee__last_appraisal_state
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_base__last_appraisal_state
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_employee_public__last_appraisal_state
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "Status"
 msgstr "Tila"
@@ -2495,7 +2601,7 @@ msgstr ""
 "Tila aktiviteetin perusteella\n"
 "Myöhässä: Eräpäivä on menneisyydessä\n"
 "Tänään: Eräpäivä on tänään\n"
-"Suunniteltu: Tulevaisuudessa."
+"Suunniteltu: Toimenpiteitä tulevaisuudessa."
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -2543,8 +2649,8 @@ msgid ""
 "Thanks to your Appraisal Plan, without any new manual Appraisal, the new "
 "Appraisal will be automatically created on %s."
 msgstr ""
-"Arviointisuunnitelmasi ansiosta ilman uutta manuaalista arviointia uusi "
-"arviointi luodaan automaattisesti osoitteessa %s."
+"Arviointisuunnitelmasi ansiosta uusi arviointi luodaan automaattisesti ilman"
+" uutta manuaalista arviointia kohteessa %s."
 
 #. module: hr_appraisal
 #. odoo-python
@@ -2556,7 +2662,13 @@ msgstr "Työntekijä ei voi muuttaa \"Esimiespalautteen julkaisua\"."
 #. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid "The appraisal's status has been set to Done by %s"
-msgstr "Arvioinnin tilaksi on asetettu valmistuu %s"
+msgstr "%s on asettanut arvioinnin tilaksi valmis"
+
+#. module: hr_appraisal
+#. odoo-python
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid "The company %(company_name)s doesn't have employees"
+msgstr "Yrityksellä %(company_name)s ei ole työntekijöitä"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__last_appraisal_date
@@ -2576,9 +2688,15 @@ msgstr ""
 "päivämäärien mukaan (ensimmäinen arviointi + arviointiväli)."
 
 #. module: hr_appraisal
+#. odoo-python
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid "The department %(department_name)s doesn't have employees"
+msgstr "Osastossa %(department_name)s ei ole työntekijöitä"
+
+#. module: hr_appraisal
 #: model:ir.model.constraint,message:hr_appraisal.constraint_res_company_positif_number_months
 msgid "The duration time must be bigger or equal to 1 month."
-msgstr "Kestoajan on oltava vähintään 1 kuukausi."
+msgstr "Keston on oltava vähintään 1 kuukausi."
 
 #. module: hr_appraisal
 #. odoo-python
@@ -2588,7 +2706,7 @@ msgid ""
 "created and you can fill it here."
 msgstr ""
 "Työntekijä %(employee)s saapui %(months)s kuukautta sitten. Arviointi on "
-"luotu ja voit täyttää sen tässä."
+"luotu ja voit täyttää sen täällä."
 
 #. module: hr_appraisal
 #. odoo-python
@@ -2608,13 +2726,24 @@ msgstr ""
 
 #. module: hr_appraisal
 #. odoo-python
+#: code:addons/hr_appraisal/wizard/hr_appraisal_campaign_wizard.py:0
+msgid ""
+"The following employees already have appraisals on %(appraisal_date)s: "
+"%(employees)s. The existing appraisals will be used instead of creating new "
+"ones."
+msgstr ""
+"Seuraavilla työntekijöillä on jo suunniteltu arvioiti %(appraisal_date)s: "
+"%(employees)s. Olemassa olevia arviointeja käytetään uusien luomisen sijaan."
+
+#. module: hr_appraisal
+#. odoo-python
 #: code:addons/hr_appraisal/models/hr_appraisal.py:0
 msgid ""
 "The last appraisal of %(employee)s was %(months)s months ago. The appraisal "
 "is created and you can fill it here."
 msgstr ""
-"Viimeisin arviointi %(employee)s oli %(months)s kuukautta sitten. Arviointi "
-"on luotu ja voit täyttää sen täällä."
+"Viimeisin %(employee)s:n arviointi oli %(months)s kuukautta sitten. "
+"Arviointi on luotu ja voit täyttää sen täällä."
 
 #. module: hr_appraisal
 #. odoo-python
@@ -2631,23 +2760,20 @@ msgstr "Tämä kenttä ei näy työntekijälle."
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 #: model_terms:hr.appraisal.template,appraisal_manager_feedback_template:hr_appraisal.hr_appraisal_yearly_template
 msgid "Threats"
-msgstr "Uhkat"
+msgstr "Uhat"
 
 #. module: hr_appraisal
-#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__new
-msgid "To Confirm"
-msgstr "Vahvistettavaksi"
-
-#. module: hr_appraisal
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal__state__1_new
+#: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_employee_public__last_appraisal_state__1_new
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_search
-msgid "To Do"
-msgstr "Tehtävät"
+msgid "To Confirm"
+msgstr "Vahvistettavana"
 
 #. module: hr_appraisal
 #: model:ir.model.fields.selection,name:hr_appraisal.selection__hr_appraisal_report__state__new
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_appraisal_report_search
 msgid "To Start"
-msgstr "Aloitettavaksi"
+msgstr "Aloitettavana"
 
 #. module: hr_appraisal
 #. odoo-javascript
@@ -2669,13 +2795,18 @@ msgstr "Koulutus"
 #. odoo-javascript
 #: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
 msgid "Try the backend and reporting:"
-msgstr "Kokeile backendiä ja raportointia:"
+msgstr "Kokeile palvelinpuolta ja raportointia:"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.hr_appraisal_campaign_wizard_view_form
+msgid "Type Employee's Name"
+msgstr "Kirjoita työntekijän nimi"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__activity_exception_decoration
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__activity_exception_decoration
 msgid "Type of the exception activity on record."
-msgstr "Poikkeusaktiviteetin tyyppi tietueella."
+msgstr "Kirjattu poikkeustoimenpiteen tyyppi."
 
 #. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__uncomplete_goals_count
@@ -2701,9 +2832,9 @@ msgid ""
 "                                         You can use a lot of options with "
 "the html editor, accessible by pressing / on the keyboard."
 msgstr ""
-"Tällä alueella voit kirjoittaa sisällön, joka näytetään työntekijälle."
+"Tähän alueeseen voit kirjoittaa sisällön, joka näytetään työntekijälle."
 "                                         Voit käyttää monia vaihtoehtoja "
-"HTML-editorilla, johon pääset painamalla / näppäimistöllä."
+"HTML-editorilla, johon pääset painamalla näppäimistön \"/\"-merkkiä."
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_template_form
@@ -2712,13 +2843,12 @@ msgid ""
 "                                         You can use a lot of options with "
 "the html editor, accessible by pressing / on the keyboard."
 msgstr ""
-"Tällä alueella voit kirjoittaa sisällön, joka näytetään Managerille."
+"Tähän alueeseen voit kirjoittaa sisällön, joka näytetään esimiehelle."
 "                                         Voit käyttää monia vaihtoehtoja "
-"HTML-editorilla, johon pääset painamalla / näppäimistöllä."
+"HTML-editorilla, johon pääset painamalla näppäimistön \"/\"-merkkiä."
 
 #. module: hr_appraisal
 #: model:ir.model,name:hr_appraisal.model_res_users
-#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__manager_user_id
 msgid "User"
 msgstr "Käyttäjä"
 
@@ -2728,9 +2858,34 @@ msgid "User Contents"
 msgstr "Käyttäjän sisältö"
 
 #. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Visible & Editable by Manager"
+msgstr "Näkyvissä & muokattavissa esimiehelle"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Visible to Employee"
+msgstr "Näkyvissä työntekijälle"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_form
+msgid "Visible to Manager"
+msgstr "Näkyvissä esimiehelle"
+
+#. module: hr_appraisal
+#: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_template_form
+msgid "Visible to all"
+msgstr "Kaikkien nähtävissä"
+
+#. module: hr_appraisal
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__waiting_feedback
 msgid "Waiting Feedback from Employee/Managers"
-msgstr "Palautteen odottaminen työntekijöiltä ja esimiehiltä"
+msgstr "Odotetaan palautetta työntekijöiltä/esimiehiltä"
+
+#. module: hr_appraisal
+#: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_campaign_wizard__warning
+msgid "Warning"
+msgstr "Varoitus"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_yearly_template
@@ -2742,18 +2897,18 @@ msgstr "Heikkoudet"
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal__website_message_ids
 #: model:ir.model.fields,field_description:hr_appraisal.field_hr_appraisal_goal__website_message_ids
 msgid "Website Messages"
-msgstr "Verkkosivun ilmoitukset"
+msgstr "Verkkosivun viestit"
 
 #. module: hr_appraisal
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal__website_message_ids
 #: model:ir.model.fields,help:hr_appraisal.field_hr_appraisal_goal__website_message_ids
 msgid "Website communication history"
-msgstr "Verkkosivun viestihistoria"
+msgstr "Verkkosivun viestintähistoria"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
 msgid "What are my best achievement(s) since my last appraisal?"
-msgstr "Mitkä ovat parhaat saavutukseni edellisen arvioinnin jälkeen?"
+msgstr "Mitkä ovat merkittävimmät saavutukseni edellisen arvioinnin jälkeen?"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
@@ -2761,8 +2916,8 @@ msgid ""
 "What are my short and long-term goals with the company, and for my\n"
 "                    career?"
 msgstr ""
-"Mitkä ovat lyhyen ja pitkän aikavälin tavoitteeni yrityksessä ja omalle tulevaisuudelleni?\n"
-"            urallani?"
+"Mitkä ovat lyhyen ja pitkän aikavälin tavoitteeni yrityksessä ja oman urallani\n"
+"            kannalta?"
 
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
@@ -2770,7 +2925,7 @@ msgid ""
 "What has been the most challenging aspect of my work this past year and\n"
 "                    why?"
 msgstr ""
-"Mikä on ollut haastavinta työssäni kuluneen vuoden aikana ja Mikä on ollut haastavinta työssäni kuluneen vuoden aikana?\n"
+"Mikä on ollut haastavinta työssäni kuluneen vuoden aikana ja\n"
 "            miksi?"
 
 #. module: hr_appraisal
@@ -2791,7 +2946,7 @@ msgstr ""
 #. module: hr_appraisal
 #: model_terms:hr.appraisal.template,appraisal_employee_feedback_template:hr_appraisal.hr_appraisal_default_template
 msgid "Which parts of my job do I most / least enjoy?"
-msgstr "Mistä työni osista nautin eniten / vähiten?"
+msgstr "Mistä työni osa-alueista nautin eniten / vähiten?"
 
 #. module: hr_appraisal
 #. odoo-python
@@ -2809,14 +2964,8 @@ msgstr ""
 msgid ""
 "You cannot delete an employee who is a goal's manager, archive it instead."
 msgstr ""
-"Et voi poistaa työntekijää, joka on tavoitteen esimies, vaan arkistoi se."
-
-#. module: hr_appraisal
-#. odoo-python
-#: code:addons/hr_appraisal/models/hr_appraisal.py:0
-msgid "You cannot delete appraisal which is not in draft or cancelled state"
-msgstr ""
-"Et voi poistaa arviointia, joka ei ole luonnosvaiheessa tai peruutettu"
+"Et voi poistaa työntekijää, joka on tavoitteen esimies, mutta voit arkistoi "
+"se."
 
 #. module: hr_appraisal
 #. odoo-python
@@ -2839,12 +2988,6 @@ msgid ""
 msgstr ""
 "Viimeisin arviointisi oli %s kuukautta sitten. Arviointisi on luotu ja voit "
 "täyttää sen täällä."
-
-#. module: hr_appraisal
-#. odoo-javascript
-#: code:addons/hr_appraisal/static/src/views/appraisal_helper_view.xml:0
-msgid "create a new one"
-msgstr "luo uusi"
 
 #. module: hr_appraisal
 #: model_terms:ir.ui.view,arch_db:hr_appraisal.view_hr_appraisal_template_form

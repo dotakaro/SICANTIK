@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates>
-  <t t-name="documents_spreadsheet.CommentThreadsSidePanel">
+  <t t-name="spreadsheet_edition.CommentThreadsSidePanel">
     <div
       class="o-threads-side-panel"
       tabindex="0"
       >
-      <Section>
-        <t t-set-slot="title">Filter comments</t>
+      <Section title.translate="Filter comments">
         <select t-model="state.mode" class="o-input">
           <option value="allSheets">All sheets</option>
           <option value="activeSheet">This sheet</option>
@@ -36,16 +35,17 @@
                 t-on-click="(ev) => this.openMenu(ev, thread.threadId)"
               />
               <span
-                class="cursor-pointer fa fa-ellipsis-v d-flex ps-1 pe-1 thread-menu"
+                class="cursor-pointer oi oi-ellipsis-v d-flex ps-1 pe-1 thread-menu"
                 t-on-click="(ev) => this.openMenu(ev, thread.threadId)"
               />
             </div>
           </div>
         </Section>
       </t>
-      <Menu
+      <MenuPopover
         t-if="menuState.isOpen"
-        position="menuState.position"
+        anchorRect="menuState.anchorRect"
+        popoverPositioning="'bottom-left'"
         menuItems="menuItems"
         onClose.bind="closeMenu"
       />

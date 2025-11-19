@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details
 
+from datetime import datetime
+
 from odoo import Command
 from odoo.exceptions import AccessError
-from odoo.tests import tagged
-from odoo.tests.common import users
+from odoo.tests import tagged, users
 
 from .common import TestIndustryFsmCommon
 
@@ -33,11 +34,11 @@ class TestFsmFlow(TestIndustryFsmCommon):
         result = task_with_george_user.action_fsm_validate()
         self.assertEqual(result['type'], 'ir.actions.act_window', 'As there are still timers to stop, an action is returned')
         Timer = self.env['timer.timer']
-        tasks_running_timer_ids = Timer.search([('res_model', '=', 'project.task'), ('res_id', '=', self.task.id)])
+        tasks_running_timer_ids = Timer.search([('parent_res_model', '=', 'project.task'), ('parent_res_id', '=', self.task.id)])
         timesheets_running_timer_ids = Timer.search([('res_model', '=', 'account.analytic.line'), ('res_id', '=', timesheet.id)])
         self.assertEqual(len(timesheets_running_timer_ids), 1, 'There is still a timer linked to the timesheet')
         self.task.invalidate_model(['timesheet_ids'])
-        self.assertEqual(len(tasks_running_timer_ids), 1, 'There is still a timer linked to the task')
+        self.assertEqual(len(tasks_running_timer_ids), 2, 'The both timers (one from marcel and the other from henri) should be linked to the task.')
         wizard = self.env['project.task.stop.timers.wizard'].create({'line_ids': [Command.create({'task_id': self.task.id})]})
         wizard.action_confirm()
         tasks_running_timer_ids = Timer.search([('res_model', '=', 'project.task'), ('res_id', '=', self.task.id)])
@@ -90,3 +91,50 @@ class TestFsmFlow(TestIndustryFsmCommon):
             partner.action_partner_navigate()['url'],
             "https://www.google.com/maps/dir/?api=1&destination=Chauss%C3%A9e+de+Namur+40%2C+1367+Ramillies",
         )
+
+    def test_fsm_project_default_task_types(self):
+        self.assertTrue(self.fsm_project.type_ids, "FSM project should have default FSM task types assigned.")
+        # Create a new FSM project
+        new_fsm_project = self.env['project.project'].create({
+            'name': 'New FSM Project',
+            'is_fsm': True,
+            'company_id': self.env.company.id
+        })
+        self.assertEqual(new_fsm_project.type_ids, self.fsm_project.type_ids, "New FSM project should inherit tasks stages from the existing FSM project.")
+
+    def test_new_fsm_stage_linked_with_existing_project(self):
+        """Check whether the new FSM stage is linked to the existing project or not."""
+        Project = self.env['project.project']
+        fsm_stage = self.env['project.task.type'].search([('project_ids.is_fsm', '=', True)])
+        # To create a new stage; otherwise, the old FSM stage is linked.
+        fsm_stage.action_archive()
+        fsm_project_no_stages = Project.create({
+            'name': 'New FSM Project',
+            'is_fsm': True,
+            'company_id': self.env.company.id,
+            'type_ids': False,
+        })
+        fsm_project_with_stages = Project.with_context(fsm_mode=True).create({
+            'name': 'New FSM Project',
+            'is_fsm': True,
+            'company_id': self.env.company.id,
+        })
+        self.assertFalse(
+            fsm_project_no_stages.type_ids,
+            "FSM Project without stages should not have any task stages."
+        )
+        self.assertTrue(
+            fsm_project_with_stages.type_ids,
+            "FSM Project with stages should have default task stages."
+        )
+        fsm_stage.action_unarchive()
+
+    def test_plan_task_in_calendar(self):
+        self.task.user_ids = self.george_user
+        self.task.with_context(task_calendar_plan_full_day=True).plan_task_in_calendar({
+            'planned_date_begin': '2023-02-01 07:00:00',
+            'date_deadline': '2023-02-01 19:00:00',
+        })
+        self.assertEqual(self.task.planned_date_begin, datetime(2023, 2, 1, 8, 0, 0))
+        self.assertEqual(self.task.date_deadline, datetime(2023, 2, 1, 17, 0, 0))
+        self.assertEqual(self.task.allocated_hours, 8)

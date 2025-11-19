@@ -8,7 +8,7 @@ from odoo.exceptions import UserError
 from itertools import chain
 
 
-class MulticurrencyRevaluationReportCustomHandler(models.AbstractModel):
+class AccountMulticurrencyRevaluationReportHandler(models.AbstractModel):
     """Manage Unrealized Gains/Losses.
 
     In multi-currencies environments, we need a way to control the risk related
@@ -20,13 +20,13 @@ class MulticurrencyRevaluationReportCustomHandler(models.AbstractModel):
     recon the real gain/loss.
     """
     _name = 'account.multicurrency.revaluation.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.report.custom.handler']
     _description = 'Multicurrency Revaluation Report Custom Handler'
 
     def _get_custom_display_config(self):
         return {
             'components': {
-                'AccountReportFilters': 'account_reports.MulticurrencyRevaluationReportFilters',
+                'AccountReportFilters': 'MulticurrencyRevaluationReportFilters',
             },
             'templates': {
                 'AccountReportLineName': 'account_reports.MulticurrencyRevaluationReportLineName',
@@ -108,7 +108,7 @@ class MulticurrencyRevaluationReportCustomHandler(models.AbstractModel):
 
         return rslt
 
-    def _custom_groupby_line_completer(self, report, options, line_dict):
+    def _custom_groupby_line_completer(self, report, options, line_dict, current_groupby):
         model_info_from_id = report._get_model_info_from_id(line_dict['id'])
         if model_info_from_id[0] == 'res.currency':
             line_dict['unfolded'] = True
@@ -188,7 +188,7 @@ class MulticurrencyRevaluationReportCustomHandler(models.AbstractModel):
                 'balance_operation': query_res['balance_operation'],
                 'balance_current': query_res['balance_current'],
                 'adjustment': query_res['adjustment'],
-                'has_sublines': query_res['aml_count'] > 0,
+                'has_sublines': True,
             }
 
         report = self.env['account.report'].browse(options['report_id'])
@@ -202,7 +202,7 @@ class MulticurrencyRevaluationReportCustomHandler(models.AbstractModel):
                 'balance_operation': None,
                 'balance_current': None,
                 'adjustment': None,
-                'has_sublines': False,
+                'has_sublines': True,
             }
 
         query = "(VALUES {})".format(', '.join("(%s, %s)" for rate in options['currency_rates']))
@@ -238,8 +238,7 @@ class MulticurrencyRevaluationReportCustomHandler(models.AbstractModel):
                    SUM(subquery.balance_currency) AS balance_currency,
                    SUM(subquery.balance_operation) AS balance_operation,
                    SUM(subquery.balance_current) AS balance_current,
-                   SUM(subquery.adjustment) AS adjustment,
-                   COUNT(subquery.aml_id) AS aml_count
+                   SUM(subquery.adjustment) AS adjustment
               FROM (
                 -- Get moves that have at least one partial at a certain date and are not fully paid at that date
                 SELECT
@@ -377,11 +376,8 @@ class MulticurrencyRevaluationReportCustomHandler(models.AbstractModel):
         self._cr.execute(full_query)
         query_res_lines = self._cr.dictfetchall()
 
-        if not current_groupby:
-            return build_result_dict(report, query_res_lines and query_res_lines[0] or {})
-        else:
-            rslt = []
-            for query_res in query_res_lines:
-                grouping_key = query_res['grouping_key']
-                rslt.append((grouping_key, build_result_dict(report, query_res)))
-            return rslt
+        rslt = []
+        for query_res in query_res_lines:
+            grouping_key = query_res['grouping_key']
+            rslt.append((grouping_key, build_result_dict(report, query_res)))
+        return rslt

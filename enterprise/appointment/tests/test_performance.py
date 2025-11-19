@@ -21,6 +21,8 @@ class AppointmentPerformanceCase(AppointmentCommon):
         super(AppointmentPerformanceCase, self).setUp()
         # patch registry to simulate a ready environment
         self.patch(self.env.registry, 'ready', True)
+        # we don't use mock_mail_gateway thus want to mock smtp to test the stack
+        self._mock_smtplib_connection()
 
 
 class AppointmentUIPerformanceCase(AppointmentPerformanceCase):
@@ -96,7 +98,7 @@ class OnlineAppointmentPerformance(AppointmentUIPerformanceCase):
         self.authenticate('staff_user_aust', 'staff_user_aust')
         t0 = time.time()
         with freeze_time(self.reference_now):
-            with self.assertQueryCount(27):  # apt 19
+            with self.assertQueryCount(20):  # apt 19
                 self._test_url_open('/appointment/%i' % self.apt_type_bxls_2days.id)
         t1 = time.time()
 

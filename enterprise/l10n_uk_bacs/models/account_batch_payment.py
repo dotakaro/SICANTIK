@@ -10,6 +10,7 @@ import base64
 
 MAX_PAYMENT_AMOUNT = 999999999.99
 
+
 class AccountBatchPayment(models.Model):
     _inherit = 'account.batch.payment'
 

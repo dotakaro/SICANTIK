@@ -4,7 +4,7 @@
 from odoo import api, fields, models
 
 
-class RetentionReportWizard(models.TransientModel):
+class L10n_Co_ReportsRetention_ReportWizard(models.TransientModel):
     _name = 'l10n_co_reports.retention_report.wizard'
     _description = "Colombian Retention Report Wizard"
 

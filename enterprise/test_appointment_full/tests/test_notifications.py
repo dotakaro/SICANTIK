@@ -3,12 +3,13 @@ from freezegun import freeze_time
 from unittest.mock import patch
 
 from odoo.addons.appointment.tests.common import AppointmentCommon
-from odoo.addons.google_calendar.models.res_users import User as GoogleUser
+from odoo.addons.google_calendar.models.res_users import ResUsers as GoogleUser
 from odoo.addons.google_calendar.tests.test_sync_common import TestSyncGoogle
 from odoo.addons.mail.tests.common import mail_new_test_user
-from odoo.addons.microsoft_calendar.models.res_users import User as MsftUser
+from odoo.addons.microsoft_calendar.models.res_users import ResUsers as MsftUser
 from odoo.addons.microsoft_calendar.tests.common import TestCommon as MsftTestCommon
 from odoo.addons.microsoft_calendar.utils.microsoft_calendar import MicrosoftCalendarService
+from odoo.tests import tagged
 
 from odoo.tests import users
 
@@ -36,6 +37,7 @@ class TestAppointmentNotificationCommon(AppointmentCommon):
         })
 
 
+@tagged('post_install', '-at_install', 'mail_flow')
 class TestAppointmentNotificationsMail(TestAppointmentNotificationCommon):
     @freeze_time('2020-02-01 09:00:00')
     def test_appointment_cancel_notification_mail(self):
@@ -43,13 +45,14 @@ class TestAppointmentNotificationsMail(TestAppointmentNotificationCommon):
         self.env.flush_all()
         self.cr.precommit.run()
         with self.mock_mail_gateway():
-            appointment.with_context(mail_notify_author=True).action_archive()
+            appointment.action_archive()
             self.env.flush_all()
             self.cr.precommit.run()
         self.assertMailMail(appointment.partner_id, 'sent', author=appointment.partner_id)
         self.assertMailMail(appointment.partner_ids - appointment.partner_id, 'sent', author=appointment.partner_id)
 
 
+@tagged('post_install', '-at_install', 'mail_flow')
 class TestSyncOdoo2GoogleMail(TestSyncGoogle, TestAppointmentNotificationCommon):
     @freeze_time('2020-02-01 09:00:00')
     @patch.object(GoogleUser, '_get_google_calendar_token', lambda user: 'some-token')
@@ -68,6 +71,7 @@ class TestSyncOdoo2GoogleMail(TestSyncGoogle, TestAppointmentNotificationCommon)
         self.assertNotSentEmail()
 
 
+@tagged('post_install', '-at_install', 'mail_flow')
 class TestAppointmentNotificationsMicrosoftCalendar(MsftTestCommon, TestAppointmentNotificationCommon):
     @classmethod
     def setUpClass(cls):
@@ -101,7 +105,7 @@ class TestAppointmentNotificationsMicrosoftCalendar(MsftTestCommon, TestAppointm
             self.env.cr.postcommit.run()
         mock_delete.assert_called_once_with('test_msft_id', token='some-token', timeout=3)
         self.assertNotSentEmail()
-    
+
     @freeze_time('2020-02-01 09:00:00')
     @users('mike@organizer.com', 'john@attendee.com', 'ms_sync_paused_user', 'user_public')
     @patch.object(

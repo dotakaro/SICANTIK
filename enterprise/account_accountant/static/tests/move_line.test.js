@@ -1,28 +1,32 @@
-import { beforeEach, test } from "@odoo/hoot";
 import { defineAccountModels } from "@account/../tests/account_test_helpers";
 import {
-    assertSteps,
     click,
     contains,
+    listenStoreFetch,
     onRpcBefore,
     openListView,
     patchUiSize,
     SIZES,
     start,
     startServer,
-    step,
+    STORE_FETCH_ROUTES,
+    userContext,
+    waitStoreFetch,
 } from "@mail/../tests/mail_test_helpers";
-import { onRpc, serverState } from "@web/../tests/web_test_helpers";
+import { beforeEach, test } from "@odoo/hoot";
+import { asyncStep, onRpc, waitForSteps } from "@web/../tests/web_test_helpers";
 import { getOrigin } from "@web/core/utils/urls";
 
 const ROUTES_TO_IGNORE = [
+    ...STORE_FETCH_ROUTES,
     "/bus/im_status",
-    "/web/dataset/call_kw/account.move.line/get_views",
-    "/web/webclient/load_menus",
-    "/web/dataset/call_kw/res.users/load_views",
     "/hr_attendance/attendance_user_data",
+    "/web/dataset/call_kw/account.move.line/get_views",
     "/web/dataset/call_kw/res.users/has_group",
+    "/web/dataset/call_kw/res.users/load_views",
+    "/web/webclient/load_menus",
 ];
+
 const openPreparedView = async (size) => {
     patchUiSize({ size: size });
     onRpcBefore((route, args) => {
@@ -32,24 +36,17 @@ const openPreparedView = async (size) => {
         ) {
             return;
         }
-        step(`${route} - ${JSON.stringify(args)}`);
+        asyncStep(`${route} - ${JSON.stringify(args)}`);
     });
-    onRpc(({ method, model, args, kwargs }) => {
-        const route = `/web/dataset/call_kw/${model}/${method}`;
+    onRpc(({ kwargs, route }) => {
         if (ROUTES_TO_IGNORE.includes(route)) {
             return;
         }
-        step(`${route} - {"kwargs":${JSON.stringify(kwargs)}}`);
+        asyncStep(`${route} - {"kwargs":${JSON.stringify(kwargs)}}`);
     });
+    listenStoreFetch("init_messaging");
     await start();
-    await assertSteps([
-        `/mail/data - ${JSON.stringify({
-            init_messaging: {},
-            failures: true,
-            systray_get_activities: true,
-            context: { lang: "en", tz: "taht", uid: serverState.userId, allowed_company_ids: [1] },
-        })}`,
-    ]);
+    await waitStoreFetch("init_messaging");
     await openListView("account.move.line", {
         context: { group_by: ["move_id"] },
         arch: `
@@ -106,23 +103,30 @@ beforeEach(async () => {
 test("No preview on small devices", async () => {
     await openPreparedView(SIZES.XL);
     await contains(".o_move_line_list_view");
-    await assertSteps([
+    await waitForSteps([
         `/web/dataset/call_kw/account.move.line/web_read_group - ${JSON.stringify({
             kwargs: {
-                orderby: "",
-                lazy: true,
-                offset: 0,
+                domain: [],
+                groupby: ["move_id"],
+                aggregates: [],
                 limit: 80,
+                offset: 0,
+                order: "",
+                auto_unfold: false,
+                opening_info: [],
+                unfold_read_specification: {
+                    id: {},
+                    name: {},
+                    move_id: { fields: { display_name: {} } },
+                    move_attachment_ids: { fields: { mimetype: {} } },
+                },
+                unfold_read_default_limit: 80,
+                groupby_read_specification: {},
                 context: {
-                    lang: "en",
-                    tz: "taht",
-                    uid: serverState.userId,
-                    allowed_company_ids: [1],
+                    ...userContext(),
+                    read_group_expand: true,
                     group_by: ["move_id"],
                 },
-                groupby: ["move_id"],
-                domain: [],
-                fields: ["id:sum"],
             },
         })}`,
     ]);
@@ -130,7 +134,7 @@ test("No preview on small devices", async () => {
     await contains(".o_attachment_preview", { count: 0 }); // The preview component shouldn't be mounted for small screens
     await click(":nth-child(1 of .o_group_header)");
     await contains(".o_data_row", { count: 2 });
-    await assertSteps([
+    await waitForSteps([
         `/web/dataset/call_kw/account.move.line/web_search_read - ${JSON.stringify({
             kwargs: {
                 specification: {
@@ -143,10 +147,7 @@ test("No preview on small devices", async () => {
                 order: "",
                 limit: 80,
                 context: {
-                    lang: "en",
-                    tz: "taht",
-                    uid: serverState.userId,
-                    allowed_company_ids: [1],
+                    ...userContext(),
                     bin_size: true,
                     group_by: ["move_id"],
                     default_move_id: 1,
@@ -162,7 +163,7 @@ test("No preview on small devices", async () => {
     await contains(".o_attachment_preview", { count: 0 }); // The preview component shouldn't be mounted for small screens even when clicking on a line without attachment
     await click(":nth-child(2 of .o_group_header)");
     await contains(".o_data_row", { count: 4 });
-    await assertSteps([
+    await waitForSteps([
         `/web/dataset/call_kw/account.move.line/web_search_read - ${JSON.stringify({
             kwargs: {
                 specification: {
@@ -175,10 +176,7 @@ test("No preview on small devices", async () => {
                 order: "",
                 limit: 80,
                 context: {
-                    lang: "en",
-                    tz: "taht",
-                    uid: serverState.userId,
-                    allowed_company_ids: [1],
+                    ...userContext(),
                     bin_size: true,
                     group_by: ["move_id"],
                     default_move_id: 2,
@@ -192,29 +190,36 @@ test("No preview on small devices", async () => {
     await contains(":nth-child(4 of .o_data_row) :nth-child(2 of .o_data_cell) input");
     // weak test, no guarantee to wait long enough for the potential attachment preview to show
     await contains(".o_attachment_preview", { count: 0 }); // The preview component shouldn't be mounted for small screens even when clicking on a line with attachment
-    await assertSteps([], { message: "no extra rpc should be done" });
+    await waitForSteps([], { message: "no extra rpc should be done" });
 });
 
 test("Fetch and preview of attachments on big devices", async () => {
     await openPreparedView(SIZES.XXL);
     await contains(".o_move_line_list_view");
-    await assertSteps([
+    await waitForSteps([
         `/web/dataset/call_kw/account.move.line/web_read_group - ${JSON.stringify({
             kwargs: {
-                orderby: "",
-                lazy: true,
-                offset: 0,
+                domain: [],
+                groupby: ["move_id"],
+                aggregates: [],
                 limit: 80,
+                offset: 0,
+                order: "",
+                auto_unfold: false,
+                opening_info: [],
+                unfold_read_specification: {
+                    id: {},
+                    name: {},
+                    move_id: { fields: { display_name: {} } },
+                    move_attachment_ids: { fields: { mimetype: {} } },
+                },
+                unfold_read_default_limit: 80,
+                groupby_read_specification: {},
                 context: {
-                    lang: "en",
-                    tz: "taht",
-                    uid: serverState.userId,
-                    allowed_company_ids: [1],
+                    ...userContext(),
+                    read_group_expand: true,
                     group_by: ["move_id"],
                 },
-                groupby: ["move_id"],
-                domain: [],
-                fields: ["id:sum"],
             },
         })}`,
     ]);
@@ -225,7 +230,7 @@ test("Fetch and preview of attachments on big devices", async () => {
     await contains(".o_attachment_preview iframe", { count: 0 });
     await click(":nth-child(1 of .o_group_header)");
     await contains(".o_data_row", { count: 2 });
-    await assertSteps([
+    await waitForSteps([
         `/web/dataset/call_kw/account.move.line/web_search_read - ${JSON.stringify({
             kwargs: {
                 specification: {
@@ -238,10 +243,7 @@ test("Fetch and preview of attachments on big devices", async () => {
                 order: "",
                 limit: 80,
                 context: {
-                    lang: "en",
-                    tz: "taht",
-                    uid: serverState.userId,
-                    allowed_company_ids: [1],
+                    ...userContext(),
                     bin_size: true,
                     group_by: ["move_id"],
                     default_move_id: 1,
@@ -257,7 +259,7 @@ test("Fetch and preview of attachments on big devices", async () => {
     await click(":nth-child(2 of .o_group_header)");
     await contains(".o_data_row", { count: 4 });
     await contains(".o_attachment_preview p", { text: "No attachments linked." });
-    await assertSteps([
+    await waitForSteps([
         `/web/dataset/call_kw/account.move.line/web_search_read - ${JSON.stringify({
             kwargs: {
                 specification: {
@@ -270,10 +272,7 @@ test("Fetch and preview of attachments on big devices", async () => {
                 order: "",
                 limit: 80,
                 context: {
-                    lang: "en",
-                    tz: "taht",
-                    uid: serverState.userId,
-                    allowed_company_ids: [1],
+                    ...userContext(),
                     bin_size: true,
                     group_by: ["move_id"],
                     default_move_id: 2,
@@ -290,7 +289,7 @@ test("Fetch and preview of attachments on big devices", async () => {
             getOrigin() + "/web/content/1"
         )}#pagemode=none']`
     );
-    await assertSteps([], { message: "no extra rpc should be done" });
+    await waitForSteps([], { message: "no extra rpc should be done" });
     await click(":nth-child(3 of .o_group_header)");
     await contains(".o_data_row", { count: 6 });
     // weak test, no guarantee to wait long enough for the potential attachment to change
@@ -299,7 +298,7 @@ test("Fetch and preview of attachments on big devices", async () => {
             getOrigin() + "/web/content/1"
         )}#pagemode=none']`
     ); // The previewer content shouldn't change without clicking on another line from another account.move
-    await assertSteps([
+    await waitForSteps([
         `/web/dataset/call_kw/account.move.line/web_search_read - ${JSON.stringify({
             kwargs: {
                 specification: {
@@ -312,10 +311,7 @@ test("Fetch and preview of attachments on big devices", async () => {
                 order: "",
                 limit: 80,
                 context: {
-                    lang: "en",
-                    tz: "taht",
-                    uid: serverState.userId,
-                    allowed_company_ids: [1],
+                    ...userContext(),
                     bin_size: true,
                     group_by: ["move_id"],
                     default_move_id: 3,
@@ -332,9 +328,9 @@ test("Fetch and preview of attachments on big devices", async () => {
             getOrigin() + "/web/content/2"
         )}#pagemode=none']`
     );
-    await assertSteps([]);
+    await waitForSteps([]);
     await click(":nth-child(1 of .o_data_row) :nth-child(2 of .o_data_cell)");
     await contains(".o_attachment_preview iframe", { count: 0 });
     await contains(".o_attachment_preview p");
-    await assertSteps([]);
+    await waitForSteps([]);
 });

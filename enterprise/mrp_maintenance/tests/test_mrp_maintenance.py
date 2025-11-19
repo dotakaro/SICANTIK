@@ -41,7 +41,7 @@ class TestMrpMaintenance(common.TransactionCase):
             'company_id': cls.main_company.id,
             'login': "employee",
             'email': "employee@yourcompany.example.com",
-            'groups_id': [(6, 0, [cls.env.ref('base.group_user').id])]
+            'group_ids': [(6, 0, [cls.env.ref('base.group_user').id])]
         })
 
         # Create user with extra rights
@@ -50,7 +50,7 @@ class TestMrpMaintenance(common.TransactionCase):
             'company_id': cls.main_company.id,
             'login': "manager",
             'email': "eqmanager@yourcompany.example.com",
-            'groups_id': [(6, 0, [cls.env.ref('maintenance.group_equipment_manager').id])]
+            'group_ids': [(6, 0, [cls.env.ref('maintenance.group_equipment_manager').id])]
         })
 
         # Create workcenter
@@ -305,7 +305,7 @@ class TestMrpMaintenance(common.TransactionCase):
 
     def test_workcenter_unavailability(self):
         # Required for `assign_date` to be visible in the view
-        self.env.user.groups_id += self.env.ref('mrp.group_mrp_routings')
+        self.env.user.group_ids += self.env.ref('mrp.group_mrp_routings')
         with self.debug_mode():
             # Create a new equipment
             equipment_form = Form(self.equipment)
@@ -334,4 +334,27 @@ class TestMrpMaintenance(common.TransactionCase):
                 (datetime(2017, 5, 3, 7), datetime(2017, 5, 3, 8)),
                 (datetime(2017, 5, 3, 8, microsecond=500), datetime(2017, 5, 3, 10, microsecond=500))
             ]
+        )
+
+    def test_maintenance_team_id_compute(self):
+        """ Ensure that the maintenance request does not update its maintenance_team_id
+        when changing to a workcenter that does not have a maintenance_team_id.
+        """
+
+        workcenter_without_team = self.env['mrp.workcenter'].create({
+            'name': 'Workcenter No Team',
+        })
+
+        request = self._create_workcenter_request(
+            name='Unexpected shutdowns',
+            request_date=datetime(2018, 4, 5).date(),
+            workcenter_id=workcenter_without_team,
+            maintenance_type="corrective"
+        )
+        request.write({'workcenter_id': self.workcenter_id.id})
+
+        self.assertEqual(
+            request.maintenance_team_id.id,
+            self.maintenance_team_id.id,
+            "Maintenance team should remain unchanged when workcenter has no maintenance_team_id."
         )

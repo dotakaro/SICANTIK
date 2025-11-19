@@ -1,4 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 import datetime
 
 from odoo.addons.mail.tests.common import mail_new_test_user
@@ -22,7 +23,7 @@ class TestProjectLeaves(common.TransactionCase):
 
         self.leave_type = self.env['hr.leave.type'].create({
             'name': 'time off',
-            'requires_allocation': 'no',
+            'requires_allocation': False,
             'request_unit': 'hour',
         })
         self.project = self.env['project.project'].create({
@@ -34,8 +35,8 @@ class TestProjectLeaves(common.TransactionCase):
         leave = self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_hruser.id,
-            'request_date_from': '2020-1-1',
-            'request_date_to': '2020-1-1',
+            'request_date_from': '2020-01-01',
+            'request_date_to': '2020-01-01',
         })
 
         task_1 = self.env['project.task'].create({
@@ -56,7 +57,7 @@ class TestProjectLeaves(common.TransactionCase):
         self.assertNotEqual(task_1.leave_warning, False,
                             "leave is not validated , but warning for requested time off")
 
-        leave.action_validate()
+        leave.action_approve()
 
         self.assertNotEqual(task_1.leave_warning, False,
                             "employee is on leave, should have a warning")
@@ -70,16 +71,16 @@ class TestProjectLeaves(common.TransactionCase):
         self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_hruser.id,
-            'request_date_from': '2020-1-6',
-            'request_date_to': '2020-1-7',
-        }).action_validate()
+            'request_date_from': '2020-01-06',
+            'request_date_to': '2020-01-07',
+        }).action_approve()
 
         self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_hruser.id,
-            'request_date_from': '2020-1-8',
-            'request_date_to': '2020-1-10',
-        }).action_validate()
+            'request_date_from': '2020-01-08',
+            'request_date_to': '2020-01-10',
+        }).action_approve()
 
         task_1 = self.env['project.task'].create({
             'name': "Task 1",
@@ -156,16 +157,18 @@ class TestProjectLeaves(common.TransactionCase):
         self.assertNotEqual(task_2.leave_warning, False,
                             "leave is not validated , but warning for requested time off")
 
-        (leave_1 + leave_2).action_validate()
+        (leave_1 + leave_2).action_approve()
+        # there is no direct link with the task, so we invalidate manually
+        self.env.invalidate_all()
 
         self.assertNotEqual(task_1.leave_warning, False,
                             "employee is on leave, should have a warning")
         self.assertEqual(task_1.leave_warning,
-            "Test HrUser is on time off on 01/01/2020 from 9:00 AM to 1:00 PM. \n")
+            "Test HrUser is on time off on 01/01/2020 from 09:00 to 13:00. \n")
         self.assertNotEqual(task_2.leave_warning, False,
                             "employee is on leave, should have a warning")
         self.assertEqual(task_2.leave_warning,
-            "Test HrUser is on time off on 01/02/2020 from 2:00 PM to 6:00 PM. \n")
+            "Test HrUser is on time off on 01/02/2020 from 14:00 to 18:00. \n")
         self.assertEqual(task_3.leave_warning, False,
                          "employee is not on leave, no warning")
 
@@ -173,9 +176,9 @@ class TestProjectLeaves(common.TransactionCase):
         self.env['hr.leave'].sudo().create({
             'holiday_status_id': self.leave_type.id,
             'employee_id': self.employee_hruser.id,
-            'request_date_from': '2020-1-1',
-            'request_date_to': '2020-1-1',
-        }).action_validate()
+            'request_date_from': '2020-01-01',
+            'request_date_to': '2020-01-01',
+        }).action_approve()
 
         with Form(self.env['project.task']) as task_form:
             task_form.name = 'Test Task'
@@ -188,3 +191,40 @@ class TestProjectLeaves(common.TransactionCase):
 
             task_form.planned_date_begin = datetime.datetime(2020, 1, 2)
             self.assertFalse(task_form.leave_warning)
+
+    def test_multicompany_with_time_off_warnning(self):
+        """
+        Ensure that time-off warnings are displayed if multi-company is activated.
+        Flow:
+            - Create a company(Opoo)
+            - Add company(Opoo) to Allowed Companies
+            - Create a time-off and validate
+            - Create task
+            - Check the time-out alert by My company.
+            - Check the time-out alert by all Companies(My company + Opoo)
+            - Check the time-out alert by Opoo Company.
+        """
+        company_1 = self.env['res.company'].create({'name': 'Opoo'})
+        self.user_hruser.company_ids += company_1
+        self.env['hr.leave'].sudo().create({
+            'holiday_status_id': self.leave_type.id,
+            'employee_id': self.employee_hruser.id,
+            'request_date_from': '2020-01-06',
+            'request_date_to': '2020-01-07',
+        }).action_approve()
+
+        task = self.env['project.task'].create({
+            'name': "Task",
+            'project_id': self.project.id,
+            'user_ids': self.user_hruser,
+            'planned_date_begin': datetime.datetime(2020, 1, 6, 8, 0),
+            'date_deadline': datetime.datetime(2020, 1, 10, 17, 0),
+        })
+        leave_warning = task.with_context(allowed_company_ids=self.user_hruser.company_ids[1].ids).leave_warning
+        self.assertEqual(leave_warning, "Test HrUser is on time off from 01/06/2020 to 01/07/2020. \n",
+                        "should show the start of the 6st leave and end of the 7nd")
+        leave_warning = task.with_context(allowed_company_ids=self.user_hruser.company_ids.ids).leave_warning
+        self.assertEqual(leave_warning, "Test HrUser is on time off from 01/06/2020 to 01/07/2020. \n",
+                        "should show the start of the 6st leave and end of the 7nd")
+        leave_warning = task.with_context(allowed_company_ids=company_1.ids).leave_warning
+        self.assertNotEqual(task.leave_warning, False)

@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { rpc } from "@web/core/network/rpc";
 import { _t } from "@web/core/l10n/translation";
 import { StreamPostKanbanRecord } from '@social/js/stream_post_kanban_record';
@@ -39,6 +37,7 @@ patch(StreamPostKanbanRecord.prototype, {
                 postId: postId,
                 comments: result.comments,
                 nextRecordsToken: result.nextRecordsToken,
+                commentsDisabled: this.record.instagram_comments_disabled.raw_value,
             });
         });
     },

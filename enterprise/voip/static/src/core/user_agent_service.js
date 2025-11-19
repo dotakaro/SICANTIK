@@ -1,14 +1,12 @@
 /* global SIP */
 
-import { reactive } from "@odoo/owl";
-
 import { Registerer } from "@voip/core/registerer";
 import { cleanPhoneNumber } from "@voip/utils/utils";
 
 import { loadBundle } from "@web/core/assets";
-import { browser } from "@web/core/browser/browser";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
+import { Reactive } from "@web/core/utils/reactive";
 import { session } from "@web/session";
 
 /**
@@ -21,7 +19,7 @@ import { session } from "@web/session";
  * @property {string} [transferTarget]
  */
 
-export class UserAgent {
+export class UserAgent extends Reactive {
     attemptingToReconnect = false;
     /**
      * The id of the setTimeout used in demo mode to simulate the waiting time
@@ -48,15 +46,33 @@ export class UserAgent {
     __sipJsUserAgent;
 
     constructor(env, services) {
+        super();
         this.env = env;
         this.callService = services["voip.call"];
         this.multiTabService = services.multi_tab;
-        this.notificationService = services.notification;
         this.ringtoneService = services["voip.ringtone"];
         this.voip = services.voip;
         this.softphone = this.voip.softphone;
         this.init();
-        return reactive(this);
+    }
+
+    /** @returns {boolean} */
+    get hasCallInvitation() {
+        const call = this.session?.call;
+        if (!call) {
+            return false;
+        }
+        return call.state === "calling" && call.direction === "incoming";
+    }
+
+    get inCallStatusText() {
+        if (this.session?.call.state !== "ongoing") {
+            return ""; // not in call
+        }
+        if (this.session.isOnHold) {
+            return _t("On hold");
+        }
+        return _t("In call");
     }
 
     /** @returns {Object} */
@@ -77,7 +93,7 @@ export class UserAgent {
      */
     get mediaStreamFactory() {
         return (constraints, sessionDescriptionHandler) => {
-            const mediaRequest = browser.navigator.mediaDevices.getUserMedia(constraints);
+            const mediaRequest = navigator.mediaDevices.getUserMedia(constraints);
             mediaRequest.then(
                 (stream) => this._onGetUserMediaSuccess(stream),
                 (error) => this._onGetUserMediaFailure(error)
@@ -125,6 +141,13 @@ export class UserAgent {
         };
     }
 
+    /** @returns {boolean} */
+    get shouldPlayIncomingCallRingtone() {
+        const dndUntil = this.voip.store.settings.do_not_disturb_until_dt;
+        const doNotDisturb = Boolean(dndUntil) && dndUntil > luxon.DateTime.now();
+        return this.hasCallInvitation && !doNotDisturb && this.multiTabService.isOnMainTab();
+    }
+
     async acceptIncomingCall() {
         this.ringtoneService.stopPlaying();
         this.session.sipSession.accept({
@@ -162,7 +185,7 @@ export class UserAgent {
 
     async hangup({ activityDone = true } = {}) {
         this.ringtoneService.stopPlaying();
-        browser.clearTimeout(this.demoTimeout);
+        clearTimeout(this.demoTimeout);
         if (this.session.sipSession) {
             this._cleanUpRemoteAudio();
             switch (this.session.sipSession.state) {
@@ -181,10 +204,6 @@ export class UserAgent {
             case "ongoing":
                 await this.callService.end(this.session.call, { activityDone });
                 break;
-        }
-        this.session = null;
-        if (this.softphone.isInAutoCallMode) {
-            this.softphone.selectNextActivity();
         }
     }
 
@@ -295,11 +314,6 @@ export class UserAgent {
         }
         const call = await this.callService.create(data);
         this.softphone.show();
-        this.softphone.closeNumpad();
-        this.notificationService.add(
-            _t("Calling %(phone number)s", { "phone number": call.phoneNumber })
-        );
-        this.softphone.selectCorrespondence({ call });
         this.session = {
             inviteState: "trying",
             isMute: false,
@@ -308,9 +322,9 @@ export class UserAgent {
         };
         this.ringtoneService.ringback.play();
         if (this.voip.mode === "prod") {
-            this.invite(call.phoneNumber);
+            this.invite(call.phone_number);
         } else {
-            this.demoTimeout = browser.setTimeout(() => {
+            this.demoTimeout = setTimeout(() => {
                 this._onOutgoingInvitationAccepted();
             }, 3000);
         }
@@ -329,7 +343,6 @@ export class UserAgent {
         this.ringtoneService.stopPlaying();
         this.session.sipSession.reject({ statusCode: 603 /* Decline */ });
         await this.callService.reject(this.session.call);
-        this.session = null;
     }
 
     /** @param {string} deviceId */
@@ -338,7 +351,7 @@ export class UserAgent {
             return;
         }
         this.preferredInputDevice = deviceId;
-        const stream = await browser.navigator.mediaDevices.getUserMedia(this.mediaConstraints);
+        const stream = await navigator.mediaDevices.getUserMedia(this.mediaConstraints);
         for (const sender of this.session.sipSession.sessionDescriptionHandler.peerConnection.getSenders()) {
             if (sender.track) {
                 await sender.replaceTrack(stream.getAudioTracks()[0]);
@@ -370,7 +383,9 @@ export class UserAgent {
         }
         const { sessionDescriptionHandler } = this.session.sipSession;
         sessionDescriptionHandler.enableReceiverTracks(!this.session.isOnHold);
-        sessionDescriptionHandler.enableSenderTracks(!this.session.isOnHold && !this.session.isMute);
+        sessionDescriptionHandler.enableSenderTracks(
+            !this.session.isOnHold && !this.session.isMute
+        );
     }
 
     _cleanUpRemoteAudio() {
@@ -389,11 +404,7 @@ export class UserAgent {
             return;
         }
         await this.callService.end(this.session.call);
-        this.session = null;
         this._cleanUpRemoteAudio();
-        if (this.softphone.isInAutoCallMode) {
-            this.softphone.selectNextActivity();
-        }
     }
 
     /** @param {DOMException} error */
@@ -457,7 +468,6 @@ export class UserAgent {
             phone_number: phoneNumber,
             state: "calling",
         });
-        this.softphone.selectCorrespondence({ call });
         inviteSession.delegate = this.sessionDelegate;
         inviteSession.incomingInviteRequest.delegate = {
             onCancel: (message) => this._onIncomingInvitationCanceled(message),
@@ -470,34 +480,41 @@ export class UserAgent {
             sipSession: inviteSession,
         };
         this.softphone.show();
-        if (this.multiTabService.isOnMainTab()) {
+        if (this.shouldPlayIncomingCallRingtone) {
             this.ringtoneService.incoming.play();
         }
-        // TODO send notification
     }
 
-    async setHold(hold) {
+    async setHold(newState) {
+        // Save the session in the closure, just in case. Subsequent operations
+        // are asynchronous. You never know what might happen, the state of
+        // 'this' might have changed in the meantime, and this.session might
+        // refer to a completely different session.
+        const session = this.session;
+        if (this.session.sipSession) {
+            try {
+                await this.session.sipSession.invite({
+                    requestDelegate: {
+                        onAccept() {
+                            session.isOnHold = newState;
+                        },
+                    },
+                    sessionDescriptionHandlerOptions: { hold: newState },
+                });
+            } catch (error) {
+                console.error(error);
+                this.voip.triggerError(_t("Failed to put the call on hold/unhold."));
+                return;
+            }
+        }
+        session.isOnHold = newState;
+    }
+
+    setMute() {
         if (!this.session?.sipSession) {
             return;
         }
-        const session = this.session;
-        session.isOnHold = hold;
-        try {
-            await this.session.sipSession.invite({
-                requestDelegate: {
-                    onAccept() {
-                        session.isOnHold = hold;
-                    },
-                    onReject() {
-                        session.isOnHold = !hold;
-                    },
-                },
-                sessionDescriptionHandlerOptions: { hold },
-            });
-        } catch (error) {
-            console.error(error);
-            this.voip.triggerError(_t("Failed to put the call on hold/unhold."));
-        }
+        this.updateTracks();
     }
 
     /**
@@ -510,7 +527,6 @@ export class UserAgent {
         this.ringtoneService.stopPlaying();
         this.session.sipSession.reject({ statusCode: 487 /* Request Terminated */ });
         this.callService.miss(this.session.call);
-        this.session = null;
     }
 
     /**
@@ -588,7 +604,6 @@ export class UserAgent {
         })();
         this.voip.triggerError(errorMessage, { isNonBlocking: true });
         this.callService.reject(this.session.call);
-        this.session = null;
     }
 
     /**
@@ -598,11 +613,10 @@ export class UserAgent {
      * @param {SIP.IncomingResponse} response The server final response to the
      * REFER request.
      */
-    _onReferAccepted(response) {
+    async _onReferAccepted(response) {
         this.session.sipSession.bye();
         this._cleanUpRemoteAudio();
-        this.callService.end(this.session.call);
-        this.session = null;
+        await this.callService.end(this.session.call);
     }
 
     /** @param {SIP.SessionState} newState */
@@ -660,7 +674,7 @@ export class UserAgent {
 }
 
 export const userAgentService = {
-    dependencies: ["multi_tab", "notification", "voip", "voip.call", "voip.ringtone"],
+    dependencies: ["multi_tab", "voip", "voip.call", "voip.ringtone"],
     start(env, services) {
         return new UserAgent(env, services);
     },

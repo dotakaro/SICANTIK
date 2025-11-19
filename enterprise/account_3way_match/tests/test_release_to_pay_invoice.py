@@ -37,7 +37,7 @@ class TestReleaseToPayInvoice(AccountTestInvoicingCommon):
                     'name': self.product.name,
                     'product_id': self.product.id,
                     'product_qty': ordered_qty,
-                    'product_uom': self.product.uom_po_id.id,
+                    'product_uom_id': self.product.uom_id.id,
                     'price_unit': order_price,
                     'date_planned': fields.Datetime.now(),
                 })]
@@ -103,7 +103,7 @@ class TestReleaseToPayInvoice(AccountTestInvoicingCommon):
             line_form.quantity = 1
             line_form.price_unit = 10
         move_form.save()
-        with move_form.line_ids.edit(0) as line_form:
+        with move_form.journal_line_ids.edit(0) as line_form:
             line_form.amount_currency = -30
         move_form.save()
-        self.assertEqual(move_form.line_ids.edit(0).amount_currency, -30)
+        self.assertEqual(move_form.journal_line_ids.edit(0).amount_currency, -30)

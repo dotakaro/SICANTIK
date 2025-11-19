@@ -1,5 +1,4 @@
 import {
-    DocumentsDocument,
     defineDocumentSpreadsheetModels,
     defineDocumentSpreadsheetTestAction,
     getBasicData,
@@ -22,6 +21,7 @@ import {
     getCellContent,
     getCellValue,
     getEvaluatedCell,
+    getEvaluatedGrid,
 } from "@spreadsheet/../tests/helpers/getters";
 import { getZoneOfInsertedDataSource } from "@spreadsheet/../tests/helpers/pivot";
 import { waitForDataLoaded } from "@spreadsheet/helpers/model";
@@ -39,12 +39,12 @@ import {
     patchWithCleanup,
     toggleMenu,
     toggleMenuItem,
+    serverState,
 } from "@web/../tests/web_test_helpers";
 import { user } from "@web/core/user";
-import { session } from "@web/session";
 import { WebClient } from "@web/webclient/webclient";
 
-const { sanitizeSheetName } = helpers;
+const { sanitizeSheetName, toCartesian, toZone } = helpers;
 
 defineDocumentSpreadsheetModels();
 defineDocumentSpreadsheetTestAction();
@@ -54,6 +54,26 @@ const { PIVOT_TABLE_CONFIG } = constants;
 beforeEach(() => {
     ResUsers._records = getDocumentBasicData().models["res.users"].records;
 });
+
+function getGridIconEventPosition(model, xc) {
+    const position = toCartesian(xc);
+    const sheetId = model.getters.getActiveSheetId();
+    const icon = model.getters.getCellIcons({ sheetId, ...position })[0];
+    if (!icon) {
+        throw new Error(`No icon inside cell ${xc}`);
+    }
+    const gridPosition = getFixture().querySelector(".o-grid-overlay").getBoundingClientRect();
+    const gridOffset = model.getters.getGridOffset();
+    const rect = model.getters.getCellIconRect(icon, model.getters.getRect(toZone(xc)));
+    const x = rect.x + rect.width / 2 - gridOffset.x + gridPosition.x;
+    const y = rect.y + rect.height / 2 - gridOffset.y + +gridPosition.y;
+    return { x, y };
+}
+
+async function clickGridIcon(model, xc) {
+    const { x, y } = getGridIconEventPosition(model, xc);
+    await pointerDown(".o-grid-overlay", { position: { x, y } });
+}
 
 test("simple pivot export", async () => {
     const { model } = await createSpreadsheetFromPivotView({
@@ -67,13 +87,46 @@ test("simple pivot export", async () => {
             },
         },
     });
-    expect(".o_spreadsheet_pivot_side_panel").toHaveCount(1);
     expect(getCellContent(model, "A1")).toBe("");
     expect(getCellContent(model, "A2")).toBe("");
     expect(getCellContent(model, "A3")).toBe("=PIVOT.HEADER(1)");
     expect(getCellContent(model, "B1")).toBe("=PIVOT.HEADER(1)");
     expect(getCellContent(model, "B2")).toBe('=PIVOT.HEADER(1,"measure","foo:sum")');
     expect(getCellContent(model, "B3")).toBe('=PIVOT.VALUE(1,"foo:sum")');
+});
+
+test.tags("desktop");
+test("open side panel in desktop mode", async () => {
+    await createSpreadsheetFromPivotView({
+        serverData: {
+            models: getBasicData(),
+            views: {
+                "partner,false,pivot": /* xml */ `
+                        <pivot>
+                            <field name="foo" type="measure"/>
+                        </pivot>`,
+                "partner,false,search": /* xml */ `<search/>`,
+            },
+        },
+    });
+    expect(".o_spreadsheet_pivot_side_panel").toHaveCount(1);
+});
+
+test.tags("mobile");
+test("don't open side panel in mobile mode", async () => {
+    await createSpreadsheetFromPivotView({
+        serverData: {
+            models: getBasicData(),
+            views: {
+                "partner,false,pivot": /* xml */ `
+                        <pivot>
+                            <field name="foo" type="measure"/>
+                        </pivot>`,
+                "partner,false,search": /* xml */ `<search/>`,
+            },
+        },
+    });
+    expect(".o_spreadsheet_pivot_side_panel").toHaveCount(0);
 });
 
 test("simple pivot export with two measures", async () => {
@@ -217,20 +270,19 @@ test("groupby date field without interval defaults to month", async () => {
         model: "partner",
         rows: [{ fieldName: "date", granularity: "month" }],
         name: "Partners by Foo",
-        sortedColumn: null,
         type: "ODOO",
     });
-    expect(getCellContent(model, "A3")).toBe('=PIVOT.HEADER(1,"date:month","04/2016")');
-    expect(getCellContent(model, "A4")).toBe('=PIVOT.HEADER(1,"date:month","10/2016")');
-    expect(getCellContent(model, "A5")).toBe('=PIVOT.HEADER(1,"date:month","12/2016")');
+    expect(getCellContent(model, "A3")).toBe('=PIVOT.HEADER(1,"date:month",DATE(2016,4,1))');
+    expect(getCellContent(model, "A4")).toBe('=PIVOT.HEADER(1,"date:month",DATE(2016,10,1))');
+    expect(getCellContent(model, "A5")).toBe('=PIVOT.HEADER(1,"date:month",DATE(2016,12,1))');
     expect(getCellContent(model, "B3")).toBe(
-        '=PIVOT.VALUE(1,"probability:avg","date:month","04/2016","foo",1)'
+        '=PIVOT.VALUE(1,"probability:avg","date:month",DATE(2016,4,1),"foo",1)'
     );
     expect(getCellContent(model, "B4")).toBe(
-        '=PIVOT.VALUE(1,"probability:avg","date:month","10/2016","foo",1)'
+        '=PIVOT.VALUE(1,"probability:avg","date:month",DATE(2016,10,1),"foo",1)'
     );
     expect(getCellContent(model, "B5")).toBe(
-        '=PIVOT.VALUE(1,"probability:avg","date:month","12/2016","foo",1)'
+        '=PIVOT.VALUE(1,"probability:avg","date:month",DATE(2016,12,1),"foo",1)'
     );
     expect(getEvaluatedCell(model, "A3").formattedValue).toBe("April 2016");
     expect(getEvaluatedCell(model, "A4").formattedValue).toBe("October 2016");
@@ -239,7 +291,7 @@ test("groupby date field without interval defaults to month", async () => {
     expect(getEvaluatedCell(model, "B4").formattedValue).toBe("11.00");
     expect(getEvaluatedCell(model, "B5").formattedValue).toBe("");
 
-    setCellContent(model, "B4", '=PIVOT.VALUE(1,"probability:avg","date","10/2016","foo",1)');
+    setCellContent(model, "B4", '=PIVOT.VALUE(1,"probability:avg","date",DATE(2016,10,1),"foo",1)');
     expect(getEvaluatedCell(model, "B4").formattedValue).toBe("11.00");
 });
 
@@ -279,7 +331,6 @@ test("groupby date field on row gives correct name", async () => {
         model: "partner",
         rows: [{ fieldName: "date", granularity: "month" }],
         name: "Partners by Date",
-        sortedColumn: null,
         type: "ODOO",
     });
 });
@@ -504,6 +555,7 @@ test("Can save a pivot in a new spreadsheet", async () => {
     expect.verifySteps(["action_open_new_spreadsheet"]);
 });
 
+test.tags("desktop");
 test("Can save a pivot in existing spreadsheet", async () => {
     const serverData = {
         models: getBasicData(),
@@ -519,12 +571,10 @@ test("Can save a pivot in existing spreadsheet", async () => {
         expect.step("write");
         return { id: 1, type: "ir.actions.act_window_close" };
     });
+    onRpc("/spreadsheet/data/*", () => expect.step("/spreadsheet/data/"), { pure: true });
     await makeDocumentsSpreadsheetMockEnv({
         serverData,
         mockRPC: function (route, args) {
-            if (route.includes("join_spreadsheet_session")) {
-                expect.step("join_spreadsheet_session");
-            }
             if (args.model === "documents.document") {
                 switch (args.method) {
                     case "get_spreadsheets_to_display":
@@ -546,7 +596,7 @@ test("Can save a pivot in existing spreadsheet", async () => {
     await animationFrame(); // Wait for the mounted to be executed
     expect(".o_spreadsheet_pivot_side_panel").toHaveCount(1);
     await getService("action").doAction(1); // leave the spreadsheet action
-    expect.verifySteps(["join_spreadsheet_session", "write"]);
+    expect.verifySteps(["/spreadsheet/data/", "write"]);
 });
 
 test("Add pivot sheet at the end of existing sheets", async () => {
@@ -554,11 +604,10 @@ test("Add pivot sheet at the end of existing sheets", async () => {
     model.dispatch("CREATE_SHEET", { sheetId: "42", position: 1, name: "My Sheet" });
     const models = getBasicData();
     models["documents.document"].records = [
-        DocumentsDocument._records[0], // res_company.document_spreadsheet_folder_id
         {
             spreadsheet_data: JSON.stringify(model.exportData()),
             name: "a spreadsheet",
-            folder_id: 1,
+            folder_id: false,
             handler: "spreadsheet",
             id: 456,
             is_favorited: false,
@@ -592,17 +641,18 @@ test("Add pivot sheet at the end of existing sheets", async () => {
 
 test("Add pivot in spreadsheet with already the same sheet name", async () => {
     const model = new Model();
+    const activeSheetId = model.getters.getActiveSheetId();
     model.dispatch("RENAME_SHEET", {
         sheetId: model.getters.getActiveSheetId(),
-        name: "Partners by Foo (Pivot #1)",
+        oldName: model.getters.getSheetName(activeSheetId),
+        newName: "Partners by Foo (Pivot #1)",
     });
     const models = getBasicData();
     models["documents.document"].records = [
-        DocumentsDocument._records[0], // res_company.document_spreadsheet_folder_id
         {
             spreadsheet_data: JSON.stringify(model.exportData()),
             name: "a spreadsheet",
-            folder_id: 1,
+            folder_id: false,
             handler: "spreadsheet",
             id: 456,
             is_favorited: false,
@@ -669,11 +719,11 @@ test("pivot with a contextual domain", async () => {
         serverData,
         additionalContext: { search_default_filter: 1 },
         mockRPC: function (route, args) {
-            if (args.method === "read_group") {
+            if (args.method === "formatted_read_group") {
                 expect(args.kwargs.domain).toEqual([["foo", "=", uid]], {
                     message: "data should be fetched with the evaluated the domain",
                 });
-                expect.step("read_group");
+                expect.step("formatted_read_group");
             }
         },
     });
@@ -684,7 +734,7 @@ test("pivot with a contextual domain", async () => {
     expect(model.exportData().pivots[pivotId].domain).toBe('[("foo", "=", uid)]', {
         message: "domain is exported with the dynamic value",
     });
-    expect.verifySteps(["read_group", "read_group"]);
+    expect.verifySteps(["formatted_read_group", "formatted_read_group"]);
 });
 
 test("pivot with a quote in name", async function () {
@@ -772,15 +822,7 @@ test("Columns of newly inserted pivot are auto-resized", async function () {
 });
 
 test("user related context is not saved in the spreadsheet", async function () {
-    const testSession = {
-        user_companies: {
-            allowed_companies: {
-                15: { id: 15, name: "Hermit" },
-            },
-            current_company: 15,
-        },
-    };
-    patchWithCleanup(session, testSession);
+    serverState.companies = [{ id: 15, name: "Hermit" }];
     const userCtx = user.context;
     patchWithCleanup(user, {
         get context() {
@@ -822,27 +864,27 @@ test("pivot related context is not saved in the spreadsheet", async function () 
             await toggleMenuItem("Count");
         },
         mockRPC: function (route, args) {
-            if (args.method === "read_group") {
-                expect.step(args.kwargs.fields.join(","));
+            if (args.method === "formatted_read_group") {
+                expect.step(args.kwargs.aggregates.join(","));
             }
         },
     });
     expect.verifySteps([
         // initial view
-        "probability:avg",
-        "probability:avg",
-        "probability:avg",
-        "probability:avg",
+        "probability:avg,__count",
+        "probability:avg,__count",
+        "probability:avg,__count",
+        "probability:avg,__count",
         // adding count in the view
         "probability:avg,__count",
         "probability:avg,__count",
         "probability:avg,__count",
         "probability:avg,__count",
         // loaded in the spreadsheet
-        "probability_avg_id:avg(probability),__count",
-        "probability_avg_id:avg(probability),__count",
-        "probability_avg_id:avg(probability),__count",
-        "probability_avg_id:avg(probability),__count",
+        "probability:avg,__count",
+        "probability:avg,__count",
+        "probability:avg,__count",
+        "probability:avg,__count",
     ]);
     expect(model.exportData().pivots[pivotId].context).toEqual(
         {
@@ -867,10 +909,9 @@ test("sort first pivot column (ascending)", async () => {
     expect(getCellValue(model, "F3")).toBe(15);
     expect(getCellValue(model, "F4")).toBe(116);
     expect(model.getters.getPivotCoreDefinition(pivotId).sortedColumn).toEqual({
-        groupId: [[], [1]],
-        measure: "probability",
+        domain: [{ field: "foo", value: 1, type: "integer" }],
+        measure: "probability:avg",
         order: "asc",
-        originIndexes: [0],
     });
 });
 
@@ -890,10 +931,9 @@ test("sort first pivot column (descending)", async () => {
     expect(getCellValue(model, "F3")).toBe(116);
     expect(getCellValue(model, "F4")).toBe(15);
     expect(model.getters.getPivotCoreDefinition(pivotId).sortedColumn).toEqual({
-        groupId: [[], [1]],
-        measure: "probability",
+        domain: [{ field: "foo", value: 1, type: "integer" }],
+        measure: "probability:avg",
         order: "desc",
-        originIndexes: [0],
     });
 });
 
@@ -912,10 +952,9 @@ test("sort second pivot column (ascending)", async () => {
     expect(getCellValue(model, "F3")).toBe(116);
     expect(getCellValue(model, "F4")).toBe(15);
     expect(model.getters.getPivotCoreDefinition(pivotId).sortedColumn).toEqual({
-        groupId: [[], [2]],
-        measure: "probability",
+        domain: [{ field: "foo", value: 2, type: "integer" }],
+        measure: "probability:avg",
         order: "asc",
-        originIndexes: [0],
     });
 });
 
@@ -935,10 +974,9 @@ test("sort second pivot column (descending)", async () => {
     expect(getCellValue(model, "F3")).toBe(15);
     expect(getCellValue(model, "F4")).toBe(116);
     expect(model.getters.getPivotCoreDefinition(pivotId).sortedColumn).toEqual({
-        groupId: [[], [2]],
-        measure: "probability",
+        domain: [{ field: "foo", value: 2, type: "integer" }],
+        measure: "probability:avg",
         order: "desc",
-        originIndexes: [0],
     });
 });
 
@@ -966,10 +1004,9 @@ test("sort second pivot measure (ascending)", async () => {
     expect(getCellValue(model, "C3")).toBe(12);
     expect(getCellValue(model, "C4")).toBe(20);
     expect(model.getters.getPivotCoreDefinition(pivotId).sortedColumn).toEqual({
-        groupId: [[], []],
-        measure: "foo",
+        domain: [],
+        measure: "foo:sum",
         order: "asc",
-        originIndexes: [0],
     });
 });
 
@@ -998,10 +1035,9 @@ test("sort second pivot measure (descending)", async () => {
     expect(getCellValue(model, "C3")).toBe(20);
     expect(getCellValue(model, "C4")).toBe(12);
     expect(model.getters.getPivotCoreDefinition(pivotId).sortedColumn).toEqual({
-        groupId: [[], []],
-        measure: "foo",
+        domain: [],
+        measure: "foo:sum",
         order: "desc",
-        originIndexes: [0],
     });
 });
 
@@ -1023,7 +1059,7 @@ test("remove sorting if measure is removed", async () => {
             await toggleMenuItem("Probability"); // remove probability measure
         },
     });
-    expect(model.getters.getPivotCoreDefinition(pivotId).sortedColumn).toBe(null);
+    expect(model.getters.getPivotCoreDefinition(pivotId).sortedColumn).toBe(undefined);
 });
 
 test("search view with group by and additional row group", async () => {
@@ -1219,4 +1255,40 @@ test("The table has the correct number of headers when inserting a pivot", async
     expect(tables[0].range.zone).toEqual(pivotZone);
     expect(tables[0].type).toBe("static");
     expect(tables[0].config.numberOfHeaders).toBe(3);
+});
+
+test("Can collapse pivot header group", async function () {
+    const { model } = await createSpreadsheetFromPivotView({
+        serverData: {
+            models: getBasicData(),
+            views: {
+                "partner,false,pivot": /* xml */ `
+                            <pivot>
+                                <field name="date" interval="year" type="col"/>
+                                <field name="date" interval="month" type="col"/>
+                                <field name="probability" type="measure"/>
+                            </pivot>`,
+                "partner,false,search": /* xml */ `<search/>`,
+            },
+        },
+    });
+    selectCell(model, "A20");
+    await animationFrame();
+    setCellContent(model, "A20", "=PIVOT(1)");
+    await clickGridIcon(model, "B20");
+
+    const [pivotId] = model.getters.getPivotIds();
+    const definition = model.getters.getPivotCoreDefinition(pivotId);
+    expect(definition.collapsedDomains).toEqual({
+        COL: [[{ field: "date:year", value: 2016, type: "date" }]],
+        ROW: [],
+    });
+
+    // prettier-ignore
+    expect(getEvaluatedGrid(model, "A20:C23")).toEqual([
+        ["Untitled by Date (Year)",         2016,           ""],
+        ["",                                "",             "Total"],
+        ["",                                "Probability",  "Probability"],
+        ["Total",                           131,            131],
+    ]);
 });

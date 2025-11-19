@@ -1,11 +1,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models, tools
+
 from odoo.addons.sale.models.sale_order import SALE_ORDER_STATE
 
 
-class RentalReport(models.Model):
-    _name = "sale.rental.report"
+class SaleRentalReport(models.Model):
+    _name = 'sale.rental.report'
     _description = "Rental Analysis Report"
     _rec_name = 'order_id'
     _auto = False
@@ -13,7 +14,7 @@ class RentalReport(models.Model):
     date = fields.Date('Date', readonly=True)
     order_id = fields.Many2one('sale.order', 'Order #', readonly=True)
     product_id = fields.Many2one('product.product', 'Product', readonly=True)
-    product_uom = fields.Many2one('uom.uom', 'Unit of Measure', readonly=True)
+    product_uom_id = fields.Many2one('uom.uom', 'Unit', readonly=True)
     quantity = fields.Float('Daily Ordered Qty', readonly=True)
     qty_delivered = fields.Float('Daily Picked-Up Qty', readonly=True)
     qty_returned = fields.Float('Daily Returned Qty', readonly=True)
@@ -45,7 +46,7 @@ class RentalReport(models.Model):
             sol.order_id,
             sol.product_id,
             %s,
-            sol.product_uom,
+            sol.product_uom_id,
             sol.order_partner_id AS partner_id,
             sol.salesman_id AS user_id,
             pt.categ_id,
@@ -63,7 +64,7 @@ class RentalReport(models.Model):
             join sale_order AS so on (sol.order_id=so.id)
             join product_product AS p on p.id=sol.product_id
             join product_template AS pt on p.product_tmpl_id=pt.id
-            join uom_uom AS u on u.id=sol.product_uom
+            join uom_uom AS u on u.id=sol.product_uom_id
             join uom_uom AS u2 on u2.id=pt.uom_id
         """
 

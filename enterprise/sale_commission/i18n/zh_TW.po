@@ -4,21 +4,32 @@
 # 
 # Translators:
 # Wil Odoo, 2025
-# Tony Ng, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-27 13:57+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Tony Ng, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:13+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: zh_TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/model/commission_plan_achievement.py:0
+msgid "%(plan)s - %(type)s %(product)s %(categ)s"
+msgstr "%(plan)s - %(type)s %(product)s %(categ)s"
+
+#. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/model/commission_plan_user.py:0
+msgid "%(user)s - %(plan)s"
+msgstr "%(user)s - %(plan)s"
 
 #. module: sale_commission
 #. odoo-python
@@ -32,6 +43,7 @@ msgid "<span class=\"o_stat_text\">Commissions</span>"
 msgstr "<span class=\"o_stat_text\">佣金</span>"
 
 #. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__achieved
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__achieved
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__achieved
 msgid "Achieved"
@@ -108,6 +120,11 @@ msgid "Add a new commission level"
 msgstr "新增佣金等級"
 
 #. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__add_user_id
+msgid "Add to"
+msgstr "加至"
+
+#. module: sale_commission
 #. odoo-python
 #: code:addons/sale_commission/model/commission_achievement.py:0
 msgid "Adjustment %s"
@@ -163,18 +180,11 @@ msgstr ""
 "                手動設置銷售預測。"
 
 #. module: sale_commission
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__amount
-msgid "Amount"
-msgstr "金額"
-
-#. module: sale_commission
-#: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_achievement__type__amount_invoiced
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan_achievement__type__amount_invoiced
 msgid "Amount Invoiced"
 msgstr "已開立發票金額"
 
 #. module: sale_commission
-#: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_achievement__type__amount_sold
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan_achievement__type__amount_sold
 msgid "Amount Sold"
 msgstr "已售出金額"
@@ -227,6 +237,8 @@ msgid "Category"
 msgstr "類別"
 
 #. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/controllers/main.py:0
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_commission__amount
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__commission
 msgid "Commission"
@@ -277,6 +289,7 @@ msgstr "佣金計劃目標預測"
 
 #. module: sale_commission
 #: model:ir.model,name:sale_commission.model_sale_commission_plan_user
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
 msgid "Commission Plan User"
 msgstr "佣金計劃使用者"
 
@@ -295,6 +308,11 @@ msgstr "佣金報表"
 #: model:ir.model.fields,field_description:sale_commission.field_res_users__commission_plan_users_ids
 msgid "Commission plans"
 msgstr "佣金計劃"
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_view_form
+msgid "Commission table"
+msgstr "佣金表"
 
 #. module: sale_commission
 #: model:ir.actions.act_window,name:sale_commission.sale_commission_action_report
@@ -375,6 +393,8 @@ msgid "Created on"
 msgstr "建立於"
 
 #. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/controllers/main.py:0
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__currency_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__currency_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__currency_id
@@ -398,8 +418,20 @@ msgstr "目前期間"
 #. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__date
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__date
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_achievement_report_view_search
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_view_form
 msgid "Date"
 msgstr "日期"
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
+msgid "Date From"
+msgstr "起始日期"
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
+msgid "Date To"
+msgstr "結束日期"
 
 #. module: sale_commission
 #: model:ir.model.fields,help:sale_commission.field_crm_team__commission_plan_ids
@@ -412,6 +444,9 @@ msgid "Details"
 msgstr "詳細資訊"
 
 #. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_crm_team__display_name
+#: model:ir.model.fields,field_description:sale_commission.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:sale_commission.field_res_users__display_name
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__display_name
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__display_name
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__display_name
@@ -462,6 +497,12 @@ msgid ""
 msgstr "確保您已被分配至一個佣金計劃，並且已完成有資格獲得佣金的銷售。"
 
 #. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/model/commission_plan.py:0
+msgid "Exporting targets is only available for plans based on targets"
+msgstr "匯出目標只適用於基於目標計算的計劃"
+
+#. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_res_users__filtered_commission_plan_users_ids
 msgid "Filtered Commission Plan Users"
 msgstr "已篩選的佣金計劃使用者"
@@ -503,6 +544,7 @@ msgstr "「從」日期必須先於「至」日期"
 #. module: sale_commission
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_achievement_report_view_search
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_target_forecast_view_search
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_view_search
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_search
 msgid "Group By"
@@ -514,6 +556,9 @@ msgid "Has Message"
 msgstr "有訊息"
 
 #. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_crm_team__id
+#: model:ir.model.fields,field_description:sale_commission.field_res_config_settings__id
+#: model:ir.model.fields,field_description:sale_commission.field_res_users__id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__id
@@ -578,7 +623,6 @@ msgid "Last Year"
 msgstr "上年"
 
 #. module: sale_commission
-#: model:ir.model.fields,help:sale_commission.field_sale_commission_achievement__team_id
 #: model:ir.model.fields,help:sale_commission.field_sale_commission_plan_target_forecast__team_id
 msgid ""
 "Main user sales team. Used notably for pipeline, or to set sales team in "
@@ -626,11 +670,6 @@ msgstr "我的佣金"
 #: model:ir.actions.act_window,name:sale_commission.sale_commission_action_my_forecast
 msgid "My Forecast"
 msgstr "我的預測"
-
-#. module: sale_commission
-#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_search
-msgid "My Team"
-msgstr "我的團隊"
 
 #. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__name
@@ -700,6 +739,12 @@ msgid "Payment Date"
 msgstr "付款日期"
 
 #. module: sale_commission
+#. odoo-python
+#: code:addons/sale_commission/controllers/main.py:0
+msgid "Performance"
+msgstr "效能"
+
+#. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__target_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target__name
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_forecast__target_id
@@ -728,6 +773,7 @@ msgstr "期間"
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_commission__plan_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_forecast__plan_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_user__plan_id
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
 msgid "Plan"
 msgstr "計劃"
 
@@ -737,13 +783,11 @@ msgid "Product"
 msgstr "商品"
 
 #. module: sale_commission
-#: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_achievement__type__qty_invoiced
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan_achievement__type__qty_invoiced
 msgid "Quantity Invoiced"
 msgstr "已開立發票數量"
 
 #. module: sale_commission
-#: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_achievement__type__qty_sold
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan_achievement__type__qty_sold
 msgid "Quantity Sold"
 msgstr "已售數量"
@@ -762,6 +806,11 @@ msgstr "比率"
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__rating_ids
 msgid "Ratings"
 msgstr "評分"
+
+#. module: sale_commission
+#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__reduce_user_id
+msgid "Reduce From"
+msgstr "減少由"
 
 #. module: sale_commission
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__related_res_id
@@ -810,7 +859,6 @@ msgid "Sales People"
 msgstr "銷售人員"
 
 #. module: sale_commission
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__user_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__user_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__user_id
 msgid "Sales Person"
@@ -819,11 +867,9 @@ msgstr "銷售人員"
 #. module: sale_commission
 #: model:ir.model,name:sale_commission.model_crm_team
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement_report__team_id
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__team_id
 #: model:ir.model.fields.selection,name:sale_commission.selection__sale_commission_plan__user_type__team
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_achievement_report_view_search
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_target_forecast_view_search
-#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_search
 msgid "Sales Team"
 msgstr "銷售團隊"
 
@@ -928,6 +974,11 @@ msgid "This Month"
 msgstr "本月"
 
 #. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_search
+msgid "This Quarter"
+msgstr "本季度"
+
+#. module: sale_commission
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_target_forecast_view_search
 msgid "This Year"
 msgstr "今年"
@@ -939,6 +990,12 @@ msgstr "今年"
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_report__date_to
 msgid "To"
 msgstr "至"
+
+#. module: sale_commission
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_achievement_report_view_list
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_achievement_view_list
+msgid "Total Achieved"
+msgstr "已達成總額"
 
 #. module: sale_commission
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_report_view_list
@@ -956,7 +1013,6 @@ msgid "Total commission"
 msgstr "佣金總額"
 
 #. module: sale_commission
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__type
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__type
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_achievement__type
 #: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_view_search
@@ -980,11 +1036,11 @@ msgstr "即將"
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan__user_ids
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_forecast__user_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_user_wizard__user_ids
+#: model_terms:ir.ui.view,arch_db:sale_commission.sale_commission_plan_user_view_search
 msgid "User"
 msgstr "使用者"
 
 #. module: sale_commission
-#: model:ir.model.fields,field_description:sale_commission.field_sale_commission_achievement__team_id
 #: model:ir.model.fields,field_description:sale_commission.field_sale_commission_plan_target_forecast__team_id
 msgid "User Sales Team"
 msgstr "用戶銷售團隊"

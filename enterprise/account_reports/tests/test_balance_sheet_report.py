@@ -27,9 +27,8 @@ class TestBalanceSheetReport(TestAccountReportsCommon):
             'code_prefix_end': '1015010',
         }])
 
-        cid = self.env.company.id
-        account_bank = self.env.ref(f"account.{cid}_bank").default_account_id
-        account_cash = self.env.ref(f"account.{cid}_cash").default_account_id
+        account_bank = self.company_data['default_journal_bank'].default_account_id
+        account_cash = self.company_data['default_journal_cash'].default_account_id
         account_a = self.env['account.account'].create([{'code': '1014010', 'name': 'A', 'account_type': 'asset_cash'}])
         account_c = self.env['account.account'].create([{'code': '101600', 'name': 'C', 'account_type': 'asset_cash'}])
 
@@ -79,7 +78,6 @@ class TestBalanceSheetReport(TestAccountReportsCommon):
 
     def test_balance_sheet_custom_date(self):
         line_id = self.env.ref('account_reports.account_financial_report_bank_view0').id
-        self.report.filter_multi_company = 'disabled'
         options = self._generate_options(self.report, fields.Date.from_string('2020-02-01'), fields.Date.from_string('2020-02-28'))
         options['date']['filter'] = 'custom'
         options['unfolded_lines'] = [line_id]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import re
@@ -7,14 +6,12 @@ from datetime import date
 from odoo import api, fields, models, tools
 from odoo.osv import expression
 
-from odoo.addons.resource.models.utils import filter_domain_leaf
 from odoo.addons.sale.models.sale_order import SALE_ORDER_STATE
 from odoo.addons.sale_subscription.models.sale_order import SUBSCRIPTION_PROGRESS_STATE, SUBSCRIPTION_STATES
 
 
-
 class SaleOrderLogReport(models.Model):
-    _name = "sale.order.log.report"
+    _name = 'sale.order.log.report'
     _description = "Sales Log Analysis Report"
     _order = 'id desc'
     _auto = False
@@ -34,6 +31,7 @@ class SaleOrderLogReport(models.Model):
         readonly=True
     )
     event_date = fields.Date(readonly=True)
+    effective_date = fields.Date(readonly=True, help="Date the MRR change was first billed.")
     contract_number = fields.Integer("Active Subscriptions Change", readonly=True)
     pricelist_id = fields.Many2one('product.pricelist', 'Pricelist', readonly=True)
     amount_signed = fields.Monetary("MRR Change", readonly=True, currency_field='log_currency_id')
@@ -48,22 +46,14 @@ class SaleOrderLogReport(models.Model):
     commercial_partner_id = fields.Many2one('res.partner', 'Customer Entity', readonly=True)
     subscription_state = fields.Selection(SUBSCRIPTION_STATES, readonly=True)
     state = fields.Selection(selection=SALE_ORDER_STATE, string="Status", readonly=True)
-    health = fields.Selection([
-        ('normal', 'Neutral'),
-        ('done', 'Good'),
-        ('bad', 'Bad')], string="Health", readonly=True)
     campaign_id = fields.Many2one('utm.campaign', 'Campaign', readonly=True)
     origin_order_id = fields.Many2one('sale.order', 'First Order', readonly=True)
     order_id = fields.Many2one('sale.order', 'Sale Order', readonly=True)
     first_contract_date = fields.Date('First Contract Date', readonly=True)
     end_date = fields.Date(readonly=True)
     close_reason_id = fields.Many2one("sale.order.close.reason", string="Close Reason", readonly=True)
-    currency_id = fields.Many2one('res.currency', compute='_compute_currency_id')
+    currency_id = fields.Many2one('res.currency')
     log_currency_id = fields.Many2one('res.currency')
-
-    @api.depends_context('allowed_company_ids')
-    def _compute_currency_id(self):
-        self.currency_id = self.env.company.currency_id
 
     def _with(self):
         companies = self.env['res.company'].search([], order='id asc')
@@ -83,13 +73,13 @@ class SaleOrderLogReport(models.Model):
         """
 
     def _select(self):
-        select = """
+        select = f"""
             log.id AS id,
             so.client_order_ref AS client_order_ref,
             log.order_id AS order_id,
             log.event_type AS event_type,
             log.event_date AS event_date,
-            log.currency_id AS currency_id,
+            log.effective_date as effective_date,
             log.user_id AS user_id,
             log.team_id AS team_id,
             so.partner_id AS partner_id,
@@ -97,7 +87,6 @@ class SaleOrderLogReport(models.Model):
             partner.industry_id AS industry_id,
             so.sale_order_template_id AS template_id,
             so.plan_id AS plan_id,
-            so.health AS health,
             log.company_id,
             partner.commercial_partner_id AS commercial_partner_id,
             log.subscription_state AS subscription_state,
@@ -112,6 +101,7 @@ class SaleOrderLogReport(models.Model):
             r1.rate AS currency_rate,
             r2.rate AS user_rate,
             log.currency_id AS log_currency_id,
+            {self.env.company.currency_id.id} AS currency_id,
             log.company_id AS log_cmp,
             CASE
                 WHEN event_type = '0_creation' THEN 1
@@ -165,7 +155,6 @@ class SaleOrderLogReport(models.Model):
             log.origin_order_id,
             so.plan_id,
             so.company_id,
-            so.health,
             so.campaign_id,
             so.pricelist_id,
             so.currency_rate,
@@ -208,11 +197,3 @@ class SaleOrderLogReport(models.Model):
             'views': [[False, "form"]],
             'res_id': self.id,
         }
-
-    def _convert_range_to_datetime(self, group_res):
-        if group_res.get('__range'):
-            date_strs = re.findall(r'\b[0-9]{4}-[0-9]{2}-[0-9]{2}', str(group_res['__range']))
-            min_date = date_strs and min(date_strs)
-            max_date = date_strs and max(date_strs)
-            return fields.Datetime.from_string(min_date), fields.Datetime.from_string(max_date)
-        return None, None

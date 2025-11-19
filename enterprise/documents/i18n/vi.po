@@ -3,16 +3,15 @@
 # 	* documents
 # 
 # Translators:
-# Tiffany Chang, 2024
 # Wil Odoo, 2025
 # Thi Huong Nguyen, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-06 18:47+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:20+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Thi Huong Nguyen, 2025\n"
 "Language-Team: Vietnamese (https://app.transifex.com/odoo/teams/41243/vi/)\n"
 "MIME-Version: 1.0\n"
@@ -22,10 +21,10 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid " (%s locked)"
-msgstr " (%s đã bị khoá)"
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "%(record)s (in %(parent)s)"
+msgstr "%(record)s (trong %(parent)s)"
 
 #. module: documents
 #. odoo-python
@@ -41,21 +40,9 @@ msgstr "%s (trang còn lại)"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "%s Files"
-msgstr "%s tệp"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "%s Folders"
-msgstr "%s thư mục"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/list/document_count_field.js:0
-msgid "%s documents"
-msgstr "%s tài liệu"
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid "%s document(s) sent to trash."
+msgstr ""
 
 #. module: documents
 #. odoo-javascript
@@ -65,21 +52,27 @@ msgstr "%s tài liệu đã được di chuyển."
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "%s file(s) not moved because they are locked by another user"
-msgstr "%s tệp không được di chuyển vì bị khóa bởi người dùng khác"
+#: code:addons/documents/static/src/core/document_service.js:0
+msgid "%s documents/folders have been moved to the Company root."
+msgstr ""
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "%s has been copied in My Drive."
 msgstr "%s đã được sao chép vào Drive của tôi."
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "%s have been copied in My Drive."
 msgstr "%s đã được sao chép vào Drive của tôi."
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/wizard/documents_access_invite.py:0
+msgid "%s members added successfully."
+msgstr ""
 
 #. module: documents
 #. odoo-javascript
@@ -92,12 +85,6 @@ msgstr "%s tài liệu mới đã được tạo"
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "%s page(s) deleted"
 msgstr "%s trang đã bị xoá"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "%s shared with you"
-msgstr "%s được chia sẻ với bạn"
 
 #. module: documents
 #. odoo-javascript
@@ -115,29 +102,6 @@ msgstr ""
 ". Các tệp được quét sẽ hiện tự động trong không gian làm việc. Sau đó, xử lý"
 " tài liệu hàng loạt bằng công cụ tách: khởi chạy tác vụ do người dùng xác "
 "định, yêu cầu ký tên, chuyển thành hóa đơn mua hàng bằng AI,..."
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid ".<br/>"
-msgstr ".<br/>"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "1 File"
-msgstr "1 tệp"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "1 Folder"
-msgstr "1 thư mục`"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/list/document_count_field.js:0
-msgid "1 document"
-msgstr "1 tài liệu"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_tag_year_previous
@@ -165,6 +129,17 @@ msgstr "<b>Bỏ chọn trang này</b> vì chúng tôi dự định xử lý hóa
 #: code:addons/documents/static/src/js/tours/documents.js:0
 msgid "<b>Select</b> this page to continue."
 msgstr "<b>Chọn</b> trang này để tiếp tục."
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.document_request_done_page
+msgid "<b>You're done!</b>"
+msgstr "<b>Thế là xong!</b>"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/core/document_service.js:0
+msgid "<br/>At least one document hasn't been moved."
+msgstr ""
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_page_layout
@@ -197,9 +172,9 @@ msgid "<i class=\"fa fa-eye\"/> Preview file"
 msgstr "<i class=\"fa fa-eye\"/> Xem trước tệp"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "<i class=\"fa fa-lock oe_inline\" title=\"Locked\" invisible=\"not lock_uid\"/>"
-msgstr "<i class=\"fa fa-lock oe_inline\" title=\"Đã khoá\" invisible=\"not lock_uid\"/>"
+#: model_terms:ir.ui.view,arch_db:documents.document_request_page
+msgid "<i class=\"fa fa-upload fa-fw\"/> Add file"
+msgstr ""
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -215,11 +190,6 @@ msgstr "<i class=\"fa fa-upload\"/> Thay thế tệp"
 #: model_terms:ir.ui.view,arch_db:documents.documents_document_res_partner_view
 msgid "<span class=\"o_stat_text\">Documents</span>"
 msgstr "<span class=\"o_stat_text\">Tài liệu</span>"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "<span class=\"o_stat_text\">Related <br/> Record</span>"
-msgstr "<span class=\"o_stat_text\">Bản ghi <br/> liên quan</span>"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -290,7 +260,7 @@ msgid ""
 "                                                </div>\n"
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                                    <a t-att-href=\"object.access_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                                                    <a t-att-href=\"object.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                                        Upload the requested document\n"
 "                                                    </a>\n"
 "                                                </div>\n"
@@ -298,7 +268,7 @@ msgid ""
 "                                            Please provide us with the missing document before <t t-out=\"object.request_activity_id.date_deadline\">2021-05-17</t>.\n"
 "                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
 "                                                <br/>\n"
-"                                                <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                                                <br data-o-mail-quote=\"1\"/>\n"
 "                                            </t>\n"
 "                                        </div>\n"
@@ -335,7 +305,7 @@ msgid ""
 "                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Documents</a>\n"
 "                          </td></tr>\n"
 "                        </table>\n"
 "                    </td></tr>\n"
@@ -388,7 +358,7 @@ msgstr ""
 "                                                </div>\n"
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                                    <a t-att-href=\"object.access_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                                                    <a t-att-href=\"object.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                                        Tải lên tài liệu được yêu cầu\n"
 "                                                    </a>\n"
 "                                                </div>\n"
@@ -396,7 +366,7 @@ msgstr ""
 "                                            Vui lòng cung cấp cho chúng tôi tài liệu còn thiếu trước <t t-out=\"object.request_activity_id.date_deadline\">ngày 17/05/2021</t>.\n"
 "                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
 "                                                <br/>\n"
-"                                                <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                                                <br data-o-mail-quote=\"1\"/>\n"
 "                                            </t>\n"
 "                                        </div>\n"
@@ -433,7 +403,7 @@ msgstr ""
 "                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"                            Cung cấp bởi <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
+"                            Cung cấp bởi <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Tài liệu</a>\n"
 "                          </td></tr>\n"
 "                        </table>\n"
 "                    </td></tr>\n"
@@ -489,7 +459,7 @@ msgid ""
 "                                                </div>\n"
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                                    <a t-att-href=\"object.access_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                                                    <a t-att-href=\"object.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                                        Upload the requested document\n"
 "                                                    </a>\n"
 "                                                </div>\n"
@@ -499,7 +469,7 @@ msgid ""
 "                                            Thank you,\n"
 "                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
 "                                                <br/>\n"
-"                                                <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                                                <br data-o-mail-quote=\"1\"/>\n"
 "                                            </t>\n"
 "                                        </div>\n"
@@ -536,7 +506,7 @@ msgid ""
 "                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Documents</a>\n"
 "                          </td></tr>\n"
 "                        </table>\n"
 "                    </td></tr>\n"
@@ -589,7 +559,7 @@ msgstr ""
 "                                                </div>\n"
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                                    <a t-att-href=\"object.access_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                                                   <a t-att-href=\"object.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\"> \n"
 "                                                        Tải lên tài liệu được yêu cầu\n"
 "                                                    </a>\n"
 "                                                </div>\n"
@@ -599,7 +569,7 @@ msgstr ""
 "                                            Cảm ơn bạn!\n"
 "                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
 "                                                <br/>\n"
-"                                                <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                                                <br data-o-mail-quote=\"1\"/>\n"
 "                                            </t>\n"
 "                                        </div>\n"
@@ -636,7 +606,196 @@ msgstr ""
 "                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"                            Cung cấp bởi <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
+"                            Cung cấp bởi <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Tài liệu</a>\n"
+"                          </td></tr>\n"
+"                        </table>\n"
+"                    </td></tr>\n"
+"                </table>\n"
+"            "
+
+#. module: documents
+#: model:mail.template,body_html:documents.mail_template_document_share
+msgid ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;\"><tr><td align=\"center\">\n"
+"                    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"padding: 16px; background-color: white; color: #454748; border-collapse:separate;\">\n"
+"                    <tbody>\n"
+"                        <!-- HEADER -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"middle\">\n"
+"                                        <span style=\"font-size: 10px;\">\n"
+"                                            Shared Document<br/>\n"
+"                                            <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.document_id.name or ''\"/>\n"
+"                                        </span><br/>\n"
+"                                    </td><td valign=\"middle\" align=\"right\" t-if=\"not user.company_id.uses_default_logo\">\n"
+"                                        <img t-attf-src=\"/logo.png?company={{ user.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.create_uid.company_id.name\"/>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <!-- CONTENT -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
+"                                        <div>\n"
+"                                            Hello <t t-out=\"object.partner_id.name\"/>,\n"
+"                                            <br/><br/>\n"
+"                                            <t t-if=\"object.document_id.type == 'folder'\" t-set=\"share_message\">share the following folder with you</t>\n"
+"                                            <t t-else=\"\" t-set=\"share_message\">share the following document with you</t>\n"
+"                                            <t t-out=\"user.name or ''\">OdooBot</t> (<t t-out=\"user.email or ''\">odoobot@example.com</t>) <t t-out=\"share_message\"/>:\n"
+"                                            <br/><br/>\n"
+"                                            <center>\n"
+"                                                <div t-if=\"object.document_id.name\">\n"
+"                                                    <b t-out=\"object.document_id.name\"/>\n"
+"                                                </div>\n"
+"                                                <div t-if=\"ctx.get('message')\">\n"
+"                                                    <i t-out=\"ctx['message']\"/>\n"
+"                                                </div>\n"
+"                                                <br/>\n"
+"                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
+"                                                    <a t-att-href=\"object.document_id.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
+"                                                        <b>Get your files</b>\n"
+"                                                    </a>\n"
+"                                                </div>\n"
+"                                            </center><br/>\n"
+"                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
+"                                                <br/>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\"/></div>\n"
+"                                                <br data-o-mail-quote=\"1\"/>\n"
+"                                            </t>\n"
+"                                        </div>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td style=\"text-align:center;\">\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <!-- FOOTER -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; font-size: 11px; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"middle\" align=\"left\">\n"
+"                                        <t t-out=\"user.company_id.name or ''\">YourCompany</t>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td valign=\"middle\" align=\"left\" style=\"opacity: 0.7;\">\n"
+"                                        <t t-out=\"user.company_id.phone or ''\">+1 650-123-4567</t>\n"
+"                                        <t t-if=\"user.company_id.email\">\n"
+"                                            | <a t-attf-href=\"'mailto:%s' % {{ user.company_id.email }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"user.company_id.email\">info@yourcompany.com</a>\n"
+"                                        </t>\n"
+"                                        <t t-if=\"user.company_id.website\">\n"
+"                                            | <a t-attf-href=\"'%s' % {{ user.company_id.website }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"user.company_id.website\">http://www.example.com</a>\n"
+"                                        </t>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                    </table>\n"
+"                    </td></tr>\n"
+"                    <!-- POWERED BY -->\n"
+"                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
+"                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Documents</a>\n"
+"                          </td></tr>\n"
+"                        </table>\n"
+"                    </td></tr>\n"
+"                </table>\n"
+"            "
+msgstr ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;\"><tr><td align=\"center\">\n"
+"                    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"padding: 16px; background-color: white; color: #454748; border-collapse:separate;\">\n"
+"                    <tbody>\n"
+"                        <!-- HEADER -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"middle\">\n"
+"                                        <span style=\"font-size: 10px;\">\n"
+"                                            Tài liệu được chia sẻ<br/>\n"
+"                                            <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.document_id.name or ''\"/>\n"
+"                                        </span><br/>\n"
+"                                    </td><td valign=\"middle\" align=\"right\" t-if=\"not user.company_id.uses_default_logo\">\n"
+"                                        <img t-attf-src=\"/logo.png?company={{ user.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.create_uid.company_id.name\"/>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <!-- CONTENT -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
+"                                        <div>\n"
+"                                            Xin chào <t t-out=\"object.partner_id.name\"/>,\n"
+"                                            <br/><br/>\n"
+"                                            <t t-if=\"object.document_id.type == 'folder'\" t-set=\"share_message\">chia sẻ tài liệu sau với bạn</t>\n"
+"                                            <t t-else=\"\" t-set=\"share_message\">chia sẻ tài liệu sau với bạn</t>\n"
+"                                            <t t-out=\"user.name or ''\">OdooBot</t> (<t t-out=\"user.email or ''\">odoobot@example.com</t>) <t t-out=\"share_message\"/>:\n"
+"                                            <br/><br/>\n"
+"                                            <center>\n"
+"                                                <div t-if=\"object.document_id.name\">\n"
+"                                                    <b t-out=\"object.document_id.name\"/>\n"
+"                                                </div>\n"
+"                                                <div t-if=\"ctx.get('message')\">\n"
+"                                                    <i t-out=\"ctx['message']\"/>\n"
+"                                                </div>\n"
+"                                                <br/>\n"
+"                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
+"                                                    <a t-att-href=\"object.document_id.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
+"                                                        <b>Nhận tệp của bạn</b>\n"
+"                                                    </a>\n"
+"                                                </div>\n"
+"                                            </center><br/>\n"
+"                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
+"                                                <br/>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\"/></div>\n"
+"                                                <br data-o-mail-quote=\"1\"/>\n"
+"                                            </t>\n"
+"                                        </div>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td style=\"text-align:center;\">\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <!-- FOOTER -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; font-size: 11px; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"middle\" align=\"left\">\n"
+"                                        <t t-out=\"user.company_id.name or ''\">YourCompany</t>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td valign=\"middle\" align=\"left\" style=\"opacity: 0.7;\">\n"
+"                                        <t t-out=\"user.company_id.phone or ''\">+1 650-123-4567</t>\n"
+"                                        <t t-if=\"user.company_id.email\">\n"
+"                                            | <a t-attf-href=\"'mailto:%s' % {{ user.company_id.email }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"user.company_id.email\">info@yourcompany.com</a>\n"
+"                                        </t>\n"
+"                                        <t t-if=\"user.company_id.website\">\n"
+"                                            | <a t-attf-href=\"'%s' % {{ user.company_id.website }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"user.company_id.website\">http://www.example.com</a>\n"
+"                                        </t>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                    </table>\n"
+"                    </td></tr>\n"
+"                    <!-- POWERED BY -->\n"
+"                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
+"                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
+"                            Cung cấp bởi <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Tài liệu</a>\n"
 "                          </td></tr>\n"
 "                        </table>\n"
 "                    </td></tr>\n"
@@ -659,6 +818,12 @@ msgid "A destination is required when creating multiple shortcuts at once."
 msgstr "Cần phải có đích khi tạo nhiều lối tắt cùng lúc."
 
 #. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "A document can not be linked to itself or another document."
+msgstr ""
+
+#. module: documents
 #: model:ir.model.constraint,message:documents.constraint_documents_document_folder_id_not_id
 msgid "A folder cannot be included in itself"
 msgstr "Một thư mục không thể được bao gồm trong chính nó"
@@ -673,18 +838,6 @@ msgstr "Một lối tắt không thể trỏ đến chính nó"
 #: code:addons/documents/static/src/core/document_service.js:0
 msgid "A shortcut has been created."
 msgstr "Một lối tắt đã được tạo."
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "Access"
-msgstr "Truy cập"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "Access Error"
-msgstr "Lỗi Truy Cập"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__access_token
@@ -716,17 +869,12 @@ msgid "Access to Server Actions"
 msgstr "Truy cập vào tác vụ máy chủ"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Access to a folder or a document"
-msgstr "Truy cập một thư mục hoặc tài liệu"
-
-#. module: documents
 #: model:ir.model.constraint,message:documents.constraint_documents_document_document_token_unique
 msgid "Access tokens already used."
 msgstr "Token truy cập đã được sử dụng."
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__access_url
 #: model:ir.model.fields,field_description:documents.field_documents_document__access_url
 msgid "Access url"
 msgstr "URL truy cập"
@@ -735,7 +883,6 @@ msgstr "URL truy cập"
 #. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.xml:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
 msgid "Action"
 msgstr "Tác vụ"
 
@@ -764,7 +911,6 @@ msgstr "Hoạt động"
 
 #. module: documents
 #: model:ir.model,name:documents.model_mail_activity
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 msgid "Activity"
 msgstr "Hoạt động"
 
@@ -845,11 +991,6 @@ msgid "Add Folder"
 msgstr "Thêm thư mục"
 
 #. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_tag_add_bill
-msgid "Add Tag Bill"
-msgstr "Add Tag Bill"
-
-#. module: documents
 #: model:ir.actions.server,name:documents.ir_actions_server_tag_add_validated
 msgid "Add Tag Validated"
 msgstr "Đã xác thực"
@@ -862,14 +1003,13 @@ msgstr "Thêm Url"
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-msgid "Add a tag..."
-msgstr "Thêm thẻ..."
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
 msgid "Add an alias tag..."
 msgstr "Thêm thẻ bí danh..."
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.document_request_page
+msgid "Add file"
+msgstr "Thêm tệp"
 
 #. module: documents
 #. odoo-javascript
@@ -878,16 +1018,15 @@ msgid "Add new file"
 msgstr "Thêm tệp mới"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Add people or email addresses..."
-msgstr "Thêm người hoặc địa chỉ email..."
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
+msgid "Add people or email addresses"
+msgstr "Thêm người hoặc địa chỉ email"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Add people or email addresses:"
-msgstr "Thêm người hoặc địa chỉ email:"
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "Add people or email addresses..."
+msgstr "Thêm người hoặc địa chỉ email..."
 
 #. module: documents
 #. odoo-javascript
@@ -902,12 +1041,31 @@ msgid "Add star"
 msgstr "Thêm sao"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "Add tags..."
+msgstr "Thêm thẻ..."
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/attachments/attachment_list_patch.js:0
+#: code:addons/documents/static/src/attachments/attachment_list_patch.xml:0
+msgid "Add to My Drive"
+msgstr ""
+
+#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "Additional documents you have access to."
 msgstr "Các tài liệu bổ sung mà bạn có quyền truy cập."
 
 #. module: documents
+#: model:documents.document,name:documents.document_internal_folder
+msgid "Administrative"
+msgstr "Hành chính"
+
+#. module: documents
+#: model:documents.document,name:documents.document_administrator_folder
 #: model:res.groups,name:documents.group_documents_manager
 msgid "Administrator"
 msgstr "Quản trị viên"
@@ -923,11 +1081,6 @@ msgid "Alias"
 msgstr "Bí danh"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_contact
-msgid "Alias Contact Security"
-msgstr "Bảo mật bí danh liên hệ "
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__alias_domain_id
 msgid "Alias Domain"
 msgstr "Miền bí danh"
@@ -938,34 +1091,14 @@ msgid "Alias Domain Name"
 msgstr "Tên miền bí danh"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_full_name
-msgid "Alias Email"
-msgstr "Email bí danh"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__alias_name
 msgid "Alias Name"
 msgstr "Tên bí danh"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_status
-msgid "Alias Status"
-msgstr "Trạng thái bí danh"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__alias_tag_ids
 msgid "Alias Tags"
 msgstr "Thẻ bí danh"
-
-#. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_status
-msgid "Alias status assessed on the last message received."
-msgstr "Trạng thái bí danh được ước tính trong tin nhắn đã nhận gần đây nhất."
-
-#. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_model_id
-msgid "Aliased Model"
-msgstr "Mô hình bí danh"
 
 #. module: documents
 #. odoo-javascript
@@ -975,18 +1108,25 @@ msgstr "Tất cả"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.js:0
-msgid ""
-"All users with access to this %(documentType)s or its parent will have edit "
-"permissions."
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "All companies"
+msgstr "Tất cả công ty"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "All users with access to this"
 msgstr ""
-"Tất cả người dùng có quyền truy cập vào %(documentType)s này hoặc phần chính"
-" của nó sẽ có quyền chỉnh sửa."
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__access_ids
 msgid "Allowed Access"
 msgstr "Quyền truy cập được phép"
+
+#. module: documents
+#: model:res.groups,comment:documents.group_documents_user
+msgid "Allows you to manage his documents."
+msgstr ""
 
 #. module: documents
 #. odoo-python
@@ -1023,18 +1163,6 @@ msgstr ""
 #: code:addons/documents/static/src/views/hooks.js:0
 msgid "An error occured while uploading."
 msgstr "Đã xảy ra lỗi khi tải lên."
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
-msgid "Anyone on the internet with the link can edit"
-msgstr "Bất kỳ ai trên internet có liên kết đều có thể chỉnh sửa"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
-msgid "Anyone on the internet with the link can view"
-msgstr "Bất kỳ ai trên internet có liên kết đều có thể xem"
 
 #. module: documents
 #. odoo-javascript
@@ -1094,12 +1222,8 @@ msgstr "Vì tệp PDF này chứa nhiều tài liệu, hãy tách và xử lý h
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/core/document_service.js:0
-msgid ""
-"At least one document couldn't be moved due to access rights. Shortcuts have"
-" been created."
+msgid "At least one document could not be moved due to access rights."
 msgstr ""
-"Có ít nhất một tài liệu không thể di chuyển được do quyền truy cập. Đã tạo "
-"lối tắt."
 
 #. module: documents
 #: model:ir.model,name:documents.model_ir_attachment
@@ -1150,6 +1274,16 @@ msgid "Blank Page"
 msgstr "Trang trống"
 
 #. module: documents
+#: model:documents.document,name:documents.document_marketing_brand1_folder
+msgid "Brand 1"
+msgstr "Thương hiệu 1"
+
+#. module: documents
+#: model:documents.document,name:documents.document_marketing_brand2_folder
+msgid "Brand 2"
+msgstr "Thương hiệu 2"
+
+#. module: documents
 #: model:documents.tag,name:documents.documents_tag_brochures
 msgid "Brochures"
 msgstr "Brochure"
@@ -1161,9 +1295,39 @@ msgstr ""
 "Bằng cách xác định một thư mục, hoạt động tải lên sẽ tạo một tài liệu."
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
+msgid "Can add, modify, and delete files within this folder."
+msgstr ""
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
+msgid "Can modify, delete, and rename."
+msgstr ""
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
+msgid "Can only view contents. Cannot add, modify, or delete items."
+msgstr ""
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
+msgid "Can only view. Cannot rename, move, or delete."
+msgstr ""
+
+#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.documents_link_to_record_form_view
 msgid "Cancel"
 msgstr "Hủy"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/widget/documents_server_action_evaluation_type_field.js:0
+msgid "Change"
+msgstr "Tiền thừa"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__checksum
@@ -1179,14 +1343,7 @@ msgstr "Phụ"
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "Choose a record to link"
-msgstr "Chọn hồ sơ để tạo liên kết"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
-msgid "Choose or Configure Email Servers"
-msgstr "Chọn hoặc cấu hình máy chủ email"
+msgstr "Chọn một bản ghi để liên kết"
 
 #. module: documents
 #. odoo-javascript
@@ -1247,6 +1404,11 @@ msgid "Color"
 msgstr "Màu"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_data_comercial_tenancy_agreement
+msgid "Commercial-Tenancy-Agreement.pdf"
+msgstr "Commercial-Tenancy-Agreement.pdf"
+
+#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "Common roots for all company users."
@@ -1278,8 +1440,6 @@ msgid "Configuration"
 msgstr "Cấu hình"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
 #: model:ir.model,name:documents.model_res_partner
 #: model:ir.model.fields,field_description:documents.field_documents_document__partner_id
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__partner_id
@@ -1313,20 +1473,20 @@ msgstr "Copy Link"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Copy Links"
 msgstr "Sao chép liên kết"
 
 #. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_create_activity
-msgid "Create Activity"
-msgstr "Tạo hoạt động"
-
-#. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Create Shortcut"
 msgstr "Tạo lối tắt"
+
+#. module: documents
+#: model:ir.model,website_form_label:documents.model_res_partner
+msgid "Create a Customer"
+msgstr "Tạo một khách hàng"
 
 #. module: documents
 #: model_terms:ir.actions.act_window,help:documents.mail_activity_plan_action_document
@@ -1345,18 +1505,7 @@ msgid "Create a new document for the remaining page."
 msgstr ""
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Create and edit new contact \""
-msgstr "Tạo và chỉnh sửa liên hệ mới \""
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Create new contact \""
-msgstr "Tạo liên hệ mới \""
-
-#. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__create_uid
 #: model:ir.model.fields,field_description:documents.field_documents_document__create_uid
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__create_uid
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__create_uid
@@ -1366,6 +1515,7 @@ msgid "Created by"
 msgstr "Được tạo bởi"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__create_date
 #: model:ir.model.fields,field_description:documents.field_documents_document__create_date
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__create_date
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__create_date
@@ -1383,11 +1533,6 @@ msgstr "Ngày tạo"
 #: code:addons/documents/static/src/components/documents_manage_versions_panel/documents_manage_versions_panel.xml:0
 msgid "Current Version"
 msgstr "Phiên bản hiện tại"
-
-#. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_bounced_content
-msgid "Custom Bounced Message"
-msgstr "Tin nhắn bị trả lại tuỳ chỉnh"
 
 #. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__create_activity_date_deadline_range_type__days
@@ -1411,9 +1556,9 @@ msgstr "Độ trễ sau khi xóa vĩnh viễn tài liệu trong thùng rác (ng�
 #: code:addons/documents/static/src/components/documents_manage_versions_panel/documents_manage_versions_panel.xml:0
 #: code:addons/documents/static/src/owl/components/pdf_exit_dialog/pdf_exit_dialog.xml:0
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
+#: code:addons/documents/static/src/views/documents_renderer_mixin.js:0
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
-#: code:addons/documents/static/src/views/list/documents_list_controller.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
 msgid "Delete"
 msgstr "Xoá"
 
@@ -1451,10 +1596,10 @@ msgstr "Ngừng sử dụng"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 #: code:addons/documents/static/src/views/hooks.js:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form_rename
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
 #: model_terms:ir.ui.view,arch_db:documents.documents_request_form_view
 #: model_terms:ir.ui.view,arch_db:documents.documents_upload_url_view
 #: model_terms:ir.ui.view,arch_db:documents.folder_deletion_form
@@ -1470,11 +1615,25 @@ msgstr "Có thể tìm được"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__display_name
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_document__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__display_name
+#: model:ir.model.fields,field_description:documents.field_documents_mixin__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_redirect__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_tag__display_name
+#: model:ir.model.fields,field_description:documents.field_documents_unlink_mixin__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_actions_server__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_attachment__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_binary__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_embedded_actions__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_http__display_name
+#: model:ir.model.fields,field_description:documents.field_mail_activity__display_name
+#: model:ir.model.fields,field_description:documents.field_mail_activity_type__display_name
+#: model:ir.model.fields,field_description:documents.field_res_company__display_name
+#: model:ir.model.fields,field_description:documents.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:documents.field_res_partner__display_name
+#: model:ir.model.fields,field_description:documents.field_res_users__display_name
 msgid "Display Name"
 msgstr "Tên hiển thị"
 
@@ -1492,6 +1651,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:documents.field_documents_redirect__document_id
 #: model:ir.model.fields,field_description:documents.field_documents_tag__document_ids
 #: model_terms:ir.ui.view,arch_db:documents.document_view_kanban
+#: model_terms:ir.ui.view,arch_db:documents.document_view_search
 msgid "Document"
 msgstr "Tài liệu"
 
@@ -1513,13 +1673,12 @@ msgid "Document Access Link"
 msgstr "Liên kết truy cập tài liệu"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__document_count
 #: model:ir.model.fields,field_description:documents.field_res_partner__document_count
+#: model:ir.model.fields,field_description:documents.field_res_users__document_count
 msgid "Document Count"
 msgstr "Số lượng tài liệu"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 #: model_terms:ir.ui.view,arch_db:documents.documents_request_form_view
 msgid "Document Name"
 msgstr "Tên tài liệu"
@@ -1580,21 +1739,27 @@ msgid "Document: Document Request"
 msgstr "Tài liệu: Yêu cầu tài liệu"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/list/document_count_field.js:0
-msgid "DocumentCountIntegerField"
-msgstr "DocumentCountIntegerField"
+#: model:mail.template,name:documents.mail_template_document_share
+msgid "Document: Document Share"
+msgstr "Tài liệu: Chia sẻ tài liệu"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-#: code:addons/documents/models/res_partner.py:0
+#. odoo-javascript
+#: code:addons/documents/static/src/views/list/document_size_field.js:0
+msgid "DocumentSizeIntegerField"
+msgstr "DocumentSizeIntegerField"
+
+#. module: documents
 #: model:ir.actions.act_window,name:documents.document_action
 #: model:ir.actions.act_window,name:documents.document_action_portal
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__document_id
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__document_ids
-#: model:ir.model.fields,field_description:documents.field_res_users__document_count
+#: model:ir.model.fields,field_description:documents.field_res_partner__document_ids
+#: model:ir.model.fields,field_description:documents.field_res_users__document_ids
+#: model:ir.model.fields.selection,name:documents.selection__ir_actions_server__usage__documents_embedded
 #: model:ir.ui.menu,name:documents.dashboard
 #: model:ir.ui.menu,name:documents.menu_root
+#: model:res.groups.privilege,name:documents.res_groups_privilege_documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_search
 #: model_terms:ir.ui.view,arch_db:documents.documents_view_activity
 #: model_terms:ir.ui.view,arch_db:documents.portal_my_home_documents
@@ -1603,20 +1768,24 @@ msgid "Documents"
 msgstr "Tài liệu"
 
 #. module: documents
+#: model:ir.model,name:documents.model_documents_access_invite
+msgid "Documents Access Invite"
+msgstr "Mời quyền truy cập tài liệu"
+
+#. module: documents
 #: model:ir.model,name:documents.model_documents_link_to_record_wizard
 msgid "Documents Link to Record"
 msgstr "Tài liệu liên kết với hồ sơ"
 
 #. module: documents
+#: model:ir.actions.client,name:documents.document_action_preference
+msgid "Documents View Preference"
+msgstr "Ưu tiên chế độ xem tài liệu"
+
+#. module: documents
 #: model:ir.model,name:documents.model_documents_mixin
 msgid "Documents creation mixin"
 msgstr "Mixin tạo tài liệu"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-msgid "Documents in the Trash cannot be shared"
-msgstr "Không thể chia sẻ tài liệu trong Thùng rác"
 
 #. module: documents
 #. odoo-javascript
@@ -1643,23 +1812,17 @@ msgstr "Hoàn tất"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
+#: code:addons/documents/static/src/attachments/attachment_list_patch.js:0
 msgid "Done!"
-msgstr "Hoàn thành!"
+msgstr "Hoàn tất!"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_manage_versions_panel/documents_manage_versions_panel.xml:0
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_download.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Download"
 msgstr "Tải xuống"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Download #{document.name}"
-msgstr "Tải xuống #{document.name}"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -1678,8 +1841,13 @@ msgstr "Tải thư mục xuống dưới dạng zip"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Download zip #{subfolder.name}"
-msgstr "Tải xuống zip #{subfolder.name}"
+msgid "Download zip {{0}}"
+msgstr "Tải xuống zip {{0}}"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
+msgid "Download {{0}}"
+msgstr "Tải xuống {{0}}"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_tag_draft
@@ -1706,22 +1874,27 @@ msgstr "Loại thời hạn"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
 msgid "Duplicate"
 msgstr "Nhân bản"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
+#: code:addons/documents/static/src/attachments/document_file_viewer.xml:0
+#: model_terms:ir.ui.view,arch_db:documents.document_view_kanban
+msgid "EMAIL"
+msgstr "EMAIL"
+
+#. module: documents
+#. odoo-javascript
 #: code:addons/documents/static/src/views/search/documents_search_panel.xml:0
 msgid "Edit"
 msgstr "Chỉnh sửa"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
 #: model:ir.model.fields.selection,name:documents.selection__documents_access__role__edit
+#: model:ir.model.fields.selection,name:documents.selection__documents_access_invite__role__edit
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_internal__edit
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_via_link__edit
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__user_permission__edit
@@ -1729,20 +1902,9 @@ msgid "Editor"
 msgstr "Biên tập"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-msgid "Email"
-msgstr "Email"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__alias_email
 msgid "Email Alias"
 msgstr "Bí danh email"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
-msgid "Email Upload"
-msgstr "Tải lên email"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__email_cc
@@ -1760,6 +1922,17 @@ msgid "Email links"
 msgstr "Liên kết email"
 
 #. module: documents
+#: model:ir.model,name:documents.model_ir_embedded_actions
+msgid "Embedded Actions"
+msgstr "Tác vụ nhúng"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "Enable access"
+msgstr "Bật quyền truy cập"
+
+#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 #: code:addons/documents/static/src/views/hooks.js:0
@@ -1772,6 +1945,12 @@ msgstr "Lỗi"
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "Escape Preview/Deselect/Exit"
 msgstr "Thoát xem trước/Bỏ chọn/Thoát"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/widget/documents_server_action_evaluation_type_field.js:0
+msgid "Evaluation type field for Documents server actions"
+msgstr "Trường loại đánh giá cho các tác vụ máy chủ Tài liệu"
 
 #. module: documents
 #. odoo-javascript
@@ -1802,13 +1981,7 @@ msgid "Expiration"
 msgstr "Ngày hết hạn"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/list/documents_list_controller.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-msgid "Export"
-msgstr "Xuất"
-
-#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
 #: model_terms:ir.ui.view,arch_db:documents.documents_request_form_view
 msgid "Extra comments..."
 msgstr "Bình luận bổ sung..."
@@ -1820,9 +1993,8 @@ msgstr "Yêu thích của"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_type_icon/documents_type_icon.xml:0
+#: code:addons/documents/static/src/views/fields/documents_type_icon/documents_type_icon.xml:0
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__type__binary
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 msgid "File"
 msgstr "Tệp"
 
@@ -1875,6 +2047,11 @@ msgid "Files will be sent to trash and deleted forever after %s days."
 msgstr "Các tệp sẽ được chuyển vào thùng rác và bị xóa vĩnh viễn sau %s ngày."
 
 #. module: documents
+#: model:documents.document,name:documents.document_finance_folder
+msgid "Finance"
+msgstr "Tài chính"
+
+#. module: documents
 #: model:documents.tag,name:documents.documents_tag_financial
 msgid "Financial"
 msgstr "Tài chính"
@@ -1911,7 +2088,7 @@ msgstr "Tập trung vào trang trước đó"
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-#: code:addons/documents/static/src/views/documents_type_icon/documents_type_icon.xml:0
+#: code:addons/documents/static/src/views/fields/documents_type_icon/documents_type_icon.xml:0
 #: model:ir.model.fields,field_description:documents.field_documents_document__folder_id
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__folder_id
 #: model:ir.model.fields,field_description:documents.field_mail_activity_type__folder_id
@@ -1949,11 +2126,6 @@ msgid "Gather in one document"
 msgstr "Tập hợp vào một tài liệu"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
-msgid "General"
-msgstr "Chung"
-
-#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.xml:0
 msgid "General access"
@@ -1975,6 +2147,11 @@ msgid "HR"
 msgstr "Nhân sự"
 
 #. module: documents
+#: model:ir.model,name:documents.model_ir_http
+msgid "HTTP Routing"
+msgstr "Định tuyến HTTP"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__has_message
 msgid "Has Message"
 msgstr "Có tin nhắn"
@@ -1991,21 +2168,27 @@ msgstr "Lịch sử"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__id
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__id
 #: model:ir.model.fields,field_description:documents.field_documents_document__id
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__id
+#: model:ir.model.fields,field_description:documents.field_documents_mixin__id
 #: model:ir.model.fields,field_description:documents.field_documents_redirect__id
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__id
 #: model:ir.model.fields,field_description:documents.field_documents_tag__id
+#: model:ir.model.fields,field_description:documents.field_documents_unlink_mixin__id
+#: model:ir.model.fields,field_description:documents.field_ir_actions_server__id
+#: model:ir.model.fields,field_description:documents.field_ir_attachment__id
+#: model:ir.model.fields,field_description:documents.field_ir_binary__id
+#: model:ir.model.fields,field_description:documents.field_ir_embedded_actions__id
+#: model:ir.model.fields,field_description:documents.field_ir_http__id
+#: model:ir.model.fields,field_description:documents.field_mail_activity__id
+#: model:ir.model.fields,field_description:documents.field_mail_activity_type__id
+#: model:ir.model.fields,field_description:documents.field_res_company__id
+#: model:ir.model.fields,field_description:documents.field_res_config_settings__id
+#: model:ir.model.fields,field_description:documents.field_res_partner__id
+#: model:ir.model.fields,field_description:documents.field_res_users__id
 msgid "ID"
 msgstr "ID"
-
-#. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_parent_thread_id
-msgid ""
-"ID of the parent record holding the alias (example: project holding the task"
-" creation alias)"
-msgstr ""
-"ID của bản ghi chính chứa bí danh (ví dụ: dự án chứa bí danh tạo nhiệm vụ)"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__activity_exception_icon
@@ -2040,15 +2223,6 @@ msgid "If checked, some messages have a delivery error."
 msgstr "Nếu chọn, một số tin nhắn sẽ có lỗi gửi."
 
 #. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_bounced_content
-msgid ""
-"If set, this content will automatically be sent out to unauthorized users "
-"instead of the default message."
-msgstr ""
-"Nếu được cài đặt, nội dung này sẽ tự động được gửi đến người dùng chưa được "
-"cấp quyền thay vì tin nhắn mặc định."
-
-#. module: documents
 #: model:documents.tag,name:documents.documents_tag_images
 msgid "Images"
 msgstr "Hình ảnh"
@@ -2058,12 +2232,6 @@ msgstr "Hình ảnh"
 #: code:addons/documents/models/documents_document.py:0
 msgid "Impossible to delete folders used by other applications."
 msgstr "Không thể xóa các thư mục được các ứng dụng khác sử dụng."
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Impossible to invite partners on multiple documents at once."
-msgstr "Không thể mời đối tác vào nhiều tài liệu cùng một lúc."
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_kanban
@@ -2078,6 +2246,7 @@ msgstr "Không thể truy cập"
 #. module: documents
 #: model:documents.tag,name:documents.documents_tag_inbox
 #: model:mail.activity.type,name:documents.mail_documents_activity_data_Inbox
+#: model:mail.activity.type,summary:documents.mail_documents_activity_data_Inbox
 msgid "Inbox"
 msgstr "Hộp thư đến"
 
@@ -2104,6 +2273,7 @@ msgstr "Thông tin & thẻ"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
 msgid "Info & tags"
 msgstr "Thông tin & thẻ"
@@ -2126,16 +2296,10 @@ msgid "Internal Users Rights"
 msgstr "Quyền người dùng nội bộ"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
-msgid "Internal users can edit"
-msgstr "Người dùng nội bộ có thể chỉnh sửa"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
-msgid "Internal users can view"
-msgstr "Người dùng nội bộ có thể xem"
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "Invalid document token"
+msgstr "Token tài liệu không hợp lệ"
 
 #. module: documents
 #. odoo-python
@@ -2145,7 +2309,6 @@ msgstr "ID thư mục không hợp lệ"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 #: code:addons/documents/static/src/views/search/documents_search_panel.js:0
 msgid "Invalid operation"
 msgstr "Thao tác không hợp lệ"
@@ -2155,6 +2318,22 @@ msgstr "Thao tác không hợp lệ"
 #: code:addons/documents/models/documents_document.py:0
 msgid "Invalid role."
 msgstr "Vai trò không hợp lệ."
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "Invite People"
+msgstr "Mời mọi người"
+
+#. module: documents
+#: model:documents.document,name:documents.documents_email_as_vendor_bill
+msgid "Invoice #INV-2025-001 - Payment Due April 24, 2025"
+msgstr ""
+
+#. module: documents
+#: model:documents.document,name:documents.documents_vendor_bill_inv_007
+msgid "Invoice-INV_2018_0007.pdf"
+msgstr "Invoice-INV_2018_0007.pdf"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__is_editable_attachment
@@ -2175,6 +2354,12 @@ msgstr "Là người theo dõi"
 #: model:ir.model.fields,field_description:documents.field_documents_document__is_multipage
 msgid "Is considered multipage"
 msgstr "Được coi là nhiều trang"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "It is not possible to create documents in an archived folder."
+msgstr "Không thể tạo tài liệu trong thư mục đã lưu trữ."
 
 #. module: documents
 #. odoo-python
@@ -2209,12 +2394,18 @@ msgid "Items moved to the trash will be deleted forever after %s days."
 msgstr "Các mục được đưa vào thùng rác sẽ bị xóa vĩnh viễn sau %s ngày."
 
 #. module: documents
+#: model:documents.document,name:documents.documents_image_La_landscape_document
+msgid "LA landscape.jpg"
+msgstr "LA landscape.jpg"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__last_access_date
 #: model:ir.model.fields,field_description:documents.field_documents_document__last_access_date_group
 msgid "Last Accessed On"
 msgstr "Được truy cập lần cuối vào"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__write_uid
 #: model:ir.model.fields,field_description:documents.field_documents_document__write_uid
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__write_uid
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__write_uid
@@ -2223,6 +2414,7 @@ msgid "Last Updated by"
 msgstr "Cập nhật lần cuối bởi"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__write_date
 #: model:ir.model.fields,field_description:documents.field_documents_document__write_date
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__write_date
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__write_date
@@ -2242,6 +2434,8 @@ msgid ""
 "Let's move this document to Finance<br/> <i>Tips: actions can be tailored to"
 " your process, according to the folder.</i>"
 msgstr ""
+"Hãy chuyển tài liệu này sang mục Tài chính<br/> <i>Mẹo: có thể điều chỉnh "
+"tác vụ cho phù hợp với quy trình, tùy theo thư mục.</i>"
 
 #. module: documents
 #. odoo-javascript
@@ -2264,7 +2458,7 @@ msgstr "Hãy xử lý tài liệu này, đến từ máy quét."
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-#: code:addons/documents/static/src/views/documents_type_icon/documents_type_icon.xml:0
+#: code:addons/documents/static/src/views/fields/documents_type_icon/documents_type_icon.xml:0
 #: model_terms:ir.ui.view,arch_db:documents.documents_link_to_record_form_view
 msgid "Link"
 msgstr "Liên kết"
@@ -2286,7 +2480,7 @@ msgstr "URL liên kết"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "Link copied to clipboard!"
 msgstr "Liên kết được sao chép vào bộ nhớ tạm!"
 
@@ -2297,33 +2491,25 @@ msgid "Link copied to the clipboard."
 msgstr "Liên kết được sao chép vào bộ nhớ tạm."
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-msgid "Linked To"
-msgstr "Liên kết với"
+#: model_terms:ir.ui.view,arch_db:documents.documents_view_list_main
+msgid "Link to"
+msgstr "Liên kết đến"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "Links copied to clipboard!"
 msgstr "Liên kết được sao chép vào bộ nhớ tạm!"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_incoming_local
-msgid "Local-part based incoming detection"
-msgstr "Phát hiện gửi đến dựa trên phần cục bộ"
-
-#. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Lock"
 msgstr "Khoá"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-#: model:ir.model.fields,field_description:documents.field_documents_document__is_locked
 msgid "Locked"
 msgstr "Đã khoá"
 
@@ -2331,11 +2517,6 @@ msgstr "Đã khoá"
 #: model:ir.model.fields,field_description:documents.field_documents_document__lock_uid
 msgid "Locked by"
 msgstr "Bị khóa bởi"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "Log a note..."
-msgstr "Ghi chú ..."
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_page_layout
@@ -2348,14 +2529,24 @@ msgid "Logout"
 msgstr "Đăng xuất"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_document__mail_alias_domain_count
+msgid "Mail Alias Domain Count"
+msgstr ""
+
+#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "Mail: %s"
 msgstr "Email: %s"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_data_multi_pdf_document
+msgid "Mails_inbox.pdf"
+msgstr "Mails_inbox.pdf"
+
+#. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Manage Versions"
 msgstr "Quản lý phiên bản"
 
@@ -2366,18 +2557,25 @@ msgid "Manage Versions of \"%s\""
 msgstr "Quản lý phiên bản của \"%s\""
 
 #. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_remove_activities
-msgid "Mark activities as completed"
-msgstr "Đánh dấu hoạt động là đã hoàn thành"
+#: model:documents.document,name:documents.document_marketing_folder
+msgid "Marketing"
+msgstr "Marketing"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/wizard/documents_access_invite.py:0
+msgid "Member added successfully."
+msgstr "Đã thêm thành viên thành công."
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Merge PDFs"
 msgstr "Gộp PDF"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__activity_note
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
 msgid "Message"
 msgstr "Tin nhắn"
 
@@ -2426,7 +2624,7 @@ msgstr "Tháng"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/action/documents_actions.xml:0
 msgid "More"
 msgstr "Thêm"
 
@@ -2438,7 +2636,7 @@ msgstr "Chuyển trang này vào thùng rác"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Move to Trash"
 msgstr "Chuyển vào thùng rác"
 
@@ -2446,6 +2644,7 @@ msgstr "Chuyển vào thùng rác"
 #. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.xml:0
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_archive.js:0
+#: code:addons/documents/static/src/views/documents_renderer_mixin.js:0
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
 #: code:addons/documents/static/src/views/hooks.js:0
 #: model_terms:ir.ui.view,arch_db:documents.folder_deletion_form
@@ -2457,11 +2656,6 @@ msgstr "Chuyển vào thùng rác"
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
 msgid "Move to trash?"
 msgstr "Chuyển vào thùng rác?"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "Moved to trash"
-msgstr "Đã chuyển vào thùng rác"
 
 #. module: documents
 #. odoo-python
@@ -2503,14 +2697,8 @@ msgstr "Vai trò NULL phải có last_access_date được thiết lập"
 #: model:ir.model.fields,field_description:documents.field_documents_document__name
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__name
 #: model:ir.model.fields,field_description:documents.field_documents_tag__name
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 msgid "Name"
 msgstr "Tên"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_search
-msgid "Name / Extension"
-msgstr "Tên/Phần mở rộng"
 
 #. module: documents
 #. odoo-javascript
@@ -2569,6 +2757,12 @@ msgid "No activity"
 msgstr "Không có hoạt động"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No activity assignee"
+msgstr "Không có người phụ trách hoạt động"
+
+#. module: documents
 #: model_terms:ir.actions.act_window,help:documents.mail_activity_type_action_document
 msgid "No activity types found. Let's create one!"
 msgstr "Không tìm thấy loại hoạt động nào. Hãy tạo một loại!"
@@ -2581,21 +2775,51 @@ msgstr "Không có bí danh nào được cấu hình"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No alias tags"
+msgstr "Không có thẻ bí danh"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No contact"
+msgstr "Không có liên hệ"
+
+#. module: documents
+#. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "No document has been selected"
 msgstr "Không có tài liệu nào được chọn"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/chatter/documents_chatter_overlay.xml:0
-msgid "No item selected"
-msgstr "Chưa chọn mục nào"
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No email alias"
+msgstr "Không có bí danh email"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No linked model"
+msgstr "Không có mô hình nào được liên kết"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No linked record"
+msgstr "Không có bản ghi nào được liên kết"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
 msgid "No one on the internet can access"
 msgstr "Không ai trên internet có thể truy cập"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No owner"
+msgstr "Không có chủ sở hữu"
 
 #. module: documents
 #. odoo-python
@@ -2609,29 +2833,17 @@ msgid "No shared links"
 msgstr "Không có liên kết được chia sẻ"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No tags"
+msgstr "Không có thẻ"
+
+#. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_internal__none
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_via_link__none
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__user_permission__none
 msgid "None"
 msgstr "Không"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Not a file"
-msgstr "Không phải tệp"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Not a folder."
-msgstr "Không phải tệp."
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Not attached"
-msgstr "Không được đính kèm"
 
 #. module: documents
 #. odoo-javascript
@@ -2645,8 +2857,12 @@ msgid "Note"
 msgstr "Ghi chú"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__notify_message
+msgid "Notification Message"
+msgstr "Tin nhắn thông báo"
+
+#. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__notify
 msgid "Notify"
 msgstr "Thông báo"
 
@@ -2717,25 +2933,19 @@ msgstr "Chỉ những người có quyền truy cập mới có thể mở bằn
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Open #{document_url.name}"
-msgstr "Mở #{document_url.name}"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Open folder #{subfolder.name}"
-msgstr "Mở thư mục #{subfolder.name}"
+msgid "Open folder {{0}}"
+msgstr "Thư mục mở {{0}}"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 msgid "Open the actions menu"
-msgstr ""
+msgstr "Mở menu tác vụ"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-msgid "Open the permissions panel"
-msgstr "Mở bảng điều khiển quyền"
+#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
+msgid "Open {{0}}"
+msgstr "Mở {{0}}"
 
 #. module: documents
 #. odoo-python
@@ -2758,23 +2968,6 @@ msgstr ""
 "phục\"/`action_unarchive`."
 
 #. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_force_thread_id
-msgid ""
-"Optional ID of a thread (record) to which all incoming messages will be "
-"attached, even if they did not reply to it. If set, this will disable the "
-"creation of new records completely."
-msgstr ""
-"ID tùy chọn của một luồng (bản ghi) tập hợp tất cả tin nhắn nhận được, thậm "
-"chí nếu đó là tin nhắn không có phản hồi. Nếu cài đặt, điều này sẽ tắt hoàn "
-"toàn việc tạo các bản ghi mới. "
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.js:0
-msgid "Optional message..."
-msgstr "Tin nhắn tùy chọn..."
-
-#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/helper/documents_action_helper.xml:0
 msgid "Or send emails to"
@@ -2787,7 +2980,6 @@ msgstr "Khác"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_partner_access.xml:0
 #: model:ir.model.fields,field_description:documents.field_documents_document__owner_id
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__requestee_id
@@ -2797,23 +2989,8 @@ msgstr "Người phụ trách"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Owner: #{document.owner_id.name}"
-msgstr "Người sở hữu: #{document.owner_id.name}"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Owner: #{document_url.owner_id.name}"
-msgstr "Chủ sở hữu: #{document_url.owner_id.name}"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Owner: #{subfolder.owner_id.name}"
-msgstr "Chủ sở hữu: #{subfolder.owner_id.name}"
-
-#. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_parent_model_id
-msgid "Parent Model"
-msgstr "Mô hình chính"
+msgid "Owner: {{0}}"
+msgstr "Chủ sở hữu: {{0}}"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__parent_path
@@ -2821,31 +2998,15 @@ msgid "Parent Path"
 msgstr "Tuyến chính"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_parent_thread_id
-msgid "Parent Record Thread ID"
-msgstr "ID luồng bản ghi chính"
-
-#. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_parent_model_id
-msgid ""
-"Parent model holding the alias. The model holding the alias reference is not"
-" necessarily the model given by alias_model_id (example: project "
-"(parent_model) and task (model))"
-msgstr ""
-"Mô hình chính chứa bí danh này. Mô hình chứa tham chiếu bí danh không nhất "
-"thiết phải là mô hình được đưa ra bởi alias_model_id (Ví dụ: dự án "
-"(parent_model) và nhiệm vụ (model))"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "Partial transfer"
-msgstr "Chuyển một phần"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__partner_id
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__partner_ids
 msgid "Partner"
 msgstr "Đối tác"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
+msgid "People"
+msgstr "Con người"
 
 #. module: documents
 #. odoo-javascript
@@ -2854,7 +3015,7 @@ msgid "People with access"
 msgstr "Mọi người có quyền truy cập"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__is_pinned_folder
+#: model:ir.model.fields,field_description:documents.field_documents_document__is_company_root_folder
 msgid "Pinned to Company roots"
 msgstr "Đã ghim vào gốc của công ty"
 
@@ -2866,19 +3027,6 @@ msgid ""
 msgstr ""
 "Vui lòng đăng nhập hoặc liên hệ với người đã chia sẻ liên kết này để biết "
 "thêm thông tin."
-
-#. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_contact
-msgid ""
-"Policy to post a message on the document using the mailgateway.\n"
-"- everyone: everyone can post\n"
-"- partners: only authenticated partners\n"
-"- followers: only followers of the related document or members of following channels\n"
-msgstr ""
-"Chính sách cho phép đăng tin nhắn lên tài liệu sử dụng cổng email.\n"
-"- mọi người: mọi người có thể đăng\n"
-"- đối tác: chỉ các đối tác đã xác thực\n"
-"- người theo dõi: chỉ những người theo dõi của tài liệu liên quan hoặc thành viên của kênh đang theo dõi\n"
 
 #. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__thumbnail_status__present
@@ -2935,11 +3083,6 @@ msgid "Record"
 msgstr "Bản ghi"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_force_thread_id
-msgid "Record Thread ID"
-msgstr "ID luồng bản ghi"
-
-#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "Remaining Pages"
@@ -2973,21 +3116,6 @@ msgid "Remove Member"
 msgstr "Gỡ thành viên"
 
 #. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_tag_remove_inbox
-msgid "Remove Tag Inbox"
-msgstr "Hộp thư đến"
-
-#. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_tag_remove_to_validate
-msgid "Remove Tag To Validate"
-msgstr "Cần xác thực"
-
-#. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_remove_tags
-msgid "Remove all tags"
-msgstr "Gỡ tất cả thẻ"
-
-#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_star.js:0
 msgid "Remove star"
@@ -2997,7 +3125,7 @@ msgstr "Gỡ sao"
 #. odoo-javascript
 #: code:addons/documents/static/src/core/document_service.js:0
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_rename.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form_rename
 msgid "Rename"
 msgstr "Đổi tên"
@@ -3029,20 +3157,6 @@ msgstr "Yêu cầu tài liệu"
 #: model:ir.actions.act_window,name:documents.action_request_form
 msgid "Request a file"
 msgstr "Yêu cầu tệp"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_request_page
-msgid ""
-"Requested\n"
-"                                ∙"
-msgstr ""
-"Được yêu cầu\n"
-"                                ∙"
-
-#. module: documents
-#: model:mail.activity.type,name:documents.mail_documents_activity_data_md
-msgid "Requested Document"
-msgstr "Tài liệu yêu cầu"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_search
@@ -3077,6 +3191,8 @@ msgid "Resource Name"
 msgstr "Tên tài nguyên"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
 #: model:ir.model.fields,field_description:documents.field_documents_document__create_activity_user_id
 msgid "Responsible"
 msgstr "Người phụ trách"
@@ -3088,9 +3204,8 @@ msgstr "Người phụ trách"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 msgid "Restore"
 msgstr "Khôi phục"
 
@@ -3114,6 +3229,7 @@ msgstr "Hoàn nguyên thay đổi"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__role
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__role
 msgid "Role"
 msgstr "Vai trò"
 
@@ -3130,7 +3246,6 @@ msgstr "Bán hàng"
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 #: model_terms:ir.ui.view,arch_db:documents.tag_view_form
 msgid "Save"
 msgstr "Lưu"
@@ -3149,9 +3264,9 @@ msgstr "Đang lưu..."
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Search people"
-msgstr "Tìm kiếm người"
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.js:0
+msgid "Select a Record To Link"
+msgstr "Chọn một bản ghi để liên kết"
 
 #. module: documents
 #. odoo-javascript
@@ -3165,6 +3280,12 @@ msgstr "Chọn một thư mục để tải lên tài liệu"
 #: code:addons/documents/static/src/views/list/documents_list_renderer.js:0
 msgid "Select all"
 msgstr "Chọn tất cả"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/chatter/documents_chatter_overlay.xml:0
+msgid "Select an item to open the chatter"
+msgstr "Chọn một mục để mở cửa sổ trò chuyện"
 
 #. module: documents
 #. odoo-javascript
@@ -3204,12 +3325,6 @@ msgstr "Chọn/Bỏ chọn tất cả trang"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Send"
-msgstr "Gửi"
-
-#. module: documents
-#. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 #: model:ir.actions.server,name:documents.ir_actions_server_send_to_finance
 msgid "Send To Finance"
@@ -3221,6 +3336,12 @@ msgid "Sent to partner when requesting a document from them"
 msgstr "Gửi cho đối tác khi yêu cầu tài liệu từ họ"
 
 #. module: documents
+#: model:mail.template,description:documents.mail_template_document_share
+msgid "Sent to partner when sharing a document with them"
+msgstr ""
+
+#. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_document__sequence
 #: model:ir.model.fields,field_description:documents.field_documents_tag__sequence
 msgid "Sequence"
 msgstr "Trình tự"
@@ -3235,11 +3356,6 @@ msgstr "Tác vụ phía máy chủ"
 #: code:addons/documents/models/ir_actions_server.py:0
 msgid "Server Actions"
 msgstr "Tác vụ Phía máy chủ"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.res_config_settings_view_form
-msgid "Set deletion delay for documents in the Trash"
-msgstr "Đặt độ trễ hành động xóa cho tài liệu trong Thùng rác"
 
 #. module: documents
 #. odoo-javascript
@@ -3265,11 +3381,11 @@ msgstr "Cài đặt"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_share.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: code:addons/documents/static/src/views/search/documents_search_panel.xml:0
 #: code:addons/documents/static/src/web/error_dialog/error_dialog_patch.xml:0
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
 msgid "Share"
 msgstr "Chia sẻ"
 
@@ -3278,6 +3394,11 @@ msgstr "Chia sẻ"
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.js:0
 msgid "Share: %(documentName)s"
 msgstr "Chia sẻ: %(documentName)s"
+
+#. module: documents
+#: model:documents.document,name:documents.document_marketing_brand1_shared_folder
+msgid "Shared"
+msgstr "Đã chia sẻ"
 
 #. module: documents
 #. odoo-javascript
@@ -3289,26 +3410,13 @@ msgid "Shared with me"
 msgstr "Được chia sẻ với tôi"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Sharing..."
-msgstr "Đang chia sẻ..."
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__shortcut_ids
 msgid "Shortcut"
 msgstr "Lối tắt"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "Shortcut created"
-msgstr "Lối tắt đã tạo"
-
-#. module: documents
-#. odoo-javascript
 #: code:addons/documents/static/src/core/document_service.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
 msgid "Shortcuts can only be created one at a time."
 msgstr "Mỗi lần chỉ có thể tạo một lối tắt."
 
@@ -3330,15 +3438,19 @@ msgid "Some files could not be uploaded (max size: %s)."
 msgstr "Không thể tải lên một số tệp (kích thước tối đa: %s)."
 
 #. module: documents
+#: model:documents.document,name:documents.documents_attachment_sorry_netsuite_document
+msgid "Sorry Netsuite.jpg"
+msgstr "Sorry Netsuite.jpg"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__shortcut_document_id
 msgid "Source Document"
 msgstr "Chứng từ gốc"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-msgid "Special folders cannot be shared"
-msgstr "Không thể chia sẻ các thư mục đặc biệt"
+#: model:ir.model.fields,field_description:documents.field_documents_document__shortcut_document_owner_id
+msgid "Source Document Owner"
+msgstr "Chủ sở hữu tài liệu nguồn"
 
 #. module: documents
 #. odoo-javascript
@@ -3348,9 +3460,8 @@ msgstr "Tách"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/attachments/document_file_viewer.xml:0
 #: code:addons/documents/static/src/js/tours/documents.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Split PDF"
 msgstr "Tách PDF"
 
@@ -3397,9 +3508,20 @@ msgid "Structure"
 msgstr "Cấu trúc lương"
 
 #. module: documents
+#. odoo-python
+#: code:addons/documents/wizard/documents_access_invite.py:0
+msgid "Successfully Shared"
+msgstr "Đã chia sẻ thành công!"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__create_activity_summary
 msgid "Summary"
 msgstr "Tóm tắt"
+
+#. module: documents
+#: model:documents.document,name:documents.document_support_folder
+msgid "Support"
+msgstr "Hỗ trợ"
 
 #. module: documents
 #: model:res.groups,name:documents.group_documents_system
@@ -3444,6 +3566,12 @@ msgid "Text shown when hovering on this tag"
 msgstr "Văn bản hiển thị khi di chuột qua thẻ này"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/attachments/attachment_list_patch.js:0
+msgid "The attachment has been successfully added to 'My Drive' in Documents."
+msgstr ""
+
+#. module: documents
 #: model:ir.model.constraint,message:documents.constraint_res_config_settings_check_deletion_delay
 msgid "The deletion delay should be positive."
 msgstr "Độ trễ hành động xóa phải dương."
@@ -3462,6 +3590,12 @@ msgid "The document has been moved."
 msgstr "Tài liệu đã được di chuyển."
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/core/document_service.js:0
+msgid "The document/folder has been moved to the Company root."
+msgstr ""
+
+#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid ""
@@ -3470,16 +3604,6 @@ msgid ""
 msgstr ""
 "Các tài liệu sau đây không thể có bí danh:\n"
 "- %(records)s"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid ""
-"The following documents/folders can't be owned by a Portal User: \n"
-"- %(partners)s"
-msgstr ""
-"Người dùng Cổng thông tin không thể sở hữu các tài liệu/thư mục sau:\n"
-"- %(partners)s"
 
 #. module: documents
 #. odoo-python
@@ -3501,15 +3625,12 @@ msgstr ""
 "Các lối tắt sau đây không thể được thiết lập làm phần chính của tài liệu:\n"
 
 #. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_model_id
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
 msgid ""
-"The model (Odoo Document Kind) to which this alias corresponds. Any incoming"
-" email that does not reply to an existing record will cause the creation of "
-"a new record of this model (e.g. a Project Task)"
+"The following user(s) cannot own root documents/folders: \n"
+"- %(lines)s"
 msgstr ""
-"Mô hình (Loại tài liệu Odoo) mà bí danh này tương tác. Mọi email đến mà "
-"không phải là email trả lời một bản ghi hiện có sẽ tạo ra một bản ghi mới "
-"trong mô hình này. (ví dụ: Nhiệm vụ dự án) "
 
 #. module: documents
 #: model:ir.model.fields,help:documents.field_documents_document__alias_name
@@ -3521,6 +3642,13 @@ msgstr ""
 " <jobs@example.odoo.com>"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid ""
+"There is at least one document you cannot move to trash in your selection."
+msgstr ""
+
+#. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__last_access_date_group__1_month
 msgid "This Month"
 msgstr "Tháng này"
@@ -3529,6 +3657,12 @@ msgstr "Tháng này"
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__last_access_date_group__2_week
 msgid "This Week"
 msgstr "Tuần này"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/ir_actions_server.py:0
+msgid "This action can not be executed on the current document."
+msgstr ""
 
 #. module: documents
 #. odoo-python
@@ -3547,19 +3681,18 @@ msgid "This document does not exist or is not publicly available."
 msgstr "Tài liệu này không tồn tại hoặc không công khai."
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_request_page
-msgid ""
-"This document has been requested.\n"
-"                <b onclick=\"document.querySelector('.o_request_upload').click()\" style=\"cursor:pointer;\">Upload it</b>."
-msgstr ""
-"Tài liệu này đã được yêu cầu.\n"
-"                <b onclick=\"document.querySelector('.o_request_upload').click()\" style=\"cursor:pointer;\">Tải lên</b>."
-
-#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "This document has been restored."
 msgstr "Tài liệu này đã được khôi phục."
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
+msgid ""
+"This document is locked by %s.\n"
+"Are you sure you want to unlock it?"
+msgstr ""
 
 #. module: documents
 #. odoo-python
@@ -3597,6 +3730,12 @@ msgid "This partner is already set on this document."
 msgstr "Đối tác này đã được thiết lập trên tài liệu này."
 
 #. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_access.py:0
+msgid "This user can not be member."
+msgstr "Người dùng này không thể là thành viên."
+
+#. module: documents
 #: model_terms:ir.actions.act_window,help:documents.mail_activity_type_action_document
 msgid ""
 "Those represent the different categories of things you have to do (e.g. "
@@ -3616,6 +3755,11 @@ msgid "Thumbnail Status"
 msgstr "Trạng thái hình thu nhỏ"
 
 #. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.res_config_settings_view_form
+msgid "Time before documents in the Trash are permanently deleted."
+msgstr "Thời gian trước khi tài liệu trong Thùng rác bị xóa vĩnh viễn."
+
+#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/helper/documents_action_helper.xml:0
 msgid "Tip: configure your scanner to send all documents to this address."
@@ -3628,11 +3772,6 @@ msgstr "Mẹo: Trở thành một công ty không giấy tờ"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_tag_to_validate
-msgid "To Validate"
-msgstr "Cần xác thực"
-
-#. module: documents
-#: model:mail.activity.type,name:documents.mail_documents_activity_data_tv
 msgid "To validate"
 msgstr "Để xác nhận"
 
@@ -3708,16 +3847,10 @@ msgstr "Tác vụ không khả dụng."
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "Unlock"
 msgstr "Mở khoá"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "Unnamed"
-msgstr "Chưa đặt tên"
 
 #. module: documents
 #. odoo-javascript
@@ -3749,6 +3882,18 @@ msgid "Upload file request"
 msgstr "Tải lên tệp yêu cầu"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/fields/documents_type_icon/documents_type_icon.xml:0
+msgid "Upload the requested file"
+msgstr ""
+
+#. module: documents
+#: model:ir.model.fields,field_description:documents.field_ir_actions_server__usage
+#: model:ir.model.fields,field_description:documents.field_ir_cron__usage
+msgid "Usage"
+msgstr "Cách dùng"
+
+#. module: documents
 #: model:ir.model,name:documents.model_res_users
 #: model:res.groups,name:documents.group_documents_user
 msgid "User"
@@ -3756,7 +3901,6 @@ msgstr "Người dùng"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_partner_access.xml:0
 msgid "User Access Role"
 msgstr "Vai trò truy cập của người dùng"
@@ -3787,14 +3931,18 @@ msgstr ""
 "Nếu bạn xóa phiên bản mới nhất, phiên bản trước đó sẽ tự động được khôi phục thành phiên bản hiện tại."
 
 #. module: documents
+#: model:documents.document,name:documents.documents_attachment_video_documents
+msgid "Video: Odoo Documents"
+msgstr "Video: Odoo Tài liệu"
+
+#. module: documents
 #: model:documents.tag,name:documents.documents_tag_videos
 msgid "Videos"
 msgstr "Video"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
 #: model:ir.model.fields.selection,name:documents.selection__documents_access__role__view
+#: model:ir.model.fields.selection,name:documents.selection__documents_access_invite__role__view
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_internal__view
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_via_link__view
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__user_permission__view
@@ -3809,6 +3957,12 @@ msgid ""
 msgstr ""
 "Bạn muốn biến doanh nghiệp mình thành <b>một công ty không giấy tờ</b>? Hãy "
 "khám phá Odoo Tài liệu."
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
+msgid "Warning"
+msgstr "Cảnh báo"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__website_message_ids
@@ -3894,6 +4048,12 @@ msgstr "Bạn không được phép xem dữ liệu của bảng điều khiển
 #. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
+msgid "You are not allowed to update these access rights."
+msgstr "Bạn không được phép cập nhật các quyền truy cập này."
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
 msgid "You are not allowed to write in this folder."
 msgstr "Bạn không được phép viết trong thư mục này."
 
@@ -3929,6 +4089,13 @@ msgstr "Bạn không thể truy cập folder_id đó. "
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid ""
+"You can't create shortcuts in nor move documents to this special folder."
+msgstr ""
+
+#. module: documents
+#. odoo-javascript
 #: code:addons/documents/static/src/views/search/documents_search_panel.js:0
 msgid ""
 "You can't create shortcuts in or move documents to this special folder."
@@ -3942,6 +4109,12 @@ msgid "You can't move documents out of folders you cannot edit."
 msgstr ""
 "Bạn không thể di chuyển tài liệu ra khỏi các thư mục mà bạn không thể chỉnh "
 "sửa."
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/core/document_service.js:0
+msgid "You can't move this/those folder(s) to the Company root."
+msgstr ""
 
 #. module: documents
 #. odoo-python
@@ -3970,15 +4143,9 @@ msgstr "Bạn không thể sao chép (các) tài liệu trong Thùng rác."
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "You cannot move folders or files when in the trash."
-msgstr "Bạn không thể di chuyển các thư mục hoặc tệp trong thùng rác."
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "You cannot move request in the company folder"
-msgstr "Bạn không thể di chuyển yêu cầu trong thư mục của công ty"
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid "You cannot move a folder into itself or a children."
+msgstr ""
 
 #. module: documents
 #. odoo-python
@@ -3999,12 +4166,6 @@ msgid "You cannot remove this partner"
 msgstr "Bạn không thể gỡ bỏ đối tác này"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-msgid "You cannot share multiple documents at the same time"
-msgstr "Bạn không thể chia sẻ nhiều tài liệu cùng một lúc"
-
-#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "You do not have sufficient access rights to delete these documents."
@@ -4012,12 +4173,9 @@ msgstr "Bạn không có đủ quyền truy cập để xóa những tài liệu
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid ""
-"You don't have the rights to move documents nor create shortcut to that "
-"folder."
-msgstr "Bạn không có quyền di chuyển tài liệu hay tạo lối tắt đến thư mục đó."
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid "You don't have the rights to write in this folder."
+msgstr ""
 
 #. module: documents
 #. odoo-javascript
@@ -4027,10 +4185,10 @@ msgstr ""
 "Bạn phải ở trong một không gian làm việc có thể viết được để tải tệp lên"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Your Role: %s"
-msgstr "Vai trò của bạn: %s"
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "You've added external users, but external sharing is disabled."
+msgstr ""
 
 #. module: documents
 #. odoo-python
@@ -4045,11 +4203,9 @@ msgid "Your personal space"
 msgstr "Không gian cá nhân của bạn"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
-msgid "alias"
-msgstr "bí danh"
+#: model_terms:ir.ui.view,arch_db:documents.document_request_done_page
+msgid "Your upload is successful"
+msgstr ""
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.format_file_size
@@ -4057,15 +4213,14 @@ msgid "bytes"
 msgstr "byte"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_image_city_document
+msgid "city.jpg"
+msgstr "city.jpg"
+
+#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.folder_deletion_form
 msgid "days."
 msgstr "ngày."
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.js:0
-msgid "document"
-msgstr "tài liệu"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -4073,15 +4228,15 @@ msgid "documents"
 msgstr "tài liệu"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "e.g. Discuss proposal"
-msgstr "vd: Thảo luận về đề xuất"
-
-#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form_new_folder
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form_rename
 msgid "e.g. Finance"
 msgstr "vd. Tài chính"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.ir_actions_server_view_form_documents
+msgid "e.g. Mass archive"
+msgstr "VD: Lưu trữ hàng loạt"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.documents_request_form_view
@@ -4101,9 +4256,14 @@ msgstr "VD: https://www.youtube.com/watch?v=CP96yVnXNrY"
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
 msgid "e.g. mycompany.com"
 msgstr "VD: mycompany.com"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "email"
+msgstr "email"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -4111,26 +4271,29 @@ msgid "files"
 msgstr "tệp"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.js:0
-msgid "folder"
-msgstr "thư mục"
-
-#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
 msgid "folders,"
 msgstr "thư mục,"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_vendor_bill_extract_azure_interior_document
+msgid "invoice Azure Interior.pdf"
+msgstr "invoice Azure Interior.pdf"
+
+#. module: documents
+#: model:documents.document,name:documents.documents_vendor_bill_extract_open_value_document
+msgid "invoice OpenValue.pdf"
+msgstr "invoice OpenValue.pdf"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.document_request_page
+msgid "is requesting"
+msgstr "đang yêu cầu"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__is_readonly_model
 msgid "is_readonly_model"
 msgstr "is_readonly_model"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/chatter/documents_chatter_overlay.xml:0
-msgid "items selected"
-msgstr "mục đã được chọn"
 
 #. module: documents
 #. odoo-javascript
@@ -4144,35 +4307,37 @@ msgid "kiB"
 msgstr "kiB"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_image_mail_document
+msgid "mail.png"
+msgstr "mail.png"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/ir_actions_server.py:0
+msgid "model_name"
+msgstr "model_name"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "or its parent will have edit permissions."
+msgstr ""
+
+#. module: documents
+#: model:documents.document,name:documents.documents_image_people_document
+msgid "people.jpg"
+msgstr "people.jpg"
+
+#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_page/pdf_page.xml:0
 msgid "select"
 msgstr "chọn"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid "shared a document with you.<br/>"
-msgstr "đã chia sẻ một tài liệu với bạn.<br/>"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid "shared a folder with you.<br/>"
-msgstr "đã chia sẻ một thư mục với bạn.<br/>"
-
-#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
 msgid "shared by"
 msgstr "được chia sẻ bởi"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid "shared this document with you:"
-msgstr "đã chia sẻ tài liệu này với bạn:"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid "shared this folder with you:"
-msgstr "đã chia sẻ thư mục này với bạn:"
 
 #. module: documents
 #. odoo-javascript
@@ -4191,6 +4356,11 @@ msgstr "sub-doc-%s"
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "unnamed"
 msgstr "không tên"
+
+#. module: documents
+#: model:mail.template,subject:documents.mail_template_document_share
+msgid "{{ object.document_id.name or 'Document' }} shared with you"
+msgstr ""
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page

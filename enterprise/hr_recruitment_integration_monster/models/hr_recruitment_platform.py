@@ -11,7 +11,7 @@ from odoo.tools.zeep.wsse.username import UsernameToken
 MONSTER_WSDL_URI = 'https://schemas.monster.com/Current/WSDL/MonsterBusinessGateway.wsdl'
 
 
-class RecruitmentPlatform(models.Model):
+class HrRecruitmentPlatform(models.Model):
     _inherit = 'hr.recruitment.platform'
 
     def _post_api_call(self, data):
@@ -36,7 +36,7 @@ class RecruitmentPlatform(models.Model):
             ),
         )
 
-        for not_used in range(3):
+        for _i in range(3):
             # service can be down for a short time
             try:
                 monster_response = monster_soap_client.service.UpdateJobs(Job=data)

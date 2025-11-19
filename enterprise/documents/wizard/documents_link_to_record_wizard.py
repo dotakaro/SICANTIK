@@ -1,8 +1,8 @@
 from odoo import api, fields, models
 
 
-class LinkToRecordWizard(models.TransientModel):
-    _name = "documents.link_to_record_wizard"
+class DocumentsLink_To_Record_Wizard(models.TransientModel):
+    _name = 'documents.link_to_record_wizard'
     _description = "Documents Link to Record"
 
     def _get_model_domain(self):

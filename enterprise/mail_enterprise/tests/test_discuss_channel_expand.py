@@ -13,14 +13,13 @@ class TestDiscussChannelExpand(HttpCase, MailCommon):
     def test_channel_expand_tour(self):
         testuser = self.env['res.users'].create({
             'email': 'testuser@testuser.com',
-            'groups_id': [(6, 0, [self.ref('base.group_user')])],
+            'group_ids': [(6, 0, [self.ref('base.group_user')])],
             'name': 'Test User',
             'login': 'testuser',
             'password': 'testuser',
         })
         DiscussChannelAsUser = self.env['discuss.channel'].with_user(testuser)
-        channel = DiscussChannelAsUser.channel_create(name="test-mail-channel-expand-tour", group_id=self.ref("base.group_user"))
-        channel.channel_member_ids.filtered(lambda m: m.is_self)._channel_fold(state='open', state_count=0)
+        channel = DiscussChannelAsUser._create_channel(name="test-mail-channel-expand-tour", group_id=self.ref("base.group_user"))
         channel.message_post(
             body=Markup("<p>test-message-mail-channel-expand-tour</p>"),
             message_type='comment',

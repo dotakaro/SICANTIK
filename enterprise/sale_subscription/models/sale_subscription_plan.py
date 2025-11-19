@@ -1,16 +1,19 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models, Command
-from odoo.tools import _, get_timedelta
+from odoo import api, fields, models
+from odoo.fields import Command
+from odoo.tools import _
+from odoo.tools.date_utils import get_timedelta
 
 
 class SaleSubscriptionPlan(models.Model):
     _name = 'sale.subscription.plan'
     _description = 'Subscription Plan'
+    _order = 'sequence, id'
 
     active = fields.Boolean(default=True)
     name = fields.Char(translate=True, required=True, default="Monthly")
+    sequence = fields.Integer(default=10)
     company_id = fields.Many2one('res.company')
 
     # Billing Period, use billing_period property for access to the timedelta
@@ -39,6 +42,11 @@ class SaleSubscriptionPlan(models.Model):
         ("at_date", "At date"),
         ("end_of_period", "End of period")
     ], string="Closeable Plan Options", required=True, default='at_date')
+    pausable_by_user = fields.Boolean(
+        string="Pausable",
+        default=False,
+        help="Allow customers to temporarily pause their subscription for a specific period. Not available for postpaid subscriptions."
+    )
 
     # Invoicing
     auto_close_limit = fields.Integer(string="Automatic Closing", default=15,
@@ -55,18 +63,24 @@ class SaleSubscriptionPlan(models.Model):
                                                help="Email template used to send invoicing email automatically.\n"
                                                     "Leave it empty if you don't want to send email automatically.")
 
-    product_subscription_pricing_ids = fields.One2many('sale.subscription.pricing', 'plan_id', string="Recurring Pricing",
-                                                       domain=['|', ('product_template_id', '=', None), ('product_template_id.active', '=', True)])
+    subscription_rule_ids = fields.One2many(
+        comodel_name='product.pricelist.item',
+        inverse_name='plan_id',
+        string="Recurring Pricing",
+        domain=[
+            ('plan_id', '!=', None),
+            '|', ('product_tmpl_id', '=', None), ('product_tmpl_id.active', '=', True)
+        ]
+    )
 
     # UX
     active_subs_count = fields.Integer(compute="_compute_active_subs_count", string="Subscriptions")
     subscription_line_count = fields.Integer(compute="_compute_active_subscription_line_count", string="Subscription Count")
 
-    _sql_constraints = [
-        (
-            'check_for_valid_billing_period_value', 'CHECK(billing_period_value > 0)',
-            'Recurring period must be a positive number. Please ensure the input is a valid positive numeric value.')
-    ]
+    _check_for_valid_billing_period_value = models.Constraint(
+        'CHECK(billing_period_value > 0)',
+        "Recurring period must be a positive number. Please ensure the input is a valid positive numeric value.",
+    )
 
     def write(self, values):
         if "related_plan_id" in values:
@@ -81,34 +95,31 @@ class SaleSubscriptionPlan(models.Model):
         return res
 
     def _search_billing_period_display(self, operator, value):
-        if operator not in ['=', 'in']:
-            raise NotImplementedError
-        plan_ids = self.env['sale.subscription.plan']
-        for plan in self.env['sale.subscription.plan'].search([]):
-            if value in plan.billing_period_display:
-                plan_ids += plan
+        if operator != 'in':
+            return NotImplemented
+        plan_ids = [
+            plan.id
+            for plan in self.env['sale.subscription.plan'].search([])
+            if any(v in plan.billing_period_display for v in value)
+        ]
         return [('id', 'in', plan_ids.ids)]
 
     def _compute_active_subs_count(self):
-        self.active_subs_count = 0
-        res = self.env['sale.order'].read_group(
+        res = dict(self.env['sale.order']._read_group(
             [('plan_id', 'in', self.ids), ('is_subscription', '=', True), ('subscription_state', 'in', ['3_progress', '4_paused'])],
-            ['__count'], ['plan_id'],
-        )
-        for template in res:
-            if template['plan_id']:
-                self.browse(template['plan_id'][0]).active_subs_count = template['plan_id_count']
+            ['plan_id'], ['__count'],
+        ))
+        for plan in self:
+            plan.active_subs_count = res.get(plan, 0)
 
     def _compute_active_subscription_line_count(self):
-        self.subscription_line_count = 0
-        line_counts = self.env['sale.order.line'].read_group(
-          [('order_id.is_subscription', '=', True), ('subscription_plan_id', 'in', self.ids), ('order_id.subscription_state', 'in', ('3_progress', '4_paused'))],
-          ['__count'],
-          ['subscription_plan_id']
-        )
-        line_counts = {r['subscription_plan_id'][0]: r['subscription_plan_id_count'] for r in line_counts}
+        line_counts = dict(self.env['sale.order.line']._read_group(
+            [('order_id.is_subscription', '=', True), ('subscription_plan_id', 'in', self.ids), ('order_id.subscription_state', 'in', ('3_progress', '4_paused'))],
+            ['subscription_plan_id'],
+            ['__count'],
+        ))
         for plan in self:
-            plan.subscription_line_count = line_counts.get(plan.id, 0)
+            plan.subscription_line_count = line_counts.get(plan, 0)
 
     def action_open_active_sub(self):
         return {
@@ -141,9 +152,16 @@ class SaleSubscriptionPlan(models.Model):
     @api.depends_context('lang')
     @api.depends('billing_period_value', 'billing_period_unit')
     def _compute_billing_period_display(self):
-        labels = dict(self._fields['billing_period_unit']._description_selection(self.env))
         for plan in self:
-            plan.billing_period_display = f"{plan.billing_period_value} {labels[plan.billing_period_unit]}"
+            value = plan.billing_period_value
+            if plan.billing_period_unit == 'week':
+                plan.billing_period_display = _('%s Weeks', value) if value > 1 else _('1 Week')
+            elif plan.billing_period_unit == 'month':
+                plan.billing_period_display = _('%s Months', value) if value > 1 else _('1 Month')
+            elif plan.billing_period_unit == 'year':
+                plan.billing_period_display = _('%s Years', value) if value > 1 else _('1 Year')
+            else:
+                raise ValueError(f"Invalid Billing Period Unit {plan.billing_period_unit!r}")
 
     @api.depends_context('lang')
     @api.depends('billing_period_value', 'billing_period_unit')

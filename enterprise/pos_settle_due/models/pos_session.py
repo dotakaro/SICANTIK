@@ -1,29 +1,25 @@
-from odoo import models
-
+from odoo import models, api
 
 class PosSession(models.Model):
     _inherit = 'pos.session'
 
-    def _reconcile_account_move_lines(self, data):
-        data = super()._reconcile_account_move_lines(data)
-        pay_later_move_lines = data.get('pay_later_move_lines')
-        # Reconcile customer receivable move lines
-        if pay_later_move_lines:
-            account_ids = pay_later_move_lines.mapped("account_id")
-            partner_ids = pay_later_move_lines.mapped("partner_id")
-            pay_later_move_lines |= pay_later_move_lines.search(
-                [
-                    "|",
-                    ("journal_id", "=", self.config_id.journal_id.id),
-                    "&",
-                    ("move_type", "=", "out_invoice"),
-                    ("move_id.pos_order_ids", "!=", False),
-                    ("account_id", "in", account_ids.ids),
-                    ("partner_id", "in", partner_ids.ids),
-                    ("reconciled", "=", False),
-                    ("parent_state", "=", "posted"),
-                ]
-            )
-            for partner in pay_later_move_lines.mapped("partner_id"):
-                pay_later_move_lines.filtered(lambda p: p.partner_id.id == partner.id).reconcile()
+    @api.model
+    def _load_pos_data_models(self, config_id):
+        data = super()._load_pos_data_models(config_id)
+        if self.env.user.has_group('account.group_account_readonly') or self.env.user.has_group('account.group_account_invoice'):
+            data += ['account.move']
+        data += ['ir.ui.view']
         return data
+
+    def close_session_from_ui(self, bank_payment_method_diff_pairs=None):
+        res = super().close_session_from_ui(bank_payment_method_diff_pairs=bank_payment_method_diff_pairs)
+        if res['successful']:
+            settled_invoice_ids = self.order_ids.mapped('lines.settled_invoice_id')
+            for inv in settled_invoice_ids:
+                # Assign outstanding credits created in the session to the invoice
+                for out_cred in inv.invoice_outstanding_credits_debits_widget['content']:
+                    if out_cred['journal_name'] == self.name:
+                        lines = self.env['account.move.line'].browse(out_cred['id'])
+                        lines += inv.line_ids.filtered(lambda line: line.account_id == lines[0].account_id and not line.reconciled)
+                        lines.reconcile()
+        return res

@@ -4,15 +4,14 @@
 # 
 # Translators:
 # Wil Odoo, 2025
-# Junko Augias, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-07 20:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Junko Augias, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -121,12 +120,12 @@ msgstr "<span>テスト </span>"
 #. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_point_view_form_inherit_quality_control
 msgid "<span>from </span>"
-msgstr "<span>以下から: </span>"
+msgstr "<span>下限 </span>"
 
 #. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_point_view_form_inherit_quality_control
 msgid "<span>to </span>"
-msgstr "<span>から以下へ: </span>"
+msgstr "<span>上限 </span>"
 
 #. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.worksheet_page
@@ -136,7 +135,7 @@ msgstr "<strong>ロット/シリアル番号:</strong>"
 #. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.worksheet_page
 msgid "<strong>Measure: </strong>"
-msgstr "<strong>寸法: </strong>"
+msgstr "<strong>測定: </strong>"
 
 #. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.worksheet_page
@@ -312,6 +311,7 @@ msgid "Control Point"
 msgstr "検査ポイント"
 
 #. module: quality_control
+#: model:ir.actions.act_window,name:quality_control.quality_point_action
 #: model:ir.ui.menu,name:quality_control.menu_quality_control_points
 msgid "Control Points"
 msgstr "検査ポイント"
@@ -403,7 +403,7 @@ msgstr "すべての在庫操作に使用されるデフォルトの測定単位
 msgid ""
 "Define Quality Control Points in order to automatically generate\n"
 "              quality checks at the right logistic operation: transfers, manufacturing orders."
-msgstr "適正なロジスティックオペレーション（運送/製造オーダ）の際に自動的に品質検査が生成されるように品質検査ポイントを定義しましょう"
+msgstr "適正なロジスティック工程(運送/製造オーダ)の際に自動的に品質検査が生成されるように品質管理ポイントを定義しましょう"
 
 #. module: quality_control
 #: model:ir.model.fields,help:quality_control.field_quality_check__testing_percentage_within_lot
@@ -445,10 +445,21 @@ msgid "Discard"
 msgstr "破棄"
 
 #. module: quality_control
+#: model:ir.model.fields,field_description:quality_control.field_product_product__display_name
+#: model:ir.model.fields,field_description:quality_control.field_product_template__display_name
+#: model:ir.model.fields,field_description:quality_control.field_quality_alert__display_name
+#: model:ir.model.fields,field_description:quality_control.field_quality_check__display_name
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_on_demand__display_name
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_spreadsheet__display_name
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__display_name
+#: model:ir.model.fields,field_description:quality_control.field_quality_point__display_name
 #: model:ir.model.fields,field_description:quality_control.field_quality_spreadsheet_template__display_name
+#: model:ir.model.fields,field_description:quality_control.field_report_quality_control_quality_worksheet__display_name
+#: model:ir.model.fields,field_description:quality_control.field_report_quality_control_quality_worksheet_internal__display_name
+#: model:ir.model.fields,field_description:quality_control.field_stock_lot__display_name
+#: model:ir.model.fields,field_description:quality_control.field_stock_move__display_name
+#: model:ir.model.fields,field_description:quality_control.field_stock_move_line__display_name
+#: model:ir.model.fields,field_description:quality_control.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -492,14 +503,12 @@ msgid "Failed Quantity"
 msgstr "不合格数"
 
 #. module: quality_control
-#: model:ir.model.fields,field_description:quality_control.field_quality_check__failure_location_id
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__failure_location_id
 msgid "Failure Location"
 msgstr "不合格ロケーション"
 
 #. module: quality_control
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__potential_failure_location_ids
-#: model:ir.model.fields,field_description:quality_control.field_quality_point__failure_location_ids
 msgid "Failure Locations"
 msgstr "不合格ロケーション"
 
@@ -532,20 +541,36 @@ msgid "Group By"
 msgstr "グループ化"
 
 #. module: quality_control
+#: model:ir.model.fields,field_description:quality_control.field_product_product__id
+#: model:ir.model.fields,field_description:quality_control.field_product_template__id
+#: model:ir.model.fields,field_description:quality_control.field_quality_alert__id
+#: model:ir.model.fields,field_description:quality_control.field_quality_check__id
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_on_demand__id
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_spreadsheet__id
 #: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__id
+#: model:ir.model.fields,field_description:quality_control.field_quality_point__id
 #: model:ir.model.fields,field_description:quality_control.field_quality_spreadsheet_template__id
+#: model:ir.model.fields,field_description:quality_control.field_report_quality_control_quality_worksheet__id
+#: model:ir.model.fields,field_description:quality_control.field_report_quality_control_quality_worksheet_internal__id
+#: model:ir.model.fields,field_description:quality_control.field_stock_lot__id
+#: model:ir.model.fields,field_description:quality_control.field_stock_move__id
+#: model:ir.model.fields,field_description:quality_control.field_stock_move_line__id
+#: model:ir.model.fields,field_description:quality_control.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
 #. module: quality_control
 #: model:ir.model.fields,help:quality_control.field_quality_check_wizard__potential_failure_location_ids
-#: model:ir.model.fields,help:quality_control.field_quality_point__failure_location_ids
 msgid ""
-"If a quality check fails, a location is chosen from this list for each "
-"failed quantity."
-msgstr "品質検査が不合格の場合、不合格数量ごとにこのリストから場所が選ばれます。"
+"If quality check fails, a destination location is chosen from this list for\n"
+"- each failed specific product quantity if control is per quantity\n"
+" /- all quantities of a product if control is per product\n"
+" /- all quantities of products in the operation if control is per operation"
+msgstr ""
+"品質検査に不合格の場合、以下の条件に応じて、このリストから宛先ロケーションが選択されます。\n"
+"- 検査が数量ごとの場合は、不合格の各特定プロダクトの数量\n"
+" /- 検査がプロダクトごとの場合はプロダクトの全ての数量\n"
+" /- 工程ごとの場合は、工程内の全てのプロダクト数量"
 
 #. module: quality_control
 #: model:ir.model.fields,help:quality_control.field_quality_check_on_demand__lot_id
@@ -668,7 +693,7 @@ msgstr "最大許容値"
 #: model:quality.point.test_type,name:quality_control.test_type_measure
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_view_form
 msgid "Measure"
-msgstr "測定対象"
+msgstr "測定"
 
 #. module: quality_control
 #: model:ir.model.fields,field_description:quality_control.field_quality_point__measure_frequency_unit
@@ -719,12 +744,6 @@ msgid "New"
 msgstr "新規"
 
 #. module: quality_control
-#. odoo-javascript
-#: code:addons/quality_control/static/src/spreadsheet_bundle/quality_spreadsheet_template_action/quality_spreadsheet_template_action.js:0
-msgid "New quality spreadsheet template created"
-msgstr "新規品質スプレッドシートテンプレートが作成されました"
-
-#. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.view_quality_check_wizard
 msgid "Next"
 msgstr "次へ"
@@ -742,7 +761,7 @@ msgstr "まだデータはありません！"
 #. module: quality_control
 #: model:ir.model.fields.selection,name:quality_control.selection__quality_check__measure_success__none
 msgid "No measure"
-msgstr "測定対象外"
+msgstr "測定なし"
 
 #. module: quality_control
 #: model_terms:ir.actions.act_window,help:quality_control.quality_alert_action_report
@@ -763,7 +782,7 @@ msgstr "品質検査なし"
 #. module: quality_control
 #: model_terms:ir.actions.act_window,help:quality_control.quality_point_action
 msgid "No quality control point found"
-msgstr "品質検査ポイントがありません"
+msgstr "品質管理ポイントがありません"
 
 #. module: quality_control
 #: model:ir.model.fields,field_description:quality_control.field_quality_point__norm
@@ -786,11 +805,6 @@ msgstr "メモ"
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_view_form
 msgid "Notes"
 msgstr "ノート"
-
-#. module: quality_control
-#: model_terms:ir.ui.view,arch_db:quality_control.quality_check_wizard_form_failure
-msgid "OK"
-msgstr "OK"
 
 #. module: quality_control
 #. odoo-python
@@ -828,12 +842,6 @@ msgstr ""
 "工程 = 工程レベルで1品質検査が要求されます。\n"
 "                  プロダクト = プロダクトにつき1品質検査が要求されます。\n"
 "                 数量 = 品質検査は、登録された新規プロダクトの数量ごとに要求され、部分的な数量検査も可能です。"
-
-#. module: quality_control
-#. odoo-python
-#: code:addons/quality_control/models/stock_picking.py:0
-msgid "Operation not supported"
-msgstr "操作はサポートされていません"
 
 #. module: quality_control
 #: model:ir.ui.menu,name:quality_control.menu_quality_dashboard
@@ -930,12 +938,6 @@ msgid "Product Moves (Stock Move Line)"
 msgstr "プロダクトの移動(在庫移動ライン)"
 
 #. module: quality_control
-#: model:ir.model.fields,field_description:quality_control.field_quality_check__uom_id
-#: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__uom_id
-msgid "Product Unit of Measure"
-msgstr "プロダクト単位"
-
-#. module: quality_control
 #: model:ir.model,name:quality_control.model_product_product
 msgid "Product Variant"
 msgstr "プロダクトバリアント"
@@ -1008,13 +1010,17 @@ msgstr "品質アラートステージは品質アラートの進捗を示しま
 
 #. module: quality_control
 #: model:ir.actions.act_window,name:quality_control.quality_alert_action_check
-#: model:ir.actions.act_window,name:quality_control.quality_alert_action_report
 #: model:ir.actions.act_window,name:quality_control.quality_alert_action_team
 #: model:ir.ui.menu,name:quality_control.menu_quality_alert
-#: model:ir.ui.menu,name:quality_control.menu_quality_alert_report
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_alert_team_dashboard_view_kanban
 msgid "Quality Alerts"
 msgstr "品質アラート"
+
+#. module: quality_control
+#: model:ir.actions.act_window,name:quality_control.quality_alert_action_report
+#: model:ir.ui.menu,name:quality_control.menu_quality_alert_report
+msgid "Quality Alerts Analysis"
+msgstr "品質アラート分析"
 
 #. module: quality_control
 #. odoo-python
@@ -1027,6 +1033,8 @@ msgid "Quality Check"
 msgstr "品質検査"
 
 #. module: quality_control
+#: model:ir.actions.act_window,name:quality_control.quality_check_action_report
+#: model:ir.ui.menu,name:quality_control.menu_quality_check_report
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_view_graph
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_view_pivot
 msgid "Quality Check Analysis"
@@ -1038,6 +1046,8 @@ msgid "Quality Check Fail"
 msgstr "品質検査不合格"
 
 #. module: quality_control
+#. odoo-python
+#: code:addons/quality_control/wizard/quality_check_wizard.py:0
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_check_wizard_form_failure
 msgid "Quality Check Failed"
 msgstr "品質検査不合格"
@@ -1072,9 +1082,7 @@ msgstr "品質検査:"
 #: model:ir.actions.act_window,name:quality_control.quality_check_action_main
 #: model:ir.actions.act_window,name:quality_control.quality_check_action_picking
 #: model:ir.actions.act_window,name:quality_control.quality_check_action_production_lot
-#: model:ir.actions.act_window,name:quality_control.quality_check_action_report
 #: model:ir.actions.act_window,name:quality_control.quality_check_action_team
-#: model:ir.ui.menu,name:quality_control.menu_quality_check_report
 #: model:ir.ui.menu,name:quality_control.menu_quality_checks
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_point_view_form_inherit_quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.stock_picking_view_form_inherit_quality
@@ -1104,11 +1112,6 @@ msgstr "品質管理ポイント"
 #: model:ir.model.fields,field_description:quality_control.field_product_template__quality_control_point_qty
 msgid "Quality Control Point Qty"
 msgstr "品質管理ポイント数量"
-
-#. module: quality_control
-#: model:ir.actions.act_window,name:quality_control.quality_point_action
-msgid "Quality Control Points"
-msgstr "品質検査ポイント"
 
 #. module: quality_control
 #: model:ir.model.fields,field_description:quality_control.field_product_product__quality_fail_qty
@@ -1185,7 +1188,7 @@ msgstr "品質検査テンプレートスプレッドシート"
 msgid ""
 "Quality control points define the quality checks which should be\n"
 "              performed at each operation, for your different products."
-msgstr "品質検査ポイントは各オペレーションで実行すべき品質検査を様々なプロダクトに対して定義します。"
+msgstr "品質検査ポイントは、各工程でプロダクトごとに実施すべき品質検査を定義します。"
 
 #. module: quality_control
 #: model:ir.model.fields,field_description:quality_control.field_quality_check__qty_line
@@ -1427,7 +1430,7 @@ msgstr ""
 #. module: quality_control
 #: model:ir.model.fields,help:quality_control.field_quality_point__measure_frequency_value
 msgid "The probability of each quality check being generated"
-msgstr "各品質チェックが生成される確率"
+msgstr "各品質検査が生成される確率"
 
 #. module: quality_control
 #. odoo-python
@@ -1485,6 +1488,12 @@ msgid "Type:"
 msgstr "タイプ:"
 
 #. module: quality_control
+#: model:ir.model.fields,field_description:quality_control.field_quality_check__uom_id
+#: model:ir.model.fields,field_description:quality_control.field_quality_check_wizard__uom_id
+msgid "Unit"
+msgstr "単位"
+
+#. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.quality_point_view_form_inherit_quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.view_quality_check_wizard
 msgid "Unit of Measure"
@@ -1498,7 +1507,12 @@ msgstr "検証"
 #. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.worksheet_page
 msgid "Value near threshold."
-msgstr "閾値に近い値。"
+msgstr "しきい値に近い値。"
+
+#. module: quality_control
+#: model_terms:ir.ui.view,arch_db:quality_control.quality_spreadsheet_template_view_list
+msgid "Visible to all"
+msgstr "全員に表示"
 
 #. module: quality_control
 #: model_terms:ir.ui.view,arch_db:quality_control.worksheet_page
@@ -1547,7 +1561,7 @@ msgstr "品質検査メモを書く..."
 #: code:addons/quality_control/wizard/on_demand_quality_check_wizard.py:0
 msgid ""
 "You can not create quality check for a draft, done or cancelled transfer."
-msgstr "ドラフト、完了済、取消済の運送に対して品質検査を作成することはできません。"
+msgstr "ドラフト、完了済、キャンセル済の運送に対して品質検査を作成することはできません。"
 
 #. module: quality_control
 #. odoo-python
@@ -1556,7 +1570,7 @@ msgid ""
 "You measured %(measure).2f %(unit)s and it should be between "
 "%(tolerance_min).2f and %(tolerance_max).2f %(unit)s."
 msgstr ""
-" %(measure).2f %(unit)sを計測し、それは%(tolerance_min).2f と %(tolerance_max).2f "
+" %(measure).2f %(unit)sを測定し、それは%(tolerance_min).2f と %(tolerance_max).2f "
 "%(unit)sの間である必要があります。"
 
 #. module: quality_control

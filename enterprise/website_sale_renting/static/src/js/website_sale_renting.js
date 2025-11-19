@@ -1,16 +1,14 @@
-/** @odoo-module **/
-
-import { WebsiteSale } from '@website_sale/js/website_sale';
-import { RentingMixin } from '@website_sale_renting/js/renting_mixin';
-import wSaleUtils from "@website_sale/js/website_sale_utils";
-import '@website_sale_renting/js/variant_mixin';
 import {
     deserializeDateTime,
-    serializeDateTime,
     formatDate,
     formatDateTime,
+    serializeDateTime,
 } from "@web/core/l10n/dates";
 import { rpc } from "@web/core/network/rpc";
+import { WebsiteSale } from '@website_sale/js/website_sale';
+import wSaleUtils from "@website_sale/js/website_sale_utils";
+import { RentingMixin } from '@website_sale_renting/js/renting_mixin';
+import '@website_sale_renting/js/variant_mixin';
 
 WebsiteSale.include(RentingMixin);
 WebsiteSale.include({
@@ -42,11 +40,16 @@ WebsiteSale.include({
     },
 
     /**
-     * Assign the renting dates to the rootProduct for rental products.
+     * Override of `_updateRootProduct` to add the renting dates to the rootProduct for rental
+     * products.
      *
      * @override
+     * @private
+     * @param {HTMLFormElement} form - The form in which the product is.
+     *
+     * @returns {void}
      */
-    _updateRootProduct($form, productId, productTemplateId) {
+    _updateRootProduct(form) {
         this._super(...arguments);
         Object.assign(this.rootProduct, this._getSerializedRentingDates());
     },
@@ -55,12 +58,12 @@ WebsiteSale.include({
     // Handlers
     // ------------------------------------------
     /**
-     * During click, verify the renting periods
+     * During click, verify the renting periods and disable the datimepicker as soon as rental
+     * product is added to cart.
      *
      * @private
-     * @returns {Promise} never resolved
      */
-    _onClickAdd(ev) {
+    async _onClickAdd(ev) {
         const $form = this.$(ev.currentTarget).closest('form');
         if ($form.find('input[name="is_rental"]').val()) {
             if (!this._verifyValidRentingPeriod($form)) {
@@ -69,7 +72,23 @@ WebsiteSale.include({
             }
         }
 
-        return this._super(...arguments);
+        const quantity = await this._super(...arguments);
+        const datepickerElements = document.querySelectorAll('.o_website_sale_daterange_picker_input');
+        const clearBtnElements = document.querySelectorAll('.clear-daterange');
+        const infoMessageElements = document.querySelectorAll('.o_rental_info_message');
+        if (quantity > 0) {
+            datepickerElements.forEach((elements) => {
+                elements.disabled=true;
+            });
+            clearBtnElements.forEach((elements) => {
+                elements.classList.add('d-none');
+            });
+            infoMessageElements.forEach((elements) => {
+                elements.classList.remove('d-none');
+            });
+        }
+
+        return quantity;
     },
 
     /**
@@ -156,7 +175,10 @@ WebsiteSale.include({
      */
     _onChangeCombination(ev, $parent, combination) {
         const result = this._super.apply(this, arguments);
-        this._verifyValidRentingPeriod($parent);
+        if (!!combination.is_rental) {
+            // only verify the renting dates if product can be rented
+            this._verifyValidRentingPeriod($parent);
+        }
         return result;
     },
 

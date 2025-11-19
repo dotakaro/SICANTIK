@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { _t } from "@web/core/l10n/translation";
 import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
@@ -49,7 +47,6 @@ export class SpreadsheetSelectorDialog extends Component {
         });
         this.actionState = {
             getOpenSpreadsheetAction: () => {},
-            notificationMessage: "",
         };
         this.notification = useService("notification");
         this.actionService = useService("action");
@@ -59,19 +56,17 @@ export class SpreadsheetSelectorDialog extends Component {
                 "spreadsheet.mixin",
                 "get_selector_spreadsheet_models"
             );
-            this.noteBookPages = spreadsheetModels.map(({ model, display_name, allow_create }) => {
-                return {
-                    Component: SpreadsheetSelectorPanel,
-                    id: model,
-                    title: display_name,
-                    props: {
-                        model,
-                        displayBlank: allow_create,
-                        onSpreadsheetSelected: this.onSpreadsheetSelected.bind(this),
-                        onSpreadsheetDblClicked: this._confirm.bind(this),
-                    },
-                };
-            });
+            this.noteBookPages = spreadsheetModels.map(({ model, display_name, allow_create }) => ({
+                Component: SpreadsheetSelectorPanel,
+                id: model,
+                title: display_name,
+                props: {
+                    model,
+                    displayBlank: allow_create,
+                    onSpreadsheetSelected: this.onSpreadsheetSelected.bind(this),
+                    onSpreadsheetDblClicked: this._confirm.bind(this),
+                },
+            }));
         });
     }
 
@@ -86,10 +81,9 @@ export class SpreadsheetSelectorDialog extends Component {
     /**
      * @param {number|null} id
      */
-    onSpreadsheetSelected({ getOpenSpreadsheetAction, notificationMessage }) {
+    onSpreadsheetSelected({ getOpenSpreadsheetAction }) {
         this.actionState = {
             getOpenSpreadsheetAction,
-            notificationMessage,
         };
     }
 
@@ -102,11 +96,8 @@ export class SpreadsheetSelectorDialog extends Component {
         const threshold = this.state.threshold ? parseInt(this.state.threshold, 10) : 0;
         const name = this.state.name.toString();
 
-        if (this.actionState.notificationMessage) {
-            this.notification.add(this.actionState.notificationMessage, { type: "info" });
-        }
         // the action can be preceded by a notification
-        const actionOpen = action.tag === "display_notification" ? action.params.next : action;
+        const actionOpen = action;
         actionOpen.params = this._addToPreprocessingAction(actionOpen.params, threshold, name);
         this.actionService.doAction(action);
         this.props.close();

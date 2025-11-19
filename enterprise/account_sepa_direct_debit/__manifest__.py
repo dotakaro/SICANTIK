@@ -39,7 +39,7 @@ available for generating a payment on the selected invoice.
         'data/account_data.xml',
         'data/sdd_payment_method.xml',
         'data/sdd_mandate_state_cron.xml',
-        'data/email_templates.xml',
+        'data/mail_template.xml',
         'views/sdd_mandate_views.xml',
         'views/account_payment_view.xml',
         'views/account_journal_dashboard_view.xml',
@@ -52,5 +52,6 @@ available for generating a payment on the selected invoice.
         'wizard/account_payment_register_view.xml',
         'wizard/sdd_mandate_send_views.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

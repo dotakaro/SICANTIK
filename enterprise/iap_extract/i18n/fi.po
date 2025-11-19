@@ -3,25 +3,16 @@
 # 	* iap_extract
 # 
 # Translators:
-# Sanna Edelman <direct@generare.com>, 2024
-# Svante Suominen <svante.suominen@web-veistamo.fi>, 2024
-# Heikki Katajisto <heikki.katajisto@myyntivoima.fi>, 2024
-# Johanna Valkonen <miujohanna@gmail.com>, 2024
-# Jenni Heikkilä <jenni.heikkila@sv-oy.fi>, 2024
-# Martin Trigaux, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Sari Mäyrä <sari.mayra@sv-oy.fi>, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
+# Jessica Jakara, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:53+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:43+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -50,6 +41,7 @@ msgstr ""
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_needaction
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_needaction
 msgid "Action Needed"
 msgstr "Vaatii toimenpiteitä"
 
@@ -68,7 +60,8 @@ msgstr ""
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__error_status
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__error_status
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__error_status
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__error_status
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__error_status
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__error_status
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__error_status
 msgid "An error occurred"
 msgstr "Tapahtui virhe"
@@ -81,6 +74,7 @@ msgstr "Ladatessa tapahtui virhe"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_attachment_count
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_attachment_count
 msgid "Attachment Count"
 msgstr "Liitteiden määrä"
 
@@ -90,6 +84,13 @@ msgid "Base class to extract data from documents"
 msgstr "Perusluokka tietojen poimimiseen asiakirjoista"
 
 #. module: iap_extract
+#: model:ir.model,name:iap_extract.model_extract_mixin_with_words
+msgid "Base class to extract data from documents with OCRed words saved"
+msgstr ""
+"Perusluokka tietojen poimimiseen asiakirjoista, joiden tekstintunnistuksella"
+" pomitut sanat on tallennettu"
+
+#. module: iap_extract
 #. odoo-javascript
 #: code:addons/iap_extract/static/src/components/status_header/status.xml:0
 msgid "Buy credits"
@@ -97,6 +98,7 @@ msgstr "Osta krediittejä"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_can_show_send_button
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_can_show_send_button
 msgid "Can show the ocr send button"
 msgstr "Voi näyttää tekstintunnistuksen lähetyspainikkeen"
 
@@ -104,10 +106,21 @@ msgstr "Voi näyttää tekstintunnistuksen lähetyspainikkeen"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__done
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__done
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__done
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__done
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__done
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__done
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__done
 msgid "Completed flow"
 msgstr "Valmistunut ajo"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__create_uid
+msgid "Created by"
+msgstr "Luonut"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__create_date
+msgid "Created on"
+msgstr "Luotu"
 
 #. module: iap_extract
 #: model:iap.service,description:iap_extract.iap_service_ocr
@@ -117,6 +130,13 @@ msgid ""
 msgstr ""
 "Digitoi skannatut tai PDF-myyjien laskut, kulut ja ansioluettelot OCR:n ja "
 "tekoälyn avulla."
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__display_name
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__display_name
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__display_name
+msgid "Display Name"
+msgstr "Näyttönimi"
 
 #. module: iap_extract
 #. odoo-python
@@ -139,7 +159,7 @@ msgstr "Asiakirja analysoitu onnistuneesti. Ole hyvä ja päivitä sivu."
 #. module: iap_extract
 #: model:iap.service,unit_name:iap_extract.iap_service_ocr
 msgid "Documents"
-msgstr "Dokumentit"
+msgstr "Asiakirjat"
 
 #. module: iap_extract
 #. odoo-python
@@ -149,36 +169,63 @@ msgstr "Digitoitavaksi lähetetyt asiakirjat"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_error_message
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_error_message
 msgid "Error message"
 msgstr "Virheilmoitus"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_attachment_id
+msgid "Extract Attachment"
+msgstr "Poimi liite"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_state_processed
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_state_processed
 msgid "Extract State Processed"
 msgstr "Hae käsittelyn tila"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_state
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_state
 msgid "Extract state"
 msgstr "Hae tila"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_status
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_status
 msgid "Extract status"
 msgstr "Hae status"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extracted_word_ids
+msgid "Extracted Words"
+msgstr "Poimitut sanat"
+
+#. module: iap_extract
+#: model:ir.model,name:iap_extract.model_iap_extracted_words
+msgid "Extracted words from an OCRed document"
+msgstr "Tekstintunnistuksella asiakirjasta poimitut sanat"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__field
+msgid "Field"
+msgstr "Kenttä"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_follower_ids
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_follower_ids
 msgid "Followers"
 msgstr "Seuraajat"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_partner_ids
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "Seuraajat (kumppanit)"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__has_message
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__has_message
 msgid "Has Message"
 msgstr "Sisältää viestin"
 
@@ -189,17 +236,27 @@ msgid "IAP Extract Notification"
 msgstr "IAP käyttöilmoitus"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__id
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__id
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__id
+msgid "ID"
+msgstr "ID"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_document_uuid
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_document_uuid
 msgid "ID of the request to IAP-OCR"
 msgstr "IAP-OCR:lle osoitetun pyynnön tunniste"
 
 #. module: iap_extract
 #: model:ir.model.fields,help:iap_extract.field_extract_mixin__message_needaction
+#: model:ir.model.fields,help:iap_extract.field_extract_mixin_with_words__message_needaction
 msgid "If checked, new messages require your attention."
 msgstr "Jos valittu, uudet viestit vaativat huomiotasi."
 
 #. module: iap_extract
 #: model:ir.model.fields,help:iap_extract.field_extract_mixin__message_has_error
+#: model:ir.model.fields,help:iap_extract.field_extract_mixin_with_words__message_has_error
 msgid "If checked, some messages have a delivery error."
 msgstr "Jos valittu, joitakin viestejä ei ole toimitettu."
 
@@ -217,26 +274,41 @@ msgstr "Virheellinen PDF-tiedosto (sivumäärää ei saada)"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_is_follower
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_is_follower
 msgid "Is Follower"
 msgstr "On seuraaja"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__is_in_extractable_state
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__is_in_extractable_state
 msgid "Is In Extractable State"
 msgstr "On haettavassa tilassa"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__write_uid
+msgid "Last Updated by"
+msgstr "Viimeksi päivittänyt"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__write_date
+msgid "Last Updated on"
+msgstr "Viimeksi päivitetty"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_main_attachment_id
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_main_attachment_id
 msgid "Main Attachment"
 msgstr "Pääliitetiedosto"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_has_error
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_has_error
 msgid "Message Delivery error"
 msgstr "Ongelma viestin toimituksessa"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_ids
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_ids
 msgid "Messages"
 msgstr "Viestit"
 
@@ -244,7 +316,8 @@ msgstr "Viestit"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__no_extract_requested
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__no_extract_requested
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__no_extract_requested
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__no_extract_requested
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__no_extract_requested
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__no_extract_requested
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__no_extract_requested
 msgid "No extract requested"
 msgstr "Ei pyydettyä otetta"
@@ -253,7 +326,8 @@ msgstr "Ei pyydettyä otetta"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__not_enough_credit
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__not_enough_credit
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__not_enough_credit
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__not_enough_credit
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__not_enough_credit
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__not_enough_credit
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__not_enough_credit
 msgid "Not enough credits"
 msgstr "Ei tarpeeksi krediittejä"
@@ -266,26 +340,36 @@ msgstr "Tietojen poimintaan ei ole riittävästi krediittejä"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_needaction_counter
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_needaction_counter
 msgid "Number of Actions"
 msgstr "Toimenpiteiden määrä"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_has_error_counter
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_has_error_counter
 msgid "Number of errors"
 msgstr "Virheiden määrä"
 
 #. module: iap_extract
 #: model:ir.model.fields,help:iap_extract.field_extract_mixin__message_needaction_counter
+#: model:ir.model.fields,help:iap_extract.field_extract_mixin_with_words__message_needaction_counter
 msgid "Number of messages requiring action"
 msgstr "Toimenpiteitä vaativien viestien määrä"
 
 #. module: iap_extract
 #: model:ir.model.fields,help:iap_extract.field_extract_mixin__message_has_error_counter
+#: model:ir.model.fields,help:iap_extract.field_extract_mixin_with_words__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "Toimitusvirheellisten viestien määrä"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__ocr_selected
+msgid "Ocr Selected"
+msgstr "Tekstintunnistus valittu"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__rating_ids
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__rating_ids
 msgid "Ratings"
 msgstr "Arviointi"
 
@@ -294,6 +378,16 @@ msgstr "Arviointi"
 #: code:addons/iap_extract/static/src/components/status_header/status.xml:0
 msgid "Refresh"
 msgstr "Päivitä"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__res_id
+msgid "Resource ID"
+msgstr "Resurssin tunnus"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__res_model
+msgid "Resource Model"
+msgstr "Resurssimalli"
 
 #. module: iap_extract
 #. odoo-javascript
@@ -351,7 +445,8 @@ msgstr "Valitut asiakirjat on jo digitoitu"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__to_validate
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__to_validate
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__to_validate
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__to_validate
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__to_validate
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__to_validate
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__to_validate
 msgid "To validate"
 msgstr "Vahvistettava"
@@ -363,10 +458,22 @@ msgid "Unsupported image format"
 msgstr "Ei tuettu kuvaformaatti"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__user_selected
+msgid "User Selected"
+msgstr "Käyttäjän valitsema"
+
+#. module: iap_extract
+#. odoo-python
+#: code:addons/iap_extract/models/extract_mixin.py:0
+msgid "Version is unsupported"
+msgstr "Versiota ei tueta"
+
+#. module: iap_extract
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__waiting_extraction
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__waiting_extraction
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__waiting_extraction
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__waiting_extraction
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__waiting_extraction
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__waiting_extraction
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__waiting_extraction
 msgid "Waiting extraction"
 msgstr "Odottaa hakua"
@@ -375,10 +482,46 @@ msgstr "Odottaa hakua"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__waiting_validation
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__waiting_validation
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__waiting_validation
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__waiting_validation
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__waiting_validation
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__waiting_validation
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__waiting_validation
 msgid "Waiting validation"
 msgstr "Odotetaan tarkistusta"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_angle
+msgid "Word Box Angle"
+msgstr "Sanalaatikon kulma"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_height
+msgid "Word Box Height"
+msgstr "Sanalaatikon korkeus"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_midX
+msgid "Word Box Midx"
+msgstr "Sanalaatikon vaakasuuntainen keskipiste"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_midY
+msgid "Word Box Midy"
+msgstr "Sanalaatikon pystysuuntainen keskipiste"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_width
+msgid "Word Box Width"
+msgstr "Sanalaatikon leveys"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_page
+msgid "Word Page"
+msgstr "Sanasivu"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_text
+msgid "Word Text"
+msgstr "Sanallinen teksti"
 
 #. module: iap_extract
 #. odoo-javascript
@@ -406,7 +549,8 @@ msgstr "Asiakirjassasi on liian monta sivua"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__extract_not_ready
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__extract_not_ready
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__extract_not_ready
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__extract_not_ready
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__extract_not_ready
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__extract_not_ready
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__extract_not_ready
 msgid "waiting extraction, but it is not ready"
 msgstr "odotetaan hakua, mutta se ei ole valmis"

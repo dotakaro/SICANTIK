@@ -1,10 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+import stdnum
+
 from json import JSONDecodeError
 from pprint import pformat
 
 from odoo import fields, models, api, _
-from odoo.exceptions import UserError, AccessError
-from odoo.tools import street_split
+from odoo.exceptions import UserError, AccessError, RedirectWarning, ValidationError
 from odoo.tools.safe_eval import json
 
 
@@ -56,22 +57,45 @@ class ResConfigSettings(models.TransientModel):
         for settings in self:
             settings.l10n_br_avatax_show_overwrite_warning = bool(settings.l10n_br_avatax_api_identifier)
 
+    def _validate_create_account_data(self):
+        """ Raises actionable errors in case there is missing required data. """
+        partner = self.company_id.partner_id
+        if not self.l10n_br_avatax_portal_email:
+            # Don't redirect, the user is already on in the Accounting settings.
+            raise ValidationError(_("Please set a valid Avatax portal email."))
+
+        if not partner.vat:
+            raise RedirectWarning(
+                _("Please set a valid Tax ID on your company."),
+                partner._get_records_action(),
+                _("Go to company configuration")
+            )
+
+        required_address_fields = ("street_name", "street2", "street_number", "zip")
+        for field in required_address_fields:
+            if not partner[field]:
+                raise RedirectWarning(
+                    _("Please set a complete address on your company."),
+                    partner._get_records_action(),
+                    _("Go to company configuration")
+                )
+
     def create_account(self):
         """ This gathers all metadata needed to create an account, does the request to the IAP server and parses
         the response. """
+        self._validate_create_account_data()
         partner = self.company_id.partner_id
-        street_data = street_split(partner.street)
         payload = {
             'subscriptionName': self.company_name,
             'corporateName': self.company_name,
             'tradeName': self.company_name,
-            'cnpj': partner.vat,
+            'cnpj': stdnum.util.get_cc_module('br', 'vat').format(partner.vat or ''),
             'municipalRegistration': partner.l10n_br_im_code,
             'stateRegistration': partner.l10n_br_ie_code,
             'suframa': partner.l10n_br_isuf_code,
-            'address': street_data['street_name'],
+            'address': partner.street_name,
             'neighborhood': partner.street2,
-            'addressNumber': street_data['street_number'],
+            'addressNumber': partner.street_number,
             'corporateContactEmailAddress': self.l10n_br_avatax_portal_email,
             'zipCode': partner.zip,
         }
@@ -94,23 +118,28 @@ class ResConfigSettings(models.TransientModel):
                     else:
                         raise UserError(result['message'])
 
-            errors = result.get('errors')
-            if errors:
-                msg = []
-                for key, errors in errors.items():
-                    curr = [key + ':'] + [f' - {error}' for error in errors]
-                    msg.append('\n'.join(curr))
-                raise UserError('\n'.join(msg))
+            if errors := result.get('errors'):
+                raise UserError('\n'.join(
+                    '{}:\n{}'.format(
+                        key,
+                        "\n".join(f" - {error}" for error in errs)
+                    )
+                    for key, errs in errors.items()
+                ))
 
     def button_l10n_br_avatax_ping(self):
         if not self.env.is_system():
             raise AccessError(_('Only administrators can ping Avatax.'))
 
         query_result = self.env['account.external.tax.mixin']._l10n_br_iap_ping(self.company_id)
-        raise UserError(_(
-            "Server Response:\n%s",
-            pformat(query_result)
-        ))
+        raise RedirectWarning(
+            _("Server Response:\n%s", pformat(query_result)),
+            action=self.env.ref('account.action_account_config').id,
+            button_text=_("Continue Configurations")
+        )
 
     def button_l10n_br_avatax_log(self):
         return self.env['account.external.tax.mixin']._l10n_br_avatax_log()
+
+    def button_l10n_br_avatax_open_company_partner(self):
+        return self.company_id.partner_id._get_records_action()

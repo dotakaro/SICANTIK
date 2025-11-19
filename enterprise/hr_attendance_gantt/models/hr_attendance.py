@@ -7,8 +7,8 @@ from pytz import timezone, UTC, utc
 from odoo import api, fields, models
 from odoo.osv import expression
 from odoo.tools import float_is_zero
-
-from odoo.addons.resource.models.utils import Intervals, timezone_datetime
+from odoo.tools.intervals import Intervals
+from odoo.tools.date_utils import localized
 
 
 class HrAttendance(models.Model):
@@ -40,12 +40,11 @@ class HrAttendance(models.Model):
         return self.env['resource.calendar']._get_attendance_intervals_days_data(employee._employee_attendance_intervals(start, stop))['hours']
 
     def _get_gantt_progress_bar_domain(self, res_ids, start, stop):
-        domain = [
+        return [
             ('employee_id', 'in', res_ids),
-            ('check_in', '>=', start),
-            ('check_out', '<=', stop)
+            ('check_in', '>=', start.replace(tzinfo=None)),
+            ('check_out', '<=', stop.replace(tzinfo=None)),
         ]
-        return domain
 
     def _gantt_progress_bar_employee_ids(self, res_ids, start, stop):
         """
@@ -70,7 +69,7 @@ class HrAttendance(models.Model):
         return values
 
     @api.model
-    def get_gantt_data(self, domain, groupby, read_specification, limit=None, offset=0, unavailability_fields=[], progress_bar_fields=None, start_date=None, stop_date=None, scale=None):
+    def get_gantt_data(self, domain, groupby, read_specification, limit=None, offset=0, unavailability_fields=None, progress_bar_fields=None, start_date=None, stop_date=None, scale=None):
         """
         We override get_gantt_data to allow the display of open-ended records,
         We also want to add in the gantt rows, the active emloyees that have a check in in the previous 60 days
@@ -110,8 +109,8 @@ class HrAttendance(models.Model):
 
         # Retrieve for each employee, their period linked to their calendars
         calendar_periods_by_employee = employees._get_calendar_periods(
-            timezone_datetime(start),
-            timezone_datetime(stop),
+            localized(start),
+            localized(stop),
         )
 
         full_interval_UTC = Intervals([(
@@ -150,8 +149,8 @@ class HrAttendance(models.Model):
                 continue
 
             calendar_work_intervals = calendar._work_intervals_batch(
-                timezone_datetime(start),
-                timezone_datetime(stop),
+                localized(start),
+                localized(stop),
                 resources=employees.resource_id,
                 tz=timezone(calendar.tz)
             )
@@ -175,6 +174,11 @@ class HrAttendance(models.Model):
                 employee_unavailable_full_interval |= interval & calendar_unavailable_interval_list
             unavailable_intervals_by_employees[employee.id] = employee_unavailable_full_interval
 
+        flexible_employees = self.env['hr.employee']
+        for calendar, employees in employees_by_calendar.items():
+            if calendar.flexible_hours:
+                flexible_employees |= employees
+
         result = {}
         for employee_id in res_ids:
             # When an employee doesn't have any calendar,
@@ -185,6 +189,13 @@ class HrAttendance(models.Model):
                     'stop': stop.astimezone(UTC),
                 }]
                 continue
+
+            # When an employee has a flexible calendar,
+            # he is considered available for the entire interval
+            if employee_id in flexible_employees.ids:
+                result[employee_id] = []
+                continue
+
             # When an employee doesn't have a calendar for a part of the entire interval,
             # he will be unavailable for this part
             if employee_id in periods_without_calendar_by_employee:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from dateutil.relativedelta import relativedelta
@@ -6,9 +5,10 @@ from unittest.mock import patch
 
 from odoo import fields
 from odoo.exceptions import AccessError
-from odoo.tools import format_date, get_timedelta
-from odoo.tests import Form, tagged
+from odoo.tools import format_date
+from odoo.tests import Form, freeze_time, tagged
 from odoo.addons.partner_commission.tests.setup import Line, Spec, TestCommissionsSetup
+from odoo.tools.date_utils import get_timedelta
 from odoo.tools.misc import NON_BREAKING_SPACE
 
 
@@ -33,47 +33,46 @@ class TestPurchaseOrder(TestCommissionsSetup):
             return po
 
         # Stub today's date.
-        def today(*args, **kwargs):
-            return fields.Date.to_date('2020-01-06')
+        today_date = fields.Date.to_date('2020-01-06')
 
         def _patched_send_mail(*args, **kwargs):
             nonlocal send_mail_count
             send_mail_count += 1
 
         # Case: OK.
-        with patch('odoo.fields.Date.today', today):
+        with freeze_time(today_date), self.enter_registry_test_mode():
             with patch('odoo.addons.mail.models.mail_template.MailTemplate.send_mail', _patched_send_mail):
                 # We test the non recurring flow: recurring_invoice is False on the product
                 self.crm.recurring_invoice = False
                 po = make_po(days_offset=-1)
-                self.env['purchase.order']._cron_confirm_purchase_orders()
+                self.env.ref('partner_commission.cron_confirm_purchase_orders').method_direct_trigger()
                 self.assertEqual(po.state, 'purchase')
                 self.assertEqual(send_mail_count, 1)
 
         # Case: NOK: standard purchase order.
         # Should not be confirmed because it's not a commission purchase: commission_po_line_id is not set on the account.move.
-        with patch('odoo.fields.Date.today', today):
+        with freeze_time(today_date), self.enter_registry_test_mode():
             po = self.env['purchase.order'].create({
                 'partner_id': self.customer.id,
                 'company_id': self.company.id,
                 'currency_id': self.company.currency_id.id,
                 'date_order': fields.Date.subtract(fields.Date.today(), days=1),
             })
-            self.env['purchase.order']._cron_confirm_purchase_orders()
+            self.env.ref('partner_commission.cron_confirm_purchase_orders').method_direct_trigger()
             self.assertEqual(po.state, 'draft')
 
         # Set a minimum amount_total to auto confirm the PO
         self.company.commission_po_minimum = 50
         # Case: OK. amount_total = 80 > 50
-        with patch('odoo.fields.Date.today', today):
+        with freeze_time(today_date), self.enter_registry_test_mode():
             po = make_po(days_offset=-1, qty=20)
-            self.env['purchase.order']._cron_confirm_purchase_orders()
+            self.env.ref('partner_commission.cron_confirm_purchase_orders').method_direct_trigger()
             self.assertEqual(po.state, 'purchase')
 
         # Case: NOK: amount_total = 8 < 50
-        with patch('odoo.fields.Date.today', today):
+        with freeze_time(today_date), self.enter_registry_test_mode():
             po = make_po(days_offset=-1, qty=2)
-            self.env['purchase.order']._cron_confirm_purchase_orders()
+            self.env.ref('partner_commission.cron_confirm_purchase_orders').method_direct_trigger()
             self.assertEqual(po.state, 'draft')
 
     def test_vendor_bill_description_multi_line_format(self):
@@ -83,7 +82,7 @@ class TestPurchaseOrder(TestCommissionsSetup):
         {{subscription.code}}, from {{date_from}} to {{subscription.recurring_next_date}} ({{number of months}})
         """
         # Required for `partner_invoice_id`, `partner_shipping_id` to be visible in the view
-        self.salesman.groups_id += self.env.ref('account.group_delivery_invoice_address')
+        self.salesman.group_ids += self.env.ref('account.group_delivery_invoice_address')
         self.referrer.commission_plan_id = self.gold_plan
         self.referrer.grade_id = self.gold
 
@@ -153,7 +152,7 @@ class TestPurchaseOrder(TestCommissionsSetup):
 
             return so, po
 
-        with self.subTest("SO's salesperson is assigned as Purchase Representative."):
+        with self.subTest("No buyer is assigned to the PO."):
             foo = self.env['product.category'].create({
                 'name': 'foo',
             })
@@ -165,7 +164,7 @@ class TestPurchaseOrder(TestCommissionsSetup):
                 'property_account_income_id': self.account_sale.id,
                 'invoice_policy': 'order',
             })
-            self.env['sale.subscription.pricing'].create({'plan_id': self.plan_month.id, 'price': 20, 'product_template_id': bar.product_tmpl_id.id})
+            self.env['product.pricelist.item'].create({'plan_id': self.plan_month.id, 'price': 20, 'product_tmpl_id': bar.product_tmpl_id.id})
             rule = self.env['commission.rule'].create({
                 'plan_id': self.gold_plan.id,
                 'category_id': foo.id,
@@ -174,24 +173,27 @@ class TestPurchaseOrder(TestCommissionsSetup):
             })
             self.gold_plan.write({'commission_rule_ids': [(4, rule.id)]})
 
-            so, po = make_orders(bar)
+            so, first_po = make_orders(bar)
 
             self.assertEqual(so.user_id, self.salesman)
-            self.assertEqual(po.user_id, self.salesman)
+            self.assertFalse(first_po.user_id)
+            self.assertIn(self.salesman.partner_id, first_po.message_follower_ids.partner_id, "Salesman should be follower so he can access the PO.")
 
-        with self.subTest("Each sales representative has its own PO."):
+        with self.subTest("POs to the same partner are grouped together, even if they come from SOs with different sales representatives."):
             sales_rep = self.env['res.users'].create({
                 'name': '...',
                 'login': 'sales_rep_1',
                 'email': 'sales_rep_1@odoo.com',
                 'company_id': self.company.id,
-                'groups_id': [(6, 0, [self.ref('sales_team.group_sale_salesman')])],
+                'group_ids': [(6, 0, [self.ref('sales_team.group_sale_salesman')])],
             })
 
-            so, po = make_orders(bar, so_sales_rep=sales_rep)
+            so, second_po = make_orders(bar, so_sales_rep=sales_rep)
 
             self.assertEqual(so.user_id, sales_rep)
-            self.assertEqual(po.user_id, sales_rep)
+            self.assertFalse(second_po.user_id)
+            self.assertEqual(first_po, second_po)
+            self.assertIn(sales_rep.partner_id, first_po.message_follower_ids.partner_id, "Salesman should be follower so he can access the PO.")
 
     def test_access_rigths(self):
 
@@ -201,7 +203,7 @@ class TestPurchaseOrder(TestCommissionsSetup):
                 'login': name,
                 'email': f'{name}@example.com',
                 'company_id': self.company.id,
-                'groups_id': [(6, 0, [
+                'group_ids': [(6, 0, [
                     group,
                 ])],
             })
@@ -253,3 +255,7 @@ class TestPurchaseOrder(TestCommissionsSetup):
         # group_commission_user: can access commissions for which he/she is the purchase representative.
         # group_commission_manager: can access all commissions.
         assert_access_allowed([commission_user_1, commission_manager])
+
+        # group_commission_user: can access commissions they are following
+        po.message_subscribe(partner_ids=commission_user_2.partner_id.ids)
+        assert_access_allowed([commission_user_2])

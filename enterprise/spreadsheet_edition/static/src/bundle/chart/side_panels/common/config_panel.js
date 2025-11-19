@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { IrMenuSelector } from "@spreadsheet_edition/bundle/ir_menu_selector/ir_menu_selector";
 import { Domain } from "@web/core/domain";
 import { DomainSelector } from "@web/core/domain_selector/domain_selector";
@@ -9,8 +7,8 @@ import { _t } from "@web/core/l10n/translation";
 import { components, constants } from "@odoo/o-spreadsheet";
 
 import { Component, onWillStart, onWillUpdateProps } from "@odoo/owl";
-const { ChartTerms } = constants;
 const { Section, ValidationMessages } = components;
+const { ChartTerms } = constants;
 
 export class CommonOdooChartConfigPanel extends Component {
     static template = "spreadsheet_edition.CommonOdooChartConfigPanel";
@@ -65,7 +63,7 @@ export class CommonOdooChartConfigPanel extends Component {
             title,
         };
         this.env.model.dispatch("UPDATE_CHART", {
-            id: this.props.figureId,
+            figureId: this.props.figureId,
             sheetId: this.env.model.getters.getFigureSheetId(this.props.figureId),
             definition,
         });
@@ -100,7 +98,7 @@ export class CommonOdooChartConfigPanel extends Component {
                     },
                 };
                 this.env.model.dispatch("UPDATE_CHART", {
-                    id: this.props.figureId,
+                    figureId: this.props.figureId,
                     sheetId: this.env.model.getters.getFigureSheetId(this.props.figureId),
                     definition: updatedDefinition,
                 });

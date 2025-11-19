@@ -3,16 +3,15 @@
 # 	* account_loans
 # 
 # Translators:
-# Ryoko Tsuda <ryoko@quartile.co>, 2024
 # Wil Odoo, 2025
 # Junko Augias, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-16 18:42+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Junko Augias, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
@@ -90,6 +89,11 @@ msgid "A/A ISDA"
 msgstr "A/A ISDA"
 
 #. module: account_loans
+#: model:ir.model,name:account_loans.model_account_return
+msgid "Accounting Return"
+msgstr "返済処理"
+
+#. module: account_loans
 #: model:ir.model.fields,field_description:account_loans.field_account_loan__message_needaction
 msgid "Action Needed"
 msgstr "要アクション"
@@ -164,7 +168,7 @@ msgstr "キャンセル"
 #. module: account_loans
 #: model:ir.model.fields.selection,name:account_loans.selection__account_loan__state__cancelled
 msgid "Cancelled"
-msgstr "取消済"
+msgstr "キャンセル済"
 
 #. module: account_loans
 #. odoo-python
@@ -286,9 +290,14 @@ msgid "Discard"
 msgstr "破棄"
 
 #. module: account_loans
+#: model:ir.model.fields,field_description:account_loans.field_account_asset__display_name
+#: model:ir.model.fields,field_description:account_loans.field_account_asset_group__display_name
+#: model:ir.model.fields,field_description:account_loans.field_account_journal__display_name
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_close_wizard__display_name
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_compute_wizard__display_name
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_line__display_name
+#: model:ir.model.fields,field_description:account_loans.field_account_move__display_name
+#: model:ir.model.fields,field_description:account_loans.field_account_return__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -378,10 +387,15 @@ msgid "Has Message"
 msgstr "メッセージあり"
 
 #. module: account_loans
+#: model:ir.model.fields,field_description:account_loans.field_account_asset__id
+#: model:ir.model.fields,field_description:account_loans.field_account_asset_group__id
+#: model:ir.model.fields,field_description:account_loans.field_account_journal__id
 #: model:ir.model.fields,field_description:account_loans.field_account_loan__id
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_close_wizard__id
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_compute_wizard__id
 #: model:ir.model.fields,field_description:account_loans.field_account_loan_line__id
+#: model:ir.model.fields,field_description:account_loans.field_account_move__id
+#: model:ir.model.fields,field_description:account_loans.field_account_return__id
 msgid "ID"
 msgstr "ID"
 
@@ -588,6 +602,7 @@ msgstr "ローン"
 #. module: account_loans
 #. odoo-python
 #: code:addons/account_loans/models/account_loan.py:0
+#: code:addons/account_loans/models/account_return.py:0
 #: model:ir.actions.act_window,name:account_loans.action_view_account_loans
 #: model:ir.ui.menu,name:account_loans.menu_action_loans
 #: model_terms:ir.ui.view,arch_db:account_loans.account_loan_list_view
@@ -661,6 +676,17 @@ msgstr "アクションを必要とするメッセージの数"
 #: model:ir.model.fields,help:account_loans.field_account_loan__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "配信エラーが発生されたメッセージ数"
+
+#. module: account_loans
+#. odoo-python
+#: code:addons/account_loans/models/account_return.py:0
+msgid ""
+"Odoo manages your amortizations automatically. No loans were found for this "
+"period. Ensure your loans are properly registered for automatic "
+"amortizations calculation."
+msgstr ""
+"Odoo "
+"は償却を自動的に管理します。この期間にはローンが見つかりませんでした。自動償却計算が正しく行われるよう、ローンが正しく登録されていることを確認してください。"
 
 #. module: account_loans
 #. odoo-python
@@ -909,7 +935,7 @@ msgstr "この仕訳は%sでした"
 #. odoo-python
 #: code:addons/account_loans/models/account_loan.py:0
 msgid "This entry has been reversed from %s"
-msgstr "この仕訳は%sから予約されました"
+msgstr "この仕訳は%sから逆仕訳されました"
 
 #. module: account_loans
 #: model_terms:ir.ui.view,arch_db:account_loans.account_loan_list_view
@@ -969,6 +995,19 @@ msgid "Website communication history"
 msgstr "ウェブサイト通信履歴"
 
 #. module: account_loans
+#. odoo-python
+#: code:addons/account_loans/models/account_asset.py:0
+#: code:addons/account_loans/models/account_loan.py:0
+msgid "id"
+msgstr "ID"
+
+#. module: account_loans
+#. odoo-python
+#: code:addons/account_loans/models/account_loan.py:0
+msgid "reversed"
+msgstr "逆仕訳済"
+
+#. module: account_loans
 #: model_terms:ir.ui.view,arch_db:account_loans.view_account_loan_close_wizard
 msgid "will be deleted and the loan will be marked as closed."
-msgstr "は削除され、ローンは終了としてマークされます。"
+msgstr "は削除され、ローンは終了とされます。"

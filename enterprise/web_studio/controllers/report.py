@@ -401,7 +401,7 @@ def deactivate_studio_view(main_view):
 
 class WebStudioReportController(main.WebStudioController):
 
-    @http.route('/web_studio/create_new_report', type='json', auth='user')
+    @http.route('/web_studio/create_new_report', type='jsonrpc', auth='user')
     def create_new_report(self, model_name, layout, context=None):
         if context:
             request.update_context(**context)
@@ -480,12 +480,12 @@ class WebStudioReportController(main.WebStudioController):
             'report_name': report.name,
         }
 
-    @http.route('/web_studio/print_report', type='json', auth='user')
+    @http.route('/web_studio/print_report', type='jsonrpc', auth='user')
     def print_report(self, report_id, record_id):
         report = request.env['ir.actions.report'].with_context(report_pdf_no_attachment=True, discard_logo_check=True, studio=1)._get_report(report_id)
         return report.report_action(record_id)
 
-    @http.route('/web_studio/load_report_editor', type='json', auth='user')
+    @http.route('/web_studio/load_report_editor', type='jsonrpc', auth='user')
     def load_report_editor(self, report_id, fields, context=None):
         if context:
             request.update_context(**context)
@@ -512,7 +512,7 @@ class WebStudioReportController(main.WebStudioController):
             "qweb_error": qweb_error,
         }
 
-    @http.route('/web_studio/get_report_html', type='json', auth='user')
+    @http.route('/web_studio/get_report_html', type='jsonrpc', auth='user')
     def get_report_html(self, report_id, record_id, context=None):
         if context:
             request.update_context(**context)
@@ -520,7 +520,7 @@ class WebStudioReportController(main.WebStudioController):
         report_html = self._render_report(report, record_id)
         return report_html and report_html[0]
 
-    @http.route('/web_studio/get_report_qweb', type='json', auth='user')
+    @http.route('/web_studio/get_report_qweb', type='jsonrpc', auth='user')
     def get_report_qweb(self, report_id, context=None):
         if context:
             request.update_context(**context)
@@ -614,7 +614,7 @@ class WebStudioReportController(main.WebStudioController):
                     external_layout = request.env.company.external_report_layout_id.sudo().key
                 return load_arch(external_layout, variables, recursive_set)
             else:
-                view = IrView._get(view_name)
+                view = IrView._get_template_view(view_name)
                 with deactivate_studio_view(view) as studio_view:
                     tree = view._get_combined_arch()
                     KeyedXmlDiffer.assign_node_ids_for_diff(tree)
@@ -637,7 +637,7 @@ class WebStudioReportController(main.WebStudioController):
             render_context['report_type'] = "pdf"
             main_qweb = _guess_qweb_variables(main_qweb, report_safe_cr, render_context)
 
-        html_container = request.env["ir.ui.view"]._render_template("web.html_container", {"studio": True})
+        html_container = IrQweb._render("web.html_container", {"studio": True})
         html_container = html.fromstring(html_container)
         main_qweb.xpath("//*[@id='wrapwrap']")[0]
         wrap = html_container.xpath("//*[@id='wrapwrap']")[0]
@@ -648,7 +648,7 @@ class WebStudioReportController(main.WebStudioController):
     def _render_report(self, report, record_id):
         return request.env['ir.actions.report'].with_context(studio=True)._render_qweb_html(report, [record_id] if record_id else [], {"studio": True})
 
-    @http.route("/web_studio/save_report", type="json", auth="user")
+    @http.route("/web_studio/save_report", type="jsonrpc", auth="user")
     def save_report(self, report_id, report_changes=None, html_parts=None, xml_verbatim=None, record_id=None, context=None):
         if context:
             request.update_context(**context)
@@ -671,7 +671,7 @@ class WebStudioReportController(main.WebStudioController):
 
             to_write["paperformat_id"] = to_write["paperformat_id"][0] if to_write["paperformat_id"] else False
 
-            to_write["groups_id"] = [Command.clear()] + [Command.link(_id) for _id in to_write["groups_id"]]
+            to_write["group_ids"] = [Command.clear()] + [Command.link(_id) for _id in to_write["group_ids"]]
             report.write(to_write)
             report_data = report.read(to_write.keys())
             paperformat = report._read_paper_format_measures()
@@ -776,10 +776,11 @@ class WebStudioReportController(main.WebStudioController):
             node.attrib.pop(DIFF_ATTRIBUTE, None)
         _get_and_write_studio_view(view, {"arch": etree.tostring(studio_view_arch)})
 
-    @http.route("/web_studio/reset_report_archs", type="json", auth="user")
+    @http.route("/web_studio/reset_report_archs", type="jsonrpc", auth="user")
     def reset_report_archs(self, report_id, include_web_layout=True):
         report = request.env["ir.actions.report"].browse(report_id)
-        views = request.env["ir.ui.view"].with_context(no_primary_children=True, __views_get_original_hierarchy=[], no_cow=True).get_related_views(report.report_name, bundles=False)
+        View = request.env["ir.ui.view"].with_context(no_primary_children=True, __views_get_original_hierarchy=[], no_cow=True, active_test=True)
+        views = View.get_related_views(report.report_name, bundles=False)
         if not include_web_layout:
             views = views.filtered(lambda v: not v.key.startswith("web.") or "layout" not in v.key)
 

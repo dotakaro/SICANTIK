@@ -3,7 +3,7 @@
 
 {
     'name': 'Quality checks with IoT',
-    'category': 'Manufacturing/Internet of Things (IoT)',
+    'category': 'Supply Chain/Internet of Things (IoT)',
     'summary': 'Control the quality of your products with IoT devices',
     'description': """
 Use devices connected to an IoT Box to control the quality of your products.
@@ -13,5 +13,6 @@ Use devices connected to an IoT Box to control the quality of your products.
         'wizard/quality_check_wizard_views.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

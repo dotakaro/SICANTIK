@@ -1,7 +1,7 @@
 from odoo import models
 
 
-class BelgianTaxReportCustomHandler(models.AbstractModel):
+class L10n_BeTaxReportHandler(models.AbstractModel):
     _inherit = 'l10n_be.tax.report.handler'
     _description = 'Belgian Tax Report Custom Prorata Handler'
 

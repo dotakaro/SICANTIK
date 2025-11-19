@@ -1,10 +1,9 @@
-/** @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
 import { useService, useBus } from "@web/core/utils/hooks";
 import { SIZES } from "@web/core/ui/ui_service";
 import { Component, useState, useRef, onWillStart } from "@odoo/owl";
+import { useBankInstitutions } from "@account_online_synchronization/hooks/bank_institutions_hook";
 
 class BankConfigureWidget extends Component {
     static template = "account.BankConfigureWidget";
@@ -22,6 +21,7 @@ class BankConfigureWidget extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.ui = useService("ui");
+        this.bankInstitutions = useBankInstitutions();
         onWillStart(this.fetchInstitutions);
         useBus(this.ui.bus, "resize", this.computeGrid);
     }
@@ -48,7 +48,7 @@ class BankConfigureWidget extends Component {
     }
 
     async fetchInstitutions() {
-        this.orm.silent.call(this.props.record.resModel, "fetch_online_sync_favorite_institutions", [this.props.record.resId])
+        this.bankInstitutions.fetch(this.props.record.resId)
         .then((response) => {
             this.allInstitutions = response;
         })
@@ -67,7 +67,10 @@ class BankConfigureWidget extends Component {
     }
 
     async fallbackConnectBank() {
-        const action = await this.orm.call('account.online.link', 'create_new_bank_account_action', [], {
+        const action = await this.orm.call(
+            'account.online.link',
+            'create_new_bank_account_action',
+            [this.props.record.resId, { journal_type: this.props.record.data.type }], {
             context: {
                 active_model: 'account.journal',
                 active_id: this.props.record.resId,

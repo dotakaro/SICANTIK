@@ -3,6 +3,7 @@
 
 # Copyright (c) 2012 Noviat nv/sa (www.noviat.be). All rights reserved.
 
+import itertools
 import time
 import re
 
@@ -734,7 +735,6 @@ class AccountJournal(models.Model):
 
         ret_statements = []
         for statement in statements:
-            statement['coda_note'] = ''
             statement_line = []
             statement_data = {
                 'name': int(statement['paperSeqNumber']),
@@ -745,18 +745,19 @@ class AccountJournal(models.Model):
             temp_data = {}
             for line in statement['lines']:
                 to_add = statement_line and statement_line[-1]['ref'][:4] == line.get('ref_move') and statement_line[-1] or temp_data
+                transaction_details = {}
                 if line['type'] == 'information':
-                    if line['communication_struct']:
-                        to_add['narration'] = "\n".join([to_add.get('narration', ''), 'Communication: '] + self._parse_structured_communication(line['communication_type'], line['communication'])[1])
-                    else:
-                        to_add['narration'] = "\n".join([to_add.get('narration', ''), line['communication']])
-                elif line['type'] == 'communication':
-                    statement['coda_note'] = "%s[%s] %s\n" % (statement['coda_note'], str(line['ref']), line['communication'])
+                    communication = (
+                        "\n".join(self._parse_structured_communication(line['communication_type'], line['communication'])[1])
+                        if line['communication_struct']
+                        else line['communication']
+                    )
+                    to_add.setdefault('transaction_details', {})
+                    to_add['transaction_details']['communication'] = to_add['transaction_details'].get('communication', '') + communication
                 elif line['type'] == 'normal'\
                         or (line['type'] == 'globalisation' and line['globalisation'] in statement['globalisation_stack'][line['ref_move']] and line['transaction_type'] in [1, 2]):
-                    note = []
                     if line.get('counterpartyName'):
-                        note.append(_('Counter Party: %s', line['counterpartyName']))
+                        transaction_details['counterpartyName'] = line['counterpartyName']
                     else:
                         line['counterpartyName'] = False
                     if line.get('counterpartyNumber'):
@@ -771,28 +772,27 @@ class AccountJournal(models.Model):
                         ):
                             line['counterpartyNumber'] = False
                         if line['counterpartyNumber']:
-                            note.append(_('Counter Party Account: %s', line['counterpartyNumber']))
+                            transaction_details['counterpartyNumber'] = line['counterpartyNumber']
                     else:
                         line['counterpartyNumber'] = False
 
                     if line.get('counterpartyAddress'):
-                        note.append(_('Counter Party Address: %s', line['counterpartyAddress']))
+                        transaction_details['counterpartyAddress'] = line['counterpartyAddress']
                     structured_com = False
                     if line['communication_struct']:
                         structured_com, extend_notes = self._parse_structured_communication(line['communication_type'], line['communication'])
-                        note.extend(extend_notes)
+                        transaction_details['communication_struct'] = extend_notes
                         # If we have no partner name but that we have an ATM/POS debit, use partner (name + city) from structured communication
                         if not line.get('counterpartyName') and line['communication_type'] == '113':
                             line['counterpartyName'] = f"{rmspaces(line['communication'][40:56])} ({rmspaces(line['communication'][56:66])})"
                     elif line.get('communication'):
-                        note.append(_('Communication: %s', rmspaces(line['communication'])))
+                        transaction_details['communication'] = rmspaces(line['communication'])
                     if not self.coda_split_transactions and statement_line and line['ref_move'] == statement_line[-1]['ref'][:4]:
                         to_add['amount'] = to_add.get('amount', 0) + line['amount']
-                        to_add['narration'] = to_add.get('narration', '') + "\n" + "\n".join(note)
                     else:
                         line_data = {
                             'payment_ref': structured_com or line.get('communication', '') or '/',
-                            'narration': "\n".join(note),
+                            'transaction_details': transaction_details,
                             'transaction_type': parse_operation(line['transaction_type'], line['transaction_family'], line['transaction_code'], line['transaction_category']),
                             'date': line['entryDate'],
                             'amount': line['amount'],
@@ -802,42 +802,39 @@ class AccountJournal(models.Model):
                             'sequence': line['sequence'],
                             'unique_import_id': str(statement['codaSeqNumber']) + '-' + str(statement['date']) + '-' + str(line['ref']),
                         }
-                        if temp_data.get('narration'):
-                            line_data['narration'] = temp_data.pop('narration') + '\n' + line_data['narration']
-                        if temp_data.get('amount'):
-                            line_data['amount'] += temp_data.pop('amount')
                         statement_line.append(line_data)
-            if statement['coda_note'] != '':
-                statement_data.update({'coda_note': _('Communication:\n%s', statement['coda_note'])})
             statement_data.update({'transactions': statement_line})
             ret_statements.append(statement_data)
         return ret_statements
 
-    def _parse_bank_statement_file(self, attachment):
+    def _parse_bank_statement_file(self, raw_file):
         pattern = re.compile("[\u0020-\u1EFF\u20A0-\u20BF\n\r]+")  # printable characters and currency symbols
 
         # Try different encodings for the file
         for encoding in ('utf_8', 'cp850', 'cp858', 'cp1140', 'cp1252', 'iso8859_15', 'utf_32', 'utf_16', 'windows-1252'):
             try:
-                record_data = attachment.raw.decode(encoding)
+                record_data = raw_file.decode(encoding)
             except UnicodeDecodeError:
                 continue
             if pattern.fullmatch(record_data, re.MULTILINE):
                 break  # We only have printable characters, stick with this one
 
         if not self._check_coda(record_data):
-            return super()._parse_bank_statement_file(attachment)
+            return super()._parse_bank_statement_file(raw_file)
 
-        statements = self._get_coda_file_statements(record_data)
-        ret_statements = self._get_coda_final_statements(statements)
+        file_statements = self._get_coda_file_statements(record_data)
+        result = []
+        for acc_number, statements in itertools.groupby(sorted(file_statements, key=lambda k: k['acc_number']), key=lambda k: k['acc_number']):
+            statements = list(statements)
+            ret_statements = self._get_coda_final_statements(statements)
 
-        # Order the transactions according the newly created statements to ensure valid balances.
-        line_sequence = 1
-        for statement_vals in reversed(ret_statements):
-            for statement_line_vals in reversed(statement_vals.get('transactions', [])):
-                statement_line_vals['sequence'] = line_sequence
-                line_sequence += 1
+            # Order the transactions according the newly created statements to ensure valid balances.
+            line_sequence = 1
+            for statement_vals in reversed(ret_statements):
+                for statement_line_vals in reversed(statement_vals.get('transactions', [])):
+                    statement_line_vals['sequence'] = line_sequence
+                    line_sequence += 1
 
-        currency_code = statements and statements[-1]['currency']
-        acc_number = statements[0] and statements[0]['acc_number'] or False
-        return currency_code, acc_number, ret_statements
+            currency_code = statements and statements[-1]['currency']
+            result.append([currency_code, acc_number, ret_statements])
+        return result

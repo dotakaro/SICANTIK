@@ -3,16 +3,16 @@
 # 	* planning
 # 
 # Translators:
-# Rasareeyar Lappiam, 2025
 # Wil Odoo, 2025
+# Rasareeyar Lappiam, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-16 20:43+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Rasareeyar Lappiam, 2025\n"
 "Language-Team: Thai (https://app.transifex.com/odoo/teams/41243/th/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -284,7 +284,8 @@ msgstr "<i class=\"fa fa-check-circle\"/> คำขอสลับกะงา�
 #: model_terms:ir.ui.view,arch_db:planning.planning_shift_notification
 msgid "<i class=\"fa fa-check-circle\"/> This shift is no longer assigned to you."
 msgstr ""
-"<i class=\"fa fa-check-circle\"/> กะงานนี้จะไม่ถูกมอบหมายให้กับคุณอีกต่อไป"
+"<i class=\"fa fa-check-circle\"/> "
+"การเปลี่ยนแปลงนี้จะไม่ถูกมอบหมายให้กับคุณอีกต่อไป"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_shift_notification
@@ -340,11 +341,6 @@ msgid "<i class=\"fa fa-long-arrow-right\" aria-label=\"Arrow icon\" title=\"Arr
 msgstr "<i class=\"fa fa-long-arrow-right\" aria-label=\"ไอคอนลูกศร\" title=\"ลูกศร\"/>"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
-msgid "<i class=\"fa fa-long-arrow-right\" title=\"Arrow\"/>"
-msgstr "<i class=\"fa fa-long-arrow-right\" title=\"ลูกศร\"/>"
-
-#. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_assignee_contact_popover
 msgid "<i class=\"fa fa-phone\" title=\"Phone\" role=\"img\" style=\"padding-right: 2px\"/>"
 msgstr ""
@@ -353,7 +349,7 @@ msgstr ""
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
-msgid "<i class=\"mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
+msgid "<i class=\"me-1 mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
 msgstr ""
 
 #. module: planning
@@ -373,11 +369,6 @@ msgid ""
 msgstr ""
 "<i class=\"o_group_caret fa fa-fw me-1 fa-caret-down\"></i> <span "
 "class=\"text-truncate w-0 flex-grow-1 text-start\">พนักงานเสิร์ฟ</span>"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_form
-msgid "<span class=\"ms-0 me-4\">Edit</span>"
-msgstr "<span class=\"ms-0 me-4\">แก้ไข</span>"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
@@ -528,7 +519,7 @@ msgstr "<span>อนุญาตให้พนักงาน:</span>"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_form
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid ""
 "<span>The employee assigned would like to switch shifts with someone "
 "else.</span>"
@@ -538,11 +529,6 @@ msgstr "<span>พนักงานที่ได้รับมอบหมา
 #: model_terms:ir.ui.view,arch_db:planning.res_config_settings_view_form
 msgid "<span>months ahead</span>"
 msgstr "<span> เดือนข้างหน้า</span>"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
-msgid "<strong>Allocated Time — </strong>"
-msgstr "<strong>เวลาที่จัดสรร — </strong>"
 
 #. module: planning
 #: model:mail.template,body_html:planning.email_template_slot_single
@@ -721,7 +707,7 @@ msgid ""
 "                    </p>\n"
 "                    <div style=\"display: flex; margin: 15px;\">\n"
 "                        <div t-if=\"ctx.get('planning_url')\" style=\"margin-right: 15px;\">\n"
-"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #FFFFFF; background-color: #875A7B; border: solid #875A7B;\">View Your Planning</a>\n"
+"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" t-attf-style=\"color: {{object.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{object.company_id.email_secondary_color or '#875A7B'}};\">View Your Planning</a>\n"
 "                        </div>\n"
 "                        <div t-if=\"ctx.get('planning_url_ics')\">\n"
 "                            <a t-att-href=\"ctx['planning_url_ics']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #374151; background-color: #E7E9ED; border: solid #E7E9ED;\">Add to Calendar</a>\n"
@@ -752,35 +738,35 @@ msgstr ""
 "                    text-align: center;\n"
 "                }\n"
 "                </style>\n"
-"                <div>\n"
+"                <body><div>\n"
 "                    <p t-if=\"ctx.get('employee')\">เรียน <t t-out=\"ctx['employee'].name or ''\">Anita Oliver</t>,</p>\n"
-"                    <p t-else=\"\">สวัสดี</p>\n"
-"                    <br>\n"
+"                    <p t-else=\"\">สวัสดีค่ะ</p>\n"
+"                    <br/>\n"
 "                    <p t-if=\"ctx.get('start_datetime') and ctx.get('end_datetime')\">\n"
-"                        กะงานที่กำลังจะเกิดขึ้นของคุณเมื่อ <t t-out=\"format_date(ctx['start_datetime'])\">05-05-2021</t>\n"
-"                        ถึง <t t-out=\"format_date(ctx['end_datetime'])\">05-11-2021</t> ได้รับการเผยแพร่แล้ว\n"
+"                        การเปลี่ยนแปลงที่กำลังจะเกิดขึ้นของคุณจาก <t t-out=\"format_date(ctx['start_datetime'])\">05-05-2021</t>\n"
+"                        ถึง <t t-out=\"format_date(ctx['end_datetime'])\">05-11-2021</t> ได้ถูกเผยแพร่แล้ว\n"
 "                    </p>\n"
 "                    <div style=\"display: flex; margin: 15px;\">\n"
 "                        <div t-if=\"ctx.get('planning_url')\" style=\"margin-right: 15px;\">\n"
-"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #FFFFFF; background-color: #875A7B; border: solid #875A7B;\">ดูการวางแผนของคุณ</a>\n"
+"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" t-attf-style=\"color: {{object.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{object.company_id.email_secondary_color or '#875A7B'}};\">ดูการวางแผนของคุณ</a>\n"
 "                        </div>\n"
 "                        <div t-if=\"ctx.get('planning_url_ics')\">\n"
 "                            <a t-att-href=\"ctx['planning_url_ics']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #374151; background-color: #E7E9ED; border: solid #E7E9ED;\">เพิ่มลงในปฏิทิน</a>\n"
 "                        </div>\n"
 "                    </div>\n"
-"                    <br>\n"
+"                    <br/>\n"
 "                    <p t-if=\"ctx.get('slot_unassigned') or (object.allow_self_unassign and object.self_unassign_days_before)\">\n"
 "                        <t t-if=\"ctx.get('slot_unassigned')\">\n"
-"                            นอกจากนี้ เราต้องการเตือนคุณด้วยว่ามีกะงานว่างอยู่ และหากคุณสนใจและว่าง โปรดจัดสรรเวลาให้กับตัวเองในกะงานเหล่านั้น\n"
+"                            นอกจากนี้ เราต้องการเตือนคุณด้วยว่ามีกะงานว่างอยู่ หากคุณสนใจและยังว่าง โปรดจัดสรรเวลาให้กับตัวเองในกะงานนั้นๆ\n"
 "                        </t>\n"
 "                        <t t-if=\"object.allow_self_unassign and object.self_unassign_days_before\">\n"
-"                            หากคุณไม่สามารถทำงานกะงานที่ได้รับมอบหมายได้ โปรดยกเลิกการมอบหมายงานภายใน <t t-out=\"object.self_unassign_days_before or ''\">5</t> วันก่อนเริ่มกะงาน\n"
+"                            หากคุณไม่สามารถทำงานกะที่ได้รับมอบหมายได้ โปรดยกเลิกการมอบหมายงานภายใน <t t-out=\"object.self_unassign_days_before or ''\">5</t> วัน ก่อนเริ่มกะงาน\n"
 "                        </t>\n"
 "                    </p>\n"
-"                    <p t-if=\"ctx.get('message')\" t-out=\"ctx['message']\"></p>\n"
-"                    <p t-if=\"object.allow_self_unassign\">หากตารางงานปัจจุบันของคุณไม่เหมาะกับคุณ เราขอแนะนำให้คุณติดต่อเพื่อนร่วมงานและขอเปลี่ยนกะงาน พวกเขาอาจสนใจที่จะเปลี่ยนกะงานกับคุณ</p>\n"
+"                    <p t-if=\"ctx.get('message')\" t-out=\"ctx['message']\"/>\n"
+"                    <p t-if=\"object.allow_self_unassign\">หากตารางงานปัจจุบันของคุณไม่เหมาะกับคุณ เราขอแนะนำให้คุณติดต่อเพื่อนร่วมงานและขอเปลี่ยนกะงาน เพราะว่าพวกเขาอาจสนใจที่จะเปลี่ยนกะงานกับคุณ</p>\n"
 "                </div>\n"
-"            "
+"            </body>"
 
 #. module: planning
 #: model:ir.model.constraint,message:planning.constraint_planning_recurrency_check_until_limit
@@ -848,11 +834,6 @@ msgstr "กะงานทั้งหมด"
 msgid ""
 "All subsequent shifts will be deleted. Are you sure you want to continue?"
 msgstr "กะที่ตามมาทั้งหมดจะถูกลบออก คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
-msgid "Allocated Hours"
-msgstr "จัดสรรชั่วโมง"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
@@ -985,7 +966,7 @@ msgstr "วางแผนกะงานที่เปิดและใบส
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_filter_panel/planning_calendar_filter_panel.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_filter_section/planning_calendar_filter_section.xml:0
 msgid "Avatar"
 msgstr "อวตาร"
 
@@ -993,11 +974,6 @@ msgstr "อวตาร"
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 msgid "Bartender"
 msgstr "บาร์เทนเดอร์"
-
-#. module: planning
-#: model:ir.model,name:planning.model_hr_employee_base
-msgid "Basic Employee"
-msgstr "พนักงานทั่วไป"
 
 #. module: planning
 #: model:ir.ui.menu,name:planning.planning_menu_schedule_by_resource
@@ -1026,6 +1002,22 @@ msgstr "ยกเลิกการสลับ"
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Chat"
 msgstr "แชท"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid ""
+"Click on a day or select a range of days to create shifts for the selected "
+"resources using the shift template"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid ""
+"Clicking on a day or selecting a range of days will permanently delete its "
+"contents"
+msgstr ""
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_role__color
@@ -1096,6 +1088,14 @@ msgid "Crane"
 msgstr "เครน"
 
 #. module: planning
+#: model_terms:ir.actions.act_window,help:planning.planning_action_open_shifts
+msgid ""
+"Create open shifts for the roles you will be needing to complete a mission.<br>\n"
+"                Allocate open shifts to resources based on their roles."
+msgstr ""
+
+#. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_planning__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_role__create_uid
@@ -1106,6 +1106,7 @@ msgid "Created by"
 msgstr "สร้างโดย"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_planning__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_role__create_date
@@ -1204,7 +1205,6 @@ msgstr ""
 #: code:addons/planning/static/src/views/planning_form/planning_form_view.js:0
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
 #: model_terms:ir.ui.view,arch_db:planning.planning_role_view_kanban
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
 msgid "Delete"
 msgstr "ลบ"
@@ -1240,13 +1240,20 @@ msgid "Discard"
 msgstr "ละทิ้ง"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_hr_departure_wizard__display_name
+#: model:ir.model.fields,field_description:planning.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:planning.field_hr_employee_public__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__display_name
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_planning__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_role__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_send__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_slot__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__display_name
+#: model:ir.model.fields,field_description:planning.field_res_company__display_name
+#: model:ir.model.fields,field_description:planning.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:planning.field_resource_resource__display_name
 msgid "Display Name"
 msgstr "แสดงชื่อ"
 
@@ -1262,7 +1269,7 @@ msgstr "Doris Cole (บาร์เทนเดอร์)"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__state__draft
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__state__draft
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
@@ -1285,6 +1292,7 @@ msgid "Duration"
 msgstr "ระยะเวลา"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_slot__template_duration_days
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__duration_days
 msgid "Duration Days"
 msgstr "ระยะเวลาของวัน"
@@ -1393,6 +1401,18 @@ msgid "Extra Message"
 msgstr "ข้อความเสริม"
 
 #. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Failed to undo reschedule"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid "Filter by specific resources to show only their shifts"
+msgstr ""
+
+#. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_my_calendar
 msgid ""
 "Find here your planning. Assign yourself open shifts that match your roles, "
@@ -1463,7 +1483,6 @@ msgstr "กลุ่มโดย"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_hr_employee__has_slots
-#: model:ir.model.fields,field_description:planning.field_hr_employee_base__has_slots
 #: model:ir.model.fields,field_description:planning.field_hr_employee_public__has_slots
 msgid "Has Slots"
 msgstr "มีสล็อต"
@@ -1479,8 +1498,6 @@ msgid "Hours"
 msgstr "ชั่วโมง"
 
 #. module: planning
-#. odoo-javascript
-#: code:addons/planning/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__resource_type__user
 msgid "Human"
 msgstr "มนุษย์"
@@ -1506,13 +1523,20 @@ msgid "I am unavailable"
 msgstr "ฉันไม่ว่าง"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_hr_departure_wizard__id
+#: model:ir.model.fields,field_description:planning.field_hr_employee__id
+#: model:ir.model.fields,field_description:planning.field_hr_employee_public__id
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__id
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__id
 #: model:ir.model.fields,field_description:planning.field_planning_planning__id
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__id
 #: model:ir.model.fields,field_description:planning.field_planning_role__id
 #: model:ir.model.fields,field_description:planning.field_planning_send__id
 #: model:ir.model.fields,field_description:planning.field_planning_slot__id
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__id
+#: model:ir.model.fields,field_description:planning.field_res_company__id
+#: model:ir.model.fields,field_description:planning.field_res_config_settings__id
+#: model:ir.model.fields,field_description:planning.field_resource_resource__id
 msgid "ID"
 msgstr "ไอดี"
 
@@ -1536,6 +1560,7 @@ msgstr "หากคุณพอใจกับการวางแผน ค�
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_send__include_unassigned
+#: model_terms:ir.ui.view,arch_db:planning.planning_send_view_form
 msgid "Include Open Shifts"
 msgstr "รวมกะงานที่เปิด"
 
@@ -1550,13 +1575,18 @@ msgid "Jeffrey Kelly (Bartender)"
 msgstr "Jeffrey Kelly (บาร์เทนเดอร์)"
 
 #. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
+msgid "Job Position"
+msgstr "ตำแหน่งงาน"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__job_title
 #: model:ir.model.fields,field_description:planning.field_planning_slot__job_title
-#: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Job Title"
 msgstr "ชื่อตำแหน่งงาน"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_planning__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_role__write_uid
@@ -1567,6 +1597,7 @@ msgid "Last Updated by"
 msgstr "อัปเดตครั้งล่าสุดโดย"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_planning__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_role__write_date
@@ -1578,7 +1609,7 @@ msgstr "อัปเดตครั้งล่าสุดเมื่อ"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 msgid "Legend"
 msgstr "Legend"
 
@@ -1666,8 +1697,6 @@ msgid "Marc Demo"
 msgstr "Marc Demo"
 
 #. module: planning
-#. odoo-javascript
-#: code:addons/planning/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__resource_type__material
 msgid "Material"
 msgstr "วัสดุ"
@@ -1797,6 +1826,7 @@ msgstr "ไม่พบเทมเพลตกะงาน มาสร้า�
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_my_calendar
+#: model_terms:ir.actions.act_window,help:planning.planning_action_open_shifts
 #: model_terms:ir.actions.act_window,help:planning.planning_action_schedule_by_resource
 #: model_terms:ir.actions.act_window,help:planning.planning_action_schedule_by_role
 msgid "No shifts found. Let's create one!"
@@ -1845,6 +1875,8 @@ msgstr "เปิดกะงาน"
 #. odoo-javascript
 #: code:addons/planning/static/src/views/planning_calendar/planning_calendar_model.js:0
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_model.js:0
+#: model:ir.actions.act_window,name:planning.planning_action_open_shifts
+#: model:ir.ui.menu,name:planning.planning_menu_open_shifts
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
 #: model_terms:ir.ui.view,arch_db:planning.slot_report
@@ -1918,6 +1950,11 @@ msgstr ""
 "เปิดเมนูเพื่อเข้าถึงตัวเลือกนี้"
 
 #. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
+msgid "Planned Date"
+msgstr "วันที่ตามแผน"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__start_time
 msgid "Planned Hours"
 msgstr "ชั่วโมงที่วางแผน"
@@ -1928,7 +1965,9 @@ msgstr "ชั่วโมงที่วางแผน"
 #: model:ir.actions.report,name:planning.report_planning_slot
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__allocation_type__planning
 #: model:ir.ui.menu,name:planning.planning_menu_root
+#: model:res.groups.privilege,name:planning.res_groups_privilege_planning
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_inherit
+#: model_terms:ir.ui.view,arch_db:planning.open_shifts_pivot_view
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_calendar
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_graph
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_my_calendar
@@ -1964,6 +2003,7 @@ msgstr "การวางแผนการเกิดซ้ำ"
 #. module: planning
 #: model:ir.model,name:planning.model_planning_role
 #: model_terms:ir.ui.view,arch_db:planning.planning_role_view_form
+#: model_terms:ir.ui.view,arch_db:planning.shifts_template_for_multi_create_in_calendar_view
 msgid "Planning Role"
 msgstr "บทบาทการวางแผน"
 
@@ -2050,6 +2090,18 @@ msgid "Press Ctrl to duplicate the shift"
 msgstr "กด Ctrl เพื่อทำซ้ำกะงาน"
 
 #. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_hooks.js:0
+msgid "Previous week's copied shifts removed"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_hooks.js:0
+msgid "Previous week's shifts copied"
+msgstr ""
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_res_config_settings__module_project_forecast
 msgid "Project Planning"
 msgstr "การวางแผนโปรเจ็กต์"
@@ -2064,6 +2116,11 @@ msgstr "เครื่องฉายภาพ"
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search
 msgid "Properties"
 msgstr "คุณสมบัติ"
+
+#. module: planning
+#: model:ir.model,name:planning.model_hr_employee_public
+msgid "Public Employee"
+msgstr "ข้าราชการ"
 
 #. module: planning
 #. odoo-javascript
@@ -2088,7 +2145,7 @@ msgstr "เผยแพร่และส่งกำหนดการทาง
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__state__published
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__state__published
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
@@ -2341,12 +2398,6 @@ msgid ""
 msgstr "กำหนดเวลาทรัพยากรบุคคลและวัสดุของคุณตามหน้าที่ โปรเจ็กต์ และใบสั่งขาย"
 
 #. module: planning
-#. odoo-python
-#: code:addons/planning/models/planning.py:0
-msgid "Search operation not supported"
-msgstr "ไม่รองรับการดำเนินการค้นหา"
-
-#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_planning__access_token
 msgid "Security Token"
 msgstr "โทเค็นความปลอดภัย"
@@ -2426,6 +2477,36 @@ msgstr "เทมเพลตกะงาน"
 
 #. module: planning
 #. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift could not be removed"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift duplicated"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift removed"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift reschedule undone"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift rescheduled"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
 #: code:addons/planning/static/src/views/planning_form/planning_form_view.js:0
 msgid "Shift saved as template"
 msgstr ""
@@ -2475,7 +2556,7 @@ msgid "Shipping Associate"
 msgstr "พนักงานจัดส่ง"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid "Some changes were made since this shift was published."
 msgstr "มีการเปลี่ยนแปลงบางอย่างตั้งแต่มีการเผยแพร่การเปลี่ยนแปลงนี้"
 
@@ -2552,12 +2633,6 @@ msgstr "จำนวนการซ้ำต้องไม่เป็นค่
 #: model:ir.model.constraint,message:planning.constraint_planning_recurrency_check_repeat_interval_positive
 msgid "The recurrence should be greater than 0."
 msgstr "การเกิดซ้ำควรมากกว่า 0"
-
-#. module: planning
-#. odoo-python
-#: code:addons/planning/models/planning.py:0
-msgid "The recurrence's end date should fall after the shift's start date."
-msgstr "วันที่สิ้นสุดของการเกิดซ้ำควรอยู่หลังวันที่เริ่มต้นของกะงาน"
 
 #. module: planning
 #. odoo-javascript
@@ -2740,6 +2815,15 @@ msgid "Type"
 msgstr "ประเภท"
 
 #. module: planning
+#. odoo-python
+#: code:addons/planning/models/planning.py:0
+msgid ""
+"Uh-oh! Let's keep things in the right order: the recurrence end date should "
+"always come after the shift start date. It's like trying to eat your "
+"breakfast before waking up – not possible!"
+msgstr ""
+
+#. module: planning
 #: model:ir.model.fields.selection,name:planning.selection__res_company__planning_employee_unavailabilities__unassign
 msgid "Unassign themselves from shifts"
 msgstr "ยกเลิกการมอบหมายตนเองจากกะงาน"
@@ -2848,7 +2932,7 @@ msgstr "คุณไม่สามารถยกเลิกการมอบ
 #. odoo-python
 #: code:addons/planning/models/planning.py:0
 msgid "You cannot assign yourself to a shift in the past."
-msgstr "คุณไม่สามารถมอบหมายตัวเองให้กับกะงานในอดีตได้"
+msgstr "คุณไม่สามารถมอบหมายตัวเองให้กับการเปลี่ยนแปลงในอดีตได้"
 
 #. module: planning
 #. odoo-python
@@ -2878,7 +2962,7 @@ msgstr "คุณไม่สามารถเปลี่ยนกะงาน
 #. odoo-python
 #: code:addons/planning/models/planning.py:0
 msgid "You cannot unassign yourself from a shift in the past."
-msgstr "คุณไม่สามารถยกเลิกการมอบหมายตัวเองให้กับกะงานในอดีตได้"
+msgstr "คุณไม่สามารถยกเลิกการมอบหมายตัวเองให้กับการเปลี่ยนแปลงในอดีตได้"
 
 #. module: planning
 #. odoo-javascript
@@ -2983,9 +3067,20 @@ msgid "e.g. John Doe"
 msgstr "เช่น John Doe"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid "other shift(s) in conflict."
 msgstr "กะงานอื่นๆ ที่มีความขัดแย้ง"
+
+#. module: planning
+#: model:ir.model,name:planning.model_planning_calendar_resource
+msgid "planning calendar resource"
+msgstr ""
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/hr.py:0
+msgid "resource_id"
+msgstr ""
 
 #. module: planning
 #. odoo-javascript

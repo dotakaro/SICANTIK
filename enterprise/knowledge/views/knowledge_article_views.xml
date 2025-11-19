@@ -27,7 +27,6 @@
                 <field name="to_delete" invisible="1"/>
                 <field name="cover_image_id" invisible="1"/>
                 <field name="has_article_children" invisible="1"/>
-                <field name="has_item_parent" invisible="1"/>
                 <field name="full_width" invisible="1"/>
                 <field name="last_edition_uid" invisible="1"/>
                 <field name="last_edition_date" invisible="1"/>
@@ -39,7 +38,7 @@
                     <widget name="knowledge_topbar"/>
                     <!-- Invisible Article Warning Banner-->
                     <div class="alert alert-info text-center mb-0" role="alert" groups="base.group_user"
-                         invisible="not id or internal_permission == 'none' or is_article_visible_by_everyone or is_article_visible">
+                         invisible="not id or category != 'workspace' or is_article_visible">
                         <field name="user_has_access_parent_path" invisible="1"/>
                         This article is only displayed to its members.
                         <a invisible="not user_has_access_parent_path" role="button" type="object" name="action_join" class="text-decoration-underline oe_link alert-link">
@@ -65,7 +64,7 @@
                     <div class="flex-grow-1 position-relative">
                         <div class="o_scroll_view o_knowledge_main_view">
                             <div class="row p-0 m-0" style="height: 100%">
-                                <div class="d-flex col-12 col-lg position-relative p-0">
+                                <div class="col-12 col-lg position-relative p-0">
                                     <div class="o_scroll_view_lg">
                                         <!-- Article body -->
                                         <div class="o_knowledge_body d-flex flex-column"
@@ -74,6 +73,7 @@
                                              <span class="o_knowledge_article_view_form_dynamic_width d-none"
                                                    invisible="full_width"/>
                                             <!-- Article Cover -->
+                                            <span class="pt-md-5" invisible="cover_image_id"/>
                                             <field name="cover_image_url" invisible="1" />
                                             <field name="cover_image_position" invisible="1" />
                                             <widget name="knowledge_cover" invisible="not cover_image_id"/>
@@ -86,7 +86,7 @@
                                                     readonly="is_locked or not user_can_write or not active"/>
                                                 <!-- Portal users get some commands disabled, notably /image and /file, as they don't have access to ir.attachment -->
                                                 <field name="body" widget="knowledge_html" class="o_field_html" no_label="1" groups="base.group_portal"
-                                                    options="{'collaborative': true, 'resizable': False, 'embedded_components': true, 'disableImage': true, 'disableVideo': true, 'disableFile': true, 'baseContainer': 'P'}"
+                                                    options="{'collaborative': true, 'resizable': False, 'embedded_components': true, 'allowAttachmentCreation': false, 'allowMediaDialogVideo': false, 'baseContainer': 'P'}"
                                                     readonly="is_locked or not user_can_write or not active"/>
                                             </div>
                                         </div>
@@ -374,7 +374,7 @@
         <field name="arch" type="xml">
             <!-- date_start has a dummy value because the attribute is required
             but it will not be used: the itemCalendarController will overwrite
-            it in onWillStartModel using the property selected by the user -->
+            it in the setup (updateModel) using the property selected by the user -->
             <calendar js_class="knowledge_article_view_calendar_embedded" string="Items" date_start="article_properties">
                 <field name="user_can_write" invisible="1"/>
                 <field name="parent_id" invisible="1"/>
@@ -410,6 +410,8 @@
                 <filter name="filter_own_privates" string="Private"
                     domain="[('category', '=', 'private'), ('user_has_write_access', '=', True)]"/>
                 <separator/>
+                <filter name="filter_templates" string="Templates"
+                    domain="[('is_listed_in_templates_gallery', '=', True)]"/>
                 <filter name="filter_is_archived" string="Archived"
                     domain="[('active', '=', False)]"/>
                 <filter name="filter_trashed" string="Trashed"

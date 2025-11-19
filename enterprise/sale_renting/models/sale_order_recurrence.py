@@ -3,6 +3,7 @@
 from odoo import fields, models
 from odoo.tools import LazyTranslate
 
+
 _lt = LazyTranslate(__name__)
 
 SINGULAR_LABELS = {
@@ -14,7 +15,7 @@ SINGULAR_LABELS = {
 }
 
 
-class SaleOrderRecurrence(models.Model):
+class SaleTemporalRecurrence(models.Model):
     _name = 'sale.temporal.recurrence'
     _description = "Sale temporal Recurrence"
     _order = 'unit,duration'
@@ -40,13 +41,10 @@ class SaleOrderRecurrence(models.Model):
     )
     duration_display = fields.Char(compute='_compute_duration_display')
 
-    _sql_constraints = [
-        (
-            "temporal_recurrence_duration",
-            "CHECK(duration >= 0)",
-            "The pricing duration has to be greater or equal to 0.",
-        ),
-    ]
+    _temporal_recurrence_duration = models.Constraint(
+        'CHECK(duration >= 0)',
+        "The pricing duration has to be greater or equal to 0.",
+    )
 
     def _compute_duration_display(self):
         for record in self:

@@ -8,8 +8,8 @@ from odoo.osv import expression
 class ResCompany(models.Model):
     _inherit = "res.company"
 
-    documents_recruitment_settings = fields.Boolean(default=False)
-    recruitment_folder_id = fields.Many2one('documents.document', string="Recruitment Workspace", check_company=True,
+    documents_recruitment_settings = fields.Boolean(default=True)
+    recruitment_folder_id = fields.Many2one('documents.document', string="Recruitment Folder", check_company=True,
                                             domain=[('type', '=', 'folder'), ('shortcut_document_id', '=', False)],
                                             compute='_compute_recruitment_folder_id', store=True, readonly=False)
     recruitment_tag_ids = fields.Many2many('documents.tag', 'recruitment_tags_rel')

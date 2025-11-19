@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { MessagingMenu } from "@mail/core/public_web/messaging_menu";
 import { ThreadIcon } from "@mail/core/common/thread_icon";
 import { patch } from "@web/core/utils/patch";
@@ -17,15 +15,14 @@ patch(MessagingMenu.prototype, {
         );
         if (hasWhatsApp) {
             items.push({
+                counter: this.store.getDiscussSidebarCategoryCounter(
+                    this.store.discuss.whatsapp.id
+                ),
                 icon: "fa fa-whatsapp",
                 id: "whatsapp",
                 label: _t("WhatsApp"),
             });
         }
         return items;
-    },
-
-    get displayStartConversation() {
-        return super.displayStartConversation && this.store.discuss.activeTab !== "whatsapp";
     },
 });

@@ -7,8 +7,8 @@ from odoo import _, api, models, fields
 from odoo.exceptions import UserError
 
 
-class Tags(models.Model):
-    _name = "documents.tag"
+class DocumentsTag(models.Model):
+    _name = 'documents.tag'
     _description = "Tag"
     _order = "sequence, name"
 
@@ -22,25 +22,10 @@ class Tags(models.Model):
     tooltip = fields.Char(help="Text shown when hovering on this tag", string="Tooltip")
     document_ids = fields.Many2many('documents.document', 'document_tag_rel')
 
-    _sql_constraints = [
-        ('tag_name_unique', 'unique (name)', "Tag name already used"),
-    ]
-
-    # todo: unused, remove in master
-    @api.model
-    def _get_tags(self, domain):
-        """
-        fetches the tag and facet ids for the document selector (custom left sidebar of the kanban view)
-        """
-        tags = self.env['documents.document'].search(domain).tag_ids
-        return [
-            {
-                'sequence': tag.sequence,
-                'id': tag.id,
-                'color': tag.color,
-                '__count': len(tag.document_ids)
-            } for tag in tags
-        ]
+    _tag_name_unique = models.Constraint(
+        'unique (name)',
+        "Tag name already used",
+    )
 
     @api.ondelete(at_uninstall=False)
     def _unlink_except_used_in_server_action(self):

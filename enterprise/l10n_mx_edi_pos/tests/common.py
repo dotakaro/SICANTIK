@@ -36,7 +36,8 @@ class TestMxEdiPosCommon(TestMxEdiCommon, TestPoSCommon):
         self.assertTrue(order.l10n_mx_edi_cfdi_to_public)
         yield order
         # invoice order
-        action = order._generate_pos_order_invoice()
+        move = order._generate_pos_order_invoice()
+        action = order.action_view_invoice()
         invoice = self.env['account.move'].browse(action['res_id'])
         # generate CFDI
         with self.with_mocked_pac_sign_success():
@@ -45,7 +46,7 @@ class TestMxEdiPosCommon(TestMxEdiCommon, TestPoSCommon):
     def _create_order(self, ui_data):
         order_data = self.create_ui_order_data(**ui_data)
         results = self.env['pos.order'].sync_from_ui([order_data])
-        return self.env['pos.order'].browse(results['pos.order'][0]['id'])
+        return self.env['pos.order'].browse([order['id'] for order in results['pos.order']])
 
     def _assert_order_cfdi(self, order, filename):
         document = order.l10n_mx_edi_document_ids.filtered(lambda x: x.state == 'invoice_sent')[:1]

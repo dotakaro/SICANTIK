@@ -6,7 +6,7 @@ from odoo.exceptions import ValidationError
 import uuid
 
 
-class PosDsfinvkExport(models.Model):
+class L10n_De_PosDsfinvk_Export(models.Model):
     _name = 'l10n_de_pos.dsfinvk_export'
     _description = 'This is the model that can download the data export from the DSFinV-K service in case of an audit.'
 

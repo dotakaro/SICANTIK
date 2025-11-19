@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { ControlPanel } from "@web/search/control_panel/control_panel";
@@ -80,7 +78,7 @@ export class AccountReport extends Component {
     // Custom overrides
     // -----------------------------------------------------------------------------------------------------------------
     static registerCustomComponent(customComponent) {
-        registry.category("account_reports_custom_components").add(customComponent.template, customComponent);
+        registry.category("account_reports_custom_components").add(customComponent.name, customComponent);
     }
 
     get cssCustomClass() {

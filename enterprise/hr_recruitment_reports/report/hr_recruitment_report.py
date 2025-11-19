@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import tools
@@ -8,14 +7,15 @@ from odoo import fields, models, _
 def nlargest(amount, data_list, method):
     return sorted(data_list, key=method, reverse=1)[:amount]
 
+
 class HrRecruitmentReport(models.Model):
-    _name = "hr.recruitment.report"
+    _name = 'hr.recruitment.report'
     _description = "Recruitment Analysis Report"
     _auto = False
     _rec_name = 'create_date'
     _order = 'create_date desc'
 
-    count = fields.Integer('Applicant', aggregator="sum", readonly=True)
+    count = fields.Integer('Applications', aggregator="sum", readonly=True)
     refused = fields.Integer('Refused', aggregator="sum", readonly=True)
     hired = fields.Integer('Hired', aggregator="sum", readonly=True)
     hiring_ratio = fields.Integer('Hired Ratio', aggregator="avg", readonly=True)
@@ -29,7 +29,6 @@ class HrRecruitmentReport(models.Model):
     ], readonly=True)
 
     user_id = fields.Many2one('res.users', 'Recruiter', readonly=True)
-
     create_date = fields.Date('Application Date', readonly=True)
     create_uid = fields.Many2one('res.users', 'Creator', readonly=True)
     date_closed = fields.Date('End Date', readonly=True)
@@ -73,7 +72,7 @@ class HrRecruitmentReport(models.Model):
                     WHEN a.date_closed IS NOT NULL THEN 'is_hired'
                     ELSE 'in_progress'
                 END AS state,
-                c.partner_name as name,
+                a.partner_name as name,
                 CASE WHEN a.refuse_reason_id IS NOT NULL OR a.active IS TRUE THEN 1 ELSE 0 END as count,
                 CASE WHEN a.refuse_reason_id IS NOT NULL THEN 1 ELSE 0 END as refused,
                 CASE WHEN a.refuse_reason_id IS NULL AND a.active IS TRUE AND a.date_closed IS NOT NULL THEN 1 ELSE 0 END as hired,
@@ -85,16 +84,15 @@ class HrRecruitmentReport(models.Model):
 
         from_ = """
                 hr_applicant a
-                JOIN hr_candidate c ON c.id = a.candidate_id
                 %s
         """ % from_clause
 
         join_ = """
                 calendar_event m
                 ON a.id = m.applicant_id
-                GROUP BY a.id, c.partner_name
+                WHERE a.job_id IS NOT NULL
+                GROUP BY a.id
         """
-
         return '(SELECT %s FROM %s LEFT OUTER JOIN %s)' % (select_, from_, join_)
 
     def init(self):

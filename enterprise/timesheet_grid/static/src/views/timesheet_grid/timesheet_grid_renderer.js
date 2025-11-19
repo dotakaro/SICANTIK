@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { _t } from "@web/core/l10n/translation";
 import { deserializeDate } from "@web/core/l10n/dates";
 import { escape } from "@web/core/utils/strings";
@@ -61,16 +59,23 @@ export class TimesheetGridRenderer extends GridRenderer {
 
     async _getLastValidatedTimesheetDate(props = this.props) {
         this.lastValidationDatePerEmployee = {};
-        if (props.sectionField?.name === 'employee_id') {
-            const employeeIds = props.model._dataPoint._getFieldValuesInSectionAndRows(props.model.fieldsInfo.employee_id);
+        const { sectionField, rowFields, employeeField, data } = props.model;
+        if (sectionField?.name === employeeField.name) {
+            const employeeIds = props.model._getFieldValuesInSectionAndRows(
+                employeeField,
+                sectionField,
+                rowFields,
+                data
+            );
             if (employeeIds.length) {
                 const result = await props.model.orm.call(
                     "hr.employee",
                     "get_last_validated_timesheet_date",
                     [employeeIds],
                 );
-                for (const [employee_id, last_validated_timesheet_date] of Object.entries(result)) {
-                    this.lastValidationDatePerEmployee[employee_id] = last_validated_timesheet_date && deserializeDate(last_validated_timesheet_date);
+                for (const [employeeId, lastValidatedTimesheetDate] of Object.entries(result)) {
+                    this.lastValidationDatePerEmployee[employeeId] =
+                        lastValidatedTimesheetDate && deserializeDate(lastValidatedTimesheetDate);
                 }
             }
         }
@@ -90,15 +95,16 @@ export class TimesheetGridRenderer extends GridRenderer {
         return res;
     }
 
-    getCellColorClass(column) {
+    getCellColorClass(column, section) {
         const res = super.getCellColorClass(...arguments);
-        const workingHours = this.props.model.data.workingHours.dailyPerEmployee?.[this.section.valuePerFieldName.employee_id[0]];
+        const workingHours =
+            this.props.model.data.workingHours.dailyPerEmployee?.[section?.valuePerFieldName?.employee_id?.[0]];
         if (!workingHours) {
             return res;
         }
 
         const value = workingHours[column.value];
-        const cellValue = this.section.cells[column.id].value;
+        const cellValue = section?.cells?.[column.id]?.value;
         if (cellValue > value) {
             return "text-warning";
         } else if (cellValue < value) {
@@ -157,9 +163,9 @@ export class TimesheetGridRenderer extends GridRenderer {
         return Object.values(section.cells).reduce((overtime, cell) => overtime + this.getSectionDailyOvertime(cell, workingHours), 0);
     }
 
-    _getSectionTotalCellBgColor(section) {
+    _getTotalCellBgColor(section) {
         const weeklyOvertime = this.getSectionOvertime(section);
-        const res = super._getSectionTotalCellBgColor(section);
+        const res = super._getTotalCellBgColor(section);
         if (weeklyOvertime == null) {
             return res;
         } else if (weeklyOvertime < 0) {
@@ -169,6 +175,24 @@ export class TimesheetGridRenderer extends GridRenderer {
         } else {
             return 'text-bg-warning';
         }
+    }
+
+    getCellsTextClasses(column, row) {
+        const res = super.getCellsTextClasses(...arguments);
+        if (this.props.model.searchParams.groupBy[0] === "employee_id") {
+            res[this.getCellColorClass(column, row)] = true;
+        }
+        return res;
+    }
+
+    getTotalCellsTextClasses(row, grandTotal) {
+        const res = super.getTotalCellsTextClasses(...arguments);
+        // Limit applying color when multi groupby of employees when the row is section
+        if (this.props.model.searchParams.groupBy[0] === "employee_id" && row.section.isFake) {
+            Object.assign(res, { [this._getTotalCellBgColor(row)]: true });
+            delete res["text-bg-200"];
+        }
+        return res;
     }
 
     /** Return grid cell action helper when no records are found */

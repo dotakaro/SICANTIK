@@ -5,7 +5,7 @@
 from odoo import models, fields
 
 
-class DemoSocialLivePost(models.Model):
+class SocialLivePost(models.Model):
     _inherit = 'social.live.post'
 
     def _refresh_statistics(self):

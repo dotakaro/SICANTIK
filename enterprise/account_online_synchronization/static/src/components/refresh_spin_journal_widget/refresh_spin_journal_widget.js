@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
 import { useService } from "@web/core/utils/hooks";
@@ -67,8 +65,8 @@ class RefreshSpin extends Component {
          * In one specific case, we have to return an action to the user to open
          * the Odoo Fin iframe to refresh the connection.
          */
-        const action = await this.orm.call("account.journal", "manual_sync", [this.recordId]);
         this.state.connectionStateDetails = { status: "fetching" };
+        const action = await this.orm.call("account.journal", "manual_sync", [this.recordId]);
         if (action) {
             this.actionService.doAction(action);
         }

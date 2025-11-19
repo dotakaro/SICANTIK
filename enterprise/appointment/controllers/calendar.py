@@ -99,7 +99,7 @@ class AppointmentCalendarController(CalendarController):
             'is_cancelled': not event.active,
         }, headers={'Cache-Control': 'no-store'})
 
-    @route(['/calendar/<string:access_token>/add_attendees_from_emails'], type="json", auth="public", website=True)
+    @route(['/calendar/<string:access_token>/add_attendees_from_emails'], type="jsonrpc", auth="public", website=True)
     def appointment_add_attendee(self, access_token, emails_str):
         """
         Add the attendee at the time of the validation of an appointment page
@@ -135,7 +135,7 @@ class AppointmentCalendarController(CalendarController):
             return request.not_found()
         if cancel_status := self._get_prevent_cancel_status(event):
             return request.redirect(f'/calendar/view/{access_token}?state={cancel_status}&partner_id={partner_id}')
-        event.with_context(mail_notify_author=True).sudo().action_cancel_meeting([int(partner_id)] if partner_id else [])
+        event.sudo().action_cancel_meeting([int(partner_id)] if partner_id else [])
         if appointment_invite:
             redirect_url = appointment_invite.redirect_url + '&state=cancel'
         else:

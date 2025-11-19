@@ -38,7 +38,7 @@ class TestCaseDocumentsBridgeRecruitment(TransactionCaseDocumentsHr, TestRecruit
 
         self.assertTrue(doc, "It should have created a document")
         self.assertEqual(doc.folder_id, self.folder, "It should be in the correct folder")
-        self.assertEqual(doc.owner_id, self.env.ref('base.user_root'), "The owner_id should be odooBot")
+        self.assertFalse(doc.owner_id)
         self.assertEqual(doc.access_via_link, "none")
         self.assertEqual(doc.access_internal, "none")
         self.assertTrue(doc.is_access_via_link_hidden)
@@ -53,7 +53,7 @@ class TestCaseDocumentsBridgeRecruitment(TransactionCaseDocumentsHr, TestRecruit
             'name': 'Applicant Partner',
         })
         applicant = self.env['hr.applicant'].create({
-            'candidate_id': self.env['hr.candidate'].create({'partner_id': partner.id, 'company_id': self.company.id}).id,
+            'partner_id': partner.id,
             'company_id': self.company.id,
         })
         attachment = self.env['ir.attachment'].create({
@@ -69,7 +69,7 @@ class TestCaseDocumentsBridgeRecruitment(TransactionCaseDocumentsHr, TestRecruit
         self.assertTrue(doc, "It should have created a document")
         self.assertEqual(doc.folder_id, self.folder, "It should be in the correct folder")
         self.assertEqual(doc.partner_id, partner, "The partner_id should be the applicant's partner_id")
-        self.assertEqual(doc.owner_id, self.env.ref('base.user_root'), "The owner_id should be odooBot")
+        self.assertFalse(doc.owner_id)
         self.assertEqual(doc.access_via_link, "none")
         self.assertEqual(doc.access_internal, "none")
         self.assertTrue(doc.is_access_via_link_hidden)
@@ -82,10 +82,10 @@ class TestCaseDocumentsBridgeRecruitment(TransactionCaseDocumentsHr, TestRecruit
             'name': 'fileTextTwo.txt',
             'mimetype': 'text/plain',
         })
-        action = document.document_hr_recruitment_create_hr_candidate()
-        self.assertEqual(document.res_model, 'hr.candidate', "The document is linked to the created candidate.")
-        applicant = self.env['hr.candidate'].search([('id', '=', document.res_id)])
-        self.assertTrue(applicant.exists(), 'Candidate has been created.')
+        action = document.document_hr_recruitment_create_hr_applicant()
+        self.assertEqual(document.res_model, 'hr.applicant', "The document is linked to the created applicant.")
+        applicant = self.env['hr.applicant'].search([('id', '=', document.res_id)])
+        self.assertTrue(applicant.exists(), 'Applicant has been created.')
         self.assertTrue(action)
 
     def test_applicant_attachments_access_rights(self):
@@ -96,7 +96,7 @@ class TestCaseDocumentsBridgeRecruitment(TransactionCaseDocumentsHr, TestRecruit
             'name': 'Applicant Partner',
         })
         applicant = self.env['hr.applicant'].create({
-            'candidate_id': self.env['hr.candidate'].create({'partner_id': partner.id, 'company_id': self.company.id}).id,
+            'partner_id': partner.id,
             'company_id': self.company.id,
         })
         attachment = self.env['ir.attachment'].create({
@@ -137,9 +137,8 @@ class TestCaseDocumentsBridgeRecruitment(TransactionCaseDocumentsHr, TestRecruit
         })
         company.recruitment_folder_id = recruitment_folder.id
         partner = self.env['res.partner'].create({'name': 'Applicant Partner'})
-        candidate = self.env['hr.candidate'].create({'partner_id': partner.id, 'company_id': company.id})
         applicant = self.env['hr.applicant'].create({
-            'candidate_id': candidate.id,
+            'partner_id': partner.id,
             'company_id': company.id,
         })
         attachment = self.env['ir.attachment'].create({

@@ -2,7 +2,7 @@ from odoo import fields, models, _
 from odoo.osv import expression
 
 
-class WhatsAppMessage(models.Model):
+class WhatsappMessage(models.Model):
     _inherit = 'whatsapp.message'
 
     links_click_datetime = fields.Datetime(

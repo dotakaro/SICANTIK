@@ -15,14 +15,13 @@ class TestWhatsappMessageQueueSend(WhatsAppFullCase):
             (self.test_base_record_partner, 'sent', 'Handle sending valid message'),
         ]:
             with self.subTest(reason):
-                with self.mockWhatsappGateway():
+                with self.mockWhatsappGateway(), self.enter_registry_test_mode():
                     with self.with_user('user_wa_admin'):
                         composer = self._instanciate_wa_composer_from_records(
                             self.whatsapp_template, test_record,
                         )
                         composer._create_whatsapp_messages()
 
-                    self.env.invalidate_all()
                     self.env.ref('whatsapp.ir_cron_send_whatsapp_queue').method_direct_trigger()
 
                 self.assertWAMessage(

@@ -2,18 +2,18 @@
 from lxml import etree
 from odoo import _, fields, models
 from odoo.exceptions import UserError
-from odoo.addons.account_batch_payment.models import sepa_mapping
+from odoo.addons.account_batch_payment.models.sepa_mapping import sanitize_communication
 
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
 
-    def create_iso20022_credit_transfer(self, payments, payment_method_code, batch_booking=False, charge_bearer=None):
+    def create_iso20022_credit_transfer(self, payments, payment_method_code, batch_booking=False):
         if (payments and payment_method_code == 'sepa_ct'
                 and self.sepa_pain_version == "pain.001.001.09"
                 and any(not payment['iso20022_uetr'] for payment in payments)):
             raise UserError(_("Some payments are missing a value for 'UETR', required for the SEPA Pain.001.001.09 format."))
-        return super().create_iso20022_credit_transfer(payments, payment_method_code, batch_booking=batch_booking, charge_bearer=charge_bearer)
+        return super().create_iso20022_credit_transfer(payments, payment_method_code, batch_booking=batch_booking)
 
     def _get_ReqdExctnDt_content(self, payment_date, payment_method_code):
         force_iso_20022_pain_09 = bool(self.env['ir.config_parameter'].sudo().get_param('account_iso20022.force_iso_20022_pain_09'))
@@ -70,12 +70,12 @@ class AccountJournal(models.Model):
                 for node_name, attr, size in [('StrtNm', 'street', 70), ('PstCd', 'zip', 140), ('TwnNm', 'city', 140), ('Ctry', 'country', 2)]:
                     if postal_address[attr]:
                         address_element = etree.SubElement(PstlAdr, node_name)
-                        address_element.text = self._sepa_sanitize_communication(postal_address[attr], size)
+                        address_element.text = sanitize_communication(postal_address[attr], size)
                 return PstlAdr
         return super()._get_PstlAdr(partner_id, payment_method_code)
 
-    def _get_CdtTrfTxInf(self, PmtInfId, payment, payment_method_code):
-        CdtTrfTxInf = super()._get_CdtTrfTxInf(PmtInfId, payment, payment_method_code)
+    def _get_CdtTrfTxInf(self, PmtInfId, payment, payment_method_code, include_charge_bearer=True):
+        CdtTrfTxInf = super()._get_CdtTrfTxInf(PmtInfId, payment, payment_method_code, include_charge_bearer)
         force_iso_20022_pain_09 = bool(self.env['ir.config_parameter'].sudo().get_param('account_iso20022.force_iso_20022_pain_09'))
         use_pain_09 = (
                 (payment_method_code == 'sepa_ct' and self.sepa_pain_version == "pain.001.001.09") or
@@ -95,7 +95,7 @@ class AccountJournal(models.Model):
             Cdtr.append(self._get_PstlAdr(partner, payment_method_code))
         return CdtTrfTxInf
 
-    def _get_RmtInf_content(self, ref, reference_type):
+    def _get_RmtInf_content(self, ref, reference_type=''):
         if reference_type == 'be':
             return self.get_strd_tree(ref, cd='SCOR', issr='BBA')
         elif reference_type == 'ch':
@@ -129,14 +129,10 @@ class AccountJournal(models.Model):
             RmtInf = super()._get_RmtInf(payment_method_code, payment)
             if (Ustrd := RmtInf.find("Ustrd")) is None:
                 Ustrd = etree.SubElement(RmtInf, "Ustrd")
-            memo = self._sepa_sanitize_communication(payment['memo'])
+            memo = sanitize_communication(payment['memo'])
             Ustrd.text = f"/A/ {memo}"
             return RmtInf
         return super()._get_RmtInf(payment_method_code, payment)
-
-    def _sepa_sanitize_communication(self, communication, size=140):
-        # DEPRECATED - to be removed in master
-        return sepa_mapping.sanitize_communication(communication, size)
 
     def _get_bic_tag(self, payment_method_code):
         force_iso_20022_pain_09 = bool(self.env['ir.config_parameter'].sudo().get_param('account_iso20022.force_iso_20022_pain_09'))

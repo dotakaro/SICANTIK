@@ -3,16 +3,15 @@
 # 	* industry_fsm
 # 
 # Translators:
-# Ryoko Tsuda <ryoko@quartile.co>, 2024
 # Wil Odoo, 2025
 # Junko Augias, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-27 13:54+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Junko Augias, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
@@ -37,6 +36,12 @@ msgstr "%(partner)sには同じ時間に %(number)sタスクあります。"
 msgid ""
 "'Field Service Report - %s - %s' % (object.name, object.partner_id.name)"
 msgstr "'フィールドサービスレポート - %s - %s' % (object.name, object.partner_id.name)"
+
+#. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_sharing_inherit_project_task_view_form
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
+msgid "(incl."
+msgstr "（以下を含む："
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
@@ -77,7 +82,7 @@ msgid ""
 "    Best regards,\n"
 "    <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
 "        <br/>\n"
-"        <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"        <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "    </t>\n"
 "</div>\n"
 "        "
@@ -92,13 +97,13 @@ msgstr ""
 "        <t t-out=\"object.name or ''\">ボイラー整備</t> は <t t-out=\"date_begin or ''\">05/31/2021 12:30:00</t> から <t t-out=\"date_end or ''\">05/31/2021 14:30:00</t>の予定です。\n"
 "    </t>\n"
 "    <t t-else=\"\">\n"
-"        <t t-out=\"object.name or ''\">ボイラー整備</t> が予定されました。\n"
+"        <t t-out=\"object.name or ''\">ボイラー整備</t> が予定されています。\n"
 "    </t>\n"
 "    <br/><br/>\n"
 "    宜しくお願い致します。\n"
 "    <t t-if=\"user.signature\" data-o-mail-quote-container=\"1\">\n"
 "        <br/>\n"
-"        <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"        <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "    </t>\n"
 "</div>\n"
 "        "
@@ -139,6 +144,11 @@ msgstr ""
 "updated.\" invisible=\"not partner_id or not is_task_phone_update\"/>"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
+msgid "<span class=\"o_stat_text text-wrap\">Customer Preview</span>"
+msgstr "<span class=\"o_stat_text text-wrap\">顧客プレビュー</span>"
+
+#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
 msgid ""
 "<span style=\"                             font-size: 10px;                             color: #fff;                             text-transform: uppercase;                             text-align: center;                             font-weight: bold; line-height: 20px;                             transform: rotate(45deg);                             width: 100px; height: auto; display: block;                             background: green;                             position: absolute;                             top: 19px; right: -21px; left: auto;                             padding: 0;\">\n"
@@ -160,11 +170,6 @@ msgid "<strong class=\"me-2\">Total</strong>"
 msgstr "<strong class=\"me-2\">合計</strong>"
 
 #. module: industry_fsm
-#: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_gantt_fsm
-msgid "<strong>Contact Number — </strong>"
-msgstr "<strong>連絡先番号 — </strong>"
-
-#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
 msgid "<strong>Customer: </strong>"
 msgstr "<strong>顧客: </strong>"
@@ -178,11 +183,6 @@ msgstr "<strong>作業者: </strong>"
 #: model:ir.model.constraint,message:industry_fsm.constraint_project_project_company_id_required_for_fsm_project
 msgid "A fsm project must be company restricted"
 msgstr "FSMプロジェクトには会社の制約が必要です。"
-
-#. module: industry_fsm
-#: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__active
-msgid "Active"
-msgstr "アクティブ"
 
 #. module: industry_fsm
 #: model:ir.ui.menu,name:industry_fsm.mail_activity_plan_menu_config_task
@@ -213,9 +213,20 @@ msgid "All Tasks Server Action"
 msgstr "全タスクサーバアクション"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_task.py:0
+msgid "All running timers should be linked to a timesheet and a task."
+msgstr "すべての稼働中のタイマーは、タイムシートおよびタスクにリンクされている必要があります。"
+
+#. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__allocated_hours
 msgid "Allocated Time"
 msgstr "割当時間"
+
+#. module: industry_fsm
+#: model:ir.model,name:industry_fsm.model_account_analytic_line
+msgid "Analytic Line"
+msgstr "分析行"
 
 #. module: industry_fsm
 #: model_terms:ir.actions.act_window,help:industry_fsm.project_task_user_action_report_fsm
@@ -259,10 +270,16 @@ msgid "By User"
 msgstr "ユーザ別"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
+msgid "Cancelled"
+msgstr "キャンセル済"
+
+#. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task__partner_city
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__partner_city
 msgid "City"
-msgstr "市"
+msgstr "市町村"
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.portal_task_sign_modal
@@ -285,6 +302,11 @@ msgid "Company"
 msgstr "会社"
 
 #. module: industry_fsm
+#: model:ir.model,name:industry_fsm.model_base_document_layout
+msgid "Company Document Layout"
+msgstr "会社文書レイアウト"
+
+#. module: industry_fsm
 #: model:ir.model,name:industry_fsm.model_res_config_settings
 msgid "Config Settings"
 msgstr "コンフィグ設定"
@@ -305,7 +327,12 @@ msgstr "確定"
 msgid ""
 "Confirm the <b>time spent</b> on your task. <i>Tip: note that the duration "
 "has automatically been rounded to 15 minutes.</i>"
-msgstr "タスクで <b>消費</b>を確認します。 <i>ヒント: 所要時間は自動的に15分に丸められています。</i>"
+msgstr "タスクに <b>費やした時間</b>を確認して下さい。 <i>ヒント: 所要時間は自動的に15分に丸められています。</i>"
+
+#. module: industry_fsm
+#: model:ir.model,name:industry_fsm.model_hr_timesheet_stop_timer_confirmation_wizard
+msgid "Confirm timesheet creation when stop timer"
+msgstr "タイマーを停止する際に、タイムシートの作成を確認してください"
 
 #. module: industry_fsm
 #: model:ir.model,name:industry_fsm.model_res_partner
@@ -313,7 +340,6 @@ msgid "Contact"
 msgstr "連絡先"
 
 #. module: industry_fsm
-#: model:ir.model.fields,field_description:industry_fsm.field_project_task__partner_phone
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_map_view_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_mobile_form
 msgid "Contact Number"
@@ -336,14 +362,19 @@ msgid "Create Date"
 msgstr "作成日"
 
 #. module: industry_fsm
-#: model:ir.model,name:industry_fsm.model_project_task_create_timesheet
-msgid "Create Timesheet from task"
-msgstr "タスクからタイムシートを作成"
+#: model:ir.model,website_form_label:industry_fsm.model_res_partner
+msgid "Create a Customer"
+msgstr "顧客を作成する"
 
 #. module: industry_fsm
 #: model:ir.actions.act_window,name:industry_fsm.open_create_project_fsm
 msgid "Create a Project"
 msgstr "プロジェクト作成"
+
+#. module: industry_fsm
+#: model:ir.model,website_form_label:industry_fsm.model_project_task
+msgid "Create a Task"
+msgstr "タスク作成"
 
 #. module: industry_fsm
 #: model:res.groups,name:industry_fsm.group_fsm_quotation_from_task
@@ -380,11 +411,6 @@ msgstr "作成日"
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__partner_id
 msgid "Customer"
 msgstr "顧客"
-
-#. module: industry_fsm
-#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
-msgid "Customer Preview"
-msgstr "カスタマープレビュー"
 
 #. module: industry_fsm
 #: model:ir.ui.menu,name:industry_fsm.fsm_menu_reporting_customer_ratings
@@ -433,9 +459,22 @@ msgid "Discard"
 msgstr "破棄"
 
 #. module: industry_fsm
+#: model:ir.model.fields,field_description:industry_fsm.field_account_analytic_line__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_base_document_layout__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_hr_timesheet_stop_timer_confirmation_wizard__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_ir_actions_report__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_ir_ui_menu__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_project_project__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task_recurrence__display_name
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard__display_name
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard_line__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task_type__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_report_industry_fsm_worksheet_custom__display_name
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_res_company__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:industry_fsm.field_res_partner__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -452,6 +491,12 @@ msgstr "フィールドサービスモジュールにタスクを表示し、開
 #: code:addons/industry_fsm/models/project_task.py:0
 msgid "Do you want to stop the running timers?"
 msgstr "タイマーを止めますか？"
+
+#. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
+msgid "Done"
+msgstr "完了"
 
 #. module: industry_fsm
 #: model:mail.template,description:industry_fsm.mail_template_data_task_report
@@ -481,6 +526,7 @@ msgstr "FSMタスク分析"
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task__is_fsm
 #: model:ir.ui.menu,name:industry_fsm.fsm_menu_root
 #: model:project.project,name:industry_fsm.fsm_project
+#: model:res.groups.privilege,name:industry_fsm.res_groups_privilege_field_service
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_view_form_inherit
 #: model_terms:ir.ui.view,arch_db:industry_fsm.res_config_settings_view_form
 msgid "Field Service"
@@ -534,6 +580,25 @@ msgid "Future Activities"
 msgstr "今後の活動"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_task.py:0
+msgid "GPS Coordinates: %(localisation_start)s (%(latitude)s, %(longitude)s)"
+msgstr "GPS座標: %(localisation_start)s (%(latitude)s, %(longitude)s)"
+
+#. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/wizard/hr_timesheet_stop_timer_confirmation_wizard.py:0
+msgid "GPS Coordinates: %(localisation_stop)s (%(latitude)s, %(longitude)s)"
+msgstr "GPS座標: %(localisation_stop)s (%(latitude)s, %(longitude)s)"
+
+#. module: industry_fsm
+#: model:ir.model.fields,field_description:industry_fsm.field_hr_timesheet_stop_timer_confirmation_wizard__allow_geolocation
+#: model:ir.model.fields,field_description:industry_fsm.field_project_project__allow_geolocation
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task__allow_geolocation
+msgid "Geolocation"
+msgstr "ジオロケーション"
+
+#. module: industry_fsm
 #. odoo-javascript
 #: code:addons/industry_fsm/static/src/js/tours/industry_fsm_tour.js:0
 msgid ""
@@ -542,18 +607,28 @@ msgid ""
 msgstr " <b>タイトル</b> <i>(例: ボイラー整備、エアコン設置など)</i>を付けて下さい。"
 
 #. module: industry_fsm
-#: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__total_hours_spent
-msgid "Hours By Task (Including Subtasks)"
-msgstr "タスクごとの時間 (サブタスク含む)"
-
-#. module: industry_fsm
+#: model:ir.model.fields,field_description:industry_fsm.field_account_analytic_line__id
+#: model:ir.model.fields,field_description:industry_fsm.field_base_document_layout__id
+#: model:ir.model.fields,field_description:industry_fsm.field_hr_timesheet_stop_timer_confirmation_wizard__id
+#: model:ir.model.fields,field_description:industry_fsm.field_ir_actions_report__id
+#: model:ir.model.fields,field_description:industry_fsm.field_ir_ui_menu__id
+#: model:ir.model.fields,field_description:industry_fsm.field_project_project__id
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task__id
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task_recurrence__id
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard__id
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard_line__id
+#: model:ir.model.fields,field_description:industry_fsm.field_project_task_type__id
+#: model:ir.model.fields,field_description:industry_fsm.field_report_industry_fsm_worksheet_custom__id
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__id
+#: model:ir.model.fields,field_description:industry_fsm.field_res_company__id
+#: model:ir.model.fields,field_description:industry_fsm.field_res_config_settings__id
+#: model:ir.model.fields,field_description:industry_fsm.field_res_partner__id
 msgid "ID"
 msgstr "ID"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
 #: model:project.task.type,name:industry_fsm.planning_project_stage_2
 msgid "In Progress"
 msgstr "進行中"
@@ -574,6 +649,11 @@ msgstr "無効な署名データ。"
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__message_is_follower
 msgid "Is Follower"
 msgstr "フォロー中　"
+
+#. module: industry_fsm
+#: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__is_template
+msgid "Is Template"
+msgstr "テンプレートか"
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
@@ -645,6 +725,19 @@ msgid "Line"
 msgstr "ライン"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_task.py:0
+#: code:addons/industry_fsm/wizard/hr_timesheet_stop_timer_confirmation_wizard.py:0
+msgid "Location error"
+msgstr "ロケーションエラー"
+
+#. module: industry_fsm
+#. odoo-javascript
+#: code:addons/industry_fsm/static/src/services/timer_geolocation_service.js:0
+msgid "Location error: %s"
+msgstr "ロケーションエラー: %s"
+
+#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.worksheet_custom_page
 msgid "Manage SME"
 msgstr "SMEを管理"
@@ -692,6 +785,11 @@ msgid "Milestones"
 msgstr "マイルストン"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_search_fsm
+msgid "My Activities"
+msgstr "自分の活動"
+
+#. module: industry_fsm
 #. odoo-python
 #: code:addons/industry_fsm/controllers/webmanifest.py:0
 msgid "My Calendar"
@@ -717,9 +815,20 @@ msgid "My Tasks in mobile Server Action"
 msgstr "自分のタスク モバイルサーバアクション内"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_project_fsm
+msgid "Name"
+msgstr "名称"
+
+#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.view_partner_address_form_industry_fsm
 msgid "Navigate To"
 msgstr "ナビゲーション"
+
+#. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
+msgid "New"
+msgstr "新規"
 
 #. module: industry_fsm
 #. odoo-python
@@ -735,12 +844,12 @@ msgstr "まだデータはありません！"
 #. module: industry_fsm
 #: model_terms:ir.actions.act_window,help:industry_fsm.project_project_action_only_fsm
 msgid "No projects found. Let's create one!"
-msgstr "プロジェクトは見つかりませんでした。作成しましょう！"
+msgstr "プロジェクトが見つかりません。作成しましょう!"
 
 #. module: industry_fsm
 #: model_terms:ir.actions.act_window,help:industry_fsm.project_task_type_action_fsm
 msgid "No stages found. Let's create one!"
-msgstr "ステージが見つかりません。作成しましょう！"
+msgstr "ステージが見つかりません。作成しましょう!"
 
 #. module: industry_fsm
 #: model_terms:ir.actions.act_window,help:industry_fsm.project_task_action_all_fsm
@@ -759,7 +868,7 @@ msgstr "ステージが見つかりません。作成しましょう！"
 #: model_terms:ir.actions.act_window,help:industry_fsm.project_task_action_to_schedule_fsm2
 #: model_terms:ir.actions.act_window,help:industry_fsm.project_tasks_action_fsm
 msgid "No tasks found. Let's create one!"
-msgstr "タスクが見つかりません。新しいタスクを作成しましょう！"
+msgstr "タスクが見つかりません。作成しましょう!"
 
 #. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__overtime
@@ -777,12 +886,16 @@ msgid "Personal Stage"
 msgstr "個人ステージ"
 
 #. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_project.py:0
 #: model:project.task.type,name:industry_fsm.planning_project_stage_1
 msgid "Planned"
 msgstr "予定済"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_sharing_inherit_project_task_view_form
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_list_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
 msgid "Planned Date"
 msgstr "予定日"
 
@@ -918,8 +1031,8 @@ msgstr "管理設定"
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_search_fsm
-msgid "Show all records which has next action date is before today"
-msgstr "次のアクションの日付が今日より前のすべてのレコードを表示"
+msgid "Show all records whose next activity date is past"
+msgstr "次回活動日が過去のすべてのレコードを表示"
 
 #. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.portal_task_sign_modal
@@ -1125,34 +1238,21 @@ msgid "Time Spent"
 msgstr "消費時間"
 
 #. module: industry_fsm
-#: model:ir.model.fields,field_description:industry_fsm.field_report_project_task_user_fsm__subtask_effective_hours
-msgid "Time Spent on Sub-Tasks"
-msgstr "サブタスク消費時間"
-
-#. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_res_config_settings__module_industry_fsm_sale
 msgid "Time and Material Invoicing"
 msgstr "タイムアンドマテリアル請求"
 
 #. module: industry_fsm
-#: model:ir.model.fields,help:industry_fsm.field_report_project_task_user_fsm__subtask_effective_hours
-msgid "Time spent on the sub-tasks (and their own sub-tasks) of this task."
-msgstr "このタスクのサブタスク(およびそれ自体のサブタスク)の消費時間"
-
-#. module: industry_fsm
-#: model:ir.model.fields,help:industry_fsm.field_report_project_task_user_fsm__total_hours_spent
-msgid "Time spent on this task, including its sub-tasks."
-msgstr "タスクに消費(サブタスクを含む)"
-
-#. module: industry_fsm
 #. odoo-python
+#: code:addons/industry_fsm/models/account_analytic_line.py:0
 #: code:addons/industry_fsm/models/project_task.py:0
 msgid "Timer started at: %(date)s %(time)s"
 msgstr "タイマー開始: %(date)s%(time)s"
 
 #. module: industry_fsm
 #. odoo-python
-#: code:addons/industry_fsm/wizard/project_task_create_timesheet.py:0
+#: code:addons/industry_fsm/models/account_analytic_line.py:0
+#: code:addons/industry_fsm/wizard/hr_timesheet_stop_timer_confirmation_wizard.py:0
 msgid "Timer stopped at: %(date)s %(time)s"
 msgstr "タイマー停止: %(date)s%(time)s"
 
@@ -1218,9 +1318,42 @@ msgid "Track the progress of your tasks from their creation to their closing."
 msgstr "作成からクローズまで、タスクの進捗を追跡しましょう。"
 
 #. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_view_form_inherit
+msgid "Track worker location when running the timer"
+msgstr "タイマー動作時に作業者のロケーションを追跡"
+
+#. module: industry_fsm
+#: model:ir.model.fields,help:industry_fsm.field_hr_timesheet_stop_timer_confirmation_wizard__allow_geolocation
+#: model:ir.model.fields,help:industry_fsm.field_project_project__allow_geolocation
+#: model:ir.model.fields,help:industry_fsm.field_project_task__allow_geolocation
+msgid "Track worker location when running the timer."
+msgstr "タイマー動作時に作業者のロケーションを追跡します。"
+
+#. module: industry_fsm
 #: model_terms:ir.ui.view,arch_db:industry_fsm.project_task_view_search_fsm
 msgid "Unread Messages"
 msgstr "未読メッセージ"
+
+#. module: industry_fsm
+#: model:ir.model.fields,help:industry_fsm.field_project_task__display_name
+msgid ""
+"Use these keywords in the title to set new tasks:\n"
+"\n"
+"        30h Allocate 30 hours to the task\n"
+"        #tags Set tags on the task\n"
+"        @user Assign the task to a user\n"
+"        ! Set the task a high priority\n"
+"\n"
+"        Make sure to use the right format and order e.g. Improve the configuration screen 5h #feature #v16 @Mitchell !"
+msgstr ""
+"新しいタスクを設定するのにこれらのキーワードを使いましょう:\n"
+"\n"
+"       30h タスクに30時間を割り当てる\n"
+"      #タグ タスクにタグを設定する\n"
+"        @ユーザ タスクをユーザーに割り当てる \n"
+"        ! タスクに高い優先順位を設定\n"
+"\n"
+"        正しいフォーマットと順序を使うようにしましょう。 例: 設定画面の改善 5h #feature #v16 @Mitchell !"
 
 #. module: industry_fsm
 #: model:res.groups,name:industry_fsm.group_fsm_user
@@ -1231,6 +1364,13 @@ msgstr "ユーザ"
 #: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
 msgid "View Itinerary"
 msgstr "日程表を見る"
+
+#. module: industry_fsm
+#. odoo-python
+#: code:addons/industry_fsm/models/project_task.py:0
+#: code:addons/industry_fsm/wizard/hr_timesheet_stop_timer_confirmation_wizard.py:0
+msgid "View on Map"
+msgstr "地図上で表示"
 
 #. module: industry_fsm
 #: model:ir.model.fields,field_description:industry_fsm.field_project_task_stop_timers_wizard_line__wizard_id
@@ -1298,6 +1438,16 @@ msgstr "例: ボイラー交換"
 #: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
 msgid "is FSM?"
 msgstr "FSMか？"
+
+#. module: industry_fsm
+#: model_terms:ir.ui.view,arch_db:industry_fsm.project_sharing_inherit_project_task_view_form
+#: model_terms:ir.ui.view,arch_db:industry_fsm.view_task_form2_inherit
+msgid ""
+"on\n"
+"                        <span class=\"fw-bold text-dark\"> Sub-tasks</span>)"
+msgstr ""
+"　\n"
+"                            <span class=\"fw-bold text-dark\"> サブタスク</span>)上"
 
 #. module: industry_fsm
 #: model:ir.actions.server,name:industry_fsm.fsm_customer_ratings_server_action

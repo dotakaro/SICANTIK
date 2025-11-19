@@ -2,10 +2,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 
 class WebsiteVisitor(models.Model):
-    _name = 'website.visitor'
     _inherit = 'website.visitor'
 
     event_track_push_enabled_ids = fields.Many2many(
@@ -28,10 +28,10 @@ class WebsiteVisitor(models.Model):
 
     def _search_event_track_push_enabled_ids(self, operator, operand):
         if operator == "not in":
-            raise NotImplementedError(self.env._("Unsupported 'Not In' operation on track push enabled tracks"))
+            raise UserError(self.env._("Unsupported 'Not In' operation on track push enabled tracks"))
 
-        track_visitors = self.env['event.track.visitor'].sudo().search([
+        subquery = self.env['event.track.visitor'].sudo()._search([
             ('track_id', operator, operand),
             ('is_blacklisted', '=', True)
         ])
-        return [('id', 'not in', track_visitors.visitor_id.ids)]
+        return [('id', 'not in', subquery.subselect('visitor_id'))]

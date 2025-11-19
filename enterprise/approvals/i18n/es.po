@@ -3,23 +3,28 @@
 # 	* approvals
 # 
 # Translators:
-# Martin Trigaux, 2024
-# Wil Odoo, 2024
 # Larissa Manderfeld, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Larissa Manderfeld, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Spanish (https://app.transifex.com/odoo/teams/41243/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: es\n"
 "Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+msgid "%s (copy)"
+msgstr "%s (copia)"
 
 #. module: approvals
 #: model:ir.actions.report,print_report_name:approvals.action_report_approval_request
@@ -63,6 +68,7 @@ msgstr "Acción requerida"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_category__active
+#: model:ir.model.fields,field_description:approvals.field_approval_request__active
 msgid "Active"
 msgstr "Activo"
 
@@ -85,6 +91,11 @@ msgstr "Decoración de Actividad de Excepción"
 #: model:ir.model.fields,field_description:approvals.field_approval_request__activity_state
 msgid "Activity State"
 msgstr "Estado de la actividad"
+
+#. module: approvals
+#: model:ir.model,name:approvals.model_mail_activity_type
+msgid "Activity Type"
+msgstr "Tipo de actividad"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_request__activity_type_icon
@@ -147,14 +158,33 @@ msgid "Approval"
 msgstr "Aprobación"
 
 #. module: approvals
+#: model:ir.actions.act_window,name:approvals.approval_category_action
+#: model:ir.ui.menu,name:approvals.approvals_category_menu_config
+msgid "Approval Categories"
+msgstr "Categorías de aprobación"
+
+#. module: approvals
 #: model:ir.model,name:approvals.model_approval_category
+#: model:ir.model.fields,field_description:approvals.field_approval_category_approver__category_id
+#: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
 msgid "Approval Category"
 msgstr "Categoría de aprobación"
+
+#. module: approvals
+#: model:ir.model,name:approvals.model_approval_category_approver
+msgid "Approval Category Approver"
+msgstr "Aprobador de la categoría de aprobación"
+
+#. module: approvals
+#: model:ir.model.fields,field_description:approvals.field_approval_category__approval_properties_definition
+msgid "Approval Properties"
+msgstr "Propiedades de aprobación"
 
 #. module: approvals
 #: model:ir.actions.report,name:approvals.action_report_approval_request
 #: model:ir.model,name:approvals.model_approval_request
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__approval_request_id
+#: model:ir.model.fields,field_description:approvals.field_mail_activity__approval_request_id
 msgid "Approval Request"
 msgstr "Solicitud de aprobación"
 
@@ -171,27 +201,15 @@ msgstr "Asunto de aprobación"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_category__approval_type
-#: model:ir.model.fields,field_description:approvals.field_approval_category_approver__category_id
 #: model:ir.model.fields,field_description:approvals.field_approval_request__approval_type
-#: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
 msgid "Approval Type"
 msgstr "Tipo de aprobación"
 
 #. module: approvals
-#: model:ir.model,name:approvals.model_approval_category_approver
-msgid "Approval Type Approver"
-msgstr "Aprobador del tipo de aprobación"
-
-#. module: approvals
 #: model:ir.ui.menu,name:approvals.approvals_menu_root
+#: model:res.groups.privilege,name:approvals.res_groups_privilege_approvals
 msgid "Approvals"
 msgstr "Aprobaciones"
-
-#. module: approvals
-#: model:ir.actions.act_window,name:approvals.approval_category_action
-#: model:ir.ui.menu,name:approvals.approvals_category_menu_config
-msgid "Approvals Types"
-msgstr "Tipos de aprobación"
 
 #. module: approvals
 #: model:ir.actions.act_window,name:approvals.approval_request_action_to_review
@@ -206,7 +224,7 @@ msgstr "Aprobaciones a revisar"
 
 #. module: approvals
 #. odoo-javascript
-#: code:addons/approvals/static/src/web/activity/approval.xml:0
+#: code:addons/approvals/static/src/web/approval.xml:0
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_kanban
 msgid "Approve"
@@ -223,6 +241,7 @@ msgstr "Aprobado"
 
 #. module: approvals
 #: model:ir.model,name:approvals.model_approval_approver
+#: model:ir.model.fields,field_description:approvals.field_mail_activity__approver_id
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 msgid "Approver"
 msgstr "Aprobador"
@@ -276,6 +295,8 @@ msgstr "Archivar"
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_kanban
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_search
+#: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
+#: model_terms:ir.ui.view,arch_db:approvals.approval_search_view_search
 msgid "Archived"
 msgstr "Archivado"
 
@@ -365,7 +386,6 @@ msgid "Car Rental Application"
 msgstr "Solicitud de alquiler de coches"
 
 #. module: approvals
-#: model:ir.model.fields,field_description:approvals.field_approval_product_line__product_uom_category_id
 #: model:ir.model.fields,field_description:approvals.field_approval_request__category_id
 #: model_terms:ir.ui.view,arch_db:approvals.approval_search_view_search
 msgid "Category"
@@ -415,15 +435,6 @@ msgstr "Contacto:"
 #: model:approval.category,name:approvals.approval_category_data_contract_approval
 msgid "Contract Approval"
 msgstr "Aprobación del contrato"
-
-#. module: approvals
-#: model:ir.model.fields,help:approvals.field_approval_product_line__product_uom_category_id
-msgid ""
-"Conversion between Units of Measure can only occur if they belong to the "
-"same category. The conversion will be made based on the ratios."
-msgstr ""
-"La conversión entre las unidades de medidas sólo puede ocurrir si pertenecen"
-" a la misma categoría. La conversión se basará en los índices establecidos."
 
 #. module: approvals
 #: model_terms:ir.actions.act_window,help:approvals.product_product_action
@@ -509,8 +520,11 @@ msgstr "Descripción"
 #: model:ir.model.fields,field_description:approvals.field_approval_category_approver__display_name
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__display_name
 #: model:ir.model.fields,field_description:approvals.field_approval_request__display_name
+#: model:ir.model.fields,field_description:approvals.field_ir_attachment__display_name
+#: model:ir.model.fields,field_description:approvals.field_mail_activity__display_name
+#: model:ir.model.fields,field_description:approvals.field_mail_activity_type__display_name
 msgid "Display Name"
-msgstr "Nombre mostrado"
+msgstr "Nombre para mostrar"
 
 #. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
@@ -578,6 +592,11 @@ msgstr "Seguidores (Contactos)"
 #: model:ir.model.fields,help:approvals.field_approval_request__activity_type_icon
 msgid "Font awesome icon e.g. fa-tasks"
 msgstr "Icono de Font Awesome p. ej. fa-tasks"
+
+#. module: approvals
+#: model:ir.actions.server,name:approvals.model_approval_request_approve_admin
+msgid "Force Approval"
+msgstr "Forzar aprobación"
 
 #. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
@@ -681,6 +700,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:approvals.field_approval_category_approver__id
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__id
 #: model:ir.model.fields,field_description:approvals.field_approval_request__id
+#: model:ir.model.fields,field_description:approvals.field_ir_attachment__id
+#: model:ir.model.fields,field_description:approvals.field_mail_activity__id
+#: model:ir.model.fields,field_description:approvals.field_mail_activity_type__id
 msgid "ID"
 msgstr "ID"
 
@@ -1079,6 +1101,11 @@ msgid "Products"
 msgstr "Productos"
 
 #. module: approvals
+#: model:ir.model.fields,field_description:approvals.field_approval_request__approval_properties
+msgid "Properties"
+msgstr "Propiedades"
+
+#. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__quantity
 #: model:ir.model.fields,field_description:approvals.field_approval_request__quantity
 #: model_terms:ir.ui.view,arch_db:approvals.approval_category_view_form
@@ -1109,7 +1136,7 @@ msgstr "Referencia:"
 
 #. module: approvals
 #. odoo-javascript
-#: code:addons/approvals/static/src/web/activity/approval.xml:0
+#: code:addons/approvals/static/src/web/approval.xml:0
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_form
 #: model_terms:ir.ui.view,arch_db:approvals.approval_request_view_kanban
 msgid "Refuse"
@@ -1270,8 +1297,8 @@ msgstr "Referencia de prueba"
 #. module: approvals
 #. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
-msgid "The request %(request_name)s for %(request_owner)s has been accepted"
-msgstr "La solicitud %(request_name)s para %(request_owner)s ha sido aceptada"
+msgid "The request %(request_name)s for %(request_owner)s has been approved"
+msgstr "La solicitud %(request_name)s para %(request_owner)s ha sido aprobada"
 
 #. module: approvals
 #. odoo-python
@@ -1285,10 +1312,10 @@ msgstr ""
 #: code:addons/approvals/models/approval_request.py:0
 msgid ""
 "The request created on %(create_date)s by %(request_owner)s has been "
-"accepted."
+"approved."
 msgstr ""
 "La solicitud creada el %(create_date)s por %(request_owner)s ha sido "
-"aceptada."
+"aprobada."
 
 #. module: approvals
 #. odoo-python
@@ -1299,6 +1326,12 @@ msgid ""
 msgstr ""
 "La solicitud creada el %(create_date)s por %(request_owner)s ha sido "
 "rechazada."
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+msgid "The request has been approved by an Approval Officer"
+msgstr "La solicitud ha sido aprobada por un encargado de aprobación"
 
 #. module: approvals
 #: model:res.groups,comment:approvals.group_approval_user
@@ -1342,8 +1375,6 @@ msgstr ""
 "lista de aprobadores."
 
 #. module: approvals
-#. odoo-javascript
-#: code:addons/approvals/static/src/web/activity/approval.xml:0
 #: model:ir.model.fields.selection,name:approvals.selection__approval_approver__status__pending
 #: model:ir.model.fields.selection,name:approvals.selection__approval_request__user_status__pending
 msgid "To Approve"
@@ -1371,18 +1402,14 @@ msgstr "Desarchivar"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_product_line__product_uom_id
-msgid "Unit of Measure"
-msgstr "Unidad de medida"
+#: model_terms:ir.ui.view,arch_db:approvals.report_aprroval_request_document
+msgid "Unit"
+msgstr "Unidad"
 
 #. module: approvals
 #: model_terms:ir.ui.view,arch_db:approvals.report_aprroval_request_document
 msgid "Units"
 msgstr "Unidades"
-
-#. module: approvals
-#: model_terms:ir.ui.view,arch_db:approvals.report_aprroval_request_document
-msgid "UoM"
-msgstr "UdM"
 
 #. module: approvals
 #: model:ir.model.fields,field_description:approvals.field_approval_approver__user_id
@@ -1425,6 +1452,18 @@ msgstr "Anular"
 #. module: approvals
 #. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
+msgid "You are not allowed to approved or refused your own approval."
+msgstr "No tiene permiso para aprobar o rechazar su propia aprobación."
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+msgid "You can't delete an approved request. Archive it instead."
+msgstr "No puede eliminat una solicitud aprobada. Archívela."
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
 msgid "You cannot approve before the previous approver."
 msgstr "No puede aprobarla antes del aprobador anterior."
 
@@ -1449,6 +1488,12 @@ msgstr ""
 #. module: approvals
 #. odoo-python
 #: code:addons/approvals/models/approval_request.py:0
+msgid "You do not have the rights to execute that action."
+msgstr "No tiene los derechos para ejecutar esa acción."
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
 msgid "You have to add at least %s approvers to confirm your request."
 msgstr "Debe añadir al menos %s aprobadores para confirmar su solicitud."
 
@@ -1457,6 +1502,12 @@ msgstr "Debe añadir al menos %s aprobadores para confirmar su solicitud."
 #: code:addons/approvals/models/approval_request.py:0
 msgid "You have to attach at least one document."
 msgstr "Debe adjuntar al menos un documento."
+
+#. module: approvals
+#. odoo-python
+#: code:addons/approvals/models/approval_request.py:0
+msgid "You must cancel and then back to draft the approval first."
+msgstr "Primero debe cancelar y volver a borrador la aprobación."
 
 #. module: approvals
 #: model_terms:ir.actions.act_window,help:approvals.product_product_action

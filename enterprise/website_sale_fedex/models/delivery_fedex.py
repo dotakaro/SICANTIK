@@ -7,7 +7,7 @@ from odoo import fields, models
 from .fedex_locations_request import FEDEXLocationsRequest
 
 
-class ProviderFedex(models.Model):
+class DeliveryCarrier(models.Model):
     _inherit = 'delivery.carrier'
 
     fedex_use_locations = fields.Boolean(string='Use Fedex Locations', help='Allows the ecommerce user to choose a pick-up point as delivery address.')
@@ -68,7 +68,7 @@ class ProviderFedex(models.Model):
 
     def _fedex_update_srm(self, srm, request_type, order=None, picking=None):
         """Add alternate delivery address to the shipment."""
-        res = super(ProviderFedex, self)._fedex_update_srm(srm, request_type, order, picking)
+        res = super()._fedex_update_srm(srm, request_type, order, picking)
         if picking:
             order = picking.sale_id
         if order and order.pickup_location_data:

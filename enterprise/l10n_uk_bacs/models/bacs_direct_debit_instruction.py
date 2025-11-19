@@ -7,7 +7,8 @@ from odoo import api, models, fields, _
 
 from odoo.exceptions import UserError, ValidationError
 
-class BACSDirectDebitInstruction(models.Model):
+
+class BacsDdi(models.Model):
     """ A class containing the data of a Direct Debit Instruction (DDI) sent by a customer to
     give their consent to a company to collect the payments associated with their invoices
     using BACS Direct Debit.
@@ -21,7 +22,10 @@ class BACSDirectDebitInstruction(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'BACS Direct Debit Instruction'
 
-    _sql_constraints = [('name_unique', 'unique(name)', "Direct Debit Instruction identifier must be unique! Please choose another one.")]
+    _name_unique = models.Constraint(
+        'unique(name)',
+        "Direct Debit Instruction identifier must be unique! Please choose another one.",
+    )
 
 
     name = fields.Char(string='Identifier', required=True, help="The unique identifier of this DDI.", default=lambda self: datetime.now().strftime('%f%S%M%H%d%m%y'), copy=False)
@@ -81,7 +85,7 @@ class BACSDirectDebitInstruction(models.Model):
 
     def _compute_from_moves(self):
         ''' Retrieve the invoices reconciled to the payments through the reconciliation (account.partial.reconcile). '''
-        stored_ddis = self.mapped('id')
+        stored_ddis = self.ids
         if not stored_ddis:
             self.paid_invoices_len = 0
             self.payments_len = 0

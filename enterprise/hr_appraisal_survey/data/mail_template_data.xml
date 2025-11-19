@@ -4,7 +4,7 @@
         <record id="mail_template_appraisal_ask_feedback" model="mail.template">
             <field name="name">Appraisal: Ask Feedback</field>
             <field name="model_id" ref="model_survey_user_input"/>
-            <field name="subject">Take part in {{ object.employee_id.name or 'this' }} appraisal</field>
+            <field name="subject">Take part in {{ ctx.get('employee_id') and ctx['employee_id'].name or 'this' }} appraisal</field>
             <field name="description">Sent to employees to gather appraisal feedback</field>
             <field name="body_html" type="html">
                 <t t-set="logged_user" t-value="ctx.get('logged_user')"/>
@@ -22,7 +22,7 @@
                         <br/><br/>
                         <div style="margin: 16px 0px 16px 0px; text-align: center;">
                             <a t-att-href="object.get_start_url()"
-                                style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                                t-attf-style="background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;">
                                 Give your feedback
                             </a>
                         </div>
@@ -30,6 +30,7 @@
                 </div>
             </field>
             <field name="auto_delete" eval="True"/>
+            <field name="use_default_to" eval="False"/>
         </record>
     </data>
 </odoo>

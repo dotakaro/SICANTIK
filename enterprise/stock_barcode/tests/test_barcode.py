@@ -13,24 +13,20 @@ class TestBarcodeClientAction(HttpCase):
         searched by its raw barcode even if GS1 nomenclature is used.
         """
         Product = self.env['product.product']
-        product_category_all = self.env.ref('product.product_category_all')
         # Creates three products.
         product1 = Product.create({
             'name': 'product1',
             'barcode': '01304510',
-            'categ_id': product_category_all.id,
             'is_storable': True,
         })
         product2 = Product.create({
             'name': 'product2',
             'barcode': '73411048',
-            'categ_id': product_category_all.id,
             'is_storable': True,
         })
         product3 = Product.create({
             'name': 'product3',
             'barcode': '00000073411048',  # Ambiguous with the product2 barcode.
-            'categ_id': product_category_all.id,
             'is_storable': True,
         })
 
@@ -74,7 +70,7 @@ class TestBarcodeClientAction(HttpCase):
 
     def test_filter_picking_by_package_gs1(self):
         grp_pack = self.env.ref('stock.group_tracking_lot')
-        self.env.user.write({'groups_id': [(3, grp_pack.id)]})
+        self.env.user.write({'group_ids': [(3, grp_pack.id)]})
 
         Package = self.env['stock.quant.package']
         # Creates three packages.
@@ -207,7 +203,6 @@ class TestBarcodeClientAction(HttpCase):
             'product_id': product.id,
         })
 
-
         # Searches while using the default barcode nomenclature.
         lot = self.env['stock.lot'].search([('name', '=', 'lot1')])
         self.assertEqual(len(lot), 1, "Lot should be found when searching by its barcode")
@@ -217,6 +212,7 @@ class TestBarcodeClientAction(HttpCase):
 
         # Searches while using the GS1 barcode nomenclature.
         self.env.company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
+        self.assertFalse(self.env['stock.lot'].search([('name', 'in', [False])]))
         for operator in ['=', 'ilike']:
             lot = self.env['stock.lot'].search([('name', operator, '10lot1')])
             self.assertEqual(len(lot), 1, "Lot should still be found when searching by its raw barcode even if GS1 nomenclature is active")
@@ -244,6 +240,7 @@ class TestBarcodeClientAction(HttpCase):
             self.assertTrue(lot1 in lots and lot2 in lots, "Lot lenght is variable so we can't trim it")
 
     def test_filter_on_barcode(self):
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_production_lot').id)]})
         product = self.env['product.product'].create({
             'name': 'product1',
             'barcode': '01304510',
@@ -266,7 +263,6 @@ class TestBarcodeClientAction(HttpCase):
                 'picking_type_id': warehouse.out_type_id.id,
                 'location_id': warehouse.lot_stock_id.id,
                 'location_dest_id': customer_loc.id,
-                'name': 'Test lot filter',
                 'product_id': product.id,
                 'product_uom_qty': 1,
                 'product_uom': product.uom_id.id,
@@ -277,3 +273,20 @@ class TestBarcodeClientAction(HttpCase):
 
         action = self.env['stock.picking'].with_context(active_id=warehouse.out_type_id.id).filter_on_barcode(lot.name)
         self.assertEqual(action['action']['context']['search_default_lot_id'], lot.id)
+
+    def test_add_and_remove_barcode_in_product(self):
+        """
+        Tests product creation with default GS1 nomenclature, ensuring barcode is saved,
+        and removed correctly.
+        """
+        company = self.env.company
+        company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
+
+        product = self.env['product.product'].create({
+            'name': 'Test Product',
+            'barcode': '0101234567890128',
+        })
+        self.assertEqual(product.barcode, '0101234567890128', "The barcode should be saved correctly.")
+
+        product.write({'barcode': False})
+        self.assertFalse(product.barcode)

@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { AbstractMacro } from "@knowledge/macros/abstract_macro";
 import { dragAndDrop } from "@knowledge/macros/utils";
 
@@ -97,7 +95,7 @@ export class AttachToMessageMacro extends AbstractMacro {
                 trigger: () => {
                     this.validatePage();
                     return this.getFirstVisibleElement(
-                        ".o-mail-Composer-attachFiles:not([disabled])"
+                        `.o-mail-Composer button[name="upload-files"]:not([disabled])`
                     );
                 },
                 action: dragAndDrop.bind(this, "dragenter", this.data.dataTransfer),

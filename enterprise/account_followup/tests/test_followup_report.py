@@ -289,23 +289,6 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
         self.assertTrue(mail, "The payment reminder email should have been sent to the invoice partner.")
         mail.unlink()
 
-        # Testing followup partner priority
-
-        followup_partner = Partner.create({
-            'name' : "Child contact followup",
-            'type' : "followup",
-            'email' : "test-followup@example.com",
-            'parent_id': self.partner_a.id,
-        })
-
-        self.partner_a._compute_unpaid_invoices()
-        with patch.object(type(self.env['mail.mail']), 'unlink', lambda self: None):
-            with patch.object(self.env.registry['account.report'], 'export_to_pdf', autospec=True, side_effect=lambda *args, **kwargs: {'file_name': 'fake_partner_ledger.pdf', 'file_content': b'', 'file_type': 'pdf'}):
-                self.env['account.followup.report']._send_email(options)
-
-        mail = self.env['mail.mail'].search([('recipient_ids', '=', followup_partner.id)])
-        self.assertTrue(mail, "The payment reminder email should have been sent to the followup partner.")
-
     def test_followup_invoice_no_amount(self):
         # Init options.
         report = self.env['account.followup.report']
@@ -552,7 +535,7 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
             self.assertEqual(wizard.render_model, "res.partner")
 
     def test_followup_report_with_levels_on_main_company(self):
-        cron = self.env.ref('account_followup.ir_cron_auto_post_draft_entry')
+        cron = self.env.ref('account_followup.ir_cron_follow_up')
 
         self.env['account_followup.followup.line'].create([{
             'company_id': self.company_data['company'].id,
@@ -583,7 +566,8 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
         with (
             freeze_time('2022-01-10'),
             patch.object(self.env.registry['res.partner'], '_send_followup') as patched,
-            patch.object(self.env.registry['ir.actions.report'], '_run_wkhtmltopdf', return_value=b"0")
+            self.enter_registry_test_mode(),
+            patch.object(self.env.registry['ir.actions.report'], '_run_wkhtmltopdf', return_value=b"0"),
         ):
             cron.method_direct_trigger()
             # For the same reason we clear the cache in assertPartnerFollowup, to avoid this test change the state of the cache,
@@ -597,7 +581,7 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
         self.assertEqual(count_mail, 1)
 
     def test_followup_report_with_levels_on_one_branch(self):
-        cron = self.env.ref('account_followup.ir_cron_auto_post_draft_entry')
+        cron = self.env.ref('account_followup.ir_cron_follow_up')
 
         branch_a, branch_b = self.env['res.company'].create([{
             'name': 'Branch number 1',
@@ -650,7 +634,8 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
         with (
             freeze_time('2022-01-10'),
             patch.object(self.env.registry['res.partner'], '_send_followup') as patched,
-            patch.object(self.env.registry['ir.actions.report'], '_run_wkhtmltopdf', return_value=b"0")
+            self.enter_registry_test_mode(),
+            patch.object(self.env.registry['ir.actions.report'], '_run_wkhtmltopdf', return_value=b"0"),
         ):
             cron.method_direct_trigger()
             # For the same reason we clear the cache in assertPartnerFollowup, to avoid this test change the state of the cache,
@@ -664,7 +649,7 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
         self.assertEqual(count_mail, 1)
 
     def test_followup_report_with_levels_on_branches_and_main_company(self):
-        cron = self.env.ref('account_followup.ir_cron_auto_post_draft_entry')
+        cron = self.env.ref('account_followup.ir_cron_follow_up')
 
         branch_a, branch_b = self.env['res.company'].create([{
             'name': 'Branch number 1',
@@ -752,7 +737,8 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
         with (
             freeze_time('2022-01-10'),
             patch.object(self.env.registry['res.partner'], '_send_followup') as patched,
-            patch.object(self.env.registry['ir.actions.report'], '_run_wkhtmltopdf', return_value=b"0")
+            self.enter_registry_test_mode(),
+            patch.object(self.env.registry['ir.actions.report'], '_run_wkhtmltopdf', return_value=b"0"),
         ):
             cron.method_direct_trigger()
             # For the same reason we clear the cache in assertPartnerFollowup, to avoid this test change the state of the cache,
@@ -862,7 +848,7 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
             self.partner_a.action_manually_process_automatic_followups()
 
         sent_attachments = self.env['mail.message'].search([('partner_ids', '=', self.partner_a.id)]).attachment_ids
-        self.assertEqual(sent_attachments.mapped('name'), [f'{self.partner_a.name} - fake_partner_ledger.pdf', 'some_attachment.pdf'])
+        self.assertEqual(sent_attachments.mapped('name'), ['some_attachment.pdf', f'{self.partner_a.name} - fake_partner_ledger.pdf'])
 
     def test_manual_followup_report_invoices_removed(self):
         followup_line = self.env['account_followup.followup.line'].create({
@@ -949,3 +935,64 @@ class TestAccountFollowupReports(TestAccountReportsCommon, TestAccountFollowupCo
 
         sent_attachments = self.env['mail.message'].search([('partner_ids', '=', self.partner_a.id)]).attachment_ids
         self.assertEqual(sent_attachments.mapped('name'), [f'{self.partner_a.name} - fake_partner_ledger.pdf'])
+
+    def test_followup_report_with_entries(self):
+        """
+            Entries shouldn't have a due date or be added to total_overdue on the followup report and on the partner.
+        """
+        report = self.env['account.followup.report']
+        options = {
+            'partner_id': self.partner_a.id,
+        }
+        with freeze_time('2016-01-02'):
+            invoice = self.env['account.move'].create({
+                'move_type': 'out_invoice',
+                'invoice_date': '2016-01-01',
+                'invoice_date_due': '2016-01-01',
+                'invoice_payment_term_id': False,
+                'partner_id': self.partner_a.id,
+                'invoice_line_ids': [Command.create({
+                    'quantity': 1,
+                    'price_unit': 300,
+                    'tax_ids': [],
+                })]
+            })
+            invoice.action_post()
+
+            entry = self.env['account.move'].create({
+                'move_type': 'entry',
+                'date': fields.Date.from_string('2016-01-02'),
+                'partner_id': self.partner_a.id,
+                'invoice_line_ids': [
+                    Command.create({
+                        'name': 'line1',
+                        'account_id': self.company_data['default_account_receivable'].id,
+                        'debit': 500.0,
+                        'credit': 0.0,
+                    }),
+                    Command.create({
+                        'name': 'counterpart line',
+                        'account_id': self.company_data['default_account_revenue'].id,
+                        'debit': 0.0,
+                        'credit': 500.0,
+                    })
+                ]
+            })
+            entry.action_post()
+
+        with freeze_time('2016-01-15'):
+            self.assertLinesValues(
+                # pylint: disable=C0326
+                report._get_followup_report_lines(options),
+                #   Name                                    Date,           Due Date,       Doc.      Total Due
+                [   0,                                      1,              2,              3,        5],
+                [
+                    ('MISC/2016/01/0001',                   '01/02/2016',   '',             '',       '$\xa0500.00'),
+                    ('INV/2016/00001',                      '01/01/2016',   '01/01/2016',   '',       '$\xa0300.00'),
+                    ('',                                    '',             '',             '',       '$\xa0800.00'),
+                    ('',                                    '',             '',             '',       '$\xa0300.00'),
+                ],
+                options,
+            )
+            self.assertEqual(self.partner_a.total_due, 800)
+            self.assertEqual(self.partner_a.total_overdue, 300)

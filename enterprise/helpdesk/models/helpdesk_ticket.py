@@ -2,12 +2,16 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import ast
+from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, Command, fields, models, tools, _
-from odoo.exceptions import AccessError
+from odoo.fields import Domain
 from odoo.osv import expression
+from odoo.tools import LazyTranslate
 from odoo.addons.web.controllers.utils import clean_action
+
+_lt = LazyTranslate(__name__)
 
 TICKET_PRIORITY = [
     ('0', 'Low priority'),
@@ -16,10 +20,13 @@ TICKET_PRIORITY = [
     ('3', 'Urgent'),
 ]
 
+
 class HelpdeskTicket(models.Model):
     _name = 'helpdesk.ticket'
     _description = 'Helpdesk Ticket'
     _order = 'priority desc, id desc'
+    _mail_defaults_to_email = True
+    _mail_thread_customer = True
     _primary_email = 'partner_email'
     _inherit = [
         'portal.mixin',
@@ -33,13 +40,13 @@ class HelpdeskTicket(models.Model):
 
     @api.model
     def default_get(self, fields):
-        result = super(HelpdeskTicket, self).default_get(fields)
+        result = super().default_get(fields)
         if result.get('team_id') and fields:
             team = self.env['helpdesk.team'].browse(result['team_id'])
-            if 'user_id' in fields and 'user_id' not in result:  # if no user given, deduce it from the team
-                result['user_id'] = team._determine_user_to_assign()[team.id].id
             if 'stage_id' in fields and 'stage_id' not in result:  # if no stage given, deduce it from the team
                 result['stage_id'] = team._determine_stage()[team.id].id
+            if 'user_id' in fields and 'user_id' not in result and ('stage_id' in fields and not self.env['helpdesk.stage'].browse(result['stage_id']).fold):  # if no user given, deduce it from the team
+                result['user_id'] = team._determine_user_to_assign({team: 1})[team.id][0]
         return result
 
     def _default_team_id(self):
@@ -81,7 +88,8 @@ class HelpdeskTicket(models.Model):
     user_id = fields.Many2one(
         'res.users', string='Assigned to', compute='_compute_user_and_stage_ids', store=True,
         readonly=False, tracking=True,
-        domain=lambda self: [('groups_id', 'in', self.env.ref('helpdesk.group_helpdesk_user').id)])
+        domain=lambda self: [('all_group_ids', 'in', self.env.ref('helpdesk.group_helpdesk_user').id)],
+        falsy_value_label=_lt("👤 Unassigned"))
     properties = fields.Properties(
         'Properties', definition='team_id.ticket_properties',
         copy=True)
@@ -114,7 +122,7 @@ class HelpdeskTicket(models.Model):
     sla_status_ids = fields.One2many('helpdesk.sla.status', 'ticket_id', string="SLA Status")
     sla_reached_late = fields.Boolean("Has SLA reached late", compute='_compute_sla_reached_late', compute_sudo=True, store=True)
     sla_reached = fields.Boolean("Has SLA reached", compute='_compute_sla_reached', compute_sudo=True, store=True)
-    sla_deadline = fields.Datetime("SLA Deadline", compute='_compute_sla_deadline', compute_sudo=True, store=True)
+    sla_deadline = fields.Datetime("SLA Deadline", compute='_compute_sla_deadline', compute_sudo=True, store=True, falsy_value_label=_lt("Deadline reached"))
     sla_deadline_hours = fields.Float("Working Hours until SLA Deadline", compute='_compute_sla_deadline', compute_sudo=True, store=True, aggregator="avg")
     sla_fail = fields.Boolean("Failed SLA Policy", compute='_compute_sla_fail', search='_search_sla_fail')
     sla_success = fields.Boolean("Success SLA Policy", compute='_compute_sla_success', search='_search_sla_success')
@@ -149,7 +157,7 @@ class HelpdeskTicket(models.Model):
 
     @api.depends('team_id')
     def _compute_domain_user_ids(self):
-        user_ids = self.env.ref('helpdesk.group_helpdesk_user').users.ids
+        user_ids = self.env.ref('helpdesk.group_helpdesk_user').all_user_ids.ids
         for ticket in self:
             ticket_user_ids = []
             ticket_sudo = ticket.sudo()
@@ -158,7 +166,7 @@ class HelpdeskTicket(models.Model):
             ticket.domain_user_ids = [Command.set(user_ids + ticket_user_ids)]
 
     def _compute_access_url(self):
-        super(HelpdeskTicket, self)._compute_access_url()
+        super()._compute_access_url()
         for ticket in self:
             ticket.access_url = '/my/ticket/%s' % ticket.id
 
@@ -233,12 +241,12 @@ class HelpdeskTicket(models.Model):
 
     @api.model
     def _search_sla_fail(self, operator, value):
+        if operator != 'in':
+            return NotImplemented
         datetime_now = fields.Datetime.now()
-        if (value and operator in expression.NEGATIVE_TERM_OPERATORS) or (not value and operator not in expression.NEGATIVE_TERM_OPERATORS):  # is not failed
-            return ['&', ('sla_reached_late', '=', False), '|', ('sla_deadline', '=', False), ('sla_deadline', '>=', datetime_now)]
-        return ['|', ('sla_reached_late', '=', True), ('sla_deadline', '<', datetime_now)]  # is failed
+        return ['|', ('sla_reached_late', '=', True), ('sla_deadline', '<', datetime_now)]
 
-    @api.depends('sla_deadline', 'sla_reached_late')
+    @api.depends('sla_deadline')
     def _compute_sla_success(self):
         now = fields.Datetime.now()
         for ticket in self:
@@ -246,16 +254,16 @@ class HelpdeskTicket(models.Model):
 
     @api.model
     def _search_sla_success(self, operator, value):
+        if operator != 'in':
+            return NotImplemented
         datetime_now = fields.Datetime.now()
-        if (value and operator in expression.NEGATIVE_TERM_OPERATORS) or (not value and operator not in expression.NEGATIVE_TERM_OPERATORS):  # is failed
-            return [('sla_status_ids.reached_datetime', '>', datetime_now), ('sla_reached_late', '!=', False), '|', ('sla_deadline', '!=', False), ('sla_deadline', '<', datetime_now)]
-        return [('sla_status_ids.reached_datetime', '<', datetime_now), ('sla_reached', '=', True), ('sla_reached_late', '=', False), '|', ('sla_deadline', '=', False), ('sla_deadline', '>=', datetime_now)]  # is success
+        return [('sla_deadline', '>', datetime_now)]
 
     @api.depends('team_id')
     def _compute_user_and_stage_ids(self):
         for ticket in self.filtered(lambda ticket: ticket.team_id):
             if not ticket.user_id:
-                ticket.user_id = ticket.team_id._determine_user_to_assign()[ticket.team_id.id]
+                ticket.user_id = ticket.team_id._determine_user_to_assign({ticket.team_id: 1})[ticket.team_id.id][0]
             if not ticket.stage_id or ticket.stage_id not in ticket.team_id.stage_ids:
                 ticket.stage_id = ticket.team_id._determine_stage()[ticket.team_id.id]
 
@@ -335,19 +343,29 @@ class HelpdeskTicket(models.Model):
 
     @api.model
     def _search_open_hours(self, operator, value):
-        dt = fields.Datetime.now() - relativedelta(hours=value)
+        if operator == 'in':
+            return Domain.OR(self._search_open_hours('=', v) for v in value)
+        if operator == 'not in':
+            return Domain.AND(self._search_open_hours('!=', v) for v in value)
 
-        d1, d2 = False, False
+        dt = fields.Datetime.now() - relativedelta(hours=value)
+        domain_closed = Domain('close_hours', operator, value)
         if operator in ['<', '<=', '>', '>=']:
-            d1 = ['&', ('close_date', '=', False), ('create_date', expression.TERM_OPERATORS_NEGATION[operator], dt)]
-            d2 = ['&', ('close_date', '!=', False), ('close_hours', operator, value)]
+            domain_unclosed = ~Domain('create_date', operator, dt)
         elif operator in ['=', '!=']:
-            subdomain = ['&', ('create_date', '>=', dt.replace(minute=0, second=0, microsecond=0)), ('create_date', '<=', dt.replace(minute=59, second=59, microsecond=99))]
-            if operator in expression.NEGATIVE_TERM_OPERATORS:
-                subdomain = expression.distribute_not(subdomain)
-            d1 = expression.AND([[('close_date', '=', False)], subdomain])
-            d2 = ['&', ('close_date', '!=', False), ('close_hours', operator, value)]
-        return expression.OR([d1, d2])
+            dt = dt.replace(minute=0, second=0, microsecond=0)
+            domain_unclosed = (
+                Domain('create_date', '>=', dt)
+                & Domain('create_date', '<', dt + relativedelta(hours=1))
+            )
+            if operator == '!=':
+                domain_unclosed = ~domain_unclosed
+        else:
+            return NotImplemented
+        return (
+            (Domain('close_date', '=', False) & domain_unclosed)
+            | (Domain('close_date', '!=', False) & domain_closed)
+        )
 
     def _get_partner_email_update(self):
         self.ensure_one()
@@ -407,7 +425,7 @@ class HelpdeskTicket(models.Model):
             empty_list_help_model='helpdesk.team',
             empty_list_help_document_name=_("tickets"),
         )
-        return super(HelpdeskTicket, self).get_empty_list_help(help_message)
+        return super().get_empty_list_help(help_message)
 
     def create_action(self, action_ref, title, search_view_ref):
         action = self.env["ir.actions.actions"]._for_xml_id(action_ref)
@@ -421,56 +439,134 @@ class HelpdeskTicket(models.Model):
         return action
 
     @api.model
-    def _find_or_create_partner(self, partner_name, partner_email, company=False):
-        partner = self.env['mail.thread'].with_context(default_company_id=company)._mail_find_partner_from_emails(emails=[partner_email], force_create=True, extra_domain=[('company_id', 'in', [company, False])])[0]
-        # if the partner was just created it will have the email as name
-        if partner.name == partner_email:
-            partner.name = partner_name
-        return partner
+    def _assign_vals_by_tags(self, vals_list):
+        """
+        This method is used to automatically assign unassigned tickets based on added tags.
+        Given a list of vals with the associated team and added tags, it updates the vals with the user_id of the user to assign the ticket to.
+        This is a side effect, and the vals are intended to then be used in a create/write method.
+
+        :param vals_list: A list of tuples with the following structure: [(helpdesk_team, tag_ids, vals_dict), ...]
+
+                          Each tuple consists of:
+                          - `helpdesk_team_id`: The id of the `helpdesk.team` of the ticket.
+                          - `tag_ids`: A list of ids corresponding to the `helpdesk.tag` being added to the ticket.
+                          - `vals_dict`: A dictionary of values that are intended to be later used to create or write on the ticket.
+                                         Note that this dictionary will be modified **in place** (side effect)
+        """
+        if not vals_list:
+            return
+        domain = expression.OR([[('team_id', '=', team_id), ('tag_id', 'in', tag_ids)] for team_id, tag_ids, _dummy in vals_list])
+        tag_assignment_res = self.env['helpdesk.tag.assignment'].sudo()._read_group(
+            domain,
+            ['team_id', 'tag_id', 'user_ids'],
+        )
+        # Dict of all the users that could be assigned from a tag in a team
+        users_per_team_and_tag = defaultdict(set)
+        all_possible_users_ids = set()
+        for team, tag, user in tag_assignment_res:
+            users_per_team_and_tag[(team.id, tag.id)].add(user.id)
+            all_possible_users_ids.add(user.id)
+        all_possible_users = self.env['res.users'].browse(all_possible_users_ids)
+        all_team_ids = {vals[0] for vals in vals_list}
+        users_per_working_days = all_possible_users._get_working_users_per_first_working_day()
+
+        # Used to keep track of how many open tickets users have in each team
+        tickets_per_user_per_team = defaultdict(dict)
+        for team, _dummy, user in tag_assignment_res:
+            tickets_per_user_per_team[team.id][user.id] = 0
+        # Add the open tickets to the previously created dict
+        ticket_count_data = self.env['helpdesk.ticket']._read_group(
+            [('stage_id.fold', '=', False), ('user_id', 'in', all_possible_users.ids), ('team_id', 'in', list(all_team_ids))],
+            ['user_id', 'team_id'],
+            ['__count'],
+        )
+        for user, team, open_tickets in ticket_count_data:
+            tickets_per_user_per_team[team.id][user.id] = open_tickets
+
+        for team_id, tag_ids, vals in vals_list:
+            # get all users matching at least one of the tags...
+            possible_user_ids = {
+                user_id
+                for tag_id in tag_ids
+                for user_id in users_per_team_and_tag.get((team_id, tag_id), [])
+            }
+            if possible_user_ids:
+                for user_ids in users_per_working_days:
+                    # ...restrict them to the earliest available users ...
+                    if available_user_ids := set(user_ids) & possible_user_ids:
+                        # ... and select the one with the fewest open tickets
+                        count_per_user = filter(lambda item: item[0] in available_user_ids, tickets_per_user_per_team[team_id].items())
+                        chosen_user_id = min(count_per_user, key=lambda count: count[1])[0]
+                        vals['user_id'] = chosen_user_id
+                        tickets_per_user_per_team[team_id][chosen_user_id] += 1
+                        break
 
     @api.model_create_multi
-    def create(self, list_value):
+    def create(self, vals_list):
         now = fields.Datetime.now()
-        # determine user_id and stage_id if not given. Done in batch.
-        teams = self.env['helpdesk.team'].browse([vals['team_id'] for vals in list_value if vals.get('team_id')])
-        team_default_map = dict.fromkeys(teams.ids, dict())
-        for team in teams:
-            team_default_map[team.id] = {
-                'stage_id': team._determine_stage()[team.id].id,
-                'user_id': team._determine_user_to_assign()[team.id].id
-            }
+
+        # Determine user_id if not given for teams with automatic assignment. We have two cases:
+        #   - If the assignment method is 'randomly' or 'balanced', we determine the next users to assign for each team.
+        #   - If the assignment method is 'tags', it's a bit more complex as it depends on the added tags for each individual ticket.
+        #       In that case, we directly modify the vals, as it's simpler than computing the user ids then map them to the vals they originate from.
+        team_ids = { vals['team_id'] for vals in vals_list if vals.get('team_id') }
+        tickets_to_assign_by_tags = []
+        teams = self.env['helpdesk.team'].browse(team_ids)
+
+        # determine stage_id if not given. Done in batch.
+        default_stage_per_team_id = teams._determine_stage()
+
+        # Determine assignees if auto assignement is enabled
+        # In case of assignment by tags, we add the user_ids to the values below. For the other methods, they are added later
+        team_per_team_id = dict(zip(team_ids, teams))
+        ticket_amount_per_team = defaultdict(int)
+        for vals in vals_list:
+            if not (team_id := vals.get('team_id')):
+                continue
+            stage = self.env['helpdesk.stage'].browse(vals['stage_id']) if 'stage_id' in vals else default_stage_per_team_id[team_id]
+            team = team_per_team_id[team_id]
+            if stage.fold or vals.get('user_id') or not team.auto_assignment:
+                continue
+            if team.assign_method == 'tags':
+                if tag_ids := vals.get('tag_ids'):
+                    tag_ids = self._fields['tag_ids'].convert_to_cache(tag_ids, self)
+                    tickets_to_assign_by_tags.append((team.id, tag_ids, vals))
+            else:
+                ticket_amount_per_team[team] += 1
+
+        self._assign_vals_by_tags(tickets_to_assign_by_tags)
+        assignees_per_team_id = self.env['helpdesk.team']._determine_user_to_assign(ticket_amount_per_team)
 
         # Manually create a partner now since '_generate_template_recipients' doesn't keep the name. This is
         # to avoid intrusive changes in the 'mail' module
         # TDE TODO: to extract and clean in mail thread
-        for vals in list_value:
+        for vals in vals_list:
             partner_id = vals.get('partner_id', False)
             partner_name = vals.get('partner_name', False)
             partner_email = vals.get('partner_email', False)
-            if partner_name and partner_email and not partner_id:
-                company = False
-                if vals.get('team_id'):
-                    team = self.env['helpdesk.team'].browse(vals.get('team_id'))
-                    company = team.company_id.id
-                vals['partner_id'] = self._find_or_create_partner(partner_name, partner_email, company).id
+            if partner_email and not partner_id:
+                company_id = self.env['helpdesk.team'].browse(vals['team_id']).company_id.id if vals.get('team_id') else False
+                suggested_name = tools.parse_contact_from_email(partner_name)[0] or tools.parse_contact_from_email(partner_email)[0]
+                vals['partner_id'] = self.env['mail.thread']._partner_find_from_emails_single(
+                    [partner_email], additional_values={tools.mail.email_normalize(partner_email) or partner_email: {'name': suggested_name, 'company_id': company_id}},
+                    filter_found=lambda partner: not partner.company_id or partner.company_id.id == company_id,
+                ).id
 
         # determine partner email for ticket with partner but no email given
-        partners = self.env['res.partner'].browse([vals['partner_id'] for vals in list_value if 'partner_id' in vals and vals.get('partner_id') and 'partner_email' not in vals])
+        partners = self.env['res.partner'].browse([vals['partner_id'] for vals in vals_list if 'partner_id' in vals and vals.get('partner_id') and 'partner_email' not in vals])
         partner_email_map = {partner.id: partner.email for partner in partners}
         partner_name_map = {partner.id: partner.name for partner in partners}
         company_per_team_id = {t.id: t.company_id for t in teams}
-        for vals in list_value:
+        for vals in vals_list:
             company = company_per_team_id.get(vals.get('team_id', False))
             vals['ticket_ref'] = self.env['ir.sequence'].with_company(company).sudo().next_by_code('helpdesk.ticket')
-            if vals.get('team_id'):
-                team_default = team_default_map[vals['team_id']]
+            if team_id := vals.get('team_id'):
                 if 'stage_id' not in vals:
-                    vals['stage_id'] = team_default['stage_id']
-                # Note: this will break the randomly distributed user assignment. Indeed, it will be too difficult to
-                # equally assigned user when creating ticket in batch, as it requires to search after the last assigned
-                # after every ticket creation, which is not very performant. We decided to not cover this user case.
-                if 'user_id' not in vals:
-                    vals['user_id'] = team_default['user_id']
+                    vals['stage_id'] = default_stage_per_team_id[team_id].id
+                if self.env['helpdesk.stage'].browse(vals['stage_id']).fold:
+                    vals['close_date'] = now
+                if 'user_id' not in vals and team_id in assignees_per_team_id:
+                    vals['user_id'] = assignees_per_team_id[team_id].pop()
                 if vals.get('user_id'):  # if a user is finally assigned, force ticket assign_date and reset assign_hours
                     vals['assign_date'] = fields.Datetime.now()
                     vals['assign_hours'] = 0
@@ -487,11 +583,11 @@ class HelpdeskTicket(models.Model):
             vals['oldest_unanswered_customer_message_date'] = now
 
         # context: no_log, because subtype already handle this
-        tickets = super(HelpdeskTicket, self).create(list_value)
+        tickets = super().create(vals_list)
 
         all_partner_emails = []
         for ticket in tickets:
-            all_partner_emails += tools.email_split(ticket.email_cc)
+            all_partner_emails += tools.email_normalize_all(ticket.email_cc)
         partners = self.env['res.partner'].search([('email', 'in', all_partner_emails)])
         partner_per_email = {
             partner.email: partner
@@ -506,7 +602,7 @@ class HelpdeskTicket(models.Model):
                 partner_ids = ticket.partner_id.ids
             if ticket.email_cc:
                 partners_with_internal_user = self.env['res.partner']
-                for email in tools.email_split(ticket.email_cc):
+                for email in tools.email_normalize_all(ticket.email_cc):
                     new_partner = partner_per_email.get(email)
                     if new_partner:
                         partners_with_internal_user |= new_partner
@@ -545,6 +641,10 @@ class HelpdeskTicket(models.Model):
             if 'kanban_state' not in vals:
                 vals['kanban_state'] = 'normal'
 
+        old_tag_ids_per_ticket_id = {}
+        if 'tag_ids' in vals:
+            old_tag_ids_per_ticket_id = {t.id: set(t.tag_ids.ids) for t in self}
+
         res = super(HelpdeskTicket, self - assigned_tickets - closed_tickets).write(vals)
         res &= super(HelpdeskTicket, assigned_tickets - closed_tickets).write(dict(vals, **{
             'assign_date': now,
@@ -568,7 +668,7 @@ class HelpdeskTicket(models.Model):
         if 'stage_id' in vals:
             self.sudo()._sla_reach(vals['stage_id'])
 
-        if 'stage_id' in vals and self.env['helpdesk.stage'].browse(vals['stage_id']).fold:
+        if stage_fold := ('stage_id' in vals and self.env['helpdesk.stage'].browse(vals['stage_id']).fold):
             odoobot_partner_id = self.env['ir.model.data']._xmlid_to_res_id('base.partner_root')
             for ticket in self:
                 exceeded_hours = ticket.sla_status_ids.mapped('exceeded_hours')
@@ -577,11 +677,37 @@ class HelpdeskTicket(models.Model):
                     message = _("This ticket was successfully closed %s hours before its SLA deadline.", round(abs(min_hours))) if min_hours < 0 \
                         else _("This ticket was closed %s hours after its SLA deadline.", round(min_hours))
                     ticket.message_post(body=message, subtype_xmlid="mail.mt_note", author_id=odoobot_partner_id)
+        elif old_tag_ids_per_ticket_id:
+            unassigned_tickets_to_assign = self.filtered(
+                lambda t: not t.user_id
+                    and t.team_id.auto_assignment
+                    and t.team_id.assign_method == 'tags'
+                    and not t.stage_id.fold
+            )
+            if unassigned_tickets_to_assign:
+                vals_list = [
+                    (ticket.team_id.id, list(added_tags), {})
+                    for ticket in unassigned_tickets_to_assign
+                    if (added_tags := set(ticket.tag_ids.ids) - old_tag_ids_per_ticket_id[ticket.id])
+                ]
+                if vals_list:
+                    self._assign_vals_by_tags(vals_list)
+                    for ticket, vals_dict in zip(unassigned_tickets_to_assign, list(zip(*vals_list))[2]):
+                        if vals_dict:
+                            ticket.write(vals_dict)
         return res
 
     def copy_data(self, default=None):
         vals_list = super().copy_data(default=default)
-        return [dict(vals, name=self.env._("%s (copy)", ticket.name)) for ticket, vals in zip(self, vals_list)]
+        has_default_user = default and 'user_id' in default
+        active_users = self.env['res.users']
+        if not has_default_user:
+            active_users = self.user_id.filtered('active')
+        for ticket, vals in zip(self, vals_list):
+            vals['name'] = self.env._("%s (copy)", ticket.name)
+            if not has_default_user and ticket.user_id and ticket.user_id not in active_users:
+                vals['user_id'] = False
+        return vals_list
 
     def _unsubscribe_portal_users(self):
         self.message_unsubscribe(partner_ids=self.message_partner_ids.filtered('user_ids.share').ids)
@@ -670,26 +796,23 @@ class HelpdeskTicket(models.Model):
 
     def _sla_generate_status_values(self, slas, keep_reached=False):
         """ Return the list of values for given SLA to be applied on current ticket """
-        status_to_keep = dict.fromkeys(self.ids, list())
-
+        exclude_slas_per_ticket = {}
         # generate the map of status to keep by ticket only if requested
         if keep_reached:
-            for ticket in self:
-                for status in ticket.sla_status_ids:
-                    if status.reached_datetime:
-                        status_to_keep[ticket.id].append(status.sla_id.id)
-
-        # create the list of value, and maybe exclude the existing ones
+            exclude_slas_per_ticket = dict(self.env['helpdesk.sla.status']._read_group(
+                domain=[('reached_datetime', '!=', False), ('ticket_id', 'in', self.ids)],
+                groupby=['ticket_id'],
+                aggregates=['sla_id:recordset'],
+            ))
         result = []
         for ticket in self:
-            for sla in slas:
-                if not (keep_reached and sla.id in status_to_keep[ticket.id]):
-                    result.append({
-                        'ticket_id': ticket.id,
-                        'sla_id': sla.id,
-                        'reached_datetime': fields.Datetime.now() if ticket.stage_id == sla.stage_id else False # in case of SLA on first stage
-                    })
-
+            exclude_slas = exclude_slas_per_ticket.get(ticket, self.env['helpdesk.sla'])
+            for sla in slas - exclude_slas:
+                result.append({
+                    'ticket_id': ticket.id,
+                    'sla_id': sla.id,
+                    'reached_datetime': fields.Datetime.now() if ticket.stage_id == sla.stage_id else False  # in case of SLA on first stage
+               })
         return result
 
     def _sla_reach(self, stage_id):
@@ -730,50 +853,27 @@ class HelpdeskTicket(models.Model):
     # Messaging API
     # ------------------------------------------------------------
 
-    #DVE FIXME: if partner gets created when sending the message it should be set as partner_id of the ticket.
-    def _message_get_suggested_recipients(self):
-        recipients = super()._message_get_suggested_recipients()
-        try:
-            if self.partner_id and self.partner_id.email:
-                self._message_add_suggested_recipient(recipients, partner=self.partner_id, reason=_('Customer'))
-            elif self.partner_email:
-                self._message_add_suggested_recipient(recipients, email=self.partner_email, reason=_('Customer Email'))
-        except AccessError:  # no read access rights -> just ignore suggested recipients because this implies modifying followers
-            pass
-        return recipients
-
     def _get_customer_information(self):
-        email_normalized_to_values = super()._get_customer_information()
-        Partner = self.env['res.partner']
+        email_keys_to_values = super()._get_customer_information()
 
-        for record in self.filtered('partner_email'):
-            email_normalized = tools.email_normalize(record.partner_email)
-            if not email_normalized:
+        for ticket in self:
+            email_key = tools.email_normalize(ticket.partner_email) or ticket.partner_email
+            # do not fill Falsy with random data, unless monorecord (= always correct)
+            if not email_key and len(self) > 1:
                 continue
-            values = email_normalized_to_values.setdefault(email_normalized, {})
-            values.update({
-                'name': record.partner_name or tools.parse_contact_from_email(record.partner_email)[0] or record.partner_email,
-                'phone': record.partner_phone,
+            email_keys_to_values.setdefault(email_key, {}).update({
+                'company_id': ticket.company_id.id,
+                'name': ticket.partner_name or tools.parse_contact_from_email(ticket.partner_email)[0] or ticket.partner_email,
+                'phone': ticket.partner_phone,
             })
-        return email_normalized_to_values
-
-    def _ticket_email_split(self, msg):
-        email_list = tools.email_split((msg.get('to') or '') + ',' + (msg.get('cc') or ''))
-        # check left-part is not already an alias
-        return [
-            x for x in email_list
-            if x.split('@')[0] not in self.mapped('team_id.alias_name')
-        ]
+        return email_keys_to_values
 
     @api.model
-    def message_new(self, msg, custom_values=None):
-        values = dict(custom_values or {}, partner_email=msg.get('from'), partner_name=msg.get('from'), partner_id=msg.get('author_id'))
-        ticket = super(HelpdeskTicket, self.with_context(mail_notify_author=True)).message_new(msg, custom_values=values)
-        thread_context = self.env['mail.thread']
-        if ticket.company_id:
-            thread_context = thread_context.with_context(default_company_id=ticket.company_id)
-        partner_ids = [x.id for x in thread_context._mail_find_partner_from_emails(ticket._ticket_email_split(msg), records=ticket, force_create=True) if x]
-        customer_ids = [p.id for p in thread_context._mail_find_partner_from_emails(tools.email_split(values['partner_email']), records=ticket, force_create=True) if p]
+    def message_new(self, msg_dict, custom_values=None):
+        values = dict(custom_values or {}, partner_email=msg_dict.get('from'), partner_name=msg_dict.get('from'), partner_id=msg_dict.get('author_id'))
+        ticket = super(HelpdeskTicket, self.with_context(mail_notify_author=True)).message_new(msg_dict, custom_values=values)
+        partner_ids = ticket._partner_find_from_emails_single(tools.email_split((msg_dict.get('to') or '') + ',' + (msg_dict.get('cc') or ''))).ids
+        customer_ids = ticket._partner_find_from_emails_single(tools.email_split(values['partner_email'])).ids
         partner_ids += customer_ids
         if customer_ids and not values.get('partner_id'):
             ticket.partner_id = customer_ids[0]
@@ -781,11 +881,11 @@ class HelpdeskTicket(models.Model):
             ticket.message_subscribe(partner_ids)
         return ticket
 
-    def message_update(self, msg, update_vals=None):
-        partner_ids = [x.id for x in self.env['mail.thread']._mail_find_partner_from_emails(self._ticket_email_split(msg), records=self) if x]
-        if partner_ids:
-            self.message_subscribe(partner_ids)
-        return super(HelpdeskTicket, self).message_update(msg, update_vals=update_vals)
+    def message_update(self, msg_dict, update_vals=None):
+        for ticket in self:
+            if partners := ticket._partner_find_from_emails_single(tools.email_split((msg_dict.get('to') or '') + ',' + (msg_dict.get('cc') or '')), no_create=True):
+                self.message_subscribe(partners.ids)
+        return super().message_update(msg_dict, update_vals=update_vals)
 
     def _message_compute_subject(self):
         """ Override the display name by the actual name field for communication."""
@@ -818,9 +918,10 @@ class HelpdeskTicket(models.Model):
         # use the sanitized body of the email from the message thread to populate the ticket's description
         if not self.description and message.subtype_id == self._creation_subtype() and tools.email_normalize(self.partner_email) == tools.email_normalize(message.email_from):
             self.description = message.body
-        return super(HelpdeskTicket, self)._message_post_after_hook(message, msg_vals)
+        return super()._message_post_after_hook(message, msg_vals)
 
     def _send_email_notify_to_cc(self, partners_to_notify):
+        # TDE TODO: this should be removed with email-like recipients management
         self.ensure_one()
         template_id = self.env['ir.model.data']._xmlid_to_res_id('helpdesk.ticket_invitation_follower', raise_if_not_found=False)
         if not template_id:
@@ -843,12 +944,9 @@ class HelpdeskTicket(models.Model):
             )
 
     def _track_template(self, changes):
-        res = super(HelpdeskTicket, self)._track_template(changes)
+        res = super()._track_template(changes)
         ticket = self[0]
-        if 'stage_id' in changes and ticket.stage_id.template_id and ticket.partner_email and (
-            not self.env.user.partner_id or not ticket.partner_id or ticket.partner_id != self.env.user.partner_id
-            or self.env.user._is_portal() or ticket._context.get('mail_notify_author')
-        ):
+        if 'stage_id' in changes and ticket.stage_id.template_id and ticket.partner_email:
             res['stage_id'] = (ticket.stage_id.template_id, {
                 'auto_delete_keep_log': False,
                 'subtype_id': self.env['ir.model.data']._xmlid_to_res_id('mail.mt_note'),
@@ -864,24 +962,15 @@ class HelpdeskTicket(models.Model):
         self.ensure_one()
         if 'stage_id' in init_values:
             return self.env.ref('helpdesk.mt_ticket_stage')
-        return super(HelpdeskTicket, self)._track_subtype(init_values)
+        return super()._track_subtype(init_values)
 
-    def _notify_get_recipients_groups(self, message, model_description, msg_vals=None):
-        """
-        Give access button to portal and portal customers.
-        If they are notified they should probably have access to the document.
-        """
-        return super()._notify_get_recipients_groups(
-            message, model_description, msg_vals=msg_vals
-        )
-
-    def _notify_get_reply_to(self, default=None):
+    def _notify_get_reply_to(self, default=None, author_id=False):
         """ Override to set alias of tickets to their team if any. """
-        aliases = self.mapped('team_id').sudo()._notify_get_reply_to(default=default)
+        aliases = self.mapped('team_id').sudo()._notify_get_reply_to(default=default, author_id=author_id)
         res = {ticket.id: aliases.get(ticket.team_id.id) for ticket in self}
         leftover = self.filtered(lambda rec: not rec.team_id)
         if leftover:
-            res.update(super(HelpdeskTicket, leftover)._notify_get_reply_to(default=default))
+            res.update(super(HelpdeskTicket, leftover)._notify_get_reply_to(default=default, author_id=author_id))
         return res
 
     # ------------------------------------------------------------

@@ -30,9 +30,10 @@ class HrPayrollEmployeeDeclaration(models.Model):
         ('pdf_generated', 'Generated PDF'),
     ], compute='_compute_state', store=True)
 
-    _sql_constraints = [
-        ('unique_employee_sheet', 'unique(employee_id, res_model, res_id)', 'An employee can only have one declaration per sheet.'),
-    ]
+    _unique_employee_sheet = models.Constraint(
+        'unique(employee_id, res_model, res_id)',
+        "An employee can only have one declaration per sheet.",
+    )
 
     @api.depends('pdf_to_generate', 'pdf_file')
     def _compute_state(self):
@@ -101,9 +102,11 @@ class HrPayrollEmployeeDeclaration(models.Model):
         if self:
             self.write({'pdf_to_generate': True})
             self.env.ref('hr_payroll.ir_cron_generate_payslip_pdfs')._trigger()
-            message = _("PDF generation started. It will be available shortly.")
         else:
-            message = _("Please select the declarations for which you want to generate a PDF.")
+            not_generated_declaration_pdfs = self.env["hr.payroll.employee.declaration"].search([('state', '=', 'draft')])
+            not_generated_declaration_pdfs.write({'pdf_to_generate': True})
+            self.env.ref('hr_payroll.ir_cron_generate_payslip_pdfs')._trigger()
+        message = _("PDF generation started. It will be available shortly.")
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -119,12 +122,10 @@ class HrPayrollEmployeeDeclaration(models.Model):
 
     @api.autovacuum
     def _gc_orphan_declarations(self):
-        orphans = self.env['hr.payroll.employee.declaration']
-        grouped_declarations = self.read_group([], ['ids:array_agg(id)', 'res_ids:array_agg(res_id)'], ['res_model'])
-        for gd in grouped_declarations:
-            sheet_ids = self.env[gd['res_model']].browse(set(gd['res_ids'])).exists().ids
-            for declaration in self.browse(gd['ids']):
-                if declaration.res_id not in sheet_ids:
-                    orphans += declaration
-        if orphans:
-            orphans.unlink()
+        orphan_ids = []
+        grouped_declarations = self._read_group([], ['res_model'], ['res_id:array_agg'])
+        for res_model, res_ids in grouped_declarations:
+            existing_ids = set(self.env[res_model].browse(set(res_ids)).exists().ids)
+            orphan_ids.extend(res_id for res_id in res_ids if res_id not in existing_ids)
+        if orphan_ids:
+            self.browse(orphan_ids).unlink()

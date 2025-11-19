@@ -13,6 +13,7 @@ import {
     getService,
     models,
     mountWithCleanup,
+    mountWebClient,
     onRpc,
     patchWithCleanup,
     serverState,
@@ -29,19 +30,6 @@ import { shareUrlMenuItem } from "@web_enterprise/webclient/share_url/share_url"
 import { WebClientEnterprise } from "@web_enterprise/webclient/webclient";
 
 const actionRegistry = registry.category("actions");
-
-/**
- * @param {{ env: import("@web/env").OdooEnv }} [options]
- */
-async function mountWebClientEnterprise(options) {
-    await mountWithCleanup(WebClientEnterprise, options);
-    // Wait for visual changes caused by a potential loadState
-    await animationFrame();
-    // wait for BlankComponent
-    await animationFrame();
-    // wait for the regular rendering
-    await animationFrame();
-}
 
 async function goToHomeMenu() {
     await click(".o_menu_toggle");
@@ -102,7 +90,6 @@ defineActions([
         name: "Partner",
         res_id: 2,
         res_model: "partner",
-        target: "inline",
         views: [[false, "form"]],
     },
     {
@@ -191,17 +178,15 @@ beforeEach(() => {
 // Those tests rely on hidden view to be in CSS: display: none
 describe("basic flow with home menu", () => {
     stepAllNetworkCalls();
-    onRpc("/web/dataset/call_kw/partner/get_formview_action", () => {
-        return {
-            type: "ir.actions.act_window",
-            res_model: "partner",
-            view_type: "form",
-            view_mode: "form",
-            views: [[false, "form"]],
-            target: "current",
-            res_id: 2,
-        };
-    });
+    onRpc("partner", "get_formview_action", () => ({
+        type: "ir.actions.act_window",
+        res_model: "partner",
+        view_type: "form",
+        view_mode: "form",
+        views: [[false, "form"]],
+        target: "current",
+        res_id: 2,
+    }));
     defineMenus(
         [
             {
@@ -215,7 +200,7 @@ describe("basic flow with home menu", () => {
         { mode: "replace" }
     );
     test("1 -- start up", async () => {
-        await mountWebClientEnterprise();
+        await mountWebClient({ WebClient: WebClientEnterprise });
         expect.verifySteps(["/web/webclient/translations", "/web/webclient/load_menus"]);
         expect(document.body).toHaveClass("o_home_menu_background");
         expect(".o_home_menu").toHaveCount(1);
@@ -224,11 +209,11 @@ describe("basic flow with home menu", () => {
     });
 
     test("2 -- navbar updates on displaying an action", async () => {
-        await mountWebClientEnterprise();
+        await mountWebClient({ WebClient: WebClientEnterprise });
         expect.verifySteps(["/web/webclient/translations", "/web/webclient/load_menus"]);
         await contains(".o_app.o_menuitem").click();
         await animationFrame();
-        expect.verifySteps(["/web/action/load", "get_views", "web_search_read"]);
+        expect.verifySteps(["/web/action/load", "get_views", "web_search_read", "has_group"]);
         expect(document.body).not.toHaveClass("o_home_menu_background");
         expect(".o_home_menu").toHaveCount(0);
         expect(".o_kanban_view").toHaveCount(1);
@@ -237,11 +222,11 @@ describe("basic flow with home menu", () => {
     });
 
     test("3 -- push another action in the breadcrumb", async () => {
-        await mountWebClientEnterprise();
+        await mountWebClient({ WebClient: WebClientEnterprise });
         expect.verifySteps(["/web/webclient/translations", "/web/webclient/load_menus"]);
         await contains(".o_app.o_menuitem").click();
         await animationFrame();
-        expect.verifySteps(["/web/action/load", "get_views", "web_search_read"]);
+        expect.verifySteps(["/web/action/load", "get_views", "web_search_read", "has_group"]);
         expect(".o_kanban_view").toHaveCount(1);
         await contains(".o_kanban_record").click();
         await animationFrame(); // there is another tick to update navbar and destroy HomeMenu
@@ -259,18 +244,18 @@ describe("basic flow with home menu", () => {
                 <field name="parent_id" open_target="current"/>
             </form>
         `;
-        await mountWebClientEnterprise();
+        await mountWebClient({ WebClient: WebClientEnterprise });
         expect.verifySteps(["/web/webclient/translations", "/web/webclient/load_menus"]);
         await contains(".o_app.o_menuitem").click();
         await animationFrame();
-        expect.verifySteps(["/web/action/load", "get_views", "web_search_read"]);
+        expect.verifySteps(["/web/action/load", "get_views", "web_search_read", "has_group"]);
         expect(".o_kanban_view").toHaveCount(1);
         await contains(".o_kanban_record").click();
         expect.verifySteps(["web_read"]);
         await contains('.o_field_widget[name="parent_id"] .o_external_button', {
             visible: false,
         }).click();
-        expect.verifySteps(["get_views", "web_read"]);
+        expect.verifySteps(["get_formview_action", "get_views", "web_read"]);
         expect(".o_form_view").toHaveCount(1);
         expect(".o_breadcrumb .active").toHaveText("Second record");
         // The third one is the active one
@@ -284,23 +269,23 @@ describe("basic flow with home menu", () => {
                 <field name="parent_id" open_target="current"/>
             </form>
         `;
-        await mountWebClientEnterprise();
+        await mountWebClient({ WebClient: WebClientEnterprise });
         expect.verifySteps(["/web/webclient/translations", "/web/webclient/load_menus"]);
         await contains(".o_app.o_menuitem").click();
         await animationFrame();
-        expect.verifySteps(["/web/action/load", "get_views", "web_search_read"]);
+        expect.verifySteps(["/web/action/load", "get_views", "web_search_read", "has_group"]);
         expect(".o_kanban_view").toHaveCount(1);
         await contains(".o_kanban_record").click();
         expect.verifySteps(["web_read"]);
         await contains('.o_field_widget[name="parent_id"] .o_external_button', {
             visible: false,
         }).click();
-        expect.verifySteps(["get_views", "web_read"]);
+        expect.verifySteps(["get_formview_action", "get_views", "web_read"]);
         await goToHomeMenu();
         expect.verifySteps([]);
         expect(".o_menu_toggle").toHaveClass("o_menu_toggle_back");
         expect(".o_home_menu").toHaveCount(1);
-        expect(".o_form_view").not.toBeVisible();
+        expect(".o_form_view").not.toHaveCount();
     });
 
     test.tags("desktop");
@@ -311,18 +296,18 @@ describe("basic flow with home menu", () => {
                 <field name="parent_id" open_target="current"/>
             </form>
         `;
-        await mountWebClientEnterprise();
+        await mountWebClient({ WebClient: WebClientEnterprise });
         expect.verifySteps(["/web/webclient/translations", "/web/webclient/load_menus"]);
         await contains(".o_app.o_menuitem").click();
         await animationFrame();
-        expect.verifySteps(["/web/action/load", "get_views", "web_search_read"]);
+        expect.verifySteps(["/web/action/load", "get_views", "web_search_read", "has_group"]);
         expect(".o_kanban_view").toHaveCount(1);
         await contains(".o_kanban_record").click();
         expect.verifySteps(["web_read"]);
         await contains('.o_field_widget[name="parent_id"] .o_external_button', {
             visible: false,
         }).click();
-        expect.verifySteps(["get_views", "web_read"]);
+        expect.verifySteps(["get_formview_action", "get_views", "web_read"]);
         await contains(".o_menu_toggle").click();
 
         // can't click again too soon because of the mutex in home_menu
@@ -354,7 +339,7 @@ test("restore the newly created record in form view", async () => {
         ],
         { mode: "replace" }
     );
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
 
     await getService("action").doAction(6);
     expect(".o_form_view").toHaveCount(1);
@@ -363,7 +348,7 @@ test("restore the newly created record in form view", async () => {
     await contains(".o_form_button_save").click();
     expect(".o_breadcrumb .active").toHaveText("red right hand");
     await goToHomeMenu();
-    expect(".o_form_view").not.toBeVisible();
+    expect(".o_form_view").not.toHaveCount();
 
     // can't click again too soon because of the mutex in home_menu
     // service (waiting for the url to be updated)
@@ -397,12 +382,12 @@ test("fast clicking on restore (implementation detail)", async () => {
     }
 
     registry.category("actions").add("DelayedClientAction", DelayedClientAction);
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     await getService("action").doAction("DelayedClientAction");
     await animationFrame();
     await contains(".o_menu_toggle").click(); // go to home menu
     expect(".o_home_menu").toBeVisible();
-    expect(".delayed_client_action").not.toBeVisible();
+    expect(".delayed_client_action").not.toHaveCount();
 
     doVeryFastClick = true;
     await contains(".o_menu_toggle").click(); // back
@@ -410,7 +395,7 @@ test("fast clicking on restore (implementation detail)", async () => {
     expect(".delayed_client_action").toHaveCount(1);
     await animationFrame(); // waiting for DelayedClientAction
     expect(".o_home_menu").toBeVisible();
-    expect(".delayed_client_action").not.toBeVisible();
+    expect(".delayed_client_action").not.toHaveCount();
 
     await contains(".o_menu_toggle").click(); // back
     await animationFrame();
@@ -432,7 +417,7 @@ test("clear unCommittedChanges when toggling home menu", async () => {
         });
     });
 
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     await getService("action").doAction(3, { viewType: "form" });
     expect(".o_form_view .o_form_editable").toHaveCount(1);
     await contains(".o_field_widget[name=name] input").edit("red right hand");
@@ -444,7 +429,7 @@ test("clear unCommittedChanges when toggling home menu", async () => {
 });
 
 test("can have HomeMenu and dialog action", async () => {
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     expect(".o_home_menu").toHaveCount(1);
     expect(".modal .o_form_view").toHaveCount(0);
     await getService("action").doAction(5);
@@ -468,26 +453,22 @@ test("supports attachments of apps deleted", async () => {
         },
     ]);
     serverState.debug = "1";
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     expect(".o_home_menu").toHaveCount(1);
 });
 
 test.tags("desktop");
 test("debug manager resets to global items when home menu is displayed", async () => {
     const debugRegistry = registry.category("debug");
-    debugRegistry.category("default").add("item_1", () => {
-        return {
-            type: "item",
-            description: "globalItem",
-            callback: () => {},
-            sequence: 10,
-        };
-    });
-    onRpc("has_access", () => {
-        return true;
-    });
+    debugRegistry.category("default").add("item_1", () => ({
+        type: "item",
+        description: "globalItem",
+        callback: () => {},
+        sequence: 10,
+    }));
+    onRpc("has_access", () => true);
     serverState.debug = "1";
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     await contains(".o_debug_manager .dropdown-toggle").click();
     expect(".dropdown-item:contains('globalItem')").toHaveCount(1);
     expect(".dropdown-item:contains('View: Kanban')").toHaveCount(0);
@@ -516,7 +497,7 @@ test("url state is well handled when going in and out of the HomeMenu", async ()
         origin: "http://example.com",
     });
     redirect("/odoo");
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     expect(router.current).toEqual({
         action: "menu",
         actionStack: [
@@ -643,7 +624,7 @@ test("underlying action's menu items are invisible when HomeMenu is displayed", 
             ],
         },
     ]);
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     expect("nav .o_menu_sections").toHaveCount(0);
     expect("nav .o_menu_brand").toHaveCount(0);
     await contains(".o_app.o_menuitem:nth-child(1)").click();
@@ -660,7 +641,7 @@ test("underlying action's menu items are invisible when HomeMenu is displayed", 
 });
 
 test("go back to home menu using browser back button", async () => {
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     expect(".o_home_menu").toHaveCount(1);
     expect(".o_main_navbar .o_menu_toggle").not.toBeVisible();
 
@@ -691,7 +672,7 @@ test("initial action crashes", async () => {
     }
     registry.category("actions").add("__test__client__action__", Override, { force: true });
 
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
     expect.verifySteps(["clientAction setup"]);
     expect("nav .o_menu_toggle").toHaveCount(1);
     expect("nav .o_menu_toggle").toBeVisible();
@@ -716,7 +697,7 @@ test("Apps are reordered at startup based on session's user settings", async () 
             return { id: 1, homemenu_config: '["menu_2","menu_1"]' };
         },
     });
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
 
     const apps = queryAll(".o_app");
     expect(apps[0]).toHaveAttribute("data-menu-xmlid", "menu_2", {
@@ -766,7 +747,7 @@ test("Navigate to an application from the HomeMenu should generate only one push
             expect.step(parsedUrl.pathname + parsedUrl.search);
         },
     });
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
 
     await contains(".o_apps > .o_draggable:nth-child(2) > .o_app").click();
     await animationFrame();
@@ -787,9 +768,28 @@ test("Navigate to an application from the HomeMenu should generate only one push
     expect.verifySteps(["/odoo", "/odoo/action-1002", "/odoo", "/odoo/action-1001", "/odoo"]);
 });
 
+test("display studio icon when studio module is not installed", async () => {
+    await mountWebClient({ WebClient: WebClientEnterprise });
+
+    expect(`.o_menu_systray .o_nav_entry i`).toHaveClass("oi oi-studio");
+    await contains(".o_menu_systray .o_nav_entry").click();
+    expect(`.modal-content`).toHaveCount(1);
+    expect(queryFirst(".modal-header").textContent).toBe(
+        "Odoo Studio - Add new fields to any view"
+    );
+});
+
+test("studio icon should not be visible for non-admin users", async () => {
+    patchWithCleanup(user, {
+        isSystem: false,
+    });
+    await mountWebClient({ WebClient: WebClientEnterprise });
+    expect(".o_menu_systray .o_nav_entry i").not.toHaveCount();
+});
+
 test.tags("desktop");
 test("Should not crash when opening an app via palette and immediately entering input in the palette search", async () => {
-    await mountWebClientEnterprise();
+    await mountWebClient({ WebClient: WebClientEnterprise });
 
     const def = new Deferred();
     onRpc("web_search_read", () => def);

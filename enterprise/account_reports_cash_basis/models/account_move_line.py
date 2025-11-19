@@ -4,7 +4,6 @@ from odoo.tools import SQL
 
 
 class AccountMoveLine(models.Model):
-    _name = "account.move.line"
     _inherit = "account.move.line"
 
     def _where_calc(self, domain, active_test=True):

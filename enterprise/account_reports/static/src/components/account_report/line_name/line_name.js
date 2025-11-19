@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { useService } from "@web/core/utils/hooks";
@@ -73,6 +71,9 @@ export class AccountReportLineName extends Component {
 
         if (this.props.line.unfoldable)
             classes += " unfoldable";
+
+        if (this.props.line.is_draft)
+            classes += " draft";
 
         if (this.props.line.class)
             classes += ` ${ this.props.line.class }`;

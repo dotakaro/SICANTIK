@@ -3,23 +3,15 @@
 # 	* pos_pricer
 # 
 # Translators:
-# Tiffany Chang, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Retropikzel, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Topi Aura <topi@aurat.fi>, 2024
-# Martin Trigaux, 2024
-# Jussi Lehto <jussi@gulfeo.com>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -35,7 +27,7 @@ msgstr "Pricer-tunniste, jolla on tämä viivakoodin tunnus, on jo olemassa"
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_tag__pricer_store_id
 msgid "Associated Pricer Store"
-msgstr "Liittyvä Pricer-kauppa"
+msgstr "Liittyvä Pricer-myymälä"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_tag__product_id
@@ -45,7 +37,7 @@ msgstr "Liitännäistuote"
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__auth_url
 msgid "Auth Url"
-msgstr "Tunnisteen URL"
+msgstr "Tunnistautumisen URL-osoite"
 
 #. module: pos_pricer
 #: model:product.pricelist,name:pos_pricer.pricer_demo_pricelist
@@ -55,7 +47,7 @@ msgstr "Joulu"
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__create_or_update_products_url
 msgid "Create Or Update Products Url"
-msgstr "Luo tai päivitä tuotteiden URL"
+msgstr "Luo tai päivitä tuotteiden URL-osoite"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__create_uid
@@ -72,11 +64,15 @@ msgstr "Luotu"
 #. module: pos_pricer
 #: model:ir.model.fields,help:pos_pricer.field_pricer_store__last_update_datetime
 msgid "Date and time of the last synchronization with Pricer"
-msgstr "Viimeisimmän synkronoinnin päivämäärä ja kellonaika Pricerin kanssa"
+msgstr "Viimeisimmän Pricer-synkronoinnin päivämäärä ja kellonaika"
 
 #. module: pos_pricer
+#: model:ir.model.fields,field_description:pos_pricer.field_pos_config__display_name
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__display_name
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_tag__display_name
+#: model:ir.model.fields,field_description:pos_pricer.field_product_product__display_name
+#: model:ir.model.fields,field_description:pos_pricer.field_product_template__display_name
+#: model:ir.model.fields,field_description:pos_pricer.field_stock_move__display_name
 msgid "Display Name"
 msgstr "Näyttönimi"
 
@@ -90,21 +86,25 @@ msgstr "Virhe: %(status_code)s - %(message)s"
 #. odoo-python
 #: code:addons/pos_pricer/models/pricer_store.py:0
 msgid "Error: check Pricer credentials"
-msgstr "Virhe: tarkista Pricer-tunnukset"
+msgstr "Virhe: tarkista Pricer-kirjautumistunnukset"
 
 #. module: pos_pricer
 #. odoo-python
 #: code:addons/pos_pricer/models/pricer_store.py:0
 msgid "Failed to unlink Pricer tag %(pricer_tag)s at API url %(api_url)s"
 msgstr ""
-"Hinnoittelutunnisteen %(pricer_tag)s linkityksen poistaminen epäonnistui "
-"API-urlissa %(api_url)s"
+"Pricer-tunnisteen %(pricer_tag)s linkityksen poistaminen epäonnistui API:n "
+"URL:ssa %(api_url)s"
 
 #. module: pos_pricer
+#: model:ir.model.fields,field_description:pos_pricer.field_pos_config__id
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__id
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_tag__id
+#: model:ir.model.fields,field_description:pos_pricer.field_product_product__id
+#: model:ir.model.fields,field_description:pos_pricer.field_product_template__id
+#: model:ir.model.fields,field_description:pos_pricer.field_stock_move__id
 msgid "ID"
-msgstr "ID"
+msgstr "Tunnus"
 
 #. module: pos_pricer
 #: model:ir.model.fields,help:pos_pricer.field_pricer_store__pricer_store_identifier
@@ -118,8 +118,8 @@ msgid ""
 "Invalid tag name. Should be 1 letter followed by 16 digits. Example: "
 "'N4081315789813275'"
 msgstr ""
-"Virheellinen tunnisteen nimi. Siinä täytyy olla yksi kirjain, jota seuraa 16"
-" numeroa. Esimerkki: \"N4081315789813275\""
+"Virheellinen tunnisteen nimi. Sen tulisi sisältää yhden kirjaimen, jota "
+"seuraa 16 numeroa. Esimerkki: \"N4081315789813275\""
 
 #. module: pos_pricer
 #: model:ir.model.fields,help:pos_pricer.field_pricer_tag__name
@@ -151,7 +151,7 @@ msgstr "Viimeksi päivitetty"
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__link_tags_url
 msgid "Link Tags Url"
-msgstr "Linkki Tunnisteet URL"
+msgstr "Linkkitunnisteiden URL-osoitteet"
 
 #. module: pos_pricer
 #: model:ir.model.fields,help:pos_pricer.field_pricer_store__pricer_login
@@ -172,7 +172,7 @@ msgstr "Myyntihinnassa"
 #. module: pos_pricer
 #: model:ir.actions.server,name:pos_pricer.pricer_sync_cron_ir_actions_server
 msgid "POS Pricer: tags update synchronization "
-msgstr "POS Pricer: tunnisteiden päivityksen synkronointi "
+msgstr "Kassajärjestelmän Pricer: tunnisteiden päivityksen synkronointi "
 
 #. module: pos_pricer
 #: model:ir.model.fields,help:pos_pricer.field_pricer_store__pricer_password
@@ -182,7 +182,7 @@ msgstr "Pricer-tilisi salasana"
 #. module: pos_pricer
 #: model:ir.model,name:pos_pricer.model_pos_config
 msgid "Point of Sale Configuration"
-msgstr "Kassan asetukset"
+msgstr "Kassajärjestelmän asetukset"
 
 #. module: pos_pricer
 #: model:ir.model.fields,help:pos_pricer.field_product_product__on_sale_price
@@ -198,44 +198,44 @@ msgstr "Pricer"
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_product_product__pricer_display_price
 msgid "Pricer Display Price"
-msgstr "Pricer Näyttö Hinta"
+msgstr "Pricer-näyttöhinta"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__pricer_login
 msgid "Pricer Login"
-msgstr "Pricer sisäänkirjautuminen"
+msgstr "Pricer-sisäänkirjautuminen"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__pricer_password
 msgid "Pricer Password"
-msgstr "Pricer salasana"
+msgstr "Pricer-salasana"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_product_product__pricer_product_to_create_or_update
 msgid "Pricer Product To Create Or Update"
-msgstr "Pricer tuotteen luominen tai päivitys"
+msgstr "Pricer-tuotteen luominen tai päivitys"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_tag__pricer_product_to_link
 msgid "Pricer Product To Link"
-msgstr "Pricer-tuoteen linkki"
+msgstr "Linkitettävä Pricer-tuote"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_product_product__pricer_sale_pricelist_id
 msgid "Pricer Sales Pricelist"
-msgstr "Pricer-Myyntihinnasto"
+msgstr "Pricer-myyntihinnasto"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_product_product__pricer_store_id
 #: model_terms:ir.ui.view,arch_db:pos_pricer.pricer_pricer_store_form_view
 #: model_terms:ir.ui.view,arch_db:pos_pricer.pricer_pricer_store_view_list
 msgid "Pricer Store"
-msgstr "Pricer kauppa"
+msgstr "Pricer-myymälä"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__pricer_store_identifier
 msgid "Pricer Store ID"
-msgstr "Pricer kaupan ID"
+msgstr "Pricer-myymälän tunnus"
 
 #. module: pos_pricer
 #. odoo-python
@@ -244,36 +244,36 @@ msgid ""
 "Pricer Store ID must only contain lowercase a-z, 0-9 or '-' and not start "
 "with '-'"
 msgstr ""
-"Pricer kauppa ID saa sisältää vain pieniä kirjaimia a-z, 0-9 tai '-', eikä "
-"se saa alkaa '-' kirjaimella"
+"Pricer-myymälän tunnus saa sisältää vain pieniä kirjaimia a-z, 0-9 tai '-', "
+"eikä se saa alkaa merkillä '-'"
 
 #. module: pos_pricer
 #: model:ir.model.fields,help:pos_pricer.field_pricer_store__name
 msgid "Pricer Store name in Odoo database"
-msgstr "Pricer kaupan nimi Odoo-tietokannassa"
+msgstr "Pricer-myymälän nimi Odoo-tietokannassa"
 
 #. module: pos_pricer
 #: model:ir.model,name:pos_pricer.model_pricer_store
 msgid "Pricer Store regrouping pricer tags"
-msgstr "Pricer kaupan uudelleenryhmittely pricer-tunnisteille"
+msgstr "Pricer-myymälän uudelleenryhmittely Pricer-tunnisteille"
 
 #. module: pos_pricer
 #: model:ir.actions.act_window,name:pos_pricer.action_open_pricer_stores
 #: model:ir.ui.menu,name:pos_pricer.menu_pos_pricer_stores
 msgid "Pricer Stores"
-msgstr "Pricer kaupat"
+msgstr "Pricer-myymälät"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_tag__name
 msgid "Pricer Tag Barcode ID"
-msgstr "Pricer tunnisteen viivakoodin ID"
+msgstr "Pricer-tunnisteen viivakoodin tunnus"
 
 #. module: pos_pricer
 #: model:ir.actions.act_window,name:pos_pricer.action_open_pricer_tags
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__pricer_tag_ids
 #: model:ir.ui.menu,name:pos_pricer.menu_pos_pricer_tags
 msgid "Pricer Tags"
-msgstr "Pricer Tunnisteet"
+msgstr "Pricer-tunnisteet"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__pricer_tenant_name
@@ -283,22 +283,22 @@ msgstr "Pricer-vuokralaisen nimi"
 #. module: pos_pricer
 #: model:ir.model,name:pos_pricer.model_pricer_tag
 msgid "Pricer electronic tag"
-msgstr "Pricer elektroninen tunniste"
+msgstr "Elektroninen Pricer-tunniste"
 
 #. module: pos_pricer
 #: model_terms:ir.ui.view,arch_db:pos_pricer.pricer_pricer_tag_view_list
 msgid "Pricer tag"
-msgstr "Hintalappu"
+msgstr "Pricer-tunniste"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__dummy_tag_barcode
 msgid "Pricer tag barcode"
-msgstr "Pricer-hinnoittelutunnisteen viivakoodi"
+msgstr "Pricer-tunnisteen viivakoodi"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_product_product__pricer_tag_ids
 msgid "Pricer tags ids"
-msgstr "Hinnoittelutunnisteet ids"
+msgstr "Pricer-tunnisteiden tunnukset"
 
 #. module: pos_pricer
 #: model:ir.model,name:pos_pricer.model_product_template
@@ -314,7 +314,7 @@ msgstr "Tuote '%s' löytyi"
 #. module: pos_pricer
 #: model:ir.model,name:pos_pricer.model_product_product
 msgid "Product Variant"
-msgstr "Tuotevariaatio"
+msgstr "Tuotevariantti"
 
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__dummy_prod_barcode
@@ -344,7 +344,7 @@ msgstr "Skannaa tuotteen viivakoodi tästä"
 #. module: pos_pricer
 #: model:ir.model.fields,help:pos_pricer.field_pricer_store__last_update_status_message
 msgid "Status message of the last synchronization with Pricer"
-msgstr "Viimeisimmän synkronoinnin tilaviesti Pricerin kanssa"
+msgstr "Viimeisimmän Pricer-synkronoinnin tilaviesti"
 
 #. module: pos_pricer
 #: model:ir.model,name:pos_pricer.model_stock_move
@@ -354,7 +354,7 @@ msgstr "Varastosiirto"
 #. module: pos_pricer
 #: model:ir.model.fields,field_description:pos_pricer.field_pricer_store__name
 msgid "Store Name"
-msgstr "Kaupan nimi"
+msgstr "Myymälän nimi"
 
 #. module: pos_pricer
 #. odoo-javascript
@@ -366,7 +366,7 @@ msgstr "Tunniste '%s' löytyi"
 #. odoo-javascript
 #: code:addons/pos_pricer/static/src/views/pricer_quick_pairing_form_view.js:0
 msgid "Tag '%s' not found, creating it"
-msgstr "Tunnistetta '%s' ei löydy, luodaan se"
+msgstr "Tunnistetta '%s' ei löydy, sen luominen"
 
 #. module: pos_pricer
 #. odoo-javascript
@@ -381,7 +381,7 @@ msgid ""
 "Tag id should be a 17 characters string composed of a letter followed by 16 "
 "digits"
 msgstr ""
-"Tunnisteen id:n on oltava 17 merkkiä pitkä merkkijono, joka koostuu "
+"Tunnisteen tunnuksen on oltava 17 merkkiä pitkä merkkijono, joka koostuu "
 "kirjaimesta ja sitä seuraavista 16 numerosta"
 
 #. module: pos_pricer
@@ -409,7 +409,7 @@ msgid ""
 "listed here. It is recommended to use a barcode scanner"
 msgstr ""
 "Tämä tuote linkitetään ja näytetään Pricer-tunnisteissa, joiden tunnukset on"
-" lueteltu tässä. On suositeltavaa käyttää viivakoodinlukijaa"
+" lueteltu tässä. Viivakoodinlukijaa suositellaan"
 
 #. module: pos_pricer
 #: model_terms:ir.ui.view,arch_db:pos_pricer.pricer_pricer_store_view_list

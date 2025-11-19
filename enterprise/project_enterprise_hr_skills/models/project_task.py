@@ -4,6 +4,7 @@ from odoo import models
 
 from odoo.addons.resource.models.utils import filter_domain_leaf
 
+
 class ProjectTask(models.Model):
     _inherit = "project.task"
 

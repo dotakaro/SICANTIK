@@ -3,7 +3,6 @@ from odoo.tools import SQL
 
 
 class AccountMove(models.Model):
-    _name = "account.move"
     _inherit = "account.move"
 
     impacting_cash_basis = fields.Boolean(store=False, search='_search_impacting_cash_basis')
@@ -15,6 +14,8 @@ class AccountMove(models.Model):
             - Move without any receivable or payable line
             - Move with a receivable or payable line and a partial is associated, specifically with a receivable or payable line
         """
+        if operator != 'in':
+            return NotImplemented
 
         sql = SQL("""(
             WITH moves_with_receivable_payable AS (
@@ -43,6 +44,4 @@ class AccountMove(models.Model):
                 rec_move.id IS NOT NULL
         )""")
 
-        # op is 'in' if (impacting_cash_basis, '=', True) or (impacting_cash_basis, '!=', False), 'not in' otherwise
-        op = 'in' if (operator == '=') ^ (value is False) else 'not in'
-        return [('id', op, sql)]
+        return [('id', 'in', sql)]

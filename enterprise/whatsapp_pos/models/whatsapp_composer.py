@@ -1,7 +1,7 @@
 from odoo import models, _
 
 
-class WhatsAppComposer(models.TransientModel):
+class WhatsappComposer(models.TransientModel):
     _inherit = 'whatsapp.composer'
     _description = 'Send WhatsApp Wizard'
 

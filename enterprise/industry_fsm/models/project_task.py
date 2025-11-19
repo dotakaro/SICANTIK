@@ -1,15 +1,20 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from ast import literal_eval
+from markupsafe import Markup
 from typing import Dict, List
 import pytz
 
 from odoo import Command, fields, models, api, _
+from odoo.exceptions import UserError
 from odoo.osv import expression
 from odoo.tools import get_lang
-from odoo.addons.resource.models.utils import Intervals, sum_intervals
+from odoo.tools.intervals import Intervals
+from odoo.tools.date_utils import sum_intervals
+from odoo.addons.timer.utils.timer_utils import round_time_spent
 
-class Task(models.Model):
+
+class ProjectTask(models.Model):
     _inherit = "project.task"
 
     @api.model
@@ -22,7 +27,7 @@ class Task(models.Model):
             fsm_project = self.env['project.project'].search([('is_fsm', '=', True), ('company_id', '=', company_id)], order='sequence, name, id', limit=1)
             if fsm_project:
                 context['default_project_id'] = self.env.context.get('default_project_id', fsm_project.id)
-        result = super(Task, self.with_context(context)).default_get(fields_list)
+        result = super(ProjectTask, self.with_context(context)).default_get(fields_list)
         if fsm_project:
             result.update({
                 'company_id': company_id,
@@ -39,9 +44,6 @@ class Task(models.Model):
     display_satisfied_conditions_count = fields.Integer(compute='_compute_display_conditions_count', export_string_translation=False)
     display_mark_as_done_primary = fields.Boolean(compute='_compute_mark_as_done_buttons', export_string_translation=False)
     display_mark_as_done_secondary = fields.Boolean(compute='_compute_mark_as_done_buttons', export_string_translation=False)
-    partner_phone = fields.Char(
-        compute='_compute_partner_phone', inverse='_inverse_partner_phone',
-        string="Contact Number", readonly=False, store=True, copy=False)
     partner_city = fields.Char(related='partner_id.city', readonly=False)
     partner_zip = fields.Char(string='ZIP', related='partner_id.zip')
     partner_street = fields.Char(related='partner_id.street')
@@ -59,6 +61,7 @@ class Task(models.Model):
     show_customer_preview = fields.Boolean(compute='_compute_show_customer_preview', export_string_translation=False)
     worksheet_signature = fields.Binary('Signature', copy=False, attachment=True)
     worksheet_signed_by = fields.Char('Signed By', copy=False)
+    allow_geolocation = fields.Boolean(related="project_id.allow_geolocation")
 
     @api.depends('planned_date_begin', 'date_deadline', 'user_ids')
     def _compute_planning_overlap(self):
@@ -69,9 +72,9 @@ class Task(models.Model):
             2. When two fsm tasks have overlapping planned dates.
 
             Example:
-            - Task A (normal) conflicts with Task B (fsm) if their combined hours > user's workable hours. Both have 1 conflict.
-            - Introduce Task C (fsm) with no allocated hours (no conflict with Task A) but same time period as Task B.
-            Result: Task A has 1 conflict, Task B has 2 conflicts, Task C has 1 conflict.
+            - ProjectTask A (normal) conflicts with ProjectTask B (fsm) if their combined hours > user's workable hours. Both have 1 conflict.
+            - Introduce ProjectTask C (fsm) with no allocated hours (no conflict with ProjectTask A) but same time period as ProjectTask B.
+            Result: ProjectTask A has 1 conflict, ProjectTask B has 2 conflicts, ProjectTask C has 1 conflict.
         """
         fsm_tasks = self.filtered("is_fsm")
         overlap_mapping = super()._compute_planning_overlap()
@@ -94,14 +97,14 @@ class Task(models.Model):
             return
         for task in fsm_tasks:
             overlap_messages = []
-            for dummy, task_mapping in overlap_mapping.get(task.id, {}).items():
+            for task_mapping in overlap_mapping.get(task.id, {}).values():
                 message = _('%(partner)s has %(number)s tasks at the same time.', partner=task_mapping['partner_name'], number=len(task_mapping['overlapping_tasks_ids']))
                 overlap_messages.append(message)
             task.planning_overlap = ' '.join(overlap_messages) or False
 
     @property
-    def SELF_READABLE_FIELDS(self):
-        return super().SELF_READABLE_FIELDS | {'is_fsm',
+    def TASK_PORTAL_READABLE_FIELDS(self):
+        return super().TASK_PORTAL_READABLE_FIELDS | {'is_fsm',
                                               'planned_date_begin',
                                               'fsm_done',
                                               'partner_phone',
@@ -113,7 +116,7 @@ class Task(models.Model):
     def _compute_mark_as_done_buttons(self):
         for task in self:
             primary, secondary = True, True
-            if task.fsm_done or not task.is_fsm or task.timer_start:
+            if task.fsm_done or not task.is_fsm or task.sudo().timer_start:
                 primary, secondary = False, False
             else:
                 if task.display_enabled_conditions_count == task.display_satisfied_conditions_count:
@@ -125,26 +128,10 @@ class Task(models.Model):
                 'display_mark_as_done_secondary': secondary,
             })
 
-    @api.depends('partner_id.phone', 'partner_id.mobile')
-    def _compute_partner_phone(self):
-        for task in self:
-            task.partner_phone = task.partner_id.mobile or task.partner_id.phone or False
-
-    def _inverse_partner_phone(self):
-        for task in self:
-            if task.partner_id:
-                if task.partner_id.mobile or not task.partner_id.phone:
-                    task.partner_id.mobile = task.partner_phone
-                else:
-                    task.partner_id.phone = task.partner_phone
-
     @api.depends('partner_phone', 'partner_id.phone')
     def _compute_is_task_phone_update(self):
         for task in self:
-            if task.partner_id.mobile or not task.partner_id.phone:
-                task.is_task_phone_update = task.partner_phone != task.partner_id.mobile
-            else:
-                task.is_task_phone_update = task.partner_phone != task.partner_id.phone
+            task.is_task_phone_update = task.partner_phone != task.partner_id.phone
 
     @api.depends('project_id.allow_timesheets', 'total_hours_spent')
     def _compute_display_conditions_count(self):
@@ -156,17 +143,11 @@ class Task(models.Model):
                 'display_satisfied_conditions_count': satisfied
             })
 
-    @api.depends('fsm_done', 'display_timesheet_timer', 'timer_start', 'total_hours_spent')
-    def _compute_display_timer_buttons(self):
-        fsm_done_tasks = self.filtered(lambda task: task.fsm_done)
-        fsm_done_tasks.update({
-            'display_timer_start_primary': False,
-            'display_timer_start_secondary': False,
-            'display_timer_stop': False,
-            'display_timer_pause': False,
-            'display_timer_resume': False,
-        })
-        super(Task, self - fsm_done_tasks)._compute_display_timer_buttons()
+    @api.depends('fsm_done')
+    def _compute_display_timesheet_timer(self):
+        fsm_done_tasks = self.filtered('fsm_done')
+        fsm_done_tasks.display_timesheet_timer = False
+        super(ProjectTask, self - fsm_done_tasks)._compute_display_timesheet_timer()
 
     @api.onchange('date_deadline', 'planned_date_begin')
     def _onchange_planned_dates(self):
@@ -177,7 +158,7 @@ class Task(models.Model):
         self_fsm = self.filtered('is_fsm')
         basic_projects = self - self_fsm
         if basic_projects:
-            res = super(Task, basic_projects).write(vals.copy())
+            res = super(ProjectTask, basic_projects).write(vals.copy())
             if not self_fsm:
                 return res
 
@@ -194,7 +175,7 @@ class Task(models.Model):
         ):
             vals.update({"date_deadline": False, "planned_date_begin": False})
 
-        return super(Task, self_fsm).write(vals)
+        return super(ProjectTask, self_fsm).write(vals)
 
     @api.model
     def _group_expand_project_ids(self, projects, domain):
@@ -221,16 +202,46 @@ class Task(models.Model):
 
     def action_timer_start(self):
         if not self.user_timer_id.timer_start and self.display_timesheet_timer:
-            super(Task, self).action_timer_start()
-            if self.is_fsm:
-                time = fields.Datetime.context_timestamp(self, self.timer_start)
-                self.message_post(
-                    body=_(
-                        'Timer started at: %(date)s %(time)s',
-                        date=time.strftime(get_lang(self.env).date_format),
-                        time=time.strftime(get_lang(self.env).time_format),
-                    ),
-                )
+            super().action_timer_start()
+            if not self.is_fsm:
+                return
+
+            if self.allow_geolocation and (geolocation := self.env.context.get("geolocation")):
+                success = geolocation.get("success")
+                latitude = 0
+                longitude = 0
+                localisation_start = False
+
+                if success:
+                    latitude = geolocation["latitude"]
+                    longitude = geolocation["longitude"]
+                    localisation_start = self.env["base.geocoder"]._get_localisation(latitude=latitude, longitude=longitude)
+
+                    geolocation_message = _("GPS Coordinates: %(localisation_start)s (%(latitude)s, %(longitude)s)",
+                        localisation_start=localisation_start,
+                        latitude=latitude,
+                        longitude=longitude,
+                    )
+                else:
+                    geolocation_message = geolocation.get("message", _("Location error"))
+            else:
+                geolocation_message = False
+
+            time = fields.Datetime.context_timestamp(self, self.timer_start)
+            body = _(
+                'Timer started at: %(date)s %(time)s',
+                date=time.strftime(get_lang(self.env).date_format),
+                time=time.strftime(get_lang(self.env).time_format),
+            )
+            if geolocation_message:
+                body += Markup("<br/>") + geolocation_message
+                if latitude and latitude:
+                    body += Markup(" <a href='https://maps.google.com?q={latitude},{longitude}' target='_blank'>{label}</a>").format(
+                        latitude=latitude,
+                        longitude=longitude,
+                        label=_("View on Map")
+                    )
+            self.message_post(body=body)
 
     def action_view_timesheets(self):
         kanban_view = self.env.ref('hr_timesheet.view_kanban_account_analytic_line')
@@ -274,16 +285,10 @@ class Task(models.Model):
             Create SO confirmed with time and material.
         """
         Timer = self.env['timer.timer']
-        tasks_running_timer_ids = Timer.search([('res_model', '=', 'project.task'), ('res_id', 'in', self.ids)])
-        timesheets = self.env['account.analytic.line'].sudo().search([('task_id', 'in', self.ids)])
-        timesheets_running_timer_ids = None
-        if timesheets:
-            timesheets_running_timer_ids = Timer.search([
-                ('res_model', '=', 'account.analytic.line'),
-                ('res_id', 'in', timesheets.ids)])
-        if tasks_running_timer_ids or timesheets_running_timer_ids:
+        running_timers = Timer.search([('parent_res_model', '=', 'project.task'), ('parent_res_id', 'in', self.ids)])
+        if running_timers:
             if stop_running_timers:
-                self._stop_all_timers_and_create_timesheets(tasks_running_timer_ids, timesheets_running_timer_ids, timesheets)
+                self._stop_all_timers_and_update_timesheets(running_timers)
             else:
                 wizard = self.env['project.task.stop.timers.wizard'].create({
                     'line_ids': [Command.create({'task_id': task.id}) for task in self],
@@ -303,40 +308,31 @@ class Task(models.Model):
         return True
 
     @api.model
-    def _stop_all_timers_and_create_timesheets(self, tasks_running_timer_ids, timesheets_running_timer_ids, timesheets):
+    def _stop_all_timers_and_update_timesheets(self, running_timers):
         ConfigParameter = self.env['ir.config_parameter'].sudo()
         Timesheet = self.env['account.analytic.line']
 
-        if not tasks_running_timer_ids and not timesheets_running_timer_ids:
+        if not running_timers:
             return Timesheet
+        if any(
+            timer.res_model != 'account.analytic.line'
+            or (timer.parent_res_model and timer.parent_res_model != 'project.task')
+            for timer in running_timers
+        ):
+            raise UserError(_('All running timers should be linked to a timesheet and a task.'))
 
         result = Timesheet
         minimum_duration = int(ConfigParameter.get_param('timesheet_grid.timesheet_min_duration', 0))
         rounding = int(ConfigParameter.get_param('timesheet_grid.timesheet_rounding', 0))
-        if tasks_running_timer_ids:
-            task_dict = {task.id: task for task in self}
-            timesheets_vals = []
-            for timer in tasks_running_timer_ids:
-                minutes_spent = timer._get_minutes_spent()
-                time_spent = self._timer_rounding(minutes_spent, minimum_duration, rounding) / 60
-                task = task_dict[timer.res_id]
-                timesheets_vals.append({
-                    'task_id': task.id,
-                    'project_id': task.project_id.id,
-                    'user_id': timer.user_id.id,
-                    'unit_amount': time_spent,
-                })
-            tasks_running_timer_ids.sudo().unlink()
-            result += Timesheet.sudo().create(timesheets_vals)
-
-        if timesheets_running_timer_ids:
+        if running_timers:
+            timesheets = self.env['account.analytic.line'].sudo().search([('id', 'in', running_timers.mapped('res_id'))])
             timesheets_dict = {timesheet.id: timesheet for timesheet in timesheets}
-            for timer in timesheets_running_timer_ids:
+            for timer in running_timers:
                 timesheet = timesheets_dict[timer.res_id]
                 minutes_spent = timer._get_minutes_spent()
-                timesheet._add_timesheet_time(minutes_spent)
+                timesheet.write({'unit_amount': round_time_spent(minutes_spent, minimum_duration, rounding) / 60})
                 result += timesheet
-            timesheets_running_timer_ids.sudo().unlink()
+            running_timers.sudo().unlink()
 
         return result
 
@@ -368,6 +364,7 @@ class Task(models.Model):
             project_id = False
         action = self.env['ir.actions.act_window']._for_xml_id(action_id)
         context = literal_eval(action.get('context', '{}'))
+        allow_timesheets = any(project.allow_timesheets for project in project_ids)
         if project_id:
             context['default_project_id'] = project_id
         return {
@@ -375,6 +372,7 @@ class Task(models.Model):
             'context': {
                 **context,
                 'default_user_ids': default_user_ids,
+                'allow_timesheets': allow_timesheets,
             },
         }
 
@@ -417,16 +415,11 @@ class Task(models.Model):
                 'default_res_ids': self.ids,
                 'default_template_id': template_id,
                 'fsm_mark_as_sent': True,
-                'mailing_document_based': True,
             },
         }
 
     def action_send_report(self):
-        tasks_with_report = self.filtered(
-            lambda task:
-                (task.display_send_report_primary or task.display_send_report_secondary)
-                and task._is_fsm_report_available()
-        )
+        tasks_with_report = self.filtered(lambda task: task._is_fsm_report_available())
         if not tasks_with_report:
             return {
                 'type': 'ir.actions.client',
@@ -470,7 +463,7 @@ class Task(models.Model):
 
     def _allocated_hours_per_user_for_scale(self, users, start, stop):
         fsm_tasks = self.filtered("is_fsm")
-        allocated_hours_mapped = super(Task, self - fsm_tasks)._allocated_hours_per_user_for_scale(users, start, stop)
+        allocated_hours_mapped = super(ProjectTask, self - fsm_tasks)._allocated_hours_per_user_for_scale(users, start, stop)
         users_work_intervals, dummy = users.sudo()._get_valid_work_intervals(start, stop)
         for task in fsm_tasks:
             # if the task goes over the gantt period, compute the duration only within
@@ -500,3 +493,20 @@ class Task(models.Model):
                 [('is_fsm', '=', True)],
             ])
         return action
+
+    def _prepare_domains_for_all_deadlines(self, date_start, date_end):
+        domain = super()._prepare_domains_for_all_deadlines(date_start, date_end)
+        if self._context.get('fsm_mode'):
+            domain['project'] = expression.AND([
+                domain['project'],
+                [('is_fsm', '=', True)]
+            ])
+            domain['milestone'] = expression.AND([
+                domain['milestone'],
+                [('project_id.is_fsm', '=', True)]
+            ])
+        return domain
+
+    def _get_report_base_filename(self):
+        self.ensure_one()
+        return 'Field Service Report %s - %s' % (self.name, self.partner_id.name)

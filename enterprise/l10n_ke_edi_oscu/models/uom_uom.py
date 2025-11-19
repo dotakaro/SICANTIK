@@ -3,7 +3,7 @@
 from odoo import fields, models, _
 
 
-class Uom(models.Model):
+class UomUom(models.Model):
     _inherit = 'uom.uom'
 
     l10n_ke_quantity_unit_id = fields.Many2one(
@@ -22,7 +22,7 @@ class Uom(models.Model):
         if misconfigured_uoms:
             messages['uom_code_missing'] = {
                 'message': _("Some units of measure are missing a corresponding KRA code where one must be configured."),
-                'action_text': _("View UoM(s)"),
+                'action_text': _("View Unit(s)"),
                 'action': misconfigured_uoms._l10n_ke_action_open_uoms(),
                 'blocking': True,
             }
@@ -32,7 +32,7 @@ class Uom(models.Model):
     def _l10n_ke_action_open_uoms(self, title=None):
         """ Open a view of the UoM fields that must be set to register products with eTIMS. """
         res = {
-            'name': title or _("UoM(s)"),
+            'name': title or _("Unit(s)"),
             'type': 'ir.actions.act_window',
             'res_model': 'uom.uom',
             'domain': [('id', 'in', self.ids)],

@@ -1,4 +1,6 @@
+import { defineMailModels } from "@mail/../tests/mail_test_helpers";
 import { before, expect, test } from "@odoo/hoot";
+import { animationFrame } from "@odoo/hoot-mock";
 import {
     contains,
     defineModels,
@@ -8,8 +10,6 @@ import {
     mountView,
     onRpc,
 } from "@web/../tests/web_test_helpers";
-import { defineMailModels } from "@mail/../tests/mail_test_helpers";
-import { animationFrame } from "@odoo/hoot-mock";
 
 class ApprovalModel extends models.Model {
     async get_views() {
@@ -109,12 +109,10 @@ before(() => {
     };
 });
 
-onRpc("studio.approval.rule", "get_approval_spec", async (...args) => {
-    return {
-        all_rules: { ...ALL_RULES },
-        ...MODEL_ENTRIES,
-    };
-});
+onRpc("studio.approval.rule", "get_approval_spec", () => ({
+    all_rules: { ...ALL_RULES },
+    ...MODEL_ENTRIES,
+}));
 
 test("approval can revoke below rules", async () => {
     onRpc("studio.approval.rule", "delete_approval", (args) => {
@@ -143,22 +141,22 @@ test("approval can revoke below rules", async () => {
 });
 
 test("reload record when setting/deleting approval", async () => {
-    onRpc("studio.approval.rule", "set_approval", async (args) => {
+    onRpc("studio.approval.rule", "set_approval", ({ args, kwargs }) => {
         expect.step({
-            ruleIds: args.args[0],
-            res_id: args.kwargs.res_id,
-            approved: args.kwargs.approved,
+            ruleIds: args[0],
+            res_id: kwargs.res_id,
+            approved: kwargs.approved,
         });
         return true;
     });
-    onRpc("studio.approval.rule", "delete_approval", (args) => {
+    onRpc("studio.approval.rule", "delete_approval", () => {
         expect.step("delete_approval");
         return true;
     });
     onRpc("partner", "web_read", () => {
         expect.step("web_read");
     });
-    onRpc("studio.approval.rule", "get_approval_spec", async (args) => {
+    onRpc("studio.approval.rule", "get_approval_spec", () => {
         expect.step("get_approval_spec");
     });
     await mountView({
@@ -194,18 +192,18 @@ test("don't reload model when setting approval in error", async () => {
         message: "Crash",
         errorName: "crash",
     });
-    onRpc("studio.approval.rule", "set_approval", async (args) => {
+    onRpc("studio.approval.rule", "set_approval", ({ args, kwargs }) => {
         expect.step({
-            ruleIds: args.args[0],
-            res_id: args.kwargs.res_id,
-            approved: args.kwargs.approved,
+            ruleIds: args[0],
+            res_id: kwargs.res_id,
+            approved: kwargs.approved,
         });
         throw error;
     });
     onRpc("partner", "web_read", () => {
         expect.step("web_read");
     });
-    onRpc("studio.approval.rule", "get_approval_spec", async (args) => {
+    onRpc("studio.approval.rule", "get_approval_spec", () => {
         expect.step("get_approval_spec");
     });
     await mountView({
@@ -221,7 +219,7 @@ test("don't reload model when setting approval in error", async () => {
     await contains(".o_web_studio_approval").click();
     await contains(".o_web_approval_approve").click();
     await animationFrame();
-    expect.verifyErrors(['Crash']);
+    expect.verifyErrors(["Crash"]);
     expect.verifySteps([
         {
             approved: true,

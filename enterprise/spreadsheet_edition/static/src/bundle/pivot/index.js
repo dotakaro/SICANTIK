@@ -1,6 +1,3 @@
-/** @odoo-module */
-
-import { _t } from "@web/core/l10n/translation";
 import * as spreadsheet from "@odoo/o-spreadsheet";
 import { initCallbackRegistry } from "@spreadsheet/o_spreadsheet/init_callbacks";
 
@@ -9,10 +6,14 @@ import { PivotDetailsSidePanel } from "./side_panels/pivot_details_side_panel";
 
 import "./autofill";
 import { insertPivot } from "./pivot_init_callback";
+import { NewPivotSidePanel } from "./side_panels/new_pivot_side_panel/new_pivot_side_panel";
+import { _t } from "@web/core/l10n/translation";
+import { PivotOdooInsertion } from "./plugins/pivot_odoo_insertion";
 
-const { featurePluginRegistry, cellMenuRegistry, pivotSidePanelRegistry } = spreadsheet.registries;
+const { featurePluginRegistry, pivotSidePanelRegistry, sidePanelRegistry } = spreadsheet.registries;
 
 featurePluginRegistry.add("odooPivotAutofillPlugin", PivotAutofillPlugin);
+featurePluginRegistry.add("odooPivotOdooInsertionPlugin", PivotOdooInsertion);
 
 pivotSidePanelRegistry.add("ODOO", {
     editor: PivotDetailsSidePanel,
@@ -20,19 +21,7 @@ pivotSidePanelRegistry.add("ODOO", {
 
 initCallbackRegistry.add("insertPivot", insertPivot);
 
-cellMenuRegistry.add("pivot_properties", {
-    name: _t("See pivot properties"),
-    sequence: 170,
-    execute(env) {
-        const position = env.model.getters.getActivePosition();
-        const pivotId = env.model.getters.getPivotIdFromPosition(position);
-        env.openSidePanel("PivotSidePanel", { pivotId });
-    },
-    isVisible: (env) => {
-        const position = env.model.getters.getActivePosition();
-        return env.model.getters.isExistingPivot(
-            env.model.getters.getPivotIdFromPosition(position)
-        );
-    },
-    icon: "o-spreadsheet-Icon.PIVOT",
+sidePanelRegistry.add("NewOdooPivotSidePanel", {
+    title: _t("New Odoo Pivot"),
+    Body: NewPivotSidePanel,
 });

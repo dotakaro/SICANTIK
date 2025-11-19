@@ -11,9 +11,9 @@ from odoo.addons.l10n_mx_edi.models.l10n_mx_edi_document import USAGE_SELECTION
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    l10n_mx_edi_addenda_id = fields.Many2one(
+    l10n_mx_edi_addenda_ids = fields.Many2many(
         comodel_name='l10n_mx_edi.addenda',
-        string='Addenda',
+        string='Addendas & Complementos',
     )
     l10n_mx_edi_fiscal_regime = fields.Selection(
         selection=FISCAL_REGIMES_SELECTION,
@@ -22,10 +22,7 @@ class ResPartner(models.Model):
         readonly=False,
         store=True,
         help="Fiscal Regime is required for all partners (used in CFDI)")
-    l10n_mx_edi_no_tax_breakdown = fields.Boolean(
-        string="No Tax Breakdown",
-        help="Mexico: Includes taxes in the price and does not add tax information to the CFDI.")
-
+    l10n_mx_edi_ieps_breakdown = fields.Boolean(string="IEPS Breakdown")
     l10n_mx_edi_usage = fields.Selection(
         selection=USAGE_SELECTION,
         string="Usage",
@@ -36,6 +33,13 @@ class ResPartner(models.Model):
         string="Payment Way",
         help="Indicates the way the invoice was/will be paid, where the options could be: "
              "Cash, Nominal Check, Credit Card, etc. Leave empty if unkown and the XML will show 'Unidentified'.",
+    )
+    l10n_mx_edi_payment_policy = fields.Selection(
+        string="Payment Policy",
+        selection=[
+            ('PPD', 'PPD'),
+            ('PUE', 'PUE'),
+        ],
     )
 
     @api.depends('country_code')
@@ -73,6 +77,12 @@ class ResPartner(models.Model):
             return timezone('America/Hermosillo') # UTC-7
         # By default, takes the central area timezone
         return timezone('America/Guatemala') # UTC-6
+
+    def _get_frontend_writable_fields(self):
+        frontend_writable_fields = super()._get_frontend_writable_fields()
+        frontend_writable_fields.add('l10n_mx_edi_fiscal_regime')
+
+        return frontend_writable_fields
 
     @api.model
     def get_partner_localisation_fields_required_to_invoice(self, country_id):

@@ -5,7 +5,7 @@ from odoo import api, fields, models, _
 from datetime import timedelta
 
 
-class FollowupLine(models.Model):
+class Account_FollowupFollowupLine(models.Model):
     _name = 'account_followup.followup.line'
     _description = 'Follow-up Criteria'
     _order = 'delay asc'
@@ -18,13 +18,13 @@ class FollowupLine(models.Model):
     company_id = fields.Many2one('res.company', 'Company', required=True, default=lambda self: self.env.company)
 
     mail_template_id = fields.Many2one(comodel_name='mail.template', domain="[('model', '=', 'res.partner')]")
-    send_email = fields.Boolean('Send Email', default=True)
+    send_email = fields.Boolean('Email', default=True)
     join_invoices = fields.Boolean(string="Attach Invoices", default=True)
     additional_follower_ids = fields.Many2many(string="Add followers", comodel_name='res.users',
                                                help="If set, those users will be added as followers on the partner and receive notifications about any email reply made by the partner on the reminder email.")
 
     sms_template_id = fields.Many2one(comodel_name='sms.template', domain="[('model', '=', 'res.partner')]")
-    send_sms = fields.Boolean('Send SMS Message')
+    send_sms = fields.Boolean('SMS')
 
     create_activity = fields.Boolean(string='Schedule Activity')
     activity_summary = fields.Char(string='Summary')
@@ -39,10 +39,14 @@ class FollowupLine(models.Model):
 
     auto_execute = fields.Boolean(string="Automatic", default=False)
 
-    _sql_constraints = [
-        ('days_uniq', 'unique(company_id, delay)', 'Days of the follow-up lines must be different per company'),
-        ('uniq_name', 'unique(company_id, name)', 'A follow-up action name must be unique. This name is already set to another action.'),
-    ]
+    _days_uniq = models.Constraint(
+        'unique(company_id, delay)',
+        "Days of the follow-up lines must be different per company",
+    )
+    _uniq_name = models.Constraint(
+        'unique(company_id, name)',
+        "A follow-up action name must be unique. This name is already set to another action.",
+    )
 
     def copy_data(self, default=None):
         vals_list = super().copy_data(default=default)
@@ -52,11 +56,11 @@ class FollowupLine(models.Model):
             company_ids += default['company_id']
 
         highest_delay_per_company_id = {
-            row['company_id'][0]: row['delay']
-            for row in self.read_group(
+            company.id: delay_max
+            for company, delay_max in self._read_group(
                 domain=[('company_id', 'in', company_ids)],
-                fields=['company_id', 'delay:max'],
-                groupby='company_id',
+                groupby=['company_id'],
+                aggregates=['delay:max'],
             )
         }
         for line, vals in zip(self, vals_list):

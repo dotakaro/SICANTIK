@@ -2,7 +2,7 @@
 
 import base64
 
-from datetime import date, datetime
+from datetime import date
 from odoo.tests import tagged
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
@@ -16,7 +16,7 @@ class TestSEPAFile(AccountTestInvoicingCommon):
         super().setUpClass()
         cls.company_data['company'].iso20022_orgid_id = "123456789"
 
-        cls.env.user.groups_id |= cls.env.ref('account.group_validate_bank_account')
+        cls.env.user.group_ids |= cls.env.ref('account.group_validate_bank_account')
 
         cls.address_home = cls.env['res.partner'].create([{
             'name': "Test Employee",
@@ -61,21 +61,14 @@ class TestSEPAFile(AccountTestInvoicingCommon):
             'company_id': cls.env.company.id,
             'distance_home_work': 75,
             'private_country_id': cls.env.ref('base.be').id,
-        })
-
-        cls.contract = cls.env['hr.contract'].create({
-            'name': "Test Contract",
-            'employee_id': cls.employee.id,
-            'resource_calendar_id': cls.company.resource_calendar_id.id,
-            'company_id': cls.company.id,
-            'date_generated_from': datetime(2020, 9, 1, 0, 0, 0),
-            'date_generated_to': datetime(2020, 9, 1, 0, 0, 0),
-            'structure_type_id': cls.env.ref('hr_contract.structure_type_employee_cp200').id,
-            'date_start': date(2018, 12, 31),
+            'structure_type_id': cls.env.ref('hr.structure_type_employee_cp200').id,
+            'date_version': date(2018, 12, 31),
+            'contract_date_start': date(2018, 12, 31),
             'wage': 2400,
             'wage_on_signature': 2400,
-            'state': "open",
         })
+
+        cls.contract = cls.employee.version_id
 
     def test_sepa_file(self):
         payslip_run = self.env['hr.payslip.run'].create({
@@ -85,11 +78,9 @@ class TestSEPAFile(AccountTestInvoicingCommon):
             'company_id': self.company.id,
         })
 
-        payslip_employee = self.env['hr.payslip.employees'].with_company(self.company).create({
-            'employee_ids': [(4, self.employee.id)]
-        })
         self.employee.action_trust_bank_accounts()
-        payslip_employee.with_context(active_id=payslip_run.id).compute_sheet()
+
+        payslip_run.generate_payslips(employee_ids=[self.employee.id])
         payslip_run.action_validate()
 
         sepa_wizard = (self.env['hr.payroll.payment.report.wizard'].with_company(self.company).create({
@@ -102,5 +93,5 @@ class TestSEPAFile(AccountTestInvoicingCommon):
         sepa_file_content = base64.b64decode(payslip_run.payment_report).decode()
         self.assertTrue("<InstrPrty>HIGH</InstrPrty>" in sepa_file_content)
         self.assertTrue("<Cd>SALA</Cd>" in sepa_file_content)
-        self.assertTrue("<Ustrd>/A/ SLIP" in sepa_file_content)
-        self.assertTrue("<Ustrd>SLIP" not in sepa_file_content)
+        self.assertTrue(f"<Ustrd>/A/ {payslip_run.slip_ids.id}" in sepa_file_content)
+        self.assertTrue(f"<Ustrd>{payslip_run.slip_ids.id}" not in sepa_file_content)

@@ -2,6 +2,7 @@
 
 from odoo import api, models
 
+
 class FleetVehicleLogServices(models.Model):
     _inherit = 'fleet.vehicle.log.services'
 

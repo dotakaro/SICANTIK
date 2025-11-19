@@ -31,7 +31,7 @@ function getPivotAutofillValue(model, xc, { direction, steps }) {
 }
 
 test("Autofill pivot values", async function () {
-    const { model } = await createSpreadsheetWithPivot();
+    const { model } = await createSpreadsheetWithPivot({ pivotType: "static" });
 
     // From value to value
     expect(getPivotAutofillValue(model, "C3", { direction: "bottom", steps: 1 })).toBe(
@@ -113,7 +113,7 @@ test("Autofill pivot values", async function () {
 });
 
 test("Autofill with pivot positions", async function () {
-    const { model } = await createSpreadsheetWithPivot();
+    const { model } = await createSpreadsheetWithPivot({ pivotType: "static" });
     setCellContent(model, "C3", `=PIVOT.VALUE(1,"probability","#bar",1,"#foo",1)`);
     expect(getPivotAutofillValue(model, "C3", { direction: "left", steps: 1 })).toBe(
         `=PIVOT.VALUE(1,"probability","#bar",1,"#foo",0)`
@@ -147,7 +147,7 @@ test("Autofill with pivot positions", async function () {
 });
 
 test("Autofill with references works like any regular function (no custom autofill)", async function () {
-    const { model } = await createSpreadsheetWithPivot();
+    const { model } = await createSpreadsheetWithPivot({ pivotType: "static" });
     setCellContent(model, "A1", `=PIVOT.VALUE(1,"probability","bar",B2,"foo",$C$3)`);
     selectCell(model, "A1");
 
@@ -158,6 +158,7 @@ test("Autofill with references works like any regular function (no custom autofi
 
 test("Autofill non-odoo pivot should copy the formula", function () {
     patchTranslations();
+    // prettier-ignore
     const grid = {
         A1: "Customer",
         B1: "Price",
@@ -196,6 +197,7 @@ test("Can autofill positional col headers horizontally", async () => {
                     <field name="date" interval="month" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     setCellContent(model, "B1", `=PIVOT.HEADER(1,"#product_id",1)`);
     expect(getPivotAutofillValue(model, "B1", { direction: "right", steps: 1 })).toBe(
@@ -216,10 +218,11 @@ test("Can autofill positional row headers vertically", async () => {
                     <field name="product_id"  type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
-    setCellContent(model, "A3", `=PIVOT.HEADER(1,"date:month","04/2016","#product_id",1)`);
+    setCellContent(model, "A3", `=PIVOT.HEADER(1,"date:month",DATE(2016,4,1),"#product_id",1)`);
     expect(getPivotAutofillValue(model, "A3", { direction: "bottom", steps: 1 })).toBe(
-        `=PIVOT.HEADER(1,"date:month","04/2016","#product_id",2)`
+        `=PIVOT.HEADER(1,"date:month",DATE(2016,4,1),"#product_id",2)`
     );
     selectCell(model, "A3");
     model.dispatch("AUTOFILL_SELECT", { col: 1, row: 3 });
@@ -235,6 +238,7 @@ test("Can autofill positional col horizontally", async () => {
                     <field name="date" interval="month" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     setCellContent(model, "B1", `=PIVOT.VALUE(1,"probability","#product_id",1)`);
     expect(getPivotAutofillValue(model, "B1", { direction: "right", steps: 1 })).toBe(
@@ -255,14 +259,15 @@ test("Can autofill positional row vertically", async () => {
                     <field name="product_id"  type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     setCellContent(
         model,
         "A3",
-        `=PIVOT.VALUE(1,"probability","date:month","04/2016","#product_id",1)`
+        `=PIVOT.VALUE(1,"probability","date:month",DATE(2016,4,1),"#product_id",1)`
     );
     expect(getPivotAutofillValue(model, "A3", { direction: "bottom", steps: 1 })).toBe(
-        `=PIVOT.VALUE(1,"probability","date:month","04/2016","#product_id",2)`
+        `=PIVOT.VALUE(1,"probability","date:month",DATE(2016,4,1),"#product_id",2)`
     );
     selectCell(model, "A3");
     model.dispatch("AUTOFILL_SELECT", { col: 1, row: 3 });
@@ -270,7 +275,7 @@ test("Can autofill positional row vertically", async () => {
     expect(tooltipContent).toEqual([{ value: "April 2016" }, { value: "" }]);
 });
 test("Autofill last column cells vertically by targeting col headers", async function () {
-    const { model } = await createSpreadsheetWithPivot();
+    const { model } = await createSpreadsheetWithPivot({ pivotType: "static" });
     expect(getPivotAutofillValue(model, "F3", { direction: "top", steps: 1 })).toBe(
         getCellFormula(model, "F2")
     );
@@ -295,21 +300,22 @@ test("Autofill pivot values with date in rows", async function () {
                     <field name="date" interval="month" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(getPivotAutofillValue(model, "A3", { direction: "bottom", steps: 1 })).toBe(
-        getCellFormula(model, "A4").replace("10/2016", "05/2016")
+        getCellFormula(model, "A4").replace("DATE(2016,10,1)", "DATE(2016,5,1)")
     );
     expect(getPivotAutofillValue(model, "A5", { direction: "bottom", steps: 1 })).toBe(
-        '=PIVOT.HEADER(1,"date:month","01/2017")'
+        '=PIVOT.HEADER(1,"date:month",DATE(2017,1,1))'
     );
     expect(getPivotAutofillValue(model, "B3", { direction: "bottom", steps: 1 })).toBe(
-        getCellFormula(model, "B4").replace("10/2016", "05/2016")
+        getCellFormula(model, "B4").replace("DATE(2016,10,1)", "DATE(2016,5,1)")
     );
     expect(getPivotAutofillValue(model, "B5", { direction: "bottom", steps: 1 })).toBe(
-        getCellFormula(model, "B5").replace("12/2016", "01/2017")
+        getCellFormula(model, "B5").replace("DATE(2016,12,1)", "DATE(2017,1,1)")
     );
     expect(getPivotAutofillValue(model, "B5", { direction: "top", steps: 1 })).toBe(
-        getCellFormula(model, "B4").replace("10/2016", "11/2016")
+        getCellFormula(model, "B4").replace("DATE(2016,10,1)", "DATE(2016,11,1)")
     );
     expect(getPivotAutofillValue(model, "F6", { direction: "top", steps: 1 })).toBe("");
 });
@@ -322,23 +328,48 @@ test("Autofill pivot values with date in cols", async function () {
                     <field name="date" interval="day" type="col"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
-    expect(getCellFormula(model, "B1")).toBe('=PIVOT.HEADER(1,"date:day","04/14/2016")');
+    expect(getCellFormula(model, "B1")).toBe('=PIVOT.HEADER(1,"date:day",DATE(2016,4,14))');
     expect(getPivotAutofillValue(model, "B1", { direction: "right", steps: 1 })).toBe(
-        '=PIVOT.HEADER(1,"date:day","04/15/2016")'
+        '=PIVOT.HEADER(1,"date:day",DATE(2016,4,15))'
     );
     expect(getCellFormula(model, "B2")).toBe(
-        '=PIVOT.HEADER(1,"date:day","04/14/2016","measure","probability:avg")'
+        '=PIVOT.HEADER(1,"date:day",DATE(2016,4,14),"measure","probability:avg")'
     );
     expect(getPivotAutofillValue(model, "B2", { direction: "right", steps: 1 })).toBe(
-        '=PIVOT.HEADER(1,"date:day","04/15/2016","measure","probability:avg")'
+        '=PIVOT.HEADER(1,"date:day",DATE(2016,4,15),"measure","probability:avg")'
     );
     expect(getCellFormula(model, "B3")).toBe(
-        '=PIVOT.VALUE(1,"probability:avg","foo",1,"date:day","04/14/2016")'
+        '=PIVOT.VALUE(1,"probability:avg","foo",1,"date:day",DATE(2016,4,14))'
     );
     expect(getPivotAutofillValue(model, "B3", { direction: "right", steps: 1 })).toBe(
-        '=PIVOT.VALUE(1,"probability:avg","foo",1,"date:day","04/15/2016")'
+        '=PIVOT.VALUE(1,"probability:avg","foo",1,"date:day",DATE(2016,4,15))'
     );
+
+    setCellContent(model, "C1", '=PIVOT.HEADER(1,"date:day",DATE(2016,4,15))');
+    expect(getPivotAutofillValue(model, "C1", { direction: "bottom", steps: 1 })).toBe(
+        '=PIVOT.HEADER(1,"date:day",DATE(2016,4,15),"measure","probability:avg")'
+    );
+    expect(getPivotAutofillValue(model, "C1", { direction: "bottom", steps: 2 })).toBe(
+        '=PIVOT.VALUE(1,"probability:avg","foo",1,"date:day",DATE(2016,4,15))'
+    );
+});
+
+test("Autofill pivot values with date in cols and multiple cols", async (assert) => {
+    const { model } = await createSpreadsheetWithPivot({
+        arch: /*xml*/ `
+                <pivot>
+                    <field name="date" interval="month" type="col"/>
+                    <field name="product_id" type="col"/>
+                    <field name="tag_ids" type="row"/>
+                    <field name="probability" type="measure"/>
+                </pivot>`,
+    });
+    setCellContent(model, "H2", '=PIVOT.HEADER(1,"date:month","05/2016")');
+    expect(getPivotAutofillValue(model, "H2", { direction: "bottom", steps: 1 })).toBe("");
+    expect(getPivotAutofillValue(model, "H2", { direction: "bottom", steps: 2 })).toBe("");
+    expect(getPivotAutofillValue(model, "H2", { direction: "bottom", steps: 3 })).toBe("");
 });
 
 test("Autofill pivot values with date (day)", async function () {
@@ -349,13 +380,14 @@ test("Autofill pivot values with date (day)", async function () {
                     <field name="date" interval="day" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
-    expect(getCellFormula(model, "A3")).toBe('=PIVOT.HEADER(1,"date:day","04/14/2016")');
+    expect(getCellFormula(model, "A3")).toBe('=PIVOT.HEADER(1,"date:day",DATE(2016,4,14))');
     expect(model.getters.getTooltipFormula(getCellFormula(model, "A3"))).toEqual([
         { value: "14 Apr 2016" },
     ]);
     expect(getPivotAutofillValue(model, "A3", { direction: "bottom", steps: 1 })).toBe(
-        '=PIVOT.HEADER(1,"date:day","04/15/2016")'
+        '=PIVOT.HEADER(1,"date:day",DATE(2016,4,15))'
     );
 });
 
@@ -366,6 +398,7 @@ test("Autofill pivot values with date (week) 2020 has 53 weeks", async function 
                     <field name="date" interval="week" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     setCellContent(model, "A1", '=PIVOT.HEADER(1,"date:week","52/2020")');
     expect(getPivotAutofillValue(model, "A1", { direction: "bottom", steps: 1 })).toBe(
@@ -383,6 +416,7 @@ test("Autofill empty pivot date value", async function () {
                     <field name="date" interval="year" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     for (const granularity of [
         "day",
@@ -456,9 +490,10 @@ test("Autofill pivot values with date (month)", async function () {
                     <field name="date" interval="month" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(getPivotAutofillValue(model, "A3", { direction: "bottom", steps: 1 })).toBe(
-        `=PIVOT.HEADER(1,"date:month","05/2016")`
+        `=PIVOT.HEADER(1,"date:month",DATE(2016,5,1))`
     );
     expect(model.getters.getTooltipFormula(getCellFormula(model, "A3"))).toEqual([
         { value: "April 2016" },
@@ -473,6 +508,7 @@ test("Autofill pivot values with date (quarter)", async function () {
                     <field name="date" interval="quarter" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(getPivotAutofillValue(model, "A3", { direction: "bottom", steps: 1 })).toBe(
         getCellFormula(model, "A3").replace("2/2016", "3/2016")
@@ -490,6 +526,7 @@ test("Autofill pivot values with date (year)", async function () {
                     <field name="date" interval="year" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(getPivotAutofillValue(model, "A3", { direction: "bottom", steps: 1 })).toBe(
         getCellFormula(model, "A3").replace("2016", "2017")
@@ -507,9 +544,10 @@ test("Autofill pivot values with date (no defined interval)", async function () 
                     <field name="date" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(getPivotAutofillValue(model, "A3", { direction: "bottom", steps: 1 })).toBe(
-        `=PIVOT.HEADER(1,"date:month","05/2016")`
+        `=PIVOT.HEADER(1,"date:month",DATE(2016,5,1))`
     );
 });
 
@@ -521,6 +559,7 @@ test("Tooltip of pivot formulas", async function () {
                     <field name="date" interval="year" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(model.getters.getTooltipFormula(getCellFormula(model, "A3"))).toEqual([
         { value: "2016" },
@@ -556,6 +595,7 @@ test("Tooltip of pivot formulas with 2 measures", async function () {
                     <field name="probability" type="measure"/>
                     <field name="foo" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(model.getters.getTooltipFormula(getCellFormula(model, "A3"))).toEqual([
         { value: "2016" },
@@ -578,6 +618,7 @@ test("Tooltip of empty pivot formula is empty", async function () {
                     <field name="probability" type="measure"/>
                     <field name="foo" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     selectCell(model, "A3");
     model.dispatch("AUTOFILL_SELECT", { col: 10, row: 10 });
@@ -592,6 +633,7 @@ test("Autofill content which contains pivots but which is not a pivot", async fu
                     <field name="date" interval="year" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     const a3 = getCellFormula(model, "A3").replace("=", "");
     const content = `=${a3} + ${a3}`;
@@ -608,8 +650,8 @@ test("Autofill pivot formula with missing pivotId", async function () {
                 colNumber: 1,
                 rowNumber: 2,
                 cells: {
-                    A1: { content: '=PIVOT.VALUE("1","bar","date","05/2023")' },
-                    B1: { content: '=PIVOT.HEADER("1","date","05/2023")' },
+                    A1: '=PIVOT.VALUE("1","bar","date","05/2023")',
+                    B1: '=PIVOT.HEADER("1","date","05/2023")',
                 },
             },
         ],
@@ -642,6 +684,7 @@ test("Can autofill col headers horizontally", async () => {
                     <field name="date" interval="year" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     const sortedTagNames = ["isCool", "Growing", "None"];
     selectCell(model, "B1");
@@ -671,6 +714,7 @@ test("Can autofill col headers vertically", async () => {
                     <field name="date" interval="year" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
 
     selectCell(model, "B1");
@@ -716,6 +760,7 @@ test("Can autofill row headers horizontally", async () => {
                     <field name="product_id"  type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     const sortedTagNames = ["isCool", "Growing", "None"];
     let tooltipContent;
@@ -758,6 +803,7 @@ test("Can autofill row headers vertically", async () => {
                     <field name="product_id"  type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     let tooltipContent;
     selectCell(model, "A3");
@@ -790,6 +836,64 @@ test("Can autofill row headers vertically", async () => {
     expect(tooltipContent[tooltipContent.length - 1].value).toBe("Probability");
 });
 
+test("Can autofill with month string parent group header and value", async () => {
+    const { model } = await createSpreadsheetWithPivot({
+        arch: /*xml*/ `
+            <pivot>
+                <field name="date" interval="month" type="row"/>
+                <field name="product_id"  type="row"/>
+                <field name="probability" type="measure"/>
+            </pivot>`,
+    });
+    let tooltipContent;
+    setCellContent(model, "A1", '=PIVOT.HEADER(1,"date:month","04/2016","product_id",37)');
+    model.dispatch("AUTOFILL_SELECT", { col: 0, row: 1 });
+    tooltipContent = model.getters.getAutofillTooltip().props.content;
+    expect(tooltipContent[tooltipContent.length - 1].value).toBe("October 2016");
+    model.dispatch("AUTOFILL");
+    expect(getCell(model, "A2").content).toBe('=PIVOT.HEADER(1,"date:month",DATE(2016,10,1))');
+
+    setCellContent(
+        model,
+        "A1",
+        '=PIVOT.VALUE(1,"probability:avg","date:month","04/2016","product_id",37)'
+    );
+    selectCell(model, "A1");
+    model.dispatch("AUTOFILL_SELECT", { col: 0, row: 1 });
+    tooltipContent = model.getters.getAutofillTooltip().props.content;
+    expect(tooltipContent[tooltipContent.length - 1].value).toBe("October 2016");
+    model.dispatch("AUTOFILL");
+    expect(getCell(model, "A2").content).toBe(
+        '=PIVOT.VALUE(1,"probability:avg","date:month",DATE(2016,10,1))'
+    );
+});
+
+test("Cannot autofill with invalid parent group header and value", async () => {
+    const { model } = await createSpreadsheetWithPivot({
+        arch: /*xml*/ `
+            <pivot>
+                <field name="date" interval="month" type="row"/>
+                <field name="product_id"  type="row"/>
+                <field name="probability" type="measure"/>
+            </pivot>`,
+    });
+    setCellContent(model, "A1", '=PIVOT.HEADER(1,"date:month",TRUE,"product_id",37)');
+    model.dispatch("AUTOFILL_SELECT", { col: 0, row: 1 });
+    expect(model.getters.getAutofillTooltip()).toBe(undefined);
+    model.dispatch("AUTOFILL");
+    expect(getCell(model, "A2")).toBe(undefined);
+
+    setCellContent(
+        model,
+        "A1",
+        '=PIVOT.VALUE(1,"probability:avg","date:month",TRUE,"product_id",37)'
+    );
+    model.dispatch("AUTOFILL_SELECT", { col: 0, row: 1 });
+    expect(model.getters.getAutofillTooltip()).toBe(undefined);
+    model.dispatch("AUTOFILL");
+    expect(getCell(model, "A2")).toBe(undefined);
+});
+
 test("Autofill pivot keeps format but neither style nor border", async function () {
     const { model } = await createSpreadsheetWithPivot({
         arch: /*xml*/ `
@@ -798,6 +902,7 @@ test("Autofill pivot keeps format but neither style nor border", async function 
                     <field name="product_id"  type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
 
     // Change the format, style and borders of E3
@@ -836,15 +941,16 @@ test("Can autofill pivot horizontally with column grouped by date", async () => 
                     <field name="product_id"  type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     // Headers
     setCellContent(
         model,
         "B1",
-        `=PIVOT.HEADER(1,"date:month","04/2016","measure","probability:avg")`
+        `=PIVOT.HEADER(1,"date:month",DATE(2016,4,1),"measure","probability:avg")`
     );
     expect(getPivotAutofillValue(model, "B1", { direction: "right", steps: 1 })).toBe(
-        `=PIVOT.HEADER(1,"date:month","05/2016","measure","probability:avg")`
+        `=PIVOT.HEADER(1,"date:month",DATE(2016,5,1),"measure","probability:avg")`
     );
 
     setCellContent(model, "B1", `=PIVOT.HEADER(1,"measure","probability:avg")`);
@@ -854,12 +960,47 @@ test("Can autofill pivot horizontally with column grouped by date", async () => 
     setCellContent(
         model,
         "B1",
-        `=PIVOT.VALUE(1,"probability:avg","product_id",47,"date:month","04/2016")`
+        `=PIVOT.VALUE(1,"probability:avg","product_id",47,"date:month",DATE(2016,4,1))`
     );
     expect(getPivotAutofillValue(model, "B1", { direction: "right", steps: 1 })).toBe(
-        `=PIVOT.VALUE(1,"probability:avg","product_id",47,"date:month","05/2016")`
+        `=PIVOT.VALUE(1,"probability:avg","product_id",47,"date:month",DATE(2016,5,1))`
     );
 
     setCellContent(model, "B1", `=PIVOT.VALUE(1,"probability:avg","product_id",47)`);
     expect(getPivotAutofillValue(model, "B1", { direction: "right", steps: 1 })).toBe("");
+});
+
+test("Can autofill pivot with collapsed dimensions", async () => {
+    const { model } = await createSpreadsheetWithPivot({
+        arch: /*xml*/ `
+                <pivot>
+                    <field name="date" interval="year" type="row"/>
+                    <field name="date" interval="month" type="row"/>
+                    <field name="probability" type="measure"/>
+                </pivot>`,
+    });
+    const pivotId = model.getters.getPivotIds()[0];
+    updatePivot(model, pivotId, {
+        collapsedDomains: {
+            ROW: [[{ field: "date:year", value: 2016, type: "date" }]],
+            COL: [],
+        },
+    });
+
+    setCellContent(model, "A1", `=PIVOT.HEADER(1,"date:year",2016)`);
+    selectCell(model, "A1");
+    model.dispatch("AUTOFILL_SELECT", { col: 0, row: 4 });
+    model.dispatch("AUTOFILL");
+
+    expect(getCell(model, "A1").content).toBe(`=PIVOT.HEADER(1,"date:year",2016)`);
+    expect(getCell(model, "A2").content).toBe(
+        `=PIVOT.HEADER(1,"date:year",2016,"date:month",DATE(2016,4,1))`
+    );
+    expect(getCell(model, "A3").content).toBe(
+        `=PIVOT.HEADER(1,"date:year",2016,"date:month",DATE(2016,10,1))`
+    );
+    expect(getCell(model, "A4").content).toBe(
+        `=PIVOT.HEADER(1,"date:year",2016,"date:month",DATE(2016,12,1))`
+    );
+    expect(getCell(model, "A5").content).toBe(`=PIVOT.HEADER(1)`);
 });

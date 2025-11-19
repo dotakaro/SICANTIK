@@ -127,7 +127,7 @@ class TestLuSaftReport(TestSaftReport):
                                 <StandardAccountID>142000</StandardAccountID>
                                 <AccountType>Current Year Earni</AccountType>
                                 <OpeningDebitBalance>8000.00</OpeningDebitBalance>
-                                <ClosingDebitBalance>0.00</ClosingDebitBalance>
+                                <ClosingDebitBalance>8000.00</ClosingDebitBalance>
                             </Account>
                             <Account>
                                 <AccountID>___ignore___</AccountID>
@@ -205,7 +205,6 @@ class TestLuSaftReport(TestSaftReport):
                         <UOMTable>
                             <UOMTableEntry>
                                 <UnitOfMeasure>Units</UnitOfMeasure>
-                                <Description>Unit</Description>
                             </UOMTableEntry>
                         </UOMTable>
                         <Products>
@@ -213,7 +212,7 @@ class TestLuSaftReport(TestSaftReport):
                                 <ProductCode>PA</ProductCode>
                                 <ProductGroup>Test Category</ProductGroup>
                                 <Description>product_a</Description>
-                                <UOMBase>Units</UOMBase>
+                                <UOMStandard>Units</UOMStandard>
                             </Product>
                         </Products>
                         <Owners>
@@ -242,7 +241,7 @@ class TestLuSaftReport(TestSaftReport):
                         <TotalCredit>9360.00</TotalCredit>
                         <Journal>
                             <JournalID>___ignore___</JournalID>
-                            <Description>Customer Invoices</Description>
+                            <Description>Sales</Description>
                             <Type>sale</Type>
                             <Transaction>
                                 <TransactionID>___ignore___</TransactionID>

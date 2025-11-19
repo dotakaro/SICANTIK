@@ -12,9 +12,9 @@ from stdnum.be.vat import compact as vat_be_compact
 from stdnum.exceptions import ValidationError
 
 
-class PartnerVATListingCustomHandler(models.AbstractModel):
+class L10n_BePartnerVatHandler(models.AbstractModel):
     _name = 'l10n_be.partner.vat.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.report.custom.handler']
     _description = 'Partner VAT Listing Custom Handler'
 
     def _caret_options_initializer(self):
@@ -49,14 +49,6 @@ class PartnerVATListingCustomHandler(models.AbstractModel):
             tax_expressions += self.env.ref(xmlid)
 
         options['partner_vat_listing_taxes_tag_ids'] = tax_expressions._get_matching_tags().ids
-
-        options['buttons'] += [{
-            'name': _('XML'),
-            'sequence': 30,
-            'action': 'export_file',
-            'action_param': 'partner_vat_listing_export_to_xml',
-            'file_export_type': _('XML')
-        }]
 
         options['enable_export_buttons_for_common_vat_in_branches'] = True
 
@@ -138,7 +130,7 @@ class PartnerVATListingCustomHandler(models.AbstractModel):
                 'vat_number': vat_number,
                 'turnover': 0,
                 'vat_amount': 0,
-                'has_sublines': False,
+                'has_sublines': True,
             }
 
             for line in query_res_lines:

@@ -5,12 +5,12 @@ from datetime import datetime
 import re
 
 from odoo.addons.delivery_shiprocket.models.shiprocket_request import ShipRocket
-from odoo.tests import TransactionCase
+from odoo.addons.delivery_shiprocket.tests.common import ShiprocketCommon
 
 _logger = logging.getLogger(__name__)
 
 
-class TestDeliveryShiprocket(TransactionCase):
+class TestDeliveryShiprocket(ShiprocketCommon):
 
     @classmethod
     def setUpClass(cls):
@@ -40,7 +40,6 @@ class TestDeliveryShiprocket(TransactionCase):
             'default_code': 'AYD1233',
             'lst_price': 200
         })
-        cls.shiprocket = cls.env.ref('delivery_shiprocket.delivery_carrier_shiprocket')
         cls.shiprocket.write({
             'shiprocket_default_package_type_id': cls.env.ref('delivery_shiprocket.shiprocket_packaging_box_1kg')
         })
@@ -97,7 +96,7 @@ class TestDeliveryShiprocket(TransactionCase):
                 }
             ],
             'sub_total': 0,
-            'payment_method': 'Prepaid' if self.shiprocket.shiprocket_payment_method == 'prepaid' else 'COD',
+            'payment_method': 'COD' if self.shiprocket.allow_cash_on_delivery else 'Prepaid',
             'shipping_charges': 0.0,
             'pickup_location': 'My Company San Francisco',
             'vendor_details': {
@@ -118,7 +117,6 @@ class TestDeliveryShiprocket(TransactionCase):
         SaleOrder = self.env['sale.order']
         sol_vals = {'product_id': self.product_to_ship1.id,
                     'name': "[AHM1232] Door with wings",
-                    'product_uom': self.product_to_ship1.uom_id.id,
                     'product_uom_qty': 1.0,
                     'price_unit': self.product_to_ship1.lst_price}
 
@@ -181,13 +179,11 @@ class TestDeliveryShiprocket(TransactionCase):
         sol_vals1 = {
             'product_id': self.product_to_ship1.id,
             'name': "[AHM1232] Door with wings",
-            'product_uom': self.product_to_ship1.uom_id.id,
             'product_uom_qty': 3.0,
             'price_unit': self.product_to_ship1.lst_price}
         sol_vals2 = {
             'product_id': self.product_to_ship2.id,
             'name': "[AYD1233] Door with legs",
-            'product_uom': self.product_to_ship2.uom_id.id,
             'product_uom_qty': 2.0,
             'price_unit': self.product_to_ship2.lst_price}
 

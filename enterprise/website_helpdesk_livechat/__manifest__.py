@@ -26,9 +26,12 @@ Features:
 
         'views/chatbot_script_views.xml',
         'views/chatbot_script_step_views.xml',
+        'views/discuss_channel_views.xml',
         'views/helpdesk_view.xml',
+        'views/helpdesk_ticket_attachment_template.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'post_init_hook': '_create_livechat_channel',
     'assets': {
@@ -36,10 +39,15 @@ Features:
             'website_helpdesk_livechat/static/src/**/*',
         ],
         'mail.assets_public': [
-            'website_helpdesk_livechat/static/src/**/*',
+            'website_helpdesk_livechat/static/src/core/common/**/*',
         ],
         'web.assets_unit_tests': [
             'website_helpdesk_livechat/static/tests/**/*',
+            ("remove", "website_helpdesk_livechat/static/tests/tours/**/*"),
         ],
+        "im_livechat.assets_livechat_support_tours": [
+            "website_helpdesk_livechat/static/tests/tours/support/*",
+        ],
+
     },
 }

@@ -4,13 +4,12 @@ import io
 import logging
 import re
 
-import psycopg2.errors
 from lxml import etree
 from markupsafe import Markup
 
 from odoo import models, fields, _
 from odoo.addons.l10n_cl_edi.models.l10n_cl_edi_util import UnexpectedXMLResponse
-from odoo.exceptions import UserError
+from odoo.exceptions import LockError, UserError
 from odoo.tools import float_repr, html_escape
 
 _logger = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ except ImportError:
 TAX19_SII_CODE = 14
 
 
-class Picking(models.Model):
+class StockPicking(models.Model):
     _name = 'stock.picking'
     _inherit = ['l10n_cl.edi.util', 'stock.picking']
 
@@ -80,9 +79,10 @@ class Picking(models.Model):
     l10n_cl_dte_file = fields.Many2one('ir.attachment', string='DTE file', copy=False)
     l10n_cl_sii_send_ident = fields.Text(string='SII Send Identification(Track ID)', copy=False, tracking=True)
 
-    _sql_constraints = [
-        ('unique_document_number_in_company', 'UNIQUE(l10n_latam_document_number, company_id)',
-         'You should have a unique document number within the company. ')]
+    _unique_document_number_in_company = models.Constraint(
+        'UNIQUE(l10n_latam_document_number, company_id)',
+        "You should have a unique document number within the company. ",
+    )
 
     def action_cancel(self):
         for record in self.filtered(
@@ -272,8 +272,8 @@ class Picking(models.Model):
                 price = move.product_id.lst_price
                 qty = move.quantity
             elif guide_price == "sale_order":
-                taxes = sale_line.tax_id
-                qty = move.product_uom._compute_quantity(move.quantity, sale_line.product_uom)
+                taxes = sale_line.tax_ids
+                qty = move.product_uom._compute_quantity(move.quantity, sale_line.product_uom_id)
                 price = sale_line.price_unit * (1 - (sale_line.discount or 0.0) / 100.0)
 
             tax_res = taxes.compute_all(
@@ -500,7 +500,7 @@ class Picking(models.Model):
             'type': 'binary',
             'datas': base64.b64encode(dte_signed.encode('ISO-8859-1', 'replace'))
         })
-        self.with_context(no_new_invoice=True).message_post(
+        self.message_post(
             body=_('Partner DTE has been generated'),
             attachment_ids=[dte_partner_attachment.id])
         return dte_partner_attachment
@@ -522,9 +522,8 @@ class Picking(models.Model):
         Send the DTE to the SII. It will be
         """
         try:
-            with self.env.cr.savepoint(flush=False):
-                self.env.cr.execute(f'SELECT 1 FROM {self._table} WHERE id IN %s FOR UPDATE NOWAIT', [tuple(self.ids)])
-        except psycopg2.errors.LockNotAvailable:
+            self.lock_for_update()
+        except LockError:
             if not self.env.context.get('cron_skip_connection_errs'):
                 raise UserError(_('This electronic document is being processed already.')) from None
             return

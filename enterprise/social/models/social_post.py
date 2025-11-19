@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
-import threading
 
 from collections import defaultdict
 from markupsafe import Markup
 
-from odoo import _, api, fields, models
+from odoo import _, api, fields, models, modules
 from odoo.exceptions import AccessError, UserError, ValidationError
-from odoo.tools import format_list
 
 
 class SocialPost(models.Model):
@@ -62,7 +59,7 @@ class SocialPost(models.Model):
     is_hatched = fields.Boolean(string="Hatched", compute='_compute_is_hatched')
     #UTM
     utm_campaign_id = fields.Many2one('utm.campaign', domain="[('is_auto_campaign', '=', False)]",
-        string="Campaign", ondelete="set null")
+        string="Campaign", ondelete="set null", index='btree_not_null')
     source_id = fields.Many2one(readonly=True)
     # Statistics
     stream_posts_count = fields.Integer("Feed Posts Count", compute='_compute_stream_posts_count')
@@ -77,7 +74,7 @@ class SocialPost(models.Model):
             if not (post.account_ids <= post.account_allowed_ids):
                 raise ValidationError(_(
                     'Selected accounts (%(account_list)s) do not match the selected company (%(company)s)',
-                    account_list=format_list(self.env, (post.account_ids - post.account_allowed_ids).mapped('name')),
+                    account_list=(post.account_ids - post.account_allowed_ids).mapped('name'),
                     company=post.company_id.name
                 ))
 
@@ -349,7 +346,7 @@ class SocialPost(models.Model):
                     for live_post in post._prepare_live_post_values()]
             })
 
-        if not getattr(threading.current_thread(), 'testing', False):
+        if not modules.module.current_test:
             # If there's a link in the message, the Facebook / Twitter API will fetch it
             # to build a preview. But when posting, the SQL transaction will not
             # yet be committed, and so the link tracker associated to this link

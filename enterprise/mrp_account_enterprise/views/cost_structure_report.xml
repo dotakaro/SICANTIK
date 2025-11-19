@@ -2,7 +2,7 @@
 <odoo>
     <template id="mrp_cost_structure">
         <t t-call="web.basic_layout">
-            <t t-call-assets="mrp_account_enterprise.assets_mrp_cost_structure_report" t-js="False"/>
+            <t t-call-assets="mrp_account_enterprise.assets_mrp_cost_structure_report" t-js="False" t-autoprefix="true"/>
             <div class="page o_mrp_report_page">
                 <t t-if="not lines">
                     <span class="text-center o_mrp_report_info"><h1>Some of the Manufacturing Order(s) selected are not done yet</h1></span>
@@ -53,7 +53,7 @@
                                         res-model="product.product"/>
                                 </td>
                                 <td class="text-end">
-                                    <span t-esc="m['qty']" t-options='{"widget": "float", "decimal_precision": "Product Unit of Measure"}'/>
+                                    <span t-esc="m['qty']" t-options='{"widget": "float", "decimal_precision": "Product Unit"}'/>
                                     <span t-esc="m['product_id'].uom_id.name"/>
                                 </td>
                                 <td class="text-end">
@@ -149,15 +149,14 @@
                             <tbody>
                                 <tr t-foreach="line['scraps']" t-as="scrap"
                                 class="text-success">
-                                    <t t-set="product_qty" t-value="scrap.product_uom == scrap.product_id.uom_id and scrap.quantity or scrap.product_uom._compute_quantity(scrap.quantity, scrap.product_id.uom_id)"/>
                                     <td>
                                         <span class="o_mrp_reports_web_action" t-att-res-id="scrap.id" res-model="stock.move" view-type="form" t-esc="scrap.product_id.display_name"/>
                                     </td>
                                     <td class="text-end">
-                                        <span><t t-esc="product_qty"/> <t t-esc="scrap.product_id.uom_id.name"/></span>
+                                        <span><t t-esc="scrap.product_qty"/> <t t-esc="scrap.product_id.uom_id.name"/></span>
                                     </td>
                                     <td class="text-end">
-                                        <span t-esc="sum(scrap.stock_valuation_layer_ids.mapped('value')) / product_qty" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                                        <span t-esc="sum(scrap.stock_valuation_layer_ids.mapped('value')) / scrap.product_qty" t-options='{"widget": "monetary", "display_currency": currency}'/>
                                     </td>
                                     <td class="text-end">
                                         <span t-esc="sum(scrap.stock_valuation_layer_ids.mapped('value'))"  t-options='{"widget": "monetary", "display_currency": currency}'/>

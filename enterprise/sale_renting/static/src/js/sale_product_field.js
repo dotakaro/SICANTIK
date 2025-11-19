@@ -1,14 +1,12 @@
-/** @odoo-module **/
-
-import { patch } from '@web/core/utils/patch';
-import { serializeDateTime } from "@web/core/l10n/dates";
 import { SaleOrderLineProductField } from '@sale/js/sale_product_field';
+import { serializeDateTime } from "@web/core/l10n/dates";
+import { patch } from '@web/core/utils/patch';
 
 patch(SaleOrderLineProductField.prototype, {
     _getAdditionalRpcParams() {
         const params = super._getAdditionalRpcParams();
         const saleOrder = this.props.record.model.root;
-        if (saleOrder.data.is_rental_order) {
+        if (saleOrder.data.rental_start_date && saleOrder.data.rental_return_date) {
             params.start_date = serializeDateTime(saleOrder.data.rental_start_date);
             params.end_date = serializeDateTime(saleOrder.data.rental_return_date);
         }
@@ -18,10 +16,18 @@ patch(SaleOrderLineProductField.prototype, {
     _getAdditionalDialogProps() {
         const props = super._getAdditionalDialogProps();
         const saleOrder = this.props.record.model.root;
-        if (saleOrder.data.is_rental_order) {
-            props.rentalStartDate = serializeDateTime(saleOrder.data.rental_start_date);
-            props.rentalEndDate = serializeDateTime(saleOrder.data.rental_return_date);
+        if (saleOrder.data.rental_start_date && saleOrder.data.rental_return_date) {
+            props.start_date = serializeDateTime(saleOrder.data.rental_start_date);
+            props.end_date = serializeDateTime(saleOrder.data.rental_return_date);
         }
         return props;
+    },
+
+    get m2oProps() {
+        const props = super.m2oProps;
+        return {
+            ...props,
+            context: { ...props.context, show_rental_tag: props.context.in_rental_app },
+        };
     },
 });

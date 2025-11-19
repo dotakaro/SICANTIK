@@ -24,6 +24,8 @@ class TestInGstrPosBase(TestPoSCommon):
             "city": "city1",
             "zip": "123456",
             "country_id": country_in_id,
+            "l10n_in_is_gst_registered": True,
+            "l10n_in_gst_efiling_feature": True,
         })
         cls.config = cls.basic_config
         cls.gst_5 = cls.env['account.chart.template'].ref('sgst_sale_5')
@@ -59,7 +61,7 @@ class TestInGstrPosBase(TestPoSCommon):
         """Helper to create a POS order from UI data."""
         order_data = self.create_ui_order_data(**ui_data)
         results = self.env['pos.order'].sync_from_ui([order_data])
-        return self.env['pos.order'].browse(results['pos.order'][0]['id'])
+        return self.env['pos.order'].browse([o['id'] for o in results['pos.order']])
 
     @classmethod
     def _create_categ_anglo(cls):

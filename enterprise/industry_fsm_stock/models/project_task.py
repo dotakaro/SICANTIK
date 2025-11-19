@@ -4,7 +4,7 @@ from odoo import models, fields, _
 from odoo.tools import float_compare, float_round
 
 
-class Task(models.Model):
+class ProjectTask(models.Model):
     _inherit = "project.task"
 
     stock_move_customer_product_count = fields.Integer(compute='_compute_stock_move_customer_product_total')
@@ -21,7 +21,8 @@ class Task(models.Model):
             for order_line in sale_line:
                 to_log = {}
                 total_qty = sum(order_line.move_ids.filtered(lambda m: m.state != 'cancel' and not m.move_dest_ids).mapped('product_uom_qty'))
-                if float_compare(order_line.product_uom_qty, total_qty, precision_rounding=order_line.product_uom.rounding) < 0:
+                if (float_compare(order_line.product_uom_qty, total_qty, precision_rounding=order_line.product_uom_id.rounding) < 0
+                    and order_line.product_id in order_line.move_ids.product_id):
                     to_log[order_line] = (order_line.product_uom_qty, total_qty)
 
                 if to_log:
@@ -137,10 +138,14 @@ class Task(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': _('Pick Up Material'),
-            'view_mode': 'list',
+            'view_mode': 'list,kanban',
+            'mobile_view_mode': 'kanban',
             'domain': [('id', 'in', stock_move_ids.ids)],
             'res_model': 'stock.move',
-            'views': [(self.env.ref('industry_fsm_stock.view_move_tree_picking_redirect').id, 'list')],
+            'views': [
+                (self.env.ref('industry_fsm_stock.view_move_tree_picking_redirect').id, 'list'),
+                (self.env.ref('industry_fsm_stock.view_move_kanban_picking_redirect').id, 'kanban'),
+            ],
         }
 
     def _fsm_ensure_sale_order(self):
@@ -167,6 +172,6 @@ class Task(models.Model):
         sale_order.action_confirm()
 
     def action_fsm_view_material(self):
-        action = super(Task, self).action_fsm_view_material()
+        action = super().action_fsm_view_material()
         action['context'].update({"warehouse_id": self.env.user._get_default_warehouse_id().id})
         return action

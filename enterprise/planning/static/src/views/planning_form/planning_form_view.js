@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { markup, onMounted, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
@@ -107,7 +105,7 @@ export class PlanningFormController extends FormController {
                     this.dialogService.add(FormViewDialog, {
                         title: "Add Work Email",
                         resModel: "hr.employee",
-                        resId: shift.data.employee_id[0],
+                        resId: shift.data.employee_id.id,
                         context: {
                             form_view_ref: 'planning.hr_employee_view_form_email',
                             force_email: true,
@@ -158,6 +156,7 @@ export class PlanningFormController extends FormController {
 
     async deleteRecord() {
         const shift = this.model.root;
+        this.state.recurrenceUpdate = shift.data.recurrence_update;
         if (shift.data.recurrency_id) {
             this.dialogService.add(AddressRecurrencyConfirmationDialog, {
                 confirm: async () => {
@@ -174,6 +173,7 @@ export class PlanningFormController extends FormController {
                     );
                 },
                 onChangeRecurrenceUpdate: this.planningRecurrenceDeletion._setRecurrenceUpdate.bind(this),
+                selected: this.state.recurrenceUpdate,
             });
         } else {
             await super.deleteRecord(...arguments);

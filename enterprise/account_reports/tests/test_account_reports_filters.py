@@ -1298,7 +1298,7 @@ class TestAccountReportsFilters(TestAccountReportsCommon, odoo.tests.HttpCase):
 
         filter_record = self.env['ir.filters'].create({
             'model_id': 'account.move.line',
-            'user_id': self.uid,
+            'user_ids': [self.uid],
             'name': 'To Check',
             'domain': '[("move_id.checked", "=", False)]',
         })
@@ -1423,25 +1423,24 @@ class TestAccountReportsFilters(TestAccountReportsCommon, odoo.tests.HttpCase):
         branch_2_1 = self.env['res.company'].create({'name': "Branch 2 sub-branch 1", 'parent_id': branch_2.id})
         other_company = self.env['res.company'].create({'name': "Other company"})
 
-        # Test 'disabled' filter, as well as 'tax_units' when no tax unit is defined and VAT is shared (they should behave in the same way)
-        for company_filter in ('disabled', 'tax_units'):
-            self.single_date_report.filter_multi_company = company_filter
+        # Test 'tax_units' when no tax unit is defined and VAT is shared
+        self.single_date_report.filter_multi_company = 'tax_units'
 
-            _check_company_filter(
-                main_company + branch_1 + branch_1_1 + branch_1_2 + branch_2 + branch_2_1 + other_company,
-                main_company + branch_1 + branch_1_1 + branch_1_2 + branch_2 + branch_2_1,
-                "The main company and all of its sub-branches should be selected",
-            )
-            _check_company_filter(
-                branch_1 + main_company + branch_1_1 + branch_1_2 + branch_2 + branch_2_1 + other_company,
-                branch_1 + branch_1_1 + branch_1_2,
-                "When the active company is a branch of another active company, it should only be selected with its sub-branches.",
-            )
-            _check_company_filter(
-                main_company + branch_1 + branch_1_2 + branch_2_1 + other_company,
-                main_company + branch_1 + branch_1_2 + branch_2_1,
-                "Choosing a subset of branches in the company selector should keep that selection in the report.",
-            )
+        _check_company_filter(
+            main_company + branch_1 + branch_1_1 + branch_1_2 + branch_2 + branch_2_1 + other_company,
+            main_company + branch_1 + branch_1_1 + branch_1_2 + branch_2 + branch_2_1,
+            "The main company and all of its sub-branches should be selected",
+        )
+        _check_company_filter(
+            branch_1 + main_company + branch_1_1 + branch_1_2 + branch_2 + branch_2_1 + other_company,
+            branch_1 + branch_1_1 + branch_1_2,
+            "When the active company is a branch of another active company, it should only be selected with its sub-branches.",
+        )
+        _check_company_filter(
+            main_company + branch_1 + branch_1_2 + branch_2_1 + other_company,
+            main_company + branch_1 + branch_1_2 + branch_2_1,
+            "Choosing a subset of branches in the company selector should keep that selection in the report.",
+        )
 
         # Test 'selector' filter
         self.single_date_report.filter_multi_company = 'selector'
@@ -1567,11 +1566,36 @@ class TestAccountReportsFilters(TestAccountReportsCommon, odoo.tests.HttpCase):
     ####################################################
 
     @freeze_time('2024-09-01')
-    def test_tax_period_filter(self):
+    def test_returns_period_filter(self):
         generic_tax_report = self.env.ref('account.generic_tax_report')
+
+        # l10n_us_reports adds a return type for this report; we make sure that none is set at this point, for testing purposes
+        generic_tax_report.return_type_ids.unlink()
+
+        # When the tax report isn't linked to a return type, it should fallback on 'this_month'
         self._assert_filter_date(
             generic_tax_report,
-            {},
+            {'no_report_reroute': True},
+            {
+                'string': 'Sep 2024',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'this_month',
+                'date_from': '2024-09-01',
+                'date_to': '2024-09-30',
+                'currency_table_period_key': '2024-09-01_2024-09-30',
+            },
+        )
+
+        # Assigning a return type without periodicity should now make use of the periodicity set on the company (monthly, by default),
+        return_type = self.env['account.return.type'].create({
+            'name': "Zaphod Beeblebrox",
+            'report_id': generic_tax_report.id,
+        })
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'no_report_reroute': True},
             {
                 'string': 'Aug 2024',
                 'period_type': 'month',
@@ -1586,7 +1610,7 @@ class TestAccountReportsFilters(TestAccountReportsCommon, odoo.tests.HttpCase):
 
         self._assert_filter_date(
             generic_tax_report,
-            {'date': {'period': -8, 'filter': 'previous_tax_period'}},
+            {'date': {'period': -8, 'filter': 'previous_return_period'}, 'no_report_reroute': True},
             {
                 'string': 'Jan 2024',
                 'period_type': 'month',
@@ -1599,19 +1623,191 @@ class TestAccountReportsFilters(TestAccountReportsCommon, odoo.tests.HttpCase):
             },
         )
 
-        self.env.company.account_tax_periodicity = 'year'
+        self.env.company.account_return_periodicity = 'year'
 
         self._assert_filter_date(
             generic_tax_report,
-            {'date': {'period': -1, 'filter': 'previous_tax_period'}},
+            {'date': {'period': -1, 'filter': 'previous_return_period'}, 'no_report_reroute': True},
             {
                 'string': '2023',
-                'period_type': 'year',
+                'period_type': 'fiscalyear',
                 'mode': 'range',
                 'filter': 'previous_year',
                 'period': -1,
                 'date_from': '2023-01-01',
                 'date_to': '2023-12-31',
                 'currency_table_period_key': '2023-01-01_2023-12-31',
+            },
+        )
+
+        # Setting a periodicity on the return type should take precedence over the company setting
+        return_type.deadline_periodicity = 'semester'
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'no_report_reroute': True},
+            {
+                'string': '01/01/2024 - 06/30/2024',
+                'period_type': 'return_period',
+                'mode': 'range',
+                'filter': 'previous_return_period',
+                'period': -1,
+                'date_from': '2024-01-01',
+                'date_to': '2024-06-30',
+                'currency_table_period_key': '2024-01-01_2024-06-30',
+            },
+        )
+
+        # Check filter fallback
+        return_type.deadline_periodicity = 'monthly'
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2024-08-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Aug 2024',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'previous_month',
+                'period': -1,
+                'date_from': '2024-08-01',
+                'date_to': '2024-08-31',
+                'currency_table_period_key': '2024-08-01_2024-08-31',
+            },
+        )
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2023-08-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Aug 2023',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'previous_month',
+                'period': -13,
+                'date_from': '2023-08-01',
+                'date_to': '2023-08-31',
+                'currency_table_period_key': '2023-08-01_2023-08-31',
+            },
+        )
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2021-08-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Aug 2021',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'previous_month',
+                'period': -37,
+                'date_from': '2021-08-01',
+                'date_to': '2021-08-31',
+                'currency_table_period_key': '2021-08-01_2021-08-31',
+            },
+        )
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2025-08-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Aug 2025',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'next_month',
+                'period': 11,
+                'date_from': '2025-08-01',
+                'date_to': '2025-08-31',
+                'currency_table_period_key': '2025-08-01_2025-08-31',
+            },
+        )
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2025-02-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Feb 2025',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'next_month',
+                'period': 5,
+                'date_from': '2025-02-01',
+                'date_to': '2025-02-28',
+                'currency_table_period_key': '2025-02-01_2025-02-28',
+            },
+        )
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2024-12-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Dec 2024',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'next_month',
+                'period': 3,
+                'date_from': '2024-12-01',
+                'date_to': '2024-12-31',
+                'currency_table_period_key': '2024-12-01_2024-12-31',
+            },
+        )
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2023-11-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Nov 2023',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'previous_month',
+                'period': -10,
+                'date_from': '2023-11-01',
+                'date_to': '2023-11-30',
+                'currency_table_period_key': '2023-11-01_2023-11-30',
+            },
+        )
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2023-03-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Mar 2023',
+                'period_type': 'month',
+                'mode': 'range',
+                'filter': 'previous_month',
+                'period': -18,
+                'date_from': '2023-03-01',
+                'date_to': '2023-03-31',
+                'currency_table_period_key': '2023-03-01_2023-03-31',
+            },
+        )
+
+        return_type.deadline_periodicity = 'trimester'
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2023-03-01', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Jan - Mar 2023',
+                'period_type': 'quarter',
+                'mode': 'range',
+                'filter': 'previous_quarter',
+                'period': -6,
+                'date_from': '2023-01-01',
+                'date_to': '2023-03-31',
+                'currency_table_period_key': '2023-01-01_2023-03-31',
+            },
+        )
+
+        self._assert_filter_date(
+            generic_tax_report,
+            {'date': {'date_to': '2022-12-31', 'filter': 'custom_return_period'}, 'no_report_reroute': True},
+            {
+                'string': 'Oct - Dec 2022',
+                'period_type': 'quarter',
+                'mode': 'range',
+                'filter': 'previous_quarter',
+                'period': -7,
+                'date_from': '2022-10-01',
+                'date_to': '2022-12-31',
+                'currency_table_period_key': '2022-10-01_2022-12-31',
             },
         )

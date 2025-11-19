@@ -9,9 +9,10 @@ from odoo.tools.misc import format_date
 from odoo.tools.float_utils import float_repr
 
 
-class EstonianTaxReportCustomHandler(models.AbstractModel):
+
+class L10n_EeTaxReportHandler(models.AbstractModel):
     _name = 'l10n_ee.tax.report.handler'
-    _inherit = 'account.tax.report.handler'
+    _inherit = ['account.tax.report.handler']
     _description = 'Estonian Tax Report Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -25,47 +26,6 @@ class EstonianTaxReportCustomHandler(models.AbstractModel):
             'action_param': 'export_to_xml',
             'file_export_type': _('XML'),
         })
-
-    def action_open_l10n_ee_modules(self, options, params):
-        module = 'l10n_ee' if params.get('upgrade_l10n_ee') else 'l10n_ee_rounding'
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Modules'),
-            'res_model': 'ir.module.module',
-            'view_mode': 'kanban, form',
-            'views': [(False, 'kanban'), (False, 'form')],
-            'domain': [('name', '=', module)],
-        }
-
-    def action_open_account_update_tax_tags_module(self, options):
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Modules'),
-            'res_model': 'ir.module.module',
-            'view_mode': 'kanban, form',
-            'views': [(False, 'kanban'), (False, 'form')],
-            'domain': [('name', '=', 'account_update_tax_tags')],
-        }
-
-    def _customize_warnings(self, report, options, all_column_groups_expression_totals, warnings):
-        """ Define if and which warning should be shown. A warning is displayed
-        if the Estonia Accounting module is not updated or if the bridge module
-        Estonia - Rounding is not installed.
-        """
-        l10n_ee_module = self.env['ir.module.module']._get('l10n_ee')
-        l10n_ee_rounding_module = self.env['ir.module.module']._get('l10n_ee_rounding')
-        upgrade_l10n_ee = l10n_ee_module.installed_version != l10n_ee_module.latest_version
-        install_l10n_ee_rounding = l10n_ee_rounding_module.state != 'installed'
-        if upgrade_l10n_ee:
-            warnings['l10n_ee_reports.upgrade_l10n_ee_report_warning'] = {
-                'alert_type': 'warning',
-                'upgrade_l10n_ee': True,
-            }
-        elif install_l10n_ee_rounding:
-            warnings['l10n_ee_reports.install_l10n_ee_rounding_warning'] = {
-                'alert_type': 'warning',
-                'install_l10n_ee_rounding': True,
-            }
 
     def action_audit_cell(self, options, params):
         # OVERRIDES 'account_reports'
@@ -101,7 +61,7 @@ class EstonianTaxReportCustomHandler(models.AbstractModel):
         report = self.env['account.report'].browse(options['report_id'])
         date_to = fields.Date.from_string(options['date'].get('date_to'))
 
-        if options['date']['period_type'] != 'month' and options['tax_periodicity']['periodicity'] != 'monthly':
+        if options['date']['period_type'] != 'month' and options['return_periodicity']['periodicity'] != 'monthly':
             raise UserError(_('Choose a month to export the VAT Report'))
 
         sender_company = report._get_sender_company_for_export(options)
@@ -166,8 +126,7 @@ class EstonianTaxReportCustomHandler(models.AbstractModel):
             'kmd_inf_report_part_b': 'purchase_lines'
         }
         for kmd_inf_part, export_section in report_export_mapping.items():
-            # In case the module is not upgraded in stable, this ensures the xml is generated without errors
-            kmd_inf_report = self.env.ref(f'l10n_ee_reports.{kmd_inf_part}', raise_if_not_found=False) or self.env.ref('l10n_ee_reports.kmd_inf_report')
+            kmd_inf_report = self.env.ref(f'l10n_ee_reports.{kmd_inf_part}', raise_if_not_found=False)
             kmd_inf_report_options = kmd_inf_report.get_options(previous_options={**options, 'unfold_all': True})
             kmd_inf_lines = kmd_inf_report._get_lines(kmd_inf_report_options)
 
@@ -197,9 +156,9 @@ class EstonianTaxReportCustomHandler(models.AbstractModel):
         }
 
 
-class EstonianKmdInfReportCustomHandler(models.AbstractModel):
+class L10n_EeKmdInfReportHandler(models.AbstractModel):
     _name = 'l10n_ee.kmd.inf.report.handler'
-    _inherit = 'account.tax.report.handler'
+    _inherit = ['account.tax.report.handler']
     _description = 'Estonian KMD INF Report Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options=None):
@@ -250,10 +209,7 @@ class EstonianKmdInfReportCustomHandler(models.AbstractModel):
     ####################################################
 
     def action_warning_partners(self, options, params):
-        view_id = (
-                self.env.ref('l10n_ee_reports.res_partner_kmd_inf_warning_view_tree', raise_if_not_found=False) or
-                self.env.ref('base.view_partner_tree')  # In case the DB was not updated.
-        ).id
+        view_id = self.env.ref('l10n_ee_reports.res_partner_kmd_inf_warning_view_tree', raise_if_not_found=False).id
         return {
             'name': _('Missing partners'),
             'res_model': 'res.partner',
@@ -312,46 +268,50 @@ class EstonianKmdInfReportCustomHandler(models.AbstractModel):
         if current_groupby == 'id':
             res = query_res_lines[0]
             return {
-                'partner_reg_code': res['buyer_reg_code'],
-                'partner_name': res['buyer_name'],
+                'buyer_reg_code': res['buyer_reg_code'],
+                'buyer_name': res['buyer_name'],
                 'invoice_number': res['invoice_number'],
                 'invoice_date': res['invoice_date'],
-                'invoice_total': res['invoice_total'],
+                'invoice_sum': res['invoice_sum'],
                 'tax_rate': res['tax_rate'],
                 'sum_for_rate_in_period': res['sum_rate_period'],
                 'comments': res['comments'],
+                'has_sublines': True,
             }
         return {
-            'partner_reg_code': None,
-            'partner_name': None,
+            'buyer_reg_code': None,
+            'buyer_name': None,
             'invoice_number': None,
             'invoice_date': None,
-            'invoice_total': 0,
+            'invoice_sum': 0,
             'tax_rate': 0,
             'sum_for_rate_in_period': 0,
             'comments': None,
+            'has_sublines': True,
         }
 
     def build_result_dict_kmd_inf_b(self, query_res_lines, current_groupby):
         if current_groupby:
             res = query_res_lines[0]
             return {
-                'partner_reg_code': res['seller_reg_code'],
-                'partner_name': res['seller_name'],
+                'seller_reg_code': res['seller_reg_code'],
+                'seller_name': res['seller_name'],
                 'invoice_number': res['invoice_number'],
                 'invoice_date': res['invoice_date'],
-                'invoice_total': res['invoice_total'],
+                'invoice_sum_vat': res['invoice_sum_vat'],
                 'vat_in_period': res['vat_in_period'],
                 'comments': res['comments'],
+                'has_sublines': True,
             }
         return {
-            'partner_reg_code': None,
-            'partner_name': None,
+            'seller_reg_code': None,
+            'seller_name': None,
             'invoice_number': None,
             'invoice_date': None,
-            'invoice_total': 0,
+            'invoice_sum_vat': 0,
             'vat_in_period': 0,
             'comments': None,
+            'has_sublines': True,
         }
 
     ####################################################
@@ -432,7 +392,7 @@ class EstonianKmdInfReportCustomHandler(models.AbstractModel):
                     res_partner.name AS buyer_name,
                     account_move_line__move_id.name AS invoice_number,
                     account_move_line__move_id.invoice_date AS invoice_date,
-                    account_move_line__move_id.amount_untaxed_signed AS invoice_total,
+                    account_move_line__move_id.amount_untaxed_signed AS invoice_sum,
                     -- the balance of outgoing moves are inverted, so multiply sum by -1
                     -SUM(
                         -- if special code is 2, column sum_rate_period should not be filled
@@ -498,10 +458,10 @@ class EstonianKmdInfReportCustomHandler(models.AbstractModel):
                     res_partner.name AS seller_name,
                     COALESCE(account_move_line__move_id.ref, account_move_line__move_id.name) AS invoice_number,
                     account_move_line__move_id.invoice_date AS invoice_date,
-                    -- invoice_total (part B) needs to be positive for bills (negative for refunds) and include reverse charge taxes (remove amount from negative repartition lines)
+                    -- invoice_sum_vat needs to be positive for bills (negative for refunds) and include reverse charge taxes (remove amount from negative repartition lines)
                     -account_move_line__move_id.amount_total_signed - SUM(
                         CASE WHEN account_tax.l10n_ee_kmd_inf_code = '12' AND tax_repartition.factor_percent < 0 THEN account_move_line.balance ELSE 0 END
-                    ) AS invoice_total,
+                    ) AS invoice_sum_vat,
                     -- input vat in period only includes lines with tax tags corresponding to field 5 of KMD form
                    SUM(CASE WHEN account_move_line.display_type = 'tax' AND tag.id = ANY(%(tag_ids)s) THEN account_move_line.balance ELSE 0 END) AS vat_in_period,
                    STRING_AGG(DISTINCT account_tax.l10n_ee_kmd_inf_code, ', ') AS comments
@@ -557,25 +517,6 @@ class EstonianKmdInfReportCustomHandler(models.AbstractModel):
             result.append((grouping_key, build_functions[kmd_inf_part](query_res_lines, current_groupby)))
 
         return result
-
-    def _report_custom_engine_kmd_inf_common(self, options, current_groupby, next_groupby, kmd_inf_part):
-        # Deprecated function kept in stable
-        warnings.warn(
-            _("This version of the KMD INF report is deprecated. Upgrade the module 'Estonia - Accounting' to have access to the updated report."),
-            DeprecationWarning
-        )
-
-        return {
-            'partner_reg_code': None,
-            'partner_name': None,
-            'invoice_number': None,
-            'invoice_date': None,
-            'invoice_total': None,
-            'tax_rate': None,
-            'sum_for_rate_in_period': None,
-            'vat_in_period': None,
-            'comments': None,
-        }
 
     ####################################################
     # HELPER FUNCTIONS

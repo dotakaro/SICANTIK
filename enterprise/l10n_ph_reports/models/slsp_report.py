@@ -2,9 +2,8 @@
 import contextlib
 import io
 import re
-import xlsxwriter
-
 from importlib import metadata
+
 from PIL import ImageFont
 
 from odoo import api, models, _, fields
@@ -14,16 +13,17 @@ from odoo.tools import date_utils, float_repr, SQL, parse_version
 from odoo.tools.misc import format_date, file_path
 
 
-class SlspCustomHandler(models.AbstractModel):
+class L10n_PhSlspReportHandler(models.AbstractModel):
     _name = 'l10n_ph.slsp.report.handler'
-    _inherit = 'l10n_ph.generic.report.handler'
+    _inherit = ['l10n_ph.generic.report.handler']
     _description = 'Summary Lists of Sales and Purchases Custom Handler'
 
     def _get_custom_display_config(self):
         return {
-            'templates': {
-                'AccountReportFilters': 'l10n_ph_reports.SlspReportFilters',
-            },
+            **super()._get_custom_display_config(),
+            'components': {
+                'AccountReportFilters': 'L10nPHSlspReportFilters',
+            }
         }
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -341,6 +341,7 @@ class SlspCustomHandler(models.AbstractModel):
 
         # Prepare the workbook.
         output = io.BytesIO()
+        import xlsxwriter  # noqa: PLC0415
         workbook = xlsxwriter.Workbook(output, {
             'in_memory': True,
             'strings_to_formulas': False,  # As we need to give a default value when using formulas, we need to handle them manually so this is not needed.
@@ -576,5 +577,5 @@ class SlspCustomHandler(models.AbstractModel):
                 sheet.merge_range(y, x, y, x + colspan - 1, value, style)
             x += colspan
         # Fill the remaining cells with empty values so that the style is applied.
-        for x in range(x, col_amount):
-            sheet.write(y, x, '', sheet.styles['text'])
+        for xx in range(x, col_amount):
+            sheet.write(y, xx, '', sheet.styles['text'])

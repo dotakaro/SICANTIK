@@ -1,6 +1,3 @@
-/** @odoo-module */
-
-import { waitFor } from "@odoo/hoot-dom";
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
@@ -27,7 +24,7 @@ registry.category("web_tour.tours").add("documents_spreadsheet_create_template_t
         },
         {
             content: "find the right folder",
-            trigger: ".o_searchview_autocomplete li:contains(Test folder)",
+            trigger: ".o_searchview_autocomplete span:contains(Test folder)",
             run: "click",
         },
         {
@@ -106,9 +103,6 @@ registry.category("web_tour.tours").add("documents_spreadsheet_create_template_t
         {
             trigger: ".o_menu_brand",
             content: "Wait search filter to be displayed",
-            run: async () => {
-                await waitFor(".o_searchview .o_facet_remove", { timeout: 1500 });
-            },
         },
         {
             trigger: ".o_searchview .o_facet_remove",
@@ -121,7 +115,7 @@ registry.category("web_tour.tours").add("documents_spreadsheet_create_template_t
             run: `edit ${TEMPLATE_NAME}`,
         },
         {
-            trigger: ".o_menu_item.focus",
+            trigger: ".o_searchview_autocomplete .o-dropdown-item.focus",
             content: "Validate search",
             run: "click",
         },
@@ -137,9 +131,6 @@ registry.category("web_tour.tours").add("documents_spreadsheet_create_template_t
         {
             trigger: ".o_menu_brand",
             content: "Wait",
-            run: async () => {
-                await waitFor(".o-spreadsheet", { timeout: 1500 });
-            },
         },
         {
             trigger: ".o-spreadsheet",

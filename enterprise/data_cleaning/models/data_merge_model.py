@@ -38,7 +38,7 @@ def merge_common_lists(lsts):
     return sets
 
 
-class DataMergeModel(models.Model):
+class Data_MergeModel(models.Model):
     _name = 'data_merge.model'
     _description = 'Deduplication Model'
     _order = 'name'
@@ -65,7 +65,7 @@ class DataMergeModel(models.Model):
     ### User Notifications for Manual merge
     notify_user_ids = fields.Many2many('res.users', string='Notify Users',
         help='List of users to notify when there are new records to merge',
-        domain=lambda self: [('groups_id', 'in', self.env.ref('base.group_system').id)])
+        domain=lambda self: [('all_group_ids', 'in', self.env.ref('base.group_system').id)])
     notify_frequency = fields.Integer(string='Notify', default=1)
     notify_frequency_period = fields.Selection([
         ('days', 'Days'),
@@ -75,15 +75,19 @@ class DataMergeModel(models.Model):
 
     ### Similarity Threshold for Automatic merge
     merge_threshold = fields.Integer(string='Similarity Threshold', default=75, help='Records with a similarity percentage above this threshold will be automatically merged')
-    create_threshold = fields.Integer(string='Suggestion Threshold', default=0, help='Duplicates with a similarity below this threshold will not be suggested', groups='base.group_no_one')
+    create_threshold = fields.Integer(string='Suggestion Threshold', default=0, help='Duplicates with a similarity below this threshold will not be suggested')
 
     ### Contextual menu action
     is_contextual_merge_action = fields.Boolean(string='Merge action attached', help='If True, this record is used for contextual menu action "Merge" on the target model.')
 
-    _sql_constraints = [
-        ('uniq_name', 'UNIQUE(name)', 'This name is already taken'),
-        ('check_notif_freq', 'CHECK(notify_frequency > 0)', 'The notification frequency should be greater than 0'),
-    ]
+    _uniq_name = models.Constraint(
+        'UNIQUE(name)',
+        "This name is already taken",
+    )
+    _check_notif_freq = models.Constraint(
+        'CHECK(notify_frequency > 0)',
+        "The notification frequency should be greater than 0",
+    )
 
     @api.depends('res_model_id')
     def _compute_name(self):
@@ -161,7 +165,6 @@ class DataMergeModel(models.Model):
                     )
                 ),
                 model=self._name,
-                notify_author=True,
                 partner_ids=partner_ids,
                 res_id=self.id,
                 subject=self.env._('Duplicates to Merge'),
@@ -312,7 +315,7 @@ class DataMergeModel(models.Model):
         if 'create_threshold' in vals and vals['create_threshold']:
             self.env['data_merge.group'].search([('model_id', 'in', self.ids), ('similarity', '<=', vals['create_threshold'] / 100)]).unlink()
 
-        return super(DataMergeModel, self).write(vals)
+        return super().write(vals)
 
     def unlink(self):
         if self.ids:

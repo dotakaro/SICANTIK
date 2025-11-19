@@ -1,7 +1,7 @@
 import mobile from "@web_mobile/js/services/core";
-import { SelectionPopup } from "@point_of_sale/app/utils/input_popups/selection_popup";
-import { makeAwaitable } from "@point_of_sale/app/store/make_awaitable_dialog";
-import { Navbar } from "@point_of_sale/app/navbar/navbar";
+import { SelectionPopup } from "@point_of_sale/app/components/popups/selection_popup/selection_popup";
+import { makeAwaitable } from "@point_of_sale/app/utils/make_awaitable_dialog";
+import { Navbar } from "@point_of_sale/app/components/navbar/navbar";
 import { patch } from "@web/core/utils/patch";
 import { _t } from "@web/core/l10n/translation";
 
@@ -34,11 +34,8 @@ patch(Navbar.prototype, {
             });
         }
     },
-    get customerFacingDisplayButtonIsShown() {
-        return this.supportDualDisplay || super.customerFacingDisplayButtonIsShown;
-    },
     get supportDualDisplay() {
-        return mobile.methods.getDisplays && this.pos.config.customer_display_type === "local";
+        return mobile.methods.getDisplays;
     },
     openCustomerDisplay() {
         if (!this.supportDualDisplay) {

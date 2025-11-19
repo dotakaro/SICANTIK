@@ -3,16 +3,15 @@
 # 	* delivery_shiprocket
 # 
 # Translators:
-# Wil Odoo, 2024
-# Larissa Manderfeld, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Larissa Manderfeld, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Spanish (https://app.transifex.com/odoo/teams/41243/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -138,11 +137,6 @@ msgid "Authentication failed! Please check your credentials."
 msgstr "La autenticación falló. Revise sus credenciales."
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__cod
-msgid "COD"
-msgstr "Contra reembolso"
-
-#. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__package_carrier_type
 msgid "Carrier"
 msgstr "Transportista"
@@ -209,7 +203,7 @@ msgid ""
 " Delivery Order."
 msgstr ""
 "Cree una solicitud de recogida para el envío de su orden con el botón "
-"Validar ubicado en la orden de entrega."
+"Validar situado en la orden de entrega."
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__create_uid
@@ -224,10 +218,15 @@ msgid "Created on"
 msgstr "Creado el"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__display_name
 msgid "Display Name"
-msgstr "Nombre mostrado"
+msgstr "Nombre para mostrar"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__eway_bill_number
@@ -324,8 +323,13 @@ msgid "Go to Shipping Methods"
 msgstr "Ir a los métodos de envío"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -374,15 +378,15 @@ msgid "Package Type"
 msgstr "Tipo de paquete"
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid "Payment Method"
-msgstr "Método de pago"
+#: model:ir.model,name:delivery_shiprocket.model_payment_provider
+msgid "Payment Provider"
+msgstr "Proveedor de pago"
 
 #. module: delivery_shiprocket
 #. odoo-python
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
-msgid "Phone or Mobile is required!"
-msgstr "Se requiere el número de teléfono o móvil"
+msgid "Phone is required!"
+msgstr "Se requiere un número de teléfono."
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_pickup_request
@@ -400,11 +404,6 @@ msgstr "Se requiere el código postal."
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
 msgid "Please configure Shiprocket credentials in the shipping method"
 msgstr "Configure las credenciales de Shiprocket en el método de envío"
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__prepaid
-msgid "Prepaid"
-msgstr "Prepago"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__delivery_type
@@ -553,6 +552,14 @@ msgid "Shiprocket order(s) not found to cancel the shipment!"
 msgstr "No se encontraron las órdenes de Shiprocket para cancelar el envío."
 
 #. module: delivery_shiprocket
+#. odoo-python
+#: code:addons/delivery_shiprocket/models/payment_provider.py:0
+msgid "Shiprocket provider is configured to use only Collect on Delivery."
+msgstr ""
+"El proveedor Shiprocket está configurado para utilizar sólo Pago "
+"contraentrega."
+
+#. module: delivery_shiprocket
 #: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_default_package_type_id
 msgid ""
 "Shiprocket requires package dimensions for getting accurate rate, you can "
@@ -610,15 +617,6 @@ msgstr "Sincronizar transportistas desde Shiprocket"
 #: model_terms:ir.ui.view,arch_db:delivery_shiprocket.view_delivery_carrier_form_inherit_delivery_shiprocket
 msgid "Test Connection"
 msgstr "Probar conexión"
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid ""
-"The method of payment. Can be either COD (Cash on delivery) Or Prepaid while"
-" creating Shiprocket order."
-msgstr ""
-"El método de pago. Puede ser pago contra reembolso o prepagado al crear la "
-"orden de Shiprocket."
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_token_valid_upto

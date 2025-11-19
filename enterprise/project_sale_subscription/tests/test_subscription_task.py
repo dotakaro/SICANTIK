@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from dateutil.relativedelta import relativedelta
 
 from odoo import fields, Command
 from odoo.tests import new_test_user, tagged
-
 from odoo.addons.sale_subscription.tests.common_sale_subscription import TestSubscriptionCommon
 
 
@@ -14,12 +12,13 @@ class TestSubscriptionTask(TestSubscriptionCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.env.user.group_ids += cls.quick_ref('project.group_project_manager')
 
         cls.env['res.config.settings'].create({
             'group_project_recurring_tasks': True,
         }).execute()
 
-        cls.env.user.groups_id += cls.env.ref('project.group_project_recurring_tasks')
+        cls.env.user.group_ids += cls.env.ref('project.group_project_recurring_tasks')
         cls.project = cls.env['project.project'].with_context({'mail_create_nolog': True}).create({
             'name': 'Project',
             'type_ids': [

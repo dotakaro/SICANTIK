@@ -15,19 +15,21 @@ class TestUi(TestFrontend):
     def setUpClass(cls):
         super().setUpClass()
 
+        cls.env.user.group_ids += cls.quick_ref('appointment.group_appointment_manager')
+
         cls.appointment_type = cls.env['appointment.type'].create({
             'appointment_manual_confirmation': True,
             'appointment_tz': 'US/Eastern',
             'assign_method': 'time_auto_assign',
             'event_videocall_source': False,
             'name': 'Table Booking Test',
-            'resource_manage_capacity': True,
-            'resource_manual_confirmation_percentage': 0.8,
+            'manage_capacity': True,
+            'manual_confirmation_percentage': 0.8,
             'schedule_based_on': 'resources',
         })
 
         cls.pos_config.write({
-            'module_pos_restaurant_appointment': True,
+            'module_pos_appointment': True,
             'appointment_type_id': cls.appointment_type.id,
         })
 

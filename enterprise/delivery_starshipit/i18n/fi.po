@@ -3,31 +3,22 @@
 # 	* delivery_starshipit
 # 
 # Translators:
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Martin Trigaux, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
+# Wil Odoo, 2025
+# Jessica Jakara, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:44+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Jessica Jakara, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid " after deleting the order on Starshipit"
-msgstr " tilauksen poistamisen jälkeen Starshipitissä"
 
 #. module: delivery_starshipit
 #: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_delivery_carrier_form
@@ -122,7 +113,11 @@ msgid "Delivery Service"
 msgstr "Toimituspalvelu"
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__display_name
 msgid "Display Name"
 msgstr "Näyttönimi"
 
@@ -141,7 +136,11 @@ msgid "Error: this delivery method is not available for this order."
 msgstr "Virhe: tämä toimitustapa ei ole käytettävissä tähän tilaukseen."
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -268,8 +267,8 @@ msgid ""
 "Return order %(order)s was sent to the carrier during label creation.As you are in a test environment, please make sure to cancel the order with your carrier directly.\n"
 "Manifest number: %(manifest_number)s"
 msgstr ""
-"Palautustilaus %(order)s lähetettiin kuljetusliikkeelle etiketin luomisen aikana. Koska olet testiympäristössä, varmista, että peruutat tilauksen suoraan kuljetusliikkeeltäsi.\n"
-"Kuormakirjan numero: %(manifest_number)s"
+"Palautustilaus %(order)s lähetettiin kuljetusyritykselle lähetysdokumentin luomisen aikana. Koska olet testiympäristössä, varmista, että peruutat tilauksen suoraan kuljetusyritykseltä.\n"
+"Tavaraluettelon numero: %(manifest_number)s"
 
 #. module: delivery_starshipit
 #. odoo-python
@@ -302,6 +301,16 @@ msgstr "Palvelukoodi"
 #: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__starshipit_service_name
 msgid "Service Name"
 msgstr "Palvelun nimi"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Shipping Cost has been updated from Starshipit. The Sales Order can now be "
+"invoiced."
+msgstr ""
+"Toimituskulut on päivitetty Starshipitistä. Myyntitilaus voidaan nyt "
+"laskuttaa."
 
 #. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_delivery_carrier
@@ -339,12 +348,12 @@ msgstr "Starshipit API-tilausavain"
 #. odoo-python
 #: code:addons/delivery_starshipit/models/starshipit_service.py:0
 msgid "Starshipit API rate exceeded. Please try again later."
-msgstr "Starshipit API rate ylitetty. Yritä myöhemmin uudelleen."
+msgstr "Starshipit API-määrä ylitetty. Yritä myöhemmin uudelleen."
 
 #. module: delivery_starshipit
 #: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__starshipit_api_key
 msgid "Starshipit Api Key"
-msgstr "Starshipit Api avain"
+msgstr "Starshipit API-avain"
 
 #. module: delivery_starshipit
 #: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_delivery_carrier_form
@@ -355,6 +364,13 @@ msgstr "Starshipitin määritykset"
 #: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__starshipit_parcel_reference
 msgid "Starshipit Parcel Reference"
 msgstr "Starshipit Paketin viite"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit Price Update Cron: System Error fetching price: %s"
+msgstr ""
+"Starshipit-hintojen päivitysajastus: Järjestelmävirhe hintaa haettaessa: %s"
 
 #. module: delivery_starshipit
 #: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__starshipit_return_parcel_reference
@@ -389,9 +405,60 @@ msgid "Starshipit returned an error: %(message)s"
 msgstr "Starshipit palautti virheen: %(message)s"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Delivery cost re-evaluated on Sales Order based on updated exact"
+" price (%(final_carrier_price)s) from transfer %(picking_name)s."
+msgstr ""
+"Starshipit: Toimituskulut myyntitilaukselle on arvioitu uudelleen päivitetyn"
+" tarkan hinnan (%(final_carrier_price)s) perusteella siirrosta "
+"%(picking_name)s."
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s, but automatic sale order delivery cost re-"
+"evaluation failed: %(e_so)s"
+msgstr ""
+"Starshipit: Tarkka hinta toimitukselle %(picking_name)s on nyt "
+"%(final_carrier_price)s, mutta automaattinen myyntitilauksen hinnan "
+"uudelleenarviointi epäonnistui: %(e_so)s"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s. This sale order is already invoiced, please review "
+"if a manual adjustment to the invoice is needed."
+msgstr ""
+"Starshipit: Tarkka hinta toimitukselle %(picking_name)s on nyt "
+"%(final_carrier_price)s. Tämä myyntitilaus on jo laskutettu, ole hyvä ja "
+"tarkista, tarviiko laskuun tehdä muutoksia tai korjausia manuaalisesti. "
+
+#. module: delivery_starshipit
+#: model:ir.actions.server,name:delivery_starshipit.ir_cron_starshipit_fetch_pending_prices_ir_actions_server
+msgid "Starshipit: Fetch Pending Shipping Prices"
+msgstr "Starshipit: Haetaan odottavia toimitushintoja"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit: Shipping Cost updated"
+msgstr "Starshipit: Toimituskulut päivitetty"
+
+#. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_stock_package_type
 msgid "Stock package type"
 msgstr "Varastopaketin tyyppi"
+
+#. module: delivery_starshipit
+#: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_picking_form_inherit_stock
+msgid "The Shipping Cost is being fetched in the background."
+msgstr "Toimituskulua haetaan taustalla."
 
 #. module: delivery_starshipit
 #: model:ir.model.fields,help:delivery_starshipit.field_delivery_carrier__starshipit_carrier_code
@@ -401,6 +468,15 @@ msgid ""
 msgstr ""
 "Starshipitissä olevan kuljetusyhtiö on kuljetusyhtiön käytössä. Palvelukoodi"
 " kuuluu sille."
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"The exact price could not be retrieved. It will be updated by a scheduled "
+"action."
+msgstr ""
+"Tarkkaa hintaa ei pystytty hakemaan. Se päivitetään ajastetulla toiminnolla."
 
 #. module: delivery_starshipit
 #. odoo-python
@@ -437,8 +513,8 @@ msgid ""
 "The service that will be used for this carrier. This is set when you select "
 "a carrier from the wizard."
 msgstr ""
-"Palvelu, jota käytetään tätä operaattoria varten. Tämä asetetaan, kun "
-"valitset operaattorin ohjatussa toiminnossa."
+"Palvelu, jota käytetään tätä toimittajaa varten. Tämä asetetaan, kun "
+"valitset toimittajan ohjatussa toiminnossa."
 
 #. module: delivery_starshipit
 #. odoo-python
@@ -459,12 +535,6 @@ msgid ""
 msgstr ""
 "Toimituspalveluja ei ole saatavilla, tarkista toimitusosoite tai aktivoi "
 "sopivat kuljetusliikkeet Starshipit-tililläsi."
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid "There was an issue when creating the order, please try again"
-msgstr "Tilauksen luomisessa ilmeni ongelma, yritä uudelleen"
 
 #. module: delivery_starshipit
 #. odoo-python

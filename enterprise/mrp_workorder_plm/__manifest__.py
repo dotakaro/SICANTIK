@@ -4,7 +4,7 @@
 {
     'name': 'PLM for workorder',
     'version': '1.0',
-    'category': 'Manufacturing/Product Lifecycle Management (PLM)',
+    'category': 'Supply Chain/Product Lifecycle Management (PLM)',
     'description': """
 PLM for workorder.
 =================================================
@@ -19,5 +19,6 @@ PLM for workorder.
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

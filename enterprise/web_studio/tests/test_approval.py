@@ -7,7 +7,8 @@ from odoo.tests.common import TransactionCase
 from odoo.tools import mute_logger
 from odoo.tests import tagged
 
-@tagged('post_install', '-at_install')
+
+@tagged('post_install', '-at_install', 'mail_activity')
 class TestStudioApproval(TransactionCase):
 
     @classmethod
@@ -35,10 +36,10 @@ class TestStudioApproval(TransactionCase):
             cls.env, login='Manager',
             groups="base.group_user,base.group_partner_manager", context=creation_context)
         cls.user.write({
-            'groups_id': [(4, cls.group_user.id)]
+            'group_ids': [(4, cls.group_user.id)]
         })
         cls.manager.write({
-            'groups_id': [(4, cls.group_manager.id)]
+            'group_ids': [(4, cls.group_manager.id)]
         })
         cls.record = cls.user.partner_id
         # setup validation rules; inactive by default, they'll get
@@ -404,7 +405,7 @@ class TestStudioApproval(TransactionCase):
         self.assertTrue(approval_result.get('approved'),
                         "The approval should have been granted upon validation of the activity")
         self.assertFalse(approval_request.exists(),
-                         "The approval request should have been deleted upon the activity's confirmation")
+                        "The approval request should have been deleted upon the activity's confirmation")
 
     def test_12_approval_activity_spoof(self):
         """Test that validating an approval activity as another user will not leak approval rights"""
@@ -430,7 +431,7 @@ class TestStudioApproval(TransactionCase):
         self.assertFalse(approval_result.get('approved'),
                          "The approval should not have been granted upon validation of the activity by anohter user")
         self.assertFalse(approval_request.exists(),
-                         "The approval request should have been deleted upon the activity's confirmation")
+                        "The approval request should have been deleted upon the activity's confirmation")
 
     def test_13_approval_activity_dismissal(self):
         """Test that granting approval unlinks the activity that was created for that purpose"""
@@ -567,10 +568,10 @@ class TestStudioApprovalPost(TransactionCase):
             cls.env, login='Manager',
             groups="base.group_user,base.group_partner_manager", context=creation_context)
         cls.user.write({
-            'groups_id': [Command.link(cls.group_user.id)]
+            'group_ids': [Command.link(cls.group_user.id)]
         })
         cls.manager.write({
-            'groups_id': [Command.link(cls.group_manager.id)]
+            'group_ids': [Command.link(cls.group_manager.id)]
         })
         cls.record = cls.user.partner_id
         # setup validation rules; inactive by default, they'll get
@@ -658,7 +659,7 @@ class TestStudioApprovalPost(TransactionCase):
             self.env['studio.approval.rule'].create({
                 'active': True,
                 'model_id': self.env.ref('base.model_res_partner').id,
-                'method': '_get_gravatar_image',
+                'method': '_fields_sync',
                 'message': "You didn't say the magic word!",
                 'approval_group_id': self.group_manager.id,
             })

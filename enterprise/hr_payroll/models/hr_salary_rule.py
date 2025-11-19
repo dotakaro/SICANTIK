@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -15,7 +15,8 @@ class HrSalaryRule(models.Model):
     code = fields.Char(required=True,
         help="The code of salary rules can be used as reference in computation of other rules. "
              "In that case, it is case sensitive.")
-    struct_id = fields.Many2one('hr.payroll.structure', string="Salary Structure", required=True)
+    struct_id = fields.Many2one('hr.payroll.structure', string="Salary Structure", required=True, index=True, ondelete='cascade')
+    country_id = fields.Many2one(related="struct_id.country_id")
     sequence = fields.Integer(required=True, index=True, default=5,
         help='Use to arrange calculation sequence')
     quantity = fields.Char(default='1.0',
@@ -23,7 +24,7 @@ class HrSalaryRule(models.Model):
              "E.g. a rule for Meal Voucher having fixed amount of "
              u"1€ per worked day can have its quantity defined in expression "
              "like worked_days['WORK100'].number_of_days.")
-    category_id = fields.Many2one('hr.salary.rule.category', string='Category', required=True)
+    category_id = fields.Many2one('hr.salary.rule.category', string='Category', required=True, domain="['|', ('country_id', '=', False), ('country_id', '=', country_id)]")
     active = fields.Boolean(default=True,
         help="If the active field is set to false, it will allow you to hide the salary rule without removing it.")
     appears_on_payslip = fields.Boolean(string='Appears on Payslip', default=True,
@@ -37,7 +38,7 @@ class HrSalaryRule(models.Model):
         ('input', 'Other Input'),
         ('python', 'Python Expression')
     ], string="Condition Based on", default='none', required=True)
-    condition_range = fields.Char(string='Range Based on', default='contract.wage',
+    condition_range = fields.Char(string='Range Based on', default='version.wage',
         help='This will be used to compute the % fields values; in general it is on basic, '
              'but you can also use categories code fields in lowercase as a variable names '
              '(hra, ma, lta, etc.) and the variable basic.')
@@ -48,8 +49,8 @@ class HrSalaryRule(models.Model):
 #----------------------
 # payslip: hr.payslip object
 # employee: hr.employee object
-# contract: hr.contract object
-# rules: dict containing the rules code (previously computed)
+# version: hr.version object
+# result_rules: dict containing the rules amounts, quantities, rates and totals (previously computed)
 # categories: dict containing the computed salary rule categories (sum of amount of all rules belonging to that category).
 # worked_days: dict containing the computed worked days
 # inputs: dict containing the computed inputs.
@@ -58,7 +59,7 @@ class HrSalaryRule(models.Model):
 #----------------------
 # result: boolean True if the rule should be calculated, False otherwise
 
-result = rules['NET']['total'] > categories['NET'] * 0.10''',
+result = result_rules['NET']['total'] > categories['NET'] * 0.10''',
         help='Applied this rule for calculation if condition is true. You can specify condition like basic > 1000.')
     condition_range_min = fields.Float(string='Minimum Range', help="The minimum amount, applied for this rule.")
     condition_range_max = fields.Float(string='Maximum Range', help="The maximum amount, applied for this rule.")
@@ -78,8 +79,8 @@ result = rules['NET']['total'] > categories['NET'] * 0.10''',
 #----------------------
 # payslip: hr.payslip object
 # employee: hr.employee object
-# contract: hr.contract object
-# rules: dict containing the rules code (previously computed)
+# version: hr.version object
+# result_rules: dict containing the rules amounts, quantities, rates and totals (previously computed)
 # categories: dict containing the computed salary rule categories (sum of amount of all rules belonging to that category).
 # worked_days: dict containing the computed worked days
 # inputs: dict containing the computed inputs.
@@ -92,24 +93,37 @@ result = rules['NET']['total'] > categories['NET'] * 0.10''',
 # result_name: string, name of the line, which defaults to the name field of the salary rule.
 #              This is useful if the name depends should depend on something computed in the rule.
 # The total returned by the salary rule is calculated as:
-# total = result * result_rate * result_qty
+# total = result * result_rate / 100 * result_qty
 
-result = contract.wage * 0.10''')
+result = version.wage
+result_rate = 10''')
     amount_percentage_base = fields.Char(string='Percentage based on', help='result will be affected to a variable')
     partner_id = fields.Many2one('res.partner', string='Partner',
         help="Eventual third party involved in the salary payment of the employees.")
     note = fields.Html(string='Description', translate=True)
+    color = fields.Char('Color', default='#000000')
+    title = fields.Boolean(string="Title", help="When selected, this salary rule will only be displayed as a title with its description, without numeric values.")
+    bold = fields.Boolean(string="Bold")
+    underline = fields.Boolean(string="Underline")
+    italic = fields.Boolean(string="Italic")
+    preview_currency_symbol = fields.Char(compute='_compute_preview_currency')
+    preview_currency_position = fields.Selection([('after', 'After Amount'), ('before', 'Before Amount')], compute='_compute_preview_currency')
+
+    @api.depends_context('company')
+    def _compute_preview_currency(self):
+        self.preview_currency_symbol = self.env.company.currency_id.symbol
+        self.preview_currency_position = self.env.company.currency_id.position
 
     def _raise_error(self, localdict, error_type, e):
         raise UserError(_("""%(error_type)s
 - Employee: %(employee)s
-- Contract: %(contract)s
+- Version: %(version)s
 - Payslip: %(payslip)s
 - Salary rule: %(name)s (%(code)s)
 - Error: %(error_message)s""",
             error_type=error_type,
             employee=localdict['employee'].name,
-            contract=localdict['contract'].name,
+            version=localdict['version'].name,
             payslip=localdict['payslip'].name,
             name=self.name,
             code=self.code,
@@ -142,7 +156,7 @@ result = contract.wage * 0.10''')
             return localdict['inputs'][self.amount_other_input_id.code].amount, 1.0, 100.0
         # python code
         try:
-            safe_eval(self.amount_python_compute or 0.0, localdict, mode='exec', nocopy=True)
+            safe_eval(self.amount_python_compute or 0.0, localdict, mode='exec')
             return float(localdict['result']), localdict.get('result_qty', 1.0), localdict.get('result_rate', 100.0)
         except Exception as e:
             self._raise_error(localdict, _("Wrong python code defined for:"), e)
@@ -162,7 +176,7 @@ result = contract.wage * 0.10''')
             return self.condition_other_input_id.code in localdict['inputs']
         # python code
         try:
-            safe_eval(self.condition_python, localdict, mode='exec', nocopy=True)
+            safe_eval(self.condition_python, localdict, mode='exec')
             return localdict.get('result', False)
         except Exception as e:
             self._raise_error(localdict, _("Wrong python condition defined for:"), e)
@@ -231,3 +245,9 @@ result = contract.wage * 0.10''')
     def unlink(self):
         self.write({'appears_on_payroll_report': False})
         return super().unlink()
+
+    @api.constrains('category_id', 'struct_id')
+    def _check_category_country(self):
+        for rule in self:
+            if rule.category_id.country_id and rule.country_id and rule.category_id.country_id != rule.country_id:
+                raise ValidationError(_("Rule category and structure should belong to the same country"))

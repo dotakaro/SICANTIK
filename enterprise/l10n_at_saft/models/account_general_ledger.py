@@ -6,7 +6,8 @@ from odoo.tools.misc import street_split
 
 from odoo import api, models, _
 
-class GeneralLedgerCustomHandler(models.AbstractModel):
+
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -129,7 +130,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             }
         else:
             company_contact = company_contacts[0]
-            if not company_contact.phone and not company_contact.mobile:
+            if not company_contact.phone:
                 template_vals['errors']['missing_partner_phone_number'] = {
                     'message': _('Please define a phone or mobile phone number for your company contact.'),
                     'action_text': _('Check Company'),

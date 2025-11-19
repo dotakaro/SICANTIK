@@ -2,12 +2,20 @@ import { describe, expect, test } from "@odoo/hoot";
 import { click, queryAll } from "@odoo/hoot-dom";
 import { advanceTime, runAllTimers } from "@odoo/hoot-mock";
 
-import { contains, defineModels, mountView, onRpc } from "@web/../tests/web_test_helpers";
+import {
+    contains,
+    defineModels,
+    getService,
+    mountView,
+    mountWithCleanup,
+    onRpc,
+} from "@web/../tests/web_test_helpers";
 import { deepCopy } from "@web/core/utils/objects";
-
-import { defineMailModels } from "@mail/../tests/mail_test_helpers";
+import { WebClient } from "@web/webclient/webclient";
 
 import { ProductProduct } from "@industry_fsm_sale/../tests/industry_fsm_sale_mock_model";
+import { defineProjectModels, projectModels } from "@project/../tests/project_models";
+import { SaleOrderLine } from "@sale/../tests/mock_server/mock_models/sale_order_line";
 
 const saleOrderLineInfo = {
     1: {
@@ -15,25 +23,29 @@ const saleOrderLineInfo = {
         readOnly: false,
         price: 14,
         productType: "consu",
+        uomDisplayName: "Unit",
     },
     2: {
         quantity: 1,
         readOnly: false,
         price: 400,
         productType: "consu",
+        uomDisplayName: "Unit",
     },
     3: {
         quantity: 3,
         price: 70,
         readOnly: false,
         productType: "consu",
+        uomDisplayName: "Unit",
     },
 };
 
 describe.current.tags("desktop");
-defineModels([ProductProduct]);
-defineMailModels();
+defineModels([ProductProduct, SaleOrderLine]);
+defineProjectModels();
 
+onRpc("has_group", () => true);
 onRpc("/product/catalog/order_lines_info", () => deepCopy(saleOrderLineInfo));
 
 test("fsm_product_kanban widgets fetching data once", async () => {
@@ -217,7 +229,7 @@ test("edit manually the product quantity and check Unit price update", async () 
     });
 
     expect('.o_kanban_record:nth-child(2) div[name="o_kanban_price"] span').toHaveText(
-        "Unit price: 400.00",
+        "400.00",
         {
             message: "The Unit price should be equal to 400",
         }
@@ -233,7 +245,7 @@ test("edit manually the product quantity and check Unit price update", async () 
         message: "The product quantity should be equal to 12",
     });
     expect('.o_kanban_record:nth-child(2) div[name="o_kanban_price"] span').toHaveText(
-        "Unit price: 100.00",
+        "100.00",
         {
             message: "The Unit price should be equal to 100 after the input change",
         }
@@ -309,4 +321,53 @@ test("edit manually a wrong product quantity", async () => {
             "After inputing a forbidden value, the quantity should be set to 0 and the input space should disapear",
     });
     expect.verifySteps(["update_sale_order_line_info", "update_sale_order_line_info"]);
+});
+
+
+test("Test button 'Back to task'", async () => {
+    ProductProduct._views.search = `<search/>`;
+    projectModels.ProjectTask._views.form = `<form><field name="name"/></form>`;
+    await mountWithCleanup(WebClient);
+    await getService("action").doAction({
+        res_model: "product.product",
+        type: "ir.actions.act_window",
+        views: [[false, "kanban"]],
+        context: {
+            product_catalog_order_model: "sale.order",
+            active_model: "project.task",
+            fsm_task_id: 1,
+        },
+    });
+
+    expect("button.o-kanban-button-back").toBeDisplayed({
+        message: "Button 'Back to task' should be displayed",
+    });
+    await click("button.o-kanban-button-back");
+    await runAllTimers();
+    expect(".o_form_view").toBeDisplayed({
+        message: "It should lead to the task form",
+    });
+});
+
+test("Should display unit price with sales access", async () => {
+    await mountView({
+        resModel: "product.product",
+        type: "kanban",
+        context: {
+            fsm_task_id: 1,
+        },
+    });
+    expect(`.o_product_catalog_price`).toHaveCount(3, { message: "Unit price should be visible" });
+});
+
+test("Should not display unit price without any sales access", async () => {
+    onRpc("has_group", () => false);
+    await mountView({
+        resModel: "product.product",
+        type: "kanban",
+        context: {
+            fsm_task_id: 1,
+        },
+    });
+    expect(`.o_product_catalog_price`).toHaveCount(0, { message: "Unit price should not be visible" });
 });

@@ -25,7 +25,7 @@ CONTAINER_TYPES = (
 DIFF_KEY = "o-diff-key"
 
 
-class Model(models.AbstractModel):
+class Base(models.AbstractModel):
     _inherit = 'base'
 
     @api.model
@@ -56,7 +56,8 @@ class Model(models.AbstractModel):
             self = self.with_context(studio=True, no_address_format=True)
         return super().get_views(views, options)
 
-class View(models.Model):
+
+class IrUiView(models.Model):
     _name = 'ir.ui.view'
     _description = 'View'
     _inherit = ['studio.mixin', 'ir.ui.view']
@@ -128,7 +129,6 @@ class View(models.Model):
                     # while still displaying the field in the view.
                     # The form view of `res.users` has fake fields, not existing in the model,
                     # so use `_fields.get(...)` instead of `_fields[...]`
-                    # e.g. `in_group_12`
                     node.set('studio_no_fetch', '1')
 
             def is_in_list(node):
@@ -527,11 +527,11 @@ class View(models.Model):
     # Based on inherit_branding of ir_ui_view
     # This will add recursively the groups ids on the spec node.
     def _groups_branding(self, specs_tree):
-        groups_id = self.groups_id
+        group_ids = self.group_ids
         studio = self.env.context.get('studio')
         check_view_ids = self.env.context.get('check_view_ids')
-        if groups_id and (not studio or not check_view_ids):
-            attr_value = ','.join(map(str, groups_id.ids))
+        if group_ids and (not studio or not check_view_ids):
+            attr_value = ','.join(map(str, group_ids.ids))
             for node in specs_tree.iter(tag=etree.Element):
                 node.set('studio-view-group-ids', attr_value)
 
@@ -563,17 +563,18 @@ class View(models.Model):
                 self._check_parent_groups(source, spec)
                 # Here, we don't want to catch the exception.
                 # This mechanism doesn't save the view if something goes wrong.
-                source = super(View, self).apply_inheritance_specs(source, spec)
+                source = super().apply_inheritance_specs(source, spec)
             else:
                 # Avoid traceback if studio view and skip xpath when studio mode is off
                 try:
-                    source = super(View, self).apply_inheritance_specs(source, spec)
+                    source = super().apply_inheritance_specs(source, spec)
                 except ValueError:
                     # 'locate_node' already log this error.
                     pass
         return source
 
-    def apply_inheritance_specs(self, source, specs_tree):
+    @api.model
+    def apply_inheritance_specs(self, source, specs_tree, pre_locate=None):
         # Add branding for groups if studio mode is on
         if self._context.get('studio'):
             self._groups_branding(specs_tree)
@@ -583,9 +584,10 @@ class View(models.Model):
             return self._apply_studio_specs(source, specs_tree)
         else:
             # Remove branding added by '_groups_branding' before locating a node
-            pre_locate = lambda arch: arch.attrib.pop("studio-view-group-ids", None)
-            return super(View, self).apply_inheritance_specs(source, specs_tree,
-                                                                pre_locate=pre_locate)
+            def pre_locate_studio(arch):
+                arch.attrib.pop("studio-view-group-ids", None)
+                return not pre_locate or pre_locate(arch)
+            return super().apply_inheritance_specs(source, specs_tree, pre_locate=pre_locate_studio)
 
     def _generate_trees_with_diff_key(self, parser, old_view):
         old_view_arch = etree.fromstring(old_view, parser)
@@ -1168,10 +1170,11 @@ class View(models.Model):
         return self._stringify_node('', arch, moved_fields)
 
     def _stringify_node(self, ancestor, node, moved_fields=None):
-        """
+        r"""
         Converts a node into its string representation
 
-        Example:
+        Example::
+
             from: <field name='color'/>
               to: "/field[@name='color']\n"
 
@@ -1273,7 +1276,7 @@ class View(models.Model):
         self = self.with_context(cloned_templates=cloned_templates)
         cloned_templates[new.key] = new_key
 
-        arch_tree = etree.fromstring(self._read_template(self.id))
+        arch_tree = self._get_view_etrees()[0]
 
         for node in arch_tree.findall(".//t[@t-call]"):
             tcall = node.get('t-call')
@@ -1301,7 +1304,7 @@ class View(models.Model):
             if not root.inherit_id:
                 break
             root = root.inherit_id
-        combined_views = self.browse(view_ids).with_context(check_view_ids=[])._get_inheriting_views()
+        combined_views = self.browse(view_ids)._get_inheriting_views()
 
         new.write({
             'name': '%s copy(%s)' % (new.name, copy_no),
@@ -1323,13 +1326,6 @@ class View(models.Model):
             self._raise_view_error(_("studio_approval attribute can only be set in form views"), node)
         if studio_approval and studio_approval not in ['True', 'False']:
             self._raise_view_error(_("Invalid studio_approval %s in button", studio_approval), node)
-
-    # REPORT STUFF
-    def _render_template(self, template, values=None):
-        if self._context.get("studio"):
-            # Force inherit branding from report rendering
-            self = self.with_context(inherit_branding=True)
-        return super(View, self)._render_template(template, values)
 
     def _contains_branded(self, node):
         if not self._context.get("studio"):
@@ -1359,7 +1355,6 @@ class View(models.Model):
         if self.env.context.get("studio"):
             return
         return super().save_embedded_field(el)
-
 
 
 class ResetViewArchWizard(models.TransientModel):

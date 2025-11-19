@@ -3,6 +3,7 @@
 
 from odoo import api, models, fields, _
 
+
 class HelpdeskTeam(models.Model):
     _inherit = "helpdesk.team"
 

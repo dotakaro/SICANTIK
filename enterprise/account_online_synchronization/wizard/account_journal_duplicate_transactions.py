@@ -3,7 +3,7 @@ from datetime import timedelta
 from odoo import api, Command, fields, models, _
 
 
-class AccountDuplicateTransaction(models.TransientModel):
+class AccountDuplicateTransactionWizard(models.TransientModel):
     _name = 'account.duplicate.transaction.wizard'
     _description = 'Wizard for duplicate transactions'
 
@@ -20,6 +20,10 @@ class AccountDuplicateTransaction(models.TransientModel):
         compute='_compute_transaction_ids',
     )
     first_ids_in_group = fields.Json(compute='_compute_transaction_ids')
+    provider_duplicate_ids = fields.One2many(
+        comodel_name='account.bank.statement.line',
+        compute='_compute_provider_duplicate_ids',
+    )
 
     @api.depends('journal_id')
     def _compute_display_name(self):
@@ -29,7 +33,7 @@ class AccountDuplicateTransaction(models.TransientModel):
     @api.depends('journal_id', 'date')
     def _compute_transaction_ids(self):
         for wizard in self:
-            ids_groups = wizard.journal_id._get_duplicate_transactions(wizard.date)
+            ids_groups = wizard.journal_id._get_duplicate_transactions(wizard.date or fields.Date.today())
             first_ids_in_group = []
             flat_ids = []
             check_set = set()
@@ -42,6 +46,11 @@ class AccountDuplicateTransaction(models.TransientModel):
                     first_ids_in_group.append(ids_group[0])
             wizard.write({'transaction_ids': [Command.set(flat_ids)]})
             wizard.first_ids_in_group = first_ids_in_group
+
+    @api.depends('journal_id', 'date')
+    def _compute_provider_duplicate_ids(self):
+        for wizard in self:
+            wizard.provider_duplicate_ids = [Command.set(wizard.journal_id._get_provider_duplicate_transactions(wizard.date))]
 
     @api.depends('journal_id')
     def _compute_date(self):
@@ -61,6 +70,3 @@ class AccountDuplicateTransaction(models.TransientModel):
                 wizard.date = bsl[0]['date']
             else:
                 wizard.date = fields.Datetime.today()
-
-    def action_display_duplicate_transaction(self):
-        return self.journal_id.action_display_duplicate_transaction_from_date(self.date)

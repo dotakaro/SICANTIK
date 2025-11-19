@@ -6,9 +6,8 @@ from odoo.osv import expression
 from odoo.exceptions import RedirectWarning, UserError
 
 
-class AnalyticLine(models.Model):
-    _name = 'account.analytic.line'
-    _inherit = ['account.analytic.line']
+class AccountAnalyticLine(models.Model):
+    _inherit = 'account.analytic.line'
 
     def _should_not_display_timer(self):
         self.ensure_one()

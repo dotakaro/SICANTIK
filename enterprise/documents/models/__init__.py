@@ -14,9 +14,11 @@ from . import documents_tag
 # orm
 from . import ir_attachment
 from . import ir_binary
+from . import ir_http
 
 # inherit
 from . import ir_actions_server
+from . import ir_embedded_actions
 from . import mail_activity
 from . import mail_activity_type
 from . import res_partner

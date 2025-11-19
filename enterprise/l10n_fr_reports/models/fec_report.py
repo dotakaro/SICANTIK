@@ -4,14 +4,12 @@ from odoo import fields, models, _
 from odoo.exceptions import UserError
 
 
-class FECReportCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
     _description = 'FEC Report Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
         super()._custom_options_initializer(report, options, previous_options=previous_options)
-        if self.env.company.account_fiscal_country_id.code != 'FR':
-            return
         options.setdefault('buttons', []).append(
             {'name': _('FEC'), 'sequence': 10, 'action': 'l10n_fr_reports_open_fec_wizard'}
         )
@@ -37,7 +35,7 @@ class FECReportCustomHandler(models.AbstractModel):
         return self.env['l10n_fr.fec.export.wizard'].browse(options['fec_wizard_id']).generate_fec()
 
 
-class FecExportWizard(models.TransientModel):
+class L10n_FrFecExportWizard(models.TransientModel):
     _inherit = 'l10n_fr.fec.export.wizard'
 
     def create_fec_report_action(self):

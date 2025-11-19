@@ -29,23 +29,32 @@ class ProductTemplate(models.Model):
         string='Country of Origin',
         readonly=False,
     )
-    intrastat_code_domain = fields.Char(
-        compute='_compute_intrastat_code_domain',
-    )
     # remove in master
     valid_intrastat_code_ids = fields.Many2many(
         string="Intrastat Code IDs",
         comodel_name='account.intrastat.code',
         compute="_compute_valid_intrastat_code_ids",
     )
+    intrastat_code_domain = fields.Char(
+        compute='_compute_intrastat_code_domain',
+    )
 
     @api.depends('type')
     def _compute_intrastat_code_domain(self):
         """Dynamically compute the domain for intrastat_code_id."""
+        country_id = self.env.company.account_fiscal_country_id.id
+        service_codes_available = self.env["account.intrastat.code"].search_count(
+            [
+                ("country_id", "in", (country_id, False)),
+                ("type", "=", "service"),
+            ],
+            limit=1,
+        )
         for product in self:
+            code_type = 'service' if service_codes_available and product.type == 'service' else 'commodity'
             product.intrastat_code_domain = str([
-                ("country_id", "in", (self.env.company.account_fiscal_country_id.id, False)),
-                ("type", "=", "commodity"),
+                ("country_id", "in", (country_id, False)),
+                ("type", "=", code_type),
             ])
 
     @api.depends('product_variant_ids')
@@ -60,18 +69,17 @@ class ProductTemplate(models.Model):
     # remove in master
     @api.depends('type')
     def _compute_valid_intrastat_code_ids(self):
-        valid_intrastat_codes = dict(self.env['account.intrastat.code']._read_group(
+        valid_intrastat_code = dict(self.env['account.intrastat.code']._read_group(
             domain=[('country_id', 'in', (self.env.company.account_fiscal_country_id.id, False))],
             groupby=['type'],
             aggregates=['id:recordset'],
         ))
         for product in self:
-            product.valid_intrastat_code_ids = product._get_valid_intrastat_code_ids(valid_intrastat_codes)
-
-    # remove in master
-    def _get_valid_intrastat_code_ids(self, valid_intrastat_codes):
-        # to be overridden
-        return valid_intrastat_codes['commodity']
+            if 'service' in valid_intrastat_code and product.type == 'service':
+                valid_codes = valid_intrastat_code['service']
+            else:
+                valid_codes = valid_intrastat_code['commodity']
+            product.valid_intrastat_code_ids = valid_codes
 
     def _inverse_intrastat_code_id(self):
         for product_template in self:
@@ -89,6 +97,7 @@ class ProductTemplate(models.Model):
         fields = super()._get_related_fields_variant_template()
         fields += ['intrastat_code_id', 'intrastat_origin_country_id', 'intrastat_supplementary_unit', 'intrastat_supplementary_unit_amount']
         return fields
+
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'

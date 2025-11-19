@@ -8,7 +8,7 @@ from odoo.exceptions import ValidationError
 _logger = logging.getLogger(__name__)
 
 
-class EventMailScheduler(models.Model):
+class EventMail(models.Model):
     _inherit = 'event.mail'
 
     notification_type = fields.Selection(selection_add=[('whatsapp', 'WhatsApp')])

@@ -11,11 +11,11 @@ from odoo.tests.common import tagged
 class TestExternalTaxSubscriptionController(TestSaleSubscriptionExternalCommon, PaymentHttpCommon, TestSubscriptionCommon):
     def test_01_external_taxes_called_in_preview(self):
         self.subscription.partner_id = self.user_portal.partner_id
+        self.subscription.action_confirm()
         self.subscription._portal_ensure_token()
 
         url = "/my/subscriptions/%s?access_token=%s" % (self.subscription.id, self.subscription.access_token)
-        with patch('odoo.addons.sale_external_tax.models.sale_order.SaleOrder._set_external_taxes', autospec=True) as mocked_set, \
-             self.patch_set_external_taxes():
+        with self.patch_set_external_taxes() as mocked_set:
             self.url_open(url, allow_redirects=False)
 
         self.assertIn(
@@ -42,14 +42,17 @@ class TestExternalTaxSubscriptionController(TestSaleSubscriptionExternalCommon, 
             "flow": "direct",
         }
 
-        with self.patch_set_external_taxes() as mocked_set:
-            self.make_jsonrpc_request(url, data)
 
+        self.make_jsonrpc_request(url, data)
+        tx =  self.subscription.transaction_ids
+        tx._set_done()
+        with self.patch_set_external_taxes() as mocked_set:
+            tx._post_process()
         self.assertEqual(
             len(self.subscription.invoice_ids), 1, "One invoice should have been created."
         )
         self.assertEqual(
-            [self.subscription.invoice_ids[0]],
-            [args[0] for args, kwargs in mocked_set.call_args_list if args[0]],
+            set(self.subscription.invoice_ids[0]),
+            set(args[0] for args, kwargs in mocked_set.call_args_list if args[0]),
             "Should have queried avatax on the created invoice when manually initiating a payment.",
         )

@@ -1,9 +1,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import Command
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, AccessError
 from odoo.tests.common import TransactionCase
 from odoo.addons.mail.tests.common import mail_new_test_user
+from odoo.tools import mute_logger
 
 
 class TestDocumentsDocumentFolder(TransactionCase):
@@ -114,28 +115,35 @@ class TestDocumentsDocumentFolder(TransactionCase):
         self.assertEqual(acl.role, 'view')
 
     def test_folder_copy(self):
-        odoobot = self.env.ref('base.user_root')
         self.folder.owner_id = self.user_portal
-        folder_copy = self.folder.copy()
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            folder_copy = self.folder.copy()
         self.assertNotEqual(folder_copy.id, self.folder.id)
-        self.assertEqual(folder_copy.name, self.folder.name)
+        self.assertEqual(folder_copy.name, f'{self.folder.name} (copy)')
         self.assertEqual(folder_copy.type, 'folder')
         self.assertEqual(folder_copy.folder_id, self.parent_folder)
-        self.assertEqual(folder_copy.owner_id, odoobot)
+        self.assertFalse(folder_copy.owner_id)
+
+        folder_shortcut = self.folder.action_create_shortcut()
+        self.assertNotEqual(folder_shortcut.id, self.folder.id)
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            folder_shortcut_copy = folder_shortcut.copy()
+        self.assertNotEqual(folder_shortcut_copy.id, folder_shortcut.id)
+        self.assertEqual(folder_shortcut_copy.name, f'{folder_shortcut.name} (copy)')
 
         child_copy = folder_copy.children_ids.ensure_one()
         self.assertNotEqual(child_copy.id, self.child_folder.id)
         self.assertEqual(child_copy.name, self.child_folder.name)
         self.assertEqual(child_copy.type, 'folder')
         self.assertEqual(child_copy.folder_id, folder_copy)
-        self.assertEqual(child_copy.owner_id, odoobot)
+        self.assertFalse(child_copy.owner_id)
 
         document_copy = child_copy.children_ids.ensure_one()
         self.assertNotEqual(document_copy.id, self.document.id)
-        self.assertEqual(document_copy.name, f'{self.document.name} (copy)')
+        self.assertEqual(document_copy.name, self.document.name)
         self.assertEqual(document_copy.type, 'binary')
         self.assertEqual(document_copy.folder_id, child_copy)
-        self.assertEqual(document_copy.owner_id, odoobot)
+        self.assertFalse(child_copy.owner_id)
 
         attachment = document_copy.attachment_id.ensure_one()
         self.assertNotEqual(attachment.id, self.document.attachment_id.id)
@@ -164,11 +172,80 @@ class TestDocumentsDocumentFolder(TransactionCase):
 
         self.assertEqual(len(action_original_child), 1)
         self.assertEqual(action_original_child.action_id.id, server_action.id)
-
-        copied_folder = original_folder.copy()
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            copied_folder = original_folder.copy()
         copied_child = copied_folder.children_ids[0]
         copied_child._compute_available_embedded_actions_ids()
         action_copied_child = copied_child.available_embedded_actions_ids
         self.assertEqual(len(action_copied_child), 1)
         self.assertEqual(action_original_child.action_id, action_copied_child.action_id)
         self.assertNotEqual(action_original_child, action_copied_child)
+
+    def test_action_move_folder(self):
+        self.document_manager, self.internal_user = self.env['res.users'].create([
+            {
+                'email': "dtdm@yourcompany.com",
+                'group_ids': [Command.link(self.env.ref('documents.group_documents_manager').id)],
+                'login': "dtdm",
+                'name': "Documents Manager",
+            },
+            {
+                'login': 'internal_user',
+                'group_ids': [Command.link(self.env.ref('base.group_user').id)],
+                'name': 'Internal user'
+            }
+        ])
+        self.folder_cpy_1, self.folder_cpy_2, self.folder_cpy_3 = self.env['documents.document'].create(
+            [{
+                'access_internal': 'view',
+                'folder_id': False,
+                'name': f'COMPANY folder {i + 1}',
+                'sequence': i,
+                'type': 'folder',
+                'owner_id': False}
+                for i in range(3)])
+        self.company_folders = self.folder_cpy_1 | self.folder_cpy_2 | self.folder_cpy_3
+
+        # Moving folders in COMPANY
+        for company_folder in self.company_folders:
+            self.assertTrue(company_folder.is_company_root_folder)
+            self.assertTrue(company_folder.with_user(self.document_manager).user_permission == 'edit')
+            self.assertTrue(company_folder.with_user(self.internal_user).user_permission == 'view')
+
+        self.assertTrue(self.folder_cpy_1.sequence < self.folder_cpy_2.sequence < self.folder_cpy_3.sequence)
+        with self.assertRaises(AccessError):
+            self.folder_cpy_1.with_user(self.internal_user).action_move_folder("COMPANY", self.folder_cpy_2.id)
+        # Insert before a folder
+        self.folder_cpy_3.with_user(self.document_manager).action_move_folder("COMPANY", self.folder_cpy_1.id)
+        self.assertTrue(self.folder_cpy_3.sequence < self.folder_cpy_1.sequence < self.folder_cpy_2.sequence)
+        # Move at the end
+        self.folder_cpy_3.with_user(self.document_manager).action_move_folder("COMPANY", False)
+        self.assertTrue(self.folder_cpy_3.sequence > self.folder_cpy_1.sequence)
+        self.assertTrue(self.folder_cpy_3.sequence > self.folder_cpy_2.sequence)
+
+        # Moving folders in MY DRIVE
+        self.folder_my_1, self.folder_my_2, self.folder_my_3 = self.env['documents.document'].create([
+            {
+                'folder_id': False,
+                'name': f"My Drive folder {i + 1}",
+                'sequence': i,
+                'type': 'folder',
+                'owner_id': self.internal_user.id,
+            }
+            for i in range(3)])
+        self.my_drive_folders = self.folder_my_1 | self.folder_my_2 | self.folder_my_3
+
+        for my_drive_folder in self.my_drive_folders:
+            self.assertTrue(my_drive_folder.with_user(self.document_manager).user_permission == 'none')
+            self.assertTrue(my_drive_folder.with_user(self.internal_user).user_permission == 'edit')
+
+        with self.assertRaises(AccessError):
+            self.folder_my_2.with_user(self.document_manager).action_move_folder("MY", self.folder_my_1.id)
+
+        # Insert before a folder
+        self.folder_my_3.with_user(self.internal_user).action_move_folder("MY", self.folder_my_1.id)
+        self.assertTrue(self.folder_my_3.sequence < self.folder_my_1.sequence < self.folder_my_2.sequence)
+        # Move at the end
+        self.folder_my_3.with_user(self.internal_user).action_move_folder("MY", False)
+        self.assertTrue(self.folder_my_3.sequence > self.folder_my_1.sequence)
+        self.assertTrue(self.folder_my_3.sequence > self.folder_my_2.sequence)

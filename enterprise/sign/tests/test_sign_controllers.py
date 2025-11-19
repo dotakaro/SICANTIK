@@ -1,36 +1,14 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-import json
 from unittest.mock import patch
 from freezegun import freeze_time
+from json import dumps
 
-from odoo.http import Request
-from .sign_request_common import SignRequestCommon
-from odoo.addons.base.tests.common import HttpCaseWithUserDemo
-from odoo.addons.sign.controllers.main import Sign
+from odoo import Command
 from odoo.exceptions import AccessError, ValidationError
-from odoo.addons.website.tools import MockRequest
+from odoo.addons.http_routing.tests.common import MockRequest
 from odoo.tests import tagged
 from odoo.tools import formataddr
-
-class TestSignControllerCommon(SignRequestCommon, HttpCaseWithUserDemo):
-    def setUp(self):
-        super().setUp()
-        self.SignController = Sign()
-
-    def _json_url_open(self, url, data, **kwargs):
-        data = {
-            "id": 0,
-            "jsonrpc": "2.0",
-            "method": "call",
-            "params": data,
-        }
-        headers = {
-            "Content-Type": "application/json",
-            **kwargs.get('headers', {})
-        }
-        return self.url_open(url, data=json.dumps(data).encode(), headers=headers)
-
+from .sign_controller_common import TestSignControllerCommon
 
 @tagged('post_install', '-at_install')
 class TestSignController(TestSignControllerCommon):
@@ -40,10 +18,11 @@ class TestSignController(TestSignControllerCommon):
         text_type = self.env['sign.item.type'].search([('name', '=', 'Text')])
         # the partner_latitude expects 7 zeros of decimal precision
         text_type.auto_field = 'partner_latitude'
+        text_type.model_id = self.env['ir.model']._get('res.partner').id
         token_a = self.env["sign.request.item"].search([('sign_request_id', '=', sign_request.id)]).access_token
         with MockRequest(sign_request.env):
             values = self.SignController.get_document_qweb_context(sign_request.id, token=token_a)
-            sign_type = list(filter(lambda sign_type: sign_type["name"] == "Text", values["sign_item_types"]))[0]
+            sign_type = next(filter(lambda sign_type: sign_type["name"] == "Text", values.get("rendering_context")["sign_item_types"]))
             latitude = sign_type["auto_value"]
             self.assertEqual(latitude, 0)
 
@@ -51,6 +30,7 @@ class TestSignController(TestSignControllerCommon):
     def test_sign_controller_dummy_fields(self):
         text_type = self.env['sign.item.type'].search([('name', '=', 'Text')])
         # we set a dummy field that raises an error
+        text_type.model_id = self.env['ir.model']._get('res.partner').id
         with self.assertRaises(ValidationError):
             text_type.auto_field = 'this_is_not_a_partner_field'
 
@@ -65,11 +45,12 @@ class TestSignController(TestSignControllerCommon):
         self.partner_1.company_id.country_id = self.env.ref('base.be').id
         sign_request = self.create_sign_request_no_item(signer=self.partner_1, cc_partners=self.partner_4)
         text_type = self.env['sign.item.type'].search([('name', '=', 'Text')])
+        text_type.model_id = self.env['ir.model']._get('res.partner').id
         text_type.auto_field = 'company_id.country_id.name'
         token_a = self.env["sign.request.item"].search([('sign_request_id', '=', sign_request.id)]).access_token
         with MockRequest(sign_request.env):
             values = self.SignController.get_document_qweb_context(sign_request.id, token=token_a)
-            sign_type = list(filter(lambda sign_type: sign_type["name"] == "Text", values["sign_item_types"]))[0]
+            sign_type = next(filter(lambda sign_type: sign_type["name"] == "Text", values.get("rendering_context")["sign_item_types"]))
             country = sign_type["auto_value"]
             self.assertEqual(country, "Belgium")
 
@@ -141,7 +122,7 @@ class TestSignController(TestSignControllerCommon):
             timestamp = sign_request_item_id._generate_expiry_link_timestamp()
             expiry_hash = sign_request_item_id._generate_expiry_signature(sign_request_item_id.id, timestamp)
 
-        with freeze_time('2020-01-04'):
+        with freeze_time('2020-01-17'):
             url = '/sign/document/mail/%(sign_request_id)s/%(access_token)s?timestamp=%(timestamp)s&exp=%(exp)s' % {
                 'sign_request_id': sign_request.id,
                 'access_token': sign_request.request_item_ids[0].access_token,
@@ -181,11 +162,11 @@ class TestSignController(TestSignControllerCommon):
             sign_request_item = {sign_request_item.role_id: sign_request_item for sign_request_item in sign_request.request_item_ids}
             sign_request_item_customer = sign_request_item[self.role_customer]
 
-            sign_request_item_customer.sudo()._edit_and_sign(self.single_role_customer_sign_values)
+            sign_request_item_customer.sudo().sign(self.single_role_customer_sign_values)
             mail = self.env['mail.mail'].search([('email_to', '=', formataddr((self.partner_1.name, self.partner_1.email)))])
             self.assertEqual(len(mail.ids), 2)
 
-        with freeze_time('2020-01-04'):
+        with freeze_time('2020-01-17'):
             self.start_tour(url, 'sign_resend_expired_link_tour', login='demo')
 
     def test_cancel_request_as_public_user(self):
@@ -195,26 +176,30 @@ class TestSignController(TestSignControllerCommon):
         sign_request = self.create_sign_request_1_role(self.partner_1, self.env['res.partner'])
         sign_request_item = sign_request.request_item_ids[0]
 
-        url = '/sign/sign_confirm_cancel/%(item_id)s' % {
-            'item_id': sign_request_item.id,
+        data = {
+            'params': {
+                'refusal_reason': 'No.',
+            },
         }
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        url = '/sign/refuse/%(item_id)s/%(token)s?refusal_reason="test"' % {
+             'item_id': sign_request.id,
+             'token': sign_request_item.access_token
+         }
 
         # Set the environment user as the public user
-        self.env.user = self.public_user
+        self.uid = self.public_user
 
         # Send a request to cancel the sign request item
         self.authenticate(None, None)
-        post_data = {
-            'access_token': sign_request_item.access_token,
-            'csrf_token': Request.csrf_token(self),
-        }
-        response = self.url_open(url, data=post_data)
-
+        response = self.url_open(url, data=dumps(data), headers=headers)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(sign_request.state, 'canceled', "Sign request state should be 'canceled'")
         self.assertEqual(sign_request_item.state, 'canceled', "Sign request item state should be 'canceled'")
 
-        sign_cancel_log = self.env['sign.log'].search([
+        sign_cancel_log = self.env['sign.log'].sudo().search([
             ('sign_request_id', '=', sign_request.id),
             ('action', '=', 'cancel')
         ])
@@ -226,3 +211,60 @@ class TestSignController(TestSignControllerCommon):
                          "Log partner_id should match partner_1")
         self.assertEqual(sign_cancel_log.sign_request_item_id.id, sign_request_item.id,
                          "Log should reference the correct request item")
+
+    def test_make_public_user_with_duplicate_contact(self):
+        """
+        Test make_public_user behavior with duplicate contacts.
+        Ensures that when a user has a duplicate contact with the same email and name, 
+        the sign request associates the correct partner ID which contains user_ids.
+        """
+        user = self.env['res.users'].create({
+            'name': 'Test User',
+            'login': 'test_user@example.com',
+            'email': 'test_user@example.com',
+        })
+        contact = user.partner_id
+
+        # Duplicate contact and set the user's partner ID to the duplicate contact
+        duplicate_contact = contact.copy()
+        user.partner_id = duplicate_contact
+        self.assertEqual(user.partner_id, duplicate_contact)
+        self.assertEqual(contact.email, duplicate_contact.email)
+
+        # Create a sign request and linked to the user's(Test User) contact
+        sign_request = self.env['sign.request'].with_context(no_sign_mail=False).create({
+            'template_id': self.template_no_item.id,
+            'reference': self.template_no_item.display_name,
+            'state': 'shared',
+            'request_item_ids': [Command.create({
+                'role_id': self.env.ref('sign.sign_item_role_default').id,
+            })],
+        })
+
+        response = self._json_url_open(
+            '/sign/send_public/%s/%s' % (sign_request.id, sign_request.access_token),
+            data={'name': contact.name, 'mail': contact.email}
+        ).json().get('result')
+
+        self.assertTrue(response.get('requestID'), 'Request ID should be returned')
+
+        sign_request_partner_id = self.env['sign.request'].search(
+            [('id', '=', response.get('requestID'))]
+        ).request_item_ids.partner_id
+
+        self.assertEqual(
+            duplicate_contact.id, sign_request_partner_id.id,
+            'The sign request partner ID should match the duplicate contact'
+        )
+        self.assertEqual(
+            sign_request_partner_id.email, contact.email,
+            'The email of the sign request partner should match the original contact email'
+        )
+        self.assertEqual(
+            sign_request_partner_id.name, duplicate_contact.name,
+            'The name of the sign request partner should match the original contact name'
+        )
+        self.assertEqual(
+            len(sign_request.request_item_ids), 1,
+            'There should be exactly one request item in the sign request'
+        )

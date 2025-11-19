@@ -5,7 +5,7 @@
     'name': "Helpdesk - SMS",
     'summary': 'Send text messages when ticket stage move',
     'description': "Send text messages when ticket stage move",
-    'category': 'Hidden',
+    'category': 'Services/Helpdesk',
     'version': '1.0',
     'depends': ['helpdesk', 'sms'],
     'data': [
@@ -15,5 +15,6 @@
         'security/helpdesk_sms_security.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -2,7 +2,7 @@
 
 {
     'name': 'FEDEX Locations for Website Delivery',
-    'category': 'Inventory/Delivery',
+    'category': 'Shipping Connectors',
     'summary': 'Allows website customers to choose delivery pick-up points',
     'description': 'This module allows ecommerce users to choose to deliver to Pick-Up points for the FEDEX connector.',
     'depends': ['delivery_fedex', 'website_sale'],
@@ -11,5 +11,6 @@
     ],
 
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

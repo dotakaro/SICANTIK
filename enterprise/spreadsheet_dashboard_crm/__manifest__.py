@@ -3,7 +3,7 @@
 {
     'name': "Spreadsheet dashboard for CRM",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Productivity/Dashboard',
     'summary': 'Spreadsheet',
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'crm_enterprise'],
@@ -12,5 +12,6 @@
     ],
     'installable': True,
     'auto_install': ['crm_enterprise'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

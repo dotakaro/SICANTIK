@@ -14,7 +14,7 @@ class TestL10nClEdiStockCommon(ValuationReconciliationTestCommon):
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.env.user.groups_id |= cls.env.ref("sales_team.group_sale_salesman")
+        cls.env.user.group_ids |= cls.env.ref("sales_team.group_sale_salesman")
         cls.env.company.write({
             'name': 'Blanco Martin & Asociados EIRL',
             'street': 'Apoquindo 6410',

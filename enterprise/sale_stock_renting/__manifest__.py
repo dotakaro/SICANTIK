@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 {
     'name': "Rental Stock Management",
 
@@ -38,5 +37,6 @@
             'sale_stock_renting/static/src/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

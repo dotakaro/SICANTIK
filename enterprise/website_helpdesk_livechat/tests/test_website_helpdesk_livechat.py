@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import base64
 import json
 
 from odoo import Command
@@ -33,22 +34,45 @@ class TestWebsiteHelpdeskLivechat(HttpCase, HelpdeskCommon):
             'anonymous_name': 'Visitor',
             'channel_id': self.livechat_channel.id,
         })
-        discuss_channel = self.env['discuss.channel'].browse(data["discuss.channel"][0]['id']).with_user(self.helpdesk_manager)
+        discuss_channel = self.env['discuss.channel'].browse(data["channel_id"]).with_user(self.helpdesk_manager)
 
         self.assertFalse(self.env['helpdesk.ticket'].search([('team_id', '=', self.test_team.id)]), 'The team should start with no tickets')
 
         # Post a message that will be part of the chat history in the ticket description
         test_message = 'Test message'
         discuss_channel.message_post(body=test_message)
+        # Create both image and text-type attachments.
+        attachments = self.env['ir.attachment'].create([{
+            'name': "Image attachment",
+            'res_model': 'discuss.channel',
+            'res_id': discuss_channel.id,
+            'raw': b'My attachment',
+            'mimetype': 'image/png',
+        }, {
+            'name': "Text attachment",
+            'res_model': 'discuss.channel',
+            'res_id': discuss_channel.id,
+            'raw': b'My attachment',
+        }])
+
+        # Post message with the created attachments
+        discuss_channel.message_post(attachment_ids=attachments.ids)
 
         # Create the ticket with the /ticket command
         ticket_name = 'Test website helpdesk livechat'
         discuss_channel.execute_command_helpdesk(body=f"/ticket {ticket_name}")
+        self.assertTrue(discuss_channel.sudo().ticket_ids)
 
         self.env.cr.precommit.run()  # trigger the creation of bus.bus records
         bus = self.env['bus.bus'].search([('channel', 'like', f'"res.partner",{self.helpdesk_manager.partner_id.id}')], order='id desc', limit=1)
         message = json.loads(bus.message)
         ticket = self.env['helpdesk.ticket'].search([('team_id', '=', self.test_team.id)])
+        self.assertIn('<div data-embedded="file"', ticket.description,
+            'The name "Text attachment" should be added to the ticket description.')
+        self.assertIn(f'<img src="/web/content/{attachments[0].id}" alt="Image attachment"', ticket.description,
+            "The image attachment should be added to the ticket description.")
+        self.assertEqual(ticket.message_attachment_count, 1,
+            'Only one text-type attachment should be attached to the ticket.')
         expected_message = f"<span class='o_mail_notification'>Created a new ticket: <a href=# data-oe-model='helpdesk.ticket' data-oe-id='{ticket.id}'>{ticket_name} (#{ticket.ticket_ref})</a></span>"
 
         self.assertTrue(ticket, f"Ticket {ticket_name} should have been created.")

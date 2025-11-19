@@ -1,12 +1,10 @@
-/** @odoo-module */
-
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { AccountReport } from "@account_reports/components/account_report/account_report";
 import { AccountReportLineName } from "@account_reports/components/account_report/line_name/line_name";
 
-export class LUAppendixLineName extends AccountReportLineName {
+export class L10nLUAppendixLineName extends AccountReportLineName {
     static template = "l10n_lu_reports.AppendixLineName";
 
     setup() {
@@ -28,4 +26,4 @@ export class LUAppendixLineName extends AccountReportLineName {
     }
 }
 
-AccountReport.registerCustomComponent(LUAppendixLineName);
+AccountReport.registerCustomComponent(L10nLUAppendixLineName);

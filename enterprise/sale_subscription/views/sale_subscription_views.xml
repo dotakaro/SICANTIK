@@ -29,12 +29,15 @@
                 <filter name="paused" string="Paused" domain="[('subscription_state','=', '4_paused')]"/>
                 <filter name="churned" string="Churned" domain="[('subscription_state','=', '6_churn')]"/>
                 <separator/>
+                <filter name="closing" string="Closing" domain="[('is_closing', '=', True)]"/>
+                <separator/>
                 <filter name="to_renew" string="To Invoice" domain="[('next_invoice_date', '&lt;=', context_today().strftime('%Y-%m-%d')), ('subscription_state', 'in', ('3_progress', '4_paused'))]"/>
                 <separator/>
-                <filter name="payment_exception" string="Failed Payments" domain="[('payment_exception','=', True)]" help="Contracts whose payment has failed"/>
+                <filter name="automatic_payment" string="Automatic Payments" domain="[('subscription_state', 'in', ('3_progress', '4_paused')), ('payment_token_id', '!=', False)]"/>
+                <filter name="manual_payment" string="Manual Payment" domain="[('subscription_state', 'in', ('3_progress', '4_paused')), ('payment_token_id', '=', False), ('require_payment', '=', True)]"/>
+                <filter name="automatic_invoicing" string="Automatic Invoicing" domain="[('subscription_state', 'in', ('3_progress', '4_paused')), ('payment_token_id', '=', False), ('require_payment', '=', False)]"/>
                 <separator/>
-                <filter name="good" string="Good Health" domain="[('health', '=', 'done')]"/>
-                <filter name="bad" string="Bad Health" domain="[('health', '=', 'bad')]"/>
+                <filter name="payment_exception" string="In Error" domain="[('payment_exception','=', True)]" help="Contracts whose payment has failed"/>
                 <separator/>
                 <filter name="first_contract_date" date="first_contract_date"/>
                 <separator/>
@@ -42,25 +45,28 @@
                 <separator/>
                 <filter name="end_date" date="end_date"/>
                 <separator/>
+                <filter invisible="1" string="My Activities" name="filter_activities_my"
+                    domain="[('activity_user_id', '=', uid)]"/>
+                <separator invisible="1"/>
                 <filter invisible="1" string="Late Activities" name="activities_overdue"
-                    domain="[('my_activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"
-                    help="Show all records which has next action date is before today"/>
+                    domain="[('activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"
+                    help="Show all records whose next activity date is past"/>
                 <filter invisible="1" string="Today Activities" name="activities_today"
-                    domain="[('my_activity_date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                    domain="[('activity_date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter invisible="1" string="Future Activities" name="activities_upcoming_all"
-                        domain="[('my_activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
+                        domain="[('activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))
                         ]"/>
                 <separator/>
                 <group expand="0" string="Group By">
-                    <filter string="Salesperson" name="sales_person" domain="[]" context="{'group_by':'user_id'}"/>
-                    <filter string="Sales Team" name="sales_team" domain="[]" context="{'group_by':'team_id'}"/>
-                    <filter string="Subscription Status" name="subscription_state" domain="[]" context="{'group_by':'subscription_state'}"/>
-                    <filter string="Template" name="template" domain="[]" context="{'group_by':'sale_order_template_id'}" groups="sales_team.group_sale_manager"/>
-                    <filter string="Recurring Plan" name="plan" domain="[]" context="{'group_by' : 'plan_id'}" />
-                    <filter string="Customer" name="customer" domain="[]" context="{'group_by':'partner_id'}"/>
-                    <filter string="First Contract Date" name="first_contract_month" domain="[]" context="{'group_by' : 'first_contract_date'}"/>
-                    <filter string="End Date" name="end_month" domain="[]" context="{'group_by' : 'end_date'}" />
-                    <filter string="Next Invoice Date" name="next_invoice_date" domain="[]" context="{'group_by' : 'next_invoice_date'}" />
+                    <filter string="Salesperson" name="sales_person" context="{'group_by':'user_id'}"/>
+                    <filter string="Sales Team" name="sales_team" context="{'group_by':'team_id'}"/>
+                    <filter string="Subscription Status" name="subscription_state" context="{'group_by':'subscription_state'}"/>
+                    <filter string="Template" name="template" context="{'group_by':'sale_order_template_id'}" groups="sales_team.group_sale_manager"/>
+                    <filter string="Recurring Plan" name="plan" context="{'group_by' : 'plan_id'}" />
+                    <filter string="Customer" name="customer" context="{'group_by':'partner_id'}"/>
+                    <filter string="First Contract Date" name="first_contract_month" context="{'group_by' : 'first_contract_date'}"/>
+                    <filter string="End Date" name="end_month" context="{'group_by' : 'end_date'}" />
+                    <filter string="Next Invoice Date" name="next_invoice_date" context="{'group_by' : 'next_invoice_date'}" />
                 </group>
             </search>
         </field>
@@ -87,7 +93,7 @@
             'search_default_paused': 1,
         }</field>
         <field name="domain">[('subscription_state', 'in', ['1_draft', '3_progress', '4_paused', '6_churn'])]</field>
-        <field name="search_view_id" eval='sale_subscription_view_search'/>
+        <field name="search_view_id" ref="sale_subscription.sale_subscription_view_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_subscription_graph">
                 Create a new subscription
@@ -125,7 +131,7 @@
             'default_subscription_state': '1_draft',
         }</field>
         <field name="domain">[('subscription_state', '!=', False)]</field>
-        <field name="search_view_id" eval='sale_subscription_view_search'/>
+        <field name="search_view_id" ref="sale_subscription.sale_subscription_view_search"/>
         <field name="help" type="html">
           <p class="o_view_nocontent_smiling_face">
             Great, there are no subscriptions to renew!
@@ -165,7 +171,7 @@
                 (0, 0, {'view_mode': 'list', 'view_id': ref('sale_subscription_upsell_primary_view_tree'), 'sequence': 1}),
                 (0, 0, {'view_mode': 'kanban', 'sequence': 2}),
             ]"/>
-        <field name="search_view_id" eval='sale_subscription_view_search'/>
+        <field name="search_view_id" ref="sale_subscription.sale_subscription_view_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 No Upsell Found
@@ -212,13 +218,12 @@
                                 <field name="starred" widget="boolean_favorite" nolabel="1" force_save="1" />
                                 <field name="activity_ids" widget="kanban_activity" class="ms-2"/>
                                 <b t-if="record.rating_ids.raw_value.length">
-                                    <span style="font-weight:bold;" class="fa fa-fw mt4 fa-smile-o text-success" t-if="record.rating_last_value.value == 5" title="Latest Rating: Satisfied" role="img" aria-label="Happy face"/>
-                                    <span style="font-weight:bold;" class="fa fa-fw mt4 fa-meh-o text-warning" t-if="record.rating_last_value.value == 3" title="Latest Rating: Okay" role="img" aria-label="Neutral face"/>
-                                    <span style="font-weight:bold;" class="fa fa-fw mt4 fa-frown-o text-danger" t-if="record.rating_last_value.value == 1" title="Latest Rating: Dissatisfied" role="img" aria-label="Sad face"/>
+                                    <span style="font-weight:bold;" class="fa fa-fw mt4 fa-smile-o text-success" t-if="record.rating_last_value.value == 5" title="Latest Rating: Happy" role="img" aria-label="Happy face"/>
+                                    <span style="font-weight:bold;" class="fa fa-fw mt4 fa-meh-o text-warning" t-if="record.rating_last_value.value == 3" title="Latest Rating: Neutral" role="img" aria-label="Neutral face"/>
+                                    <span style="font-weight:bold;" class="fa fa-fw mt4 fa-frown-o text-danger" t-if="record.rating_last_value.value == 1" title="Latest Rating: Unhappy" role="img" aria-label="Unhappy face"/>
                                 </b>
                             </div>
                             <div class="ms-auto d-flex align-items-center">
-                                <field name="health" widget="state_selection" readonly="1" invisible="health != 'bad'"/>
                                 <field name="user_id" widget="many2one_avatar_user" class="ms-1"/>
                             </div>
                         </footer>
@@ -252,8 +257,10 @@
             <field name="next_invoice_date" string="Next Invoice" class="fw-bold"
                    decoration-info="first_contract_date and first_contract_date &gt; current_date"
                    decoration-danger="next_invoice_date and next_invoice_date &lt; current_date"
+                   decoration-warning="is_closing"
                    readonly="1"
                    invisible="subscription_state not in ['3_progress', '4_paused']"/>
+            <field name="end_date" optional="hide"/>
             <field name="team_id" optional="hide"/>
             <field name="user_id" widget="many2one_avatar_user"/>
             <field name="activity_ids" widget="list_activity" optional="show" readonly="1"/>
@@ -279,9 +286,7 @@
                     decoration-info="state == 'draft'"
                     decoration-primary="state == 'sent'"
                     widget="badge" optional="hide"/>
-            <field name="pricelist_id" readonly="1" column_invisible="True"/>
             <field name="currency_id" readonly="1" column_invisible="True"/>
-            <field name="invoice_status" column_invisible="True"/>
         </list>
       </field>
     </record>
@@ -336,7 +341,7 @@
                 (0, 0, {'view_mode': 'list', 'view_id': ref('sale_subscription.sale_subscription_quotation_tree_view'), 'sequence': 1}),
                 (0, 0, {'view_mode': 'kanban', 'sequence': 2}),
             ]"/>
-        <field name="search_view_id" ref='sale_subscription_view_search'/>
+        <field name="search_view_id" ref="sale_subscription_view_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create a subscription quotation
@@ -357,12 +362,12 @@
                 <field name="recurring_monthly" widget="monetary"/>
                 <field name="plan_id"/>
             </field>
-            <xpath expr="//calendar" position="attributes">
+            <calendar position="attributes">
                 <attribute name="color">subscription_state</attribute>
-            </xpath>
-            <xpath expr="//field[@name='state']" position="replace">
+            </calendar>
+            <field name="state" position="replace">
                 <field name="subscription_state" filters="1" invisible="1"/>
-            </xpath>
+            </field>
         </field>
     </record>
 
@@ -402,33 +407,21 @@
         <field name="mode">primary</field>
         <field name="priority">999</field>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='order_lines']/field/list/field[@name='product_id']" position="attributes">
+            <xpath expr="//field[@name='order_line']//list//field[@name='product_id']" position="attributes">
                 <attribute name="context">
                     {
-                    'partner_id': parent.partner_id,
-                    'quantity': product_uom_qty,
-                    'pricelist': parent.pricelist_id,
-                    'uom':product_uom,
-                    'company_id': parent.company_id,
                     'default_lst_price': price_unit,
-                    'default_description_sale': name,
                     'default_recurring_invoice': True,
-                    'default_uom_id': product_uom,
+                    'default_uom_id': product_uom_id,
                     }
                 </attribute>
             </xpath>
-            <xpath expr="//page[@name='order_lines']/field/list/field[@name='product_template_id']" position="attributes">
+            <xpath expr="//field[@name='order_line']//list//field[@name='product_template_id']" position="attributes">
                 <attribute name="context">
                     {
-                    'partner_id': parent.partner_id,
-                    'quantity': product_uom_qty,
-                    'pricelist': parent.pricelist_id,
-                    'uom':product_uom,
-                    'company_id': parent.company_id,
                     'default_lst_price': price_unit,
-                    'default_description_sale': name,
                     'default_recurring_invoice': True,
-                    'default_uom_id': product_uom,
+                    'default_uom_id': product_uom_id,
                     }
                 </attribute>
             </xpath>
@@ -539,7 +532,7 @@
         <field name="name">Change customer</field>
         <field name="model_id" ref="sale.model_sale_order"/>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
-        <field name="binding_view_types">form,list</field>
+        <field name="binding_view_types">form,list,kanban</field>
         <field name="state">code</field>
         <field name="code">action = env["ir.actions.actions"]._for_xml_id("sale_subscription.sale_subscription_change_customer_wizard_action")</field>
     </record>
@@ -548,7 +541,7 @@
         <field name="name">Pause Subscription</field>
         <field name="model_id" ref="sale.model_sale_order"/>
         <field name="binding_model_id" ref="sale.model_sale_order"/>
-        <field name="binding_view_types">form,list</field>
+        <field name="binding_view_types">form,list,kanban</field>
         <field name="state">code</field>
         <field name="code">
 if records:
@@ -556,61 +549,4 @@ if records:
         </field>
     </record>
 
-    <record id="sale_subscription_plan_search" model="ir.ui.view">
-        <field name="name">sale.subscription.plan.search</field>
-        <field name="model">sale.subscription.plan</field>
-        <field name="arch" type="xml">
-            <search string="Recurring Plan">
-                <field name="name"/>
-                <field name="auto_close_limit" string="Automatic Closing After" filter_domain="[('auto_close_limit', '=', self)]"/>
-                <filter name="closable" string="Closable" domain="[('user_closable', '=', 'True')]"/>
-                <filter name="renew" string="Renew" domain="[('user_extend', '=', 'True')]"/>
-                <filter name="add_product" string="Add Products" domain="[('user_quantity', '=', 'True')]"/>
-            </search>
-        </field>
-    </record>
-
-    <record id="sale_subscription_plan_action" model="ir.actions.act_window">
-        <field name="name">Recurring Plans</field>
-        <field name="res_model">sale.subscription.plan</field>
-        <field name="view_mode">list,form</field>
-        <field name="search_view_id" eval='sale_subscription_plan_search'/>
-        <field name="context">
-            { 'search_default_subscription_plan': 1 }
-        </field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Create a new plan
-            </p>
-        </field>
-    </record>
-
-    <!-- Menuitems -->
-    <menuitem id="menu_sale_subscription_root" name="Subscriptions" sequence="40" web_icon="sale_subscription,static/description/icon.png" groups="sales_team.group_sale_salesman"/>
-
-    <menuitem id="menu_sale_subscription" name="Subscriptions" parent="menu_sale_subscription_root" sequence="5"/>
-    <menuitem action="sale_subscription_action" id="menu_sale_subscription_action" sequence="10" parent="menu_sale_subscription"/>
-    <menuitem action="sale_subscription_action_quotes" id="menu_sale_subscription_quotes" sequence="20" parent="menu_sale_subscription"/>
-    <menuitem action="sale_subscription_action_pending" id="menu_sale_subscription_pending" sequence="30" parent="menu_sale_subscription"/>
-    <menuitem action="sale_subscription_action_upsell" id="menu_sale_subscription_upsell" sequence="40" parent="menu_sale_subscription"/>
-    <menuitem id="menu_orders_customers" name="Customers" action="account.res_partner_action_customer" sequence="50" parent="menu_sale_subscription"/>
-
-    <menuitem id="product_menu_catalog"
-            name="Products"
-            groups="sales_team.group_sale_salesman"
-            parent="menu_sale_subscription_root"
-            sequence="30">
-            <menuitem id="menu_sale_subscription_product"
-                action="product_action_subscription"
-                sequence="10"/>
-        </menuitem>
-
-    <menuitem action="product.product_pricelist_action2" id="menu_sale_subscription_pricelist" sequence="50" parent="product_menu_catalog" groups="product.group_product_pricelist"/>
-
-    <menuitem id="menu_sale_subscription_config" name="Configuration" sequence="100" parent="menu_sale_subscription_root" groups="sales_team.group_sale_manager"/>
-    <menuitem id="menu_sale_subscription_settings" name="Settings" parent="menu_sale_subscription_config" sequence="1" action="sale.action_sale_config_settings" groups="base.group_system"/>
-    <menuitem id="menu_sale_subscription_plans" name="Recurring Plans" action="sale_subscription_plan_action" parent="menu_sale_subscription_config" sequence="2"/>
-    <menuitem id="menu_template_of_subscription" action="sale_subscription_template_action" parent="menu_sale_subscription_config" sequence="4" groups="sale_management.group_sale_order_template"/>
-    <menuitem id="menu_sale_subscription_alert" name="Automation Rules" parent="menu_sale_subscription_config" action="sale_subscription_alert_action" sequence="8"/>
-    <menuitem id="menu_sale_subscription_close_reason_action" action="sale_subscription_close_reason_action" parent="menu_sale_subscription_config" sequence="10"/>
 </odoo>

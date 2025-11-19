@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from .sign_request_common import SignRequestCommon
@@ -32,7 +31,7 @@ class TestSignMulticompany(SignRequestCommon, MockEmail):
             self.assertSentEmail('"OdooBot" <odoobot@example.com>', self.partner_1, body_content='Company2')
 
             # Followup mail should contain reference to company_2
-            sign_request.request_item_ids.with_company(self.company_3)._refuse('')
+            sign_request.request_item_ids.with_company(self.company_3)._refuse(request_state='sent', refusal_reason='')
             self.assertSentEmail('"OdooBot" <odoobot@example.com>', self.partner_1, body_content='Company2')
 
     def test_sign_request_multicompany_sign(self):
@@ -49,5 +48,5 @@ class TestSignMulticompany(SignRequestCommon, MockEmail):
             self.assertSentEmail('"OdooBot" <odoobot@example.com>', self.partner_1, body_content='Company2')
 
             # Followup mail should contain reference to company_2
-            sign_request.request_item_ids.with_company(self.company_3)._edit_and_sign(self.single_role_customer_sign_values)
+            sign_request.request_item_ids.with_company(self.company_3).sign(self.single_role_customer_sign_values)
             self.assertSentEmail('"OdooBot" <odoobot@example.com>', self.partner_1, body_content='Company2')

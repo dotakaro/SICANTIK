@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
@@ -9,7 +7,7 @@ registry.category("web_tour.tours").add('hr_payroll_edit_payslip_lines_tour', {
     stepUtils.showAppsMenuItem(),
     {
         content: "Open Payroll app",
-        trigger: '.o_app[data-menu-xmlid="hr_work_entry_contract_enterprise.menu_hr_payroll_root"]',
+        trigger: '.o_app[data-menu-xmlid="hr_work_entry_enterprise.menu_hr_payroll_root"]',
         run: "click",
     },
     {
@@ -20,11 +18,6 @@ registry.category("web_tour.tours").add('hr_payroll_edit_payslip_lines_tour', {
     {
         content: "Click All Payroll",
         trigger: '[data-menu-xmlid="hr_payroll.menu_hr_payroll_employee_payslips"]',
-        run: "click",
-    },
-    {
-        content: 'Remove "Batch" filter',
-        trigger: ".o_searchview .o_facet_remove",
         run: "click",
     },
     {

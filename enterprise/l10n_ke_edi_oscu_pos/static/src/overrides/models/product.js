@@ -14,7 +14,7 @@ patch(ProductProduct.prototype, {
             this.l10n_ke_origin_country_id &&
             this.l10n_ke_product_type_code &&
             this.unspsc_code_id &&
-            this.taxes_id.length > 0 &&
+            this.product_tmpl_id.taxes_id.length > 0 &&
             this.standard_price > 0
         );
     },

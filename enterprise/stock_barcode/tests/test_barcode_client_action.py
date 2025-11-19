@@ -1,5 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from odoo import Command
 from odoo.tests import HttpCase, tagged
 
 
@@ -11,6 +12,19 @@ class TestBarcodeClientAction(HttpCase):
         self.env['ir.config_parameter'].set_param('stock_barcode.mute_sound_notifications', True)
 
         self.uid = self.env.ref('base.user_admin').id
+
+        """ Remove all access rights linked to stock application"""
+        self.env.user.write({'group_ids': [
+            Command.unlink(self.env.ref('stock.group_production_lot').id),
+            Command.unlink(self.env.ref('stock.group_stock_multi_locations').id),
+            Command.unlink(self.env.ref('stock.group_tracking_lot').id),
+            Command.unlink(self.env.ref('stock_barcode.group_barcode_count_entire_location').id),
+        ]})
+        # Explicitly remove the UoM group.
+        grp_uom = self.env.ref('uom.group_uom')
+        self.env.ref('base.group_user').write({'implied_ids': [Command.unlink(grp_uom.id)]})
+        self.env.user.write({'group_ids': [Command.unlink(grp_uom.id)]})
+
         self.supplier_location = self.env.ref('stock.stock_location_suppliers')
         self.stock_location = self.env.ref('stock.stock_location_stock')
         self.stock_location.write({
@@ -50,26 +64,22 @@ class TestBarcodeClientAction(HttpCase):
             'name': 'product1',
             'default_code': 'TEST',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': 'product1',
         })
         self.product2 = self.env['product.product'].create({
             'name': 'product2',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': 'product2',
         })
         self.productserial1 = self.env['product.product'].create({
             'name': 'productserial1',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': 'productserial1',
             'tracking': 'serial',
         })
         self.productlot1 = self.env['product.product'].create({
             'name': 'productlot1',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': 'productlot1',
             'tracking': 'lot',
         })
@@ -86,29 +96,11 @@ class TestBarcodeClientAction(HttpCase):
             'default_code': 'B1',
             'is_storable': True,
             'tracking': 'lot',
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': '76543210',  # (01)00000076543210 (GTIN-8 format)
             'uom_id': self.env.ref('uom.product_uom_unit').id
         })
 
         self.call_count = 0
-
-    def clean_access_rights(self):
-        """ Removes all access right link to stock application to the users
-        given as parameter"""
-        grp_lot = self.env.ref('stock.group_production_lot')
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        grp_pack = self.env.ref('stock.group_tracking_lot')
-        grp_uom = self.env.ref('uom.group_uom')
-        grp_barcode_count_entire_location = self.env.ref('stock_barcode.group_barcode_count_entire_location')
-        self.env.user.write({'groups_id': [(3, grp_lot.id)]})
-        self.env.user.write({'groups_id': [(3, grp_multi_loc.id)]})
-        self.env.user.write({'groups_id': [(3, grp_pack.id)]})
-        self.env.user.write({'groups_id': [(3, grp_barcode_count_entire_location.id)]})
-        # Explicitly remove the UoM group.
-        group_user = self.env.ref('base.group_user')
-        group_user.write({'implied_ids': [(3, grp_uom.id)]})
-        self.env.user.write({'groups_id': [(3, grp_uom.id)]})
 
     def tearDown(self):
         self.call_count = 0

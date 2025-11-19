@@ -23,10 +23,11 @@
         'web.assets_frontend': [
             'sign_itsme/static/src/**/*',
         ],
-        'web.qunit_suite_tests': [
-            'sign_itsme/static/tests/**/*',
+        'web.assets_unit_tests': [
+            'sign_itsme/static/tests/itsme_dialog.test.js',
         ],
     },
     'installable': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

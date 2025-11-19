@@ -49,7 +49,7 @@
         <field name="model">approval.request</field>
         <field name="priority">10</field>
         <field name="arch" type="xml">
-            <list create="false" sample="1" decoration-info="request_status == 'new'">
+            <list sample="1" decoration-info="request_status == 'new'">
                 <field name="name"/>
                 <field name="request_owner_id" widget="many2one_avatar_user"/>
                 <field name="category_id"/>
@@ -60,6 +60,7 @@
                 <field name="activity_ids" widget="list_activity" optional="hide"/>
                 <field name="user_ids" string="Approvers" widget="many2many_avatar_user" optional="hide"/>
                 <field name="request_status" decoration-info="request_status == 'new'" decoration-warning="request_status == 'pending'" decoration-success="request_status == 'approved'" decoration-danger="request_status == 'refused'" widget="badge"/>
+                <field name="approval_properties"/>
                 <field name="company_id" readonly="True" optional="hide" groups="base.group_multi_company"/>
             </list>
         </field>
@@ -80,6 +81,8 @@
                 <filter string="Refused" name="filter_refused_requests" domain="[('request_status', '=', 'refused')]"/>
                 <separator/>
                 <filter string="Canceled" name="filter_canceled_requests" domain="[('request_status', '=', 'cancel')]"/>
+                <separator/>
+                <filter string="Archived" name="filter_archived_requests" domain="[('active', '=', False)]"/>
                 <group string="Group By">
                     <filter string="Request Owner" name="groupby_request_owner"
                         context="{'group_by': 'request_owner_id'}"/>
@@ -95,7 +98,7 @@
         <field name="model">approval.request</field>
         <field name="priority">10</field>
         <field name="arch" type="xml">
-            <form string="Request" create="false">
+            <form string="Request">
                 <header>
                     <field name="user_status" invisible="1"/>
                     <field name="has_access_to_request" invisible="1"/>
@@ -107,12 +110,13 @@
                     <button name="action_refuse" string="Refuse" type="object" invisible="request_status in ['approved', 'refused', 'cancel'] or user_status != 'pending'" data-hotkey="z"/>
                     <button name="action_withdraw" string="Withdraw" type="object" invisible="request_status == 'new' or user_status in ['waiting', 'pending', 'cancel'] or not user_status" data-hotkey="y"/>
                     <button name="action_draft" string="Back To Draft" type="object" invisible="request_status != 'cancel' or not user_status and not has_access_to_request" data-hotkey="w"/>
-                    <button name="action_cancel" string="Cancel" type="object" invisible="request_status in ['new', 'cancel'] or not user_status and not has_access_to_request or request_owner_id != uid" data-hotkey="x"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="request_status in ['new', 'cancel'] or request_owner_id != uid" data-hotkey="x"/>
                     <widget name="attach_document" string="Attach Document" action="message_post" invisible="(attachment_number &lt; 1 and request_owner_id == uid)"/>
                     <button string="Print" invisible="request_status != 'approved' or approval_type !='purchase'" type="action" name="%(action_report_approval_request)d"/>
                     <field name="request_status" widget="statusbar" statusbar_visible="new,pending,approved,refused" />
                 </header>
                 <sheet>
+                    <field name="active" invisible="1"/>
                     <field name="has_date" invisible="1"/>
                     <field name="has_period" invisible="1"/>
                     <field name="has_quantity" invisible="1"/>
@@ -138,6 +142,7 @@
                     <div class="oe_avatar">
                         <field name="category_image" widget="image" options="{'preview_image': 'category_image', 'size': [80, 80]}" class="bg-view" />
                     </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                     <div class="oe_title">
                         <label for="name"/>
                         <h1>
@@ -179,6 +184,7 @@
                             <field name="reference" invisible="has_reference == 'no'" required="has_reference == 'required'"/>
                             <field name="company_id" invisible="1"/>
                         </group>
+                        <field name="approval_properties" columns="2"/>
                     </group>
                     <notebook>
                         <page string="Products" name="products"
@@ -261,7 +267,7 @@
                         <field name="name" class="fw-bolder fs-5"/>
                         <field name="category_id" class="text-muted"/>
                         <div class="d-flex text-muted">
-                            <field name="date_start" widget="date" class="me-1"/>-<field name="date_end" widget="date" class="ms-1"/>
+                            <field name="date_start" options="{'show_time': false}" class="me-1"/>-<field name="date_end" options="{'show_time': false}" class="ms-1"/>
                         </div>
                         <footer class="pt-0">
                             <field name="activity_ids" widget="kanban_activity"/>
@@ -270,6 +276,19 @@
                     </t>
                 </templates>
             </kanban>
+        </field>
+    </record>
+
+    <record id="model_approval_request_approve_admin" model="ir.actions.server">
+        <field name="name">Force Approval</field>
+        <field name="model_id" ref="approvals.model_approval_request"/>
+        <field name="binding_model_id" ref="approvals.model_approval_request"/>
+        <field name="group_ids" eval="[(4, ref('approvals.group_approval_user'))]"/>
+        <field name="binding_view_types">form,list</field>
+        <field name="state">code</field>
+        <field name="code">
+if records:
+    records._action_force_approval()
         </field>
     </record>
 
@@ -332,7 +351,7 @@
     <menuitem
         id="approvals_category_menu_config"
         parent="approvals_menu_config"
-        name="Approvals Types"
+        name="Approval Categories"
         action="approval_category_action"
         groups="group_approval_manager"
         sequence="10"/>

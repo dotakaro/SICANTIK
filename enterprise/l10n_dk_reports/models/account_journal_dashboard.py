@@ -2,7 +2,6 @@ from odoo import models
 
 
 class AccountJournal(models.Model):
-
     _inherit = 'account.journal'
 
     def _get_journal_dashboard_data_batched(self):

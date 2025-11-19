@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { endKnowledgeTour } from '@knowledge/../tests/tours/knowledge_tour_utils';
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
@@ -11,18 +9,18 @@ registry.category("web_tour.tours").add('knowledge_pick_emoji_tour', {
     trigger: '.o_app[data-menu-xmlid="knowledge.knowledge_menu_root"]',
     run: "click",
 }, {
-    // click on the main "New" action
-    trigger: '.o_knowledge_header .btn:contains("New")',
+    // click on the "New Article" action
+    trigger: '.o_knowledge_create_article',
     run: "click",
 }, {
     trigger: 'section[data-section="private"] .o_article .o_article_name:contains("Untitled")',
  // check that the article is correctly created (private section)
 }, {
-    trigger: '#dropdown_tools_panel',
+    trigger: '.o_knowledge_header .dropdown-toggle',
     run: "click",
 }, {
     // add a random emoji
-    trigger: '.o_knowledge_add_icon',
+    trigger: '.dropdown-item:contains("Add Icon")',
     run: 'click',
 }, {
     trigger: '.o_knowledge_body .o_article_emoji',

@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 /**
  * Knowledge history tour.
  * Features tested:
@@ -51,8 +49,8 @@ registry.category("web_tour.tours").add('knowledge_history_tour', {
         trigger: '.o_app[data-menu-xmlid="knowledge.knowledge_menu_root"]',
         run: "click",
     }, {
-        // click on the main "New" action
-        trigger: '.o_knowledge_header .btn:contains("New")',
+        // click on the "New Article" action
+        trigger: '.o_knowledge_create_article',
         run: "click",
     }, {
         // check that the article is correctly created (private section)
@@ -63,8 +61,13 @@ registry.category("web_tour.tours").add('knowledge_history_tour', {
         ...changeArticleContentAndSave('Modified Title 02'),
         ...changeArticleContentAndSave('Modified Title 03'),
     {
+        // Open dropdown 'More actions'
+        trigger: '.o_knowledge_header .dropdown-toggle',
+        run: "click",
+    },
+    {
         // Open history dialog
-        trigger: '.btn.btn-history',
+        trigger: '.dropdown-item:contains("Open Version History")',
         run: "click",
     }, {
         // check the history dialog is opened
@@ -99,7 +102,8 @@ registry.category("web_tour.tours").add('knowledge_history_tour', {
         // check the comparison content is correct
         trigger: '.history-container .tab-pane',
         run: function () {
-            const comparisonHtml = document.querySelector('.history-container .tab-pane .o_readonly').innerHTML;
+            const comparisonHtml = document.querySelector('.history-container .tab-pane .o_readonly').innerHTML
+                .replace(/ data-heading-link-id="\d+"/, "");
             const correctHtml = `<h1 class="oe-hint" data-oe-version="${CURRENT_VERSION}"><added>` + testArticleName + '</added><removed>Modified Title 03</removed></h1>';
             if (comparisonHtml !== correctHtml) {
                 throw new Error('Expect comparison to be ' + correctHtml + ', got ' + comparisonHtml);

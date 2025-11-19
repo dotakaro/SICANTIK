@@ -1,8 +1,28 @@
 
+from textwrap import dedent
 from uuid import uuid4
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+
+ISO20022_CHARGE_BEARER_SELECTION = [
+    ('CRED', "Creditor"),
+    ('DEBT', "Debtor"),
+    ('SHAR', "Shared"),
+    ('SLEV', "Service Level"),
+]
+ISO20022_PRIORITY_SELECTION = [
+    ('NORM', 'NORM - Normal'),
+    ('HIGH', 'HIGH - High priority'),
+    ('URGP', 'URGP - Critical urgency'),
+    ('SVDA', 'SVDA - Same value date'),
+]
+ISO20022_PRIORITY_HELP = dedent('''\
+    • NORM: Standard processing time.
+    • HIGH: High priority payment.
+    • URGP: Critical, requires immediate processing.
+    • SVDA: Payments must settle on same day as submission.'''
+)
 
 
 class AccountPayment(models.Model):
@@ -15,6 +35,31 @@ class AccountPayment(models.Model):
         store=True,
         help='Unique end-to-end transaction reference',
     )
+    iso20022_priority = fields.Selection(
+        string='Priority',
+        selection=ISO20022_PRIORITY_SELECTION,
+        compute='_compute_payment_method_priority',
+        store=True, readonly=False,
+        help=ISO20022_PRIORITY_HELP,
+    )
+    payment_method_is_iso20022 = fields.Boolean(related='payment_method_line_id.payment_method_id.is_iso20022')
+    iso20022_charge_bearer = fields.Selection(
+        string="Charge Bearer",
+        selection=ISO20022_CHARGE_BEARER_SELECTION,
+        compute='_compute_iso20022_charge_bearer',
+        readonly=False,
+        store=True,
+        tracking=True,
+        help="Specifies which party/parties will bear the charges associated with the processing of the payment transaction."
+    )
+
+    @api.depends('payment_method_id')
+    def _compute_iso20022_charge_bearer(self):
+        for payment in self:
+            if payment.payment_method_id.code == 'sepa_ct':
+                payment.iso20022_charge_bearer = 'SLEV'
+            else:
+                payment.iso20022_charge_bearer = payment.journal_id.iso20022_charge_bearer
 
     @api.model
     def _get_method_codes_using_bank_account(self):
@@ -58,3 +103,11 @@ class AccountPayment(models.Model):
         )
         for payment in payments:
             payment.iso20022_uetr = uuid4()
+
+    @api.depends('journal_id', 'payment_method_is_iso20022')
+    def _compute_payment_method_priority(self):
+        for payment in self:
+            payment.iso20022_priority = (
+                payment.payment_method_is_iso20022
+                and payment.journal_id.iso20022_default_priority
+            )

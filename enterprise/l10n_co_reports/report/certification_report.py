@@ -8,7 +8,7 @@ from odoo.exceptions import UserError
 from odoo.tools.translate import _
 
 
-class CertificationReport(models.AbstractModel):
+class ReportL10n_Co_ReportsReport_Certification(models.AbstractModel):
     _name = 'report.l10n_co_reports.report_certification'
     _description = "Colombian Certification Report"
 

@@ -8,7 +8,7 @@ from odoo import _, api, models
 from odoo.exceptions import UserError
 
 
-class Certificate(models.Model):
+class CertificateCertificate(models.Model):
     _inherit = 'certificate.certificate'
 
     @api.model

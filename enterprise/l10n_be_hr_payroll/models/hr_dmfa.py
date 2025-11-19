@@ -98,7 +98,7 @@ class DMFAWorker(DMFANode):
             self.occupations = []
             skip_remun = False
         else:
-            self.occupations = self._prepare_occupations(self.payslips.mapped('contract_id'), self.quarter_start, self.quarter_end)
+            self.occupations = self._prepare_occupations(self.payslips.mapped('version_id'), self.quarter_start, self.quarter_end)
             skip_remun = all(o.skip_remun for o in self.occupations)
 
         self._prepare_occupation_deductions(self.occupations)
@@ -146,7 +146,7 @@ class DMFAWorker(DMFANode):
         contribution_payslips = contribution_payslips.filtered(lambda p: p.struct_id.code in basis_lines)
         line_values = contribution_payslips._get_line_values(['SALARY', 'BASIC', 'PAY_SIMPLE'])
         basis = round(sum(line_values[basis_lines[p.struct_id.code]][p.id]['total'] for p in contribution_payslips), 2)
-        has_mobility_budget_balance = 'MOBILITY.PAYMENT' in contribution_payslips.input_line_ids.mapped('code')
+        has_mobility_budget_balance = contribution_payslips._get_input_line_amount('MOBILITY.PAYMENT')
         if not basis:
             return []
 
@@ -231,7 +231,7 @@ class DMFAWorker(DMFANode):
         termination_occupations = []
         for data in occupation_data:
             occupation_contracts, date_from, date_to = data
-            payslips = self.payslips.filtered(lambda p: p.contract_id in occupation_contracts)
+            payslips = self.payslips.filtered(lambda p: p.version_id in occupation_contracts)
             termination_payslips = payslips.filtered(lambda p: p.struct_id.code == 'CP200TERM')
             if termination_payslips:
                 # Le salaire et les données relatives aux prestations se rapportant à une indemnité
@@ -362,14 +362,14 @@ class DMFAStudentContribution(DMFANode):
     """
     def __init__(self, payslips, basis, sequence=None):
         super().__init__(payslips.env, sequence=sequence)
-        work_address = payslips.mapped('contract_id.employee_id.address_id')[0]
+        work_address = payslips.mapped('version_id.employee_id.address_id')[0]
         location_unit = self.env['l10n_be.dmfa.location.unit'].search([
             ('partner_id', '=', work_address.id)])
         self.local_unit_id = format_amount(location_unit._get_code(), width=10, hundredth=False)
         self.student_remun_amount = format_amount(basis, width=9)
         self.student_contribution_amount = format_amount(round(basis * 0.0813, 2), width=9)
         self.student_nbr_days = -1
-        self.student_hours_nbr = round(payslips._get_worked_days_line_number_of_hours('WORK100'))
+        self.student_hours_nbr = round(payslips._get_worked_days_line_values(['WORK100'], ['number_of_hours'], True)['WORK100']['sum']['number_of_hours'])
 
 class DMFAWorkerContributionSpecialWorkAccident(DMFANode):
     """
@@ -618,6 +618,8 @@ class DMFAOccupation(DMFANode):
         self.occupation_informations = self._prepare_occupation_informations()
         work_address = contract.employee_id.address_id
         location_unit = self.env['l10n_be.dmfa.location.unit'].search([('partner_id', '=', work_address.id)])
+        if not location_unit:
+            raise UserError(_('No DMFA location unit linked to work address %(work_address)s for employee %(employee)s', work_address=work_address.name, employee=contract.employee_id.name))
         self.work_place = format_amount(location_unit._get_code(), width=10, hundredth=False)
 
     def _prepare_services(self):
@@ -689,7 +691,7 @@ class DMFAOccupation(DMFANode):
 
     def _prepare_occupation_informations(self):
         infos_to_declare = []
-        has_mobility_budget_balance = 'MOBILITY.PAYMENT' in self.payslips.input_line_ids.mapped('code')
+        has_mobility_budget_balance = self.payslips._get_input_line_amount('MOBILITY.PAYMENT')
         if has_mobility_budget_balance:
             infos_to_declare.append('mobility_budget')
         return DMFAOccupationInformation.init_multi([(self.payslips, infos_to_declare)] if infos_to_declare else [])
@@ -741,8 +743,8 @@ class DMFAOccupationInformation(DMFANode):
         self.career_measure = -1
         self.sector_detail = -1
         self.mobility_budget = -1
-        if 'mobility_budget' in infos_to_declare and 'l10n_be_mobility_budget_amount' in payslips.env['hr.contract']:
-            self.mobility_budget = format_amount(max(payslips.contract_id.mapped('l10n_be_mobility_budget_amount')))
+        if 'mobility_budget' in infos_to_declare and 'l10n_be_mobility_budget_amount' in payslips.env['hr.version']:
+            self.mobility_budget = format_amount(max(payslips.version_id.mapped('l10n_be_mobility_budget_amount')))
         self.flemish_training_hours = -1
         self.flemish_training_hours = -1
         self.regional_aid_measure = -1
@@ -757,7 +759,7 @@ class DMFAService(DMFANode):
         if len(list(set(worked_days.mapped('work_entry_type_id.dmfa_code')))) > 1:
             raise ValueError("Cannot mix work of different types.")
 
-        self.contract = worked_days.mapped('contract_id').sorted(key='date_start', reverse=True)[0]
+        self.contract = worked_days.mapped('version_id').sorted(key='date_start', reverse=True)[0]
 
         work_entry_type = worked_days[0].work_entry_type_id
         self.code = work_entry_type.dmfa_code.zfill(3)
@@ -827,7 +829,8 @@ class DMFAOccupationDeduction(DMFANode):
         self.applicant_inss = -1
         self.certificate_origin = -1
 
-class HrDMFAReport(models.Model):
+
+class L10n_BeDmfa(models.Model):
     _name = 'l10n_be.dmfa'
     _description = 'DMFA xml report'
     _order = "year desc, quarter desc"
@@ -874,9 +877,10 @@ class HrDMFAReport(models.Model):
     ], default='normal', compute='_compute_validation_state', store=True)
     error_message = fields.Char(store=True, compute='_compute_validation_state', string="Error Message")
 
-    _sql_constraints = [
-        ('_unique', 'unique (company_id, year, quarter, file_type)', "Only one DMFA per year/ quarter / declaration type is allowed. Another one already exists."),
-    ]
+    _unique = models.Constraint(
+        'unique (company_id, year, quarter, file_type)',
+        "Only one DMFA per year/ quarter / declaration type is allowed. Another one already exists.",
+    )
 
     @api.depends('reference', 'quarter', 'year')
     def _compute_name(self):
@@ -1023,10 +1027,10 @@ class HrDMFAReport(models.Model):
         ])
         # Exclude CIP contracts from DmfA, as they only have a DIMONA
         contract_type_cip = self.env.ref('l10n_be_hr_payroll.l10n_be_contract_type_cip')
-        valid_structure_types = self.env.ref('hr_contract.structure_type_employee_cp200_pfi') \
-                              + self.env.ref('hr_contract.structure_type_employee_cp200') \
+        valid_structure_types = self.env.ref('hr.structure_type_employee_cp200_pfi') \
+                              + self.env.ref('hr.structure_type_employee_cp200') \
                               + self.env.ref('l10n_be_hr_payroll.structure_type_student')
-        payslips = payslips.filtered(lambda p: p.contract_id.contract_type_id != contract_type_cip and p.contract_id.structure_type_id in valid_structure_types)
+        payslips = payslips.filtered(lambda p: p.version_id.contract_type_id != contract_type_cip and p.version_id.structure_type_id in valid_structure_types)
         employees = payslips.mapped('employee_id')
         worker_count = len(employees)
 
@@ -1165,7 +1169,7 @@ class HrDMFAReport(models.Model):
     def _get_double_holiday_pay_contribution(self, payslips):
         """ Some contribution are not specified at the worker level but globally for the whole company """
         # Montant de la cotisation exeptionnelle (code 870)
-        payslips = payslips.filtered(lambda p: not p.contract_id.no_onss)
+        payslips = payslips.filtered(lambda p: not p.version_id.no_onss)
 
         basis_lines = {
             'CP200MONTHLY': 'DOUBLE.DECEMBER.SALARY',
@@ -1197,19 +1201,20 @@ class HrDMFAReport(models.Model):
         return (round(basis, 2), round(onss_amount, 2))
 
 
-class HrDMFALocationUnit(models.Model):
+class L10n_BeDmfaLocationUnit(models.Model):
     _name = 'l10n_be.dmfa.location.unit'
     _description = 'Work Place defined by ONSS'
     _rec_name = 'code'
 
     code = fields.Char(required=True)
-    company_id = fields.Many2one('res.company', required=True, default=lambda self: self.env.company)
+    company_id = fields.Many2one('res.company', required=True, default=lambda self: self.env.company, index=True)
     partner_id = fields.Many2one('res.partner', string="Working Address", required=True)
 
     def _get_code(self):
         self.ensure_one()
         return self.code
 
-    _sql_constraints = [
-        ('_unique', 'unique (company_id, partner_id)', "A DMFA location cannot be set more than once for the same company and partner."),
-    ]
+    _unique = models.Constraint(
+        'unique (company_id, partner_id)',
+        "A DMFA location cannot be set more than once for the same company and partner.",
+    )

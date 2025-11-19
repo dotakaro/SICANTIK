@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
@@ -7,7 +6,6 @@
     'category': 'Human Resources/Payroll',
     'depends': [
         'hr_payroll',
-        'hr_contract_reports',
         'hr_work_entry_holidays',
         'hr_payroll_holidays',
     ],
@@ -29,7 +27,6 @@ Hong Kong Payroll Rules.
         "data/hr_payslip_input_type_data.xml",
         "data/hr_salary_rule_category_data.xml",
         "data/hr_rule_parameters_data.xml",
-        "data/hr_leave_type_data.xml",
         "data/ir_cron_data.xml",
         'data/ir_default_data.xml',
         'data/ir_sequence_data.xml',
@@ -38,13 +35,14 @@ Hong Kong Payroll Rules.
         "data/cap57/employee_payment_in_lieu_of_notice_data.xml",
         "data/cap57/employee_long_service_payment_data.xml",
         "data/cap57/employee_severance_payment_data.xml",
-        "views/hr_contract_views.xml",
+        "views/hr_contract_template_views.xml",
         "views/hr_departure_reason_views.xml",
         "views/hr_employee_views.xml",
         "views/hr_payslip_run_views.xml",
         "views/hr_payslip_views.xml",
         "views/hr_work_entry_views.xml",
         "views/l10n_hk_manulife_mpf_views.xml",
+        "views/l10n_hk_ird_views.xml",
         "views/l10n_hk_ir56b_views.xml",
         "views/l10n_hk_ir56e_views.xml",
         "views/l10n_hk_ir56f_views.xml",
@@ -71,5 +69,6 @@ Hong Kong Payroll Rules.
             'l10n_hk_hr_payroll/static/src/scss/report_ird.scss',
         ]
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

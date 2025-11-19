@@ -2,12 +2,11 @@
 from odoo import models
 
 
-class L10nBrEDIAccountExternalTaxMixin(models.AbstractModel):
+class AccountExternalTaxMixin(models.AbstractModel):
     _inherit = "account.external.tax.mixin"
 
-    def _l10n_br_build_avatax_line(self, product, qty, unit_price, total, discount, line_id):
-        """ Override. Include required fields for EDI. """
-        res = super()._l10n_br_build_avatax_line(product, qty, unit_price, total, discount, line_id)
-        res["itemCode"] = product.default_code
-        res["itemDescriptor"]["description"] = product.name
+    def _prepare_l10n_br_avatax_document_line_service_call(self, line_data, *args):
+        # EXTENDS 'account.external.tax.mixin'
+        res = super()._prepare_l10n_br_avatax_document_line_service_call(line_data, *args)
+        res['itemCode'] = line_data['base_line']['product_id'].default_code
         return res

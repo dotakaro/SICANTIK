@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 export const stepUtils = {
     confirmAddingUnreservedProduct() {
         return [
@@ -17,10 +15,10 @@ export const stepUtils = {
     },
     inputManuallyBarcode(barcode) {
         return [
-            { trigger: '.o_barcode_actions', run: "click" },
-            { trigger: 'input#manual_barcode', run: "click" },
-            { trigger: 'input#manual_barcode', run: `edit ${barcode}` },
-            { trigger: 'input#manual_barcode+button', run: "click" },
+            { trigger: ".o_barcode_actions", run: "click" },
+            { trigger: "input#manual_barcode", run: "click" },
+            { trigger: "input#manual_barcode", run: `edit ${barcode}` },
+            { trigger: "input#manual_barcode+button", run: "click" },
         ];
     },
     validateBarcodeOperation(trigger = ".o_barcode_client_action") {
@@ -60,5 +58,5 @@ export const stepUtils = {
     },
     closeCountRFID() {
         return [{ trigger: ".o_barcode_count_rfid button.btn-close" }];
-    }
+    },
 };

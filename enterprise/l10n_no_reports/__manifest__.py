@@ -12,6 +12,7 @@ Accounting reports for Norway
     'category': 'Accounting/Localizations/Reporting',
     'depends': ['l10n_no', 'account_reports'],
     'data': [
+        'data/account_return_data.xml',
         'data/profit_loss.xml',
         'data/balance_sheet.xml',
         'data/tax_report.xml',
@@ -19,5 +20,6 @@ Accounting reports for Norway
     ],
     'auto_install': ['l10n_no', 'account_reports'],
     'installable': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

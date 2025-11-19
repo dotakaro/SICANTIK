@@ -20,13 +20,13 @@
                 </p>
             </xpath>
 
-            <xpath expr="//t[@t-set='layout_document_title']/span[contains(@t-if, 'out_invoice') and contains(@t-if, 'posted')]" position="attributes">
+            <t name="invoice_title" position="attributes">
                 <attribute name="t-out">o.l10n_latam_document_type_id.report_name</attribute>
-            </xpath>
+            </t>
 
-            <xpath expr="//t[@t-set='layout_document_title']/span[contains(@t-elif, 'out_refund') and contains(@t-elif, 'posted')]" position="attributes">
+            <t name="credit_note_title" position="attributes">
                 <attribute name="t-out">o.l10n_latam_document_type_id.report_name</attribute>
-            </xpath>
+            </t>
 
             <xpath expr="//t[@t-set='layout_document_title']/span[@t-field='o.name']" position="replace">
                 <span t-if="o.name" t-out="o.name.replace(' ', '')"/>
@@ -71,7 +71,7 @@
                     </table>
                     <p t-if="spot.get('has_installments')">The withholding has to be paid in the first installment.</p>
                     <p>
-                        <img t-if="extra_edi_vals" class="border border-dark rounded" t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('QR', extra_edi_vals['qr_str'], 100, 100)"/>
+                        <img t-if="extra_edi_vals" class="border border-dark rounded" t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s&amp;quiet=%s' % ('QR', extra_edi_vals['qr_str'], 100, 100, 0)"/>
                     </p>
                 </div>
             </xpath>

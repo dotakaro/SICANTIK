@@ -6,7 +6,7 @@ from odoo.tools.translate import html_translate
 
 
 class AppointmentResource(models.Model):
-    _name = "appointment.resource"
+    _name = 'appointment.resource'
     _description = "Appointment Resource"
     _inherit = ["avatar.mixin", "resource.mixin"]
     _order = 'sequence,id'
@@ -23,8 +23,7 @@ class AppointmentResource(models.Model):
             self.env.ref('appointment.appointment_default_resource_calendar', raise_if_not_found=False) or
             self.env.company.resource_calendar_id),
         help="If kept empty, the working schedule of the company set on the resource will be used")
-    capacity = fields.Integer("Capacity", default=1, required=True,
-        help="""Maximum amount of people for this resource (e.g. Table for 6 persons, ...)""")
+    capacity = fields.Integer("Capacity", default=1, required=True)
     shareable = fields.Boolean("Shareable",
         help="""This allows to share the resource with multiple attendee for a same time slot (e.g. a bar counter)""")
     source_resource_ids = fields.Many2many(
@@ -51,9 +50,10 @@ class AppointmentResource(models.Model):
         relation="appointment_type_appointment_resource_rel",
         domain="[('schedule_based_on', '=', 'resources')]")
 
-    _sql_constraints = [
-        ('check_capacity', 'check(capacity >= 1)', 'The resource should have at least one capacity.')
-    ]
+    _check_capacity = models.Constraint(
+        'check(capacity >= 1)',
+        "The resource should have at least one capacity.",
+    )
 
     @api.depends('source_resource_ids', 'destination_resource_ids')
     def _compute_linked_resource_ids(self):
@@ -78,7 +78,7 @@ class AppointmentResource(models.Model):
 
     @api.depends('capacity')
     def _compute_display_name(self):
-        """ Display the capacity of the resource next to its name if resource_manage_capacity is enabled """
+        """ Display the capacity of the resource next to its name if manage_capacity is set. """
         for resource in self:
             resource_name_capacity = f"{resource.name} (🪑{resource.capacity})"
             display_name = resource_name_capacity if resource.capacity > 1 else resource.name

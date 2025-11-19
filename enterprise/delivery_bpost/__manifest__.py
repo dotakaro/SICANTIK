@@ -11,7 +11,7 @@ local Post company.
 
 See: https://www.bpost.be/portal/goHome
     """,
-    'category': 'Inventory/Delivery',
+    'category': 'Shipping Connectors',
     'sequence': 330,
     'version': '1.0',
     'application': True,
@@ -22,5 +22,6 @@ See: https://www.bpost.be/portal/goHome
         'views/res_config_settings_views.xml',
         'views/bpost_request_templates.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

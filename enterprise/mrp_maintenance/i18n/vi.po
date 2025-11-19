@@ -3,15 +3,15 @@
 # 	* mrp_maintenance
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Thi Huong Nguyen, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:27+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:23+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Thi Huong Nguyen, 2025\n"
 "Language-Team: Vietnamese (https://app.transifex.com/odoo/teams/41243/vi/)\n"
 "MIME-Version: 1.0\n"
@@ -23,7 +23,7 @@ msgstr ""
 #. module: mrp_maintenance
 #: model_terms:ir.ui.view,arch_db:mrp_maintenance.mrp_production_view_form_inherit_maintenance
 msgid "<span class=\"o_stat_text\">Maintenance</span>"
-msgstr "<span class=\"o_stat_text\">Bảo trì</span>"
+msgstr "<span class=\"o_stat_text\">Bảo dưỡng</span>"
 
 #. module: mrp_maintenance
 #: model_terms:ir.ui.view,arch_db:mrp_maintenance.maintenance_equipment_view_form_inherit_mrp
@@ -58,7 +58,7 @@ msgstr "Biểu tượng loại hoạt động"
 #. module: mrp_maintenance
 #: model_terms:ir.actions.act_window,help:mrp_maintenance.mrp_workcenter_request_action_from_workcenter
 msgid "Add a new maintenance request"
-msgstr "Thêm yêu cầu bảo trì"
+msgstr "Thêm yêu cầu bảo dưỡng"
 
 #. module: mrp_maintenance
 #: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_request__recurring_leaves_count
@@ -105,12 +105,22 @@ msgstr "Cưa lưỡi thẳng: 8 ppi. "
 #. module: mrp_maintenance
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__maintenance_open_count
 msgid "Current Maintenance"
-msgstr "Bảo trì hiện hành"
+msgstr "Bảo dưỡng hiện hành"
 
 #. module: mrp_maintenance
 #: model_terms:ir.ui.view,arch_db:mrp_maintenance.maintenance_request_view_form_inherit_mrp
 msgid "Discard"
 msgstr "Huỷ bỏ"
+
+#. module: mrp_maintenance
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_equipment__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_request__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_stage__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_production__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__display_name
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workorder__display_name
+msgid "Display Name"
+msgstr "Tên hiển thị"
 
 #. module: mrp_maintenance
 #: model:maintenance.equipment,name:mrp_maintenance.equipment_furniture3
@@ -192,6 +202,16 @@ msgid "Has Message"
 msgstr "Có tin nhắn"
 
 #. module: mrp_maintenance
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_equipment__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_request__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_stage__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_production__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__id
+#: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workorder__id
+msgid "ID"
+msgstr "ID"
+
+#. module: mrp_maintenance
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__activity_exception_icon
 msgid "Icon"
 msgstr "Biểu tượng"
@@ -223,8 +243,8 @@ msgid ""
 "It won't be possible to plan work orders or other maintenances on this "
 "workcenter during this time."
 msgstr ""
-"Sẽ không thể lập kế hoạch công đoạn hoặc các hoạt động bảo trì khác tại khu "
-"vực sản xuất này trong thời gian này."
+"Sẽ không thể lập kế hoạch công đoạn hoặc các hoạt động bảo dưỡng khác tại "
+"khu vực sản xuất này trong thời gian này."
 
 #. module: mrp_maintenance
 #: model_terms:ir.ui.view,arch_db:mrp_maintenance.mrp_workcenter_view_form_inherit_maintenance
@@ -261,47 +281,53 @@ msgstr "Máy móc và dụng cụ"
 #: model_terms:ir.ui.view,arch_db:mrp_maintenance.mrp_workcenter_view_form_inherit_maintenance
 #: model_terms:ir.ui.view,arch_db:mrp_maintenance.mrp_workcenter_view_kanban_inherit_maintenance
 msgid "Maintenance"
-msgstr "Bảo trì"
+msgstr "Bảo dưỡng"
 
 #. module: mrp_maintenance
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__maintenance_count
 msgid "Maintenance Count"
-msgstr "Số lần bảo trì"
+msgstr "Số lần bảo dưỡng"
 
 #. module: mrp_maintenance
 #: model:ir.model,name:mrp_maintenance.model_maintenance_equipment
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__equipment_ids
 msgid "Maintenance Equipment"
-msgstr "Thiết bị bảo trì"
+msgstr "Thiết bị bảo dưỡng"
 
 #. module: mrp_maintenance
+#: model:ir.actions.server,name:mrp_maintenance.action_production_maintenance_request
 #: model:ir.model,name:mrp_maintenance.model_maintenance_request
-#: model_terms:ir.ui.view,arch_db:mrp_maintenance.mrp_production_view_form_inherit_maintenance
 msgid "Maintenance Request"
-msgstr "Yêu cầu bảo trì"
+msgstr "Yêu cầu bảo dưỡng"
 
 #. module: mrp_maintenance
 #. odoo-python
 #: code:addons/mrp_maintenance/models/mrp_maintenance.py:0
 #: model:ir.actions.act_window,name:mrp_maintenance.mrp_workcenter_request_action_from_workcenter
 msgid "Maintenance Requests"
-msgstr "Yêu cầu bảo trì"
+msgstr "Yêu cầu bảo dưỡng"
 
 #. module: mrp_maintenance
 #: model:ir.model,name:mrp_maintenance.model_maintenance_stage
 msgid "Maintenance Stage"
-msgstr "Giai đoạn bảo trì"
+msgstr "Giai đoạn bảo dưỡng"
 
 #. module: mrp_maintenance
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__maintenance_team_id
 msgid "Maintenance Team"
-msgstr "Đội bảo trì"
+msgstr "Đội bảo dưỡng"
 
 #. module: mrp_maintenance
 #: model:ir.model,name:mrp_maintenance.model_mrp_production
 #: model:ir.model.fields,field_description:mrp_maintenance.field_maintenance_request__production_id
 msgid "Manufacturing Order"
 msgstr "Lệnh sản xuất"
+
+#. module: mrp_maintenance
+#. odoo-python
+#: code:addons/mrp_maintenance/models/mrp_maintenance.py:0
+msgid "Manufacturing Orders are already scheduled for this time slot."
+msgstr "Lệnh sản xuất đã được lên lịch cho khung thời gian này."
 
 #. module: mrp_maintenance
 #: model_terms:ir.actions.act_window,help:mrp_maintenance.maintenance_workcenter_action
@@ -323,7 +349,7 @@ msgid ""
 "Mean Time Between Failure, computed based on done corrective maintenances."
 msgstr ""
 "Thời gian trung bình giữa các lần hỏng, được tính toán dựa trên hoạt động "
-"bảo trì sửa chữa đã hoàn thành. "
+"bảo dưỡng sửa chữa đã hoàn thành. "
 
 #. module: mrp_maintenance
 #: model:ir.model.fields,help:mrp_maintenance.field_mrp_workcenter__mttr
@@ -350,7 +376,7 @@ msgstr "Thời hạn hoạt động của tôi"
 #. odoo-python
 #: code:addons/mrp_maintenance/models/mrp_maintenance.py:0
 msgid "New Maintenance Request"
-msgstr "Yêu cầu bảo trì mới"
+msgstr "Yêu cầu bảo dưỡng mới"
 
 #. module: mrp_maintenance
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_workcenter__activity_calendar_event_id
@@ -385,7 +411,7 @@ msgstr "Số lượng lỗi"
 #. module: mrp_maintenance
 #: model:ir.model.fields,field_description:mrp_maintenance.field_mrp_production__maintenance_count
 msgid "Number of maintenance requests"
-msgstr "Số lượng yêu cầu bảo trì"
+msgstr "Số lượng yêu cầu bảo dưỡng"
 
 #. module: mrp_maintenance
 #: model:ir.model.fields,help:mrp_maintenance.field_mrp_workcenter__message_needaction_counter
@@ -427,7 +453,7 @@ msgstr "Yêu cầu đã được xác nhận"
 #. odoo-javascript
 #: code:addons/mrp_maintenance/static/src/components/menuPopup.xml:0
 msgid "Request Maintenance"
-msgstr "Yêu cầu bảo trì"
+msgstr "Yêu cầu bảo dưỡng"
 
 #. module: mrp_maintenance
 #. odoo-python
@@ -477,7 +503,7 @@ msgstr "Kỹ thuật viên"
 #. odoo-javascript
 #: code:addons/mrp_maintenance/static/src/components/maintenance_request_form_view.js:0
 msgid "The maintenance request has successfully been created."
-msgstr "Yêu cầu bảo trì đã được tạo thành công."
+msgstr "Yêu cầu bảo dưỡng đã được tạo thành công."
 
 #. module: mrp_maintenance
 #. odoo-python
@@ -522,7 +548,7 @@ msgid ""
 "When this box is unticked, and the maintenance is of the type 'Work Center', no leave is created on the respective work center when a maintenance request is created.\n"
 "If the box is ticked, the work center is automatically blocked for the listed duration, either at the specified date, or as soon as possible, if the work center is unavailable then."
 msgstr ""
-"Khi ô này không được đánh dấu và loại bảo trì là 'Khu vực sản xuất', thì không có đợt ngừng hoạt động nào được tạo trên khu vực sản xuất tương ứng khi tạo yêu cầu bảo trì.\n"
+"Khi ô này không được đánh dấu và loại bảo dưỡng là 'Khu vực sản xuất', thì không có đợt ngừng hoạt động nào được tạo trên khu vực sản xuất tương ứng khi tạo yêu cầu bảo dưỡng.\n"
 "Nếu ô này được đánh dấu, thì khu vực sản xuất sẽ tự động bị chặn trong khoảng thời gian đã chọn, vào ngày nhất định hoặc ngay khi có thể, với điều kiện lúc đó khu vực sản xuất không hoạt động."
 
 #. module: mrp_maintenance

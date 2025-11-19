@@ -3,7 +3,7 @@
 {
     'name': 'UNSPSC product codes',
     'version': '0.2',
-    'category': 'Hidden',
+    'category': 'Accounting/Accounting',
     'summary': 'UNSPSC product codes',
     'description': """
 Countries like Colombia, Peru, Mexico, Denmark need to be able to use the
@@ -15,5 +15,6 @@ UNSPSC code for their products and uoms.
     "post_init_hook": "post_init_hook",
     'installable': True,
     'uninstall_hook': 'uninstall_hook',
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

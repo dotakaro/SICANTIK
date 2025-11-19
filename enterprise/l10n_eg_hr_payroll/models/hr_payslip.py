@@ -3,7 +3,7 @@
 from odoo import models
 
 
-class HRPayslip(models.Model):
+class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
     def _get_eg_tax(self, taxable_amount):

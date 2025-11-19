@@ -1,11 +1,10 @@
-# -*- coding:utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
     'name': 'Belgium - Payroll',
     'countries': ['be'],
     'category': 'Human Resources/Payroll',
-    'depends': ['certificate', 'hr_payroll', 'hr_contract_reports', 'hr_work_entry_holidays', 'hr_payroll_holidays'],
+    'depends': ['certificate', 'hr_payroll', 'hr_work_entry_holidays', 'hr_payroll_holidays'],
     'auto_install': ['hr_payroll'],
     'version': '1.0',
     'description': """
@@ -64,14 +63,13 @@ Prerequisites:
         'views/reports.xml',
         'wizard/hr_payroll_employee_departure_notice_views.xml',
         'wizard/hr_payroll_employee_departure_holiday_attest_views.xml',
-        'wizard/hr_payroll_generate_warrant_payslips_views.xml',
         'wizard/l10n_be_hr_payroll_schedule_change_wizard_views.xml',
         'wizard/hr_payroll_allocating_paid_time_off_views.xml',
         'wizard/l10n_be_december_slip_wizard_views.xml',
         'wizard/l10n_be_group_insurance_wizard_views.xml',
         'views/l10n_be_double_pay_recovery_line_views.xml',
         'views/l10n_be_meal_voucher_report_views.xml',
-        'views/hr_contract_views.xml',
+        'views/hr_contract_template_views.xml',
         'views/hr_employee_views.xml',
         'views/res_users_views.xml',
         'views/hr_work_entry_views.xml',
@@ -86,6 +84,7 @@ Prerequisites:
         'views/withholding_tax_xml_export_template.xml',
         'views/hr_job_views.xml',
         'views/hr_leave_views.xml',
+        'views/hr_leave_type_views.xml',
         'data/res_partner_data.xml',
         'data/contract_type_data.xml',
         'data/ir_default_data.xml',
@@ -102,6 +101,7 @@ Prerequisites:
         'data/hr_departure_reason_data.xml',
         'data/cp200/employee_double_holidays_data.xml',
         'data/cp200/employee_pfi_data.xml',
+        'data/cp200/employee_salary_advance_data.xml',
         'data/cp200/employee_salary_data.xml',
         'data/cp200/employee_termination_fees_data.xml',
         'data/cp200/employee_termination_holidays_N1_data.xml',
@@ -117,10 +117,8 @@ Prerequisites:
         'views/l10n_be_281_10_views.xml',
         'views/l10n_be_281_45_views.xml',
         'report/hr_individual_account_templates.xml',
-        'report/hr_contract_employee_report_views.xml',
         'report/hr_281_10_templates.xml',
         'report/hr_281_45_templates.xml',
-        'report/hr_contract_history_report_views.xml',
         'report/l10n_be_hr_payroll_274_XX_sheet_template.xml',
         'report/l10n_be_hr_payroll_273S_pdf_template.xml',
         'report/hr_payroll_report_views.xml',
@@ -136,7 +134,7 @@ Prerequisites:
         'views/hr_payslip_views.xml',
         'views/hr_payslip_run_views.xml',
     ],
-    'demo':[
+    'demo': [
         'data/l10n_be_hr_payroll_demo.xml'
     ],
     'assets': {
@@ -147,5 +145,6 @@ Prerequisites:
             'l10n_be_hr_payroll/static/src/scss/*.scss',
         ]
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

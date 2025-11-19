@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from odoo.fields import Command
+from odoo.tests import tagged
 
 from odoo.addons.sale_subscription.tests.common_sale_subscription import TestSubscriptionCommon
-from odoo.tests import tagged
 
 
 @tagged('post_install', '-at_install')
-class TestSubscription(TestSubscriptionCommon):
+class TestSubscriptionReport(TestSubscriptionCommon):
 
     @classmethod
     def setUpClass(cls):
@@ -24,7 +26,6 @@ class TestSubscription(TestSubscriptionCommon):
                 'name': "Product 1",
                 'product_id': self.product.id,
                 'product_uom_qty': 1,
-                'product_uom': self.product.uom_id.id
             })]
         })
         sub_a.action_confirm()
@@ -36,7 +37,6 @@ class TestSubscription(TestSubscriptionCommon):
                 'name': "Product 1",
                 'product_id': self.product.id,
                 'product_uom_qty': 1,
-                'product_uom': self.product.uom_id.id
             })]
         })
         sub_b.write({
@@ -67,26 +67,29 @@ class TestSubscription(TestSubscriptionCommon):
             'name': 'Company1 - Currency1 - Bis',
             'sale_order_template_id': self.subscription_tmpl.id,
             'partner_id': self.user_portal.partner_id.id,
-            'currency_id': self.company.currency_id.id,
+            'company_id': self.company.id,
             'plan_id': self.plan_month.id,
-            'order_line': [(0, 0, {
+            'order_line': [Command.create({
                 'name': "Product 1",
                 'product_id': self.product.id,
                 'product_uom_qty': 1,
-                'product_uom': self.product.uom_id.id
             })]
         })
         sub_a.action_confirm()
+        default_pricelist_company_2 = self.env['product.pricelist'].search([
+            ('company_id', '=', self.company_data_2['company'].id)
+        ])
+        for rule in sub_a.pricelist_id.subscription_item_ids:
+            rule.copy({'pricelist_id': default_pricelist_company_2.id})
         sub_b = self.subscription.create({
             'name': 'Company2 - Currency1 - Bis',
             'partner_id': self.user_portal.partner_id.id,
             'company_id': self.company_data_2['company'].id,
             'plan_id': self.plan_month.id,
-            'order_line': [(0, 0, {
+            'order_line': [Command.create({
                 'name': "Product 1",
                 'product_id': self.product.id,
                 'product_uom_qty': 1,
-                'product_uom': self.product.uom_id.id
             })]
         })
         sub_b.action_confirm()
@@ -95,11 +98,10 @@ class TestSubscription(TestSubscriptionCommon):
             'partner_id': self.user_portal.partner_id.id,
             'company_id': self.company_data_2['company'].id,
             'plan_id': self.plan_month.id,
-            'order_line': [(0, 0, {
+            'order_line': [Command.create({
                 'name': "Product 1",
                 'product_id': self.product.id,
                 'product_uom_qty': 1,
-                'product_uom': self.product.uom_id.id
             })]
         })
         sub_c.write({

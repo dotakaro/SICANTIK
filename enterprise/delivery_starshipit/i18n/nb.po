@@ -3,30 +3,21 @@
 # 	* delivery_starshipit
 # 
 # Translators:
-# Thor Arne Hvidsten <thor.arne.hvidsten@gmail.com>, 2024
-# Martin Trigaux, 2024
-# Rune Restad, 2024
-# Marius Stedjan <marius@stedjan.com>, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:24+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Marius Stedjan <marius@stedjan.com>, 2024\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Norwegian Bokmål (https://app.transifex.com/odoo/teams/41243/nb/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: nb\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid " after deleting the order on Starshipit"
-msgstr ""
 
 #. module: delivery_starshipit
 #: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_delivery_carrier_form
@@ -113,13 +104,16 @@ msgid "Delivery Service"
 msgstr ""
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__display_name
 msgid "Display Name"
 msgstr "Visningsnavn"
 
 #. module: delivery_starshipit
 #. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
 #: code:addons/delivery_starshipit/models/delivery_carrier.py:0
 msgid ""
 "Error: %(file_name)s file could not be obtained for order %(order_name)s."
@@ -132,7 +126,11 @@ msgid "Error: this delivery method is not available for this order."
 msgstr ""
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -285,6 +283,14 @@ msgid "Service Name"
 msgstr "Tjenestenavn"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Shipping Cost has been updated from Starshipit. The Sales Order can now be "
+"invoiced."
+msgstr ""
+
+#. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_delivery_carrier
 msgid "Shipping Methods"
 msgstr "Fraktmetoder"
@@ -338,6 +344,12 @@ msgid "Starshipit Parcel Reference"
 msgstr ""
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit Price Update Cron: System Error fetching price: %s"
+msgstr ""
+
+#. module: delivery_starshipit
 #: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__starshipit_return_parcel_reference
 msgid "Starshipit Return Parcel Reference"
 msgstr ""
@@ -368,15 +380,65 @@ msgid "Starshipit returned an error: %(message)s"
 msgstr ""
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Delivery cost re-evaluated on Sales Order based on updated exact"
+" price (%(final_carrier_price)s) from transfer %(picking_name)s."
+msgstr ""
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s, but automatic sale order delivery cost re-"
+"evaluation failed: %(e_so)s"
+msgstr ""
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s. This sale order is already invoiced, please review "
+"if a manual adjustment to the invoice is needed."
+msgstr ""
+
+#. module: delivery_starshipit
+#: model:ir.actions.server,name:delivery_starshipit.ir_cron_starshipit_fetch_pending_prices_ir_actions_server
+msgid "Starshipit: Fetch Pending Shipping Prices"
+msgstr ""
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit: Shipping Cost updated"
+msgstr ""
+
+#. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_stock_package_type
 msgid "Stock package type"
 msgstr "Lager pakketype"
+
+#. module: delivery_starshipit
+#: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_picking_form_inherit_stock
+msgid "The Shipping Cost is being fetched in the background."
+msgstr ""
 
 #. module: delivery_starshipit
 #: model:ir.model.fields,help:delivery_starshipit.field_delivery_carrier__starshipit_carrier_code
 msgid ""
 "The carrier on starshipit used by this carrier. The service code belongs to "
 "it."
+msgstr ""
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"The exact price could not be retrieved. It will be updated by a scheduled "
+"action."
 msgstr ""
 
 #. module: delivery_starshipit
@@ -424,12 +486,6 @@ msgstr ""
 msgid ""
 "There are no shipping services available, please verify the shipping address"
 " or activate suitable carriers in your starshipit account."
-msgstr ""
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid "There was an issue when creating the order, please try again"
 msgstr ""
 
 #. module: delivery_starshipit

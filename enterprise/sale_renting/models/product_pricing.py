@@ -1,12 +1,14 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from collections import defaultdict
 import math
+from collections import defaultdict
+
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.tools import format_amount
+
 
 # For our use case: pricing depending on the duration, the values should be sufficiently different from one plan to
 # another to not suffer from the approcimation that all months are 31 longs.
@@ -34,6 +36,7 @@ class ProductPricing(models.Model):
     product_template_id = fields.Many2one(
         comodel_name='product.template',
         ondelete='cascade',
+        index='btree_not_null',
         help="Select products on which this pricing will be applied.",
     )
     product_variant_ids = fields.Many2many(
@@ -41,7 +44,7 @@ class ProductPricing(models.Model):
         help="Select Variants of the Product for which this rule applies."
             "Leave empty if this rule applies for any variant of this template.",
     )
-    pricelist_id = fields.Many2one('product.pricelist', ondelete='cascade')
+    pricelist_id = fields.Many2one('product.pricelist', index='btree_not_null', ondelete='cascade')
     company_id = fields.Many2one(related='pricelist_id.company_id')
 
     @api.constrains('product_template_id', 'pricelist_id', 'recurrence_id', 'product_variant_ids')
@@ -108,7 +111,8 @@ class ProductPricing(models.Model):
 
         :param datetime start_date: beginning of the duration.
         :param datetime end_date: end of the duration.
-        :return dict: duration length in different units.
+        :returns: duration length in different units.
+        :rtype: dict
         """
         duration = end_date - start_date
         vals = dict(hour=(duration.days * 24 + duration.seconds / 3600))

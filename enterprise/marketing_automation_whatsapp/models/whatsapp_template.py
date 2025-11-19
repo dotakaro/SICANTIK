@@ -9,7 +9,7 @@ from urllib3.exceptions import LocationParseError
 _logger = logging.getLogger(__name__)
 
 
-class WhatsAppTemplate(models.Model):
+class WhatsappTemplate(models.Model):
     _inherit = 'whatsapp.template'
 
     def _get_additional_button_values(self, button):

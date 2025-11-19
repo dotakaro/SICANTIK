@@ -1,8 +1,7 @@
-/** @odoo-module **/
-
 import { unique } from "@web/core/utils/arrays";
 import { exprToBoolean } from "@web/core/utils/strings";
 import { visitXML } from "@web/core/utils/xml";
+import { stringToOrderBy } from "@web/search/utils/order_by";
 
 export class MapArchParser {
     parse(arch) {
@@ -54,10 +53,7 @@ export class MapArchParser {
             archInfo.fieldNames.push("display_name");
         }
         if (node.hasAttribute("default_order")) {
-            archInfo.defaultOrder = {
-                name: node.getAttribute("default_order"),
-                asc: true,
-            };
+            archInfo.defaultOrder = stringToOrderBy(node.getAttribute("default_order") || null);
         }
         if (node.hasAttribute("allow_resequence")) {
             archInfo.allowResequence = exprToBoolean(node.getAttribute("allow_resequence"));

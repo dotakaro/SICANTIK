@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { helpers, stores } from "@odoo/o-spreadsheet";
 import { initCallbackRegistry } from "@spreadsheet/o_spreadsheet/init_callbacks";
 import { Domain } from "@web/core/domain";
@@ -12,7 +10,8 @@ export function insertChart(chartData) {
     const chartType = `odoo_${chartData.metaData.mode}`;
     const definition = {
         metaData: {
-            groupBy: chartData.metaData.groupBy,
+            // Transform the fields object into their string representation (with the fields object' toJSON())
+            groupBy: JSON.parse(JSON.stringify(chartData.metaData.groupBy)),
             measure: chartData.metaData.measure,
             order: chartData.metaData.order,
             resModel: chartData.metaData.resModel,
@@ -22,6 +21,7 @@ export function insertChart(chartData) {
             domain: new Domain(chartData.searchParams.domain).toJson(),
         },
         stacked: chartData.metaData.stacked,
+        axisType: chartData.metaData.axisType,
         fillArea: chartType === "odoo_line",
         cumulative: chartData.metaData.cumulated,
         cumulatedStart: chartData.metaData.cumulatedStart,
@@ -30,15 +30,17 @@ export function insertChart(chartData) {
         legendPosition: "top",
         verticalAxisPosition: "left",
         type: chartType,
-        dataSourceId: uuidGenerator.uuidv4(),
-        id: uuidGenerator.uuidv4(),
+        dataSourceId: uuidGenerator.smallUuid(),
+        id: uuidGenerator.smallUuid(),
         actionXmlId: chartData.actionXmlId,
     };
     return (model, stores) => {
         model.dispatch("CREATE_CHART", {
             sheetId: model.getters.getActiveSheetId(),
-            id: definition.id,
-            position: {
+            figureId: definition.id,
+            col: 0,
+            row: 0,
+            offset: {
                 x: 10,
                 y: 10,
             },

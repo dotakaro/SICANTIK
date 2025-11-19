@@ -1,11 +1,12 @@
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
     xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
-    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
-    <ext:UBLExtensions
-        xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+    <ext:UBLExtensions>
         <ext:UBLExtension>
             <ext:ExtensionContent>
-                <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="placeholder" />
+                <ds:Signature Id="placeholder"/>
             </ext:ExtensionContent>
         </ext:UBLExtension>
     </ext:UBLExtensions>
@@ -182,6 +183,13 @@
                 <cbc:PriceTypeCode>01</cbc:PriceTypeCode>
             </cac:AlternativeConditionPrice>
         </cac:PricingReference>
+        <cac:AllowanceCharge>
+            <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+            <cbc:AllowanceChargeReasonCode>00</cbc:AllowanceChargeReasonCode>
+            <cbc:MultiplierFactorNumeric>0.20000</cbc:MultiplierFactorNumeric>
+            <cbc:Amount currencyID="USD">2000.00</cbc:Amount>
+            <cbc:BaseAmount currencyID="USD">10000.00</cbc:BaseAmount>
+        </cac:AllowanceCharge>
         <cac:TaxTotal>
             <cbc:TaxAmount currencyID="USD">3328.00</cbc:TaxAmount>
             <cac:TaxSubtotal>
@@ -217,7 +225,7 @@
             </cac:CommodityClassification>
         </cac:Item>
         <cac:Price>
-            <cbc:PriceAmount currencyID="USD">1600.0</cbc:PriceAmount>
+            <cbc:PriceAmount currencyID="USD">2000.0</cbc:PriceAmount>
         </cac:Price>
     </cac:InvoiceLine>
     <cac:InvoiceLine>
@@ -230,6 +238,13 @@
                 <cbc:PriceTypeCode>01</cbc:PriceTypeCode>
             </cac:AlternativeConditionPrice>
         </cac:PricingReference>
+        <cac:AllowanceCharge>
+            <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+            <cbc:AllowanceChargeReasonCode>00</cbc:AllowanceChargeReasonCode>
+            <cbc:MultiplierFactorNumeric>0.20000</cbc:MultiplierFactorNumeric>
+            <cbc:Amount currencyID="USD">2000.00</cbc:Amount>
+            <cbc:BaseAmount currencyID="USD">10000.00</cbc:BaseAmount>
+        </cac:AllowanceCharge>
         <cac:TaxTotal>
             <cbc:TaxAmount currencyID="USD">1440.00</cbc:TaxAmount>
             <cac:TaxSubtotal>
@@ -254,7 +269,7 @@
             </cac:CommodityClassification>
         </cac:Item>
         <cac:Price>
-            <cbc:PriceAmount currencyID="USD">1600.0</cbc:PriceAmount>
+            <cbc:PriceAmount currencyID="USD">2000.0</cbc:PriceAmount>
         </cac:Price>
     </cac:InvoiceLine>
 </Invoice>

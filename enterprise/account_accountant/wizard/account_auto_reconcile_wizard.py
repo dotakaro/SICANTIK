@@ -25,7 +25,7 @@ class AccountAutoReconcileWizard(models.TransientModel):
         comodel_name='account.account',
         string='Accounts',
         check_company=True,
-        domain="[('reconcile', '=', True), ('deprecated', '=', False), ('account_type', '!=', 'off_balance')]",
+        domain="[('reconcile', '=', True), ('account_type', '!=', 'off_balance')]",
     )
     partner_ids = fields.Many2many(
         comodel_name='res.partner',
@@ -173,4 +173,4 @@ class AccountAutoReconcileWizard(models.TransientModel):
                 'domain': [('id', 'in', reconciled_amls_and_related.ids)],
             }
         else:
-            raise UserError("Nothing to reconcile.")
+            raise UserError(self.env._("Nothing to reconcile."))

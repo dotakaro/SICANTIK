@@ -4,9 +4,8 @@ from odoo import _, models, fields, api
 from odoo.exceptions import AccessError
 
 
-class Document(models.Model):
-    _name = 'documents.document'
-    _inherit = ['documents.document']
+class DocumentsDocument(models.Model):
+    _inherit = 'documents.document'
 
     website_id = fields.Many2one(
         'website', ondelete='set null', compute='_compute_website_id', readonly=False, store=True,
@@ -22,16 +21,23 @@ class Document(models.Model):
         for document in self.filtered(lambda d: not d.website_id or d.website_id.company_id != d.company_id):
             document.website_id = document.company_id.website_id or self.env.company.website_id
 
-    @api.constrains('company_id', 'website_id')
     def _check_website_id(self):
-        if self.env.is_superuser() or not self.env.companies:
-            return
         invalid_docs = []
         for doc in self.filtered('website_id'):
-            if (
-                doc.company_id != doc.website_id.company_id
-                and doc.website_id.company_id not in self.env.companies
-            ):
+            if doc.company_id != doc.website_id.company_id and self.env.companies and doc.website_id.company_id not in self.env.companies:
                 invalid_docs.append(doc.name)
         if invalid_docs:
             raise AccessError(_("You can't set this website for the following documents:\n- ") + '\n- '.join(invalid_docs))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        res = super().create(vals_list)
+        if not self.env.is_superuser():
+            res._check_website_id()
+        return res
+
+    def write(self, vals):
+        res = super().write(vals)
+        if not self.env.is_superuser() and vals.keys() & {'website_id', 'company_id'}:
+            self._check_website_id()
+        return res

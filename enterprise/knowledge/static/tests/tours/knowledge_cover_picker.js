@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { endKnowledgeTour } from "./knowledge_tour_utils.js";
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
@@ -25,8 +23,8 @@ registry.category("web_tour.tours").add("knowledge_cover_selector_tour", {
             run: "click",
         },
         {
-            content: "Click on the 'Create' button",
-            trigger: ".o_knowledge_header .btn-create",
+            content: "Click on the 'New Article' button",
+            trigger: ".o_knowledge_create_article",
             run: "click",
         },
         {
@@ -43,12 +41,12 @@ registry.category("web_tour.tours").add("knowledge_cover_selector_tour", {
         },
         {
             content: "click on toggle menu",
-            trigger: "#dropdown_tools_panel[title='More actions']",
+            trigger: ".o_knowledge_header .dropdown-toggle",
             run: "click",
         },
         {
             content: "Click on add cover button",
-            trigger: ".o_knowledge_add_cover",
+            trigger: ".dropdown-item:contains('Add Cover')",
             run: "click",
         },
         {
@@ -129,7 +127,7 @@ registry.category("web_tour.tours").add("knowledge_cover_selector_tour", {
         },
         {
             content: "Create another article",
-            trigger: ".o_knowledge_header .btn-create",
+            trigger: ".o_knowledge_create_article",
             run: "click",
         },
         {
@@ -185,13 +183,13 @@ registry.category("web_tour.tours").add("knowledge_cover_selector_tour", {
             trigger: ".o_article_active:contains(odoo)",
         },
         {
-            content: "click on toggle menu",
-            trigger: "#dropdown_tools_panel[title='More actions']",
+            content: "Open options dropdown",
+            trigger: ".o_knowledge_header .dropdown-toggle",
             run: "click",
         },
         {
             content: "Click on add cover button",
-            trigger: ".o_knowledge_add_cover",
+            trigger: ".dropdown-item:contains('Add Cover')",
             run: "click",
         },
         {
@@ -212,13 +210,13 @@ registry.category("web_tour.tours").add("knowledge_cover_selector_tour", {
             run: "click",
         },
         {
-            content: "click on toggle menu",
-            trigger: "#dropdown_tools_panel[title='More actions']",
+            content: "Open options dropdown",
+            trigger: ".o_knowledge_header .dropdown-toggle",
             run: "click",
         },
         {
             content: "Click on add cover button",
-            trigger: ".o_knowledge_add_cover",
+            trigger: ".dropdown-item:contains('Add Cover')",
             run: "click",
         },
         {

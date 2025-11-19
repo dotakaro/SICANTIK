@@ -8,7 +8,7 @@ from odoo import api, fields, models, _
 
 
 class HrExpense(models.Model):
-    _inherit = ['hr.expense']
+    _inherit = 'hr.expense'
 
     # Description is the field from which we would find the product
     # Limit_parameter should be the limit of expenses to analyse ( 10000 seems to be the best )
@@ -73,9 +73,9 @@ class HrExpense(models.Model):
                             (setweight(to_tsvector(%(lang)s, expense.name), 'B'))
                             AS document
                         FROM hr_expense expense
-                        WHERE expense.state = 'done'
+                        WHERE expense.state IN ('paid', 'in_payment', 'posted')
                             AND expense.company_id = %(company_id)s
-                        ORDER BY expense.date DESC
+                        ORDER BY expense.date DESC, expense.id DESC
                         LIMIT %(limit_parameter)s
                     ) p_search,
                     to_tsquery(%(lang)s, %(description)s) query_plain
@@ -101,9 +101,9 @@ class HrExpense(models.Model):
                             (setweight(to_tsvector(%(lang)s, expense.predicted_category), 'A'))
                             AS document
                         FROM hr_expense expense
-                        WHERE expense.state = 'done'
+                        WHERE expense.state IN ('paid', 'in_payment', 'posted')
                             AND expense.company_id = %(company_id)s
-                        ORDER BY expense.date DESC
+                        ORDER BY expense.date DESC, expense.id DESC
                         LIMIT %(limit_parameter)s
                     ) p_search,
                     to_tsquery(%(lang)s,  %(description)s) query_plain

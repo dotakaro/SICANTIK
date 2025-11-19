@@ -2,7 +2,7 @@
 
 {
     'name': 'WhatsApp Messaging',
-    'category': 'Marketing/WhatsApp',
+    'category': 'Productivity/WhatsApp',
     'summary': 'Text your Contacts on WhatsApp',
     'version': '1.0',
     'description': """This module integrates Odoo with WhatsApp to use WhatsApp messaging service""",
@@ -10,7 +10,8 @@
     'data': [
         'data/ir_actions_server_data.xml',
         'data/ir_cron_data.xml',
-        'data/ir_module_category_data.xml',
+        'data/res_groups_privilege_data.xml',
+        'data/whatsapp_template_data.xml',
         'data/whatsapp_templates_preview.xml',
         'security/res_groups.xml',
         'security/ir_rules.xml',
@@ -33,8 +34,20 @@
     ],
     'external_dependencies': {
         'python': ['phonenumbers'],
+        'apt': {
+            'phonenumbers': 'python3-phonenumbers',
+        },
     },
     'assets': {
+        "im_livechat.assets_embed_core": [
+            "whatsapp/static/src/core/common/**/*",
+            "whatsapp/static/src/**/common/**/*",
+        ],
+        "mail.assets_public": [
+            "whatsapp/static/src/core/common/**/*",
+            "whatsapp/static/src/core/public_web/**/*",
+            "whatsapp/static/src/**/common/**/*",
+        ],
         'web.assets_backend': [
             'whatsapp/static/src/scss/*.scss',
             'whatsapp/static/src/core/common/**/*',
@@ -54,6 +67,7 @@
             'whatsapp/static/tests/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'application': True,
     'installable': True,

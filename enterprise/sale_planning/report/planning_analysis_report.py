@@ -3,6 +3,7 @@
 
 from odoo import fields, models, api
 
+
 class PlanningAnalysisReport(models.Model):
     _inherit = "planning.analysis.report"
 

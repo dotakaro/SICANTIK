@@ -2,6 +2,7 @@
 
 from odoo import models
 
+
 class AccountTax(models.Model):
     _inherit = 'account.tax'
 

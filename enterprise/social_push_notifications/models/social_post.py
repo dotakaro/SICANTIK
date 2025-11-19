@@ -5,7 +5,7 @@
 from odoo import fields, models, api
 
 
-class SocialPostPushNotifications(models.Model):
+class SocialPost(models.Model):
     _inherit = 'social.post'
 
     use_visitor_timezone = fields.Boolean(compute='_compute_use_visitor_timezone', readonly=False, store=True)
@@ -21,7 +21,7 @@ class SocialPostPushNotifications(models.Model):
         minimum amount of delay for the end user as push notifications are only sent when the CRON
         job runs (see social_push_notifications/social_live_post.py#_post). """
 
-        super(SocialPostPushNotifications, self)._action_post()
+        super()._action_post()
 
         if 'push_notifications' in self.account_ids.mapped('media_type') and any(post_method == 'now' for post_method in self.mapped('post_method')):
             # trigger CRON job ASAP so that push notifications are sent
@@ -36,7 +36,7 @@ class SocialPostPushNotifications(models.Model):
 
         The related social.post will remain 'pending' until all live.posts are processed. """
 
-        super(SocialPostPushNotifications, self)._cron_publish_scheduled()
+        super()._cron_publish_scheduled()
 
         ready_live_posts = self.env['social.live.post'].search([
             ('state', 'in', ['ready', 'posting'])

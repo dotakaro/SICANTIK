@@ -297,7 +297,7 @@ class TestNlXafExport(TestNlXafExportCommon):
                         <totalCredit>7137.6</totalCredit>
                         <journal>
                             <jrnID>INV</jrnID>
-                            <desc>Customer Invoices</desc>
+                            <desc>Sales</desc>
                             <jrnTp>S</jrnTp>
                             <transaction>
                                 <nr>___ignore___</nr>
@@ -610,7 +610,7 @@ class TestNlXafExport(TestNlXafExportCommon):
                             </transaction>
                         </journal><journal>
                             <jrnID>BILL</jrnID>
-                            <desc>Vendor Bills</desc>
+                            <desc>Purchases</desc>
                             <jrnTp>P</jrnTp>
                             <transaction>
                                 <nr>___ignore___</nr>
@@ -696,15 +696,12 @@ class TestNlXafExport(TestNlXafExportCommon):
             </auditfile>
         ''')
 
-        try:
-            self.env.registry.enter_test_mode(self.cr)
+        with self.enter_registry_test_mode():
             # Set the batch size to 10 to make sure the generator will iterate more than once.
             self.env['ir.config_parameter'].set_param('l10n_nl_reports.general_ledger_batch_size', 10)
-            xaf_stream = self.env[report.custom_handler_model_name].l10n_nl_get_xaf(options).get('file_content')
+            xaf_stream = self.env[report.custom_handler_model_name].l10n_nl_reports_get_xaf(options).get('file_content')
             generated_xaf = self.get_xml_tree_from_string(b''.join(xaf_stream))
             self.assertXmlTreeEqual(generated_xaf, expected_xaf)
-        finally:
-            self.env.registry.leave_test_mode()
 
 
 @tagged('external_l10n', 'post_install', '-at_install', '-standard', 'external')
@@ -713,10 +710,7 @@ class TestNlXafExportXmlValidity(TestNlXafExportCommon):
     def test_xml_validity(self):
         report = self.env.ref('account_reports.general_ledger_report')
         options = self._generate_options(report, fields.Date.from_string('2019-01-01'), fields.Date.from_string('2019-12-31'))
-        try:
-            self.env.registry.enter_test_mode(self.cr)
-            xaf_stream = self.env[report.custom_handler_model_name].l10n_nl_get_xaf(options).get('file_content')
+        with self.enter_registry_test_mode():
+            xaf_stream = self.env[report.custom_handler_model_name].l10n_nl_reports_get_xaf(options).get('file_content')
             generated_xaf = self.get_xml_tree_from_string(b''.join(xaf_stream))
-        finally:
-            self.env.registry.leave_test_mode()
         return generated_xaf

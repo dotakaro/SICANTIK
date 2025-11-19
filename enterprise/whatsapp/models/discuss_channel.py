@@ -9,10 +9,10 @@ from odoo import api, Command, fields, models, tools, _
 from odoo.addons.mail.tools.discuss import Store
 from odoo.addons.whatsapp.tools import phone_validation as wa_phone_validation
 from odoo.exceptions import ValidationError
-from odoo.models import Constraint
 
 
 _logger = logging.getLogger(__name__)
+
 
 class DiscussChannel(models.Model):
     """ Support WhatsApp Channels, used for discussion with a specific
@@ -29,11 +29,20 @@ class DiscussChannel(models.Model):
     wa_account_id = fields.Many2one(comodel_name='whatsapp.account', string="WhatsApp Business Account")
     whatsapp_channel_active = fields.Boolean('Is Whatsapp Channel Active', compute="_compute_whatsapp_channel_active")
 
-    _constraints = [
-        Constraint('group_public_id_check',
-                   "CHECK (channel_type = 'channel' OR channel_type = 'whatsapp' OR group_public_id IS NULL)",
-                   'Group authorization and group auto-subscription are only supported on channels and whatsapp.'),
-    ]
+    _group_public_id_check = models.Constraint(
+        "CHECK (channel_type = 'channel' OR channel_type = 'whatsapp' OR group_public_id IS NULL)",
+        "Group authorization and group auto-subscription are only supported on channels and whatsapp.",
+    )
+
+    @api.depends('whatsapp_partner_id', 'whatsapp_number')
+    def _compute_display_name(self):
+        whatsapp_channels = self.filtered('whatsapp_partner_id')
+        for channel in whatsapp_channels:
+            number = channel.whatsapp_number
+            partner = channel.whatsapp_partner_id
+            partner_name = partner.name if partner.name != partner.phone else False
+            channel.display_name = f'{partner_name} ({number})' if partner_name else number
+        super(DiscussChannel, self - whatsapp_channels)._compute_display_name()
 
     @api.constrains('channel_type', 'whatsapp_number')
     def _check_whatsapp_number(self):
@@ -154,9 +163,7 @@ class DiscussChannel(models.Model):
                 })
         if messages.author_id == self.whatsapp_partner_id:
             self.last_wa_mail_message_id = new_msg
-            self._bus_send_store(
-                self, {"whatsapp_channel_valid_until": self.whatsapp_channel_valid_until}
-            )
+            Store(self, "whatsapp_channel_valid_until", bus_channel=self).bus_send()
         if whatsapp_message_vals:
             self.env['whatsapp.message'].create(whatsapp_message_vals)._send_message()
 
@@ -170,7 +177,6 @@ class DiscussChannel(models.Model):
     # CONTROLLERS
     # ------------------------------------------------------------
 
-    @api.returns('self')
     def _get_whatsapp_channel(self, whatsapp_number, wa_account_id, sender_name=False, create_if_not_found=False, related_message=False):
         """ Creates a whatsapp channel.
 
@@ -209,15 +215,14 @@ class DiscussChannel(models.Model):
             channel = channel.filtered(lambda c: all(r in c.channel_member_ids.partner_id for r in responsible_partners))
 
         partners_to_notify = responsible_partners
-        record_name = related_message.record_name
-        if not record_name and related_message.res_id:
-            record_name = self.env[related_message.model].browse(related_message.res_id).display_name
         if not channel and create_if_not_found:
+            recipient_partner = self.env['res.partner']._find_or_create_from_number(wa_formatted, sender_name)
+            recipient_name = recipient_partner.name if recipient_partner.name != recipient_partner.phone else False
             channel = self.sudo().with_context(tools.clean_context(self.env.context)).create({
-                'name': f"{wa_formatted} ({record_name})" if record_name else wa_formatted,
+                'name': f"{recipient_name} ({wa_formatted})" if recipient_name else wa_formatted,
                 'channel_type': 'whatsapp',
                 'whatsapp_number': wa_formatted,
-                'whatsapp_partner_id': self.env['res.partner']._find_or_create_from_number(wa_formatted, sender_name).id,
+                'whatsapp_partner_id': recipient_partner.id,
                 'wa_account_id': wa_account_id.id,
             })
             partners_to_notify |= channel.whatsapp_partner_id
@@ -274,14 +279,14 @@ class DiscussChannel(models.Model):
             }])
             message_body = Markup(f'<div class="o_mail_notification">{_("joined the channel")}</div>')
             new_member.channel_id.message_post(body=message_body, message_type="notification", subtype_xmlid="mail.mt_comment")
-            self._bus_send_store(Store(new_member).add(self, {"memberCount": self.member_count}))
+            Store(new_member, bus_channel=self).add(self, "member_count").bus_send()
         return Store(self).get_result()
 
     # ------------------------------------------------------------
     # OVERRIDE
     # ------------------------------------------------------------
 
-    def _action_unfollow(self, partner=None, guest=None):
+    def _action_unfollow(self, partner=None, guest=None, post_leave_message=True):
         if partner and self.channel_type == "whatsapp" \
                 and next(
                     (member.partner_id for member in self.channel_member_ids if not member.partner_id.partner_share),
@@ -290,15 +295,15 @@ class DiscussChannel(models.Model):
             msg = _("You can't leave this channel. As you are the owner of this WhatsApp channel, you can only delete it.")
             partner._bus_send_transient_message(self, msg)
             return
-        super()._action_unfollow(partner, guest)
+        super()._action_unfollow(partner, guest, post_leave_message)
 
-    def _to_store(self, store: Store):
-        super()._to_store(store)
-        for channel in self.filtered(lambda channel: channel.channel_type == "whatsapp"):
-            store.add(channel, {
-                "whatsapp_channel_valid_until": channel.whatsapp_channel_valid_until,
-                "whatsapp_partner_id": Store.one(channel.whatsapp_partner_id, only_id=True),
-            })
+    def _to_store_defaults(self, target):
+        return super()._to_store_defaults(target) + [
+            "whatsapp_channel_valid_until",
+            Store.One("whatsapp_partner_id", []),
+            # sudo: discuss.channel - reading wa_account_id is allowed for multi-company users
+            Store.One("wa_account_id", ["name"], sudo=True),
+        ]
 
     def _types_allowing_seen_infos(self):
         return super()._types_allowing_seen_infos() + ["whatsapp"]

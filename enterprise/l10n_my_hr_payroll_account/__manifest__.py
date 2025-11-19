@@ -16,6 +16,7 @@ Accounting Data for Malaysian Payroll Rules
     'demo': [
         'data/l10n_my_hr_payroll_account_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'auto_install': True,
 }

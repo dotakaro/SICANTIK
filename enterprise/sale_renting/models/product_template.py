@@ -12,6 +12,7 @@ class ProductTemplate(models.Model):
 
     rent_ok = fields.Boolean(
         string="Rental",
+        default=lambda self: bool(self.env.context.get('in_rental_app')),
         help="Allow renting of this product.")
     qty_in_rent = fields.Float("Quantity currently in rent", compute='_get_qty_in_rent')
     product_pricing_ids = fields.One2many(
@@ -87,10 +88,10 @@ class ProductTemplate(models.Model):
         }
 
     @api.depends('rent_ok')
-    @api.depends_context('rental_products')
+    @api.depends_context('show_rental_tag')
     def _compute_display_name(self):
         super()._compute_display_name()
-        if not self._context.get('rental_products'):
+        if not self.env.context.get('show_rental_tag'):
             return
         for template in self:
             if template.rent_ok:
@@ -179,6 +180,7 @@ class ProductTemplate(models.Model):
         date,
         currency,
         pricelist,
+        *,
         start_date=None,
         end_date=None,
         **kwargs,
@@ -222,3 +224,9 @@ class ProductTemplate(models.Model):
                     unit=pricing.recurrence_id._get_unit_label(rental_duration),
                 )
         return data
+
+    def _has_multiple_uoms(self):
+        # multi-uoms doesn't work with rental (for now)
+        if self.rent_ok:
+            return False
+        return super()._has_multiple_uoms()

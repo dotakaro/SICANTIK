@@ -4,7 +4,7 @@ from cryptography import x509
 from odoo import models, fields, api
 
 
-class Certificate(models.Model):
+class CertificateCertificate(models.Model):
     _inherit = "certificate.certificate"
 
     user_id = fields.Many2one('res.users', 'Certificate Owner',

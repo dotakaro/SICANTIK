@@ -1,5 +1,4 @@
 import {
-    assertSteps,
     click,
     contains,
     insertText,
@@ -8,10 +7,10 @@ import {
     registerArchs,
     start,
     startServer,
-    step,
 } from "@mail/../tests/mail_test_helpers";
 import { describe, test } from "@odoo/hoot";
-import { onRpc, serverState } from "@web/../tests/web_test_helpers";
+import { asyncStep, onRpc, serverState, waitForSteps } from "@web/../tests/web_test_helpers";
+import { press } from "@odoo/hoot-dom";
 import { defineWebsiteHelpdeskLivechatModels } from "@website_helpdesk_livechat/../tests/website_helpdesk_livechat_test_helpers";
 
 describe.current.tags("desktop");
@@ -35,7 +34,7 @@ test("[technical] /ticket command gets a body as kwarg", async () => {
         seen_message_id: messageId,
     });
     onRpc("discuss.channel", "execute_command_helpdesk", ({ kwargs }) => {
-        step(`execute command helpdesk. body: ${kwargs.body}`);
+        asyncStep(`execute command helpdesk. body: ${kwargs.body}`);
         // random value returned in order for the mock server to know that this route is implemented.
         return true;
     });
@@ -43,8 +42,8 @@ test("[technical] /ticket command gets a body as kwarg", async () => {
     await openDiscuss(channelId);
     await contains(".o-mail-Discuss-threadName[title='General']");
     await insertText(".o-mail-Composer-input", "/ticket something");
-    await click(".o-mail-Composer-send:enabled");
-    await assertSteps(["execute command helpdesk. body: /ticket something"]);
+    await press("Enter");
+    await waitForSteps(["execute command helpdesk. body: /ticket something"]);
 });
 
 test("canned response should work in helpdesk ticket", async () => {
@@ -69,6 +68,6 @@ test("canned response should work in helpdesk ticket", async () => {
     await click(".o-mail-Chatter button", { text: "Send message" });
     await contains(".o-mail-Composer-suggestion strong", { count: 0, text: "hello" });
 
-    await insertText(".o-mail-Composer-input", ":");
+    await insertText(".o-mail-Composer-input", "::");
     await contains(".o-mail-Composer-suggestion strong", { text: "hello" });
 });

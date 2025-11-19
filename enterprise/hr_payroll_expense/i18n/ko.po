@@ -3,17 +3,15 @@
 # 	* hr_payroll_expense
 # 
 # Translators:
-# Wil Odoo, 2024
-# Sarah Park, 2024
-# Daye Jeong, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:26+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Daye Jeong, 2024\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -33,18 +31,39 @@ msgstr ""
 "                        </span>"
 
 #. module: hr_payroll_expense
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "<span class=\"o_stat_text\">Payslip</span>"
 msgstr "<span class=\"o_stat_text\">급여 명세서</span>"
 
 #. module: hr_payroll_expense
-#: model:ir.model,name:hr_payroll_expense.model_hr_expense_sheet
-msgid "Expense Report"
-msgstr "지출결의서"
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_move__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payroll_structure__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__display_name
+msgid "Display Name"
+msgstr "표시명"
+
+#. module: hr_payroll_expense
+#: model:ir.model,name:hr_payroll_expense.model_hr_expense
+msgid "Expense"
+msgstr "경비"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "Expense (\"%(name)s\") was removed from the next payslip."
+msgstr "다음 급여 명세서에서 경비(\"%(name)s\")가 제거되었습니다."
+
+#. module: hr_payroll_expense
+#. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "Expense (\"%(name)s\") will be added to the next payslip."
+msgstr "다음 급여 명세서에서 경비(\"%(name)s\")가 추가되었습니다."
+
+#. module: hr_payroll_expense
+#. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
 "Expense reimbursement rule needs to be configured to add expenses to payslips.\n"
 "Please create one salary rule with the \"%(code)s\" code on the relevant salary structures."
@@ -53,19 +72,8 @@ msgstr ""
 "해당 급여 구조에 \"%(code)s\" 코드를 사용하여 급여 규칙을 만드십시오. "
 
 #. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "Expense report (\"%(name)s\") was removed from the next payslip."
-msgstr "다음 급여 명세서에서 경비 보고서(\"%(name)s\")가 제거되었습니다."
-
-#. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "Expense report (\"%(name)s\") will be added to the next payslip."
-msgstr "다음 급여 명세서에서 경비 보고서(\"%(name)s\")가 추가되었습니다."
-
-#. module: hr_payroll_expense
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__expense_sheet_ids
+#: model:hr.payslip.input.type,name:hr_payroll_expense.expense_other_input
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__expense_ids
 #: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_payslip_view_form_inherit_expense
 msgid "Expenses"
 msgstr "경비"
@@ -81,15 +89,24 @@ msgid "Expenses Reimbursement"
 msgstr "비용 환급"
 
 #. module: hr_payroll_expense
-#: model:ir.model.fields,help:hr_payroll_expense.field_hr_payslip__expense_sheet_ids
+#: model:ir.model.fields,help:hr_payroll_expense.field_hr_payslip__expense_ids
 msgid "Expenses to reimburse to employee."
 msgstr "직원에게 상환되는 비용"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid "Go to salary rules"
 msgstr "급여 규정으로 이동"
+
+#. module: hr_payroll_expense
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_move__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payroll_structure__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__id
+msgid "ID"
+msgstr "ID"
 
 #. module: hr_payroll_expense
 #: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__is_already_paid_through_a_payslip
@@ -107,10 +124,10 @@ msgstr "전표 입력"
 msgid ""
 "No debit account found in the '%(rule_name)s' payslip salary rule. Please "
 "add a payable debit account to be able to create an accounting entry for the"
-" expense reports linked to this payslip."
+" expenses linked to this payslip."
 msgstr ""
-"'%(rule_name)s' 급여명세서의 급여 규칙에서 직불 계좌를 찾을 수 없습니다. 이 급여명세서와 연결된 지출결의서에 대한 회계 "
-"항목을 생성하려면 지급 가능한 직불 계좌를 추가하세요."
+"'%(rule_name)s' 급여명세서의 급여 규칙에서 직불 계좌를 찾을 수 없습니다. 이 급여명세서와 연결된 경비에 대해 회계 항목을 "
+"생성하려면 지급 가능한 직불 계좌를 추가하세요."
 
 #. module: hr_payroll_expense
 #. odoo-python
@@ -122,11 +139,11 @@ msgstr "'%(structure_name)s' 구조에서 경비를 처리하는 급여 규칙�
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
-"Only approved expense reports that were paid by an employee can be "
+"Only approved and posted expenses that were paid by an employee can be "
 "reimbursed in a payslip."
-msgstr "직원이 지불한 승인된 경비보고서만 급여 명세서를 통해 환급받을 수 있습니다."
+msgstr "승인 및 게시된 경비 중에서 직원이 결제한 항목만 급여명세서를 통해 환급받을 수 있습니다."
 
 #. module: hr_payroll_expense
 #: model:ir.model,name:hr_payroll_expense.model_account_payment_register
@@ -140,13 +157,13 @@ msgstr "급여 명세서"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense_sheet__payslip_id
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__payslip_id
 msgid "Payslip"
 msgstr "급여 명세서"
 
 #. module: hr_payroll_expense
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense_sheet__refund_in_payslip
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__refund_in_payslip
 msgid "Reimburse In Next Payslip"
 msgstr "다음 급여 명세서에서 상환"
 
@@ -157,13 +174,13 @@ msgid "Reimbursed Expenses"
 msgstr "상환된 비용"
 
 #. module: hr_payroll_expense
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "Remove from Payslip"
 msgstr "급여명세서에서 제거"
 
 #. module: hr_payroll_expense
 #: model:ir.actions.server,name:hr_payroll_expense.hr_expense_add_to_payslip_action_server
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "Report in Next Payslip"
 msgstr "다음 급여 명세서에서 보고"
 
@@ -193,21 +210,13 @@ msgstr ""
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid ""
-"The state of the accounting entries linked to this expense report do not "
-"allow it to be reimbursed through a payslip."
-msgstr "이 경비 보고서에 연결된 회계 항목의 상태로 인해 급여 명세서를 통해 환급할 수 없습니다."
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "There are no valid expenses selected."
+msgstr "선택된 유효 비용이 없습니다."
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "There are no valid expense sheets selected."
-msgstr "유효한 경비 지출 관련 시트를 선택하지 않았습니다."
-
-#. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
 "You cannot remove an expense from a payslip that has already been validated.\n"
 "Expenses can only be removed from draft or canceled payslips."
@@ -217,12 +226,17 @@ msgstr ""
 
 #. module: hr_payroll_expense
 #. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "You do not have permission to add this expense to a payslip."
+msgstr "급여명세서에 이 비용을 추가할 권한이 없습니다."
+
+#. module: hr_payroll_expense
+#. odoo-python
 #: code:addons/hr_payroll_expense/models/hr_payslip.py:0
 msgid ""
-"You don't have the access rights to link an expense report to a payslip. You"
-" need to be a payroll officer to do that."
-msgstr ""
-"경비 보고서를 급여 명세서에 연결할 수 있는 액세스 권한이 없습니다. 이 작업을 수행하려면 급여 담당자 권한을 부여받아야 합니다."
+"You don't have the access rights to link an expense to a payslip. You need "
+"to be a payroll officer to do that."
+msgstr "경비를 급여 명세서에 연결할 수 있는 액세스 권한이 없습니다. 이 작업을 수행하려면 급여 담당자 권한이 있어야 합니다."
 
 #. module: hr_payroll_expense
 #. odoo-python

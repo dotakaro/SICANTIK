@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { Model } from "@web/model/model";
 import { session } from "@web/session";
@@ -7,6 +5,7 @@ import { resequence } from "@web/model/relational_model/utils";
 import { browser } from "@web/core/browser/browser";
 import { formatDateTime, parseDate, parseDateTime } from "@web/core/l10n/dates";
 import { KeepLast } from "@web/core/utils/concurrency";
+import { orderByToString } from "@web/search/utils/order_by";
 
 const DATE_GROUP_FORMATS = {
     year: "yyyy",
@@ -91,8 +90,8 @@ export class MapModel extends Model {
     get canResequence() {
         return (
             this.metaData.defaultOrder &&
-            !this.metaData.fields[this.metaData.defaultOrder.name].readonly &&
-            this.metaData.fields[this.metaData.defaultOrder.name].type === "integer" &&
+            !this.metaData.fields[this.metaData.defaultOrder[0].name].readonly &&
+            this.metaData.fields[this.metaData.defaultOrder[0].name].type === "integer" &&
             this.metaData.allowResequence &&
             !this.metaData.groupBy?.length
         );
@@ -105,8 +104,8 @@ export class MapModel extends Model {
      * @param {Number} targetRecordId
      */
     async resequence(movedId, targetId) {
-        const fieldName = this.metaData.defaultOrder.name;
-        const asc = this.metaData.defaultOrder.asc;
+        const fieldName = this.metaData.defaultOrder[0].name;
+        const asc = this.metaData.defaultOrder[0].asc;
         const resequenceProm = resequence({
             records: this.data.records,
             resModel: this.metaData.resModel,
@@ -121,7 +120,7 @@ export class MapModel extends Model {
         // we need to notify after the synchronous record change
         this.notify();
         const resequencedRecords = await resequenceProm;
-        if (resequencedRecords) {
+        if (resequencedRecords.length) {
             for (const resequencedRecord of resequencedRecords) {
                 const record = this.data.records.find((r) => r.id === resequencedRecord.id);
                 record[fieldName] = resequencedRecord[fieldName];
@@ -288,18 +287,11 @@ export class MapModel extends Model {
      */
     _fetchRecordData(metaData, data) {
         const specification = this._getRecordSpecification(metaData, data);
-        const orderBy = [];
-        if (metaData.defaultOrder) {
-            orderBy.push(metaData.defaultOrder.name);
-            if (metaData.defaultOrder.asc) {
-                orderBy.push("ASC");
-            }
-        }
         return this.orm.webSearchRead(metaData.resModel, metaData.domain, {
             specification,
             limit: metaData.limit,
             offset: metaData.offset,
-            order: orderBy.join(" "),
+            order: orderByToString(metaData.defaultOrder || []),
             context: metaData.context,
         });
     }
@@ -380,10 +372,6 @@ export class MapModel extends Model {
         return ERROR_MESSAGES[message];
     }
 
-    _getEmptyGroupLabel(fieldName) {
-        return _t("None");
-    }
-
     /**
      * @protected
      * @returns {Object} the fetched records grouped by the groupBy field.
@@ -391,6 +379,7 @@ export class MapModel extends Model {
     async _getRecordGroups(metaData, data) {
         const [fieldName, subGroup] = data.groupByKey.split(":");
         const fieldType = metaData.fields[fieldName].type;
+        const unsetName = metaData.fields[fieldName].falsy_value_label || _t("None");
         const groups = {};
         function addToGroup(id, name, record) {
             if (!groups[id]) {
@@ -410,15 +399,17 @@ export class MapModel extends Model {
                         addToGroup(r.id, r.display_name, record);
                     }
                 } else {
-                    id = name = this._getEmptyGroupLabel(fieldName);
+                    id = name = unsetName;
                     addToGroup(id, name, record);
                 }
             } else {
                 if (["date", "datetime"].includes(fieldType) && value) {
                     const date = fieldType === "date" ? parseDate(value) : parseDateTime(value);
-                    id = name = date.toFormat(DATE_GROUP_FORMATS[subGroup]);
+                    id = name = date.toFormat(DATE_GROUP_FORMATS[subGroup || "month"]);
                 } else if (fieldType === "boolean") {
                     id = name = value ? _t("Yes") : _t("No");
+                } else if (fieldType === "integer") {
+                    id = name = value || "0";
                 } else if (fieldType === "selection") {
                     const selected = metaData.fields[fieldName].selection.find(
                         (o) => o[0] === value
@@ -432,7 +423,7 @@ export class MapModel extends Model {
                     name = value;
                 }
                 if (!id && !name) {
-                    id = name = this._getEmptyGroupLabel(fieldName);
+                    id = name = unsetName;
                 }
                 addToGroup(id, name, record);
             }

@@ -57,7 +57,7 @@ Welcome to {{4}} office''',
                 'variable_ids': [
                     (5, 0, 0),
                     (0, 0, {'name': "{{1}}", 'line_type': "body", 'field_type': "user_name", 'demo_value': "Jigar"}),
-                    (0, 0, {'name': "{{2}}", 'line_type': "body", 'field_type': "user_mobile", 'demo_value': "+91 12345 12345"}),
+                    (0, 0, {'name': "{{2}}", 'line_type': "body", 'field_type': "user_phone", 'demo_value': "+91 12345 12345"}),
                     (0, 0, {'name': "{{3}}", 'line_type': "body", 'field_type': "field", 'demo_value': "sample country", 'field_name': 'country_id'}),
                     (0, 0, {'name': "{{4}}", 'line_type': "body", 'field_type': "free_text", 'demo_value': "Odoo In"}),
                 ],
@@ -103,7 +103,7 @@ class WhatsAppComposerRendering(WhatsAppComposerCase, WhatsAppFullCase, CronMixi
         self.assertWAMessageFromRecord(
             test_record,
             fields_values={
-                'body': f'<p>Hello I am {self.env.user.name},<br>Here my mobile number: {self.env.user.mobile},'
+                'body': f'<p>Hello I am {self.env.user.name},<br>Here my mobile number: {self.env.user.phone},'
                         f'<br>You are coming from {test_record.country_id.name}.<br>Welcome to {free_text} office</p>',
             },
         )
@@ -142,12 +142,12 @@ class WhatsAppComposerRendering(WhatsAppComposerCase, WhatsAppFullCase, CronMixi
         test_record_with_datetime_false = test_record_with_tz.copy({'datetime': False})
 
         for test_record, user_tz, tmpl_model, expected_formatted_date in [
-            (self.test_base_records[0], 'Asia/Kolkata', wa_base_model_id, 'Jan 19, 2024, 5:30:00 AM Asia/Kolkata'),
-            (self.test_base_records[0], False, wa_base_model_id, 'Jan 19, 2024, 12:00:00 AM UTC'),
-            (test_record_with_tz, 'Asia/Kolkata', wa_tz_model_id, 'Jan 19, 2024, 1:00:00 AM Europe/Brussels'),
-            (test_record_with_tz, False, wa_tz_model_id, 'Jan 19, 2024, 1:00:00 AM Europe/Brussels'),
-            (test_record_with_tz_false, 'Asia/Kolkata', wa_tz_model_id, 'Jan 19, 2024, 5:30:00 AM Asia/Kolkata'),
-            (test_record_with_tz_false, False, wa_tz_model_id, 'Jan 19, 2024, 12:00:00 AM UTC'),
+            (self.test_base_records[0], 'Asia/Kolkata', wa_base_model_id, '01/19/2024 05:30:00 Asia/Kolkata'),
+            (self.test_base_records[0], False, wa_base_model_id, '01/19/2024 00:00:00 UTC'),
+            (test_record_with_tz, 'Asia/Kolkata', wa_tz_model_id, '01/19/2024 01:00:00 Europe/Brussels'),
+            (test_record_with_tz, False, wa_tz_model_id, '01/19/2024 01:00:00 Europe/Brussels'),
+            (test_record_with_tz_false, 'Asia/Kolkata', wa_tz_model_id, '01/19/2024 05:30:00 Asia/Kolkata'),
+            (test_record_with_tz_false, False, wa_tz_model_id, '01/19/2024 00:00:00 UTC'),
             (test_record_with_datetime_false, 'Asia/Kolkata', wa_tz_model_id, ''),
         ]:
             with self.subTest(test_record=test_record, user_tz=user_tz, tmpl_model=tmpl_model):
@@ -329,7 +329,7 @@ class WhatsAppComposerRendering(WhatsAppComposerCase, WhatsAppFullCase, CronMixi
                 {'header_text': 'Header {{1}}',
                  'variable_ids': [
                     (5, 0),
-                    (0, 0, {'name': '{{1}}', 'line_type': 'header', 'field_type': 'user_mobile', 'demo_value': sample_text})
+                    (0, 0, {'name': '{{1}}', 'line_type': 'header', 'field_type': 'user_phone', 'demo_value': sample_text})
                  ] + base_variable_ids,
                  },
                 # image
@@ -396,7 +396,7 @@ class WhatsAppComposerRendering(WhatsAppComposerCase, WhatsAppFullCase, CronMixi
                 {'body': f'<p><b>Header World</b></p><p>Hello {self.test_base_records[0].name}</p>'},
                 {'body': f'<p><b>Header {sample_text}</b></p><p>Hello {self.test_base_records[0].name}</p>'},
                 {'body': f'<p><b>Header {self.env.user.name}</b></p><p>Hello {self.test_base_records[0].name}</p>'},
-                {'body': f'<p><b>Header {self.env.user.mobile}</b></p><p>Hello {self.test_base_records[0].name}</p>'},
+                {'body': f'<p><b>Header {self.env.user.phone}</b></p><p>Hello {self.test_base_records[0].name}</p>'},
                 # image
                 {},
                 # video

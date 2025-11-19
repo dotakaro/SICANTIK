@@ -18,7 +18,7 @@ class TestPurchaseQualityCheck(TestQualityCommon):
             'name': 'Buyer',
             'login': 'buyer',
             'email': 'superbuyer@example.com',
-            'groups_id': [
+            'group_ids': [
                 # Internal
                 (4, self.ref('base.group_user')),
                 # Purchase: User:
@@ -46,7 +46,7 @@ class TestPurchaseQualityCheck(TestQualityCommon):
                     'name': self.product.name,
                     'product_id': self.product.id,
                     'product_qty': 1.0,
-                    'product_uom': self.product.uom_po_id.id,
+                    'product_uom_id': self.product.uom_id.id,
                     'price_unit': 1.0,
                     'date_planned': fields.Datetime.now(),
                 })]

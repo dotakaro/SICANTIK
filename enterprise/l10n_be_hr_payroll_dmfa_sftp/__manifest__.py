@@ -6,7 +6,10 @@
     'category': 'Human Resources',
     'depends': ['l10n_be_hr_payroll', 'certificate'],
     'external_dependencies': {
-        'python': ['paramiko']
+        'python': ['paramiko'],
+        'apt': {
+            'pyjwt': 'python3-paramiko',
+        },
     },
     'description': """
 synchronize DmfA to ONSS portal
@@ -41,5 +44,6 @@ requirements and reduces manual interaction with the SFTP portal.
         'security/security.xml',
         'data/ir_cron_data.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

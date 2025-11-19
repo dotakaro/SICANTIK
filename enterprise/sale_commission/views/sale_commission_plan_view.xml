@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="sale_commission_plan_user_view_list" model="ir.ui.view">
+        <field name="name">sale.commission.plan.user.view.list</field>
+        <field name="model">sale.commission.plan.user</field>
+        <field name="arch" type="xml">
+            <list multi_edit="1">
+                <field name="user_id"/>
+                <field name="plan_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="sale_commission_plan_user_view_search" model="ir.ui.view">
+        <field name="name">sale.commission.plan.user.view.search</field>
+        <field name="model">sale.commission.plan.user</field>
+        <field name="arch" type="xml">
+            <search string="Commission Plan User">
+                <field name="user_id" string="User"/>
+                <separator/>
+                 <field name="plan_id"/>
+                <group expand="1" string="Group By">
+                    <filter string="User" name="user" context="{'group_by':'user_id'}"/>
+                    <filter string="Plan" name="plan" context="{'group_by':'plan_id'}"/>
+                    <filter string="Date From" name="date_from" context="{'group_by':'date_from'}"/>
+                    <filter string="Date To" name="date_to" context="{'group_by':'date_to'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
     <record id="sale_commission_plan_view_form" model="ir.ui.view">
         <field name="name">sale.commission.plan.view.form</field>
         <field name="model">sale.commission.plan</field>
@@ -43,9 +74,8 @@
                         </group>
                         <group>
                             <label for="date_from" string="Effective Period"/>
-                            <div>
-                                <field name="date_from" class="oe_inline" readonly="state != 'draft'" force_save="1"/>
-                               <i class="oi oi-fw oi-arrow-right"/><field name="date_to" class="oe_inline" readonly="state != 'draft'" force_save="1"/>
+                            <div class="d-inline-flex">
+                                <field name="date_from" string="Date" widget="daterange" options="{'end_date_field': 'date_to'}" required="1" readonly="state != 'draft'" force_save="1"/>
                             </div>
                             <field name="periodicity" string="Target Frequency" readonly="state != 'draft'" force_save="1"/>
                         </group>
@@ -70,8 +100,9 @@
                                     <field name="target_commission_graph" widget="commission_graph" nolabel="1"/>
                                 </group>
                             </group>
+                            <button string="Commission table" type="object" name="action_export_targets" icon="fa-download" class="btn btn-link"/>
                         </page>
-                        <page string="Targets" invisible="type == 'achieve'">
+                        <page string="Targets" invisible="type != 'target'">
                             <field name="target_ids" readonly="state != 'draft'">
                                 <list create="0" delete="0" editable="bottom">
                                     <field name="name" force_save="1"/>
@@ -97,7 +128,7 @@
                         </page>
                         <page string="Periods" invisible="type == 'target'">
                             <field name="target_ids" readonly="state != 'draft'">
-                                <list create="0" delete="0">
+                                <list create="0" delete="0" editable="bottom">
                                     <field name="name" force_save="1"/>
                                     <field name="date_from" optional="hide" force_save="1"/>
                                     <field name="date_to" optional="hide" force_save="1"/>
@@ -138,7 +169,6 @@
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="date_from" string="Start Date"/>
                 <field name="date_to" string="End Date"/>
-                <field name="state"/>
                 <field name="state" widget="badge"
                    decoration-info="state == 'draft'"
                    decoration-success="state == 'approved'"

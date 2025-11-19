@@ -110,7 +110,7 @@
                             <field name="active" invisible="1"/>
                             <field name="model_name" invisible="1"/>
                             <field name="utm_campaign_id" required="0" invisible="1"/>
-                            <field name="unique_field_id" string="Unicity based on " options="{'no_create_edit': True, 'no_open': True}"/>
+                            <field name="unique_field_id" string="Unicity based on " options="{'no_create': True, 'no_open': True}"/>
                         </group>
                     </group>
                     <group>
@@ -123,13 +123,15 @@
                         </div>
                         <field name="marketing_activity_ids" widget="hierarchy_kanban" mode="kanban" nolabel="1"
                             class="o_ma_hierarchy_container o_ma_campaign_hierarchy"
-                            add-label="Add new activity"
                             context="{
                                 'default_campaign_id': id,
                                 'default_model_id': model_id,
                                 'default_utm_campaign_id': utm_campaign_id,
                             }">
                             <kanban limit="1000" default_order="interval_standardized" can_open="false">
+                                <control>
+                                    <create class="o-kanban-button-new" string="Add new activity"/>
+                                </control>
                                 <field name="interval_standardized" />
                                 <field name="model_name" />
                                 <field name="trigger_type" />
@@ -175,11 +177,11 @@
                                             <div class="o_ma_card card">
                                                 <div class="o_ma_title_bar">
                                                     <div class="o_ma_title ps-2 mt-0">
-                                                        <a type="edit" t-attf-class="fw-medium mb0 mt0 fs-3 #{read_only_mode and 'o_ma_full' or None}" t-att-title="record.name.raw_value"><field name="name" /></a>
+                                                        <a type="open" t-attf-class="fw-medium mb0 mt0 fs-3 #{!widget.editable and 'o_ma_full' or None}" t-att-title="record.name.raw_value"><field name="name" /></a>
                                                         <div class="o_ma_desc"><field name="activity_type" /></div>
                                                     </div>
                                                     <div class="o_ma_switch">
-                                                        <a t-if="!read_only_mode" type="delete" title="Delete" role="button" class="float-start mt8 fa fa-trash btn btn-link btn-sm" href="#"/>
+                                                        <a t-if="widget.deletable" type="delete" title="Delete" role="button" class="float-start mt8 fa fa-trash btn btn-link btn-sm" href="#"/>
                                                         <span role="img" title="Graph" aria-label="Graph"
                                                              class="o_ma_activity_tab active" data-tab-type="graph">
                                                             <i class="fa fa-pie-chart" />
@@ -226,7 +228,7 @@
                                                     </div>
                                                 </div>
                                                 <field name="domain" widget="domain" options="{'foldable': True, 'model': 'model_name'}" readonly="1" class="o_pane o_pane_filter d-none"/>
-                                                <div t-if="!read_only_mode" class="o_ma_child_activity text-center">
+                                                <div t-if="widget.editable" class="o_ma_child_activity text-center">
                                                     <div class="o_ma_child_activity_title card-footer user-select-none">
                                                         <i class="fa fa-plus-circle" /> Add child activity
                                                     </div>

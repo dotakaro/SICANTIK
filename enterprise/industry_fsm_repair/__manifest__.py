@@ -4,7 +4,7 @@
     'name': 'Field Service Repair',
     'summary':  'Allow user without repair right to access fsm stock.picking',
     'description': "Allow user without repair right to access fsm stock.picking",
-    'category': 'Hidden',
+    'category': 'Services/Field Service',
     'version': '1.0',
     'depends': ['industry_fsm_stock', 'repair'],
     'data': [
@@ -12,5 +12,6 @@
         'views/stock_picking_views.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

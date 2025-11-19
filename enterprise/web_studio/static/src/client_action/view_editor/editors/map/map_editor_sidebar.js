@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { mapView } from "@web_map/map_view/map_view";
 import { registry } from "@web/core/registry";
 
@@ -7,10 +5,10 @@ import { Component, useState } from "@odoo/owl";
 import { InteractiveEditorSidebar } from "@web_studio/client_action/view_editor/interactive_editor/interactive_editor_sidebar";
 import { Property } from "@web_studio/client_action/view_editor/property/property";
 import { SidebarViewToolbox } from "@web_studio/client_action/view_editor/interactive_editor/sidebar_view_toolbox/sidebar_view_toolbox";
-import { Record } from "@web/model/record";
 import { Many2ManyTagsField } from "@web/views/fields/many2many_tags/many2many_tags_field";
 import { useEditNodeAttributes } from "@web_studio/client_action/view_editor/view_editor_model";
 import { MultiRecordSelector } from "@web/core/record_selectors/multi_record_selector";
+import { fieldsToChoices } from "@web_studio/client_action/view_editor/editors/utils";
 
 export class MapEditorSidebar extends Component {
     static template = "web_studio.ViewEditor.MapEditorSidebar";
@@ -22,7 +20,6 @@ export class MapEditorSidebar extends Component {
         InteractiveEditorSidebar,
         Property,
         SidebarViewToolbox,
-        Record,
         Many2ManyTagsField,
         MultiRecordSelector,
     };
@@ -75,6 +72,14 @@ export class MapEditorSidebar extends Component {
             .map((field) => ({ label: `${field.string} (${field.name})`, value: field.name }));
     }
 
+    get defaultGroupbyChoices() {
+        return fieldsToChoices(
+            this.viewEditorModel.fields,
+            this.viewEditorModel.GROUPABLE_TYPES,
+            (field) => field.store
+        );
+    }
+
     /**
      * @param {Array<Number>} resIds
      */
@@ -96,6 +101,10 @@ export class MapEditorSidebar extends Component {
                 field_ids: operationType === "add" ? newIds : toRemoveIds,
             },
         });
+    }
+
+    editDefaultGroupBy(value) {
+        this.editArchAttributes({ default_group_by: value.join(",") });
     }
 }
 

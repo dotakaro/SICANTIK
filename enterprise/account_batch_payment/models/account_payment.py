@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import models, fields, api, _
+from odoo import Command, models, fields, api, _
 
 
 class AccountPayment(models.Model):
     _inherit = "account.payment"
 
-    batch_payment_id = fields.Many2one('account.batch.payment', ondelete='set null', copy=False)
+    batch_payment_id = fields.Many2one('account.batch.payment', ondelete='set null', copy=False, index='btree_not_null')
     amount_signed = fields.Monetary(
         currency_field='currency_id', compute='_compute_amount_signed',
         help='Negative value of amount field if payment_type is outbound')
@@ -23,6 +23,18 @@ class AccountPayment(models.Model):
 
     @api.model
     def create_batch_payment(self):
+        valid_payment_states = self.env['account.batch.payment']._valid_payment_states()
+        if any(payment.state not in valid_payment_states for payment in self):
+            create_batch_error_wizard = self.env['account.create.batch.error.wizard'].create({'payment_ids': [Command.set(self.ids)]})
+            return {
+                'name': _('Create Batch'),
+                'type': 'ir.actions.act_window',
+                'view_mode': 'form',
+                'target': 'new',
+                'res_model': 'account.create.batch.error.wizard',
+                'res_id': create_batch_error_wizard.id,
+            }
+
         # We use self[0] to create the batch; the constrains on the model ensure
         # the consistency of the generated data (same journal, same payment method, ...)
         batch = self.env['account.batch.payment'].create({

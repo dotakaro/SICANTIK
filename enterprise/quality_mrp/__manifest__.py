@@ -4,7 +4,7 @@
 {
     'name': 'MRP features for Quality Control',
     'version': '1.0',
-    'category': 'Manufacturing/Quality',
+    'category': 'Supply Chain/Quality',
     'sequence': 50,
     'summary': 'Quality Management with MRP',
     'depends': ['quality_control', 'mrp'],
@@ -19,5 +19,6 @@ Adds workcenters to Quality Control
         'wizard/on_demand_quality_check_wizard_views.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

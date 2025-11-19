@@ -1,49 +1,65 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.tests import tagged
-from odoo.addons.website.tools import MockRequest
 from odoo.exceptions import UserError
-from .common import TestWebsiteSaleSubscriptionCommon
+from odoo.tests import tagged
+
+from odoo.addons.website_sale.controllers.cart import Cart
+from odoo.addons.website_sale.tests.common import MockRequest
+
+from .common import WebsiteSaleSubscriptionCommon
+
 
 @tagged('post_install', '-at_install')
-class TestWebsiteSaleSubscription(TestWebsiteSaleSubscriptionCommon):
+class TestWebsiteSaleSubscription(WebsiteSaleSubscriptionCommon):
 
     def test_cart_update_so_reccurence(self):
         self.env['product.pricelist'].sudo().search([('active', '=', True)]).action_archive()
+        self.env['product.pricelist.item'].search([('plan_id', '!=', False)]).pricelist_id = False
         # Product not recurring
-        product = self.env['product.template'].with_context(website_id=self.current_website.id).create({
+        product = self.env['product.template'].with_context(website_id=self.website.id).create({
             'name': 'Non-recurring Product',
             'list_price': 15,
             'type': 'service',
         })
-        so = self.env['sale.order'].create({
-            'partner_id': self.partner.id,
-            'company_id': self.company.id,
-        })
 
         # Mocking to check if error raised on Website when adding
         # 2 subscription product with different recurrence
-        with MockRequest(self.env, website=self.current_website, sale_order_id=so.id):
-            so = self.current_website.sale_get_order()
+        with MockRequest(self.env, website=self.website) as request:
+            so = request.website._create_cart()
             self.assertFalse(so.plan_id)
-            so._cart_update(product_id=product.product_variant_ids.id, add_qty=1)
+            so._cart_add(product_id=product.product_variant_ids.id, quantity=1)
             self.assertFalse(so.plan_id)
-            so._cart_update(product_id=self.sub_product.product_variant_ids.id, add_qty=1)
+            so._cart_add(product_id=self.sub_product.product_variant_ids.id, quantity=1)
             self.assertEqual(so.plan_id, self.plan_week)
             with self.assertRaises(UserError, msg="You can't add a subscription product to a sale order with another recurrence."):
-                so._cart_update(product_id=self.sub_product_2.product_variant_ids.id, add_qty=1)
-            so._cart_update(product_id=self.sub_product.product_variant_ids.id, add_qty=None, set_qty=0)
+                # Must go through controller since _is_add_to_cart_allowed is checked there
+                Cart().add_to_cart(
+                    product_template_id=self.sub_product_2.id,
+                    product_id=self.sub_product_2.product_variant_id.id,
+                    quantity=1.0,
+                )
+            so._cart_update_line_quantity(
+                line_id=so.order_line.filtered(
+                    lambda sol: sol.product_id == self.sub_product.product_variant_id
+                ).id,
+                quantity=0,
+            )
             self.assertFalse(so.plan_id)
-            so._cart_update(product_id=self.sub_product_2.product_variant_ids.id, add_qty=1)
+            so._cart_add(product_id=self.sub_product_2.product_variant_ids.id, quantity=1)
             self.assertEqual(so.plan_id, self.plan_month)
-            so._cart_update(product_id=self.sub_product_2.product_variant_ids.id, add_qty=None, set_qty=0)
+            so._cart_update_line_quantity(
+                line_id=so.order_line.filtered(
+                    lambda sol: sol.product_id == self.sub_product_2.product_variant_id
+                ).id,
+                quantity=0,
+            )
             self.assertFalse(so.plan_id)
 
     def test_combination_info_product(self):
-        self.sub_product = self.sub_product.with_context(website_id=self.current_website.id)
+        self.sub_product = self.sub_product.with_context(website_id=self.website.id)
 
-        with MockRequest(self.env, website=self.current_website):
+        with MockRequest(self.env, website=self.website) as request:
+            self.assertEqual(request.pricelist, self.pricelist)
             combination_info = self.sub_product._get_combination_info()
             self.assertEqual(combination_info['price'], 5)
             self.assertTrue(combination_info['is_subscription'])
@@ -51,27 +67,57 @@ class TestWebsiteSaleSubscription(TestWebsiteSaleSubscriptionCommon):
             self.assertEqual(combination_info['subscription_default_pricing_price'], 'Weekly: $ 5.00')
 
     def test_combination_info_variant_products(self):
-        template = self.sub_with_variants.with_context(website_id=self.current_website.id)
-        combination_info = template.product_variant_ids[0]._get_combination_info_variant()
+        template = self.sub_with_variants.with_context(website_id=self.website.id)
+        with MockRequest(self.env, website=self.website) as request:
+            self.assertEqual(request.pricelist, self.pricelist)
+            combination_info = template.product_variant_ids[0]._get_combination_info_variant()
         self.assertEqual(combination_info['price'], 10)
         self.assertTrue(combination_info['is_subscription'])
         self.assertEqual(combination_info['subscription_default_pricing_plan_id'], self.plan_week.id)
         self.assertEqual(combination_info['subscription_default_pricing_price'], 'Weekly: $ 10.00')
 
-        combination_info_variant_2 = template.product_variant_ids[-1]._get_combination_info_variant()
+        with MockRequest(self.env, website=self.website) as request:
+            self.assertEqual(request.pricelist, self.pricelist)
+            combination_info_variant_2 = template.product_variant_ids[-1]._get_combination_info_variant()
         self.assertEqual(combination_info_variant_2['price'], 25)
         self.assertTrue(combination_info_variant_2['is_subscription'])
         self.assertEqual(combination_info_variant_2['subscription_default_pricing_plan_id'], self.plan_month.id)
         self.assertEqual(combination_info_variant_2['subscription_default_pricing_price'], 'Monthly: $ 25.00')
 
     def test_combination_info_multi_pricelist(self):
-        product = self.sub_product_3.with_context(website_id=self.current_website.id)
+        product = self.sub_product_3.with_context(website_id=self.website.id)
 
-        with MockRequest(self.env, website=self.current_website, website_sale_current_pl=self.pricelist_111.id):
+        with MockRequest(self.env, website=self.website, website_sale_current_pl=self.pricelist_111.id):
             combination_info = product._get_combination_info(only_template=True)
             self.assertEqual(combination_info['price'], 111)
 
-        self.current_website.invalidate_recordset(['pricelist_id'])
-        with MockRequest(self.env, website=self.current_website, website_sale_current_pl=self.pricelist_222.id):
+        with MockRequest(self.env, website=self.website, website_sale_current_pl=self.pricelist_222.id):
             combination_info = product._get_combination_info(only_template=True)
             self.assertEqual(combination_info['price'], 222)
+
+    def test_cart_add_one_time_and_plan_product(self):
+        one_time_product = self.one_time_sub_product
+
+        # Case 1: Add to cart without a plan (one-time purchase)
+        with MockRequest(self.env, website=self.website) as request:
+            so = request.website._create_cart()
+            self.assertFalse(so.plan_id)
+            so._cart_add(product_id=one_time_product.product_variant_ids.id, quantity=1)
+
+            # Check product in order line
+            so.plan_id = False
+
+            self.assertTrue(so.order_line)
+            self.assertEqual(so.order_line.product_id, one_time_product.product_variant_ids)
+            self.assertEqual(so.order_line.price_unit, one_time_product.list_price)
+
+        # Case 2: Add to cart with a plan selected
+        with MockRequest(self.env, website=self.website) as request:
+            so = request.website._create_cart()
+            so._cart_add(product_id=one_time_product.product_variant_ids.id, quantity=1)
+
+            # Check product and price with plan applied
+
+            self.assertTrue(so.order_line)
+            self.assertEqual(so.order_line.product_id, one_time_product.product_variant_ids)
+            self.assertEqual(so.plan_id, self.plan_month)

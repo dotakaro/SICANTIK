@@ -69,7 +69,7 @@ ERROR_MESSAGES = {
 }
 
 
-class Picking(models.Model):
+class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
     l10n_pe_edi_transport_type = fields.Selection(
@@ -183,7 +183,8 @@ class Picking(models.Model):
             errors = record._l10n_pe_edi_generate_missing_data_error_list()
             if not errors:
                 continue
-            raise UserError('%s\n\n%s' % (_("Invalid picking configuration:"), '\n'.join(errors)))
+            error_msg = self.env._("Invalid picking configuration:") + "\n\n" + "\n".join(errors)
+            raise UserError(error_msg)
 
     def _l10n_pe_edi_generate_missing_data_error_list(self):
         """ Check that all the required data is present before generating the delivery guide.

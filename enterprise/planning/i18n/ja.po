@@ -3,15 +3,15 @@
 # 	* planning
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Junko Augias, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-16 20:43+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Junko Augias, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
@@ -278,7 +278,7 @@ msgstr ""
 msgid ""
 "<i class=\"fa fa-check-circle\"/> Request to switch shift cancelled "
 "successfully."
-msgstr "<i class=\"fa fa-check-circle\"/> シフト交換の要求が正常に取消されました。 "
+msgstr "<i class=\"fa fa-check-circle\"/> シフト交換の要求が正常にキャンセルされました。 "
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_shift_notification
@@ -335,19 +335,16 @@ msgid "<i class=\"fa fa-long-arrow-right\" aria-label=\"Arrow icon\" title=\"Arr
 msgstr "<i class=\"fa fa-long-arrow-right\" aria-label=\"Arrow icon\" title=\"Arrow\"/>"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
-msgid "<i class=\"fa fa-long-arrow-right\" title=\"Arrow\"/>"
-msgstr "<i class=\"fa fa-long-arrow-right\" title=\"Arrow\"/>"
-
-#. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_assignee_contact_popover
 msgid "<i class=\"fa fa-phone\" title=\"Phone\" role=\"img\" style=\"padding-right: 2px\"/>"
 msgstr "<i class=\"fa fa-phone\" title=\"Phone\" role=\"img\" style=\"padding-right: 2px\"/>"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
-msgid "<i class=\"mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
-msgstr "<i class=\"mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
+msgid "<i class=\"me-1 mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
+msgstr ""
+"<i class=\"me-1 mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" "
+"title=\"Date\"/>"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
@@ -366,11 +363,6 @@ msgid ""
 msgstr ""
 "<i class=\"o_group_caret fa fa-fw me-1 fa-caret-down\"></i> <span "
 "class=\"text-truncate w-0 flex-grow-1 text-start\">ウェイター</span>"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_form
-msgid "<span class=\"ms-0 me-4\">Edit</span>"
-msgstr "<span class=\"ms-0 me-4\">編集</span>"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
@@ -527,7 +519,7 @@ msgstr "<span>従業員に以下を許可する:</span>"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_form
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid ""
 "<span>The employee assigned would like to switch shifts with someone "
 "else.</span>"
@@ -537,11 +529,6 @@ msgstr "<span>割当された従業員は他の人とシフトの交換を希望
 #: model_terms:ir.ui.view,arch_db:planning.res_config_settings_view_form
 msgid "<span>months ahead</span>"
 msgstr "<span>か月先</span>"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
-msgid "<strong>Allocated Time — </strong>"
-msgstr "<strong>割当時間 — </strong>"
 
 #. module: planning
 #: model:mail.template,body_html:planning.email_template_slot_single
@@ -720,7 +707,7 @@ msgid ""
 "                    </p>\n"
 "                    <div style=\"display: flex; margin: 15px;\">\n"
 "                        <div t-if=\"ctx.get('planning_url')\" style=\"margin-right: 15px;\">\n"
-"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #FFFFFF; background-color: #875A7B; border: solid #875A7B;\">View Your Planning</a>\n"
+"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" t-attf-style=\"color: {{object.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{object.company_id.email_secondary_color or '#875A7B'}};\">View Your Planning</a>\n"
 "                        </div>\n"
 "                        <div t-if=\"ctx.get('planning_url_ics')\">\n"
 "                            <a t-att-href=\"ctx['planning_url_ics']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #374151; background-color: #E7E9ED; border: solid #E7E9ED;\">Add to Calendar</a>\n"
@@ -761,7 +748,7 @@ msgstr ""
 "                    </p>\n"
 "                    <div style=\"display: flex; margin: 15px;\">\n"
 "                        <div t-if=\"ctx.get('planning_url')\" style=\"margin-right: 15px;\">\n"
-"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #FFFFFF; background-color: #875A7B; border: solid #875A7B;\">計画を見る</a>\n"
+"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" t-attf-style=\"color: {{object.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{object.company_id.email_secondary_color or '#875A7B'}};\">計画を見る</a>\n"
 "                        </div>\n"
 "                        <div t-if=\"ctx.get('planning_url_ics')\">\n"
 "                            <a t-att-href=\"ctx['planning_url_ics']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #374151; background-color: #E7E9ED; border: solid #E7E9ED;\">カレンダに追加する</a>\n"
@@ -845,11 +832,6 @@ msgstr "全てのシフト"
 msgid ""
 "All subsequent shifts will be deleted. Are you sure you want to continue?"
 msgstr "後続のすべてのシフトは削除されます。継続してもよろしいですか？"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
-msgid "Allocated Hours"
-msgstr "割り当てられた時間"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
@@ -977,7 +959,7 @@ msgstr "オープンシフトと販売オーダを自動的に計画"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_filter_panel/planning_calendar_filter_panel.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_filter_section/planning_calendar_filter_section.xml:0
 msgid "Avatar"
 msgstr "アバター"
 
@@ -985,11 +967,6 @@ msgstr "アバター"
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 msgid "Bartender"
 msgstr "バーテンダー"
-
-#. module: planning
-#: model:ir.model,name:planning.model_hr_employee_base
-msgid "Basic Employee"
-msgstr "基本社員"
 
 #. module: planning
 #: model:ir.ui.menu,name:planning.planning_menu_schedule_by_resource
@@ -1004,7 +981,7 @@ msgstr "役割ごと"
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.unwanted_slots_list_template
 msgid "CANCEL SWITCH"
-msgstr "交代を取消"
+msgstr "交代をキャンセル"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.period_report_template
@@ -1012,12 +989,28 @@ msgstr "交代を取消"
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_form_in_gantt
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
 msgid "Cancel Switch"
-msgstr "交換を取消"
+msgstr "交換をキャンセル"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Chat"
 msgstr "チャット"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid ""
+"Click on a day or select a range of days to create shifts for the selected "
+"resources using the shift template"
+msgstr "日をクリックするか、日付範囲を選択して、選択されたリソースに対してシフトテンプレートを使用してシフトを作成します。 "
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid ""
+"Clicking on a day or selecting a range of days will permanently delete its "
+"contents"
+msgstr "日をクリックするか日付範囲を選択すると、その内容は完全に削除されます"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_role__color
@@ -1086,6 +1079,16 @@ msgid "Crane"
 msgstr "クレーン"
 
 #. module: planning
+#: model_terms:ir.actions.act_window,help:planning.planning_action_open_shifts
+msgid ""
+"Create open shifts for the roles you will be needing to complete a mission.<br>\n"
+"                Allocate open shifts to resources based on their roles."
+msgstr ""
+"任務を完了するために必要な役割のオープンシフトを作成します。<br>\n"
+"                役割に基づいて人材リソースにオープンシフトを割り当てます。"
+
+#. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_planning__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_role__create_uid
@@ -1096,6 +1099,7 @@ msgid "Created by"
 msgstr "作成者"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_planning__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_role__create_date
@@ -1189,7 +1193,6 @@ msgstr ""
 #: code:addons/planning/static/src/views/planning_form/planning_form_view.js:0
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
 #: model_terms:ir.ui.view,arch_db:planning.planning_role_view_kanban
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
 msgid "Delete"
 msgstr "削除"
@@ -1225,13 +1228,20 @@ msgid "Discard"
 msgstr "破棄"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_hr_departure_wizard__display_name
+#: model:ir.model.fields,field_description:planning.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:planning.field_hr_employee_public__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__display_name
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_planning__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_role__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_send__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_slot__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__display_name
+#: model:ir.model.fields,field_description:planning.field_res_company__display_name
+#: model:ir.model.fields,field_description:planning.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:planning.field_resource_resource__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -1247,7 +1257,7 @@ msgstr "Doris Cole (バーテンダー)"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__state__draft
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__state__draft
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
@@ -1269,6 +1279,7 @@ msgid "Duration"
 msgstr "期間"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_slot__template_duration_days
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__duration_days
 msgid "Duration Days"
 msgstr "期間日"
@@ -1376,11 +1387,23 @@ msgid "Extra Message"
 msgstr "エクストラメッセージ"
 
 #. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Failed to undo reschedule"
+msgstr "再スケジュールの取り消しに失敗しました"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid "Filter by specific resources to show only their shifts"
+msgstr "特定のリソースでフィルタして、そのリソースのシフトのみを表示します"
+
+#. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_my_calendar
 msgid ""
 "Find here your planning. Assign yourself open shifts that match your roles, "
 "or indicate your unavailability."
-msgstr "あなたの計画をこちらで見つけてください。自分の役割に合ったオープンシフトを割り当てたり、稼働できないことを表示したりします。"
+msgstr "自分の計画をこちらで確認して下さい。自分の役割に合ったオープンシフトを割り当てたり、稼働不可であることを表示したりします。"
 
 #. module: planning
 #. odoo-python
@@ -1444,7 +1467,6 @@ msgstr "グループ化"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_hr_employee__has_slots
-#: model:ir.model.fields,field_description:planning.field_hr_employee_base__has_slots
 #: model:ir.model.fields,field_description:planning.field_hr_employee_public__has_slots
 msgid "Has Slots"
 msgstr "スロットあり"
@@ -1460,8 +1482,6 @@ msgid "Hours"
 msgstr "時間"
 
 #. module: planning
-#. odoo-javascript
-#: code:addons/planning/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__resource_type__user
 msgid "Human"
 msgstr "人的資源"
@@ -1487,13 +1507,20 @@ msgid "I am unavailable"
 msgstr "予定ありです"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_hr_departure_wizard__id
+#: model:ir.model.fields,field_description:planning.field_hr_employee__id
+#: model:ir.model.fields,field_description:planning.field_hr_employee_public__id
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__id
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__id
 #: model:ir.model.fields,field_description:planning.field_planning_planning__id
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__id
 #: model:ir.model.fields,field_description:planning.field_planning_role__id
 #: model:ir.model.fields,field_description:planning.field_planning_send__id
 #: model:ir.model.fields,field_description:planning.field_planning_slot__id
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__id
+#: model:ir.model.fields,field_description:planning.field_res_company__id
+#: model:ir.model.fields,field_description:planning.field_res_config_settings__id
+#: model:ir.model.fields,field_description:planning.field_resource_resource__id
 msgid "ID"
 msgstr "ID"
 
@@ -1515,6 +1542,7 @@ msgstr "満足な計画ができたら、 従業員にそれを<b>送信</b>し�
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_send__include_unassigned
+#: model_terms:ir.ui.view,arch_db:planning.planning_send_view_form
 msgid "Include Open Shifts"
 msgstr "オープンシフトを含めます"
 
@@ -1529,13 +1557,18 @@ msgid "Jeffrey Kelly (Bartender)"
 msgstr "Jeffrey Kelly (バーテンダー)"
 
 #. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
+msgid "Job Position"
+msgstr "職位"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__job_title
 #: model:ir.model.fields,field_description:planning.field_planning_slot__job_title
-#: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Job Title"
 msgstr "役職"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_planning__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_role__write_uid
@@ -1546,6 +1579,7 @@ msgid "Last Updated by"
 msgstr "最終更新者"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_planning__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_role__write_date
@@ -1557,7 +1591,7 @@ msgstr "最終更新日"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 msgid "Legend"
 msgstr "凡例"
 
@@ -1643,8 +1677,6 @@ msgid "Marc Demo"
 msgstr "Marc Demo"
 
 #. module: planning
-#. odoo-javascript
-#: code:addons/planning/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__resource_type__material
 msgid "Material"
 msgstr "製品"
@@ -1760,24 +1792,25 @@ msgstr "まだデータはありません！"
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_resources
 msgid "No material resources found. Let's create one!"
-msgstr "物的リソースがありません。作成しましょう！"
+msgstr "物的リソースがありません。作成しましょう!"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 msgid "No roles found. Let's create one!"
-msgstr "役割が見つかりません。役割を作成しましょう。"
+msgstr "役割が見つかりません。作成しましょう!"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_shift_template
 msgid "No shift templates found. Let's create one!"
-msgstr "シフトテンプレートが見つかりません。シフトテンプレートを作成しましょう。"
+msgstr "シフトテンプレートが見つかりません。作成しましょう!"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_my_calendar
+#: model_terms:ir.actions.act_window,help:planning.planning_action_open_shifts
 #: model_terms:ir.actions.act_window,help:planning.planning_action_schedule_by_resource
 #: model_terms:ir.actions.act_window,help:planning.planning_action_schedule_by_role
 msgid "No shifts found. Let's create one!"
-msgstr "シフトが見つかりません。新しいシフトを作成しましょう！"
+msgstr "シフトが見つかりません。作成しましょう!"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__name
@@ -1821,6 +1854,8 @@ msgstr "オープンシフト"
 #. odoo-javascript
 #: code:addons/planning/static/src/views/planning_calendar/planning_calendar_model.js:0
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_model.js:0
+#: model:ir.actions.act_window,name:planning.planning_action_open_shifts
+#: model:ir.ui.menu,name:planning.planning_menu_open_shifts
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
 #: model_terms:ir.ui.view,arch_db:planning.slot_report
@@ -1888,6 +1923,11 @@ msgid ""
 msgstr "<b>前週のスケジュールをコピー</b>して、ワンクリックでシフトを計画。メニューを開いてこのオプションにアクセスします。"
 
 #. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
+msgid "Planned Date"
+msgstr "予定日"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__start_time
 msgid "Planned Hours"
 msgstr "計画時間数"
@@ -1898,7 +1938,9 @@ msgstr "計画時間数"
 #: model:ir.actions.report,name:planning.report_planning_slot
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__allocation_type__planning
 #: model:ir.ui.menu,name:planning.planning_menu_root
+#: model:res.groups.privilege,name:planning.res_groups_privilege_planning
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_inherit
+#: model_terms:ir.ui.view,arch_db:planning.open_shifts_pivot_view
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_calendar
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_graph
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_my_calendar
@@ -1934,6 +1976,7 @@ msgstr "計画繰り返し"
 #. module: planning
 #: model:ir.model,name:planning.model_planning_role
 #: model_terms:ir.ui.view,arch_db:planning.planning_role_view_form
+#: model_terms:ir.ui.view,arch_db:planning.shifts_template_for_multi_create_in_calendar_view
 msgid "Planning Role"
 msgstr "計画の役割"
 
@@ -2019,6 +2062,18 @@ msgid "Press Ctrl to duplicate the shift"
 msgstr "Ctrlを押してシフトを複製"
 
 #. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_hooks.js:0
+msgid "Previous week's copied shifts removed"
+msgstr "前週のシフトは削除されました"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_hooks.js:0
+msgid "Previous week's shifts copied"
+msgstr "前週のシフトがコピーされました"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_res_config_settings__module_project_forecast
 msgid "Project Planning"
 msgstr "プロジェクト計画"
@@ -2033,6 +2088,11 @@ msgstr "プロジェクター"
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search
 msgid "Properties"
 msgstr "属性"
+
+#. module: planning
+#: model:ir.model,name:planning.model_hr_employee_public
+msgid "Public Employee"
+msgstr "公務員"
 
 #. module: planning
 #. odoo-javascript
@@ -2057,7 +2117,7 @@ msgstr "スケジュールの公開とメール送信"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__state__published
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__state__published
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
@@ -2310,12 +2370,6 @@ msgid ""
 msgstr "役割、プロジェクト、販売オーダにまたがる人的・物的リソースのスケジュールを立てることができます。"
 
 #. module: planning
-#. odoo-python
-#: code:addons/planning/models/planning.py:0
-msgid "Search operation not supported"
-msgstr "検索操作はサポートされていません"
-
-#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_planning__access_token
 msgid "Security Token"
 msgstr "セキュリティトークン"
@@ -2394,6 +2448,36 @@ msgstr "シフト・テンプレート"
 
 #. module: planning
 #. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift could not be removed"
+msgstr "シフトを削除できませんでした"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift duplicated"
+msgstr "シフトが複製されました"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift removed"
+msgstr "シフトが削除されました"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift reschedule undone"
+msgstr "シフトの再スケジュールが元に戻されました"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift rescheduled"
+msgstr "シフトが再スケジュールされました"
+
+#. module: planning
+#. odoo-javascript
 #: code:addons/planning/static/src/views/planning_form/planning_form_view.js:0
 msgid "Shift saved as template"
 msgstr "シフトがテンプレートとして保存されました"
@@ -2443,7 +2527,7 @@ msgid "Shipping Associate"
 msgstr "配送アソシエイト"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid "Some changes were made since this shift was published."
 msgstr "このシフトが公開されたので、いくつかの変更が行われました。"
 
@@ -2520,12 +2604,6 @@ msgstr "繰返し回数は負であることはできません。"
 #: model:ir.model.constraint,message:planning.constraint_planning_recurrency_check_repeat_interval_positive
 msgid "The recurrence should be greater than 0."
 msgstr "繰返しは0より大きくして下さい。"
-
-#. module: planning
-#. odoo-python
-#: code:addons/planning/models/planning.py:0
-msgid "The recurrence's end date should fall after the shift's start date."
-msgstr "繰返しの終了日は、シフトの開始日以降にして下さい。"
 
 #. module: planning
 #. odoo-javascript
@@ -2700,6 +2778,15 @@ msgid "Type"
 msgstr "タイプ"
 
 #. module: planning
+#. odoo-python
+#: code:addons/planning/models/planning.py:0
+msgid ""
+"Uh-oh! Let's keep things in the right order: the recurrence end date should "
+"always come after the shift start date. It's like trying to eat your "
+"breakfast before waking up – not possible!"
+msgstr "おっと! 繰り返しの終了日は、必ずシフトの開始日より後の日付を設定してください。順序が逆になると、正しく処理できません。"
+
+#. module: planning
 #: model:ir.model.fields.selection,name:planning.selection__res_company__planning_employee_unavailabilities__unassign
 msgid "Unassign themselves from shifts"
 msgstr "シフトから自分の割当を解除する"
@@ -2812,7 +2899,7 @@ msgstr "過去のシフトに自分で割当てを行うことはできません
 #. odoo-python
 #: code:addons/planning/models/planning.py:0
 msgid "You cannot cancel a request to switch made by another user."
-msgstr "他のユーザが行った交代要求を取消することはできません。"
+msgstr "他のユーザが行った交代要求をキャンセルすることはできません。"
 
 #. module: planning
 #. odoo-python
@@ -2862,7 +2949,7 @@ msgstr "自分のシフトを決める権限はありません。"
 #. odoo-python
 #: code:addons/planning/models/planning.py:0
 msgid "You don't have the right to cancel a request to switch."
-msgstr "交代要求を取消す権限がありません。"
+msgstr "交代要求をキャンセルす権限がありません。"
 
 #. module: planning
 #. odoo-python
@@ -2939,9 +3026,20 @@ msgid "e.g. John Doe"
 msgstr "例: 鈴木 一郎"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid "other shift(s) in conflict."
 msgstr "競合している他のシフト(s)。"
+
+#. module: planning
+#: model:ir.model,name:planning.model_planning_calendar_resource
+msgid "planning calendar resource"
+msgstr "カレンダーリソースの計画"
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/hr.py:0
+msgid "resource_id"
+msgstr "resource_id"
 
 #. module: planning
 #. odoo-javascript

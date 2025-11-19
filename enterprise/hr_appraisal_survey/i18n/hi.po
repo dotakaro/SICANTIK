@@ -3,17 +3,16 @@
 # 	* hr_appraisal_survey
 # 
 # Translators:
-# Martin Trigaux, 2024
-# Wil Odoo, 2024
-# Manav Shah, 2025
+# Wil Odoo, 2025
+# Ujjawal Pathak, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:52+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Manav Shah, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Ujjawal Pathak, 2025\n"
 "Language-Team: Hindi (https://app.transifex.com/odoo/teams/41243/hi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -67,7 +66,7 @@ msgid ""
 "                        Thank you!\n"
 "                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                Give your feedback\n"
 "                            </a>\n"
 "                        </div>\n"
@@ -221,7 +220,9 @@ msgstr ""
 #. module: hr_appraisal_survey
 #. odoo-python
 #: code:addons/hr_appraisal_survey/models/hr_appraisal.py:0
+#: model:ir.actions.act_window,name:hr_appraisal_survey.appraisal_ask_feedback_action
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.appraisal_ask_feedback_view_form
+#: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_user_input_view_tree
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_view_form
 msgid "Ask Feedback"
 msgstr ""
@@ -250,7 +251,7 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__attachment_ids
 msgid "Attachments"
-msgstr ""
+msgstr "अटैचमेंट"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__author_id
@@ -260,12 +261,12 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__body_has_template_value
 msgid "Body content is the same as the template"
-msgstr ""
+msgstr "बॉडी कॉन्टेंट बिलकुल टेंप्लेट की तरह है"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__can_edit_body
 msgid "Can Edit Body"
-msgstr ""
+msgstr "बॉडी में बदलाव किया जा सकता है"
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.appraisal_ask_feedback_view_form
@@ -286,7 +287,7 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model,name:hr_appraisal_survey.model_res_company
 msgid "Companies"
-msgstr ""
+msgstr "कंपनियां"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__completed_survey_count
@@ -307,12 +308,12 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model,name:hr_appraisal_survey.model_res_config_settings
 msgid "Config Settings"
-msgstr ""
+msgstr "कॉन्फ़िगरेशन सेटिंग"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__body
 msgid "Contents"
-msgstr ""
+msgstr "कॉन्टेंट"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.y_360_5_2
@@ -327,7 +328,7 @@ msgstr "द्वारा निर्मित"
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__create_date
 msgid "Created on"
-msgstr ""
+msgstr "इस तारीख को बनाया गया"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_14
@@ -378,8 +379,15 @@ msgstr ""
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__display_name
 msgid "Display Name"
-msgstr ""
+msgstr "डिस्प्ले नाम"
 
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_360_10
@@ -465,8 +473,15 @@ msgstr ""
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__id
 msgid "ID"
-msgstr ""
+msgstr "आईडी"
 
 #. module: hr_appraisal_survey
 #: model_terms:survey.question,description:hr_appraisal_survey.appraisal_4
@@ -483,7 +498,7 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__is_mail_template_editor
 msgid "Is Editor"
-msgstr ""
+msgstr "एडिटर है"
 
 #. module: hr_appraisal_survey
 #: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
@@ -505,17 +520,17 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__lang
 msgid "Language"
-msgstr ""
+msgstr "भाषा"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__write_uid
 msgid "Last Updated by"
-msgstr ""
+msgstr "इन्होंने आखिरी बार अपडेट किया"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__write_date
 msgid "Last Updated on"
-msgstr ""
+msgstr "आखिरी बार अपडेट हुआ"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_2_3
@@ -542,7 +557,7 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__template_id
 msgid "Mail Template"
-msgstr ""
+msgstr "मेल टेंप्लेट"
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_view_form
@@ -568,7 +583,7 @@ msgstr "नाम"
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.x_360_5_1
 msgid "Never"
-msgstr ""
+msgstr "कभी नहीं"
 
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_2_1
@@ -593,6 +608,10 @@ msgid ""
 "a placeholder expression that provides the appropriate language, e.g. {{ "
 "object.partner_id.lang }}."
 msgstr ""
+"यह एक वैकल्पिक भाषा (ISO कोड) है जिसे आप ईमेल भेजते समय चुन सकते हैं, ताकि "
+"ईमेल उस भाषा में अनुवादित हो. अगर आप इसे सेट नहीं करते हैं, तो ईमेल अंग्रेजी"
+" में जाएगा. इसे आमतौर पर एक प्लेसहोल्डर (जैसे {{ object.partner_id.lang }}) "
+"के रूप में सेट करना चाहिए, जो अपने-आप सही भाषा कोड ले लेगा."
 
 #. module: hr_appraisal_survey
 #: model_terms:survey.question,description:hr_appraisal_survey.appraisal_1
@@ -607,6 +626,12 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_4_2
 msgid "Personal Performance Objectives"
+msgstr ""
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
+msgid "Please set an Answer Deadline in the future"
 msgstr ""
 
 #. module: hr_appraisal_survey
@@ -642,7 +667,7 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__employee_ids
 msgid "Recipients"
-msgstr ""
+msgstr "रसीद"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.y_360_5_7
@@ -652,7 +677,7 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__render_model
 msgid "Rendering Model"
-msgstr ""
+msgstr "रेंडरिंग मॉडल"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__requested_by
@@ -709,7 +734,7 @@ msgstr ""
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.appraisal_ask_feedback_view_form
 msgid "Send"
-msgstr ""
+msgstr "भेजें"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,help:hr_appraisal_survey.field_hr_appraisal__survey_ids
@@ -751,7 +776,7 @@ msgstr "विषय"
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.appraisal_ask_feedback_view_form
 msgid "Subject..."
-msgstr ""
+msgstr "सब्जेक्ट..."
 
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_3_2
@@ -763,7 +788,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__survey_ids
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__survey_id
 msgid "Survey"
-msgstr ""
+msgstr "सर्वे"
 
 #. module: hr_appraisal_survey
 #. odoo-python
@@ -794,7 +819,9 @@ msgstr ""
 
 #. module: hr_appraisal_survey
 #: model:mail.template,subject:hr_appraisal_survey.mail_template_appraisal_ask_feedback
-msgid "Take part in {{ object.employee_id.name or 'this' }} appraisal"
+msgid ""
+"Take part in {{ ctx.get('employee_id') and ctx['employee_id'].name or 'this'"
+" }} appraisal"
 msgstr ""
 
 #. module: hr_appraisal_survey
@@ -959,6 +986,18 @@ msgid ""
 msgstr ""
 
 #. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected feedback linked to multiples appraisals."
+msgstr ""
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected multiple feedback template."
+msgstr ""
+
+#. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_button_form_view
 msgid "or"
-msgstr ""
+msgstr " "

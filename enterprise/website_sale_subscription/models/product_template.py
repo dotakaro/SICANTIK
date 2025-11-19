@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from math import floor
 
-from odoo import models, fields, api, _
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+from odoo.fields import Domain
 from odoo.http import request
 from odoo.tools import format_amount
+
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
@@ -15,66 +17,139 @@ class ProductTemplate(models.Model):
         for template in self:
             if not template.recurring_invoice:
                 continue
-            plan_ids = set(template.product_subscription_pricing_ids.plan_id.ids)
+            plan_ids = set(template.subscription_rule_ids.plan_id.ids)
             for optional_template in template.optional_product_ids:
                 if not optional_template.recurring_invoice:
                     continue
-                optional_plan_ids = optional_template.product_subscription_pricing_ids.plan_id.ids
+                optional_plan_ids = optional_template.subscription_rule_ids.plan_id.ids
                 if not plan_ids.intersection(optional_plan_ids):
                     raise UserError(_('You cannot have an optional product that has a no common pricing\'s plan.'))
 
-    def _get_pricelist_pricings(self, pricelist, product=None):
+    def _website_can_be_added(self, product=None) -> bool:
+        """Return whether the product/template can be added to the active SO."""
         self.ensure_one()
-        is_template = not product and self._name == 'product.template'
-        res = self.env['sale.subscription.plan']
-        for pricing in self.product_subscription_pricing_ids.sorted(lambda x: not x.pricelist_id):
-            if pricing.pricelist_id and pricing.pricelist_id != pricelist:
-                continue
-            if not is_template and not pricing._applies_to(product or self):
-                continue
-            if pricing.plan_id not in res:
-                yield pricing
-                res |= pricing.plan_id
-
-    def _website_can_be_added(self, pricelist=None, pricing=None, product=None):
-        """ Return true if the product/template can be added to the active SO
-        """
-        self = product or self
         if not self.recurring_invoice:
             return True
-        website = self.env['website'].get_current_website()
-        so = website and request and website.sale_get_order()
-        if not so or not so.plan_id:
-            return True
-        if pricing:
-            return pricing.plan_id == so.plan_id and (not pricing.pricelist_id or pricing.pricelist_id == pricelist)
-        return bool(self.env['sale.subscription.pricing'].sudo()._get_first_suitable_recurring_pricing(
-            self, plan=so.plan_id, pricelist=pricelist or website.pricelist_id))
 
-    def _get_additionnal_combination_info(self, product_or_template, quantity, date, website):
-        res = super()._get_additionnal_combination_info(product_or_template, quantity, date, website)
+        has_pricing = bool(
+            self._get_recurring_pricing(
+                pricelist=request.pricelist,
+                variant=product,
+                plan_id=request.cart.plan_id.id,
+            )
+        )
+        if not has_pricing and not product:
+            # If pricings are only defined by variant, there are no pricing applicable to the
+            # template itself. In this situation, we need to search for a pricing on a variant
+            # otherwise customers wouldn't be able to add the product to their cart.
+            has_pricing = bool(
+                self._get_recurring_pricing(
+                    pricelist=request.pricelist,
+                    variant=self.product_variant_id,
+                    plan_id=request.cart.plan_id.id,
+                )
+            )
+
+        return has_pricing or (
+            self.allow_one_time_sale
+            and self.type == 'consu'
+            and not request.cart.plan_id
+        )
+
+    def _get_recurring_pricings(self, pricelist, variant=None, quantity=1.0):
+        """Return the first pricing applicable for each of the available subscription plans."""
+        self.ensure_one()
+
+        pricings = self.env['product.pricelist.item']
+        domain = pricelist._get_applicable_rules_domain(
+            products=variant or self,
+            date=fields.Datetime.now(),
+            any_plan=True,
+        )
+
+        all_pricings = self.env['product.pricelist.item'].search(
+            domain, order=self.env['product.pricelist.item']._get_recurring_rules_order()
+        )
+        if pricelist:
+            # Add the rules not restricted to a specific pricelist, only for the plans that had no
+            # rule for the current pricelist.
+            domain = self.env['product.pricelist']._get_applicable_rules_domain(
+                products=variant or self,
+                date=fields.Datetime.now(),
+                any_plan=True,
+            )
+            all_pricings |= self.env['product.pricelist.item'].search(
+                Domain.AND([domain, [('plan_id', 'not in', all_pricings.plan_id.ids)]]),
+                order=self.env['product.pricelist.item']._get_recurring_rules_order()
+            )
+
+        found_plan_ids = set()
+        for pricing in all_pricings:
+            if (
+                (plan_id := pricing.plan_id.id) not in found_plan_ids
+                # No need for uom conversion since multi-uom is not supported for recurring
+                # products atm.
+                and pricing._is_applicable_for(product=variant or self, qty_in_product_uom=quantity)
+            ):
+                found_plan_ids.add(plan_id)
+                pricings |= pricing
+
+        return pricings
+
+    def _get_additionnal_combination_info(self, product_or_template, quantity, uom, date, website):
+        res = super()._get_additionnal_combination_info(product_or_template, quantity, uom, date, website)
 
         if not product_or_template.recurring_invoice:
             return res
 
-        res['list_price'] = res['price']  # No pricelist discount for subscription prices
-        currency = website.currency_id
-        pricelist = website.pricelist_id
-        requested_plan = request and request.params.get('plan_id')
-        requested_plan = requested_plan and requested_plan.isdigit() and int(requested_plan)
-        possible_pricing_count = 0
+        product = (product_or_template.is_product_variant and product_or_template) or self.env['product.product']
+        pricings = self._get_recurring_pricings(pricelist=request.pricelist, variant=product, quantity=quantity)
 
-        pricings = []
-        default_pricing = False
-        for pricing in product_or_template.sudo()._get_pricelist_pricings(pricelist):
-            price = pricing.price
-            if pricing.currency_id != currency:
-                price = pricing.currency_id._convert(
-                    from_amount=price,
-                    to_currency=currency,
-                    company=self.env.company,
-                    date=date,
-                )
+        res['list_price'] = res['price']  # No pricelist discount for subscription prices
+
+        if not pricings:
+            res.update({
+                'is_subscription': True,
+                'is_plan_possible': False,
+                'pricings': False,
+                'allow_one_time_sale': not request.cart.plan_id and self.allow_one_time_sale,
+            })
+            return res
+
+        to_year = {'year': 1, 'month': 12, 'week': 52}
+        translation_mapping = {
+            'year': _('year'),
+            'month': _('month'),
+            'week': _('week'),
+        }
+        minimum_period = min(
+            pricings.sudo().plan_id.mapped('billing_period_unit'),
+            key=lambda x: 1 / to_year[x],
+        )
+
+        currency = website.currency_id
+        requested_plan = request and request.params.get('plan_id')
+        requested_plan_id = requested_plan and requested_plan.isdigit() and int(requested_plan)
+        requested_plan_id = requested_plan_id or request.cart.plan_id.id
+        if requested_plan_id:
+            chosen_pricing = pricings.filtered(lambda pricing: pricing.plan_id.id == requested_plan_id)
+        else:
+            chosen_pricing = pricings[0]
+
+        sales_price = res['price']
+
+        def _get_pricing_data(pricing):
+            if not pricing:
+                return {}
+
+            price = pricing._compute_price(
+                product=product_or_template,
+                quantity=quantity or 1.0,
+                date=date,
+                uom=product_or_template.uom_id,
+                currency=currency,
+                plan_id=pricing.plan_id.id,
+            )
 
             if res.get('product_taxes', False):
                 price = self.env['product.template']._apply_taxes_to_price(
@@ -82,55 +157,57 @@ class ProductTemplate(models.Model):
                 )
 
             price_format = format_amount(self.env, amount=price, currency=currency)
-            pricing = {
-                'plan_id': pricing.plan_id.id,
+            pricing_plan_sudo = pricing.plan_id.sudo()  # Not accessible to public users
+            price_in_minimum_period = (
+                price
+                / pricing_plan_sudo.billing_period_value
+                * to_year[pricing_plan_sudo.billing_period_unit]
+                / to_year[minimum_period]
+            )
+            pricing_data = {
+                'plan_id': pricing_plan_sudo.id,
                 'price': f"{pricing.plan_id.name}: {price_format}",
                 'price_value': price,
                 'table_price': price_format,
                 'table_name': pricing.plan_id.name.replace(' ', ' '),
-                'can_be_added': product_or_template._website_can_be_added(pricelist=pricelist, pricing=pricing)
+                'to_minimum_billing_period': f'{format_amount(self.env, amount=price_in_minimum_period, currency=currency)}'
+                                             f' / {translation_mapping.get(minimum_period, minimum_period)}',
+                'can_be_added': request.cart.plan_id.id in (pricing_plan_sudo.id, False),
             }
-            possible_pricing_count += 1 if pricing['can_be_added'] else 0
 
-            if (not default_pricing or pricing['plan_id'] == requested_plan) and pricing['can_be_added']:
-                default_pricing = pricing
-            pricings += [pricing]
+            # discount calculation for one time purchase
+            discount = 0.0
+            if product_or_template.type == 'consu':
+                if price > 0 and sales_price > 0 and sales_price >= price:
+                    discount = ((sales_price - price) * 100) / sales_price
+                    pricing_data['discounted_price'] = floor(discount)  # Round down to the nearest integer
+                else:
+                    pricing_data['discounted_price'] = 0.0
 
-        if pricings:
-            plan_ids = self.env['sale.subscription.plan'].browse(pricing['plan_id'] for pricing in pricings)
-            to_year = {'year': 1, 'month': 12, 'week': 52}
-            translation_mapping = {'year': _('year'),
-                                   'month': _('month'),
-                                   'week': _('week'),
-            }
-            minimum_period = min(plan_ids.mapped('billing_period_unit'), key=lambda x: 1/to_year[x])
-            for pricing in pricings:
-                plan_id = plan_ids.browse(pricing['plan_id'])
-                price = pricing['price_value'] / plan_id.billing_period_value * to_year[plan_id.billing_period_unit] \
-                        / to_year[minimum_period]
-                pricing['to_minimum_billing_period'] = f'{format_amount(self.env, amount=price, currency=currency)} / {translation_mapping.get(minimum_period, minimum_period)}'
+            return pricing_data
 
-        if not pricings:
-            res.update({
-                'is_subscription': True,
-                'is_plan_possible': False,
-                'pricings': False,
-            })
-            return res
+        default_pricing_data = _get_pricing_data(chosen_pricing)
 
-        unit_price = default_pricing['price_value'] if default_pricing else 0
+        pricing_details = [
+            _get_pricing_data(pricing)
+            for pricing in pricings
+        ]
+
+        unit_price = default_pricing_data.get('price_value', 0)
         return {
             **res,
             'is_subscription': True,
-            'pricings': pricings,
-            'is_plan_possible': possible_pricing_count > 0,
+            'pricings': pricing_details,
+            'is_plan_possible': bool(chosen_pricing),
             'price': unit_price,
-            'subscription_default_pricing_price': default_pricing['price'] if default_pricing else '',
-            'subscription_default_pricing_plan_id': default_pricing['plan_id'] if default_pricing else False,
-            'subscription_pricing_select': possible_pricing_count > 1,
+            'subscription_default_pricing_price': default_pricing_data.get('price', ''),
+            'subscription_default_pricing_plan_id': default_pricing_data.get('plan_id', False),
+            'subscription_pricing_select': len(pricings) > 1 and not request.cart.plan_id,
             'prevent_zero_price_sale': website.prevent_zero_price_sale and currency.is_zero(
                 unit_price,
             ),
+            'allow_one_time_sale': not request.cart.plan_id and self.allow_one_time_sale,
+            'allow_recurring': not request.cart._has_one_time_sale(),
         }
 
     # Search bar
@@ -150,16 +227,18 @@ class ProductTemplate(models.Model):
 
     def _get_sales_prices(self, website):
         prices = super()._get_sales_prices(website)
-        pricelist = website.pricelist_id
-        fiscal_position = website.fiscal_position_id.sudo()
-        currency = pricelist.currency_id or self.env.company.currency_id
+
+        pricelist = request.pricelist
+        currency = website.currency_id
+        fiscal_position_sudo = request.fiscal_position
+        so_plan_id = request.cart.plan_id.id
         date = fields.Date.context_today(self)
-        website = self.env['website'].get_current_website()
-        so = website and request and website.sale_get_order()
-        plan_id = so and so.plan_id
-        for template in self.filtered('recurring_invoice'):
-            pricing = self.env['sale.subscription.pricing'].sudo()\
-                ._get_first_suitable_recurring_pricing(template, plan=plan_id, pricelist=pricelist)
+
+        for template in self:
+            if not template.recurring_invoice:
+                continue
+
+            pricing = template._get_recurring_pricing(pricelist=pricelist, plan_id=so_plan_id)
             if not pricing:
                 prices[template.id].update({
                     'is_subscription': True,
@@ -167,32 +246,30 @@ class ProductTemplate(models.Model):
                 })
                 continue
 
-            unit_price = pricing.price
-
-            # curr conversion
-            if currency != pricing.currency_id:
-                unit_price = pricing.currency_id._convert(
-                    from_amount=unit_price,
-                    to_currency=currency,
-                    company=self.env.company,
-                    date=date,
-                )
+            unit_price = pricing._compute_price(
+                product=template,
+                quantity=1.0,
+                date=date,
+                uom=template.uom_id,
+                currency=currency,
+                plan_id=so_plan_id,
+            )
 
             # taxes application
             product_taxes = template.sudo().taxes_id.filtered(lambda t: t.company_id == t.env.company)
             if product_taxes:
-                taxes = fiscal_position.map_tax(product_taxes)
+                taxes = fiscal_position_sudo.map_tax(product_taxes)
                 unit_price = self.env['product.template']._apply_taxes_to_price(
                     unit_price, currency, product_taxes, taxes, template)
 
-            plan = pricing.plan_id
+            plan_sudo = pricing.plan_id.sudo()
             prices[template.id].update({
                 'is_subscription': True,
                 'price_reduce': unit_price,
-                'is_plan_possible': template._website_can_be_added(
-                    pricelist=pricelist, pricing=pricing),
-                'temporal_unit_display': plan.billing_period_display_sentence,
+                'is_plan_possible': True,  # The plan can only be valid at this point
+                'temporal_unit_display': plan_sudo.billing_period_display_sentence,
             })
+
         return prices
 
     def _website_show_quick_add(self):

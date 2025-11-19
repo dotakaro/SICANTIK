@@ -14,7 +14,7 @@
         'views/room_menus.xml',
         'views/room_booking_templates_frontend.xml',
         'views/room_office_views.xml',
-        'data/ir_module_category_data.xml',
+        'data/res_groups_privilege_data.xml',
         'security/ir_rule.xml',
         'security/ir.model.access.csv',
     ],
@@ -29,11 +29,10 @@
         'web.assets_backend_lazy': [
             'room/static/src/room_booking_gantt_view/**/*',
         ],
-        'web.qunit_suite_tests': [
-            'room/static/tests/*.js',
-            'room/static/src/room_booking/**/*.js',
-            'room/static/src/room_booking/**/*.xml',
-            'room/static/tests/room_booking_view_patch.xml',
+        "web.assets_unit_tests": [
+            "room/static/src/room_booking/**/*.js",
+            "room/static/src/room_booking/**/*.xml",
+            "room/static/tests/**/*",
         ],
         'room.assets_room_booking': [
             # 1 Define room variables (takes priority)
@@ -50,7 +49,6 @@
             ('include', 'web._assets_bootstrap_backend'),
             "web/static/src/libs/fontawesome/css/font-awesome.css",
             "web/static/lib/odoo_ui_icons/*",
-            'web/static/src/legacy/scss/ui.scss',
             'web/static/src/scss/base_frontend.scss',
             'web/static/src/core/utils/transitions.scss',
             'web/static/src/core/notifications/notification.scss',
@@ -60,5 +58,6 @@
             'room/static/src/room_booking/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

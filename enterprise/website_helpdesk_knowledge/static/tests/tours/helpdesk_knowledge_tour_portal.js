@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { registry } from "@web/core/registry";
 
 registry.category("web_tour.tours").add('access_helpdesk_article_portal_tour', {
@@ -7,6 +5,7 @@ registry.category("web_tour.tours").add('access_helpdesk_article_portal_tour', {
     content: "clik on 'Help'",
     trigger: 'a[role="menuitem"]:contains("Help")',
     run: "click",
+    expectUnloadPage: true,
 }, {
     content: "Write 'Article' in the search bar",
     trigger: 'input[name="search"]',

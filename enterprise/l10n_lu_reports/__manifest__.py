@@ -30,6 +30,7 @@ Necessary master data is also included.
         'data/tax_report.xml',
         'data/saft_report.xml',
         'data/ec_sales_list_report.xml',
+        'data/account_return_data.xml',
         'views/account_ec_sales_xml_template.xml',
         'views/electronic_report_template.xml',
         'views/res_company_views.xml',
@@ -43,6 +44,7 @@ Necessary master data is also included.
     'demo': ['demo/demo_company.xml'],
     'post_init_hook': '_l10n_lu_reports_post_init',
     'auto_install': ['l10n_lu', 'account_reports'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

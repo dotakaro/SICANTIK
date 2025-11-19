@@ -1,4 +1,3 @@
-/** @odoo-module */
 import {
     Component,
     onWillStart,
@@ -11,7 +10,6 @@ import {
 import { loadBundle } from "@web/core/assets";
 import { ensureJQuery } from "@web/core/ensure_jquery";
 import { _t } from "@web/core/l10n/translation";
-import { rpc } from "@web/core/network/rpc";
 import { omit } from "@web/core/utils/objects";
 import { usePopover } from "@web/core/popover/popover_hook";
 import { useHotkey } from "@web/core/hotkeys/hotkey_hook";
@@ -40,6 +38,9 @@ import { QWebTablePlugin } from "./qweb_table_plugin";
 import { visitNode } from "../utils";
 import { TablePlugin } from "@html_editor/main/table/table_plugin";
 import { withSequence } from "@html_editor/utils/resource";
+import { ReportRecordNavigation } from "../report_editor_xml/report_record_navigation";
+import { CheckBox } from "@web/core/checkbox/checkbox";
+import { isHtmlContentSupported } from "@html_editor/core/selection_plugin";
 
 class __Record extends _Record.components._Record {
     setup() {
@@ -126,12 +127,10 @@ class FieldDynamicPlaceholder extends Component {
             return score;
         };
 
-        const mapFn = ([k, v]) => {
-            return {
-                value: k,
-                label: `${k} (${v.name})`,
-            };
-        };
+        const mapFn = ([k, v]) => ({
+            value: k,
+            label: `${k} (${v.name})`,
+        });
         return sortBy(entries, sortFn, "desc").map((e) => mapFn(e));
     }
 
@@ -151,9 +150,7 @@ class FieldDynamicPlaceholder extends Component {
             return companyVar && companyVar[0];
         }
 
-        let defaultVar = this.sortedVariables.find((v) => {
-            return ["doc", "o"].includes(v.value);
-        });
+        let defaultVar = this.sortedVariables.find((v) => ["doc", "o"].includes(v.value));
         defaultVar =
             defaultVar ||
             this.sortedVariables.find(
@@ -167,6 +164,7 @@ class UndoRedo extends Component {
     static template = "web_studio.ReportEditorWysiwyg.UndoRedo";
     static props = {
         state: Object,
+        className: { type: String, optional: true },
     };
 }
 
@@ -214,6 +212,8 @@ export class ReportEditorWysiwyg extends Component {
         BooleanField,
         UndoRedo,
         ReportEditorIframe,
+        ReportRecordNavigation,
+        CheckBox,
     };
     static props = {
         paperFormatStyle: String,
@@ -234,6 +234,9 @@ export class ReportEditorWysiwyg extends Component {
         });
 
         const reportEditorModel = (this.reportEditorModel = useState(this.env.reportEditorModel));
+        this.reportRecordHooks = {
+            onRecordChanged: (rec) => (this.reportEditorModel.reportData = rec.data),
+        };
 
         this.fieldPopover = usePopover(FieldDynamicPlaceholder);
         useEditorMenuItem({
@@ -315,14 +318,11 @@ export class ReportEditorWysiwyg extends Component {
                     }),
                     user_commands: this.getUserCommands(),
                     powerbox_items: this.getPowerboxCommands(),
-                    unsplittable_node_predicates: (node) => {
-                        return (
-                            node.nodeType === Node.ELEMENT_NODE &&
-                            node.matches(".page, .header, .footer")
-                        );
-                    },
+                    unsplittable_node_predicates: (node) =>
+                        node.nodeType === Node.ELEMENT_NODE &&
+                        node.matches(".page, .header, .footer"),
                 },
-                disableVideo: true,
+                allowMediaDialogVideo: false,
             },
             this.env.services
         );
@@ -336,6 +336,7 @@ export class ReportEditorWysiwyg extends Component {
     onIframeLoaded({ iframeRef }) {
         if (this.editor) {
             this.editor.destroy(true);
+            this.editor = null;
         }
         this.iframeRef = iframeRef;
         const doc = iframeRef.el.contentDocument;
@@ -352,7 +353,7 @@ export class ReportEditorWysiwyg extends Component {
                 });
             });
         }
-        if (!this.reportEditorModel._errorMessage) {
+        if (!this.reportEditorModel._errorMessage && !this.reportEditorModel.inPreview) {
             this.editor = this.instantiateEditor({ editable: doc.querySelector("#wrapwrap") });
         }
         this.reportEditorModel.setInEdition(false);
@@ -496,6 +497,9 @@ export class ReportEditorWysiwyg extends Component {
 
     getUserCommands() {
         const isAvailable = (selection) => {
+            if (!isHtmlContentSupported(selection)) {
+                return;
+            }
             const { anchorNode } = selection;
             const { availableQwebVariables } = this.getQwebVariables(
                 anchorNode.nodeType === 1 ? anchorNode : anchorNode.parentElement
@@ -684,31 +688,6 @@ export class ReportEditorWysiwyg extends Component {
         });
     }
 
-    async printPreview() {
-        const model = this.reportEditorModel;
-        await this.save();
-        const recordId = model.reportEnv.currentId || model.reportEnv.ids.find((i) => !!i) || false;
-        if (!recordId) {
-            this.notification.add(
-                _t(
-                    "There is no record on which this report can be previewed. Create at least one record to preview the report."
-                ),
-                {
-                    type: "danger",
-                    title: _t("Report preview not available"),
-                }
-            );
-            return;
-        }
-
-        const action = await rpc("/web_studio/print_report", {
-            record_id: recordId,
-            report_id: model.editedReportId,
-        });
-        this.reportEditorModel.renderKey++;
-        return this.action.doAction(action, { clearBreadcrumbs: true });
-    }
-
     async resetReport() {
         const state = reactive({ includeHeaderFooter: true });
         this.addDialog(ResetConfirmationPopup, {
@@ -746,5 +725,15 @@ export class ReportEditorWysiwyg extends Component {
     async editSources() {
         await this.save();
         this.reportEditorModel.mode = "xml";
+    }
+
+    async togglePreview(toValue) {
+        if (toValue) {
+            const saved = await this.save();
+            if (!saved) {
+                await this.reportEditorModel.loadReportHtml();
+            }
+        }
+        this.reportEditorModel.inPreview = toValue;
     }
 }

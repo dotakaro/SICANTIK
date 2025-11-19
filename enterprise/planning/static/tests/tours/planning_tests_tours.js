@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { markup } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 
@@ -36,7 +34,7 @@ registry.category("web_tour.tours").add('planning_test_tour', {
     content: "Set start datetime",
     run: function (actions) {
         const input = this.anchor;
-        input.value = input.value.replace(/(\d{2}:){2}\d{2}/g, '08:00:00');
+        input.value = input.value.replace(/\d{2}:\d{2}/g, '08:00');
         input.dispatchEvent(new InputEvent('input', {
             bubbles: true,
         }));
@@ -47,7 +45,7 @@ registry.category("web_tour.tours").add('planning_test_tour', {
     content: "Set end datetime",
     run: function (actions) {
         const input = this.anchor;
-        input.value = input.value.replace(/(\d{2}:){2}\d{2}/g, '11:59:59');
+        input.value = input.value.replace(/\d{2}:\d{2}/g, '11:59');
         input.dispatchEvent(new InputEvent('input', {
             bubbles: true,
         }));
@@ -66,7 +64,7 @@ registry.category("web_tour.tours").add('planning_test_tour', {
     trigger: ".o_gantt_pill :contains('11:59')",
     content: markup("<b>Drag & drop</b> your shift to reschedule it. <i>Tip: hit CTRL (or Cmd) to duplicate it instead.</i> <b>Adjust the size</b> of the shift to modify its period."),
     run: function () {
-        const expected = "8:00 AM - 11:59 AM";
+        const expected = "8:00 - 11:59";
         // Without the replace below, this step could break since luxon
         // (via Intl) uses sometimes U+202f instead of a simple space.
         // Note: U+202f is a narrow non-break space.

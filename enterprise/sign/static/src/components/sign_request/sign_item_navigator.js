@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { offset } from "./utils";
 
@@ -12,7 +10,7 @@ import { offset } from "./utils";
  */
 export function startSignItemNavigator(parent, target, types, env) {
     function setTip(text) {
-        navigator.style.fontFamily = "Helvetica";
+        navigator.style.fontFamily = "Helvetica,sans-serif";
         navigator.innerText = text;
     }
 
@@ -131,7 +129,7 @@ export function startSignItemNavigator(parent, target, types, env) {
 
         const duration = Math.max(
             Math.min(
-                500,
+                1000,
                 5 *
                     (Math.abs(target.scrollTop - scrollTop) +
                         Math.abs(navigator.getBoundingClientRect().top) -

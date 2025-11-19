@@ -149,12 +149,13 @@ class DeliveryCarrier(models.Model):
             parcels = sendcloud._send_shipment(pick)
             # fetch the ids, tracking numbers and url for each parcel
             parcel_ids, parcel_tracking_numbers, doc_ids = self._prepare_track_message_docs(pick, parcels, sendcloud)
-            pick.message_post_with_source(
-                'delivery_sendcloud.sendcloud_label_tracking',
-                render_values={'type': 'Shipment', 'parcels': parcels},
-                subtype_xmlid='mail.mt_note',
-                attachment_ids=doc_ids.ids,
-            )
+            for doc_id in doc_ids:
+                pick.message_post_with_source(
+                    'delivery_sendcloud.sendcloud_label_tracking',
+                    render_values={'type': 'Shipment', 'parcels': parcels},
+                    subtype_xmlid='mail.mt_note',
+                    attachment_ids=[doc_id.id],
+                )
             pick.sendcloud_parcel_ref = parcel_ids
             try:
                 # generate return if config is set
@@ -232,7 +233,12 @@ class DeliveryCarrier(models.Model):
                     failed_call.append(parcel_id)
         if failed_call:
             details = ",".join(str(p_id) for p_id in failed_call)
-            raise UserError(f"The cancellation was rejected for the parcel(s) with the following id :\n{details}\nEither :\n\t - The parcel is already cancelled\n\t - The parcel has been announced more than 42 days ago\n\t - The parcel has already been delivered")
+            raise UserError(
+                self.env._(
+                    "The cancellation was rejected for the parcel(s) with the following id:\n%(details)s\nEither:\n\t - The parcel is already cancelled\n\t - The parcel has been announced more than 42 days ago\n\t - The parcel has already been delivered",
+                    details=details,
+                ),
+            )
 
     def sendcloud_convert_weight(self, weight, grams=False, reverse=False):
         """

@@ -1,11 +1,10 @@
-/** @odoo-module */
-
 import { registry } from '@web/core/registry';
 import { useService } from "@web/core/utils/hooks";
 
 import { kanbanView } from '@web/views/kanban/kanban_view';
 import { KanbanRenderer } from '@web/views/kanban/kanban_renderer';
 import { onWillStart } from "@odoo/owl";
+import { user } from "@web/core/user";
 
 export class ReferralKanbanRenderer extends KanbanRenderer {
     static template = "hr_referral.KanbanRenderer";
@@ -14,7 +13,6 @@ export class ReferralKanbanRenderer extends KanbanRenderer {
         super.setup();
 
         this.orm = useService('orm');
-        this.company = useService("company");
         this.showGrass = true;
 
         onWillStart(async () => {
@@ -24,7 +22,7 @@ export class ReferralKanbanRenderer extends KanbanRenderer {
     }
 
     get companyId() {
-        return this.company.activeCompanyIds[0];
+        return user.activeCompany.id;
     }
 }
 

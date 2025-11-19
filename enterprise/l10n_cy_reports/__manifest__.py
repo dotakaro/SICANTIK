@@ -13,6 +13,7 @@ Cyprus accounting reports
         "account_reports",
     ],
     "data": [
+        'data/account_return_data.xml',
         'data/balance_sheet.xml',
         'data/profit_loss.xml',
     ],
@@ -21,5 +22,6 @@ Cyprus accounting reports
         "l10n_cy",
         "account_reports",
     ],
+    "author": "Odoo S.A.",
     "license": "OEEL-1"
 }

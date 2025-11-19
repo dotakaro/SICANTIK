@@ -3,16 +3,15 @@
 
 import json
 import logging
-import threading
 
-from datetime import timedelta, date
 from ast import literal_eval
+from datetime import timedelta, date
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models, _
+from odoo import api, fields, models, modules, _
+from odoo.osv import expression
 from odoo.fields import Datetime
 from odoo.exceptions import ValidationError, AccessError
-from odoo.osv import expression
 from odoo.tools.misc import clean_context
 
 _logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ class MarketingActivity(models.Model):
         ], string='Activity Type', required=True, default='email')
     mass_mailing_id = fields.Many2one(
         'mailing.mailing', string='Marketing Template', compute='_compute_mass_mailing_id',
-        readonly=False, store=True)
+        readonly=False, store=True, index='btree_not_null')
     # Technical field doing the mapping of activity type and mailing type
     mass_mailing_id_mailing_type = fields.Selection([
         ('mail', 'Email')], string='Mailing Type', compute='_compute_mass_mailing_id_mailing_type',
@@ -252,7 +251,7 @@ class MarketingActivity(models.Model):
         return super(MarketingActivity, self).copy_data(default=default)
 
     def write(self, values):
-        if any(field in values.keys() for field in ('interval_number', 'interval_type')):
+        if any(activity.campaign_id.state == 'running' for activity in self) and any(field in values for field in ('interval_number', 'interval_type')):
             values['require_sync'] = True
         return super(MarketingActivity, self).write(values)
 
@@ -339,7 +338,7 @@ class MarketingActivity(models.Model):
 
     def execute(self, domain=None):
         # auto-commit except in testing mode
-        auto_commit = not getattr(threading.current_thread(), 'testing', False)
+        auto_commit = not modules.module.current_test
 
         # organize traces by activity
         trace_domain = [
@@ -541,7 +540,8 @@ class MarketingActivity(models.Model):
         """ Retrieve a set of trigger types that have a schedule_date that depends
         on parent or activity / campaign, not on external user actions.
 
-        :returns set[str]: set of ``trigger_type`` elements
+        :returns: set of ``trigger_type`` elements
+        :rtype: set[str]
         """
         return {'activity', 'begin', 'mail_not_open', 'mail_not_click', 'mail_not_reply'}
 

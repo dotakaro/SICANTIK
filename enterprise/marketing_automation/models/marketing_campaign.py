@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from collections import defaultdict
-import threading
 
 from ast import literal_eval
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models, tools, _
+from odoo import api, fields, models, modules, tools, _
 from odoo.fields import Datetime
 from odoo.exceptions import ValidationError, AccessError
 from odoo.tools import convert
@@ -141,7 +139,6 @@ class MarketingCampaign(models.Model):
             campaign.total_participant_count = campaign.completed_participant_count + campaign.running_participant_count
             campaign.test_participant_count = campaign_data.get('is_test', 0)
 
-    @api.returns('self')
     def copy(self, default=None):
         """ Copy the activities of the campaign, each parent_id of each child
         activities should be set to the new copied parent activity. """
@@ -351,7 +348,7 @@ class MarketingCampaign(models.Model):
         participants = self.env['marketing.participant']
         now = self.env.cr.now()
         # auto-commit except in testing mode
-        auto_commit = not getattr(threading.current_thread(), 'testing', False)
+        auto_commit = not modules.module.current_test
         for campaign in self.filtered(lambda c: c.marketing_activity_ids):
             if not campaign.last_sync_date:
                 campaign.last_sync_date = now
@@ -448,6 +445,7 @@ class MarketingCampaign(models.Model):
             'values': {
                 'name': _('Add Hot Category'),
                 'model_id': self.env['ir.model']._get_id('res.partner'),
+                'state': 'object_write',
                 'update_field_id': self.env["ir.model.fields"]._get_ids('res.partner')['category_id'],
                 'update_path': 'category_id',
                 'evaluation_type': 'value',

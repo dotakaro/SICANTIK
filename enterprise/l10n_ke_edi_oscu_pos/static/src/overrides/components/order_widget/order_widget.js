@@ -1,20 +1,22 @@
 /** @odoo-module */
+import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
-import { OrderWidget } from "@point_of_sale/app/generic_components/order_widget/order_widget";
+import { OrderDisplay } from "@point_of_sale/app/components/order_display/order_display";
 import { onMounted } from "@odoo/owl";
 
-patch(OrderWidget.prototype, {
+patch(OrderDisplay.prototype, {
     setup() {
         super.setup();
         this.orm = useService("orm");
         this.actionService = useService("action");
+        this.pos = usePos();
 
         onMounted(() => {
-            if (this.props.lines.length > 0 && this.props.lines[0].order_id?.config_id.is_kenyan) {
-                for (const line of this.props.lines) {
+            if (this.props.order.lines.length > 0 && this.pos.config.is_kenyan) {
+                for (const line of this.props.order.lines) {
                     if (line.tax_ids?.length === 0) {
-                        line.tax_ids.push(...line.product_id.taxes_id);
+                        line.tax_ids.push(...line.product_id.product_tmpl_id.taxes_id);
                     }
                 }
             }
@@ -40,6 +42,6 @@ patch(OrderWidget.prototype, {
             "l10n_ke_action_open_products_view",
             [0, product_ids]
         );
-        this.actionService.doAction(actionData, { onClose: () => window.location.reload() });
+        this.actionService.doAction(actionData, { onClose: () => this.pos.reloadData() });
     },
 });

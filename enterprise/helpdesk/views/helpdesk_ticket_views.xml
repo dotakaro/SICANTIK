@@ -34,7 +34,7 @@
         <field name="name">helpdesk.ticket.graph</field>
         <field name="model">helpdesk.ticket</field>
         <field name="arch" type="xml">
-            <graph string="Helpdesk Tickets" type="bar" sample="1" js_class="helpdesk_ticket_graph">
+            <graph string="Helpdesk Tickets" type="bar" sample="1">
                 <field name="stage_id"/>
                 <field name="rating_last_value" string="Rating (1-5)"/>
                 <field name="user_id" string="Assigned"/>
@@ -54,7 +54,7 @@
         <field name="name">helpdesk.ticket.pivot</field>
         <field name="model">helpdesk.ticket</field>
         <field name="arch" type="xml">
-            <pivot string="Helpdesk Tickets" sample="1" js_class="helpdesk_ticket_pivot">
+            <pivot string="Helpdesk Tickets" sample="1">
                 <field name="stage_id" type="col"/>
                 <field name="rating_last_value" string="Rating (1-5)"/>
                 <field name="close_hours" string="Working Hours to Close" widget="float_time"/>
@@ -104,9 +104,9 @@
                     <filter name="closed_on_last_365_days" string="Last 365 Days" domain="[('close_date', '&gt;', datetime.datetime.combine(context_today() - relativedelta(days=365), datetime.time(23, 59, 59)).to_utc())]"/>
                 </filter>
                 <separator />
-                <filter name="rating_satisfied" string="Satisfied" domain="[('rating_avg', '&gt;', 3.66)]" groups="helpdesk.group_use_rating"/>
-                <filter name="rating_okay" string="Okay" domain="[('rating_avg', '&lt;', 3.66), ('rating_avg', '&gt;=', 2.33)]" groups="helpdesk.group_use_rating"/>
-                <filter name="dissatisfied" string="Dissatisfied" domain="[('rating_avg', '&lt;', 2.33), ('rating_last_value', '!=', 0.0)]" groups="helpdesk.group_use_rating"/>
+                <filter name="rating_satisfied" string="Happy" domain="[('rating_avg', '&gt;', 3.66)]" groups="helpdesk.group_use_rating"/>
+                <filter name="rating_okay" string="Neutral" domain="[('rating_avg', '&lt;', 3.66), ('rating_avg', '&gt;=', 2.33)]" groups="helpdesk.group_use_rating"/>
+                <filter name="dissatisfied" string="Unhappy" domain="[('rating_avg', '&lt;', 2.33), ('rating_last_value', '!=', 0.0)]" groups="helpdesk.group_use_rating"/>
                 <separator/>
                 <filter string="Creation Date" date="create_date" name="creation_date">
                     <filter name="create_date_today" string="Today" domain="[('create_date', '&gt;', datetime.datetime.combine(context_today() - relativedelta(days=1), datetime.time(23, 59, 59)).to_utc())]"/>
@@ -153,13 +153,16 @@
             </filter>
             <filter name="archive" position="after">
                 <separator invisible="1"/>
+                <filter invisible="1" string="My Activities" name="filter_activities_my"
+                    domain="[('activity_user_id', '=', uid)]"/>
+                <separator invisible="1"/>
                 <filter invisible="1" string="Late Activities" name="activities_overdue"
-                    domain="[('my_activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"
-                    help="Show all records which has next action date is before today"/>
+                    domain="[('activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"
+                    help="Show all records whose next activity date is past"/>
                 <filter invisible="1" string="Today Activities" name="activities_today"
-                    domain="[('my_activity_date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                    domain="[('activity_date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter invisible="1" string="Future Activities" name="activities_upcoming_all"
-                    domain="[('my_activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
+                    domain="[('activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
             </filter>
         </field>
     </record>
@@ -180,13 +183,16 @@
                 <filter name="filter_create_date" date="create_date"/>
                 <filter name="filter_assign_date" date="assign_date"/>
                 <filter name="filter_sla_deadline" date="sla_deadline"/>
+                <filter invisible="1" string="My Activities" name="filter_activities_my"
+                    domain="[('activity_user_id', '=', uid)]"/>
+                <separator invisible="1"/>
                 <filter invisible="1" string="Late Activities" name="activities_overdue"
-                    domain="[('my_activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"
-                    help="Show all records which has next action date is before today"/>
+                    domain="[('activity_date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"
+                    help="Show all records whose next activity date is past"/>
                 <filter invisible="1" string="Today Activities" name="activities_today"
-                    domain="[('my_activity_date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                    domain="[('activity_date_deadline', '=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter invisible="1" string="Future Activities" name="activities_upcoming_all"
-                    domain="[('my_activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
+                    domain="[('activity_date_deadline', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
                 <separator/>
                 <filter string="SLA Failed" name="sla_failed" domain="[('sla_fail','!=',False)]" groups="helpdesk.group_use_sla"/>
                 <group expand="0" string="Group By">
@@ -300,8 +306,7 @@
                 <progressbar field="kanban_state" colors='{"done": "success", "blocked": "danger", "normal": "200"}'/>
                 <templates>
                     <t t-name="menu">
-                        <t t-if="widget.editable"><a type="open" class="dropdown-item" role="menuitem">Edit</a></t>
-                        <a name="toggle_active" type="object" class="dropdown-item" role="menuitem" t-if="! record.active.value">Restore</a>
+                        <a name="action_unarchive" type="object" class="dropdown-item" role="menuitem" t-if="! record.active.value">Restore</a>
                         <field name="color" widget="kanban_color_picker"/>
                     </t>
                     <t t-name="card">
@@ -322,13 +327,13 @@
                                 <field name="priority" widget="priority"/>
                                 <field name="activity_ids" widget="kanban_activity" class="ms-2"/>
                                 <b t-if="record.use_rating.raw_value and record.rating_count.raw_value &gt; 0" groups="helpdesk.group_use_rating" class="ms-2">
-                                    <strong class="fa fa-fw fa-smile-o fa-lg text-success fw-bolder" t-if="record.rating_avg.raw_value &gt;= 3.66" title="Average Rating: Satisfied" role="img" aria-label="Happy face"/>
-                                    <strong class="fa fa-fw fa-meh-o fa-lg text-warning fw-bolder" t-elif="record.rating_avg.raw_value &gt;= 2.33" title="Average Rating: Okay" role="img" aria-label="Neutral face"/>
-                                    <strong class="fa fa-fw fa-frown-o fa-lg text-danger fw-bolder" t-else="" title="Average Rating: Dissatisfied" role="img" aria-label="Sad face"/>
+                                    <strong class="fa fa-fw fa-smile-o fa-lg text-success fw-bolder" t-if="record.rating_avg.raw_value &gt;= 3.66" title="Average Rating: Happy" role="img" aria-label="Happy face"/>
+                                    <strong class="fa fa-fw fa-meh-o fa-lg text-warning fw-bolder" t-elif="record.rating_avg.raw_value &gt;= 2.33" title="Average Rating: Neutral" role="img" aria-label="Neutral face"/>
+                                    <strong class="fa fa-fw fa-frown-o fa-lg text-danger fw-bolder" t-else="" title="Average Rating: Unhappy" role="img" aria-label="Unhappy face"/>
                                 </b>
                             </div>
                             <div class="d-flex align-items-center ms-auto">
-                                <field t-if="record.user_id.raw_value" name="user_id" widget="many2one_avatar_user"/>
+                                <field name="user_id" widget="many2one_avatar_user"/>
                                 <field name="kanban_state" widget="state_selection" groups="base.group_user" class="ms-1"/>
                             </div>
                         </footer>
@@ -357,9 +362,9 @@
                     <field name="team_privacy_visibility" invisible="1"/>
                     <div class="oe_button_box" name="button_box" groups="base.group_user">
                         <button name="action_open_ratings" type="object" class="oe_stat_button" icon="" invisible="not use_rating or rating_count == 0" groups="helpdesk.group_use_rating">
-                            <i class="fa fa-fw o_button_icon fa-smile-o text-success" invisible="rating_avg &lt; 3.66" title="Satisfied"/>
-                            <i class="fa fa-fw o_button_icon fa-meh-o text-warning" invisible="rating_avg &lt; 2.33 or rating_avg &gt;= 3.66" title="Okay"/>
-                            <i class="fa fa-fw o_button_icon fa-frown-o text-danger" invisible="rating_avg &gt;= 2.33" title="Dissatisfied"/>
+                            <i class="fa fa-fw o_button_icon fa-smile-o text-success" invisible="rating_avg &lt; 3.66" title="Happy"/>
+                            <i class="fa fa-fw o_button_icon fa-meh-o text-warning" invisible="rating_avg &lt; 2.33 or rating_avg &gt;= 3.66" title="Neutral"/>
+                            <i class="fa fa-fw o_button_icon fa-frown-o text-danger" invisible="rating_avg &gt;= 2.33" title="Unhappy"/>
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value"><field name="rating_avg_text" nolabel="1"/></span>
                                 <span class="o_stat_text">Rating</span>
@@ -602,7 +607,7 @@
             'default_partner_to': '{{ object.partner_id.id or \'\' }}',
         }</field>
         <field name="binding_model_id" ref="helpdesk.model_helpdesk_ticket"/>
-        <field name="binding_view_types">list</field>
+        <field name="binding_view_types">list,kanban</field>
     </record>
 
     <!-- Action for dashboard button -->
@@ -1075,5 +1080,15 @@
                 <attribute name="default_order">ticket_ref desc</attribute>
             </xpath>
         </field>
+    </record>
+
+    <record id="action_edit_followers_helpdesk_ticket" model="ir.actions.act_window">
+        <field name="name">Add/remove followers</field>
+        <field name="res_model">mail.followers.edit</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_res_model': 'helpdesk.ticket', 'default_res_ids': active_ids}</field>
+        <field name="binding_model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="binding_view_types">list,kanban</field>
     </record>
 </odoo>

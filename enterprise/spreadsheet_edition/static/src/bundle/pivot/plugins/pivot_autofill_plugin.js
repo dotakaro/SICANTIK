@@ -2,8 +2,13 @@ import { _t } from "@web/core/l10n/translation";
 import { UIPlugin, tokenize, helpers } from "@odoo/o-spreadsheet";
 import { domainHasNoRecordAtThisPosition } from "@spreadsheet/pivot/pivot_helpers";
 
-const { getNumberOfPivotFunctions, isDateOrDatetimeField, pivotTimeAdapter, createPivotFormula } =
-    helpers;
+const {
+    getNumberOfPivotFunctions,
+    isDateOrDatetimeField,
+    pivotTimeAdapter,
+    createPivotFormula,
+    toNormalizedPivotValue,
+} = helpers;
 
 /**
  * @typedef {import("@odoo/o-spreadsheet").SpreadsheetPivotTable} SpreadsheetPivotTable
@@ -191,7 +196,7 @@ export class PivotAutofillPlugin extends UIPlugin {
      */
     _autofillPivotValue(pivotId, args, isColumn, increment, dataSource, definition) {
         const currentElement = this._getCurrentValueElement(args, definition);
-        const table = dataSource.getTableStructure();
+        const table = dataSource.getExpandedTableStructure();
         const isDate = this._isGroupedOnlyByOneDate(definition, isColumn ? "COLUMN" : "ROW");
         let cols = [];
         let rows = [];
@@ -204,10 +209,10 @@ export class PivotAutofillPlugin extends UIPlugin {
                 const group = this._getGroupOfFirstDate(definition, "COLUMN");
                 cols = currentElement.cols;
                 const value = this._incrementDate(cols[0], group, increment);
-                if (value === undefined){
-                    return ""
+                if (value === undefined) {
+                    return "";
                 }
-                cols[0] = value
+                cols[0] = value;
                 measure = cols.pop();
             } else {
                 const currentColIndex = this._getColMeasureIndex(table, currentElement.cols);
@@ -239,10 +244,10 @@ export class PivotAutofillPlugin extends UIPlugin {
                 const group = this._getGroupOfFirstDate(definition, "ROW");
                 rows = currentElement.rows;
                 const value = this._incrementDate(rows[0], group, increment);
-                if (value === undefined){
-                    return ""
+                if (value === undefined) {
+                    return "";
                 }
-                rows[0] = value
+                rows[0] = value;
             } else {
                 const currentRowIndex = this._getRowIndex(table, currentElement.rows);
                 if (currentRowIndex === -1) {
@@ -308,7 +313,7 @@ export class PivotAutofillPlugin extends UIPlugin {
      */
     _autofillPivotColHeader(pivotId, args, isColumn, increment, dataSource, definition) {
         /** @type {SpreadsheetPivotTable} */
-        const table = dataSource.getTableStructure();
+        const table = dataSource.getExpandedTableStructure();
         const currentElement = this._getCurrentHeaderElement(args, definition);
         const currentColIndex = this._getColMeasureIndex(table, currentElement.cols);
         const isDate =
@@ -322,10 +327,10 @@ export class PivotAutofillPlugin extends UIPlugin {
                 const group = this._getGroupOfFirstDate(definition, "COLUMN");
                 groupValues = currentElement.cols;
                 const value = this._incrementDate(groupValues[0], group, increment);
-                if (value === undefined){
-                    return ""
+                if (value === undefined) {
+                    return "";
                 }
-                groupValues[0] = value
+                groupValues[0] = value;
             } else {
                 const rowIndex = currentElement.cols.length - 1;
                 const nextColIndex = currentColIndex + increment;
@@ -358,19 +363,39 @@ export class PivotAutofillPlugin extends UIPlugin {
             if (nextRowIndex >= groupLevels + 1) {
                 // Targeting a value
                 const rowIndex = nextRowIndex - groupLevels - 1;
-                const measureCell = this._getCellFromMeasureRowAtIndex(table, currentColIndex);
-                const cols = [...measureCell.values];
+                let cols;
+                if (currentColIndex >= 0) {
+                    cols = [...this._getCellFromMeasureRowAtIndex(table, currentColIndex).values];
+                } else if (groupLevels > 1) {
+                    return "";
+                } else {
+                    // Autofilling value not present in the original table
+                    cols = [
+                        ...currentElement.cols,
+                        ...this._getCellFromMeasureRowAtIndex(table, 0).values.slice(
+                            currentElement.cols.length
+                        ),
+                    ];
+                }
                 const measure = cols.pop();
                 const rows = [...this._getCellsFromRowAtIndex(table, rowIndex).values];
                 return this._createPivotFormula(pivotId, rows, cols, definition, measure);
             } else {
                 // Targeting a col.header
-                const groupValues = this._getNextColCell(
-                    table,
-                    currentColIndex,
-                    nextRowIndex
-                ).values;
-
+                let groupValues;
+                if (currentColIndex >= 0) {
+                    groupValues = this._getNextColCell(table, currentColIndex, nextRowIndex).values;
+                } else if (groupLevels > 1) {
+                    return "";
+                } else {
+                    // Autofilling value not present in the original table
+                    groupValues = [
+                        ...currentElement.cols,
+                        ...this._getNextColCell(table, 0, nextRowIndex).values.slice(
+                            currentElement.cols.length
+                        ),
+                    ];
+                }
                 return this._createPivotFormula(pivotId, [], groupValues, definition);
             }
         }
@@ -407,7 +432,7 @@ export class PivotAutofillPlugin extends UIPlugin {
      * @returns {string}
      */
     _autofillPivotRowHeader(pivotId, args, isColumn, increment, dataSource, definition) {
-        const table = dataSource.getTableStructure();
+        const table = dataSource.getExpandedTableStructure();
         const currentElement = this._getCurrentHeaderElement(args, definition);
         const currentIndex = this._getRowIndex(table, currentElement.rows);
         const isDate = this._isGroupedOnlyByOneDate(definition, "ROW");
@@ -436,10 +461,10 @@ export class PivotAutofillPlugin extends UIPlugin {
                 const group = this._getGroupOfFirstDate(definition, "ROW");
                 rows = currentElement.rows;
                 const value = this._incrementDate(rows[0], group, increment);
-                if (value === undefined){
-                    return ""
+                if (value === undefined) {
+                    return "";
                 }
-                rows[0] = value
+                rows[0] = value;
             } else {
                 const nextIndex = currentIndex + increment;
                 if (currentIndex === -1 || nextIndex < 0 || nextIndex >= table.rows.length) {
@@ -467,7 +492,7 @@ export class PivotAutofillPlugin extends UIPlugin {
         if (nextIndex >= 0) {
             return "";
         }
-        const table = dataSource.getTableStructure();
+        const table = dataSource.getExpandedTableStructure();
         const groupIndex = this._getColMeasureIndex(table, currentElement.cols);
         if (groupIndex < 0) {
             return "";
@@ -516,14 +541,11 @@ export class PivotAutofillPlugin extends UIPlugin {
      */
     _getCurrentHeaderElement(args, definition) {
         const values = this._parseArgs(args.slice(1));
-        const cols = this._getFieldValues(
-            [...definition.columns.map((col) => col.nameWithGranularity), "measure"],
-            values
-        );
-        const rows = this._getFieldValues(
-            definition.rows.map((row) => row.nameWithGranularity),
-            values
-        );
+        const cols = this._getFieldValues(definition.columns, values);
+        const rows = this._getFieldValues(definition.rows, values);
+        if ("measure" in values) {
+            cols.push(values.measure);
+        }
         return { cols, rows };
     }
     /**
@@ -539,33 +561,38 @@ export class PivotAutofillPlugin extends UIPlugin {
      */
     _getCurrentValueElement(args, definition) {
         const values = this._parseArgs(args.slice(2));
-        const cols = this._getFieldValues(
-            definition.columns.map((col) => col.nameWithGranularity),
-            values
-        );
+        const cols = this._getFieldValues(definition.columns, values);
         cols.push(args[1]); // measure
-        const rows = this._getFieldValues(
-            definition.rows.map((row) => row.nameWithGranularity),
-            values
-        );
+        const rows = this._getFieldValues(definition.rows, values);
         return { cols, rows };
     }
     /**
      * Return the values for the fields which are present in the list of
      * fields
      *
-     * ex: fields: ["create_date"]
-     *     values: { create_date: "01/01", stage_id: 1 }
+     * ex: dimensions: [{ nameWithGranularity: "create_date:month" }]
+     *     values: { "create_date:month": "01/01", stage_id: 1 }
      *      => ["01/01"]
      *
-     * @param {Array<string>} fields List of fields
+     * @param {import("@odoo/o-spreadsheet").PivotDimension[]} dimensions List of fields
      * @param {Object} values Association field-values
      *
      * @private
      * @returns {Array<string>}
      */
-    _getFieldValues(fields, values) {
-        return fields.filter((field) => field in values).map((field) => values[field]);
+    _getFieldValues(dimensions, values) {
+        return dimensions
+            .filter((dimension) => dimension.nameWithGranularity in values)
+            .map((dimension) => {
+                try {
+                    return toNormalizedPivotValue(
+                        dimension,
+                        values[dimension.nameWithGranularity]
+                    ).toString();
+                } catch {
+                    return "";
+                }
+            });
     }
     /**
      * Increment a date with a given increment and interval (group)

@@ -37,6 +37,7 @@ Note: Only the admin user is allowed to make those customizations.
         'views/actions.xml',
         'views/ir_actions_report_xml.xml',
         'views/ir_model_data.xml',
+        'views/base_automation_views.xml',
         'views/studio_approval_views.xml',
         'views/reset_view_arch_wizard.xml',
         'views/studio_export_wizard_views.xml',
@@ -49,6 +50,7 @@ Note: Only the admin user is allowed to make those customizations.
         'security/studio_security.xml',
     ],
     'application': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [
@@ -111,14 +113,8 @@ Note: Only the admin user is allowed to make those customizations.
             'web_studio/static/src/client_action/report_editor/qweb_table_plugin.scss',
         ],
         'web.qunit_suite_tests': [
-            # In tests we don't want to lazy load this
-            # And we don't want to push them into any other test suite either
-            # as web.tests_assets would
-            ('include', 'web_studio.studio_assets_minimal'),
-            'web_studio/static/tests/legacy/**/*.js',
-        ],
-        'web.qunit_mobile_suite_tests': [
-            'web_studio/static/tests/legacy/views/disable_patch.js',
+            # File to remove once all the legacy tests have been converted
+            'web_studio/static/tests/legacy/disable_patch.js',
         ],
         'web.assets_unit_tests': [
             ('include', 'web_studio.studio_assets_minimal'),

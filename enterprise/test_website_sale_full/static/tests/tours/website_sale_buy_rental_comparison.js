@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import * as tourUtils from "@website_sale/js/tours/tour_utils";
 
@@ -11,16 +9,7 @@ registry.category("web_tour.tours").add("shop_buy_rental_product_comparison", {
             trigger: "img[alt=Computer]",
             run: "hover && click .o_add_compare",
         },
-        {
-            content: "Search Color T-Shirt write text",
-            trigger: 'form input[name="search"]',
-            run: "edit Color T-Shirt",
-        },
-        {
-            content: "Search Color T-Shirt click",
-            trigger: 'form:has(input[name="search"]) .oe_search_button',
-            run: "click",
-        },
+        ...tourUtils.searchProduct("Color T-Shirt"),
         {
             content: "add first product 'Color T-Shirt' in a comparison list",
             trigger: '.oe_product_cart:contains("Color T-Shirt")',
@@ -37,6 +26,7 @@ registry.category("web_tour.tours").add("shop_buy_rental_product_comparison", {
             content: "click on compare button",
             trigger: ".o_comparelist_button a",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             content: "click on add to cart",
@@ -46,7 +36,7 @@ registry.category("web_tour.tours").add("shop_buy_rental_product_comparison", {
         tourUtils.goToCart({ quantity: 1 }),
         {
             content: "Verify there is a Computer",
-            trigger: '#cart_products div a h6:contains("Computer")',
+            trigger: '#cart_products div h6:contains("Computer")',
         },
         {
             content: "Verify there are 1 quantity of Computers",
@@ -59,6 +49,7 @@ registry.category("web_tour.tours").add("shop_buy_rental_product_comparison", {
             content: "go to checkout",
             trigger: 'a[href*="/shop/checkout"]',
             run: "click",
+            expectUnloadPage: true,
         },
         tourUtils.confirmOrder(),
         {

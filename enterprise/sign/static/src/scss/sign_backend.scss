@@ -30,6 +30,51 @@
         }
     }
 
+    .o_sign_sidebar_documents_header_title,.o_sign_sidebar_signers_header_title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 33px;
+        border-bottom: 1px solid $o-gray-300;
+    }
+
+    .o_sign_sidebar_signer .fa-pencil {
+        display: none;
+    }
+
+    .o_sign_sidebar_signer:hover .fa-pencil {
+        display: inline-block;
+    }
+
+    .o_sign_sidebar_document_name {
+        padding: 5px;
+        width: 100%;
+        height: 45px;
+        align-items: center;
+        display: flex;
+        &:hover {
+            cursor: pointer;
+            background-color: #F8F8F8;
+        }
+        border-bottom: 1px solid #d8dadd;
+        overflow: hidden;
+    }
+
+    .o_sign_sidebar_document_name_text {
+        overflow: hidden;
+        width: 100%;
+        padding-right: 10px;
+        cursor: pointer;
+    }
+
+    .o_sign_document_name_input {
+        width: 100%;
+        padding-right: 10px;
+    }
+
+    .o_sign_sidebar_document_name_selected {
+        background-color: #F8F8F8;
+    }
     /* Module pages */
     .o_sign_template, .o_sign_document {
         display: flex;
@@ -54,19 +99,6 @@
             opacity: 1.0; 
         }
 
-        .o_sign_template_name_input {
-            width: auto;
-            display: inline-block;
-            border: 1px dashed white;
-            &:focus {
-                border: 1px solid silver;
-            }
-            &[disabled] {
-                background-color: transparent;
-                border: none;
-            }
-        }
-
         .alert.o_sign_template_saved_info {
             padding: 5px;
             opacity: 0;
@@ -75,24 +107,6 @@
         .o_sign_duplicate_sign_template {
             padding: 0;
             margin-bottom: 2px;
-        }
-
-        .o_sign_template_header_wrapper {
-            .o_sign_template_tags_and_save .o_field_many2many_selection {
-                width: auto !important; //makes many2many field one line
-            }
-        }
-    }
-
-
-    .o_sign_create_partner {
-        .fa-exclamation-circle {
-            padding: 0 10px;
-            color: map-get($theme-colors, 'danger');
-        }
-        .fa-check-circle {
-            padding-left: 10px;
-            color: map-get($theme-colors, 'success');
         }
     }
 
@@ -120,11 +134,9 @@
     .o_sign_resend_access_button {
         padding: 0;
     }
-    
+
     .o_popover_offset {
         top: 29px !important;
-        left: -4px !important #{"/*rtl:ignore*/"};
-        left: 4px !important #{"/*rtl:remove*/"};
     }
 
     .o_sign_close_button {
@@ -135,6 +147,191 @@
         line-height: 1;
         text-shadow: 0 1px 0 #FFFFFF;
         opacity: .5;
+    }
+
+    .o_sign_sidebar {
+        max-width: 320px;
+        z-index: 1030;
+        flex-shrink: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        background-color: white;
+    }
+
+    .o_sign_sidebar_icon {
+        min-width: 10px;
+        border: none;
+        padding: 0px !important;
+    }
+
+    .o_sign_document_list_item {
+        cursor: pointer;
+    }
+
+    .o_sign_sidebar_add_button_container {
+        background: var(--body-bg);
+    }
+
+    .o_sign_sidebar_add_button {
+        min-width: 150px;
+        font-size: 15px;
+    }
+
+    .o_sign_sidebar_delete_button {
+        min-width: 150px;
+        font-size: 15px;
+        margin-top: 10px;
+    }
+
+    .o_sign_sidebar_signer_header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .o_sign_sidebar_signer {
+        position: relative;
+        padding: 5px;
+        &:hover {
+            cursor: pointer;
+            background-color: #F8F8F8;
+        }
+    }
+
+    .o_sign_sidebar_signer_selected {
+        background-color: #F8F8F8;
+    }
+
+    .o_sign_sidebar_signer_header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .o_sign_item_count {
+        display: flex;
+        align-items: center;
+        width: 25px;
+        height: 25px;
+        justify-content: center;
+        border-radius: 15px;
+        margin: auto;
+        padding: 4px;
+    }
+
+    .o_sign_sidebar_signer_name {
+        width: 100%;
+        overflow: hidden;
+        height: 35px;
+    }
+
+    .o_sign_sidebar_item_grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px; /* Small gap between buttons */
+        padding: 4px;
+        border-radius: 5px;
+    }
+
+    .o_sign_field_type_button {
+        &:hover {
+            cursor: move;
+            transition: transform 200ms ease 0s;
+            transform: translateX(1px) translateY(-1px) scale(1.02) rotate(1deg);
+        }
+    }
+
+    .o_sign_field_type_button_content i {
+        flex-shrink: 0; /* Prevent icon from shrinking */
+    }
+
+    .o_sign_sidebar_role_input_container {
+        display: flex;
+        align-items: center;
+        height: 35px;
+    }
+
+    .o_sign_sidebar_role_muted_input {
+        border-color: transparent;
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
+    .o_sign_save_template_dialog_container {
+        display: flex;
+        align-items: center;
+        border-radius: 5px;
+        background-color: white;
+        min-width: 400px;
+        min-height: 60px;
+        position: fixed;
+        right: 30px;
+        margin-top: 10px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        font-size: 15px;
+        overflow: hidden;
+        color: black;
+    }
+
+    .o_sign_notification_bar {
+        height: 100%;
+        width: 10px;
+        min-height: 60px;
+        margin-right: 10px;
+    }
+
+    .o_sign_save_template_dialog_div {
+        display: flex;
+        align-items: center;
+    }
+
+    .o_sign_save_template_save_button {
+        font-weight: bold;
+        color: darkblue;
+    }
+
+    .o_sign_save_template_close_button_div {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .o_sign_save_template_close_button {
+        right: 5px;
+        top: 5px;
+    }
+
+    @for $size from 2 through length($o-colors) {
+        .o_color_responsible_#{length($o-colors) - $size} { //assign colors in reverse order
+            background-color: rgba(nth($o-colors, $size), .2);
+
+            &:active {
+                background-color: darken(rgba(nth($o-colors, $size), .2), 15%);
+            }
+        }
+    }
+
+    @for $size from 1 through length($o-colors-secondary) {
+        .o_color_responsible_#{length($o-colors) + $size - 2} {
+            background-color: rgba(nth($o-colors-secondary, $size), .3);
+
+            &:active {
+                background-color: darken(rgba(nth($o-colors-secondary, $size), .3), 15%);
+            }
+        }
+    }
+
+    .o_sign_sidebar_document_name .fa-pencil,
+    .o_sign_sidebar_signer .fa-pencil {
+        display: none;
+    }
+
+    .o_sign_sidebar_document_name:hover .fa-pencil,
+    .o_sign_sidebar_signer:hover .fa-pencil {
+        display: inline-block;
     }
 }
 
@@ -154,7 +351,35 @@
 .o_sign_template_kanban .o_kanban_renderer {
     --KanbanRecord-width: 360px;
 
+    &.o_kanban_grouped {
+        .row > div {
+            flex: 1 1 100% !important;
+            max-width: 100% !important;
+            &.col-6 {
+                flex: 1 1 50% !important;
+                max-width: 50% !important;
+            }
+            &.d-none {
+                display: none !important; //forcing the d-none to override the d-lg or d-sm classes for grouped view
+            }
+            .oe_kanban_bottom_left {
+                float: left !important; //overrides the float-end for grouped view
+            }
+        }
+    }
+    &.o_kanban_ungrouped {
+        --Kanban-padding: 0px 0px;
+    }
+    .o_sign_kanban_card {
+        min-height: 60px;
+        border: none !important;
+        border-bottom: 1px solid #d8dadd;
+    }
     .o_kanban_record {
+        width: 100%;
+        margin: 0px;
+        border-left: none !important;
+        border-top: none !important;
         .o_dropdown_kanban {
             .dropdown-menu {
                 // the content of items in the dropdown menu of sign template is very long
@@ -192,6 +417,7 @@
 
         .o_attachment {
             width: auto;
+            min-width: 0;
         }
     }
 }
@@ -210,9 +436,65 @@
     z-index: 1055 !important;
 }
 
-.o_sign_tags_format {
-    width: 25%;
-    min-height: 72px;
+.o_sign_documents_container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.o_sign_visible_document {
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.o_sign_invisible_document {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.o_sign_template_tags_and_save {
+    position: absolute;
+    width: 300px;
+    right: 10px;
+    top: 50px;
+
+    .o_field_widget.o_field_many2many_tags {
+        height: 50px;
+        overflow: auto;
+        display: flex;
+        align-items: start;
+    }
+
+    .o_field_tags {
+        flex-wrap: nowrap;
+    }
+
+    .o_tag {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .o_tag_badge_text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .o_sign_template_tags_and_save {
+        display: none !important;
+    }
 }
 
 .o_sign_template_tags_and_save .o_tags_input {

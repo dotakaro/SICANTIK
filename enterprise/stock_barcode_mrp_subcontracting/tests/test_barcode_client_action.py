@@ -37,9 +37,7 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
         })
 
     def test_receipt_classic_subcontracted_product(self):
-        self.clean_access_rights()
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_stock_multi_locations').id)]})
         receipt_picking = self.env['stock.picking'].create({
             'partner_id': self.subcontractor_partner.id,
             'location_id': self.supplier_location.id,
@@ -47,7 +45,6 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
             'picking_type_id': self.picking_type_in.id,
         })
         self.env['stock.move'].create({
-            'name': 'test_receipt_classic_subcontracted_product',
             'location_id': self.supplier_location.id,
             'location_dest_id': self.stock_location.id,
             'product_id': self.subcontracted_product.id,
@@ -69,7 +66,6 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
         self.assertEqual(sub_order.mapped('state'), ['done', 'done'])
 
     def test_receipt_tracked_subcontracted_product(self):
-        self.clean_access_rights()
         self.subcontracted_component.tracking = 'lot'
         lot_id = self.env['stock.lot'].create({
             'product_id': self.subcontracted_component.id,
@@ -85,7 +81,6 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
             'picking_type_id': self.picking_type_in.id,
         })
         self.env['stock.move'].create({
-            'name': 'test_receipt_classic_subcontracted_product',
             'location_id': self.supplier_location.id,
             'location_dest_id': self.stock_location.id,
             'product_id': self.subcontracted_product.id,
@@ -101,9 +96,6 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
         self.assertEqual(receipt_picking.move_ids.quantity, 5)
 
     def test_receipt_flexible_subcontracted_product(self):
-        self.clean_access_rights()
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
         self.bom.consumption = 'flexible'  # To able to record flexible component
         receipt_picking = self.env['stock.picking'].create({
             'partner_id': self.subcontractor_partner.id,
@@ -112,7 +104,6 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
             'picking_type_id': self.picking_type_in.id,
         })
         self.env['stock.move'].create({
-            'name': 'test_receipt_classic_subcontracted_product',
             'location_id': self.supplier_location.id,
             'location_dest_id': self.stock_location.id,
             'product_id': self.subcontracted_product.id,
@@ -137,8 +128,6 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
         opened in barcode and the form is used to add another move line (for the same product), the
         src location of the new move line should also be the subcontract location.
         """
-        self.clean_access_rights()
-
         receipt = self.env['stock.picking'].create({
             'name': 'TRSBPMASL picking',
             'location_id': self.supplier_location.id,
@@ -146,7 +135,6 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
             'picking_type_id': self.env.ref('stock.picking_type_in').id,
             'partner_id': self.subcontractor_partner.id,
             'move_ids_without_package': [Command.create({
-                'name': 'TRSBPMASL move',
                 'location_id': self.supplier_location.id,
                 'location_dest_id': self.stock_location.id,
                 'product_id': self.subcontracted_product.id,
@@ -159,3 +147,31 @@ class TestSubcontractingBarcodeClientAction(TestBarcodeClientAction):
         self.start_tour(url, 'test_receipt_subcontract_bom_product_manual_add_src_location', login='admin', timeout=180)
 
         self.assertEqual(receipt.move_line_ids.location_id, self.env.company.subcontracting_location_id)
+
+    def test_partial_subcontract_receipt_and_backorder(self):
+        receipt = self.env['stock.picking'].create({
+            'name': "test_partial_subcontract_receipt_and_backorder",
+            'picking_type_id': self.stock_location.warehouse_id.in_type_id.id,
+            'partner_id': self.subcontractor_partner.id,
+        })
+        self.env['stock.move'].create([{
+            'product_id': prod.id,
+            'product_uom_qty': 5,
+            'product_uom': self.subcontracted_product.uom_id.id,
+            'location_id': self.supplier_location.id,
+            'location_dest_id': self.stock_location.id,
+            'picking_id': receipt.id,
+        } for prod in [self.subcontracted_product, self.subcontracted_component]])
+        receipt.action_confirm()
+
+        # Ensure user has a mail setup
+        user_login = 'admin'
+        user_partner = self.env['res.users'].search([('login', '=', user_login)]).partner_id
+        if not user_partner.email:
+            user_partner.email = 'admin@yourcompany.example.com'
+
+        url = self._get_client_action_url(receipt.id)
+        self.start_tour(url, 'test_partial_subcontract_receipt_and_backorder', login=user_login)
+
+        self.assertEqual(receipt.state, 'done')
+        self.assertTrue(receipt.backorder_ids)

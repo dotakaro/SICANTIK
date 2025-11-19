@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { SORTABLE_TOLERANCE } from "@knowledge/components/sidebar/sidebar";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 import { queryOne, queryFirst } from "@odoo/hoot-dom";
@@ -8,10 +6,42 @@ import { Component, xml } from "@odoo/owl";
 import { patch } from "@web/core/utils/patch";
 import { ReadonlyEmbeddedViewComponent } from "@knowledge/editor/embedded_components/backend/view/readonly_embedded_view";
 
+const permissions = { none: "No Access", read: "Can Read", write: "Can Edit" };
+
+export const openPermissionPanel = [
+    {
+        isActive: ["body:has(.o_knowledge_permission_panel)"],
+        content: "close o_knowledge_permission_panel if it already opened",
+        trigger: ".o_knowledge_header button:contains('Share')",
+        run: "click",
+    },
+    {
+        trigger: "body:not(:has(.o_knowledge_permission_panel))",
+    },
+    {
+        trigger: ".o_knowledge_header button:contains('Share')",
+        async run(helpers) {
+                await new Promise((r) => setTimeout(r, 1000));
+                await helpers.click();
+            },
+    },
+    {
+        trigger: "body:has(.o_knowledge_permission_panel)",
+    },
+];
+
 export const changeInternalPermission = (permission) => {
-    const target = document.querySelector('.o_permission[aria-label="Internal Permission"]');
-    target.value = permission;
-    target.dispatchEvent(new Event("change"));
+    return [
+        ...openPermissionPanel,
+        {
+            trigger: ".o_knowledge_permission_panel .o_internal_permission .dropdown-toggle",
+            run: "click",
+        },
+        {
+            trigger: `.o-dropdown-item:contains('${permissions[permission]}')`,
+            run: "click",
+        },
+    ];
 };
 
 function getOffset(element) {
@@ -115,16 +145,12 @@ export function appendArticleLink(htmlFieldContainerSelector, articleName, previ
         trigger: '.o-we-powerbox .o-we-command .o-we-command-img.fa-newspaper-o',
         run: 'click',
     }, {
-        // select an article in the list
-        // 'not has span' is used to remove children articles as they also contain the article name
-        trigger: `.o_select_menu_item > span:not(:has(span)):contains(${articleName})`,
+        trigger: ".o_article_search_input input",
+        run: `edit ${articleName}`,
+    }, {
+        trigger: `.o_article_search_item .o_article_search_name:contains(${articleName})`,
         run: 'click',
-    }, { // wait for the choice to be registered
-        trigger: `.o_select_menu_toggler_slot:contains(${articleName})`,
-    }, { // click on the "Insert Link" button
-        trigger: '.modal-dialog:contains(Link an Article) .modal-footer button.btn-primary',
-        run: 'click'
-    }];
+    }]
 }
 
 /**

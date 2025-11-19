@@ -1,4 +1,4 @@
-/** @odoo-module **/
+import { _t } from "@web/core/l10n/translation";
 
 import hrContractSalary from "@hr_contract_salary/js/hr_contract_salary";
 import { renderToElement } from "@web/core/utils/render";
@@ -18,11 +18,12 @@ hrContractSalary.include({
         "change input[name='fold_l10n_be_ambulatory_insured_spouse']": "onchangeAmbulatory",
         "change input[name='children']": "onchangeChildren",
         "change input[name='fold_wishlist_car_total_depreciated_cost']": "onchangeWishlistCar",
+        "change input[name='fold_l10n_be_mobility_budget_amount_monthly']": "onchangeMobility",
     }),
 
     getBenefits() {
         var res = this._super.apply(this, arguments);
-        res.contract.l10n_be_canteen_cost = parseFloat(
+        res.version.l10n_be_canteen_cost = parseFloat(
             this.el.querySelector("input[name='l10n_be_canteen_cost']").value || "0.0"
         );
         return res
@@ -49,6 +50,7 @@ hrContractSalary.include({
         if ($submit_button.length) {
             $submit_button.prop('disabled', !!data["configurator_warning"]);
         }
+        $("input[name='l10n_be_mobility_budget_amount_monthly']").val(data['l10n_be_mobility_budget_amount_monthly']);
     },
 
     onchangeCompanyCar: function(event) {
@@ -79,7 +81,7 @@ hrContractSalary.include({
             anchorEl.dataset.bsBackdrop = "false";
             anchorEl.dataset.bsDismiss = "modal";
             anchorEl.setAttribute("name", "wishlist_simulation_button");
-            anchorEl.textContent = "Simulation";
+            anchorEl.textContent = _t("Simulation");
             const nextToSelectEl = this.el.querySelector(
                 'input[name="wishlist_car_total_depreciated_cost"]'
             ).parentElement;
@@ -123,6 +125,54 @@ hrContractSalary.include({
         }
     },
 
+    onchangeMobility: function(event) {
+        const hasMobility = this.el.querySelector(`input[name='fold_l10n_be_mobility_budget_amount_monthly']`)?.checked;
+        const transportRelatedFields = [
+            "fold_company_car_total_depreciated_cost",
+            "fold_private_car_reimbursed_amount",
+            "fold_l10n_be_bicyle_cost",
+            "fold_wishlist_car_total_depreciated_cost",
+            "fold_public_transport_reimbursed_amount",
+            "fold_train_transport_reimbursed_amount",
+        ];
+        if (hasMobility) {
+            for (const fieldName of transportRelatedFields) {
+                const element = this.el.querySelector(`input[name='${fieldName}']`);
+                if (element && element.checked) {
+                    element.click();
+                }
+            }
+
+            const fuelCardSliderEl = this.el.querySelector("input[name='fuel_card_slider']");
+            const fuelCardEl = this.el.querySelector("input[name='fuel_card']");
+            if (fuelCardSliderEl) {
+                fuelCardEl.value = 0;
+                fuelCardEl.disabled = true;
+            }
+            if (fuelCardEl) {
+                fuelCardEl.value = 0;
+            }
+
+            this.el.querySelector("label[for='company_car_total_depreciated_cost']")?.removeAttribute('checked');
+            this.el.querySelector("label[for='company_car_total_depreciated_cost']")?.parentElement.classList.add("o_disabled");
+            this.el.querySelector("label[for='wishlist_car_total_depreciated_cost']")?.parentElement.classList.add("o_disabled");
+            this.el.querySelector("label[for='public_transport_reimbursed_amount']")?.parentElement.classList.add("o_disabled");
+            this.el.querySelector("label[for='train_transport_reimbursed_amount']")?.parentElement.classList.add("o_disabled");
+            this.el.querySelector("label[for='private_car_reimbursed_amount']")?.parentElement.classList.add("o_disabled");
+            this.el.querySelector("label[for='l10n_be_bicyle_cost']")?.parentElement.classList.add("o_disabled");
+            this.el.querySelector("label[for='fuel_card']")?.parentElement.classList.add("o_disabled");
+        } else {
+            this.el.querySelector("label[for='company_car_total_depreciated_cost']")?.parentElement.classList.remove("o_disabled");
+            this.el.querySelector("label[for='wishlist_car_total_depreciated_cost']")?.parentElement.classList.remove("o_disabled");
+            this.el.querySelector("label[for='public_transport_reimbursed_amount']")?.parentElement.classList.remove("o_disabled");
+            this.el.querySelector("label[for='train_transport_reimbursed_amount']")?.parentElement.classList.remove("o_disabled");
+            this.el.querySelector("label[for='private_car_reimbursed_amount']")?.parentElement.classList.remove("o_disabled");
+            this.el.querySelector("label[for='l10n_be_bicyle_cost']")?.parentElement.classList.remove("o_disabled");
+            this.el.querySelector("label[for='fuel_card']")?.parentElement.classList.remove("o_disabled");
+        }
+    },
+
+
     start: async function () {
         const res = await this._super(...arguments);
         this.onchangeChildren();
@@ -150,13 +200,13 @@ hrContractSalary.include({
         const childrenEl = this.el.querySelector("input[name='insured_relative_children_manual']");
         const childrenStrongEl = document.createElement("strong");
         childrenStrongEl.classList.add("mt8");
-        childrenStrongEl.textContent = "# Children < 19";
+        childrenStrongEl.textContent = _t("# Children < 19");
         childrenEl?.parentNode.insertBefore(childrenStrongEl, childrenEl);
 
         const adultsEl = this.el.querySelector("input[name='insured_relative_adults_manual']");
         const adultStrongEl = document.createElement("strong");
         adultStrongEl.classList.add("mt8");
-        adultStrongEl.textContent = "# Children >= 19";
+        adultStrongEl.textContent = _t("# Children >= 19");
         adultsEl?.parentNode.insertBefore(adultStrongEl, adultsEl);
 
         const insuranceEl = this.el.querySelector(
@@ -164,7 +214,7 @@ hrContractSalary.include({
         );
         const insuranceNoteStrongEl = document.createElement("strong");
         insuranceNoteStrongEl.classList.add("mt8");
-        insuranceNoteStrongEl.textContent = "Additional Information";
+        insuranceNoteStrongEl.textContent = _t("Additional Information");
         insuranceEl?.parentNode.insertBefore(insuranceNoteStrongEl, insuranceEl);
         this.onchangeAmbulatory();
         this.el
@@ -199,6 +249,7 @@ hrContractSalary.include({
         ambulatoryInsuranceEl?.parentNode.insertBefore(
             insuranceNoteStrongEl.cloneNode(true), ambulatoryInsuranceEl
         );
+        this.onchangeMobility();
         return res;
     },
 

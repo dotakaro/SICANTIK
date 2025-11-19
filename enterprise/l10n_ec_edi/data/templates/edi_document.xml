@@ -100,6 +100,13 @@
                             <baseImponible t-out="format_num_2(withhold_line['tax_base_amount'])"/>
                             <porcentajeRetener t-out="format_num_2(withhold_line['tax_rate'])"/>
                             <valorRetenido t-out="format_num_2(withhold_line['tax_amount'])"/>
+                             <t t-if="is_withhold and is_dividend_withhold">
+                                <dividendos>
+                                    <fechaPagoDiv t-out="strftime(dividend_payment_date)"/>
+                                    <imRentaSoc t-out="format_num_2(dividend_income_tax)"/>
+                                    <ejerFisUtDiv t-out="dividend_fiscal_year"/>
+                                </dividendos>
+                            </t>
                         </retencion>
                     </retenciones>
                     <t t-call="l10n_ec_edi.detail_reimbursement"/>
@@ -250,7 +257,7 @@
             <codigo t-out="tax_data['code']"/>
             <codigoPorcentaje t-out="tax_data['code_percentage']"/>
             <tarifa t-if="tarifa_pre_base" t-out="format_num_6(abs(tax_data['rate']))"/>
-            <baseImponible t-out="format_num_6(currency_round(abs(tax_data['base_amount'])))"/>
+            <baseImponible t-out="format_num_6(currency_round(abs(tax_data['base_amount'] if tax_data['code_percentage'] != '3680' else (tax_data['tax_amount']/tax_data['rate']))))"/>
             <tarifa t-if="tarifa_post_base" t-out="format_num_6(abs(tax_data['rate']))"/>
             <valor t-out="format_num_2(abs(tax_data['tax_amount']))"/>
         </template>

@@ -3,13 +3,14 @@
 
 {
     'name': "Barcode/Quality/Batch Transfer bridge module",
-    'category': 'Hidden',
+    'category': 'Supply Chain/Inventory',
     'version': '1.0',
     'depends': [
         'quality_control_picking_batch',
         'stock_barcode_quality_control',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

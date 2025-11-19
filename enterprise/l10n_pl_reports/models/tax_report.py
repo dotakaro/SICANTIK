@@ -9,7 +9,7 @@ from lxml import etree
 import pytz
 
 
-class PolishTaxReportCustomHandler(models.AbstractModel):
+class L10n_PlTaxReportHandler(models.AbstractModel):
     """
     Handler for generating the JPK V7M and V7K declarations.
     The V7M is for taxpayers filing monthly VAT declarations, and includes a list of invoices /
@@ -20,7 +20,7 @@ class PolishTaxReportCustomHandler(models.AbstractModel):
     declaration for the entire quarter.
     """
     _name = 'l10n_pl.tax.report.handler'
-    _inherit = 'account.tax.report.handler'
+    _inherit = ['account.tax.report.handler']
     _description = 'Polish Tax Report Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -42,7 +42,7 @@ class PolishTaxReportCustomHandler(models.AbstractModel):
             message += _("Please configure the email in the company's contact.\n")
         if not self.env.company.partner_id.is_company and len(self.env.company.name.split()) <= 1:
             message += _("As your company is an individual, please put your name and surname separated by a space in the company's contact.\n")
-        if self.env.company.account_tax_periodicity not in ('monthly', 'trimester'):
+        if self.env.company.account_return_periodicity not in ('monthly', 'trimester'):
             message += _("The company's tax periodicity needs to be quarterly (for JPK_v7k) or monthly (for JPK_v7m).\n")
         if message:
             message = _("Some information is needed to generate the file:\n") + message
@@ -290,7 +290,7 @@ class PolishTaxReportCustomHandler(models.AbstractModel):
         expr_tax_waived = self.env.ref('l10n_pl.account_tax_report_line_zaniechaniem_poboru_tag')
         expr_prev_decla = self.env.ref('l10n_pl.account_tax_report_line_podatek_deklaracji_applied_carryover')
 
-        if self.env.company.account_tax_periodicity == 'trimester':
+        if self.env.company.account_return_periodicity == 'trimester':
             if fields.Date.to_date(options['date']['date_from']).month % 3 != 0:
                 # We don't need the aggregation of all the tax grid amounts because we're not at the end of the quarter
 
@@ -384,7 +384,7 @@ class PolishTaxReportCustomHandler(models.AbstractModel):
         self._l10n_pl_fill_move_values(options, values, report)
         self._l10n_pl_fill_aggregate_values(options, values, report)
 
-        if self.env.company.account_tax_periodicity == 'trimester':
+        if self.env.company.account_return_periodicity == 'trimester':
             values.update({
                 'xmlns':  "http://crd.gov.pl/wzor/2021/12/27/11149/"
             })

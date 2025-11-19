@@ -15,7 +15,7 @@ from tempfile import TemporaryDirectory
 
 from dbfread import DBF
 
-from odoo import models, fields, _
+from odoo import Command, models, fields, _
 from odoo.exceptions import UserError, RedirectWarning
 from odoo.tools import frozendict
 
@@ -27,8 +27,9 @@ SALE_CODE = '2'
 CREDIT_NOTE_PURCHASE_CODE = '1'
 CREDIT_NOTE_SALE_CODE = '3'
 
-class WinbooksImportWizard(models.TransientModel):
-    _name = "account.winbooks.import.wizard"
+
+class AccountWinbooksImportWizard(models.TransientModel):
+    _name = 'account.winbooks.import.wizard'
     _description = 'Account Winbooks import wizard'
 
     zip_file = fields.Binary('File', required=True)
@@ -36,35 +37,23 @@ class WinbooksImportWizard(models.TransientModel):
     suspense_code = fields.Char(string="Suspense Account Code", help="This is the code of the account in which you want to put the counterpart of unbalanced moves. This might be an account from your Winbooks data, or an account that you created in Odoo before the import.")
 
     def _import_partner_info(self, dbf_records):
-        """Import information related to partner from *_table*.dbf files.
-        The data in those files is the title, language, payment term and partner
-        category.
-        :return: (civility_data, category_data)
-            civility_data is a dictionary whose keys are the Winbooks references
-                and the values the civility title
+        """Import partner category information from *_table*.dbf files.
+        :return: category_data
             category_data is a dictionary whose keys are the Winbooks category
                 references and the values the partner categories
         """
         _logger.info("Import Partner Infos")
-        civility_data = {}
         category_data = {}
-        ResPartnerTitle = self.env['res.partner.title']
         ResPartnerCategory = self.env['res.partner.category']
         for rec in dbf_records:
-            if rec.get('TTYPE') == 'CIVILITY':
-                shortcut = rec.get('TID')
-                title = ResPartnerTitle.search([('shortcut', '=', shortcut)], limit=1)
-                if not title:
-                    title = ResPartnerTitle.create({'shortcut': shortcut, 'name': rec.get('TDESC')})
-                civility_data[shortcut] = title.id
-            elif rec.get('TTYPE').startswith('CAT'):
+            if rec.get('TTYPE').startswith('CAT'):
                 category = ResPartnerCategory.search([('name', '=', rec.get('TDESC'))], limit=1)
                 if not category:
                     category = ResPartnerCategory.create({'name': rec.get('TDESC')})
                 category_data[rec.get('TID')] = category.id
-        return civility_data, category_data
+        return category_data
 
-    def _import_partner(self, dbf_records, civility_data, category_data, account_data):
+    def _import_partner(self, dbf_records, category_data, account_data):
         """Import partners from *_csf*.dbf files.
         The data in those files is the partner details, its type, its category,
         bank informations, and central accounts.
@@ -86,7 +75,7 @@ class WinbooksImportWizard(models.TransientModel):
                 partner_data[rec.get('NUMBER')] = partner.id
             if not partner:
                 vatcode = rec.get('VATNUMBER') and rec.get('COUNTRY') and (rec.get('COUNTRY') + rec.get('VATNUMBER').replace('.', ''))
-                if not rec.get('VATNUMBER') or not rec.get('COUNTRY') or not ResPartner.simple_vat_check(rec.get('COUNTRY').lower(), vatcode):
+                if not rec.get('VATNUMBER') or not rec.get('COUNTRY') or not ResPartner._check_vat_number(rec.get('COUNTRY').upper(), vatcode):
                     vatcode = ''
                 data = {
                     'ref': rec.get('NUMBER'),
@@ -100,7 +89,6 @@ class WinbooksImportWizard(models.TransientModel):
                     'zip': rec.get('ZIPCODE') and ''.join([n for n in rec.get('ZIPCODE') if n.isdigit()]),
                     'email': rec.get('EMAIL'),
                     'active': not rec.get('ISLOCKED'),
-                    'title': civility_data.get(rec.get('CIVNAME1'), False),
                     'category_id': [(6, 0, [category_data.get(rec.get('CATEGORY'))])] if category_data.get(rec.get('CATEGORY')) else False
                 }
                 if partner_data_dict.get(rec.get('NUMBER')):
@@ -108,9 +96,7 @@ class WinbooksImportWizard(models.TransientModel):
                         if value:  # Winbooks has different partners for customer/supplier. Here we merge the data of the 2
                             data[key] = value
                 if rec.get('NAME2'):
-                    data.update({
-                        'child_ids': [(0, 0, {'name': rec.get('NAME2'), 'title': civility_data.get(rec.get('CIVNAME2'), False)})]
-                    })
+                    data['child_ids'] = [Command.create({'name': rec['NAME2']})]
                 # manage the bank account of the partner
                 if rec.get('IBANAUTO'):
                     partner_bank = ResPartnerBank.search([('acc_number', '=', rec.get('IBANAUTO'))], limit=1)
@@ -137,7 +123,7 @@ class WinbooksImportWizard(models.TransientModel):
                 if len(partner_data_dict) % 100 == 0:
                     _logger.info("Advancement: %s", len(partner_data_dict))
 
-        partner_ids = ResPartner.create(partner_data_dict.values())
+        partner_ids = ResPartner.create(tuple(partner_data_dict.values()))
         for partner in partner_ids:
             partner_data[partner.ref] = partner.id
         return partner_data, partner_ids
@@ -287,30 +273,49 @@ class WinbooksImportWizard(models.TransientModel):
         journal_data = {}
         journals = self.env['account.journal']
         AccountJournal = self.env['account.journal']
+        existing_journals = AccountJournal.search(AccountJournal._check_company_domain(self.env.company))
+        used_codes = set(existing_journals.mapped('code'))
+        processed_records = set()   # used to filter out duplicate records
+        code_inc = 0
         for rec in dbf_records:
-            if not rec.get('DBKID'):
+            if not rec.get('DBKID') or rec.get('DBKID') in processed_records:
                 continue
-            journal = AccountJournal.search([
-                *AccountJournal._check_company_domain(self.env.company),
-                ('code', '=', rec.get('DBKID')),
-            ], limit=1)
+            journal = existing_journals.filtered(lambda j: j.code == rec.get('DBKID'))
             if not journal:
                 if rec.get('DBKTYPE') == '4':
                     journal_type = 'bank' if 'IBAN' in rec.get('DBKOPT') else 'cash'
                 else:
                     journal_type = journal_types.get(rec.get('DBKTYPE'), 'general')
+                # The code of a journal is limited to a size of 5 characters.
+                # The following process is applied to the received code:
+                # 1) Check if the 5 first characters is used.
+                # 2) Check if the 5 last characters is used.
+                # 3) Fall back on a generic code.
+                # The format of this code will be the "*" character followed by an incremented number.
+                # The possible values will range from "*1" to "*9999".
+                # There are only 9999 possibilities, but it should be more than enough to handle the duplicate codes.
+                # The purpose of this generic code is to not prevent the jounal creation and to be able
+                # to quickly find it once created if we want to change it manually.
+                code = rec.get('DBKID')[:5]
+                if code in used_codes:
+                    code = rec.get('DBKID')[-5:]
+                while code in used_codes and code_inc < 10000:
+                    code_inc += 1
+                    code = '*%s' % code_inc
+                used_codes.add(code)
                 data = {
                     'name': rec.get('DBKDESC'),
-                    'code': rec.get('DBKID'),
+                    'code': code,
                     'type': journal_type,
                 }
                 if data['type'] == 'sale':
-                    data['default_account_id'] = self.env['product.category']._fields['property_account_income_categ_id'].get_company_dependent_fallback(self.env['product.category']).id
+                    data['default_account_id'] = self.env.company.income_account_id.id
                 if data['type'] == 'purchase':
-                    data['default_account_id'] = self.env['product.category']._fields['property_account_expense_categ_id'].get_company_dependent_fallback(self.env['product.category']).id
+                    data['default_account_id'] = self.env.company.expense_account_id.id
                 journal = AccountJournal.create(data)
             journal_data[rec.get('DBKID')] = journal.id
             journals += journal
+            processed_records.add(rec.get('DBKID'))
         return journal_data, journals
 
     def _import_move(self, dbf_records, pdffiles, account_data, account_central, journal_data, partner_data, vatcode_data, param_data):
@@ -380,7 +385,7 @@ class WinbooksImportWizard(models.TransientModel):
             # Split lines having a different sign on the balance in company currency and foreign currency
             tmp_val = []
             for rec in val:
-                tmp_val += [rec]
+                tmp_val += [rec.copy()]
                 if (rec['AMOUNTEUR'] or 0) * (rec['CURRAMOUNT'] or 0) < 0:
                     tmp_val[-1]['CURRAMOUNT'] = 0
                     tmp_val += [rec.copy()]
@@ -744,7 +749,7 @@ class WinbooksImportWizard(models.TransientModel):
         return param_data
 
     def _post_import(self, account_deprecated_ids):
-        account_deprecated_ids.write({'deprecated': True})  # We can't set it before because of a constraint in aml's create
+        account_deprecated_ids.write({'active': False})  # We can't set it before because of a constraint in aml's create
 
     def import_winbooks_file(self):
         """Import all the data from a Winbooks database dump. The imported
@@ -818,10 +823,10 @@ class WinbooksImportWizard(models.TransientModel):
                 self._post_process_account(account_data, vatcode_data, account_tax)
 
                 table_recs = get_dbfrecords(lambda file: file.lower().endswith("_table.dbf"))
-                civility_data, category_data = self._import_partner_info(table_recs)
+                category_data = self._import_partner_info(table_recs)
 
                 csf_recs = get_dbfrecords(lambda file: file.lower().endswith("_csf.dbf"))
-                partner_data, partner_ids = self._import_partner(csf_recs, civility_data, category_data, account_data)
+                partner_data, partner_ids = self._import_partner(csf_recs, category_data, account_data)
 
                 act_recs = get_dbfrecords(lambda file: file.lower().endswith("_act.dbf"))
                 move_data, move_ids = self._import_move(act_recs, pdffiles, account_data, account_central, journal_data, partner_data, vatcode_data, param_data)

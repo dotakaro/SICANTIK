@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 const PAPER_TO_CSS = {
     margin_top: "padding-top",
     margin_left: "padding-left",
@@ -24,7 +22,7 @@ function recordSetReprToData(string) {
 }
 
 export function humanReadableError(error) {
-    if (error.code === 200 && error.data) {
+    if (error.data) {
         error = error.data;
     }
     let viewError;

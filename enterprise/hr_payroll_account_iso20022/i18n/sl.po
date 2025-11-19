@@ -3,15 +3,15 @@
 # 	* hr_payroll_account_iso20022
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Aleš Pipan, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:47+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Aleš Pipan, 2025\n"
 "Language-Team: Slovenian (https://app.transifex.com/odoo/teams/41243/sl/)\n"
 "MIME-Version: 1.0\n"
@@ -28,6 +28,10 @@ msgid ""
 "                            <span invisible=\"not is_trusted_bank_account\" class=\"text-success\">Trusted</span>\n"
 "                        </span>"
 msgstr ""
+"<span class=\"d-flex gap-2 w-50\">\n"
+"                            <span invisible=\"is_trusted_bank_account\" class=\"text-muted\">Nezaupanja vreden</span>\n"
+"                            <span invisible=\"not is_trusted_bank_account\" class=\"text-success\">Zaupanja vreden</span>\n"
+"                        </span>"
 
 #. module: hr_payroll_account_iso20022
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account_iso20022.view_employee_form
@@ -43,7 +47,15 @@ msgstr "Bančni dnevnik"
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account_iso20022.hr_payslip_run_view_form
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account_iso20022.hr_payslip_view_form
 msgid "Create Payment Report"
-msgstr ""
+msgstr "Ustvari poročilo o plačilu"
+
+#. module: hr_payroll_account_iso20022
+#: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_payroll_payment_report_wizard__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_payslip__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_payslip_run__display_name
+msgid "Display Name"
+msgstr "Prikazani naziv"
 
 #. module: hr_payroll_account_iso20022
 #: model:ir.model,name:hr_payroll_account_iso20022.model_hr_employee
@@ -52,33 +64,41 @@ msgstr "Kader"
 
 #. module: hr_payroll_account_iso20022
 #: model:hr.payroll.dashboard.warning,name:hr_payroll_account_iso20022.hr_payroll_dashboard_warning_employee_invalid_bank_account
-msgid "Employees With Invalid Bank Accounts"
+msgid "Employees With Invalid IBAN Bank Accounts"
 msgstr ""
 
 #. module: hr_payroll_account_iso20022
 #: model:hr.payroll.dashboard.warning,name:hr_payroll_account_iso20022.hr_payroll_dashboard_warning_employee_no_country
 msgid "Employees Without Any Country"
-msgstr ""
-
-#. module: hr_payroll_account_iso20022
-#: model:hr.payroll.dashboard.warning,name:hr_payroll_account_iso20022.hr_payroll_dashboard_warning_untrusted_bank_accounts
-msgid "Employees with untrusted Bank Account numbers"
-msgstr ""
+msgstr "Zaposleni brez kakršne koli države"
 
 #. module: hr_payroll_account_iso20022
 #: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_payroll_payment_report_wizard__export_format
 msgid "Export Format"
-msgstr ""
+msgstr "Izvozna oblika"
 
 #. module: hr_payroll_account_iso20022
 #: model:ir.model,name:hr_payroll_account_iso20022.model_hr_payroll_payment_report_wizard
 msgid "HR Payroll Payment Report Wizard"
-msgstr ""
+msgstr "Čarovnik za poročila o plačilih plač za kadrovske službe"
+
+#. module: hr_payroll_account_iso20022
+#: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_employee__id
+#: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_payroll_payment_report_wizard__id
+#: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_payslip__id
+#: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_payslip_run__id
+msgid "ID"
+msgstr "ID"
 
 #. module: hr_payroll_account_iso20022
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account_iso20022.hr_payslip_run_view_form
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account_iso20022.hr_payslip_view_form
 msgid "Mark as paid"
+msgstr "Označi kot plačano"
+
+#. module: hr_payroll_account_iso20022
+#: model:ir.model,name:hr_payroll_account_iso20022.model_hr_payslip_run
+msgid "Pay Run"
 msgstr ""
 
 #. module: hr_payroll_account_iso20022
@@ -87,14 +107,9 @@ msgid "Pay Slip"
 msgstr "Pay Slip"
 
 #. module: hr_payroll_account_iso20022
-#: model:ir.model,name:hr_payroll_account_iso20022.model_hr_payslip_run
-msgid "Payslip Batches"
-msgstr "Payslip Batches"
-
-#. module: hr_payroll_account_iso20022
 #: model:ir.model.fields.selection,name:hr_payroll_account_iso20022.selection__hr_payroll_payment_report_wizard__export_format__sepa
 msgid "SEPA"
-msgstr ""
+msgstr "SEPA"
 
 #. module: hr_payroll_account_iso20022
 #: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_employee__is_trusted_bank_account
@@ -120,13 +135,13 @@ msgstr ""
 #. odoo-python
 #: code:addons/hr_payroll_account_iso20022/wizard/hr_payroll_payment_report_wizard.py:0
 msgid "Some employees (%s) don't have a valid name on the work contact."
-msgstr ""
+msgstr "Nekateri zaposleni (%s) nimajo veljavnega imena v službenem stiku."
 
 #. module: hr_payroll_account_iso20022
 #. odoo-python
 #: code:addons/hr_payroll_account_iso20022/wizard/hr_payroll_payment_report_wizard.py:0
 msgid "Some employees (%s) don't have a work contact."
-msgstr ""
+msgstr "Nekateri zaposleni (%s) nimajo službenega stika."
 
 #. module: hr_payroll_account_iso20022
 #: model:ir.model.fields.selection,name:hr_payroll_account_iso20022.selection__hr_payroll_payment_report_wizard__export_format__iso20022_ch
@@ -135,11 +150,9 @@ msgstr "Švicarski ISO20022"
 
 #. module: hr_payroll_account_iso20022
 #. odoo-python
-#: code:addons/hr_payroll_account_iso20022/models/hr_employee.py:0
-msgid ""
-"The following employees have invalid bank accounts and could not be trusted:\n"
-"%s"
-msgstr ""
+#: code:addons/hr_payroll_account_iso20022/wizard/hr_payroll_payment_report_wizard.py:0
+msgid "The effective date cannot be in the past."
+msgstr "Datum začetka veljavnosti ne sme biti v preteklosti."
 
 #. module: hr_payroll_account_iso20022
 #. odoo-python
@@ -154,7 +167,7 @@ msgstr ""
 #. module: hr_payroll_account_iso20022
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account_iso20022.view_employee_form
 msgid "Trust Bank Account"
-msgstr ""
+msgstr "Skrbniški bančni račun"
 
 #. module: hr_payroll_account_iso20022
 #: model:ir.model.fields,field_description:hr_payroll_account_iso20022.field_hr_payslip__iso20022_uetr
@@ -169,7 +182,7 @@ msgstr "Edinstvena referenca transakcije od začetka do konca"
 #. module: hr_payroll_account_iso20022
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account_iso20022.view_employee_form
 msgid "Untrust Bank Account"
-msgstr ""
+msgstr "Nezaupanja vreden bančni račun"
 
 #. module: hr_payroll_account_iso20022
 #. odoo-python

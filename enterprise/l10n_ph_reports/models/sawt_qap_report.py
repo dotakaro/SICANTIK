@@ -7,7 +7,7 @@ from odoo.exceptions import UserError
 from odoo.addons.l10n_ph import utils
 
 
-class SawtQapCustomHandler(models.AbstractModel):
+class L10n_PhSawt_QapReportHandler(models.AbstractModel):
     _name = 'l10n_ph.sawt_qap.report.handler'
     _inherit = ['l10n_ph.generic.report.handler', 'account.tax.report.handler']
     _description = 'Withholding Taxes Custom Handler'
@@ -424,9 +424,9 @@ class SawtQapCustomHandler(models.AbstractModel):
         }
 
 
-class SawtCustomHandler(models.AbstractModel):
+class L10n_PhSawtReportHandler(models.AbstractModel):
     _name = 'l10n_ph.sawt.report.handler'
-    _inherit = 'l10n_ph.sawt_qap.report.handler'
+    _inherit = ['l10n_ph.sawt_qap.report.handler']
     _description = 'Sales Withholding Taxes Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options=None):
@@ -441,9 +441,9 @@ class SawtCustomHandler(models.AbstractModel):
         })
 
 
-class QapCustomHandler(models.AbstractModel):
+class L10n_PhQapReportHandler(models.AbstractModel):
     _name = 'l10n_ph.qap.report.handler'
-    _inherit = 'l10n_ph.sawt_qap.report.handler'
+    _inherit = ['l10n_ph.sawt_qap.report.handler']
     _description = 'Purchase Withholding Taxes Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options=None):

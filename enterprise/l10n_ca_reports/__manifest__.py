@@ -11,10 +11,12 @@ Accounting reports for Canada
         'account_reports',
     ],
     'data': [
+        'data/account_return_data.xml',
         'data/balance_sheet.xml',
         'data/profit_loss.xml',
     ],
     'auto_install': True,
     'installable': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

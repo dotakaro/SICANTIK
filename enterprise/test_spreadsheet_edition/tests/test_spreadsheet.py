@@ -84,7 +84,7 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         copy = spreadsheet.copy().with_context(active_test=False)  # get all the archived revisions
 
         copied_data = json.loads(copy.spreadsheet_data)
-        copied_snapshot = copy._get_spreadsheet_snapshot()  # snapshot
+        copied_snapshot = json.loads(copy._get_spreadsheet_serialized_snapshot())  # snapshot
         copied_revision_before = json.loads(copy.spreadsheet_revision_ids[0].commands)  # revision before snapshot
         copied_revision_after = json.loads(copy.spreadsheet_revision_ids[2].commands)  # revision after snapshot
 
@@ -113,11 +113,11 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         spreadsheet._dispatch_command(add_thread_command(3))
 
         action = spreadsheet.fork_history(spreadsheet.spreadsheet_revision_ids[-1].id, snapshot_data)
-        fork_id = action["params"]["next"]["params"]["spreadsheet_id"]
+        fork_id = action["params"]["spreadsheet_id"]
         fork = self.env["spreadsheet.test"].browse(fork_id).with_context(active_test=False)  # get all the archived revisions
 
         copied_data = json.loads(fork.spreadsheet_data)
-        copied_snapshot = fork._get_spreadsheet_snapshot()  # snapshot
+        copied_snapshot = json.loads(fork._get_spreadsheet_serialized_snapshot())  # snapshot
         copied_revision_before = json.loads(fork.spreadsheet_revision_ids[0].commands)  # revision before snapshot
         copied_revision_after = json.loads(fork.spreadsheet_revision_ids[2].commands)  # revision after snapshot
 
@@ -170,7 +170,7 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         spreadsheet.save_spreadsheet_snapshot(snapshot)
         self.assertNotEqual(spreadsheet.current_revision_uuid, current_revision_uuid)
         self.assertEqual(
-            spreadsheet._get_spreadsheet_snapshot(),
+            json.loads(spreadsheet._get_spreadsheet_serialized_snapshot()),
             dict(snapshot, revisionId=spreadsheet.current_revision_uuid),
         )
 
@@ -184,19 +184,6 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         with self.assertRaises(UserError):
             spreadsheet.save_spreadsheet_snapshot(snapshot)
 
-    def test_company_currency(self):
-        spreadsheet = self.env["spreadsheet.test"].create({})
-        company_eur = self.env["res.company"].create({"currency_id": self.env.ref("base.EUR").id, "name": "EUR"})
-        company_gbp = self.env["res.company"].create({"currency_id": self.env.ref("base.GBP").id, "name": "GBP"})
-
-        data = spreadsheet.with_company(company_eur).join_spreadsheet_session()
-        self.assertEqual(data["default_currency"]["code"], "EUR")
-        self.assertEqual(data["default_currency"]["symbol"], "€")
-
-        data = spreadsheet.with_company(company_gbp).join_spreadsheet_session()
-        self.assertEqual(data["default_currency"]["code"], "GBP")
-        self.assertEqual(data["default_currency"]["symbol"], "£")
-
     def test_fork_history(self):
         spreadsheet = self.env["spreadsheet.test"].create({})
         spreadsheet.dispatch_spreadsheet_message(self.new_revision_data(spreadsheet))
@@ -204,14 +191,7 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         action = spreadsheet.fork_history(rev1.id, {"test": "snapshot"})
         self.assertTrue(isinstance(action, dict))
 
-        self.assertEqual(action["params"]["message"], "New spreadsheet created")
-        self.assertEqual(action["tag"], "display_notification")
-        self.assertEqual(action["type"], "ir.actions.client")
-
-        next_action = action["params"]["next"]
-
-        self.assertTrue(isinstance(next_action, dict))
-        copy_id = next_action["params"]["spreadsheet_id"]
+        copy_id = action["params"]["spreadsheet_id"]
         spreadsheet_copy = self.env["spreadsheet.test"].browse(copy_id)
         self.assertTrue(spreadsheet_copy.exists())
         fork_revision = spreadsheet_copy.with_context(active_test=False).spreadsheet_revision_ids
@@ -232,9 +212,9 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         rev1 = spreadsheet.with_context(active_test=False).spreadsheet_revision_ids[0]
         fork_snapshot = {"test": "snapshot"}
         action = spreadsheet.fork_history(rev1.id, fork_snapshot)
-        fork_id = action["params"]["next"]["params"]["spreadsheet_id"]
+        fork_id = action["params"]["spreadsheet_id"]
         spreadsheet_fork = self.env["spreadsheet.test"].browse(fork_id)
-        self.assertEqual(spreadsheet_fork._get_spreadsheet_snapshot(), fork_snapshot)
+        self.assertEqual(json.loads(spreadsheet_fork._get_spreadsheet_serialized_snapshot()), fork_snapshot)
         self.assertEqual(
             spreadsheet_fork.with_context(active_test=False).spreadsheet_revision_ids.active,
             False
@@ -256,7 +236,7 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         self.assertFalse(rev2.exists())
 
         self.assertEqual(
-            spreadsheet._get_spreadsheet_snapshot(),
+            json.loads(spreadsheet._get_spreadsheet_serialized_snapshot()),
             {"test": "snapshot", "revisionId": spreadsheet.current_revision_uuid}
         )
 
@@ -289,7 +269,7 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         spreadsheet = self.env["spreadsheet.test"].with_user(user).create({})
         spreadsheet.dispatch_spreadsheet_message(self.new_revision_data(spreadsheet))
         spreadsheet.dispatch_spreadsheet_message(self.new_revision_data(spreadsheet))
-        revisions = spreadsheet.spreadsheet_revision_ids
+        revisions = spreadsheet.sudo().spreadsheet_revision_ids
         rev1 = revisions[0]
         rev2 = revisions[1]
 
@@ -301,7 +281,7 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         self.assertFalse(rev2.exists())
 
         self.assertEqual(
-            spreadsheet._get_spreadsheet_snapshot(),
+            json.loads(spreadsheet._get_spreadsheet_serialized_snapshot()),
             {"test": "snapshot", "revisionId": spreadsheet.current_revision_uuid}
         )
 
@@ -358,7 +338,7 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         spreadsheet = self.env["spreadsheet.test"].create({})
         spreadsheet.spreadsheet_snapshot = False
         spreadsheet.spreadsheet_data = False
-        self.assertEqual(spreadsheet.current_revision_uuid, False)
+        self.assertEqual(spreadsheet.current_revision_uuid, "START_REVISION")
 
     def test_last_revision_is_server_revision_id(self):
         spreadsheet = self.env["spreadsheet.test"].create({})
@@ -395,34 +375,6 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         spreadsheet.dispatch_spreadsheet_message(revision_data)
         self.assertEqual(spreadsheet.current_revision_uuid, next_revision_id)
 
-    def test_default_company_custom_colors(self):
-        spreadsheet = self.env["spreadsheet.test"].create({})
-        company = self.env["res.company"].create({"name": "test"})
-        data = spreadsheet.with_company(company).join_spreadsheet_session()
-        self.assertEqual(data["company_colors"], ["#000000", "#875A7B"])
-
-    def test_all_company_custom_colors(self):
-        spreadsheet = self.env["spreadsheet.test"].create({})
-        company = self.env["res.company"].create({"name": "test"})
-        company.primary_color = "#000000"
-        company.secondary_color = "#ffffff"
-        company.email_primary_color = "#aaaaaa"
-        company.email_secondary_color = "#bbbbbb"
-        data = spreadsheet.with_company(company).join_spreadsheet_session()
-        self.assertEqual(data["company_colors"], ["#000000", "#ffffff", "#aaaaaa", "#bbbbbb"])
-
-    def test_two_companies_custom_colors(self):
-        spreadsheet = self.env["spreadsheet.test"].create({})
-        company_A = self.env["res.company"].create({"name": "company A"})
-        company_B = self.env["res.company"].create({"name": "company B"})
-        companies = company_A | company_B
-        company_A.primary_color = "#aa0000"
-        company_B.primary_color = "#bb0000"
-        company_A.secondary_color = "#aa1111"
-        company_B.secondary_color = "#bb1111"
-        data = spreadsheet.with_context(allowed_company_ids=companies.ids).join_spreadsheet_session()
-        self.assertEqual(data["company_colors"], ["#aa0000", "#aa1111", "#bb0000", "#bb1111"])
-
     def test_get_spreadsheets(self):
         spreadsheet = self.env["spreadsheet.test"].create({})
         self.assertEqual(
@@ -431,7 +383,7 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
                 "records": [{
                     "id": spreadsheet.id,
                     "display_name": spreadsheet.display_name,
-                    "thumbnail": False
+                    "display_thumbnail": False
                 }],
                 "total": 1,
             }
@@ -460,3 +412,57 @@ class SpreadsheetMixinTest(SpreadsheetTestCase):
         action = self.env["spreadsheet.test"].action_open_new_spreadsheet()
         spreadsheet = self.env["spreadsheet.test"].browse(action["params"]["spreadsheet_id"])
         self.assertTrue(spreadsheet.exists())
+
+    def test_keep_original_spreadsheet_author_with_multiple_users(self):
+        test_user_1 = new_test_user(self.env, login="test_user_1")
+        test_user_2 = new_test_user(self.env, login="test_user_2")
+        test_user_3 = new_test_user(self.env, login="test_user_3")
+        spreadsheet = self.env["spreadsheet.test"].with_user(test_user_1).create({})
+        spreadsheet.dispatch_spreadsheet_message(self.new_revision_data(spreadsheet))
+        spreadsheet.with_user(test_user_2).dispatch_spreadsheet_message(self.new_revision_data(spreadsheet))
+        spreadsheet.with_user(test_user_3).dispatch_spreadsheet_message(self.new_revision_data(spreadsheet))
+        copy = spreadsheet.with_user(self.env.ref("base.user_admin")).copy()
+        revisions = copy.spreadsheet_revision_ids
+        self.assertEqual(revisions[0].author_id, test_user_1)
+        self.assertEqual(revisions[1].author_id, test_user_2)
+        self.assertEqual(revisions[2].author_id, test_user_3)
+        spreadsheet.with_user(self.env.ref("base.user_admin")).dispatch_spreadsheet_message(self.new_revision_data(spreadsheet))
+        self.assertEqual(spreadsheet.sudo().spreadsheet_revision_ids[-1].author_id, self.env.ref("base.user_admin"))
+
+    def test_get_search_arch(self):
+
+        # default search view
+        arch = '<search><field name="name"/></search>'
+        self.env["ir.ui.view"].create({
+            "name": "Search View",
+            "model": "res.partner",
+            "type": "search",
+            "arch": arch,
+        })
+        action = self.env["ir.actions.act_window"].create({
+            "name": "Action2",
+            "res_model": "res.partner",
+        })
+        xml_id = "spreadsheet_test_partner_search_view"
+        module = "test_spreadsheet_edition"
+        self.env["ir.model.data"].create({
+            "name": xml_id,
+            "model": "ir.actions.act_window",
+            "module": module,
+            "res_id": action.id,
+        })
+        xml_id = f"{module}.{xml_id}"
+        result = self.env["spreadsheet.mixin"].get_search_view_archs([xml_id])
+        self.assertEqual(result, {"res.partner": [arch]})
+
+        # with a custom search view
+        custom_arch = '<search><field name="name" string="custom search view"/></search>'
+        custom_search_view = self.env["ir.ui.view"].create({
+            "name": "Custom Search View",
+            "model": "res.partner",
+            "type": "search",
+            "arch": custom_arch,
+        })
+        action.search_view_id = custom_search_view
+        result = self.env["spreadsheet.mixin"].get_search_view_archs([xml_id])
+        self.assertEqual(result, {"res.partner": [custom_arch]})

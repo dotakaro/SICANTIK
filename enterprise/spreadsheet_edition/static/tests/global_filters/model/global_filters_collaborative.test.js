@@ -38,7 +38,6 @@ test("Add a filter with a default value", async () => {
         label: "41",
         defaultValue: [41],
         modelName: undefined,
-        rangeType: undefined,
     };
     await waitForDataLoaded(alice);
     await waitForDataLoaded(bob);
@@ -67,7 +66,6 @@ test("Edit a filter", async () => {
         defaultValue: [41],
         modelID: undefined,
         modelName: undefined,
-        rangeType: undefined,
     };
     await waitForDataLoaded(bob);
     await waitForDataLoaded(charlie);
@@ -94,7 +92,6 @@ test("Edit a filter and remove it concurrently", async () => {
         defaultValue: [41],
         modelID: undefined,
         modelName: undefined,
-        rangeType: undefined,
     };
     await addGlobalFilter(alice, filter);
     await animationFrame();
@@ -116,7 +113,6 @@ test("Remove a filter and edit it concurrently", async () => {
         defaultValue: [41],
         modelID: undefined,
         modelName: undefined,
-        rangeType: undefined,
     };
     await addGlobalFilter(alice, filter);
     await animationFrame();
@@ -138,7 +134,6 @@ test("Remove a filter and edit another concurrently", async () => {
         defaultValue: [41],
         modelID: undefined,
         modelName: undefined,
-        rangeType: undefined,
     };
     const filter2 = {
         id: "37",
@@ -147,7 +142,6 @@ test("Remove a filter and edit another concurrently", async () => {
         defaultValue: [37],
         modelID: undefined,
         modelName: undefined,
-        rangeType: undefined,
     };
     await addGlobalFilter(alice, filter1);
     await addGlobalFilter(alice, filter2);
@@ -186,17 +180,24 @@ test("add column concurrently to adding a text filter with a range", async () =>
         id: "41",
         type: "text",
         label: "text filter",
-        rangeOfAllowedValues: toRangeData(sheetId, "A1:A2"),
+        rangesOfAllowedValues: [toRangeData(sheetId, "A1:A2"), toRangeData(sheetId, "B1:B2")],
     };
     await network.concurrent(async () => {
         await addGlobalFilter(alice, filter);
         addColumns(bob, "before", "A", 1);
     });
-    expect(alice.getters.getGlobalFilter("41").rangeOfAllowedValues.zone).toEqual(toZone("B1:B2"));
-    expect(bob.getters.getGlobalFilter("41").rangeOfAllowedValues.zone).toEqual(toZone("B1:B2"));
-    expect(charlie.getters.getGlobalFilter("41").rangeOfAllowedValues.zone).toEqual(
-        toZone("B1:B2")
-    );
+    expect(alice.getters.getGlobalFilter("41").rangesOfAllowedValues.map((r) => r.zone)).toEqual([
+        toZone("B1:B2"),
+        toZone("C1:C2"),
+    ]);
+    expect(bob.getters.getGlobalFilter("41").rangesOfAllowedValues.map((r) => r.zone)).toEqual([
+        toZone("B1:B2"),
+        toZone("C1:C2"),
+    ]);
+    expect(charlie.getters.getGlobalFilter("41").rangesOfAllowedValues.map((r) => r.zone)).toEqual([
+        toZone("B1:B2"),
+        toZone("C1:C2"),
+    ]);
 });
 
 test("delete entirely range concurrently to adding a text filter with a range", async () => {
@@ -205,15 +206,15 @@ test("delete entirely range concurrently to adding a text filter with a range", 
         id: "41",
         type: "text",
         label: "text filter",
-        rangeOfAllowedValues: toRangeData(sheetId, "A1:A2"),
+        rangesOfAllowedValues: [toRangeData(sheetId, "A1:A2")],
     };
     await network.concurrent(async () => {
         await addGlobalFilter(alice, filter);
         deleteColumns(bob, ["A"]);
     });
-    expect(alice.getters.getGlobalFilter("41").rangeOfAllowedValues).toBe(undefined);
-    expect(bob.getters.getGlobalFilter("41").rangeOfAllowedValues).toBe(undefined);
-    expect(charlie.getters.getGlobalFilter("41").rangeOfAllowedValues).toBe(undefined);
+    expect(alice.getters.getGlobalFilter("41").rangesOfAllowedValues).toBe(undefined);
+    expect(bob.getters.getGlobalFilter("41").rangesOfAllowedValues).toBe(undefined);
+    expect(charlie.getters.getGlobalFilter("41").rangesOfAllowedValues).toBe(undefined);
 });
 test("add column concurrently to editing a text filter with a range", async () => {
     const sheetId = alice.getters.getActiveSheetId();
@@ -226,13 +227,17 @@ test("add column concurrently to editing a text filter with a range", async () =
     await network.concurrent(() => {
         editGlobalFilter(charlie, {
             ...filter,
-            rangeOfAllowedValues: toRangeData(sheetId, "A1:A2"),
+            rangesOfAllowedValues: [toRangeData(sheetId, "A1:A2")],
         });
         addColumns(bob, "before", "A", 1);
     });
-    expect(alice.getters.getGlobalFilter("41").rangeOfAllowedValues.zone).toEqual(toZone("B1:B2"));
-    expect(bob.getters.getGlobalFilter("41").rangeOfAllowedValues.zone).toEqual(toZone("B1:B2"));
-    expect(charlie.getters.getGlobalFilter("41").rangeOfAllowedValues.zone).toEqual(
+    expect(alice.getters.getGlobalFilter("41").rangesOfAllowedValues[0].zone).toEqual(
+        toZone("B1:B2")
+    );
+    expect(bob.getters.getGlobalFilter("41").rangesOfAllowedValues[0].zone).toEqual(
+        toZone("B1:B2")
+    );
+    expect(charlie.getters.getGlobalFilter("41").rangesOfAllowedValues[0].zone).toEqual(
         toZone("B1:B2")
     );
 });
@@ -243,17 +248,17 @@ test("delete entirely range concurrently to editing a text filter with a range",
         id: "41",
         type: "text",
         label: "text filter",
-        rangeOfAllowedValues: toRangeData(sheetId, "A1:A2"),
+        rangesOfAllowedValues: [toRangeData(sheetId, "A1:A2")],
     };
     await addGlobalFilter(alice, filter);
     await network.concurrent(() => {
         editGlobalFilter(charlie, {
             ...filter,
-            rangeOfAllowedValues: toRangeData(sheetId, "A1:A2"),
+            rangesOfAllowedValues: [toRangeData(sheetId, "A1:A2")],
         });
         deleteColumns(bob, ["A"]);
     });
-    expect(alice.getters.getGlobalFilter("41").rangeOfAllowedValues).toBe(undefined);
-    expect(bob.getters.getGlobalFilter("41").rangeOfAllowedValues).toBe(undefined);
-    expect(charlie.getters.getGlobalFilter("41").rangeOfAllowedValues).toBe(undefined);
+    expect(alice.getters.getGlobalFilter("41").rangesOfAllowedValues).toBe(undefined);
+    expect(bob.getters.getGlobalFilter("41").rangesOfAllowedValues).toBe(undefined);
+    expect(charlie.getters.getGlobalFilter("41").rangesOfAllowedValues).toBe(undefined);
 });

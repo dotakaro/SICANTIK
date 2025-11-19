@@ -9,10 +9,15 @@ class HrPayslipInputType(models.Model):
     _name = 'hr.payslip.input.type'
     _description = 'Payslip Input Type'
 
-    name = fields.Char(string='Description', required=True)
+    name = fields.Char(string='Description', required=True, translate=True)
     code = fields.Char(required=True, help="The code that can be used in the salary rules")
     struct_ids = fields.Many2many('hr.payroll.structure', string='Availability in Structure', help='This input will be only available in those structure. If empty, it will be available in all payslip.')
-    country_id = fields.Many2one('res.country', string='Country', default=lambda self: self.env.company.country_id)
+    country_id = fields.Many2one(
+        'res.country',
+        string='Country',
+        default=lambda self: self.env.company.country_id,
+        domain=lambda self: [('id', 'in', self.env.companies.country_id.ids)]
+    )
     country_code = fields.Char(related='country_id.code')
     active = fields.Boolean('Active', default=True)
     available_in_attachments = fields.Boolean(string="Available in attachments")
@@ -30,4 +35,4 @@ class HrPayslipInputType(models.Model):
     @api.constrains('active')
     def _check_salary_attachment_type_active(self):
         if self.env['hr.salary.attachment'].search_count([('other_input_type_id', 'in', self.ids), ('state', 'not in', ('close', 'cancel'))], limit=1):
-            raise UserError("You cannot archive an input type if there exists a running salary attachment of this type.")
+            raise UserError(self.env._("You cannot archive an input type if there exists a running salary attachment of this type."))

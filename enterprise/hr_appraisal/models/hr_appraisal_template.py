@@ -3,8 +3,8 @@
 from odoo import fields, models, _
 
 
-class HrAppraisal(models.Model):
-    _name = "hr.appraisal.template"
+class HrAppraisalTemplate(models.Model):
+    _name = 'hr.appraisal.template'
     _description = "Employee Appraisal Template"
     _rec_name = 'description'
 

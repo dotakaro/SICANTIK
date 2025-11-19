@@ -1,16 +1,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import logging
-
 from odoo import Command
 from odoo.tests import tagged
 
 from odoo.addons.payment.tests.http_common import PaymentHttpCommon
 
-_logger = logging.getLogger(__name__)
 
-
-@tagged('post_install', '-at_install')
+@tagged('post_install', '-at_install', 'is_tour')
 class TestSubscriptionPaymentIntegration(PaymentHttpCommon):
 
     @classmethod
@@ -34,6 +30,7 @@ class TestSubscriptionPaymentIntegration(PaymentHttpCommon):
         cls.plan_month = cls.env['sale.subscription.plan'].create({
             'name': "Monthly Plan",
             'billing_period_unit': 'month',
+            'sequence': 4,
         })
         cls.subscription = cls.env['sale.order'].create({
             'name': "Demo Subscription",
@@ -59,7 +56,7 @@ class TestSubscriptionPaymentIntegration(PaymentHttpCommon):
 
     def assertInvoicePaid(self, invoice):
         self.assertIn(invoice.payment_state, {'in_payment', 'paid'}, "Payment should register")
-        self.assertAlmostEqual(invoice.amount_paid, invoice.amount_total, "Amount should match")
+        self.assertAlmostEqual(invoice.amount_paid, invoice.amount_total, msg="Amount should match")
 
     def test_subscription_invoice_payment(self):
         """

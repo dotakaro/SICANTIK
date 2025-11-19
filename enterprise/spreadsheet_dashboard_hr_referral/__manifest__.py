@@ -2,7 +2,7 @@
 {
     'name': "Spreadsheet dashboard for recruitment",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Productivity/Dashboard',
     'summary': 'Spreadsheet',
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'hr_referral', 'hr_contract_salary'],
@@ -11,5 +11,6 @@
     ],
     'installable': True,
     'auto_install': ['hr_referral', 'hr_contract_salary'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

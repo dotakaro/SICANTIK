@@ -77,3 +77,14 @@ class SaleOrder(models.Model):
                 'commission_plan_frozen': self.referrer_id.commission_plan_id != self.commission_plan_id,
             })
         return values
+
+    def _remove_partnership(self):
+        for so in self:
+            if so.partner_id.grade_id != so.assigned_grade_id:
+                continue
+            if so.partner_id.commission_plan_id == so.assigned_grade_id.default_commission_plan_id:
+                so.partner_id.commission_plan_id = False
+            for child in so.partner_id.child_ids:
+                if child.grade_id == so.assigned_grade_id and child.commission_plan_id == so.assigned_grade_id.default_commission_plan_id:
+                    child.commission_plan_id = False
+        return super()._remove_partnership()

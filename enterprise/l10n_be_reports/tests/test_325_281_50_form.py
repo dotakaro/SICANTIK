@@ -508,12 +508,7 @@ class TestResPartner(AccountTestInvoicingCommon):
         })
 
         st_line = statement.line_ids
-        wizard = self.env['bank.rec.widget'].with_context(default_st_line_id=st_line.id).new({})
-        line = wizard.line_ids.filtered(lambda x: x.flag == 'auto_balance')
-        wizard._js_action_mount_line_in_edit(line.index)
-        line.account_id = expense_account_atn_281_50
-        wizard._line_value_changed_account_id(line)
-        wizard._action_validate()
+        st_line.set_account_bank_statement_line(st_line.line_ids[-1].id, expense_account_atn_281_50.id)
 
         form_325 = self.create_325_form()
         form_281_50 = form_325.form_281_50_ids
@@ -550,12 +545,7 @@ class TestResPartner(AccountTestInvoicingCommon):
         })
 
         st_line = statement.line_ids
-        wizard = self.env['bank.rec.widget'].with_context(default_st_line_id=st_line.id).new({})
-        line = wizard.line_ids.filtered(lambda x: x.flag == 'auto_balance')
-        wizard._js_action_mount_line_in_edit(line.index)
-        line.account_id = expense_account_atn_281_50
-        wizard._line_value_changed_account_id(line)
-        wizard._action_validate()
+        st_line.set_account_bank_statement_line(st_line.line_ids[-1].id, expense_account_atn_281_50.id)
 
         form_325 = self.create_325_form()
         form_281_50_partner_b = form_325.form_281_50_ids.filtered(lambda f: f.partner_id == self.partner_b)
@@ -773,6 +763,21 @@ class TestResPartner(AccountTestInvoicingCommon):
         self.assertIn(form, self.partner_a.forms_281_50)
         self.assertIn(form_3, self.partner_a.forms_281_50)
         self.assertNotIn(form_2, self.partner_a.forms_281_50)
+
+    def test_281_50_partner_with_invalid_company(self):
+        """Ensure that you can not create a form with a partner wich belong in an other company"""
+        # set partner_a to belong to an other company
+        self.partner_a.company_id = self.company_data_2['company']
+        with self.assertRaisesRegex(UserError, "There are some inconsistencies in the partner-company association. The following partners should be accessible by their paired company: partner_a: company_1_data"):
+            self.create_form28150(ref_year=2020)
+            self.partner_a.company_id = self.company_data_2['company']
+        # set partner_a to belong to a child company
+        branch = self.env['res.company'].create({
+            'name': "Branch A",
+            'parent_id': self.company_data['company'].id,
+        })
+        self.partner_a.company_id = branch
+        self.create_form28150(ref_year=2020)
 
     def test_325_and_281_50_should_raise_error_when_unlink_and_state_is_generated(self):
         form = self.create_form28150(ref_year=2020)

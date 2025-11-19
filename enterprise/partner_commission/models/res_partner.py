@@ -25,3 +25,10 @@ class ResPartner(models.Model):
     @api.onchange('grade_id')
     def _onchange_grade_id(self):
         self.commission_plan_id = self._default_commission_plan()
+
+    def write(self, values):
+        if values.get('grade_id'):
+            grade = self.env['res.partner.grade'].browse(values['grade_id'])
+            if grade.default_commission_plan_id:
+                values['commission_plan_id'] = grade.default_commission_plan_id.id
+        return super().write(values)

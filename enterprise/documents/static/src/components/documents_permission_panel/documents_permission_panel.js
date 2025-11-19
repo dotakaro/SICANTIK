@@ -1,15 +1,14 @@
-/** @odoo-module **/
-
+import { parseEmail } from "@mail/utils/common/format";
 import { CopyButton } from "@web/core/copy_button/copy_button";
 import { Dialog } from "@web/core/dialog/dialog";
 import { DocumentsAccessSettings } from "./documents_access_settings";
-import { DocumentsMemberInvite } from "./documents_member_invite";
 import { DocumentsPartnerAccess } from "./documents_partner_access";
 import { serializeDateTime } from "@web/core/l10n/dates";
 import { _t } from "@web/core/l10n/translation";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { rpcBus } from "@web/core/network/rpc";
 import { user } from "@web/core/user";
+import { Many2XAutocomplete } from "@web/views/fields/relational_utils";
 import { Component, onWillStart, useState } from "@odoo/owl";
 
 export class DocumentsPermissionPanel extends Component {
@@ -17,8 +16,8 @@ export class DocumentsPermissionPanel extends Component {
         CopyButton,
         Dialog,
         DocumentsAccessSettings,
-        DocumentsMemberInvite,
         DocumentsPartnerAccess,
+        Many2XAutocomplete,
     };
     static props = {
         document: {
@@ -43,6 +42,7 @@ export class DocumentsPermissionPanel extends Component {
         this.documentService = useService("document.document");
         this.isInternalUser = this.documentService.userIsInternal;
         this.state = useState({
+            hidden: false,
             loading: true,
             mainPage: true,
             didSave: false,
@@ -75,27 +75,6 @@ export class DocumentsPermissionPanel extends Component {
         return this.pendingSave ? _t("Save or discard changes first") : _t("Copy Link");
     }
 
-    /**
-     * Check whether there is an alert message to display, and which one
-     *
-     * @returns {string|null}
-     */
-    get warningMessage() {
-        if (
-            this.state.access.access_via_link === "edit" &&
-            (this.state.access.access_internal === "view" ||
-                this.state.access.access_ids.some((a) => a.role === "view"))
-        ) {
-            const documentType =
-                this.state.access.type === "folder" ? _t("folder") : _t("document");
-            return _t(
-                "All users with access to this %(documentType)s or its parent will have edit permissions.",
-                { documentType }
-            );
-        }
-        return null;
-    }
-
     get partnersRoleIsDirty() {
         return this.state.access.access_ids.some((a) => a.role !== this.basePartnersRole[a.id]);
     }
@@ -104,6 +83,25 @@ export class DocumentsPermissionPanel extends Component {
         return this.state.access.access_ids.some(
             (a) => a.expiration_date !== this.basePartnersAccessExpDate[a.id]
         );
+    }
+
+    get membersAccessExtended() {
+        return (
+            this.state.access.access_via_link === "edit" &&
+            (this.state.access.access_internal === "view" ||
+                this.state.access.access_ids.some((a) => a.role === "view"))
+        );
+    }
+
+    get anyMembersWithoutAccess() {
+        return (
+            this.state.access.access_via_link === "none" &&
+            this.state.access.access_ids.some((a) => !a.partner_id.user_ids.length)
+        );
+    }
+
+    allowAccessViaLink(ev) {
+        this.state.access.access_via_link = "view";
     }
 
     revertChanges() {
@@ -157,10 +155,8 @@ export class DocumentsPermissionPanel extends Component {
     /**
      * Create/Update/Unlink access to document/folder.
      * @param {Object} partners Partners to be added.
-     * @param {Boolean} notify Whether to notify the `partners`
-     * @param {String} message Optional customized message
      */
-    async updateAccessRights(partners= undefined, notify = false, message = "") {
+    async updateAccessRights(partners = undefined) {
         const accessValuesToSend = Object.fromEntries(
             Object.entries(this.baseAccess).map(([field, oldValue]) => [
                 field,
@@ -188,11 +184,51 @@ export class DocumentsPermissionPanel extends Component {
             accessValuesToSend.access_via_link,
             accessValuesToSend.is_access_via_link_hidden,
             partnersToUpdate,
-            notify,
-            message,
         ]))[0];
         this.state.didSave = true;
         return userPermission;
+    }
+
+    getInviteMembersDomain() {
+        return [["id", "not in", this.state.access.access_ids.map((a) => a.partner_id.id)]];
+    }
+
+    async onInviteMemberQuickCreate(request) {
+        const [name, email] = parseEmail(request);
+        const [partnerId] = await this.orm.create("res.partner", [{ name, email }]);
+        await this.onInviteMembersSelected([{ id: partnerId }]);
+    }
+
+    /**
+     * Open the "access invite" wizard initialized with the selected partners.
+     */
+    async onInviteMembersSelected(selectedPartners) {
+        if (!selectedPartners) {
+            return;
+        }
+        this.state.hidden = true;
+        return this.actionService.doAction(
+            {
+                name: this.panelTitle,
+                type: "ir.actions.act_window",
+                res_model: "documents.access.invite",
+                views: [[false, "form"]],
+                target: "new",
+            },
+            {
+                additionalContext: {
+                    default_document_id: this.props.document.id,
+                    default_partner_ids: selectedPartners.map((p) => p.id),
+                    dialog_size: "medium",
+                },
+                onClose: async (closeInfo) => {
+                    this.state.loading = true;
+                    this.state.hidden = false;
+                    await this.loadMainPage();
+                    this.state.loading = false;
+                },
+            }
+        );
     }
 
     /**

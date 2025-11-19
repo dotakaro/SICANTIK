@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { useService } from "@web/core/utils/hooks";
 import { Component, markup, onWillStart, onWillUpdateProps, useState } from "@odoo/owl";
 import { escape } from "@web/core/utils/strings";

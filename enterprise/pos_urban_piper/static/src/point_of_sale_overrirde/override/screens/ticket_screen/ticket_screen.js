@@ -2,8 +2,8 @@ import { _t } from "@web/core/l10n/translation";
 import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { TicketScreen } from "@point_of_sale/app/screens/ticket_screen/ticket_screen";
 import { patch } from "@web/core/utils/patch";
-import { SelectionPopup } from "@point_of_sale/app/utils/input_popups/selection_popup";
-import { orderInfoPopup } from "@pos_urban_piper/point_of_sale_overrirde/app/order_info_popup/order_info_popup";
+import { SelectionPopup } from "@point_of_sale/app/components/popups/selection_popup/selection_popup";
+import { orderInfoPopup } from "@pos_urban_piper/point_of_sale_overrirde/app/components/popups/order_info_popup/order_info_popup";
 
 patch(TicketScreen, {
     props: {
@@ -37,12 +37,12 @@ patch(TicketScreen.prototype, {
     _getSearchFields() {
         return Object.assign({}, super._getSearchFields(...arguments), {
             DELIVERYPROVIDER: {
-                repr: (order) => order.get_delivery_provider_name(),
+                repr: (order) => order.getDeliveryProviderName(),
                 displayName: _t("Delivery Channel"),
                 modelField: "delivery_provider_id.name",
             },
             ORDERSTATUS: {
-                repr: (order) => order.get_order_status(),
+                repr: (order) => order.getOrderStatus(),
                 displayName: _t("Delivery Order Status"),
                 modelField: "delivery_status",
             },
@@ -69,11 +69,13 @@ patch(TicketScreen.prototype, {
     },
 
     async _updateOrderStatus(order, status, code = null) {
+        const urban_piper_test = JSON.parse(order.delivery_json)?.order?.urban_piper_test;
         const response = await this.pos.data.call("pos.config", "order_status_update", [
             this.pos.config.id,
             order.id,
             status,
             code,
+            urban_piper_test,
         ]);
         return response;
     },
@@ -83,16 +85,14 @@ patch(TicketScreen.prototype, {
         const response = await this._updateOrderStatus(syncedOrder, "Acknowledged");
         const status = await this._handleResponse(response, syncedOrder, "acknowledged");
         if (status) {
-            await this._updateScreenState(syncedOrder, "ACTIVE_ORDERS");
+            this._updateScreenState(syncedOrder, "ACTIVE_ORDERS");
             syncedOrder.uiState.orderAcceptTime = luxon.DateTime.now().ts;
         }
     },
 
     async _rejectOrder(order) {
         if (
-            ["deliveroo", "justeat", "hungerstation"].includes(
-                order.delivery_provider_id.technical_name
-            )
+            ["deliveroo", "", "hungerstation"].includes(order.delivery_provider_id.technical_name)
         ) {
             return this.dialog.add(AlertDialog, {
                 title: _t("Error"),
@@ -118,6 +118,7 @@ patch(TicketScreen.prototype, {
             ],
             getPayload: async (code) => {
                 const last_order_status = order.delivery_status;
+                order.state = "cancel";
                 const response = await this._updateOrderStatus(order, "Cancelled", code);
                 const status = await this._handleResponse(response, order, "cancelled");
                 if (status) {
@@ -125,17 +126,18 @@ patch(TicketScreen.prototype, {
                         Object.keys(order.last_order_preparation_change.lines).length == 0 &&
                         last_order_status !== "placed"
                     ) {
-                        if (order.general_note) {
-                            order.last_order_preparation_change.generalNote = order.general_note;
+                        if (order.general_customer_note) {
+                            order.last_order_preparation_change.general_customer_note =
+                                order.general_customer_note;
                         }
-                        await this.pos.sendOrderInPreparation(order, true);
+                        await this.pos.checkPreparationStateAndSentOrderInPreparation(order, true);
                     }
                     await this._updateScreenState(order, "ACTIVE_ORDERS");
                     order.uiState.displayed = false;
-                    if (order.id === this.pos.get_order()?.id) {
+                    if (order.id === this.pos.getOrder()?.id) {
                         const orderList = this._getOrderList();
                         if (orderList.length == 1) {
-                            this.pos.add_new_order();
+                            this.pos.addNewOrder();
                         } else {
                             this.pos.selectNextOrder();
                         }
@@ -151,15 +153,15 @@ patch(TicketScreen.prototype, {
         const response = await this._updateOrderStatus(order, "Food Ready");
         const status = await this._handleResponse(response, order, "food_ready");
         if (status) {
-            await this._updateScreenState(order, "SYNCED", "DONE");
+            this._updateScreenState(order, "SYNCED", "DONE");
         }
         await this.pos.data.searchRead("pos.order", [["id", "=", order.id]]);
 
         // make sure the order is identified as paid.
         order = this.pos.models["pos.order"].get(order.id);
         this.state.selectedOrderUuid = order.uuid;
-        order.set_screen_data({ name: "" });
-        order.uiState.locked = true;
+        order.setScreenData({ name: "" });
+        await super._doneOrder(...arguments);
     },
 
     async _dispatchOrder(order) {
@@ -214,11 +216,13 @@ patch(TicketScreen.prototype, {
      */
     getDate(order) {
         if (order?.delivery_identifier) {
-            return luxon.DateTime.fromFormat(order.date_order, "yyyy-MM-dd HH:mm:ss", {
-                zone: "utc",
-            })
-                .setZone("local")
-                .toFormat("MM/dd/yyyy HH:mm:ss");
+            if (
+                order.date_order.toLocal().startOf("day").ts ===
+                luxon.DateTime.now().startOf("day").ts
+            ) {
+                return _t("Today");
+            }
+            return order.date_order.toFormat("MM/dd/yyyy");
         }
         return super.getDate(order);
     },

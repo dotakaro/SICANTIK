@@ -3,18 +3,15 @@
 # 	* hr_payroll_expense
 # 
 # Translators:
-# Wil Odoo, 2024
-# 何彬 <vnsoft.he@gmail.com>, 2024
-# Chloe Wang, 2024
-# Raymond Yu <cl_yu@hotmail.com>, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:26+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Raymond Yu <cl_yu@hotmail.com>, 2024\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -34,18 +31,39 @@ msgstr ""
 "                        </span>"
 
 #. module: hr_payroll_expense
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "<span class=\"o_stat_text\">Payslip</span>"
 msgstr "<span class=\"o_stat_text\">工资单</span>"
 
 #. module: hr_payroll_expense
-#: model:ir.model,name:hr_payroll_expense.model_hr_expense_sheet
-msgid "Expense Report"
-msgstr "费用报表"
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_move__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payroll_structure__display_name
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__display_name
+msgid "Display Name"
+msgstr "显示名称"
+
+#. module: hr_payroll_expense
+#: model:ir.model,name:hr_payroll_expense.model_hr_expense
+msgid "Expense"
+msgstr "费用"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "Expense (\"%(name)s\") was removed from the next payslip."
+msgstr "开支 “%(name)s” 已从下期工资单中移除。"
+
+#. module: hr_payroll_expense
+#. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "Expense (\"%(name)s\") will be added to the next payslip."
+msgstr "开支 “%(name)s” 会被加入下一份工资单中。"
+
+#. module: hr_payroll_expense
+#. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
 "Expense reimbursement rule needs to be configured to add expenses to payslips.\n"
 "Please create one salary rule with the \"%(code)s\" code on the relevant salary structures."
@@ -54,19 +72,8 @@ msgstr ""
 "请在相关工资结构上创建一个带有“%(code)s ”代码的工资规则。"
 
 #. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "Expense report (\"%(name)s\") was removed from the next payslip."
-msgstr "从下一张工资单中删除了费用报告（\"%(name)s\"）。"
-
-#. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "Expense report (\"%(name)s\") will be added to the next payslip."
-msgstr "费用报告（\"%(name)s\"）将添加到下一张工资单中。"
-
-#. module: hr_payroll_expense
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__expense_sheet_ids
+#: model:hr.payslip.input.type,name:hr_payroll_expense.expense_other_input
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__expense_ids
 #: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_payslip_view_form_inherit_expense
 msgid "Expenses"
 msgstr "费用"
@@ -82,15 +89,24 @@ msgid "Expenses Reimbursement"
 msgstr "费用报销"
 
 #. module: hr_payroll_expense
-#: model:ir.model.fields,help:hr_payroll_expense.field_hr_payslip__expense_sheet_ids
+#: model:ir.model.fields,help:hr_payroll_expense.field_hr_payslip__expense_ids
 msgid "Expenses to reimburse to employee."
 msgstr "报销给员工的费用。"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid "Go to salary rules"
 msgstr "转到薪资规则"
+
+#. module: hr_payroll_expense
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_move__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payroll_structure__id
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_payslip__id
+msgid "ID"
+msgstr "ID"
 
 #. module: hr_payroll_expense
 #: model:ir.model.fields,field_description:hr_payroll_expense.field_account_payment_register__is_already_paid_through_a_payslip
@@ -108,9 +124,9 @@ msgstr "日记账分录"
 msgid ""
 "No debit account found in the '%(rule_name)s' payslip salary rule. Please "
 "add a payable debit account to be able to create an accounting entry for the"
-" expense reports linked to this payslip."
+" expenses linked to this payslip."
 msgstr ""
-"工资单薪酬规则 “%(rule_name)s” 中，没有找到扣账账户。请新增一个应付款项扣账账户，以便能够为已连接至此工资单的开支报告，创建会计记项。"
+"工资单薪酬规则 “%(rule_name)s” 中，沒有找到扣账账户。请新增一个应付款项扣账账户，以便能够为已连接至此工资单的开支，建立会计记项。"
 
 #. module: hr_payroll_expense
 #. odoo-python
@@ -122,11 +138,11 @@ msgstr "找不到薪酬规则可处理以下薪酬结构中的报销开支：%(s
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
-"Only approved expense reports that were paid by an employee can be "
+"Only approved and posted expenses that were paid by an employee can be "
 "reimbursed in a payslip."
-msgstr "只有经批准由员工支付的费用报告，才能在工资单中报销。"
+msgstr "只有经批准并由员工支付的费用报告，才能在工资单报销。"
 
 #. module: hr_payroll_expense
 #: model:ir.model,name:hr_payroll_expense.model_account_payment_register
@@ -140,13 +156,13 @@ msgstr "工资单"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense_sheet__payslip_id
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__payslip_id
 msgid "Payslip"
 msgstr "工资单"
 
 #. module: hr_payroll_expense
-#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense_sheet__refund_in_payslip
+#: model:ir.model.fields,field_description:hr_payroll_expense.field_hr_expense__refund_in_payslip
 msgid "Reimburse In Next Payslip"
 msgstr "下一个工资单中报销"
 
@@ -157,13 +173,13 @@ msgid "Reimbursed Expenses"
 msgstr "报销费用"
 
 #. module: hr_payroll_expense
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "Remove from Payslip"
 msgstr "从工资单上移除"
 
 #. module: hr_payroll_expense
 #: model:ir.actions.server,name:hr_payroll_expense.hr_expense_add_to_payslip_action_server
-#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_sheet_view_form_inherit_payroll
+#: model_terms:ir.ui.view,arch_db:hr_payroll_expense.hr_expense_view_form_inherit_payroll
 msgid "Report in Next Payslip"
 msgstr "于下期工资单报表"
 
@@ -191,21 +207,13 @@ msgstr "代码为 'EXPENSES' 8的薪金规则必须设置一个借方账户，�
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid ""
-"The state of the accounting entries linked to this expense report do not "
-"allow it to be reimbursed through a payslip."
-msgstr "连接至此费用报告的会计记项，其状态不允许通过工资单处理发还。"
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "There are no valid expenses selected."
+msgstr "未选择有效的支出。"
 
 #. module: hr_payroll_expense
 #. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
-msgid "There are no valid expense sheets selected."
-msgstr "所选项目中，没有有效的开支表。"
-
-#. module: hr_payroll_expense
-#. odoo-python
-#: code:addons/hr_payroll_expense/models/hr_expense_sheet.py:0
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
 msgid ""
 "You cannot remove an expense from a payslip that has already been validated.\n"
 "Expenses can only be removed from draft or canceled payslips."
@@ -215,11 +223,17 @@ msgstr ""
 
 #. module: hr_payroll_expense
 #. odoo-python
+#: code:addons/hr_payroll_expense/models/hr_expense.py:0
+msgid "You do not have permission to add this expense to a payslip."
+msgstr "您无权将此费用添加到工资单上。"
+
+#. module: hr_payroll_expense
+#. odoo-python
 #: code:addons/hr_payroll_expense/models/hr_payslip.py:0
 msgid ""
-"You don't have the access rights to link an expense report to a payslip. You"
-" need to be a payroll officer to do that."
-msgstr "您没有访问权限将费用报告与工资单联系起来。您需要成为薪资管理人员，才能执行此操作。"
+"You don't have the access rights to link an expense to a payslip. You need "
+"to be a payroll officer to do that."
+msgstr "您没有将费用与工资单联系起来的访问权限。您需要成为薪资管理人员，才能执行此操作。"
 
 #. module: hr_payroll_expense
 #. odoo-python

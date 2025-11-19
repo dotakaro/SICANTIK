@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 
 @tagged('post_install_l10n', 'post_install', '-at_install')
 @patch('odoo.tools.xml_utils._check_with_xsd', _check_with_xsd_patch)
-@patch('odoo.addons.certificate.models.certificate.Certificate._compute_is_valid', _is_valid_certificate)
+@patch('odoo.addons.certificate.models.certificate.CertificateCertificate._compute_is_valid', _is_valid_certificate)
 class TestL10nClEdiStock(TestL10nClEdiStockCommon):
 
     @freeze_time('2019-10-24T20:00:00', tz_offset=3)
@@ -29,7 +29,6 @@ class TestL10nClEdiStock(TestL10nClEdiStockCommon):
             'picking_type_id': self.warehouse.out_type_id.id,
         })
         self.env['stock.move'].create({
-            'name': self.product_with_taxes_a.name,
             'product_id': self.product_with_taxes_a.id,
             'product_uom': self.product_with_taxes_a.uom_id.id,
             'product_uom_qty': 10.00,
@@ -41,7 +40,6 @@ class TestL10nClEdiStock(TestL10nClEdiStockCommon):
             'company_id': self.env.company.id
         })
         self.env['stock.move'].create({
-            'name': self.product_with_taxes_b.name,
             'product_id': self.product_with_taxes_b.id,
             'product_uom': self.product_with_taxes_b.uom_id.id,
             'product_uom_qty': 1,
@@ -80,14 +78,12 @@ class TestL10nClEdiStock(TestL10nClEdiStockCommon):
                 'name': self.product_with_taxes_a.name,
                 'product_id': self.product_with_taxes_a.id,
                 'product_uom_qty': 10.0,
-                'product_uom': self.product_with_taxes_a.uom_id.id,
                 'price_unit': self.product_with_taxes_a.list_price
                 }),
                 (0, 0, {
                 'name': self.product_with_taxes_b.name,
                 'product_id': self.product_with_taxes_b.id,
                 'product_uom_qty': 1.0,
-                'product_uom': self.product_with_taxes_b.uom_id.id,
                 'price_unit': self.product_with_taxes_b.list_price
                 })
             ],
@@ -129,18 +125,16 @@ class TestL10nClEdiStock(TestL10nClEdiStockCommon):
                     'name': self.product_without_taxes_a.name,
                     'product_id': self.product_without_taxes_a.id,
                     'product_uom_qty': 5.0,
-                    'product_uom': self.product_without_taxes_a.uom_id.id,
                     'price_unit': self.product_without_taxes_a.list_price,
                     'discount': 10.00,
-                    'tax_id': [],
+                    'tax_ids': [],
                 }),
                 (0, 0, {
                     'name': self.product_without_taxes_b.name,
                     'product_id': self.product_without_taxes_b.id,
                     'product_uom_qty': 10.0,
-                    'product_uom': self.product_without_taxes_b.uom_id.id,
                     'price_unit': self.product_without_taxes_b.list_price,
-                    'tax_id': [],
+                    'tax_ids': [],
                 })
             ],
         })
@@ -181,7 +175,6 @@ class TestL10nClEdiStock(TestL10nClEdiStockCommon):
                     'name': self.product_with_taxes_a.name,
                     'product_id': self.product_with_taxes_a.id,
                     'product_uom_qty': 3.0,
-                    'product_uom': self.product_with_taxes_a.uom_id.id,
                     'price_unit': self.product_with_taxes_a.list_price,
                     'discount': 10.00,
                 })
@@ -309,7 +302,6 @@ class TestL10nClEdiStock(TestL10nClEdiStockCommon):
             'picking_type_id': self.warehouse.out_type_id.id,
         })
         self.env['stock.move'].create({
-            'name': product_a.name,
             'product_id': product_a.id,
             'product_uom_qty': 10.00,
             'quantity': 10.00,

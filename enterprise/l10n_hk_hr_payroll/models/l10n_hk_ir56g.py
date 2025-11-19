@@ -7,9 +7,9 @@ from collections import defaultdict
 from odoo import _, api, fields, models
 
 
-class L10nHkIr56g(models.Model):
+class L10n_HkIr56g(models.Model):
     _name = 'l10n_hk.ir56g'
-    _inherit = 'l10n_hk.ird'
+    _inherit = ['l10n_hk.ird']
     _description = 'IR56G Sheet'
     _order = 'start_period'
 
@@ -52,8 +52,8 @@ class L10nHkIr56g(models.Model):
                 code: sum(all_line_values[code][p.id]['total'] for p in payslips)
                 for code in line_codes}
 
-            start_date = self.start_period if self.start_period > employee.first_contract_date else employee.first_contract_date
-            end_date = employee.contract_id.date_end if employee.contract_id.date_end else self.end_period
+            start_date = self.start_period if self.start_period > employee.contract_date_start else employee.contract_date_start
+            end_date = employee.version_id.date_end if employee.version_id.date_end else self.end_period
 
             rental_ids = employee.l10n_hk_rental_ids.filtered_domain([
                 ('state', 'in', ['open', 'close']),
@@ -101,8 +101,10 @@ class L10nHkIr56g(models.Model):
                     ('date_to', '<=', rental.date_end or self.end_period),
                 ])
                 date_start_rental = rental.date_start if rental.date_start > start_date else start_date
-                date_start_rental_str = date_start_rental.strftime('%Y%m%d')
-                date_end_rental_str = (rental.date_end or self.end_period).strftime('%Y%m%d')
+                date_end_rental = rental.date_end or self.end_period
+
+                date_start_rental_str = date_start_rental.strftime('%Y%m%d') if date_start_rental else ''
+                date_end_rental_str = date_end_rental.strftime('%Y%m%d') if date_end_rental else ''
                 period_rental_str = '{} - {}'.format(date_start_rental_str, date_end_rental_str)
 
                 amount_rental = sum(all_line_values['HRA'][p.id]['total'] for p in payslips_rental)
@@ -142,10 +144,10 @@ class L10nHkIr56g(models.Model):
         return result
 
     def _get_posted_document_owner(self, employee):
-        return employee.contract_id.hr_responsible_id or self.env.user
+        return employee.version_id.hr_responsible_id or self.env.user
 
 
-class L10nHkIr56bLine(models.Model):
+class L10n_HkIr56gLine(models.Model):
     _name = 'l10n_hk.ir56g.line'
     _description = 'IR56G Line'
 
@@ -170,9 +172,10 @@ class L10nHkIr56bLine(models.Model):
     amount_non_exercised_stock_options = fields.Float(string='Amount of Non-Exercised Stock Options')
     date_grant = fields.Date(string='Date of Grant')
 
-    _sql_constraints = [
-        ('unique_employee', 'unique(employee_id, sheet_id)', 'An employee can only have one IR56G line per sheet.'),
-    ]
+    _unique_employee = models.Constraint(
+        'unique(employee_id, sheet_id)',
+        "An employee can only have one IR56G line per sheet.",
+    )
 
     def _get_line_details(self):
         self.ensure_one()

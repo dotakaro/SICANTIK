@@ -3,7 +3,7 @@
 
 {
     'name': 'Mass mailing on sale subscriptions',
-    'category': 'Hidden',
+    'category': 'Marketing/Email Marketing',
     'version': '1.0',
     'summary': 'Add sale subscription support in mass mailing',
     'description': """Mass mailing on sale subscriptions""",
@@ -12,5 +12,6 @@
         'sale_subscription',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

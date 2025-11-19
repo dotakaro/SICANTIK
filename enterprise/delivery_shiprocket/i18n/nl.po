@@ -3,16 +3,15 @@
 # 	* delivery_shiprocket
 # 
 # Translators:
-# Wil Odoo, 2024
-# Erwin van der Ploeg <erwin@odooexperts.nl>, 2025
+# Wil Odoo, 2025
 # Manon Rondou, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Manon Rondou, 2025\n"
 "Language-Team: Dutch (https://app.transifex.com/odoo/teams/41243/nl/)\n"
 "MIME-Version: 1.0\n"
@@ -139,11 +138,6 @@ msgid "Authentication failed! Please check your credentials."
 msgstr "Authenticatie mislukt! Controleer je logingegevens."
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__cod
-msgid "COD"
-msgstr "COD"
-
-#. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__package_carrier_type
 msgid "Carrier"
 msgstr "Vervoerder"
@@ -225,8 +219,13 @@ msgid "Created on"
 msgstr "Aangemaakt op"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "Schermnaam"
 
@@ -322,8 +321,13 @@ msgid "Go to Shipping Methods"
 msgstr "Ga naar verzendmethoden"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -370,15 +374,15 @@ msgid "Package Type"
 msgstr "Verpakking soort"
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid "Payment Method"
-msgstr "Betaalmethode"
+#: model:ir.model,name:delivery_shiprocket.model_payment_provider
+msgid "Payment Provider"
+msgstr "Betaalprovider"
 
 #. module: delivery_shiprocket
 #. odoo-python
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
-msgid "Phone or Mobile is required!"
-msgstr "Telefoon of GSM is vereist!"
+msgid "Phone is required!"
+msgstr "Telefoon is vereist!"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_pickup_request
@@ -396,11 +400,6 @@ msgstr "Pincode is vereist!"
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
 msgid "Please configure Shiprocket credentials in the shipping method"
 msgstr "Configureer de Shiprocket inloggegevens in de verzendwijze"
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__prepaid
-msgid "Prepaid"
-msgstr "Prepaid"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__delivery_type
@@ -549,6 +548,14 @@ msgid "Shiprocket order(s) not found to cancel the shipment!"
 msgstr "Shiprocket order(s) niet gevonden om de levering te annuleren!"
 
 #. module: delivery_shiprocket
+#. odoo-python
+#: code:addons/delivery_shiprocket/models/payment_provider.py:0
+msgid "Shiprocket provider is configured to use only Collect on Delivery."
+msgstr ""
+"Shiprocket-provider is geconfigureerd om alleen betaling bij levering te "
+"gebruiken."
+
+#. module: delivery_shiprocket
 #: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_default_package_type_id
 msgid ""
 "Shiprocket requires package dimensions for getting accurate rate, you can "
@@ -606,15 +613,6 @@ msgstr "Koeriers synchroniseren vanuit Shiprocket"
 #: model_terms:ir.ui.view,arch_db:delivery_shiprocket.view_delivery_carrier_form_inherit_delivery_shiprocket
 msgid "Test Connection"
 msgstr "Test verbinding"
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid ""
-"The method of payment. Can be either COD (Cash on delivery) Or Prepaid while"
-" creating Shiprocket order."
-msgstr ""
-"De betaalmethode. Kan COD (Cash on delivery) of voorafbetaald zijn tijdens "
-"het maken van de Shiprocket order."
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_token_valid_upto

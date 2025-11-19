@@ -40,6 +40,7 @@ class AccountMove(models.Model):
             else:
                 move.intrastat_country_id = False
 
+
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 

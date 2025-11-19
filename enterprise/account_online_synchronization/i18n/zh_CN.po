@@ -3,17 +3,15 @@
 # 	* account_online_synchronization
 # 
 # Translators:
-# 何彬 <vnsoft.he@gmail.com>, 2024
-# Wil Odoo, 2024
-# Chloe Wang, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-07 20:46+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Chloe Wang, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:10+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -109,7 +107,7 @@ msgid ""
 "                            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                                <tr>\n"
 "                                    <td style=\"text-align: center; font-size: 13px;\">\n"
-"                                        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=auth\" style=\"color: #875A7B;\">Odoo</a>\n"
+"                                        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=auth\" t-attf-style=\"color: {{object.company_id.email_secondary_color or '#875A7B'}};\">Odoo</a>\n"
 "                                    </td>\n"
 "                                </tr>\n"
 "                            </table>\n"
@@ -138,13 +136,13 @@ msgstr ""
 "                                                    <td valign=\"top\" style=\"font-size: 13px;\">\n"
 "                                                        <div>\n"
 "                                                            您好！<br/><br/>\n"
-"                                                            特此通知<b><a t-att-href=\"object.get_base_url()\" t-out=\"object.get_base_url() or ''\">https://yourcompany.odoo.com</a></b>与<t t-out=\"object.account_online_link_id.name or ''\">Belfius</t>之间的连线，<t t-if=\"not object.expiring_synchronization_due_day\">已经过期。</t><t t-else=\"\">将于<t t-out=\"object.expiring_synchronization_due_day or ''\">10</t> 天后到期。</t><br/>\n"
+"                                                            特此通知， <b><a t-att-href=\"object.get_base_url()\" t-out=\"object.get_base_url() or ''\">https://yourcompany.odoo.com</a></b> 与 <t t-out=\"object.account_online_link_id.name or ''\">Belfius</t> 之间的连线，<t t-if=\"not object.expiring_synchronization_due_day\">已经逾期。</t><t t-else=\"\">将于 <t t-out=\"object.expiring_synchronization_due_day or ''\">10</t> 天后到期。</t><br/>\n"
 "                                                            <div style=\"margin: 16px 0px 16px 0px;\">\n"
 "                                                                <a t-attf-href=\"{{ website_url }}/renew_consent/{{ object.id }}?access_token={{object.access_token}}\" style=\"background-color: #4caf50; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
 "                                                                    更新同意\n"
 "                                                                </a>\n"
 "                                                            </div>\n"
-"                                                            安全提示：请检查网页重新定义到的域名是否为<b><a t-att-href=\"object.get_base_url()\" t-out=\"object.get_base_url() or ''\">https://yourcompany.odoo.com。</a></b>\n"
+"                                                            安全提示：请检查网页重新导向后的网址域名，确保是 <b><a t-att-href=\"object.get_base_url()\" t-out=\"object.get_base_url() or ''\">https://yourcompany.odoo.com</a></b> 。\n"
 "                                                        </div>\n"
 "                                                    </td>\n"
 "                                                </tr>\n"
@@ -166,7 +164,7 @@ msgstr ""
 "                            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                                <tr>\n"
 "                                    <td style=\"text-align: center; font-size: 13px;\">\n"
-"                                        由<a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=auth\" style=\"color: #875A7B;\">Odoo</a>驱动\n"
+"                                        由 <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=auth\" t-attf-style=\"color: {{object.company_id.email_secondary_color or '#875A7B'}};\">Odoo</a> 驱动\n"
 "                                    </td>\n"
 "                                </tr>\n"
 "                            </table>\n"
@@ -290,6 +288,24 @@ msgid "Automatic synchronization"
 msgstr "自动同步"
 
 #. module: account_online_synchronization
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_account__available_balance
+msgid "Available Balance"
+msgstr "可用余额"
+
+#. module: account_online_synchronization
+#: model:ir.model.fields,help:account_online_synchronization.field_account_online_account__available_balance
+msgid ""
+"Available balance of the account sent by the third party provider. This is "
+"typically the balance plus/minus pending transactions."
+msgstr "第三方提供商发送的账户可用余额。通常是余额加上/减去待处理交易。"
+
+#. module: account_online_synchronization
+#. odoo-javascript
+#: code:addons/account_online_synchronization/static/src/components/bank_reconciliation/statement_summary/statement_summary.xml:0
+msgid "Available balance with pending"
+msgstr "可用余额（包括待处理项目）"
+
+#. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_account__balance
 msgid "Balance"
 msgstr "余额"
@@ -315,11 +331,6 @@ msgid "Bank Statement Line"
 msgstr "银行对账单行"
 
 #. module: account_online_synchronization
-#: model:mail.activity.type,name:account_online_synchronization.bank_sync_activity_update_consent
-msgid "Bank Synchronization: Update consent"
-msgstr "银行同步：更新同意"
-
-#. module: account_online_synchronization
 #. odoo-python
 #: code:addons/account_online_synchronization/models/account_online.py:0
 msgid "Bank Synchronization: Update your consent"
@@ -329,11 +340,6 @@ msgstr "银行同步：更新同意"
 #: model:mail.template,name:account_online_synchronization.email_template_sync_reminder
 msgid "Bank connection expiration reminder"
 msgstr "银行连接到期提醒"
-
-#. module: account_online_synchronization
-#: model:ir.model,name:account_online_synchronization.model_bank_rec_widget
-msgid "Bank reconciliation widget for a single statement line"
-msgstr "用于单个对账单行的银行对账工具"
 
 #. module: account_online_synchronization
 #: model_terms:ir.ui.view,arch_db:account_online_synchronization.account_missing_transaction_wizard_view_form
@@ -444,6 +450,11 @@ msgid "Contact"
 msgstr "联系人"
 
 #. module: account_online_synchronization
+#: model:ir.model,website_form_label:account_online_synchronization.model_res_partner
+msgid "Create a Customer"
+msgstr "创建客户"
+
+#. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_selection__create_uid
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line_transient__create_uid
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_duplicate_transaction_wizard__create_uid
@@ -482,11 +493,15 @@ msgstr "该此连接的同意的到期日期"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_selection__display_name
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line_transient__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_duplicate_transaction_wizard__display_name
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_journal__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_missing_transaction_wizard__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_account__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__display_name
+#: model:ir.model.fields,field_description:account_online_synchronization.field_res_company__display_name
+#: model:ir.model.fields,field_description:account_online_synchronization.field_res_partner__display_name
 msgid "Display Name"
 msgstr "显示名称"
 
@@ -619,11 +634,15 @@ msgstr "这里"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_selection__id
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line_transient__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_duplicate_transaction_wizard__id
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_journal__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_missing_transaction_wizard__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_account__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__id
+#: model:ir.model.fields,field_description:account_online_synchronization.field_res_company__id
+#: model:ir.model.fields,field_description:account_online_synchronization.field_res_partner__id
 msgid "ID"
 msgstr "ID"
 
@@ -856,6 +875,12 @@ msgid "Next synchronization"
 msgstr "下次同步"
 
 #. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_journal.py:0
+msgid "No Pending Transactions"
+msgstr "没有待处理的交易"
+
+#. module: account_online_synchronization
 #: model:ir.model.fields.selection,name:account_online_synchronization.selection__account_online_link__state__disconnected
 msgid "Not Connected"
 msgstr "未连接"
@@ -949,6 +974,12 @@ msgid "Pending"
 msgstr "待定"
 
 #. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_journal.py:0
+msgid "Pending Transactions"
+msgstr "待处理交易"
+
+#. module: account_online_synchronization
 #: model:ir.model.fields.selection,name:account_online_synchronization.selection__account_online_account__fetching_status__planned
 msgid "Planned"
 msgstr "计划"
@@ -990,6 +1021,16 @@ msgstr "处理中"
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__provider_data
 msgid "Provider Data"
 msgstr "服务提供商数据"
+
+#. module: account_online_synchronization
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_duplicate_transaction_wizard__provider_duplicate_ids
+msgid "Provider Duplicate"
+msgstr "重复服务商"
+
+#. module: account_online_synchronization
+#: model_terms:ir.ui.view,arch_db:account_online_synchronization.account_duplicate_transaction_wizard_view_form
+msgid "Provider Duplicates"
+msgstr "重复服务商"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__provider_type
@@ -1090,6 +1131,12 @@ msgid "Select a Bank Account"
 msgstr "选择银行账户"
 
 #. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_online.py:0
+msgid "Select a Credit Card Account"
+msgstr "选择信用卡账户"
+
+#. module: account_online_synchronization
 #: model_terms:ir.ui.view,arch_db:account_online_synchronization.view_account_bank_selection_form_wizard
 msgid "Select the"
 msgstr "选择"
@@ -1120,6 +1167,12 @@ msgstr "设定银行"
 #: code:addons/account_online_synchronization/models/account_online.py:0
 msgid "Setup Bank Account"
 msgstr "设置银行账户"
+
+#. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_online.py:0
+msgid "Setup Credit Card Account"
+msgstr "设置信用卡账户"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__show_sync_actions
@@ -1176,6 +1229,12 @@ msgid ""
 "The online synchronization service is not available at the moment. Please "
 "try again later."
 msgstr "当前在线同步服务不可用。请稍后再试。"
+
+#. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_journal.py:0
+msgid "There are no pending transactions for this journal."
+msgstr "该日记账没有待处理的交易。"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,help:account_online_synchronization.field_account_online_link__provider_type
@@ -1353,6 +1412,12 @@ msgstr "要连接的账户："
 #: code:addons/account_online_synchronization/static/src/components/bank_configure/bank_configure.xml:0
 msgid "banks"
 msgstr "银行"
+
+#. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_online.py:0
+msgid "default_contextduplicates_from_date"
+msgstr "default_contextduplicates_from_date"
 
 #. module: account_online_synchronization
 #. odoo-javascript

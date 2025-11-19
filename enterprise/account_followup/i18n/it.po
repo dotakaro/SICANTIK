@@ -3,16 +3,16 @@
 # 	* account_followup
 # 
 # Translators:
-# Wil Odoo, 2024
-# Marianna Ciofani, 2025
+# Wil Odoo, 2025
+# Sergio Zanchetta <primes2h@gmail.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-13 18:46+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Marianna Ciofani, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:22+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Sergio Zanchetta <primes2h@gmail.com>, 2025\n"
 "Language-Team: Italian (https://app.transifex.com/odoo/teams/41243/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -66,73 +66,6 @@ msgstr "50 giorni"
 #: model:account_followup.followup.line,name:account_followup.demo_followup_line5
 msgid "60 Days"
 msgstr "60 giorni"
-
-#. module: account_followup
-#: model:mail.template,body_html:account_followup.email_template_followup_1
-msgid ""
-"<div style=\"margin: 0px; padding: 0px;\">\n"
-"                    <p style=\"margin: 0px; padding: 0px;\">\n"
-"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Dear <t t-out=\"object.name or ''\"/> (<t t-out=\"object.commercial_partner_id.name or ''\"/>),</t>\n"
-"                        <t t-else=\"\">Dear <t t-out=\"object.name or ''\"/>,</t>\n"
-"                        <br/>\n"
-"                        It has come to our attention that you have&nbsp;an outstanding balance of <t t-out=\"format_amount(object.total_overdue, object.currency_id) or ''\"/>\n"
-"                        <br/>\n"
-"                        We kindly request that you take necessary action to settle this amount within the next 8 days.\n"
-"                        <br/>\n"
-"                        </p><div t-if=\"object._show_pay_now_button()\" class=\"d-flex\">\n"
-"                            <a t-att-href=\"'/my/invoices/overdue'\" class=\"btn btn-primary\">Pay now</a>\n"
-"                        </div>\n"
-"                        If you have already made the payment after receiving this message, please disregard it.\n"
-"                        Our accounting department is available if you require any assistance or have any questions.\n"
-"                        <br/>\n"
-"                        Thank you for your cooperation.\n"
-"                        <br/>\n"
-"                        Sincerely,\n"
-"                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().signature\"/>\n"
-"                        </t>\n"
-"                        <t t-else=\"\">\n"
-"                            <br/>\n"
-"                            --\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().name\"/>\n"
-"                        </t>\n"
-"                    \n"
-"                </div>\n"
-"            "
-msgstr ""
-"<div style=\"margin: 0px; padding: 0px;\">\n"
-"                    <p style=\"margin: 0px; padding: 0px;\">\n"
-"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Gentile <t t-out=\"object.name or ''\"/> (<t t-out=\"object.commercial_partner_id.name or ''\"/>),</t>\n"
-"                        <t t-else=\"\">Gentile <t t-out=\"object.name or ''\"/>,</t>\n"
-"                        <br/>\n"
-"                        abbiamo constatato che hai un saldo in sospeso pari a <t t-out=\"format_amount(object.total_overdue, object.currency_id) or ''\"/>\n"
-"                        <br/>\n"
-"                        Ti chiediamo gentilmente di intraprendere le azioni necessarie per saldare l'importo entro i prossimi 8 giorni.\n"
-"                        <br/>\n"
-"                        </p><div t-if=\"object._show_pay_now_button()\" class=\"d-flex\">\n"
-"                            <a t-att-href=\"'/my/invoices/overdue'\" class=\"btn btn-primary\">Paga ora</a>\n"
-"                        </div>\n"
-"                        Se hai già effettuato il pagamento in seguito alla ricezione del messaggio, ignoralo.\n"
-"                        Il nostro dipartimento contabilità è disponibile se hai bisogno di assistenza o per rispondere a qualsiasi domanda.\n"
-"                        <br/>\n"
-"                        Grazie per la collaborazione.\n"
-"                        <br/>\n"
-"                        Cordialmente,\n"
-"                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().signature\"/>\n"
-"                        </t>\n"
-"                        <t t-else=\"\">\n"
-"                            <br/>\n"
-"                            --\n"
-"                            <br/>\n"
-"                            <t t-out=\"object._get_followup_responsible().name\"/>\n"
-"                        </t>\n"
-"                    \n"
-"                </div>\n"
-"            "
 
 #. module: account_followup
 #: model:mail.template,body_html:account_followup.demo_followup_email_template_4
@@ -249,18 +182,78 @@ msgstr ""
 "            "
 
 #. module: account_followup
-#: model_terms:ir.ui.view,arch_db:account_followup.res_partner_view_form
-msgid "<span class=\"o_stat_text\">Customer Statement</span>"
-msgstr "<span class=\"o_stat_text\">Estratto conto cliente</span>"
+#: model:mail.template,body_html:account_followup.email_template_followup_1
+msgid ""
+"<div style=\"margin: 0px; padding: 0px;\">\n"
+"                    <p>\n"
+"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Dear <t t-out=\"object.name or ''\"/> (<t t-out=\"object.commercial_partner_id.name or ''\"/>),</t>\n"
+"                        <t t-else=\"\">Dear <t t-out=\"object.name or ''\"/>,</t>\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        We would like to inform you that your account shows an outstanding balance of <b><t t-out=\"format_amount(object.total_overdue, object.currency_id) or ''\"/></b>.\n"
+"                        We kindly ask that you settle this amount within the next <b>8 days</b>.\n"
+"                    </p>\n"
+"                    <p t-if=\"object._show_pay_now_button()\">\n"
+"                        <a t-att-href=\"'/my/invoices/overdue'\" style=\"padding: 8px 12px; font-size: 12px; color: #FFFFFF; text-decoration: none !important; font-weight: 400; background-color: #875A7B; border: 0px solid #875A7B; border-radius:3px\">Pay now</a>\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        If payment has already been made, please disregard this notice.\n"
+"                        For any questions or if you need assistance, feel free to contact our accounting department.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        We appreciate your cooperation in resolving this matter.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Sincerely,\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
+"                            <t t-out=\"object._get_followup_responsible().signature\"/>\n"
+"                        </t>\n"
+"                        <t t-else=\"\">\n"
+"                            <t t-out=\"object._get_followup_responsible().name\"/>\n"
+"                        </t>\n"
+"                    </p>\n"
+"                </div>\n"
+"            "
+msgstr ""
+"<div style=\"margin: 0px; padding: 0px;\">\n"
+"                    <p>\n"
+"                        <t t-if=\"object.id != object.commercial_partner_id.id\">Gentile <t t-out=\"object.name or ''\"/> (<t t-out=\"object.commercial_partner_id.name or ''\"/>),</t>\n"
+"                        <t t-else=\"\">Gentile <t t-out=\"object.name or ''\"/>,</t>\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        abbiamo constatato che hai un saldo in sospeso pari a <b><t t-out=\"format_amount(object.total_overdue, object.currency_id) or ''\"/></b>.\n"
+"                        Ti chiediamo di saldare l'importo entro i prossimi <b>8 giorni</b>.\n"
+"                    </p>\n"
+"                    <p t-if=\"object._show_pay_now_button()\">\n"
+"                        <a t-att-href=\"'/my/invoices/overdue'\" style=\"padding: 8px 12px; font-size: 12px; color: #FFFFFF; text-decoration: none !important; font-weight: 400; background-color: #875A7B; border: 0px solid #875A7B; border-radius:3px\">Paga ora</a>\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Se hai già effettuato il pagamento in seguito alla ricezione del messaggio, ignoralo.\n"
+"                        Il nostro dipartimento contabilità è disponibile se hai bisogno di assistenza o per rispondere a qualsiasi domanda.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Grazie per la collaborazione.\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        Cordialmente,\n"
+"                    </p>\n"
+"                    <p>\n"
+"                        <t t-if=\"not is_html_empty(object._get_followup_responsible().signature)\">\n"
+"                            <t t-out=\"object._get_followup_responsible().signature\"/>\n"
+"                        </t>\n"
+"                        <t t-else=\"\">\n"
+"                            <t t-out=\"object._get_followup_responsible().name\"/>\n"
+"                        </t>\n"
+"                    </p>\n"
+"                </div>\n"
+"            "
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.res_partner_view_form
-msgid ""
-"<span>Preferred address for follow-up reports. Selected by default when you "
-"send reminders about overdue invoices.</span>"
-msgstr ""
-"<span>Indirizzi preferiti per i rendiconti di follow-up selezionati in "
-"maniera predefinita quando invii promemoria su fatture in ritardo.</span>"
+msgid "<span class=\"o_stat_text\">Customer Statement</span>"
+msgstr "<span class=\"o_stat_text\">Estratto conto cliente</span>"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.template_followup_report
@@ -288,7 +281,7 @@ msgid "Account Manager"
 msgstr "Account Manager"
 
 #. module: account_followup
-#: model:ir.actions.server,name:account_followup.ir_cron_auto_post_draft_entry_ir_actions_server
+#: model:ir.actions.server,name:account_followup.ir_cron_follow_up_ir_actions_server
 msgid "Account Report Followup; Execute followup"
 msgstr "Documento di sollecito conto: effettua sollecito"
 
@@ -332,12 +325,6 @@ msgstr "Aggiungi seguaci"
 #: model_terms:ir.ui.view,arch_db:account_followup.followup_filter_info_template
 msgid "Address"
 msgstr "Indirizzo"
-
-#. module: account_followup
-#: model:ir.model.fields,field_description:account_followup.field_res_partner__type
-#: model:ir.model.fields,field_description:account_followup.field_res_users__type
-msgid "Address Type"
-msgstr "Tipologia indirizzo"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__join_invoices
@@ -395,7 +382,6 @@ msgstr "Contatto"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
-#: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
 msgid "Content Template"
 msgstr "Modello del contenuto"
 
@@ -403,6 +389,11 @@ msgstr "Modello del contenuto"
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__body
 msgid "Contents"
 msgstr "Contenuti"
+
+#. module: account_followup
+#: model:ir.model,website_form_label:account_followup.model_res_partner
+msgid "Create a Customer"
+msgstr "Crea cliente"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__create_uid
@@ -426,7 +417,7 @@ msgstr "Rif. cliente:"
 #. module: account_followup
 #: model:ir.actions.client,name:account_followup.action_account_followup
 msgid "Customers Statement"
-msgstr "Report clienti"
+msgstr "Estratto conto clienti"
 
 #. module: account_followup
 #. odoo-python
@@ -460,12 +451,12 @@ msgid ""
 "Best Regards,\n"
 "\n"
 msgstr ""
-"Gentile %s,\n"
+"Spett.le %s,\n"
 "\n"
 "\n"
-"salvo errore da parte nostra, sembra che il seguente importo non sia stato pagato. Chiediamo di adottare le misure necessarie per effettuare il pagamento nei prossimi 8 giorni.\n"
+"salvo errore da parte nostra, sembra che il seguente importo non sia stato pagato. Siete pregati di adottare le misure necessarie per effettuare il pagamento nei prossimi 8 giorni.\n"
 "\n"
-"Se il pagamento è stato effettuato dopo l'invio di questa e-mail ignora questo messaggio. Non esitare a contattare il nostro ufficio contabilità.\n"
+"Se il pagamento è stato effettuato dopo l'invio di questa mail, ignorate questo messaggio. Non esitate a contattare il nostro ufficio contabilità.\n"
 "\n"
 "Cordiali saluti,\n"
 "\n"
@@ -484,7 +475,7 @@ msgstr ""
 #. module: account_followup
 #: model_terms:ir.actions.act_window,help:account_followup.action_account_followup_line_definition_form
 msgid "Define follow-up levels and their related actions"
-msgstr "Definisce i livelli di sollecito e le azioni correlate"
+msgstr "Definisci i livelli di sollecito e le azioni correlate"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.followup_filter_info_template
@@ -513,6 +504,10 @@ msgstr ""
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__display_name
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__display_name
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_missing_information_wizard__display_name
+#: model:ir.model.fields,field_description:account_followup.field_account_followup_report__display_name
+#: model:ir.model.fields,field_description:account_followup.field_account_move_line__display_name
+#: model:ir.model.fields,field_description:account_followup.field_ir_actions_report__display_name
+#: model:ir.model.fields,field_description:account_followup.field_res_partner__display_name
 msgid "Display Name"
 msgstr "Nome visualizzato"
 
@@ -525,9 +520,10 @@ msgstr "Scadenza"
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__delay
 msgid "Due Days"
-msgstr "Giorni di Ritardo"
+msgstr "Giorni di ritardo"
 
 #. module: account_followup
+#: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__send_email
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__email
 msgid "Email"
 msgstr "E-mail"
@@ -543,6 +539,11 @@ msgid "Email Subject"
 msgstr "Oggetto e-mail"
 
 #. module: account_followup
+#: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
+msgid "Email Template"
+msgstr "Modello e-mail"
+
+#. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__email_recipient_ids
 msgid "Extra Recipients"
 msgstr "Destinatari aggiuntivi"
@@ -554,14 +555,9 @@ msgid "Follow-up %(partner)s - %(date)s.pdf"
 msgstr "Follow-up %(partner)s - %(date)s.pdf"
 
 #. module: account_followup
-#: model:ir.model.fields.selection,name:account_followup.selection__res_partner__type__followup
-msgid "Follow-up Address"
-msgstr "Indirizzo sollecito"
-
-#. module: account_followup
 #: model:ir.model,name:account_followup.model_account_followup_followup_line
 msgid "Follow-up Criteria"
-msgstr "Criterio di sollecito"
+msgstr "Criterio sollecito"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_move_line__followup_line_id
@@ -579,7 +575,7 @@ msgstr "Livelli di sollecito"
 #. module: account_followup
 #: model:ir.model,name:account_followup.model_account_followup_report
 msgid "Follow-up Report"
-msgstr "Resoconto controllo di pagamento"
+msgstr "Documento di sollecito"
 
 #. module: account_followup
 #: model:ir.model.fields.selection,name:account_followup.selection__account_followup_followup_line__activity_default_responsible_type__followup
@@ -607,7 +603,7 @@ msgstr "Dettagli follow-up"
 #. odoo-python
 #: code:addons/account_followup/models/account_followup_report.py:0
 msgid "Follow-up letter generated"
-msgstr "Lettera di follow-up creata"
+msgstr "Lettera di sollecito generata"
 
 #. module: account_followup
 #: model:ir.model,name:account_followup.model_account_followup_missing_information_wizard
@@ -621,9 +617,9 @@ msgid ""
 "            possible to use print and e-mail templates to send specific messages to\n"
 "            the customer."
 msgstr ""
-"Specifica per ogni step le azioni da compiere e da rimandare nei giorni. È\n"
-"            possibile utilizzare modelli e-mail e di stampa per inviare messaggi specifici\n"
-"            al cliente."
+"Per ciascun passaggio, specifica le azioni da intraprendere e il ritardo in\n"
+"            giorni. Per inviare messaggi specifici ai clienti è possibile utilizzare i modelli\n"
+"            di stampa ed e-mail."
 
 #. module: account_followup
 #: model:mail.template,name:account_followup.demo_followup_email_template_4
@@ -640,6 +636,10 @@ msgstr "Ha movimenti"
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__id
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__id
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_missing_information_wizard__id
+#: model:ir.model.fields,field_description:account_followup.field_account_followup_report__id
+#: model:ir.model.fields,field_description:account_followup.field_account_move_line__id
+#: model:ir.model.fields,field_description:account_followup.field_ir_actions_report__id
+#: model:ir.model.fields,field_description:account_followup.field_res_partner__id
 msgid "ID"
 msgstr "ID"
 
@@ -747,7 +747,7 @@ msgstr "Prossimo promemoria"
 #. module: account_followup
 #: model:ir.model.fields.selection,name:account_followup.selection__res_partner__followup_status__no_action_needed
 msgid "No action needed"
-msgstr "Nessuna azione richiesta"
+msgstr " Non richiede azione"
 
 #. module: account_followup
 #: model:ir.model.fields,help:account_followup.field_res_partner__followup_next_action_date
@@ -777,10 +777,10 @@ msgid ""
 "a placeholder expression that provides the appropriate language, e.g. {{ "
 "object.partner_id.lang }}."
 msgstr ""
-"Lingua di traduzione opzionale (codice ISO) da selezionare quando si invia "
-"un'email. Se non impostato, verrà usata la versione inglese. Di solito "
-"dovrebbe essere un'espressione segnaposto che fornisce la lingua "
-"appropriata, ad esempio {{ object.partner_id.lang }}."
+"Lingua di traduzione opzionale (codice ISO) da selezionare quando viene "
+"inviata una e-mail. Se non impostata, viene usata la versione inglese. "
+"Normalmente dovrebbe essere un'espressione segnaposto che fornisce la lingua"
+" appropriata, es. {{ object.partner_id.lang }}."
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form
@@ -868,6 +868,7 @@ msgid "Responsible"
 msgstr "Responsabile"
 
 #. module: account_followup
+#: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__send_sms
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
 msgid "SMS"
 msgstr "SMS"
@@ -885,7 +886,7 @@ msgstr "Programmazione attività"
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_line_filter
 msgid "Search Follow-up"
-msgstr "Cerca follow-up"
+msgstr "Ricerca sollecito"
 
 #. module: account_followup
 #: model:mail.template,name:account_followup.demo_followup_email_template_2
@@ -904,19 +905,19 @@ msgid "Send & Print"
 msgstr "Invia e stampa"
 
 #. module: account_followup
-#: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__send_email
-msgid "Send Email"
-msgstr "Invia e-mail"
-
-#. module: account_followup
-#: model:ir.model.fields,field_description:account_followup.field_account_followup_followup_line__send_sms
-msgid "Send SMS Message"
-msgstr "Invia messaggio SMS"
-
-#. module: account_followup
 #: model:ir.actions.act_window,name:account_followup.manual_reminder_action
 msgid "Send and Print"
 msgstr "Invia e stampa"
+
+#. module: account_followup
+#: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__show_print_button
+msgid "Show Print Button"
+msgstr "Mostra pulsante stampa"
+
+#. module: account_followup
+#: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__show_send_button
+msgid "Show Send Button"
+msgstr "Mostra pulsante invia"
 
 #. module: account_followup
 #: model:ir.model.fields,field_description:account_followup.field_account_followup_manual_reminder__sms
@@ -971,8 +972,8 @@ msgid ""
 "the reminder. Can be negative if you want to send the reminder before the "
 "invoice due date."
 msgstr ""
-"Numero di giorni da attendere successivi alla data di scadenza della fattura"
-" prima dell'invio della fattura. Può essere negativo se vuoi inviare il "
+"Il numero di giorni di attesa, dopo la scadenza della fattura, prima "
+"dell'invio del promemoria. Può essere negativo se si vuole inviare il "
 "promemoria prima della data di scadenza della fattura."
 
 #. module: account_followup
@@ -1034,7 +1035,7 @@ msgstr "Numero di fatture non pagate"
 #: model:ir.model.fields,field_description:account_followup.field_res_partner__unreconciled_aml_ids
 #: model:ir.model.fields,field_description:account_followup.field_res_users__unreconciled_aml_ids
 msgid "Unreconciled Aml"
-msgstr "Aml Non Riconciliato"
+msgstr "RMC non riconciliata"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.missing_information_view_form
@@ -1058,7 +1059,7 @@ msgstr "Con fatture scadute"
 #. module: account_followup
 #: model:ir.model,name:account_followup.model_account_followup_manual_reminder
 msgid "Wizard for sending manual reminders to clients"
-msgstr "Procedura guidata per l'inoltro manuale di promemoria ai clienti"
+msgstr "Procedura guidata per l'invio manuale di promemoria ai clienti"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.manual_reminder_view_form
@@ -1084,6 +1085,12 @@ msgid ""
 msgstr ""
 "Stai cercando di inviare un SMS ma non è stato indicato nessun numero di "
 "telefono per il contatto di follow-up legato al cliente \"%s\""
+
+#. module: account_followup
+#. odoo-python
+#: code:addons/account_followup/models/res_partner.py:0
+msgid "commercial_partner_id"
+msgstr "commercial_partner_id"
 
 #. module: account_followup
 #: model_terms:ir.ui.view,arch_db:account_followup.view_account_followup_followup_line_form

@@ -6,10 +6,10 @@ import json
 from dateutil.relativedelta import relativedelta
 
 from odoo import models, fields, api, Command, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 
-class CommissionPlan(models.Model):
+class SaleCommissionPlan(models.Model):
     _name = 'sale.commission.plan'
     _description = 'Commission Plan'
     _order = 'id'
@@ -61,7 +61,7 @@ CREATE INDEX IF NOT EXISTS account_move_invoice_user_id_date_idx ON account_move
     @api.constrains('date_from', 'date_to')
     def _date_constraint(self):
         for plan in self:
-            if not plan.date_to > plan.date_from:
+            if plan.date_to and plan.date_from and not plan.date_to > plan.date_from:
                 raise ValidationError(_("The start date must be before the end date."))
 
     @api.constrains('team_id', 'user_type')
@@ -204,6 +204,16 @@ CREATE INDEX IF NOT EXISTS account_move_invoice_user_id_date_idx ON account_move
 
     def action_cancel(self):
         self.state = 'cancel'
+
+    def action_export_targets(self):
+        self.ensure_one()
+        if self.type != 'target':
+            raise UserError(_("Exporting targets is only available for plans based on targets"))
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/sale_commission/export/targets/{self.id}",
+            "target": "download",
+        }
 
     @api.model
     def _get_completion_value(self, sorted_amounts, sorted_rates):

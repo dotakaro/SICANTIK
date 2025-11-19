@@ -3,16 +3,15 @@
 # 	* hr_payroll_account
 # 
 # Translators:
-# Wil Odoo, 2024
-# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2024
+# Wil Odoo, 2025
 # Fernanda Alvarez, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:47+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Fernanda Alvarez, 2025\n"
 "Language-Team: Spanish (Latin America) (https://app.transifex.com/odoo/teams/41243/es_419/)\n"
 "MIME-Version: 1.0\n"
@@ -28,7 +27,6 @@ msgid "# of Payslips"
 msgstr "Núm. de recibos de nómina"
 
 #. module: hr_payroll_account
-#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_run_view_form
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_view_form
 msgid ""
 "<span class=\"o_stat_text\" invisible=\"move_state != 'draft'\">Journal Entry <br/>(Draft)</span>\n"
@@ -45,6 +43,17 @@ msgid "<span class=\"o_stat_text\">Payslip</span>"
 msgstr "<span class=\"o_stat_text\">Recibo de nómina</span>"
 
 #. module: hr_payroll_account
+#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_run_view_form
+msgid ""
+"<span invisible=\"move_state != 'draft'\">Journal Entry <br/>(Draft)</span>\n"
+"                    <span invisible=\"move_state != 'posted'\">Journal Entry <br/>(Posted)</span>\n"
+"                    <span invisible=\"move_state != 'cancel'\">Journal Entry <br/>(Canceled)</span>"
+msgstr ""
+"<span invisible=\"move_state != 'draft'\">Asiento <br/>(borrador)</span>\n"
+"                    <span invisible=\"move_state != 'posted'\">Asiento <br/>(registrado)</span>\n"
+"                    <span invisible=\"move_state != 'cancel'\">Asiento <br/>(cancelado)</span>"
+
+#. module: hr_payroll_account
 #: model:ir.model,name:hr_payroll_account.model_account_chart_template
 msgid "Account Chart Template"
 msgstr "Plantilla de plan de cuentas"
@@ -56,7 +65,7 @@ msgid "Account Payslip Houserental"
 msgstr "Recibo de nómina de la cuenta para alquiler de casa"
 
 #. module: hr_payroll_account
-#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_employee_view_form
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_salary_rule_view_form
 msgid "Accounting"
 msgstr "Contabilidad"
@@ -73,9 +82,9 @@ msgid "Adjustment Entry"
 msgstr "Asiento de ajuste"
 
 #. module: hr_payroll_account
-#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_contract__analytic_account_id
-#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_contract_history__analytic_account_id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_employee__analytic_account_id
 #: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__analytic_account_id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_version__analytic_account_id
 msgid "Analytic Account"
 msgstr "Cuenta analítica"
 
@@ -91,6 +100,11 @@ msgstr "¿Está seguro de que desea continuar?"
 #: model:ir.ui.menu,name:hr_payroll_account.menu_hr_employee_bank_account
 msgid "Bank Accounts"
 msgstr "Cuentas bancarias"
+
+#. module: hr_payroll_account
+#: model_terms:ir.ui.view,arch_db:hr_payroll_account.view_partner_bank_tree_inherit
+msgid "Bank Identifier Code"
+msgstr "Código de identificación bancaria"
 
 #. module: hr_payroll_account
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.res_config_settings_view_form
@@ -113,11 +127,6 @@ msgstr "Empresas"
 #: model:ir.model,name:hr_payroll_account.model_res_config_settings
 msgid "Config Settings"
 msgstr "Ajustes de configuración"
-
-#. module: hr_payroll_account
-#: model:ir.model,name:hr_payroll_account.model_hr_contract_history
-msgid "Contract history"
-msgstr "Historial de contratos"
 
 #. module: hr_payroll_account
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_run_view_form
@@ -158,7 +167,26 @@ msgid "Debit Tax Grids"
 msgstr "Tablas fiscales de débito"
 
 #. module: hr_payroll_account
-#: model:ir.model,name:hr_payroll_account.model_hr_contract
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_chart_template__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_journal__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_move__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_payment__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_payment_register__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payroll_payment_report_wizard__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payroll_structure__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_line__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_run__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_version__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_partner_bank__display_name
+msgid "Display Name"
+msgstr "Nombre en pantalla"
+
+#. module: hr_payroll_account
+#: model:ir.model,name:hr_payroll_account.model_hr_version
 msgid "Employee Contract"
 msgstr "Contrato del empleado"
 
@@ -200,6 +228,11 @@ msgstr ""
 "a sus contactos."
 
 #. module: hr_payroll_account
+#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_run_view_form
+msgid "Generated Journal Entries"
+msgstr "Asientos generados"
+
+#. module: hr_payroll_account
 #: model:ir.model,name:hr_payroll_account.model_hr_payroll_payment_report_wizard
 msgid "HR Payroll Payment Report Wizard"
 msgstr "Asistente de reportes de pagos de nómina para RR. HH."
@@ -209,6 +242,25 @@ msgstr "Asistente de reportes de pagos de nómina para RR. HH."
 #: model:ir.model.fields,field_description:hr_payroll_account.field_res_partner_bank__has_alt_bank_account
 msgid "Has Alt Bank Account"
 msgstr "Tiene una cuenta bancaria alterna"
+
+#. module: hr_payroll_account
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_chart_template__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_journal__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_move__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_payment__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_payment_register__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payroll_payment_report_wizard__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payroll_structure__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_line__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_run__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_version__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_company__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_partner_bank__id
+msgid "ID"
+msgstr "ID"
 
 #. module: hr_payroll_account
 #. odoo-python
@@ -261,7 +313,7 @@ msgstr "Estado del movimiento"
 #. module: hr_payroll_account
 #: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__not_computed_in_net
 msgid "Not computed in net accountably"
-msgstr "No se calcula en la contabilidad neta"
+msgstr "No se calcula en contabilidad neta"
 
 #. module: hr_payroll_account
 #. odoo-python
@@ -285,6 +337,11 @@ msgid "Pay"
 msgstr "Pagar"
 
 #. module: hr_payroll_account
+#: model:ir.model,name:hr_payroll_account.model_hr_payslip_run
+msgid "Pay Run"
+msgstr "Periodo de nómina"
+
+#. module: hr_payroll_account
 #: model:ir.model,name:hr_payroll_account.model_hr_payslip
 msgid "Pay Slip"
 msgstr "Recibo de nómina"
@@ -299,11 +356,6 @@ msgstr "Pago realizado en %s"
 #: model:ir.model,name:hr_payroll_account.model_account_payment
 msgid "Payments"
 msgstr "Pagos"
-
-#. module: hr_payroll_account
-#: model:ir.model,name:hr_payroll_account.model_hr_payslip_run
-msgid "Payslip Batches"
-msgstr "Lotes de recibos de nómina"
 
 #. module: hr_payroll_account
 #: model:ir.model,name:hr_payroll_account.model_hr_payslip_line

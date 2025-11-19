@@ -1,6 +1,6 @@
 {
     'name': 'eCommerce Rental with Stock Management',
-    'category': 'Hidden',
+    'category': 'Website/Website',
     'summary': 'Sell rental products on your eCommerce and manage stock',
     'version': '1.0',
     'description': """
@@ -22,5 +22,6 @@ appropriate views and selling choices.
         ],
     },
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

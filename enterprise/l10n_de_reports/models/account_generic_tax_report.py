@@ -6,9 +6,9 @@ from lxml import etree
 from datetime import date, datetime
 
 
-class GermanTaxReportCustomHandler(models.AbstractModel):
+class L10n_DeTaxReportHandler(models.AbstractModel):
     _name = 'l10n_de.tax.report.handler'
-    _inherit = 'account.tax.report.handler'
+    _inherit = ['account.tax.report.handler']
     _description = 'German Tax Report Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -48,7 +48,7 @@ class GermanTaxReportCustomHandler(models.AbstractModel):
         options = report.get_options(options)
         date_to = datetime.strptime(options['date']['date_to'], '%Y-%m-%d')
         template_context['year'] = date_to.year
-        periodicity = options['tax_periodicity']['periodicity']
+        periodicity = options['return_periodicity']['periodicity']
         if periodicity == 'monthly':
             template_context['period'] = date_to.strftime("%m")
         elif periodicity == 'quarterly':
@@ -92,16 +92,8 @@ class GermanTaxReportCustomHandler(models.AbstractModel):
                 if line_code in ("21", "35", "41", "42", "43", "44", "45", "46", "48", "49", "50", "60", "73",
                                  "76", "77", "81", "84", "86", "87", "89", "91", "93", "90", "94", "95"):
                     elem.text = float_repr(int(line_value), 0)
-                elif line_code in ("66", "61", "62", "67", "63", "59", "64",):
-                    # These are taxes that are on the wrong sign on the report compared to what should be exported
-                    elem.text = float_repr(- line_value, 2).replace('.', ',')
                 else:
                     elem.text = float_repr(line_value, 2).replace('.', ',')
-
-            # "kz83" must be supplied with 0.00 if it doesn't have balance
-            elif line_code == "83":
-                elem = etree.SubElement(taxes, "Kz" + line_code)
-                elem.text = "0,00"
 
         return {
             'file_name': report.get_default_report_filename(options, 'xml'),

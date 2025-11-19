@@ -15,7 +15,7 @@
         <record id="hr_appraisal_0" model="hr.appraisal" forcecreate="1">
             <field name="active">True</field>
             <field name="employee_id" ref="hr.employee_sj"/>
-            <field name="state">pending</field>
+            <field name="state">2_pending</field>
             <field name="date_close" eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-1')"/>
             <field name="manager_ids" eval="[(4, ref('hr.employee_mw'))]"/>
             <field name="employee_feedback" type="html">
@@ -317,7 +317,7 @@
         <record id="hr_appraisal_1" model="hr.appraisal" forcecreate="1">
             <field name="active">True</field>
             <field name="employee_id" ref="hr.employee_eg"/>
-            <field name="state">pending</field>
+            <field name="state">2_pending</field>
             <field name="date_close" eval="(datetime.now()+relativedelta(months=1)).strftime('%Y-%m-%d')"/>
             <field name="manager_ids" eval="[Command.set([ref('hr.employee_mw'), ref('hr.employee_sj')])]"/>
             <field name="employee_feedback_published">False</field>
@@ -490,7 +490,7 @@
         <record id="hr_appraisal_2" model="hr.appraisal" forcecreate="1">
             <field name="active">True</field>
             <field name="employee_id" ref="hr.employee_eg"/>
-            <field name="state">done</field>
+            <field name="state">3_done</field>
             <field name="assessment_note" ref="hr_appraisal.note_good"/>
             <field name="date_close" eval="(datetime.now()+relativedelta(months=-3)).strftime('%Y-%m-1')"/>
             <field name="manager_ids" eval="[Command.set([ref('hr.employee_mw')])]"/>
@@ -593,8 +593,8 @@
         <!-- Appraisal Goal -->
         <record id="hr_appraisal_goal_1" model="hr.appraisal.goal" forcecreate="1">
             <field name="name">Team Management</field>
-            <field name="employee_id" ref="hr.employee_sj"/>
-            <field name="manager_id" ref="hr.employee_mw"/>
+            <field name="employee_ids" eval="[(6, 0, [ref('hr.employee_sj')])]"/>
+            <field name="manager_ids" eval="[(4, ref('hr.employee_mw'))]"/>
             <field name="progression">075</field>
             <field name="deadline" eval="(DateTime.now() + relativedelta(months=8)).strftime('%Y-%m-%d')"/>
             <field name="tag_ids" eval="[Command.set([ref('hr_appraisal.hr_appraisal_goal_tag_softskills')])]"/>
@@ -646,8 +646,8 @@
 
         <record id="hr_appraisal_goal_2" model="hr.appraisal.goal" forcecreate="1">
             <field name="name">Javascript</field>
-            <field name="employee_id" ref="hr.employee_sj"/>
-            <field name="manager_id" ref="hr.employee_mw"/>
+            <field name="employee_ids" eval="[(6, 0, [ref('hr.employee_sj')])]"/>
+            <field name="manager_ids" eval="[(4, ref('hr.employee_mw'))]"/>
             <field name="progression">000</field>
             <field name="deadline" eval="(DateTime.now() + relativedelta(months=8)).strftime('%Y-%m-%d')"/>
             <field name="tag_ids" eval="[Command.set([ref('hr_appraisal.hr_appraisal_goal_tag_hardskills'),
@@ -698,8 +698,8 @@
 
         <record id="hr_appraisal_goal_3" model="hr.appraisal.goal" forcecreate="1">
             <field name="name">Deadlines</field>
-            <field name="employee_id" ref="hr.employee_eg"/>
-            <field name="manager_id" ref="hr.employee_sj"/>
+            <field name="employee_ids" eval="[(6, 0, [ref('hr.employee_eg')])]"/>
+            <field name="manager_ids" eval="[(4, ref('hr.employee_sj'))]"/>
             <field name="progression">000</field>
             <field name="deadline" eval="(DateTime.now() + relativedelta(months=10)).strftime('%Y-%m-%d')"/>
             <field name="tag_ids" eval="[Command.set([ref('hr_appraisal.hr_appraisal_goal_tag_softskills')])]"/>
@@ -719,8 +719,8 @@
 
         <record id="hr_appraisal_goal_4" model="hr.appraisal.goal" forcecreate="1">
             <field name="name">Python</field>
-            <field name="employee_id" ref="hr.employee_eg"/>
-            <field name="manager_id" ref="hr.employee_sj"/>
+            <field name="employee_ids" eval="[(6, 0, [ref('hr.employee_eg')])]"/>
+            <field name="manager_ids" eval="[(4, ref('hr.employee_sj'))]"/>
             <field name="progression">050</field>
             <field name="deadline" eval="(DateTime.now() + relativedelta(months=10)).strftime('%Y-%m-%d')"/>
             <field name="tag_ids" eval="[Command.set([ref('hr_appraisal.hr_appraisal_goal_tag_hardskills'),

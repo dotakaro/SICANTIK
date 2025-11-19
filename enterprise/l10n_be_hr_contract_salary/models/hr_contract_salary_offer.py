@@ -20,7 +20,6 @@ class HrContractSalaryOffer(models.Model):
         store=True,
         readonly=False,
         help="The employee will be able to choose a new car even if the maximum number of used cars available is reached.")
-    show_new_car = fields.Boolean(tracking=True)
     car_id = fields.Many2one(
         'fleet.vehicle', string='Default Vehicle',
         compute='_compute_car_id',
@@ -60,8 +59,8 @@ class HrContractSalaryOffer(models.Model):
                 partner |= offer.employee_id.work_contact_id
                 # In case the car was reserved for an applicant, while
                 # the offer is sent for the corresponding employee
-                if offer.employee_id.candidate_id:
-                    partner |= offer.employee_id.candidate_id.partner_id
+                if offer.employee_id.applicant_ids:
+                    partner |= offer.employee_id.applicant_ids.partner_id
             elif offer.applicant_id:
                 partner |= offer.applicant_id.partner_id
             if partner:
@@ -93,8 +92,8 @@ class HrContractSalaryOffer(models.Model):
                 partners |= offer.applicant_id.partner_id
             elif offer.employee_id:
                 partners |= offer.employee_id.work_contact_id
-                if offer.employee_id.candidate_id:
-                    partners |= offer.employee_id.candidate_id.partner_id
+                if offer.employee_id.applicant_ids:
+                    partners |= offer.employee_id.applicant_ids.partner_id
             if offer.car_id.driver_id and offer.car_id.driver_id not in partners:
                 warning.append(f"Car is already assigned to {offer.car_id.driver_id.name} as a driver.")
             if offer.car_id.future_driver_id and offer.car_id.future_driver_id not in partners:
@@ -107,6 +106,6 @@ class HrContractSalaryOffer(models.Model):
         for offer in self:
             if offer.contract_template_id.available_cars_amount >= offer.contract_template_id.max_unused_cars:
                 offer.wishlist_car_warning = _("We already have %s car(s) without driver(s) available",
-                                              offer.employee_contract_id.available_cars_amount)
+                                              offer.employee_version_id.available_cars_amount)
             else:
                 offer.wishlist_car_warning = False

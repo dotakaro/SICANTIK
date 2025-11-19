@@ -4,13 +4,14 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
+
 class AppointmentQuestion(models.Model):
-    _name = "appointment.question"
+    _name = 'appointment.question'
     _description = "Appointment Questions"
     _order = "sequence"
 
     sequence = fields.Integer('Sequence')
-    appointment_type_id = fields.Many2one('appointment.type', 'Appointment Type', ondelete="cascade")
+    appointment_type_id = fields.Many2one('appointment.type', 'Appointment Type', ondelete="cascade", index='btree_not_null')
     name = fields.Char('Question', translate=True, required=True)
     placeholder = fields.Char('Placeholder', translate=True)
     question_required = fields.Boolean('Mandatory Answer')

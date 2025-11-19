@@ -11,8 +11,8 @@ from odoo.osv import expression
 from odoo.tools.float_utils import float_compare, float_is_zero
 
 
-class TransferModel(models.Model):
-    _name = "account.transfer.model"
+class AccountTransferModel(models.Model):
+    _name = 'account.transfer.model'
     _description = "Account Transfer Model"
 
     # DEFAULTS
@@ -347,12 +347,12 @@ class TransferModel(models.Model):
         return values_list, amount_left
 
 
-class TransferModelLine(models.Model):
-    _name = "account.transfer.model.line"
+class AccountTransferModelLine(models.Model):
+    _name = 'account.transfer.model.line'
     _description = "Account Transfer Model Line"
     _order = "sequence, id"
 
-    transfer_model_id = fields.Many2one('account.transfer.model', string="Transfer Model", required=True, ondelete='cascade')
+    transfer_model_id = fields.Many2one('account.transfer.model', string="Transfer Model", required=True, index=True, ondelete='cascade')
     account_id = fields.Many2one('account.account', string="Destination Account", required=True,
                                  domain="[('account_type', '!=', 'off_balance')]")
     percent = fields.Float(string="Percent", required=True, default=100, help="Percentage of the sum of lines from the origin accounts will be transferred to the destination account")
@@ -361,11 +361,10 @@ class TransferModelLine(models.Model):
     percent_is_readonly = fields.Boolean(compute="_compute_percent_is_readonly")
     sequence = fields.Integer("Sequence")
 
-    _sql_constraints = [
-        (
-            'unique_account_by_transfer_model', 'UNIQUE(transfer_model_id, account_id)',
-            'Only one account occurrence by transfer model')
-    ]
+    _unique_account_by_transfer_model = models.Constraint(
+        'UNIQUE(transfer_model_id, account_id)',
+        "Only one account occurrence by transfer model",
+    )
 
     @api.onchange('analytic_account_ids', 'partner_ids')
     def set_percent_if_analytic_account_ids(self):

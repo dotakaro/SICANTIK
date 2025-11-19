@@ -3,7 +3,7 @@ import { animationFrame, mockTimeZone } from "@odoo/hoot-mock";
 import { helpers, registries } from "@odoo/o-spreadsheet";
 import { defineTestSpreadsheetEditionModels } from "@test_spreadsheet_edition/../tests/helpers/data";
 import { createSpreadsheetTestAction } from "@test_spreadsheet_edition/../tests/helpers/helpers";
-import { contains, patchWithCleanup } from "@web/../tests/web_test_helpers";
+import { contains, mockService } from "@web/../tests/web_test_helpers";
 import { getSpreadsheetActionModel } from "@spreadsheet_edition/../tests/helpers/webclient_helpers";
 import { waitForDataLoaded } from "@spreadsheet/helpers/model";
 
@@ -21,7 +21,7 @@ function createRevision(revisions, type, payload) {
         type === "REMOTE_REVISION"
             ? [
                   {
-                      sheetId: uuidGenerator.uuidv4(),
+                      sheetId: uuidGenerator.smallUuid(),
                       position: 0,
                       name: `sheet ${len + 2}`,
                       type: "CREATE_SHEET",
@@ -32,7 +32,7 @@ function createRevision(revisions, type, payload) {
         id: len + 1,
         name: `revision ${len + 1}`,
         serverRevisionId: revisions.at(-1)?.nextRevisionId || "START_REVISION",
-        nextRevisionId: uuidGenerator.uuidv4(),
+        nextRevisionId: uuidGenerator.smallUuid(),
         version: "1",
         timestamp: "2023-09-09 13:00:00",
         user: [2, "Superman"],
@@ -53,23 +53,23 @@ function actionModel(action) {
 
 test("Open history version from the menu", async function () {
     const { env } = await createSpreadsheetTestAction("spreadsheet_test_action");
-    patchWithCleanup(env.services.action, {
+    mockService("action", {
         doAction(action) {
-            expect.step(JSON.stringify(action));
+            expect.step(action);
         },
     });
     const file = topbarMenuRegistry.getAll().find((item) => item.id === "file");
     const showHistory = file.children.find((item) => item.id === "version_history");
     await showHistory.execute(env);
     expect.verifySteps([
-        JSON.stringify({
+        {
             type: "ir.actions.client",
             tag: "action_open_spreadsheet_history",
             params: {
                 spreadsheet_id: 1,
                 res_model: "spreadsheet.test",
             },
-        }),
+        },
     ]);
 });
 
@@ -572,7 +572,7 @@ test("Datasources are re-evaluated if their domain is altered", async function (
                 );
                 return {
                     data: {
-                        version: 14,
+                        version: 16,
                         sheets: [
                             {
                                 id: "sh1",
@@ -654,5 +654,5 @@ test("Selection and scroll are preserved when switching revision", async functio
     model = actionModel(action);
 
     expect(model.getters.getActivePosition()).toEqual({ sheetId: sheetIds[2], row: 5, col: 5 });
-    expect(model.getters.getActiveSheetDOMScrollInfo()).toEqual({ scrollX: 30, scrollY: 30 });
+    expect(model.getters.getActiveSheetScrollInfo()).toEqual({ scrollX: 30, scrollY: 30 });
 });

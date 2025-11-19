@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { Component } from "@odoo/owl";
 
 export default class OptionLine extends Component {
@@ -11,6 +9,7 @@ export default class OptionLine extends Component {
         } else if (this.env.model.needPickings) {
             return this.env.model.selectedPickings.indexOf(this.props.line.id) !== -1;
         }
+        return false;
     }
 
     select() {

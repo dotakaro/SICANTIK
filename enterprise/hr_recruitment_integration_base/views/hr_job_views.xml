@@ -6,33 +6,34 @@
         <field name="inherit_id" ref="hr.view_hr_job_form"/>
         <field name="priority">200</field>
         <field name="arch" type="xml">
-            <header position="inside">
-                <button name="action_post_job"
-                        string="Publish on Job Board"
-                        type="object"
-                        class="oe_highlight"
-                        invisible="job_post_count"/>
-                <button name="action_post_job"
-                        string="Publish on Job Board"
-                        type="object"
-                        invisible="not job_post_count"/>
-            </header>
             <div name="button_box" position="inside">
                 <button class="oe_stat_button"
                     icon="fa-newspaper-o"
-                    name="%(action_open_hr_job_post)d"
-                    context="{'search_default_job_id': id}"
-                    invisible="not job_post_count"
-                    type="action">
+                    name="action_open_hr_job_post"
+                    type="object"
+                    invisible="job_post_count == 0">
                     <field
                         name="job_post_count"
                         widget="statinfo"
-                        string="Job Board"/>
+                        string="Job Board"
+                        />
                 </button>
             </div>
+            <header position="inside">
+                <button name="action_post_job" string="Post on Job Boards" type="object" class="btn-secondary"/>
+            </header>
             <field name="contract_type_id" position="after">
                 <field name="schedule_id"/>
+                <field
+                    name="date_from"
+                    widget="daterange"
+                    string="Mission Dates"
+                    options="{'end_date_field': 'date_to'}"/>
+                <field name="date_to" invisible="1"/> <!-- Added to the view so that it is passed to the write method when the record is saved-->
                 <field name="currency_id" invisible="True"/> <!-- necessary for the display of monetary fields -->
+            </field>
+
+            <field name="industry_id" position="after">
                 <label for="salary_min" string="Salary Range"/>
                 <div>
                     <field name="salary_min" class="oe_inline"/> -
@@ -41,13 +42,15 @@
                 </div>
             </field>
 
-            <xpath expr="//page[@name='job_description_page']" position="after">
+
+            <xpath expr="//page[@name='trackers_page']" position="after">
                 <page string="Job Boards" name="job_boards">
-                    <separator string="Posts" name="posts"/>
                     <div>
                         <field name="job_post_ids">
                             <list string="Posts">
                                 <field name="platform_id" widget="many2one_avatar"/>
+                                <field name="campaign_start_date" string="Start Date"/>
+                                <field name="campaign_end_date" string="End Date"/>
                                 <field name="apply_method"/>
                                 <field name="status"
                                     decoration-danger="status == 'failure'"
@@ -83,6 +86,18 @@
                     <a name="action_post_job" type="object">Job Board Posts</a>
                 </div>
             </xpath>
+        </field>
+    </record>
+
+    <record id="action_publish_on_job_board" model="ir.actions.server">
+        <field name="name">Publish on Job Board</field>
+        <field name="model_id" ref="hr_recruitment_integration_base.model_hr_job"/>
+        <field name="binding_model_id" ref="hr_recruitment_integration_base.model_hr_job"/>
+        <field name="binding_view_types">form</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                action = records.action_post_job()
         </field>
     </record>
 </odoo>

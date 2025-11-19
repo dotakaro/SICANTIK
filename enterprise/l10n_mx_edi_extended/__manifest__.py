@@ -4,7 +4,7 @@
     'name': 'EDI for Mexico (Advanced Features)',
     'countries': ['mx'],
     'version': '0.1',
-    'category': 'Hidden',
+    'category': 'Accounting/Localizations/EDI',
     'depends': [
         'l10n_mx_edi',
         'base_address_extended',
@@ -15,7 +15,6 @@
         'data/4.0/cfdi.xml',
         'data/l10n_mx_edi.res.locality.csv',
         'data/l10n_mx_edi.tariff.fraction.csv',
-        'data/product_data.xml',
         'data/res.city.csv',
         'data/uom_uom_data.xml',
 
@@ -35,5 +34,6 @@
         'demo/demo_cfdi.xml',
     ],
     'installable': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

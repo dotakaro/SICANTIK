@@ -4,7 +4,7 @@
 from odoo import models, api
 
 
-class Product(models.Model):
+class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     @api.model

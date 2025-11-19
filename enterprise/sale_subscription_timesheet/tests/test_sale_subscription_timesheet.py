@@ -19,7 +19,6 @@ class TestSubscriptionTask(TestSubscriptionCommon, TestCommonSaleTimesheet):
             'type': 'service',
             'invoice_policy': 'delivery',
             'uom_id': self.uom_hour.id,
-            'uom_po_id': self.uom_hour.id,
             'default_code': 'SERV-ORDERED2',
             'service_type': 'timesheet',
             'recurring_invoice': True,
@@ -34,8 +33,7 @@ class TestSubscriptionTask(TestSubscriptionCommon, TestCommonSaleTimesheet):
             'plan_id': self.plan_month.id,
             'note': "original subscription description",
             'partner_id': self.user_portal.partner_id.id,
-            'pricelist_id': self.company_data['default_pricelist'].id,
-             'order_line': [
+            'order_line': [
                     Command.create({
                         'product_id': self.product_deliver_timesheet.id,
                         'product_uom_qty': 1
@@ -50,7 +48,7 @@ class TestSubscriptionTask(TestSubscriptionCommon, TestCommonSaleTimesheet):
             'group_project_recurring_tasks': True,
         }).execute()
 
-        self.env.user.groups_id += self.env.ref('project.group_project_recurring_tasks')
+        self.env.user.group_ids += self.env.ref('project.group_project_recurring_tasks')
         with freeze_time("2024-10-01"):
             self.subscription_timesheet.action_confirm()
             task = self.subscription_timesheet.tasks_ids
@@ -113,7 +111,6 @@ class TestSubscriptionTask(TestSubscriptionCommon, TestCommonSaleTimesheet):
                 'name': 'Test',
                 'plan_id': self.plan_month.id,
                 'partner_id': self.user_portal.partner_id.id,
-                'pricelist_id': self.company_data['default_pricelist'].id,
                 'start_date': '2025-02-01',
                 'order_line': [
                     Command.create({

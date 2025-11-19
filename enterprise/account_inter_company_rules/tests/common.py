@@ -18,8 +18,6 @@ class TestInterCompanyRulesCommon(AccountTestInvoicingCommon):
         cls.product_consultant = cls.env['product.product'].create({
             'name': 'Service',
             'uom_id': cls.env.ref('uom.product_uom_hour').id,
-            'uom_po_id': cls.env.ref('uom.product_uom_hour').id,
-            'categ_id': cls.env.ref('product.product_category_all').id,
             'type': 'service',
             'taxes_id': [(6, 0, (cls.company_a.account_sale_tax_id + cls.company_b.account_sale_tax_id).ids)],
             'supplier_taxes_id': [(6, 0, (cls.company_a.account_purchase_tax_id + cls.company_b.account_purchase_tax_id).ids)],
@@ -33,7 +31,7 @@ class TestInterCompanyRulesCommon(AccountTestInvoicingCommon):
             'email': 'usera@yourcompany.com',
             'company_id': cls.company_a.id,
             'company_ids': [(6, 0, [cls.company_a.id])],
-            'groups_id': [(6, 0, [
+            'group_ids': [(6, 0, [
                 cls.env.ref('account.group_account_user').id,
                 cls.env.ref('account.group_account_manager').id
             ])]
@@ -46,7 +44,7 @@ class TestInterCompanyRulesCommon(AccountTestInvoicingCommon):
             'email': 'userb@yourcompany.com',
             'company_id': cls.company_b.id,
             'company_ids': [(6, 0, [cls.company_b.id])],
-            'groups_id': [(6, 0, [
+            'group_ids': [(6, 0, [
                 cls.env.ref('account.group_account_user').id
             ])]
         })

@@ -3,16 +3,15 @@
 # 	* delivery_starshipit
 # 
 # Translators:
-# Wil Odoo, 2024
-# 何彬 <vnsoft.he@gmail.com>, 2024
+# Wil Odoo, 2025
 # Chloe Wang, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:44+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Chloe Wang, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
@@ -20,12 +19,6 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid " after deleting the order on Starshipit"
-msgstr "删除Starshipit上的订单"
 
 #. module: delivery_starshipit
 #: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_delivery_carrier_form
@@ -114,7 +107,11 @@ msgid "Delivery Service"
 msgstr "送货服务"
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__display_name
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__display_name
 msgid "Display Name"
 msgstr "显示名称"
 
@@ -132,7 +129,11 @@ msgid "Error: this delivery method is not available for this order."
 msgstr "错误：此订单不适用此送货方式。"
 
 #. module: delivery_starshipit
+#: model:ir.model.fields,field_description:delivery_starshipit.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_starshipit.field_starshipit_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__id
+#: model:ir.model.fields,field_description:delivery_starshipit.field_stock_return_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -293,6 +294,14 @@ msgid "Service Name"
 msgstr "服务名称"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Shipping Cost has been updated from Starshipit. The Sales Order can now be "
+"invoiced."
+msgstr "Starshipit已更新运费，现在可对该销售订单开具发票。"
+
+#. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_delivery_carrier
 msgid "Shipping Methods"
 msgstr "送货方式"
@@ -346,6 +355,12 @@ msgid "Starshipit Parcel Reference"
 msgstr "Starshipit 包裹参考"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit Price Update Cron: System Error fetching price: %s"
+msgstr "Starshipit价格更新定时任务：获取价格时出现系统错误：%s"
+
+#. module: delivery_starshipit
 #: model:ir.model.fields,field_description:delivery_starshipit.field_stock_picking__starshipit_return_parcel_reference
 msgid "Starshipit Return Parcel Reference"
 msgstr "Starshipit 退件包裹参考"
@@ -376,9 +391,54 @@ msgid "Starshipit returned an error: %(message)s"
 msgstr "Starshipit 返回错误信息：%(message)s"
 
 #. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Delivery cost re-evaluated on Sales Order based on updated exact"
+" price (%(final_carrier_price)s) from transfer %(picking_name)s."
+msgstr ""
+"Starshipit：已根据转运单%(final_carrier_price)s的最新精确价格%(picking_name)s重新计算销售订单的配送成本"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s, but automatic sale order delivery cost re-"
+"evaluation failed: %(e_so)s"
+msgstr ""
+"Starshipit：转运单%(picking_name)s的精确运费已更新为%(final_carrier_price)s，但自动重新计算销售订单配送成本失败：%(e_so)s"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"Starshipit: Exact shipping cost for delivery %(picking_name)s is now "
+"%(final_carrier_price)s. This sale order is already invoiced, please review "
+"if a manual adjustment to the invoice is needed."
+msgstr ""
+"Starshipit：转运单%(picking_name)s的精确运费已更新为%(final_carrier_price)s。该销售订单已开具发票，请检查是否需要手动调整发票。"
+
+#. module: delivery_starshipit
+#: model:ir.actions.server,name:delivery_starshipit.ir_cron_starshipit_fetch_pending_prices_ir_actions_server
+msgid "Starshipit: Fetch Pending Shipping Prices"
+msgstr "Starshipit：获取待处理运输价格"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid "Starshipit: Shipping Cost updated"
+msgstr "  Starshipit：运输成本已更新"
+
+#. module: delivery_starshipit
 #: model:ir.model,name:delivery_starshipit.model_stock_package_type
 msgid "Stock package type"
 msgstr "库存包裹类型"
+
+#. module: delivery_starshipit
+#: model_terms:ir.ui.view,arch_db:delivery_starshipit.view_picking_form_inherit_stock
+msgid "The Shipping Cost is being fetched in the background."
+msgstr "正在后台获取运输成本。"
 
 #. module: delivery_starshipit
 #: model:ir.model.fields,help:delivery_starshipit.field_delivery_carrier__starshipit_carrier_code
@@ -386,6 +446,14 @@ msgid ""
 "The carrier on starshipit used by this carrier. The service code belongs to "
 "it."
 msgstr "承运商在starshipit上使用的承运商。服务代码属于它。"
+
+#. module: delivery_starshipit
+#. odoo-python
+#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
+msgid ""
+"The exact price could not be retrieved. It will be updated by a scheduled "
+"action."
+msgstr "无法获取精确价格，将通过定时任务更新。"
 
 #. module: delivery_starshipit
 #. odoo-python
@@ -437,12 +505,6 @@ msgid ""
 "There are no shipping services available, please verify the shipping address"
 " or activate suitable carriers in your starshipit account."
 msgstr "没有可用的送货服务，请核实送货地址或在您的 starshipit 账户中激活合适的承运商。"
-
-#. module: delivery_starshipit
-#. odoo-python
-#: code:addons/delivery_starshipit/models/delivery_carrier.py:0
-msgid "There was an issue when creating the order, please try again"
-msgstr "创建订单时出现问题，请重试"
 
 #. module: delivery_starshipit
 #. odoo-python

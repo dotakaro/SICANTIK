@@ -17,21 +17,21 @@ class TestL10nBrEDIStock(TestL10nBREDICommon):
         cls.package_type = cls.env["stock.package.type"].create(
             {"name": "Box", "l10n_br_brand": "BR brand", "base_weight": 3}
         )
-        cls.sale_order = cls.env["sale.order"].create(
+        cls.sale_order = cls.env["sale.order"].sudo().create(
             {
                 "partner_id": cls.partner_customer.id,
                 "order_line": [
                     Command.create(
                         {
                             "product_id": cls.product_screens.product_variant_id.id,
-                            "tax_id": False,
+                            "tax_ids": False,
                             "product_uom_qty": 12,
                         }
                     ),
                 ],
                 "l10n_br_edi_freight_model": "CIF",
             }
-        )
+        ).sudo(False)
 
     def test_01_nfe_with_transport_info(self):
         self.sale_order.action_confirm()
@@ -46,7 +46,7 @@ class TestL10nBrEDIStock(TestL10nBREDICommon):
         invoice.l10n_br_package_ids = invoice.l10n_br_related_package_ids  # select all related packages
 
         self.partner_customer.property_account_position_id = self.avatax_fp
-        with self.with_patched_account_move("_l10n_br_iap_request"), self.with_patched_account_move("_l10n_br_call_avatax_taxes"):
+        with self.with_patched_account_move("_l10n_br_iap_request"), self.with_patched_account_move("_get_and_set_external_taxes_on_eligible_records"):
             invoice.action_post()
         invoice.l10n_br_edi_avatax_data = json.dumps({"header": {}})  # normally set by account.external.tax.mixin
         invoice.l10n_br_plate_number = "12345678"
@@ -56,7 +56,7 @@ class TestL10nBrEDIStock(TestL10nBREDICommon):
         with self.with_patched_account_move("_l10n_br_iap_request") as patched_submit:
             wizard.action_send_and_print(allow_fallback_pdf=True)  # allow_fallback_pdf to avoid raising on errors
 
-        sent_request = patched_submit.call_args.args[2]
+        sent_request = patched_submit.call_args.args[3]
 
         self.assertIn("volumes", sent_request["header"]["goods"]["transport"], "Transport data wasn't sent in request.")
         self.assertEqual(len(sent_request["header"]["goods"]["transport"]["volumes"]), 1, "Exactly one volume should be sent.")

@@ -1,145 +1,176 @@
-/** @odoo-module */
-
-import { _t } from "@web/core/l10n/translation";
 import { MrpWorkorder } from "./mrp_workorder";
-import { MrpQualityCheckConfirmationDialog } from "../dialog/mrp_quality_check_confirmation_dialog";
 import { useService } from "@web/core/utils/hooks";
+import { FileUploader } from "@web/views/fields/file_handler";
+import { useRef, useState } from "@odoo/owl";
+import { MrpWorksheetDialog } from "../dialog/mrp_worksheet_dialog";
 
 export class QualityCheck extends MrpWorkorder {
     static template = "mrp_workorder.QualityCheck";
     static components = {
         ...MrpWorkorder.components,
-        MrpQualityCheckConfirmationDialog,
+        FileUploader,
     };
     static props = {
         ...MrpWorkorder.props,
-        displayInstruction: Function,
-        quantityToProduce: { optional: true, type: Number },
+        registerProduction: { type: Function, optional: true },
+        qtyProducing: { type: String, optional: true },
+        isCurrent: Boolean,
+        startWorking: Function,
     };
 
     setup() {
-        super.setup();
-        this.fieldState = "quality_state";
-        this.isLongPressable = false;
-        this.name = this.props.record.data.title || this.props.record.data.name;
-        this.note = this.props.record.data.note;
         this.action = useService("action");
+        this.fileUploaderToggle = useRef("fileUploaderToggle");
+        this.unique = useState({ epoch: Date.now() });
+        this.dialog = useService("dialog");
     }
 
-    clicked() {
-        this.props.displayInstruction();
-    }
-
-    async pass() {
-        const { parent, record } = this.props;
-        if (["instructions", "passfail"].includes(record.data.test_type)) {
-            return this._pass();
-        } else if (record.data.test_type === "register_production") {
-            if (record.data.quality_state !== "none" || record.data.lot_id) {
-                return this.clicked();
-            } else if (record.data.product_tracking === "serial") {
-                await record.model.orm.call(
-                    record.resModel,
-                    "action_generate_serial_number_and_pass",
-                    [record.resId]
-                );
-            } else {
-                if (record.data.product_tracking === "lot") {
-                    await record.model.orm.call(
-                        record.resModel,
-                        "action_generate_serial_number_and_pass",
-                        [record.resId]
-                    );
-                }
-                parent.update({ qty_producing: this.props.quantityToProduce });
-                record.update({ qty_done: this.props.quantityToProduce });
-                await Promise.all(this.env.model.root.records.map(async (record) => record.save()));
-                await record.model.orm.call(record.resModel, "action_next", [record.resId]);
-            }
-            this.env.reload(this.props.record);
-            return;
-        } else if (record.data.test_type === "print_label") {
-            const res = await record.model.orm.call(record.resModel, "action_print", [
-                record.resId,
-            ]);
-            this.action.doAction(res);
-            this._pass();
-            return;
-        } else if (record.data.test_type === "picture") {
-            return;
-        }
-        this.clicked();
-    }
-
-    get active() {
-        return false;
+    get passed() {
+        return this.check.quality_state === "pass";
     }
 
     get failed() {
-        return this.state === "fail";
+        return this.check.quality_state === "fail";
+    }
+
+    get type() {
+        return this.check.test_type;
     }
 
     get isComplete() {
         return this.passed || this.failed;
     }
 
+    get showImage() {
+        return this.passed && this.type === "picture";
+    }
+
+    get check() {
+        return this.props.record.data;
+    }
+
+    get label() {
+        return this.check.title || this.check.name;
+    }
+
+    get imageUrl() {
+        const { resId } = this.props.record;
+        return `/web/image/quality.check/${resId}/picture?unique=${this.unique.epoch}`;
+    }
+
     get icon() {
-        switch (this.props.record.data.test_type) {
+        switch (this.type) {
             case "picture":
-                return "fa fa-camera";
-            case "register_consumed_materials":
-            case "register_byproduct":
-                return "fa fa-barcode";
+                return this.passed ? "mw" : "fa fa-camera";
             case "instructions":
-                return "fa fa-square-o";
-            case "passfail":
-                return "fa fa-check";
-            case "measure":
-                return "fa fa-arrows-h";
+                return this.passed ? "fa fa-undo" : "fa fa-check";
             case "print_label":
                 return "fa fa-print";
+            case "register_production":
+                return "fa fa-plus";
             default:
-                return "fa fa-lightbulb-o";
+                return "";
         }
     }
 
-    get passed() {
-        return this.state === "pass";
+    get isActive() {
+        return this.props.isCurrent;
     }
 
-    get showMeasure() {
-        return (
-            this.props.record.data.quality_state === "pass" &&
-            this.props.record.data.test_type === "measure"
-        );
+    get activeClass() {
+        return "btn-primary";
     }
 
-    get uom() {
-        if (this.displayUOM) {
-            return this.props.uom[1];
+    get hasInstruction() {
+        const { note, worksheet_document } = this.check;
+        return (note && note.length) || worksheet_document;
+    }
+
+    get showQty() {
+        const { lot_id, product_tracking } = this.check;
+        if (this.type === "register_production") {
+            return product_tracking != "none"
+                ? lot_id && lot_id.display_name
+                : this.passed ? this.props.qtyProducing : false;
         }
-        return this.quantityToProduce === 1 ? _t("Unit") : _t("Units");
+        return false;
     }
 
-    _pass() {
-        this.props.record.update({ quality_state: "pass" });
-        this.props.record.save({ reload: false });
-        this.props.record._parentRecord.model.notify();
+    async clicked() {
+        switch (this.type) {
+            case "instructions":
+                if (this.isComplete) {
+                    this.props.record.data.quality_state = "none";
+                    return;
+                } else {
+                    return this.doActionAndNext("action_next");
+                }
+            case "print_label":
+                return this.doActionAndNext("action_print");
+            case "picture":
+                return this.fileUploaderToggle.el.click();
+            case "register_production":
+                if(["lot", "serial"].includes(this.check.product_tracking) && !this.check.lot_id) {
+                    await this.props.record.load();
+                }
+                return this.isComplete || this.check.lot_id
+                    ? this.props.registerProduction(this.props.record)
+                    : this.quickRegisterProduction();
+        }
     }
 
-    get lotInfo(){
-        const recordData = this.props.record.data;
-        if (recordData.quality_state === 'pass' && recordData.test_type === 'register_consumed_materials'){
-            if (recordData.component_tracking === 'lot'){
-                return recordData.qty_done + ' ' + recordData.component_uom_id[1];
+    async quickRegisterProduction() {
+        await this.doActionAndNext("action_register_production");
+        return this.env.reload(this.props.record);
+    }
+
+    async onFileUploaded(info) {
+        await this.props.record.update({ picture: info.data });
+        await this.props.record.save({ reload: false });
+        await this.doActionAndNext("action_next");
+        this.unique.epoch = Date.now();
+    }
+
+    async doActionAndNext(action, stateToSet = "pass", actionParams = {}) {
+        const { model, resModel, resId, data, _parentRecord } = this.props.record;
+        const result = await model.orm.call(resModel, action, [resId]);
+        if ("next_check_id" in result) {
+            data.quality_state = stateToSet;
+            _parentRecord.data.current_quality_check_id = [result.next_check_id];
+        }
+        if ("type" in result) {
+            const params = {};
+            if (result.type === "ir.actions.act_window") {
+                params.onClose = () => this.env.reload(this.props.record);
+                data.quality_state = "none";
             }
-            if (recordData.component_tracking === 'serial'){
-                return recordData.lot_id[1];
+            if (result.type === "ir.actions.client") {
+                result.params = { ...result.params, ...actionParams };
             }
+            await this.action.doAction(result, params);
         }
+        return this.props.startWorking();
     }
 
-    get shouldDisplayCheckmark() {
-        return this.state === "pass" && !(this.showMeasure || this.lotInfo);
+    async showWorksheet() {
+        let worksheetData = false;
+        if (this.check.worksheet_document) {
+            const sheet = await this.props.record.model.orm.read(
+                "quality.check",
+                [this.check.id],
+                ["worksheet_document"]
+            );
+            worksheetData = {
+                resModel: "quality.check",
+                resId: this.check.id,
+                resField: "worksheet_document",
+                value: sheet[0].worksheet_document,
+                page: 1,
+            };
+        }
+        this.dialog.add(MrpWorksheetDialog, {
+            worksheetText: this.check.note,
+            worksheetData,
+        });
     }
 }

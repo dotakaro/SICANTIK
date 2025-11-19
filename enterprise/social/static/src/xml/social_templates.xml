@@ -7,25 +7,30 @@
         <t t-set="bubble_design" t-value="false"/>
         <Dialog t-if="state.displayModal" title="props.title" footer="false" size="'md'" bodyClass="bodyClass">
             <t t-call="social.StreamPostCommentsOriginalPost"/>
-            <t t-component="commentReplyComponent"
-               originalPost="props.originalPost"
-               mediaSpecificProps="mediaSpecificProps"
-               classes="'bg-white p-3 border-top'"
-               bubble_design="bubble_design"
-               onAddComment.bind="onAddComment"
-               preventAddComment.bind="preventAddComment"/>
-            <div class="o_social_comments_messages px-3 pt-4" t-att-class="{ 'bg-100': !bubble_design }">
-                <t t-component="commentListComponent"
-                   comments="comments"
-                   mediaSpecificProps="mediaSpecificProps"
-                   originalPost="originalPost"
-                   preventAddComment.bind="preventAddComment"
-                   error="props.error"/>
+            <t t-if="!commentsDisabled">
+                <t t-component="commentReplyComponent"
+                    originalPost="props.originalPost"
+                    mediaSpecificProps="mediaSpecificProps"
+                    classes="'bg-white p-3 border-top'"
+                    bubble_design="bubble_design"
+                    onAddComment.bind="onAddComment"
+                    preventAddComment.bind="preventAddComment"/>
+                <div class="o_social_comments_messages px-3 pt-4" t-att-class="{ 'bg-100': !bubble_design }">
+                    <t t-component="commentListComponent"
+                        comments="comments"
+                        mediaSpecificProps="mediaSpecificProps"
+                        originalPost="originalPost"
+                        preventAddComment.bind="preventAddComment"
+                        error="props.error"/>
+                </div>
+                <a t-if="state.showLoadMoreComments" href="#" t-on-click="loadMoreComments"
+                   class="o_social_load_more_comments text-center p3-bg-white">
+                    <i class="fa fa-comments"/><span>Load more comments...</span>
+                </a>
+            </t>
+            <div t-else="" class="text-black-50 text-center border-top pt-3">
+                <span>New comments are disabled</span>
             </div>
-            <a t-if="state.showLoadMoreComments" class="o_social_load_more_comments text-center p3-bg-white"
-               href="#" t-on-click="loadMoreComments">
-                <i class="fa fa-comments"/><span>Load more comments...</span>
-            </a>
         </Dialog>
     </t>
 
@@ -43,7 +48,7 @@
                         data-bs-toggle="dropdown"
                         aria-haspopup="true"
                         aria-expanded="false">
-                        <i class="fa fa-ellipsis-v"/>
+                        <i class="oi oi-ellipsis-v"/>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end"
                         aria-labelledby="stream_post_actions">
@@ -291,7 +296,7 @@
                                         data-bs-toggle="dropdown"
                                         aria-haspopup="true"
                                         aria-expanded="false">
-                                        <i class="fa fa-ellipsis-v"/>
+                                        <i class="oi oi-ellipsis-v"/>
                                     </button>
                                     <div class="dropdown-menu dropdown-menu-end" t-attf-aria-labelledby="post_actions_{{ comment.id }}">
                                         <a t-if="isEditable" class="dropdown-item text-decoration-none" href="#" t-on-click.prevent="_toggleEditMode">Edit</a>
@@ -442,10 +447,10 @@
 
     <div t-name="StreamPostKanbanView.buttons" t-inherit="web.KanbanView.Buttons">
         <xpath expr="//div[hasclass('o_cp_buttons')]" position="inside">
-            <button type="button" class="btn btn-primary o_stream_post_kanban_new_stream me-1" t-on-click.prevent="_onNewStream">
+            <button type="button" class="btn btn-primary o_stream_post_kanban_new_stream" t-on-click.prevent="_onNewStream">
                 Add Stream
             </button>
-            <button  t-if="hasAccounts" type="button" class="btn btn-primary o_stream_post_kanban_new_post me-1" t-on-click.prevent="_onNewPost">
+            <button  t-if="hasAccounts" type="button" class="btn btn-primary o_stream_post_kanban_new_post" t-on-click.prevent="_onNewPost">
                 New Post
             </button>
             <button t-if="hasAccounts" type="button" class="btn btn-secondary o_stream_post_kanban_refresh_now" t-att-disabled="state.disableSyncButton" t-on-click.prevent="_onRefreshStats">

@@ -79,9 +79,7 @@ class GetTyroReport extends Component {
         const lines = reportData
             .split("\n")
             .filter((line) => line.length > 0)
-            .map((line) => {
-                return line.replace(/NEW_LINE|FORM_FEED/, "");
-            })
+            .map((line) => line.replace(/NEW_LINE|FORM_FEED/, ""))
             .map((line) => {
                 const classList = [];
                 if (line.includes("_CENTRED")) {

@@ -1,8 +1,8 @@
 import { expect, test, beforeEach } from "@odoo/hoot";
 import { animationFrame, mockDate } from "@odoo/hoot-mock";
-import { click } from "@odoo/hoot-dom";
+import { click, queryFirst } from "@odoo/hoot-dom";
 
-import { onRpc, mountView, mockService } from "@web/../tests/web_test_helpers";
+import { mountView, mockService } from "@web/../tests/web_test_helpers";
 
 import { defineProjectModels, projectModels } from "@project/../tests/project_models";
 
@@ -21,7 +21,6 @@ function mockActionService(doActionStep) {
 const { ProjectTask } = projectModels;
 
 beforeEach(() => {
-    onRpc("get_all_deadlines", () => ({ milestone_id: [], project_id: [] }));
     mockDate("2024-01-03 07:00:00");
     ProjectTask._records = [
         {
@@ -60,7 +59,7 @@ test("fsm task gantt view", async () => {
     await animationFrame();
     expect(".modal").toHaveCount(1);
     expect(".modal .o_field_widget[name=planned_date_begin] .o_input").toHaveValue(
-        now.toFormat("MM/dd/yyyy 00:00:00"),
+        now.toFormat("MM/dd/yyyy 00:00"),
         {
             message:
                 "The fsm_mode present in the view context should set the start_datetime to the current day instead of the first day of the gantt view",
@@ -83,7 +82,7 @@ test("test custom action for edit gantt popover button", async () => {
     expect(".o_gantt_pill").toHaveCount(1);
     click(".o_gantt_pill");
     await animationFrame();
-    expect(".o_popover .popover-header").toHaveText("Custom Mobile Button Test");
+    expect(queryFirst(".o_popover .popover-body span")).toHaveText("Custom Mobile Button Test");
     click(".o_popover .popover-footer button", { text: "Edit" });
     await animationFrame();
 

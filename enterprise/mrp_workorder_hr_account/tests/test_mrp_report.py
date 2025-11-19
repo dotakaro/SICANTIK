@@ -54,7 +54,6 @@ class TestMrpReportEmployeeCost(TestMrpCommon):
 
     def test_mrp_report_expected_cost_fields(self):
         self.workcenter_2.write({
-            'default_capacity': 2,
             'costs_hour': 20,
             'employee_costs_hour': 30,
         })
@@ -89,7 +88,8 @@ class TestMrpReportEmployeeCost(TestMrpCommon):
         mo_2.move_raw_ids.quantity = 2
         mo_2.move_raw_ids.picked = True
         mo_2.button_mark_done()
-        self.env.flush_all() # second report record not created without flush
+        # second report record not created without flush
+        self.env.flush_all()
         self.assertRecordValues(
             self.env['mrp.report'].search([('production_id', 'in', (mo_1.id, mo_2.id))]),
             [{

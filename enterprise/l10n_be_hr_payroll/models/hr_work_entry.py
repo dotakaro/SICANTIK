@@ -6,19 +6,13 @@ from odoo import api, models, _
 class HrWorkEntry(models.Model):
     _inherit = 'hr.work.entry'
 
-    def init(self):
-        # speeds up `l10n_be.work.entry.daily.benefit.report`
-        self.env.cr.execute("""
-            CREATE INDEX IF NOT EXISTS hr_work_entry_daily_benefit_idx
-                ON hr_work_entry (active, employee_id)
-                WHERE state IN ('draft', 'validated');
-        """)
-        super().init()
+    # speeds up `l10n_be.work.entry.daily.benefit.report`
+    _daily_benefit_idx = models.Index("(active, employee_id) WHERE state IN ('draft', 'validated')")
 
     @api.model_create_multi
     def create(self, vals_list):
         res = super().create(vals_list)
-        partial_sick_work_entry_type = self.env.ref('l10n_be_hr_payroll.work_entry_type_part_sick')
+        partial_sick_work_entry_type = self.env.ref('hr_work_entry.l10n_be_work_entry_type_part_sick')
         leaves = self.env['hr.leave']
         for work_entry in res:
             if work_entry.work_entry_type_id == partial_sick_work_entry_type and work_entry.leave_id:
@@ -38,5 +32,6 @@ class HrWorkEntry(models.Model):
                     'res_id': leave.id,
                     'res_model_id': res_model_id,
                 })
+        # TDE TODO: batch schedule with record-based note
         self.env['mail.activity'].create(activity_vals)
         return res

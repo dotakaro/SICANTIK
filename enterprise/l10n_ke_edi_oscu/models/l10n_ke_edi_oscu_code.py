@@ -32,7 +32,7 @@ CODE_TYPES = [
 ]
 
 
-class L10nKeOSCUCode(models.Model):
+class L10n_Ke_Edi_OscuCode(models.Model):
     _name = 'l10n_ke_edi_oscu.code'
     _description = "eTIMS Technical Codes"
 

@@ -8,8 +8,8 @@ from odoo.exceptions import UserError
 
 
 class L10nBeHrPayrollExportGroupS(models.Model):
-    _inherit = 'hr.work.entry.export.mixin'
     _name = 'l10n.be.hr.payroll.export.group.s'
+    _inherit = ['hr.work.entry.export.mixin']
     _description = 'Export Payroll to Group S'
 
     eligible_employee_line_ids = fields.One2many('l10n.be.hr.payroll.export.group.s.employee')
@@ -180,10 +180,10 @@ class L10nBeHrPayrollExportGroupS(models.Model):
     def _generate_employee_entries(self, reference_contract, employee_line):
         we_by_day_and_code = employee_line._get_work_entries_by_day_and_code()
         employee_entries = ''
-        for contract in employee_line.contract_ids:
+        for contract in employee_line.version_ids:
             if not contract.schedule_pay == reference_contract.schedule_pay:
                 raise UserError(_('The pay schedule of the contracts must be the same to export to Group S.'))
-            if len(employee_line.contract_ids) > 1:
+            if len(employee_line.version_ids) > 1:
                 we_by_day_and_code_in_contract = {
                     date: we_by_code for date, we_by_code in we_by_day_and_code.items()
                     if date >= contract.date_start and (not contract.date_end or date <= contract.date_end)
@@ -212,7 +212,7 @@ class L10nBeHrPayrollExportGroupS(models.Model):
         for employee_type, employee_lines in employee_lines_by_employee_type.items():
             if not employee_lines:
                 continue
-            reference_contract = employee_lines[0].contract_ids[0]
+            reference_contract = employee_lines[0].version_ids[0]
             file += self._compose_group_s_info(reference_contract, employee_type)
             for employee_line in employee_lines:
                 file += self._generate_employee_entries(reference_contract, employee_line)
@@ -252,6 +252,6 @@ class L10nBeHrPayrollExportGroupS(models.Model):
 class L10nBeHrPayrollExportGroupSEmployee(models.Model):
     _name = 'l10n.be.hr.payroll.export.group.s.employee'
     _description = 'Group S Export Employee'
-    _inherit = 'hr.work.entry.export.employee.mixin'
+    _inherit = ['hr.work.entry.export.employee.mixin']
 
     export_id = fields.Many2one('l10n.be.hr.payroll.export.group.s')

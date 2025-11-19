@@ -1,5 +1,6 @@
 from odoo import fields, models
 
+
 class SpreadsheetCellThread(models.Model):
     _inherit = "spreadsheet.cell.thread"
 

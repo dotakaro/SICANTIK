@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from dateutil.relativedelta import relativedelta
@@ -19,34 +18,37 @@ class HrContractSalaryOffer(models.Model):
         for field in fields:
             if field.startswith('x_') and 'active_id' in self.env.context:
                 model = self.env.context.get('active_model')
-                if model == "hr.contract" and field in self.env[model]:
-                    contract = self.env[model].browse(self.env.context['active_id'])
-                    result[field] = contract[field]
-                elif model == "hr.applicant" and field in self.env["hr.contract"] and "default_contract_template_id" in self.env.context:
-                    contract = self.env["hr.contract"].browse(self.env.context['default_contract_template_id'])
-                    result[field] = contract[field]
+                if model == "hr.version" and field in self.env[model]:
+                    version = self.env[model].browse(self.env.context['active_id'])
+                    result[field] = version[field]
+                elif model == "hr.applicant" and field in self.env["hr.version"] and "default_contract_template_id" in self.env.context:
+                    version = self.env["hr.version"].browse(self.env.context['default_contract_template_id'])
+                    result[field] = version[field]
         return result
 
-    display_name = fields.Char(string="Title", compute="_compute_display_name", search="_search_display_name", readonly=False)  # TODO read-only=False, but not inversed?
+    display_name = fields.Char(string="Title", readonly=False)  # TODO read-only=False, but not inversed?
     company_id = fields.Many2one('res.company', default=lambda self: self.env.company.id, required=True)
     currency_id = fields.Many2one(related='company_id.currency_id')
     contract_template_id = fields.Many2one(
-        'hr.contract',
-        domain="['|', ('employee_id', '=', False), ('id', '=', employee_contract_id)]", required=True, tracking=True)
+        'hr.version',
+        domain="['|', ('employee_id', '=', False), ('id', '=', employee_version_id)]", required=True, tracking=True)
     state = fields.Selection([
         ('open', 'In Progress'),
         ('half_signed', 'Partially Signed'),
         ('full_signed', 'Fully Signed'),
         ('expired', 'Expired'),
         ('refused', 'Refused'),
+        ('cancelled', 'Cancelled'),
     ], default='open', tracking=True)
     refusal_reason = fields.Many2one('hr.contract.salary.offer.refusal.reason', string="Refusal Reason", tracking=True)
     offer_create_date = fields.Date("Offer Create Date", compute="_compute_offer_create_date", readonly=True)
     refusal_date = fields.Date("Refusal Date")
     sign_request_ids = fields.Many2many('sign.request', string='Requested Signatures')
-    employee_contract_id = fields.Many2one('hr.contract', tracking=True)
-    employee_id = fields.Many2one(related="employee_contract_id.employee_id", store=True, tracking=True)
-    applicant_id = fields.Many2one('hr.applicant', tracking=True)
+    employee_version_id = fields.Many2one('hr.version', tracking=True,
+        store=True, compute="_compute_employee_version_id", inverse='_inverse_employee_version_id',
+        index='btree_not_null')
+    employee_id = fields.Many2one('hr.employee', tracking=True, domain=[('version_ids', '!=', False)])
+    applicant_id = fields.Many2one('hr.applicant', index=True, tracking=True)
     applicant_name = fields.Char(related='applicant_id.partner_name')
     final_yearly_costs = fields.Monetary("Employer Budget", aggregator="avg", tracking=True)
     job_title = fields.Char(tracking=True)
@@ -58,11 +60,19 @@ class HrContractSalaryOffer(models.Model):
     validity_days_count = fields.Integer("Validity Days Count",
                               compute="_compute_validity_days_count",
                               store=True, readonly=False)
-    offer_end_date = fields.Date('Offer Validity Date',
-                                 compute="_compute_offer_end_date",
-                                 store=True, readonly=False,
+    offer_end_date = fields.Date('Offer Expiration', readonly=False,
                                  copy=False, tracking=True)
     url = fields.Char('Link', compute='_compute_url')
+    is_half_sign_state_required = fields.Boolean(
+        compute="_compute_is_half_sign_state_required",
+        compute_sudo=True,
+        export_string_translation=False
+    )
+
+    @api.depends('contract_template_id.sign_template_signatories_ids')
+    def _compute_is_half_sign_state_required(self):
+        for offer in self:
+            offer.is_half_sign_state_required = len(offer.contract_template_id.sign_template_signatories_ids) != 1
 
     @api.depends("access_token", "applicant_id")
     def _compute_url(self):
@@ -73,7 +83,7 @@ class HrContractSalaryOffer(models.Model):
                       + f"?final_yearly_costs={round(offer.final_yearly_costs, 2)}" \
                       + (f"&token={offer.access_token}" if offer.applicant_id else "")
 
-    @api.depends('applicant_id', 'employee_contract_id')
+    @api.depends('applicant_id', 'employee_version_id', 'employee_id')
     def _compute_display_name(self):
         for offer in self:
             if offer.applicant_id:
@@ -81,13 +91,14 @@ class HrContractSalaryOffer(models.Model):
                     offer.applicant_id.partner_id.name or \
                     offer.applicant_id.partner_name
             else:
-                name = offer.employee_contract_id.employee_id.name
-            offer.display_name = _("Offer for %(recipient)s", recipient=name)
+                name = offer.employee_version_id.employee_id.name or \
+                    offer.employee_id.name
+            offer.display_name = _("Offer for %(recipient)s", recipient=name) if name else ""
 
     def _search_display_name(self, operator, value):
-        if neg := (operator in expression.NEGATIVE_TERM_OPERATORS):
-            operator = expression.TERM_OPERATORS_NEGATION[operator]
-        domain = [
+        if operator in expression.NEGATIVE_TERM_OPERATORS:
+            return NotImplemented
+        return [
             "|",
                 ('applicant_id', 'any', [
                     ('employee_id.name', operator, value),
@@ -96,27 +107,45 @@ class HrContractSalaryOffer(models.Model):
                 ]),
             "&",
                 ('applicant_id', '=', False),
-                ('employee_contract_id.employee_id.name', operator, value),
+                ('employee_version_id.employee_id.name', operator, value),
         ]
-        if neg:
-            domain = ["!", *domain]
-        return domain
 
     @api.depends('create_date')
     def _compute_offer_create_date(self):
         for offer in self:
-            offer.offer_create_date = offer.create_date.date()
-
-    @api.depends('offer_create_date', 'validity_days_count')
-    def _compute_offer_end_date(self):
-        for offer in self:
-            offer.offer_end_date = offer.offer_create_date + relativedelta(days=offer.validity_days_count)
+            offer.offer_create_date = offer.create_date and offer.create_date.date() or fields.Date.today()
 
     @api.depends('offer_create_date', 'offer_end_date')
     def _compute_validity_days_count(self):
         for offer in self:
             offer.validity_days_count = (offer.offer_end_date - offer.offer_create_date).days \
                 if offer.offer_end_date else False
+
+    @api.depends('employee_id')
+    def _compute_employee_version_id(self):
+        for offer in self:
+            if offer.employee_id:
+                versions = offer.employee_id.version_ids.sorted("create_date")
+
+                if len(versions) == 1:
+                    offer.employee_version_id = versions[0]
+                    continue
+
+                # Filter active versions based on offer's creation date
+                active_versions = versions.filtered(
+                    lambda c: c.date_start <= offer.offer_create_date and
+                    (not c.date_end or c.date_end >= offer.offer_create_date)
+                )
+
+                if active_versions:
+                    offer.employee_version_id = active_versions[0]
+                else:
+                    # No active or running version, so pick the first created version
+                    offer.employee_version_id = versions[0]
+
+    def _inverse_employee_version_id(self):
+        for offer in self:
+            offer.employee_id = offer.employee_version_id.employee_id
 
     @api.onchange('employee_job_id')
     def _onchange_employee_job_id(self):
@@ -125,16 +154,16 @@ class HrContractSalaryOffer(models.Model):
             self.department_id = self.employee_job_id.department_id
 
         if (
-            self.employee_contract_id and
+            self.employee_version_id and
             (
-                self.employee_job_id == self.employee_contract_id.job_id or
-                not self.employee_job_id.default_contract_id
+                self.employee_job_id == self.employee_version_id.job_id or
+                not self.employee_job_id.contract_template_id
             )
         ):
-            self.contract_template_id = self.employee_contract_id
+            self.contract_template_id = self.employee_version_id
 
-        elif self.employee_job_id.default_contract_id:
-            self.contract_template_id = self.employee_job_id.default_contract_id
+        elif self.employee_job_id.contract_template_id:
+            self.contract_template_id = self.employee_job_id.contract_template_id
 
     @api.onchange('contract_template_id')
     def _onchange_contract_template_id(self):
@@ -155,6 +184,7 @@ class HrContractSalaryOffer(models.Model):
         }
 
     def action_refuse_offer(self, message=None, refusal_reason=None):
+        self.applicant_id.unlink_archived_versions()
         if not message:
             message = _("%s manually set the Offer to Refused", self.env.user.name)
         self.write({
@@ -175,6 +205,10 @@ class HrContractSalaryOffer(models.Model):
             'url': url,
             'target': 'new',
         }
+
+    def unlink(self):
+        self.applicant_id.unlink_archived_versions()
+        return super().unlink()
 
     def _cron_update_state(self):
         self.search([
@@ -197,22 +231,6 @@ class HrContractSalaryOffer(models.Model):
         else:
             default_template_id = template_id
 
-        partner_to = False
-        email_to = False
-        if self.employee_id:
-            email_to = self.employee_id.work_email
-        elif self.applicant_id:
-            partner_to = self.applicant_id.partner_id
-            if not partner_to:
-                partner_to = self.env['res.partner'].create({
-                    'is_company': False,
-                    'name': self.applicant_id.partner_name,
-                    'email': self.applicant_id.email_from,
-                    'phone': self.applicant_id.partner_phone,
-                    'mobile': self.applicant_id.partner_phone,
-                })
-                self.applicant_id.partner_id = partner_to
-
         ctx = {
             'default_composition_mode': 'comment',
             'default_email_layout_xmlid': "mail.mail_notification_light",
@@ -222,10 +240,7 @@ class HrContractSalaryOffer(models.Model):
             'default_record_name': _("%(company)s: Job Offer - %(job_title)s", company=self.company_id.name, job_title=self.job_title),
             'offer_id': self.id,
             'access_token': self.access_token,
-            'partner_to': partner_to and partner_to.id or False,
             'validity_end': self.offer_end_date,
-            'email_to': email_to or False,
-            'mail_post_autofollow': False,
         }
         return {
             'type': 'ir.actions.act_window',
@@ -239,32 +254,31 @@ class HrContractSalaryOffer(models.Model):
     def action_view_signature_request(self):
         self.ensure_one()
         pending_sign_request = self.sign_request_ids.filtered(lambda r: r.state != 'signed')
-        sign_request_id = pending_sign_request[0].id if pending_sign_request else False
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Requested Signature'),
-            'view_mode': 'form',
-            'res_model': 'sign.request',
-            'res_id': sign_request_id,
-            'target': 'new',
-        }
+        return pending_sign_request.go_to_document()
 
     def action_view_contract(self):
         self.ensure_one()
-        contract_id = self.employee_contract_id.id or self.env['hr.contract'].search([("applicant_id", "=", self.applicant_id.id)], limit=1).id
+        version = self.env['hr.version'].search([('originated_offer_id', '=', self.id)], limit=1) or \
+                  self.employee_version_id or \
+                  self.env['hr.version'].search([("applicant_id", "=", self.applicant_id.id)], limit=1)
         return {
             'type': 'ir.actions.act_window',
-            'name': _('Contract'),
             'view_mode': 'form',
-            'res_model': 'hr.contract',
-            'res_id': contract_id,
+            'res_model': 'hr.employee',
+            'res_id': self.employee_id.id,
             'target': 'current',
+            'context': {'version_id': version.id}
         }
 
-    def _message_get_suggested_recipients(self):
-        recipients = super()._message_get_suggested_recipients()
-        if self.applicant_id:
-            self._message_add_suggested_recipient(recipients, email=self.applicant_id.email_from, reason=_('Contact Email'))
-        elif self.employee_id:
-            self._message_add_suggested_recipient(recipients, partner=self.employee_id.work_contact_id.sudo(), reason=_('Contact'))
-        return recipients
+    def _mail_get_partners(self, introspect_fields=False):
+        return {
+            offer.id: (offer.applicant_id.partner_id + offer.employee_id.work_contact_id)
+            for offer in self
+        }
+
+    def _mail_get_primary_email(self):
+        # Override as there is no "_primary_email" defined here, it is a related
+        return {
+            record.id: record.applicant_id.email_from or record.employee_id.work_email
+            for record in self
+        }

@@ -3,7 +3,7 @@
 from odoo import models
 
 
-class HRPayslip(models.Model):
+class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
     def _l10n_tr_get_tax(self, taxable_amount):

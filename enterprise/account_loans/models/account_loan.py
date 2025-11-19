@@ -76,7 +76,7 @@ class AccountLoan(models.Model):
     line_ids = fields.One2many('account.loan.line', 'loan_id', string='Loan Lines')  # Amortization schedule
 
     # Computed fields
-    display_name = fields.Char("Loan name", compute='_compute_display_name', store=True)  # stored for pivot view
+    display_name = fields.Char(string="Loan name", store=True)  # stored for pivot view
     start_date = fields.Date(compute='_compute_start_end_date')
     end_date = fields.Date(compute='_compute_start_end_date')
     is_wrong_date = fields.Boolean(compute='_compute_is_wrong_date')
@@ -292,9 +292,10 @@ class AccountLoan(models.Model):
                 reclassification_reversed_move.reversed_entry_id = reclassification_move
                 reclassification_reversed_move.message_post(body=_('This entry has been reversed from %s', reclassification_move._get_html_link()))
 
-            reclassification_moves._message_log_batch(
-                bodies={move.id: _('This entry has been %s', reverse._get_html_link(title=_("reversed"))) for move, reverse in zip(reclassification_moves, reclassification_reversed_moves)}
-            )
+            bodies = {}
+            for move, reverse in zip(reclassification_moves, reclassification_reversed_moves):
+                bodies[move.id] = _('This entry has been %s', reverse._get_html_link(title=_("reversed")))
+            reclassification_moves._message_log_batch(bodies=bodies)
 
             if any(m.state != 'posted' for m in payment_moves | reclassification_moves | reclassification_reversed_moves):
                 loan.state = 'running'
@@ -389,11 +390,11 @@ class AccountLoan(models.Model):
         }
 
     def action_cancel(self):
-        self.line_ids.generated_move_ids._unlink_or_reverse()
+        self.line_ids.generated_move_ids.filtered(lambda m: m.state != 'cancel')._unlink_or_reverse()
         self.state = 'cancelled'
 
     def action_set_to_draft(self):
-        self.line_ids.generated_move_ids._unlink_or_reverse()
+        self.line_ids.generated_move_ids.filtered(lambda m: m.state != 'cancel')._unlink_or_reverse()
         self.state = 'draft'
 
     def action_open_loan_entries(self):

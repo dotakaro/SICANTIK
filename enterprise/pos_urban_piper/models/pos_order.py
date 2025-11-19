@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import fields, models, api
 
 
 class PosOrder(models.Model):
@@ -24,8 +24,7 @@ class PosOrder(models.Model):
         help='Preparation time for the food as provided by UrbanPiper.'
     )
 
-    def _generate_unique_reference(self, pos_session_id, config_id, sequence_number, delivery_provider):
-        """
-        Generate unique id for the urban piper order.
-        """
-        return f'{delivery_provider} {pos_session_id:05}-{config_id:03}-{sequence_number:04}'
+    @api.model
+    def _load_pos_preparation_data_fields(self):
+        res = super()._load_pos_preparation_data_fields()
+        return res + ['delivery_status', 'delivery_provider_id', 'delivery_identifier', 'prep_time', 'config_id']

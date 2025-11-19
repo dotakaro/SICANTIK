@@ -1,17 +1,15 @@
 import { describe, expect, test } from "@odoo/hoot";
 import { Deferred } from "@odoo/hoot-mock";
 
+import { defineApprovalsModels } from "@approvals/../tests/approvals_test_helpers";
 import {
-    assertSteps,
     click,
     contains,
+    openFormView,
     start,
     startServer,
-    step,
-    openFormView,
 } from "@mail/../tests/mail_test_helpers";
-import { serverState, onRpc } from "@web/../tests/web_test_helpers";
-import { defineApprovalsModels } from "@approvals/../tests/approvals_test_helpers";
+import { asyncStep, onRpc, serverState, waitForSteps } from "@web/../tests/web_test_helpers";
 
 describe.current.tags("desktop");
 defineApprovalsModels();
@@ -50,7 +48,9 @@ test("activity with approval to be made by another user", async () => {
     const pyEnv = await startServer();
     const requestId = pyEnv["approval.request"].create({});
     const userId = pyEnv["res.users"].create({
-        partner_id: pyEnv["res.partner"].create({}),
+        partner_id: pyEnv["res.partner"].create({
+            name: "Mike",
+        }),
     });
     pyEnv["approval.approver"].create({
         request_id: requestId,
@@ -75,9 +75,8 @@ test("activity with approval to be made by another user", async () => {
     await contains(".o-mail-Activity .btn", { count: 0, text: "Cancel" });
     await contains(".o-mail-Activity .btn", { count: 0, text: "Mark Done" });
     await contains(".o-mail-Activity .btn", { count: 0, text: "Upload Document" });
-    await contains(".o-mail-Activity button", { count: 0, text: "Approve" });
-    await contains(".o-mail-Activity button", { count: 0, text: "Refuse" });
-    await contains(".o-mail-Activity span", { text: "To Approve" });
+    await contains(".o-mail-Activity button", { count: 1, text: "Approve" });
+    await contains(".o-mail-Activity button", { count: 1, text: "Refuse" });
 });
 
 test("approve approval", async () => {
@@ -98,14 +97,14 @@ test("approve approval", async () => {
     onRpc("approval.approver", "action_approve", (args) => {
         expect(args.args.length).toBe(1);
         expect(args.args[0]).toBe(requestId);
-        step("action_approve");
+        asyncStep("action_approve");
         def.resolve();
     });
     await start();
     await openFormView("approval.request", requestId);
     await click(".o-mail-Activity button", { text: "Approve" });
     await def;
-    assertSteps(["action_approve"]);
+    await waitForSteps(["action_approve"]);
 });
 
 test("refuse approval", async () => {
@@ -126,12 +125,12 @@ test("refuse approval", async () => {
     onRpc("approval.approver", "action_refuse", (args) => {
         expect(args.args.length).toBe(1);
         expect(args.args[0]).toBe(requestId);
-        step("action_refuse");
+        asyncStep("action_refuse");
         def.resolve();
     });
     await start();
     await openFormView("approval.request", requestId);
     await click(".o-mail-Activity button", { text: "Refuse" });
     await def;
-    assertSteps(["action_refuse"]);
+    await waitForSteps(["action_refuse"]);
 });

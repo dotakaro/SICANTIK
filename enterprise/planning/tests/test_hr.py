@@ -5,8 +5,8 @@ from freezegun import freeze_time
 import pytz
 
 from odoo import fields
+from odoo.tools.intervals import Intervals
 
-from odoo.addons.resource.models.utils import Intervals
 from .common import TestCommonPlanning
 
 class TestPlanningHr(TestCommonPlanning):
@@ -14,7 +14,7 @@ class TestPlanningHr(TestCommonPlanning):
     def setUpClass(cls):
         super(TestPlanningHr, cls).setUpClass()
         cls.classPatch(cls.env.cr, 'now', fields.Datetime.now)
-        with freeze_time('2015-1-1'):
+        with freeze_time('2015-01-01'):
             cls.setUpEmployees()
         calendar_joseph = cls.env['resource.calendar'].create({
             'name': 'Calendar 1',

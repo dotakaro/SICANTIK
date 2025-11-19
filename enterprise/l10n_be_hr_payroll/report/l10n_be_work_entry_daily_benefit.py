@@ -5,7 +5,7 @@ from odoo import fields, models
 from odoo.tools.sql import drop_view_if_exists, SQL
 
 
-class l10nBeWorkEntryDailyBenefitReport(models.Model):
+class L10n_BeWorkEntryDailyBenefitReport(models.Model):
     """Generates a list of combination of dates, benefit name and employee_id.
        The list is created in accordance with:
        * The work entries currently in the system and the benefits associated with the work entry types.
@@ -27,13 +27,13 @@ class l10nBeWorkEntryDailyBenefitReport(models.Model):
                     SELECT work_entry.employee_id,
                            GREATEST(day_serie.day_serie, timezone(calendar.tz::text, work_entry.date_start::timestamp with time zone))::date AS day,
                            advantage.benefit_name,
-                           ROW_NUMBER() OVER() AS id
+                           1 AS id
 
                       FROM hr_work_entry work_entry
-                      JOIN hr_contract contract ON work_entry.contract_id = contract.id
+                      JOIN hr_version version ON work_entry.version_id = version.id
                                                 AND work_entry.active
                                                 AND work_entry.state::TEXT = ANY (ARRAY ['draft'::CHARACTER VARYING::TEXT, 'validated'::CHARACTER VARYING::TEXT])
-                      JOIN resource_calendar calendar ON contract.resource_calendar_id = calendar.id
+                      JOIN resource_calendar calendar ON version.resource_calendar_id = calendar.id
                       JOIN hr_work_entry_type ON work_entry.work_entry_type_id = hr_work_entry_type.id
                                               AND (hr_work_entry_type.meal_voucher = TRUE OR hr_work_entry_type.private_car = TRUE OR hr_work_entry_type.representation_fees = TRUE)
                 CROSS JOIN LATERAL generate_series(date_trunc('day'::text, work_entry.date_start), date_trunc('day'::text, work_entry.date_stop), '1 day'::interval) day_serie(day_serie)

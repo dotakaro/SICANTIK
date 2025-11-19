@@ -9,7 +9,7 @@ from odoo.tools import format_date
 from odoo.exceptions import UserError
 
 
-class MulticurrencyRevaluationWizard(models.TransientModel):
+class AccountMulticurrencyRevaluationWizard(models.TransientModel):
     _name = 'account.multicurrency.revaluation.wizard'
     _description = 'Multicurrency Revaluation Wizard'
 
@@ -48,7 +48,7 @@ class MulticurrencyRevaluationWizard(models.TransientModel):
 
     @api.model
     def default_get(self, default_fields):
-        rec = super(MulticurrencyRevaluationWizard, self).default_get(default_fields)
+        rec = super().default_get(default_fields)
         if 'reversal_date' in default_fields:
             report_options = self._context['multicurrency_revaluation_report_options']
             rec['reversal_date'] = fields.Date.to_date(report_options['date']['date_to']) + relativedelta(days=1)
@@ -107,7 +107,7 @@ class MulticurrencyRevaluationWizard(models.TransientModel):
     @api.model
     def _get_move_vals(self):
         def _get_model_id(parsed_line, selected_model):
-            for dummy, parsed_res_model, parsed_res_id in parsed_line:
+            for _dummy, parsed_res_model, parsed_res_id in parsed_line:
                 if parsed_res_model == selected_model:
                     return parsed_res_id
 

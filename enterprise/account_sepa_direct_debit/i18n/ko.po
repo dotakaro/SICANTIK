@@ -3,16 +3,15 @@
 # 	* account_sepa_direct_debit
 # 
 # Translators:
-# Daye Jeong, 2025
 # Wil Odoo, 2025
 # Sarah Park, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-23 18:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:22+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Sarah Park, 2025\n"
 "Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
@@ -20,6 +19,17 @@ msgstr ""
 "Content-Transfer-Encoding: \n"
 "Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: account_sepa_direct_debit
+#: model:ir.actions.report,print_report_name:account_sepa_direct_debit.sdd_mandate_form_report_main
+msgid ""
+"\n"
+"                '%s_sdd_mandate_form_%s' % ((object.partner_id.name).replace(' ', '_'), object.name)\n"
+"            "
+msgstr ""
+"\n"
+"                '%s_sdd_mandate_form_%s' % ((object.partner_id.name).replace(' ', '_'), object.name)\n"
+"            "
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
@@ -30,6 +40,15 @@ msgstr "(적용될 경우)"
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "(optional)"
 msgstr "(선택 사항)"
+
+#. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sepa_direct_debit_mandate_form
+msgid ""
+".\n"
+"                                Make sure the mandate isn't meant for the parent contact."
+msgstr ""
+".\n"
+"                                위임장이 상위 연락처용으로 설정되어 있지 않은지 확인하세요."
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.view_batch_payment_form_inherit
@@ -82,7 +101,7 @@ msgid ""
 "                        Best regards,\n"
 "                        <t t-if=\"not is_html_empty(user.signature)\" data-o-mail-quote-container=\"1\">\n"
 "                            <br/><br/>\n"
-"                            <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
@@ -90,19 +109,19 @@ msgid ""
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"                        안녕하세요, <t t-out=\"object.partner_id.display_name or ''\">Azure Interior</t>님.\n"
+"                        안녕하세요 <t t-out=\"object.partner_id.display_name or ''\">Azure Interior</t>님,\n"
 "                        <br/>\n"
 "                        <br/>\n"
-"                        다음은\n"
-"                        <t t-out=\"object.company_id.display_name or ''\">YourCompany</t>에서\n"
-"                        안내에 따라\n"
-"                        <t t-out=\"object.company_id.display_name or ''\">YourCompany</t>의 자동 이체 금액을 인출할 수 있도록 승인하기 위한 SEPA 자동 이체 동의서입니다.\n"
-"                        궁금한 점이 있으시면 언제든지 문의 주시기 바랍니다.\n"
+"                        다음의 안내에 따라 SEPA 자동 이체 동의서에 서명하여\n"
+"                        <t t-out=\"object.company_id.display_name or ''\">YourCompany</t> \n"
+"                        거래 은행에서 \n"
+"                        <t t-out=\"object.company_id.display_name or ''\">YourCompany</t> 자동 이체 인출을 승인해 주시기 바랍니다.\n"
+"                        궁금한 점이 있으면 언제든지 문의 주시기 바랍니다..\n"
 "                        <br/>\n"
 "                        감사합니다.\n"
 "                        <t t-if=\"not is_html_empty(user.signature)\" data-o-mail-quote-container=\"1\">\n"
 "                            <br/><br/>\n"
-"                            <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
@@ -135,14 +154,6 @@ msgstr "<strong>채권자 식별 기호: </strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid ""
-"<strong>Date and place of signature:</strong> "
-"......................................"
-msgstr ""
-"<strong>서명 날짜 및 장소 : </strong>  ......................................"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "<strong>Email:</strong>"
 msgstr "<strong>이메일 : </strong>"
 
@@ -158,20 +169,8 @@ msgstr "<strong>위임장 식별 기호: </strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid ""
-"<strong>Name of the reference party:</strong> "
-"......................................"
-msgstr "<strong>참조 당사자의 이름 :</strong> ......................................"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "<strong>Phone:</strong>"
 msgstr "<strong>전화 : </strong>"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid "<strong>Signature:</strong>"
-msgstr "<strong>서명 : </strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
@@ -597,8 +596,8 @@ msgid ""
 "be claimed within 8 weeks starting from the date on which your account was "
 "debited."
 msgstr ""
-"고객이 보유한 권리 중 하나로서, 고객은 은행 계약 조건에 따라 은행에서 환불을 받을 권리가 있습니다. 고객의 권리에 대한 내용은 "
-"은행에서 교부하는 명세서에서 확인하실 수 있습니다. 환불 요청은 반드시 계좌 인출일로부터 8주 이내에 청구해야 합니다."
+"귀하가 보유한 권리 중 하나로서, 귀하는 은행 계약 조건에 따라서 은행에서 환불을 받을 권리가 있습니다. 귀하의 권리에 대한 내용은 "
+"은행에서 전송해드리는  명세서에서 확인하실 수 있습니다. 계좌에 입금된 날로부터 8주 이내에 환불을 요청하셔야 합니다."
 
 #. module: account_sepa_direct_debit
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__message_attachment_count
@@ -738,6 +737,11 @@ msgid "Could a SDD mandate be used?"
 msgstr "SDD 위임장을 사용할 수 있습니까?"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model,website_form_label:account_sepa_direct_debit.model_res_partner
+msgid "Create a Customer"
+msgstr "고객 만들기"
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.actions.act_window,help:account_sepa_direct_debit.account_sepa_direct_debit_mandate_tree_act
 msgid "Create a new direct debit customer mandate"
 msgstr "새로운 자동 이체 고객 위임 만들기"
@@ -837,7 +841,6 @@ msgstr "Demo@email.com"
 
 #. module: account_sepa_direct_debit
 #: model:ir.actions.act_window,name:account_sepa_direct_debit.account_sepa_direct_debit_mandate_tree_act
-#: model:ir.actions.act_window,name:account_sepa_direct_debit.account_sepa_direct_debit_partner_mandates
 #: model:ir.ui.menu,name:account_sepa_direct_debit.account_sepa_direct_debit_customer_mandates_menu
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sdd_res_partner_view
 msgid "Direct Debit Mandates"
@@ -860,6 +863,16 @@ msgid "Direct debit payments to collect"
 msgstr "자동 이체 수금"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_batch_payment__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_journal__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_method__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_company__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner_bank__display_name
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__display_name
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate_send__display_name
 msgid "Display Name"
@@ -993,6 +1006,16 @@ msgid "IBAN"
 msgstr "IBAN (국제 은행 계좌 번호)"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_batch_payment__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_journal__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_method__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_company__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_config_settings__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner_bank__id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate_send__id
 msgid "ID"
@@ -1181,6 +1204,11 @@ msgid "Next Activity Type"
 msgstr "다음 활동 유형"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__no_sdd_mandate_partner_ids
+msgid "No Sdd Mandate Partner"
+msgstr "SDD 위임장 파트너 없음"
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.actions.act_window,help:account_sepa_direct_debit.action_sdd_payments_to_collect
 msgid "No direct debit payment to collect"
 msgstr "결제할 자동이체 내용 없음"
@@ -1199,7 +1227,7 @@ msgstr "오류 횟수"
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_sdd_mandate__payments_to_collect_nber
 msgid ""
 "Number of in-process and completed payments generated under this mandate."
-msgstr ""
+msgstr "이 위임장에 따라 생성된 결제가 진행 중이거나 완료된 결제 건수입니다."
 
 #. module: account_sepa_direct_debit
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_sdd_mandate__paid_invoices_nber
@@ -1237,8 +1265,6 @@ msgstr ""
 "                    바로 대금을 받을 수 있습니다."
 
 #. module: account_sepa_direct_debit
-#: model:ir.model.fields,help:account_sepa_direct_debit.field_account_bank_statement_line__sdd_mandate_id
-#: model:ir.model.fields,help:account_sepa_direct_debit.field_account_move__sdd_mandate_id
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_account_payment__sdd_mandate_id
 msgid ""
 "Once this invoice has been paid with Direct Debit, contains the mandate that"
@@ -1269,6 +1295,10 @@ msgstr "위임은 초안 상태인 경우에만 삭제할 수 있습니다."
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_payment_register_form_inherit_account_sepa_direct_debit
+msgid "Oops! No valid SEPA mandate for the following partner(s):"
+msgstr "오류 발생! 다음의 파트너는 유효한 SEPA 위임 항목이 없습니다:"
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_account_payment_form
 msgid "Oops! No valid SEPA mandate for this customer."
 msgstr "오류 발생! 해당 고객에 대한 SEPA 위임 내용이 없습니다."
@@ -1324,15 +1354,21 @@ msgid "Paid via direct debit"
 msgstr "자동 이체를 통한 지불"
 
 #. module: account_sepa_direct_debit
-#: model:ir.model,name:account_sepa_direct_debit.model_account_partial_reconcile
-msgid "Partial Reconcile"
-msgstr "부분 조정"
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__partner_parent_id
+msgid "Parent Partner"
+msgstr "상위 파트너"
 
 #. module: account_sepa_direct_debit
 #. odoo-python
 #: code:addons/account_sepa_direct_debit/wizard/sdd_mandate_send.py:0
 msgid "Partner should have an email address."
 msgstr "파트너는 이메일 주소가 있어야 합니다."
+
+#. module: account_sepa_direct_debit
+#. odoo-python
+#: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
+msgid "Partner's Parent"
+msgstr "상위 파트너"
 
 #. module: account_sepa_direct_debit
 #: model:ir.model,name:account_sepa_direct_debit.model_account_payment_register
@@ -1598,8 +1634,6 @@ msgid "Sdd Has Usable Mandate"
 msgstr "Sdd에 확인 가능한 위임 내용이 있습니다"
 
 #. module: account_sepa_direct_debit
-#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_bank_statement_line__sdd_mandate_id
-#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__sdd_mandate_id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__sdd_mandate_id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__sdd_mandate_ids
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_users__sdd_mandate_ids
@@ -1633,11 +1667,6 @@ msgstr "고객에게 전송"
 #: model:mail.template,description:account_sepa_direct_debit.email_template_sdd_pre_notification
 msgid "Sent to the customer to indicate their account will be charged"
 msgstr "계정에 요금이 청구된다는 내용을 고객에게 안내하기 위해 전송합니다"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid "Signature"
-msgstr "서명"
 
 #. module: account_sepa_direct_debit
 #. odoo-python
@@ -1787,6 +1816,11 @@ msgid ""
 "The payment must be linked to a SEPA Direct Debit mandate in order to "
 "generate a Direct Debit XML."
 msgstr "자동 이체 XML을 생성하려면 지불이 SEPA 자동 이체 위임에 연결되어 있어야 합니다."
+
+#. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sepa_direct_debit_mandate_form
+msgid "The selected customer is a child of"
+msgstr "선택하신 고객님 자녀의 연령대는"
 
 #. module: account_sepa_direct_debit
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_sdd_mandate__name

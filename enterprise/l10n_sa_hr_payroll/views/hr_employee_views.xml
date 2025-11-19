@@ -5,9 +5,32 @@
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="hr_payroll.payroll_hr_employee_view_form"/>
         <field name="arch" type="xml">
-            <group name="payroll_group" position="after">
-                <group string='Saudi Payroll Information' name="l10n_sa_payroll_group" invisible="company_country_code != 'SA'" >
+            <group name="payroll_group" position="inside">
+                <group string='Saudi Payroll Information' name="l10n_sa_payroll_group" invisible="company_country_code != 'SA'">
                     <field name="l10n_sa_employee_code" />
+
+                    <separator string="Allowances"/>
+                    <label for="l10n_sa_housing_allowance" string="Housing"/>
+                    <div class="o_row" name="l10n_sa_housing_allowance">
+                        <field class="o_hr_narrow_field" name="l10n_sa_housing_allowance"/>
+                        <span>/ month</span>
+                    </div>
+                    <label for="l10n_sa_transportation_allowance" string="Transportation"/>
+                    <div class="o_row" name="l10n_sa_transportation_allowance">
+                        <field class="o_hr_narrow_field" name="l10n_sa_transportation_allowance"/>
+                        <span>/ month</span>
+                    </div>
+                    <label for="l10n_sa_other_allowances" string="Other"/>
+                    <div class="o_row" name="l10n_sa_other_allowances">
+                        <field class="o_hr_narrow_field" name="l10n_sa_other_allowances"/>
+                        <span>/ month</span>
+                    </div>
+
+                    <separator string="End Of Service Provision"/>
+                    <field name="l10n_sa_number_of_days" string="Number of Days"/>
+
+                    <separator string="WPS Information"/>
+                    <field name="l10n_sa_wps_description" />
                 </group>
             </group>
         </field>

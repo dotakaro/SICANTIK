@@ -7,7 +7,7 @@ from odoo import fields, models
 class QualitySpreadsheetTemplate(models.Model):
     _name = 'quality.spreadsheet.template'
     _description = "Quality check template spreadsheet"
-    _inherit = 'spreadsheet.mixin'
+    _inherit = ['spreadsheet.mixin']
 
     name = fields.Char(required=True)
     company_id = fields.Many2one(
@@ -34,7 +34,7 @@ class QualitySpreadsheetTemplate(models.Model):
             },
         }
 
-    def join_spreadsheet_session(self, access_token=None):
-        data = super().join_spreadsheet_session(access_token)
+    def _get_spreadsheet_metadata(self, access_token=None):
+        data = super()._get_spreadsheet_metadata(access_token)
         data['quality_check_cell'] = self.check_cell
         return data

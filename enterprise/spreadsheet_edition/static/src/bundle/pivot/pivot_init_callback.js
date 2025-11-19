@@ -1,4 +1,3 @@
-/** @odoo-module **/
 //@ts-check
 
 import { helpers, stores } from "@odoo/o-spreadsheet";
@@ -45,8 +44,8 @@ export function insertPivot(pivotData) {
     }));
     const sortedMeasure = pivotData.metaData.sortedColumn?.measure;
     const sortedColumn = activeMeasures.includes(sortedMeasure)
-        ? pivotData.metaData.sortedColumn
-        : null;
+        ? getPivotSortedColumn(pivotData)
+        : undefined;
     /** @type {import("@spreadsheet").OdooPivotCoreDefinition} */
     const pivot = deepCopy({
         type: "ODOO",
@@ -67,7 +66,7 @@ export function insertPivot(pivotData) {
      * @param {import("@spreadsheet").OdooSpreadsheetModel} model
      */
     return async (model, stores) => {
-        const pivotId = uuidGenerator.uuidv4();
+        const pivotId = uuidGenerator.smallUuid();
         ensureSuccess(
             model.dispatch("ADD_PIVOT", {
                 pivotId,
@@ -88,7 +87,7 @@ export function insertPivot(pivotData) {
         );
         // Add an empty sheet in the case of an existing spreadsheet.
         if (!this.isEmptySpreadsheet) {
-            const sheetId = uuidGenerator.uuidv4();
+            const sheetId = uuidGenerator.smallUuid();
             const sheetIdFrom = model.getters.getActiveSheetId();
             if (model.getters.getSheetIdByName(sheetName)) {
                 sheetName = undefined;
@@ -100,14 +99,16 @@ export function insertPivot(pivotData) {
             });
             model.dispatch("ACTIVATE_SHEET", { sheetIdFrom, sheetIdTo: sheetId });
         } else {
+            const sheetId = model.getters.getActiveSheetId();
             model.dispatch("RENAME_SHEET", {
-                sheetId: model.getters.getActiveSheetId(),
-                name: sheetName,
+                sheetId,
+                oldName: model.getters.getSheetName(sheetId),
+                newName: sheetName,
             });
         }
         const sheetId = model.getters.getActiveSheetId();
 
-        const table = ds.getTableStructure();
+        const table = ds.getExpandedTableStructure();
         ensureSuccess(
             model.dispatch("INSERT_PIVOT_WITH_TABLE", {
                 sheetId,
@@ -126,5 +127,35 @@ export function insertPivot(pivotData) {
         model.dispatch("AUTORESIZE_COLUMNS", { sheetId, cols: columns });
         const sidePanel = stores.get(SidePanelStore);
         sidePanel.open("PivotSidePanel", { pivotId });
+    };
+}
+
+function getPivotSortedColumn(pivotData) {
+    if (!pivotData.metaData.sortedColumn) {
+        return undefined;
+    }
+
+    const fields = pivotData.metaData.fields;
+    const sortedValues = pivotData.metaData.sortedColumn.groupId[1];
+    const sortColDomain = [];
+
+    for (let i = 0; i < sortedValues.length; i++) {
+        const value = sortedValues[i];
+        const field = pivotData.metaData.fullColGroupBys[i];
+        if (!field) {
+            return undefined;
+        }
+
+        const fieldName = field.split(":")[0];
+        const fieldType = fields[fieldName].type;
+        sortColDomain.push({ value, field, type: fieldType });
+    }
+
+    const sortedColumn = pivotData.metaData.sortedColumn;
+    const measure = sortedColumn.measure;
+    return {
+        domain: sortColDomain,
+        order: sortedColumn.order,
+        measure: fields[measure]?.aggregator ? `${measure}:${fields[measure].aggregator}` : measure,
     };
 }

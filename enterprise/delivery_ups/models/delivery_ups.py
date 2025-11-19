@@ -9,7 +9,7 @@ from odoo.tools import pdf
 from .ups_request import UPSRequest
 
 
-class ProviderUPS(models.Model):
+class DeliveryCarrier(models.Model):
     _inherit = 'delivery.carrier'
 
     def _get_ups_service_types(self):
@@ -50,8 +50,6 @@ class ProviderUPS(models.Model):
     ups_bill_my_account = fields.Boolean(string='Bill My Account',
                                          help="If checked, ecommerce users will be prompted their UPS account number\n"
                                               "and delivery fees will be charged on it.")
-    ups_cod = fields.Boolean(string='Collect on Delivery',
-        help='This value added service enables UPS to collect the payment of the shipment from your customer.')
     ups_saturday_delivery = fields.Boolean(string='UPS Saturday Delivery',
         help='This value added service will allow you to ship the package on saturday also.')
     ups_cod_funds_code = fields.Selection(selection=[
@@ -60,20 +58,20 @@ class ProviderUPS(models.Model):
         ], string='COD Funding Option', default='0')
 
     def _compute_can_generate_return(self):
-        super(ProviderUPS, self)._compute_can_generate_return()
+        super()._compute_can_generate_return()
         for carrier in self:
             if carrier.delivery_type == 'ups':
                 carrier.can_generate_return = True
 
     def _compute_supports_shipping_insurance(self):
-        super(ProviderUPS, self)._compute_supports_shipping_insurance()
+        super()._compute_supports_shipping_insurance()
         for carrier in self:
             if carrier.delivery_type == 'ups':
                 carrier.supports_shipping_insurance = True
 
     @api.onchange('ups_default_service_type')
     def on_change_service_type(self):
-        self.ups_cod = False
+        self.allow_cash_on_delivery = False
         self.ups_saturday_delivery = False
 
     def ups_rate_shipment(self, order):
@@ -87,7 +85,7 @@ class ProviderUPS(models.Model):
             'total_qty': sum(line.product_uom_qty for line in order.order_line.filtered(lambda line: not line.is_delivery and not line.display_type))  # required when service type = 'UPS Worldwide Express Freight'
         }
 
-        if self.ups_cod:
+        if self.allow_cash_on_delivery:
             cod_info = {
                 'currency': order.partner_id.country_id.currency_id.name,
                 'monetary_value': order.amount_total,
@@ -151,7 +149,7 @@ class ProviderUPS(models.Model):
                 'total_qty': sum(sml.quantity for sml in picking.move_line_ids),
                 'ilt_monetary_value': '%d' % sum(sml.sale_price for sml in picking.move_line_ids),
                 'itl_currency_code': self.env.company.currency_id.name,
-                'phone': picking.partner_id.mobile or picking.partner_id.phone or picking.sale_id.partner_id.mobile or picking.sale_id.partner_id.phone,
+                'phone': picking.partner_id.phone or picking.sale_id.partner_id.phone,
                 'terms_of_shipment': terms_of_shipment.code if terms_of_shipment else None,
                 'purchase_order_number': picking.sale_id.name if picking.sale_id else None,
             }
@@ -163,7 +161,7 @@ class ProviderUPS(models.Model):
             if self.ups_bill_my_account:
                 ups_carrier_account = picking.partner_id.with_company(picking.company_id).property_ups_carrier_account
 
-            if picking.carrier_id.ups_cod:
+            if picking.carrier_id.allow_cash_on_delivery:
                 cod_info = {
                     'currency': picking.partner_id.country_id.currency_id.name,
                     'monetary_value': picking.sale_id.amount_total,
@@ -245,7 +243,7 @@ class ProviderUPS(models.Model):
             'total_qty': sum(sml.quantity for sml in picking.move_line_ids),
             'ilt_monetary_value': '%d' % invoice_line_total,
             'itl_currency_code': self.env.company.currency_id.name,
-            'phone': picking.partner_id.mobile or picking.partner_id.phone or picking.sale_id.partner_id.mobile or picking.sale_id.partner_id.phone,
+            'phone': picking.partner_id.phone or picking.sale_id.partner_id.phone,
         }
         if picking.sale_id and picking.sale_id.carrier_id != picking.carrier_id:
             ups_service_type = picking.carrier_id.ups_default_service_type or self.ups_default_service_type
@@ -255,7 +253,7 @@ class ProviderUPS(models.Model):
         if self.ups_bill_my_account:
             ups_carrier_account = picking.partner_id.with_company(picking.company_id).property_ups_carrier_account
 
-        if picking.carrier_id.ups_cod:
+        if picking.carrier_id.allow_cash_on_delivery:
             cod_info = {
                 'currency': picking.partner_id.country_id.currency_id.name,
                 'monetary_value': picking.sale_id.amount_total,

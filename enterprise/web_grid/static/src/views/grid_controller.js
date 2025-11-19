@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
@@ -16,6 +14,7 @@ import { CogMenu } from "@web/search/cog_menu/cog_menu";
 import { SearchBar } from "@web/search/search_bar/search_bar";
 import { useSearchBarToggler } from "@web/search/search_bar/search_bar_toggler";
 import { browser } from "@web/core/browser/browser";
+import { ActionHelper } from "@web/views/action_helper";
 
 import { Component, useState, onWillUnmount, useRef } from "@odoo/owl";
 
@@ -29,6 +28,7 @@ export class GridController extends Component {
         ViewButton,
         CogMenu,
         SearchBar,
+        ActionHelper,
     };
 
     static props = {
@@ -167,7 +167,7 @@ export class GridController extends Component {
     async afterExecuteActionButton() {}
 
     async reload() {
-        await this.model.fetchData();
+        await this.model.reload();
     }
 
     async onRecordSaved(record) {
@@ -175,9 +175,11 @@ export class GridController extends Component {
     }
 
     get columns() {
-        return this.state.isWeekendVisible || this.state.activeRangeName === "day" ? this.model.columnsArray : this.model.columnsArray.filter(column => {
-            return DateTime.fromISO(column.value).weekday < 6;
-        });
+        return this.state.isWeekendVisible || this.state.activeRangeName === "day"
+            ? this.model.columnsArray
+            : this.model.columnsArray.filter(
+                  (column) => DateTime.fromISO(column.value).weekday < 6
+              );
     }
 
     toggleWeekendVisibility() {

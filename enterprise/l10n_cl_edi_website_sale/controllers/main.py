@@ -5,6 +5,7 @@ from stdnum.cl import rut
 from odoo import _
 from odoo.http import request, route
 from odoo.tools import single_email_re, str2bool
+
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 
 
@@ -12,11 +13,14 @@ class L10nCLWebsiteSale(WebsiteSale):
 
     def _l10n_cl_is_extra_info_needed(self):
         IrConfigParameter = request.env['ir.config_parameter'].sudo()
-        order = request.website.sale_get_order()
-        return (
-            order.company_id.country_code == 'CL'
+        invoicing_step = request.website._get_checkout_step(
+            '/shop/l10n_cl_invoicing_info'
+        )
+        invoicing_info_needed = invoicing_step.sudo().is_published = (
+            request.website.company_id.country_code == 'CL'
             and str2bool(IrConfigParameter.get_param('sale.automatic_invoice'))
         )
+        return invoicing_info_needed
 
     @route()
     def shop_checkout(self, try_skip_step=False, **query_params):
@@ -56,25 +60,27 @@ class L10nCLWebsiteSale(WebsiteSale):
 
     @route('/shop/l10n_cl_invoicing_info', type='http', auth='public', methods=['GET', 'POST'], website=True, sitemap=False)
     def l10n_cl_invoicing_info(self, **kw):
-        order = request.website.sale_get_order()
+        order_sudo = request.cart
         values = {
-            'website_sale_order': order,
+            'website_sale_order': order_sudo,
             'l10n_cl_show_extra_info': True,
             'default_value': kw,
-            'errors_fields': self._checkout_invoice_info_form_validate(order, **kw),
+            'errors_fields': self._checkout_invoice_info_form_validate(order_sudo, **kw),
             'errors_empty': self._checkout_invoice_info_form_empty(**kw),
         }
         if request.httprequest.method == 'POST':
             if (values['errors_fields'] or values['errors_empty']) and kw['l10n_cl_type_document'] != 'ticket':
+                values.update(request.website._get_checkout_step_values())
                 return request.render("l10n_cl_edi_website_sale.l10n_cl_edi_invoicing_info", values)
-            self._l10n_cl_update_order(order, **kw)
+            self._l10n_cl_update_order(order_sudo, **kw)
             return request.redirect("/shop/confirm_order")
         # httprequest.method GET
-        if order.partner_id.country_id.code != 'CL':
-            order.partner_invoice_id = request.env.ref('l10n_cl.par_cfa')
+        if order_sudo.partner_id.country_id.code != 'CL':
+            order_sudo.partner_invoice_id = request.env.ref('l10n_cl.par_cfa')
             return request.redirect("/shop/confirm_order")
         if 'l10n_cl_type_document' not in values['default_value']:
             values['default_value'].update(l10n_cl_type_document='ticket')
+        values.update(request.website._get_checkout_step_values(request.httprequest.path))
         return request.render('l10n_cl_edi_website_sale.l10n_cl_edi_invoicing_info', values)
 
     def _check_billing_address(self, partner_sudo):

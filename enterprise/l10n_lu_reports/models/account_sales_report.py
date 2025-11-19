@@ -10,9 +10,9 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_compare
 
 
-class LuxembourgishECSalesReportCustomHandler(models.AbstractModel):
+class L10n_LuEcSalesReportHandler(models.AbstractModel):
     _name = 'l10n_lu.ec.sales.report.handler'
-    _inherit = 'account.ec.sales.report.handler'
+    _inherit = ['account.ec.sales.report.handler']
     _description = 'Luxembourgish EC Sales Report Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -241,7 +241,7 @@ class LuxembourgishECSalesReportCustomHandler(models.AbstractModel):
 
         # The correction of reports having the same declaring period isn't allowed,
         # and the correction of reports having later declaring periods doesn't make sense
-        for dummy, ctype, cyear, cperiod in compared_declarations:
+        for _dummy, ctype, cyear, cperiod in compared_declarations:
             # convert quarters to months to compare; because any overlap has to be avoided,
             # take last month of the quarter of the compared declarations,
             # and the first of the present declaration
@@ -478,12 +478,12 @@ class LuxembourgishECSalesReportCustomHandler(models.AbstractModel):
         return corrections
 
 
-class L10n_luStoredSalesReport(models.Model):
+class L10n_LuStoredIntraReport(models.Model):
     _name = 'l10n_lu.stored.intra.report'
     _description = "Wrapper for an attachment, adds the financial report data"
     _rec_name = "display_name"
 
-    attachment_id = fields.Many2one(comodel_name='ir.attachment')
+    attachment_bin = fields.Binary()
     year = fields.Char(required=True)
     period = fields.Char(required=True)
     codes = fields.Selection([
@@ -492,8 +492,17 @@ class L10n_luStoredSalesReport(models.Model):
         ('LTS', 'Supply of goods (normal/in the context of triangular operations) and supply of services')
     ])
     company_id = fields.Many2one(comodel_name='res.company', default=lambda self: self.env.company.id)
+    name = fields.Char(required=True)
 
-    @api.depends('year', 'period', 'codes', 'attachment_id')
+    @api.depends('year', 'period', 'codes', 'name')
     def _compute_display_name(self):
         for r in self:
-            r.display_name = f"{r.year}/{r.period}/{r.codes} : {r.attachment_id.name}"
+            r.display_name = f"{r.year}/{r.period}/{r.codes} : {r.name}"
+
+    def action_download_stored_report(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/web/content/l10n_lu.stored.intra.report/{self.id}/attachment_bin?download=true",
+            "target": "download",
+        }

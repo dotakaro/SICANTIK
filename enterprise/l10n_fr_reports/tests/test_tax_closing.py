@@ -26,7 +26,7 @@ class TestFrenchTaxClosing(TestAccountReportsCommon):
         })
 
         cls.company_data['company'].write({
-            'siret': '50056940503239',
+            'company_registry': '50056940503239',
             'street': 'Rue du Souleillou',
             'street2': '2',
             'zip': '46800',
@@ -85,17 +85,19 @@ class TestFrenchTaxClosing(TestAccountReportsCommon):
             ),
         ])._post()
 
-        options = self._generate_options(
-            self.report,
-            date_from='2024-04-01',
-            date_to='2024-04-30',
-        )
-        with patch.object(self.env.registry['account.move'], '_get_vat_report_attachments', return_value=[]):
-            april_closing_entry = self.report_handler._get_periodic_vat_entries(options)
-            april_closing_entry._post()
+        april_return = self.env['account.return'].create({
+            'name': "April return",
+            'date_from': '2024-04-01',
+            'date_to': '2024-04-30',
+            'type_id': self.env.ref('l10n_fr_reports.vat_return_type').id,
+            'company_id': self.env.company.id,
+        })
+        april_return.action_review(bypass_failing_tests=True)
+        with self.allow_pdf_render():
+            april_return.action_submit()
 
         self.assertRecordValues(
-            april_closing_entry.line_ids,
+            april_return.closing_move_ids.line_ids,
             [
                 {
                     'account_id': self.tax_20_g_purchase.repartition_line_ids.account_id.id,
@@ -123,18 +125,19 @@ class TestFrenchTaxClosing(TestAccountReportsCommon):
             ),
         ])._post()
 
-        options = self._generate_options(
-            self.report,
-            date_from='2024-05-01',
-            date_to='2024-05-31',
-        )
-        with patch.object(self.env.registry['account.move'], '_get_vat_report_attachments', return_value=[]):
-            may_closing_entry = self.report_handler._get_periodic_vat_entries(options)
-            may_closing_entry.refresh_tax_entry()
-            may_closing_entry._post()
+        may_return = self.env['account.return'].create({
+            'name': "May return",
+            'date_from': '2024-05-01',
+            'date_to': '2024-05-31',
+            'type_id': self.env.ref('l10n_fr_reports.vat_return_type').id,
+            'company_id': self.env.company.id,
+        })
+        may_return.action_review(bypass_failing_tests=True)
+        with self.allow_pdf_render():
+            may_return.action_submit()
 
         self.assertRecordValues(
-            may_closing_entry.line_ids,
+            may_return.closing_move_ids.line_ids,
             [
                 {
                     'account_id': self.tax_20_g_sale.repartition_line_ids.account_id.id,
@@ -234,10 +237,16 @@ class TestFrenchTaxClosing(TestAccountReportsCommon):
             edi_vals['declarations'][0]['identif']['zones'],
         )
 
-        with patch.object(self.env.registry['account.move'], '_get_vat_report_attachments', return_value=[]):
-            may_closing_entry = self.report_handler._get_periodic_vat_entries(options)
-            may_closing_entry.refresh_tax_entry()
-            may_closing_entry._post()
+        may_return = self.env['account.return'].create({
+            'name': "May return",
+            'date_from': '2024-05-01',
+            'date_to': '2024-05-31',
+            'type_id': self.env.ref('l10n_fr_reports.vat_return_type').id,
+            'company_id': self.env.company.id,
+        })
+        may_return.action_review(bypass_failing_tests=True)
+        with self.allow_pdf_render():
+            may_return.action_submit()
 
         with patch.object(self.env.registry['l10n_fr_reports.send.vat.report'], '_send_xml_to_aspone', return_value=[]):
             send_vat_wizard.send_vat_return()
@@ -259,7 +268,8 @@ class TestFrenchTaxClosing(TestAccountReportsCommon):
         """
         self.env['account.move'].create([
             self._get_move_create_data(
-                move_data={'move_type': 'in_invoice', 'invoice_date': '2024-05-08', 'journal_id': self.company_data['default_journal_purchase'].id},
+                move_data={'move_type': 'in_invoice', 'invoice_date': '2024-05-08',
+                           'journal_id': self.company_data['default_journal_purchase'].id},
                 line_data={'price_unit': 1000, 'tax_ids': [Command.link(self.tax_20_g_purchase.id)]}
             ),
             self._get_move_create_data(
@@ -417,4 +427,46 @@ class TestFrenchTaxClosing(TestAccountReportsCommon):
                 'value': 'TVA1-20240501-20240531-3310CA3',
             },
             edi_vals['declarations'][0]['identif']['zones'],
+        )
+
+    def test_fr_send_empty_declaration_to_administration(self):
+        """ The aim of this test is to verify edi VAT values
+            when VAT is empty VS when not empty.
+        """
+        def get_edi_vals(start_date, end_date):
+            send_vat_wizard = self.env['l10n_fr_reports.send.vat.report'].create({
+                'date_from': start_date,
+                'date_to': end_date,
+                'report_id': self.report.id,
+                'test_interchange': True,
+            })
+            options = self._generate_options(
+                self.report,
+                date_from=start_date,
+                date_to=end_date,
+                default_options={
+                    'no_format': True,
+                    'unfold_all': True,
+                }
+            )
+            lines = self.report._get_lines(options)
+            return send_vat_wizard._prepare_edi_vals(options, lines)
+
+        self.init_invoice('out_invoice', invoice_date='2024-05-08', amounts=[100], taxes=self.tax_20_g_sale, post=True)
+        edi_vals_5 = get_edi_vals('2024-05-01', '2024-05-31')
+        self.assertNotIn(
+            {
+                'id': 'KF',
+                'value': 'X',
+            },
+            edi_vals_5['declarations'][0]['form']['zones'],
+        )
+
+        edi_vals_6 = get_edi_vals('2024-06-01', '2024-06-30')
+        self.assertIn(
+            {
+                'id': 'KF',
+                'value': 'X',
+            },
+            edi_vals_6['declarations'][0]['form']['zones'],
         )

@@ -5,7 +5,7 @@ from odoo.tools import SQL
 
 class BudgetReport(models.Model):
     _name = 'budget.report'
-    _inherit = 'analytic.plan.fields.mixin'
+    _inherit = ['analytic.plan.fields.mixin']
     _description = "Budget Report"
     _auto = False
     _order = False
@@ -20,6 +20,7 @@ class BudgetReport(models.Model):
     budget = fields.Float('Budget', readonly=True)
     committed = fields.Float('Committed', readonly=True)
     achieved = fields.Float('Achieved', readonly=True)
+    theoretical = fields.Float(readonly=True)
     budget_analytic_id = fields.Many2one('budget.analytic', 'Budget Analytic', readonly=True)
     budget_line_id = fields.Many2one('budget.line', 'Budget Line', readonly=True)
 
@@ -32,6 +33,7 @@ class BudgetReport(models.Model):
                    'budget.analytic' AS res_model,
                    bl.budget_analytic_id AS res_id,
                    bl.date_from AS date,
+                   bl.date_to AS bl_date_to,
                    ba.name AS description,
                    bl.company_id AS company_id,
                    NULL AS user_id,
@@ -39,6 +41,12 @@ class BudgetReport(models.Model):
                    bl.budget_amount AS budget,
                    0 AS committed,
                    0 AS achieved,
+                   CASE WHEN NOW() < bl.date_to AND NOW() > bl.date_from
+                        THEN (((NOW()::DATE - bl.date_from::DATE + 1))/(bl.date_to::DATE - bl.date_from::DATE + 1)::FLOAT)*bl.budget_amount
+                        WHEN NOW() < bl.date_from
+                        THEN 0
+                        ELSE bl.budget_amount
+                   END AS theoretical,
                    %(plan_fields)s
               FROM budget_line bl
               JOIN budget_analytic ba ON ba.id = bl.budget_analytic_id
@@ -55,6 +63,7 @@ class BudgetReport(models.Model):
                    'account.analytic.line' AS res_model,
                    aal.id AS res_id,
                    aal.date AS date,
+                   bl.date_to AS bl_date_to,
                    aal.name AS description,
                    aal.company_id AS company_id,
                    aal.user_id AS user_id,
@@ -62,6 +71,7 @@ class BudgetReport(models.Model):
                    0 AS budget,
                    aal.amount * CASE WHEN ba.budget_type = 'expense' THEN -1 ELSE 1 END AS committed,
                    aal.amount * CASE WHEN ba.budget_type = 'expense' THEN -1 ELSE 1 END AS achieved,
+                   0 AS theoretical,
                    %(analytic_fields)s
               FROM account_analytic_line aal
          LEFT JOIN budget_line bl ON (bl.company_id IS NULL OR aal.company_id = bl.company_id)
@@ -93,26 +103,30 @@ class BudgetReport(models.Model):
         )
 
     def _get_pol_query(self, plan_fnames):
+        precision_digits = self.env['decimal.precision'].precision_get('Product Unit')
         qty_invoiced_table = SQL(
             """
                SELECT SUM(
                           CASE WHEN COALESCE(uom_aml.id != uom_pol.id, FALSE)
-                               THEN ROUND((aml.quantity / uom_aml.factor) * uom_pol.factor, -LOG(uom_pol.rounding)::integer)
+                               THEN ROUND(CAST((aml.quantity / uom_aml.factor) * uom_pol.factor AS NUMERIC), %(precision_digits)s)
                                ELSE COALESCE(aml.quantity, 0)
                           END
-                          * CASE WHEN aml.balance < 0 THEN -1 ELSE 1 END
+                          * CASE WHEN am.move_type = 'in_invoice' THEN 1
+                                 WHEN am.move_type = 'in_refund' THEN -1
+                                 ELSE 0 END
                       ) AS qty_invoiced,
                       pol.id AS pol_id
                  FROM purchase_order po
             LEFT JOIN purchase_order_line pol ON pol.order_id = po.id
             LEFT JOIN account_move_line aml ON aml.purchase_line_id = pol.id
+            LEFT JOIN account_move am ON aml.move_id = am.id
             LEFT JOIN uom_uom uom_aml ON uom_aml.id = aml.product_uom_id
-            LEFT JOIN uom_uom uom_pol ON uom_pol.id = pol.product_uom
-            LEFT JOIN uom_category uom_category_aml ON uom_category_aml.id = uom_pol.category_id
-            LEFT JOIN uom_category uom_category_pol ON uom_category_pol.id = uom_pol.category_id
+            LEFT JOIN uom_uom uom_pol ON uom_pol.id = pol.product_uom_id
                 WHERE aml.parent_state = 'posted'
              GROUP BY pol.id
-        """)
+        """,
+        precision_digits=precision_digits
+        )
         return SQL(
             """
             SELECT (pol.id::TEXT || '-' || ROW_NUMBER() OVER (PARTITION BY pol.id ORDER BY pol.id)) AS id,
@@ -121,6 +135,7 @@ class BudgetReport(models.Model):
                    'purchase.order' AS res_model,
                    po.id AS res_id,
                    po.date_order AS date,
+                   bl.date_to AS bl_date_to,
                    pol.name AS description,
                    pol.company_id AS company_id,
                    po.user_id AS user_id,
@@ -133,10 +148,11 @@ class BudgetReport(models.Model):
                         * (a.rate)
                         * CASE WHEN ba.budget_type = 'both' THEN -1 ELSE 1 END AS committed,
                    0 AS achieved,
+                   0 AS theoretical,
                    %(analytic_fields)s
               FROM purchase_order_line pol
          LEFT JOIN (%(qty_invoiced_table)s) qty_invoiced_table ON qty_invoiced_table.pol_id = pol.id
-              JOIN purchase_order po ON pol.order_id = po.id AND po.state in ('purchase', 'done')
+              JOIN purchase_order po ON pol.order_id = po.id AND po.state = 'purchase'
         CROSS JOIN JSONB_TO_RECORDSET(pol.analytic_json) AS a(rate FLOAT, %(field_cast)s)
          LEFT JOIN budget_line bl ON (bl.company_id IS NULL OR po.company_id = bl.company_id)
                                  AND po.date_order >= bl.date_from

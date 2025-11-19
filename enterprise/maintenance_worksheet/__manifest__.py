@@ -4,7 +4,7 @@
 {
     'name': 'Worksheet for Maintenance',
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Supply Chain/Maintenance',
     'summary': 'Create custom worksheets for Maintenance',
     'description': """
 Create customizable worksheet templates for Maintenance
@@ -23,5 +23,6 @@ Create customizable worksheet templates for Maintenance
     "demo": [
         'data/maintenance_worksheet_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

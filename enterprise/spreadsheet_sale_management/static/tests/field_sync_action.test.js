@@ -10,16 +10,16 @@ import { mailModels } from "@mail/../tests/mail_test_helpers";
 import { setCellContent } from "@spreadsheet/../tests/helpers/commands";
 import { getCellContent } from "@spreadsheet/../tests/helpers/getters";
 
+import { helpers, stores } from "@odoo/o-spreadsheet";
+import { addFieldSync } from "./helpers/commands";
 import {
     defineSpreadsheetSaleModels,
     getSaleOrderSpreadsheetData,
     SaleOrderSpreadsheet,
 } from "./helpers/data";
 import { mountSaleOrderSpreadsheetAction } from "./helpers/webclient_helpers";
-import { addFieldSync } from "./helpers/commands";
-import { stores, helpers } from "@odoo/o-spreadsheet";
 
-const { HighlightStore, HoveredCellStore } = stores;
+const { HighlightStore, DelayedHoveredCellStore } = stores;
 const { toZone } = helpers;
 
 defineSpreadsheetSaleModels();
@@ -28,9 +28,8 @@ defineModels(mailModels);
 describe("field sync action", () => {
     test("write on sale order when leaving action", async () => {
         const orderId = 1;
-        onRpc("/web/dataset/call_kw/sale.order/write", async function (request, args) {
-            const { params } = await request.json();
-            const [orderIds, vals] = params.args;
+        onRpc("sale.order", "write", ({ args }) => {
+            const [orderIds, vals] = args;
             expect(orderIds).toEqual([orderId]);
             expect(vals).toEqual({
                 order_line: [
@@ -51,7 +50,7 @@ describe("field sync action", () => {
     });
 
     test("don't write on sale order with no order_id param", async () => {
-        onRpc("/web/dataset/call_kw/sale.order/write", async (request, args) => {
+        onRpc("sale.order", "write", () => {
             expect.step("write-sale-order");
         });
         const spreadsheetId = 1;
@@ -77,8 +76,8 @@ describe("field sync action", () => {
 
     test("auto resize list columns", async () => {
         onRpc(
-            "/web/dataset/call_kw/sale.order.spreadsheet/join_spreadsheet_session",
-            async (request, args) => {
+            "/spreadsheet/data/sale.order.spreadsheet/*",
+            () => {
                 const data = getSaleOrderSpreadsheetData();
                 const commands = [
                     {
@@ -105,7 +104,8 @@ describe("field sync action", () => {
                         },
                     ],
                 };
-            }
+            },
+            { pure: true }
         );
         const { model } = await mountSaleOrderSpreadsheetAction();
         const sheetId = model.getters.getActiveSheetId();
@@ -116,19 +116,16 @@ describe("field sync action", () => {
 
     test("hover field sync highlights matching list formulas", async () => {
         const { model, env } = await mountSaleOrderSpreadsheetAction();
-        const hoverStore = env.getStore(HoveredCellStore);
+        const hoverStore = env.getStore(DelayedHoveredCellStore);
         const highlightStore = env.getStore(HighlightStore);
         addFieldSync(model, "B1", "product_uom_qty", 0);
         setCellContent(model, "A1", '=ODOO.LIST(1,1,"product_uom_qty")');
         expect(highlightStore.highlights).toHaveLength(0);
         hoverStore.hover({ col: 1, row: 0 });
-        expect(highlightStore.highlights).toEqual([
-            {
-                zone: toZone("A1"),
-                color: "#875A7B",
-                sheetId: model.getters.getActiveSheetId(),
-            },
-        ]);
+        expect(highlightStore.highlights).toHaveLength(1);
+        expect(highlightStore.highlights[0].range.zone).toEqual(toZone("A1"));
+        expect(highlightStore.highlights[0].color).toBe("#875A7B");
+        expect(highlightStore.highlights[0].sheetId).toBe(model.getters.getActiveSheetId());
 
         // with computed list args
         setCellContent(model, "A1", "=ODOO.LIST(A2, A3, A4)");
@@ -137,12 +134,9 @@ describe("field sync action", () => {
         setCellContent(model, "A3", "1");
         setCellContent(model, "A4", "product_uom_qty");
         hoverStore.hover({ col: 1, row: 0 });
-        expect(highlightStore.highlights).toEqual([
-            {
-                zone: toZone("A1"),
-                color: "#875A7B",
-                sheetId: model.getters.getActiveSheetId(),
-            },
-        ]);
+        expect(highlightStore.highlights).toHaveLength(1);
+        expect(highlightStore.highlights[0].range.zone).toEqual(toZone("A1"));
+        expect(highlightStore.highlights[0].color).toBe("#875A7B");
+        expect(highlightStore.highlights[0].sheetId).toBe(model.getters.getActiveSheetId());
     });
 });

@@ -22,11 +22,11 @@ class AccountReportBudget(models.Model):
                 raise ValidationError(_("Please enter a valid budget name."))
 
     @api.model_create_multi
-    def create(self, create_values):
-        for values in create_values:
+    def create(self, vals_list):
+        for values in vals_list:
             if name := values.get('name'):
                 values['name'] = name.strip()
-        return super().create(create_values)
+        return super().create(vals_list)
 
     def _create_or_update_budget_items(self, value_to_set, account_id, rounding, date_from, date_to):
         """ This method will create / update several budget items following the number
@@ -105,7 +105,13 @@ class AccountReportBudgetItem(models.Model):
     _name = 'account.report.budget.item'
     _description = "Accounting Report Budget Item"
 
-    budget_id = fields.Many2one(string="Budget", comodel_name='account.report.budget', required=True, ondelete='cascade')
-    account_id = fields.Many2one(string="Account", comodel_name='account.account', required=True)
+    budget_id = fields.Many2one(string="Budget", comodel_name='account.report.budget', required=True, index=True, ondelete='cascade')
+    account_id = fields.Many2one(
+        string="Account",
+        comodel_name='account.account',
+        domain="[('account_type', 'in', ('income', 'income_other', 'expense', 'expense_depreciation', 'expense_direct_cost'))]",
+        required=True,
+        index=True,
+    )
     amount = fields.Float(string="Amount", default=0)
     date = fields.Date(required=True)

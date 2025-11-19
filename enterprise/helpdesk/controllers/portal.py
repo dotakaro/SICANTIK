@@ -18,7 +18,7 @@ from odoo.osv.expression import AND, FALSE_DOMAIN
 class CustomerPortal(portal.CustomerPortal):
 
     def _prepare_portal_layout_values(self):
-        values = super(CustomerPortal, self)._prepare_portal_layout_values()
+        values = super()._prepare_portal_layout_values()
         return values
 
     def _prepare_home_portal_values(self, counters):
@@ -41,6 +41,7 @@ class CustomerPortal(portal.CustomerPortal):
             'ticket_link_section': [],
             'ticket_closed': kwargs.get('ticket_closed', False),
             'preview_object': ticket,
+            'res_company': ticket.company_id  # Used to display correct company logo
         }
         return self._get_page_view_values(ticket, access_token, values, 'my_tickets_history', False, **kwargs)
 
@@ -83,8 +84,7 @@ class CustomerPortal(portal.CustomerPortal):
         domain = self._prepare_helpdesk_tickets_domain()
 
         searchbar_sortings = {
-            'create_date desc': {'label': _('Newest')},
-            'id desc': {'label': _('Reference')},
+            'id desc': {'label': _('Newest')},
             'name': {'label': _('Subject')},
             'user_id': {'label': _('Assigned to')},
             'stage_id': {'label': _('Stage')},
@@ -102,7 +102,7 @@ class CustomerPortal(portal.CustomerPortal):
 
         # default sort by value
         if not sortby:
-            sortby = 'create_date desc'
+            sortby = next(iter(searchbar_sortings))
 
         domain = AND([domain, searchbar_filters[filterby]['domain']])
 
@@ -185,13 +185,13 @@ class CustomerPortal(portal.CustomerPortal):
         if not ticket_sudo.team_id.allow_portal_ticket_closing:
             raise UserError(_("The team does not allow ticket closing through portal"))
 
-        if not ticket_sudo.closed_by_partner:
+        if not ticket_sudo.closed_by_partner and request.httprequest.method == 'GET':
             closing_stage = ticket_sudo.team_id._get_closing_stage()
             if ticket_sudo.stage_id != closing_stage:
                 ticket_sudo.write({'stage_id': closing_stage[0].id, 'closed_by_partner': True})
             else:
                 ticket_sudo.write({'closed_by_partner': True})
             body = _('Ticket closed by the customer')
-            ticket_sudo.with_context(mail_create_nosubscribe=True).message_post(body=body, message_type='comment', subtype_xmlid='mail.mt_note')
+            ticket_sudo.with_context(mail_post_autofollow_author_skip=True).message_post(body=body, message_type='comment', subtype_xmlid='mail.mt_note')
 
         return request.redirect('/my/ticket/%s/%s?ticket_closed=1' % (ticket_id, access_token or ''))

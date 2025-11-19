@@ -9,7 +9,7 @@ class ResCompany(models.Model):
 
     documents_account_settings = fields.Boolean()
     account_folder_id = fields.Many2one(
-        'documents.document', string="Accounting Workspace", check_company=True,
+        'documents.document', string="Accounting Folder", check_company=True,
         compute='_compute_account_folder_id', store=True, readonly=False,
         domain=[('type', '=', 'folder'), ('shortcut_document_id', '=', False)])
 

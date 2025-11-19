@@ -4,7 +4,6 @@ from odoo import models
 
 
 class PaymentToken(models.Model):
-    _name = 'payment.token'
     _inherit = 'payment.token'
 
     def _handle_archiving(self):

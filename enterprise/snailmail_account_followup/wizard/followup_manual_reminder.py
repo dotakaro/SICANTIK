@@ -4,11 +4,17 @@
 from odoo import fields, models, api
 
 
-class FollowupManualReminder(models.TransientModel):
+class Account_FollowupManual_Reminder(models.TransientModel):
     _inherit = 'account_followup.manual_reminder'
 
     snailmail = fields.Boolean()
     snailmail_cost = fields.Float(string='Stamps', default=1, readonly=True, compute='_compute_snailmail_cost')
+
+    @api.depends('snailmail')
+    def _compute_show_send_button(self):
+        super()._compute_show_send_button()
+        for wizard in self:
+            wizard.show_send_button = wizard.show_send_button or wizard.snailmail
 
     def _get_defaults_from_followup_line(self, followup_line):
         defaults = super()._get_defaults_from_followup_line(followup_line)

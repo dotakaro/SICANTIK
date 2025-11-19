@@ -581,7 +581,7 @@ class AccountEdiFormat(models.Model):
                 message = _("Testing environment is active, care that those documents are not synced with SUNAT!")
             else:
                 message = _("The EDI document was successfully created and signed by the government.")
-            invoice.with_context(no_new_invoice=True).message_post(
+            invoice.message_post(
                 body=message,
                 attachment_ids=res['attachment'].ids,
             )
@@ -921,6 +921,9 @@ class AccountEdiFormat(models.Model):
         if any(not line.tax_ids for line in move.invoice_line_ids if line.display_type not in ('line_note', 'line_section') and line._check_edi_line_tax_required()):
             res.append(_("Taxes need to be assigned on all invoice lines"))
 
+        if move.move_type == 'out_refund' and any(line.quantity < 0 or line.price_total < 0 for line in move.invoice_line_ids if line.display_type not in ('line_note', 'line_section')):
+            res.append(_("The credit note cannot have negative quantities or amounts on any line"))
+
         # When this condition is met in `_l10n_pe_edi_get_spot` we will need this bank account.
         # As the mentioned method is meant to be run by a CRON, the user won't be able to see the error hence we raise it here.
         max_percent = max(move.invoice_line_ids.mapped('product_id.l10n_pe_withhold_percentage'), default=0)
@@ -1025,7 +1028,7 @@ class AccountEdiFormat(models.Model):
                 'mimetype': 'application/xml',
             })
             for invoice in invoices:
-                invoice.with_context(no_new_invoice=True).message_post(
+                invoice.message_post(
                     body=message,
                     attachment_ids=void_attachment.ids,
                 )
@@ -1058,7 +1061,7 @@ class AccountEdiFormat(models.Model):
                 'datas': base64.encodebytes(res['cdr']),
                 'mimetype': 'application/xml',
             })
-            invoice.with_context(no_new_invoice=True).message_post(
+            invoice.message_post(
                 body=message,
                 attachment_ids=cdr_void_attachment.ids,
             )

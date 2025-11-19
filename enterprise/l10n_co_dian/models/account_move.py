@@ -2,11 +2,11 @@ from pytz import timezone
 from lxml import etree
 
 from collections import defaultdict
+from datetime import datetime
 import re
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
-from odoo.fields import datetime
 
 DESCRIPTION_CREDIT_CODE = [
     ("1", "Devolución parcial de los bienes y/o no aceptación parcial del servicio"),
@@ -153,13 +153,17 @@ class AccountMove(models.Model):
             return 'l10n_co_dian.report_vendor_document'
         return super()._get_name_invoice_report()
 
-    @api.model
-    def _get_ubl_cii_builder_from_xml_tree(self, tree):
-        # EXTENDS account_edi_ubl_cii
-        ubl_profile = tree.findtext('{*}ProfileID')
-        if ubl_profile and ubl_profile.startswith('DIAN 2.1'):
-            return self.env['account.edi.xml.ubl_dian']
-        return super()._get_ubl_cii_builder_from_xml_tree(tree)
+    def _get_import_file_type(self, file_data):
+        """ Identify DIAN UBL files. """
+        # EXTENDS 'account'
+        if (
+            file_data['xml_tree'] is not None
+            and (ubl_profile := file_data['xml_tree'].findtext('{*}ProfileID'))
+            and ubl_profile.startswith('DIAN 2.1:')
+        ):
+            return 'account.edi.xml.ubl_dian'
+
+        return super()._get_import_file_type(file_data)
 
     @api.model
     def _get_mail_template(self):
@@ -235,7 +239,7 @@ class AccountMove(models.Model):
         self.ensure_one()
         document = self.l10n_co_dian_document_ids.sorted()[:1]
         return {
-            'barcode_src': f'/report/barcode/?barcode_type=QR&value="{self._l10n_co_dian_get_invoice_report_qr_code_value()}"&width=180&height=180',
+            'barcode_src': f'/report/barcode/?barcode_type=QR&value="{self._l10n_co_dian_get_invoice_report_qr_code_value()}"&width=180&height=180&quiet=0',
             'signing_datetime': document.datetime.replace(microsecond=0),
             'identifier': document.identifier,
         }
@@ -250,7 +254,7 @@ class AccountMove(models.Model):
         prepayment_by_move = defaultdict(float)
         source_exchange_move = {}
         for field in ('debit', 'credit'):
-            for partial in lines[f'matched_{field}_ids'].sorted('exchange_move_id', reverse=True):
+            for partial in lines[f'matched_{field}_ids'].sorted('exchange_move_id.id'):
                 counterpart_line = partial[f'{field}_move_id']
                 # Aggregate the exchange difference amount
                 if partial.exchange_move_id:
@@ -284,7 +288,7 @@ class AccountMove(models.Model):
         self.l10n_co_dian_document_ids.filtered(lambda doc: doc.state == 'invoice_rejected').unlink()
         document = self.env['l10n_co_dian.document']._send_to_dian(xml=xml, move=self)
         if document.state == 'invoice_accepted':
-            self.with_context(no_new_invoice=True).message_post(
+            self.message_post(
                 body=_(
                     "The %s was accepted by the DIAN.",
                     dict(document.move_id._fields['move_type'].selection)[document.move_id.move_type],

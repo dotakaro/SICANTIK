@@ -1,7 +1,7 @@
 from odoo import models, fields, _
 
 
-class OperationMode(models.Model):
+class L10n_Co_DianOperation_Mode(models.Model):
     _name = 'l10n_co_dian.operation_mode'
     _description = "Colombian operation modes of DIAN used for different documents"
 
@@ -36,9 +36,10 @@ class OperationMode(models.Model):
         ondelete='cascade',
     )
 
-    _sql_constraints = [
-        ('uniq_software_operation_mode', 'UNIQUE(dian_software_operation_mode, company_id)', 'You cannot have two records with same mode'),
-    ]
+    _uniq_software_operation_mode = models.Constraint(
+        'UNIQUE(dian_software_operation_mode, company_id)',
+        "You cannot have two records with same mode",
+    )
 
     def _compute_display_name(self):
         self.display_name = _("DIAN Operation Mode")

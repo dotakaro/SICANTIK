@@ -6,19 +6,11 @@ class PosOrder(models.Model):
     _name = 'pos.order'
     _inherit = ['pos.order', 'account.external.tax.mixin', 'account.avatax.unique.code']
 
-    # Main mixin overrides
-    def _get_date_for_external_taxes(self):
-        return self.date_order
-
     def _get_and_set_external_taxes_on_eligible_records(self):
         """ account.external.tax.mixin override. """
         eligible_orders = self.filtered(lambda order: order.is_tax_computed_externally and order.state in ('draft'))
-        eligible_orders._set_external_taxes(*eligible_orders._get_external_taxes())
+        eligible_orders._set_external_taxes(eligible_orders._get_external_taxes())
         return super()._get_and_set_external_taxes_on_eligible_records()
-
-    def _get_lines_eligible_for_external_taxes(self):
-        """ account.external.tax.mixin override. """
-        return self.lines
 
     def _get_line_data_for_external_taxes(self):
         """ account.external.tax.mixin override. """
@@ -32,7 +24,9 @@ class PosOrder(models.Model):
                 "id": line.id,
                 "model_name": line._name,
                 "product_id": line.product_id,
+                "description": None,  # no line description on pos.order.line
                 "qty": line.qty,
+                "uom_id": line.product_uom_id,
                 "price_subtotal": line.price_subtotal,
                 "price_unit": line.price_unit,
                 "discount": line.discount,
@@ -41,40 +35,9 @@ class PosOrder(models.Model):
             })
         return res
 
-    def _set_external_taxes(self, mapped_taxes, summary):
-        """ account.external.tax.mixin override. """
-        to_flush = self.env['pos.order.line']
-        for line, detail in mapped_taxes.items():
-            line.tax_ids = detail['tax_ids']
-            to_flush += line
-
-        # Trigger field computation due to changing the tax id. Do
-        # this here because we will manually change the taxes.
-        to_flush.flush_recordset(['price_subtotal', 'price_subtotal_incl'])
-
-        for line, detail in mapped_taxes.items():
-            line.price_subtotal = detail['total']
-            line.price_subtotal_incl = detail['tax_amount'] + detail['total']
-
-        for order in self:
-            order.amount_tax = sum(line.price_subtotal_incl - line.price_subtotal for line in order.lines)
-            order.amount_total = sum(line.price_subtotal_incl for line in order.lines)
-
-    def _get_avatax_dates(self):
-        """ account.external.tax.mixin override. """
-        return self._get_date_for_external_taxes(), self._get_date_for_external_taxes()
-
     def _get_avatax_ship_to_partner(self):
         """ account.external.tax.mixin override. """
         return self.partner_id
-
-    def _get_avatax_document_type(self):
-        """ account.external.tax.mixin override. """
-        return 'SalesOrder'
-
-    def _get_avatax_description(self):
-        """ account.external.tax.mixin override. """
-        return 'PoS Order'
 
     def _get_invoice_grouping_keys(self):
         res = super()._get_invoice_grouping_keys()

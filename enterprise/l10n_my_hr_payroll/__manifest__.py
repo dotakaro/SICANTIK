@@ -21,8 +21,9 @@ Malaysian Payroll and Tax Rules
         'data/hr_salary_rule_data.xml',
         'views/hr_employee_views.xml',
     ],
-    'license': 'OEEL-1',
     'demo':[
         'data/l10n_my_hr_payroll_demo.xml'
-    ]
+    ],
+    'author': 'Odoo S.A.',
+    'license': 'OEEL-1',
 }

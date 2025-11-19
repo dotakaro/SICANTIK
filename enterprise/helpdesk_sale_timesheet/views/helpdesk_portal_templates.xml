@@ -2,15 +2,19 @@
 <odoo>
 <data noupdate="0">
     <template id="tickets_followup_timesheet" name="Helpdesk tickets timesheet" inherit_id="helpdesk.tickets_followup" priority="50">
+        <xpath expr="//div[hasclass('o_project_portal_sidebar')]" position="before">
+            <t t-set="show_portal_timesheets" t-value="ticket.env['account.analytic.line']._show_portal_timesheets()"/>
+        </xpath>
         <xpath expr="//li[@id='nav-header']" position="after">
-            <li t-if="timesheets" class="nav-item">
+            <li t-if="timesheets and show_portal_timesheets" class="nav-item">
                 <a class="nav-link p-0" href="#details">
                     Timesheets
                 </a>
             </li>
         </xpath>
         <xpath expr="//div[@name='description']" position="after">
-            <section id="details" style="page-break-inside: auto;" class="mt32" t-if="timesheets and ticket.sale_line_id.product_template_id.service_policy not in ['delivered_milestones', 'delivered_manual']">
+            <t t-set="show_portal_timesheets" t-value="ticket.env['account.analytic.line']._show_portal_timesheets()"/>
+            <section id="details" style="page-break-inside: auto;" class="mt32" t-if="timesheets and show_portal_timesheets and ticket.sale_line_id.product_template_id.service_policy not in ['delivered_milestones', 'delivered_manual']">
                 <h3 id="details">Timesheets</h3>
 
                 <table class="table table-sm table-striped" id="timesheet_table">
@@ -37,7 +41,7 @@
                                 <td><span t-field="line.name"/></td>
                                 <td t-if="display_sol">
                                     <t t-if="line.so_line"><a t-att-href="'/my/orders/%s' % line.so_line.order_id.id"><span t-field="line.so_line"/></a></t>
-                                    <t t-else=""><t t-out="line.so_line.display_name"/></t>
+                                    <span t-else="" class="text-muted">Non-billable</span>
                                 </td>
                                 <td class="text-end">
                                     <span t-if="is_uom_day" t-esc="convert_hours_to_days(line.unit_amount)" t-options='{"widget": "timesheet_uom"}'/>
@@ -74,15 +78,40 @@
     </template>
 
     <template id="portal_helpdesk_ticket_timesheet" name="Helpdesk Ticket timesheet" inherit_id="helpdesk.portal_helpdesk_ticket">
-        <xpath expr="//th[@id='ticket_user_header']" position="after">
+        <xpath expr="//thead" position="before">
             <t t-set="show_spent_hours" t-value="any(ticket.use_helpdesk_sale_timesheet for group in grouped_tickets for ticket in group)"/>
-            <th class="text-end" t-if="show_spent_hours">
+        </xpath>
+        <xpath expr="//th[@id='ticket_user_header']" position="after">
+            <th class="text-end" t-if="show_spent_hours and show_portal_timesheets">
                 <t t-esc="display_tickets"/>
                 Time Spent
             </th>
         </xpath>
+        <xpath expr="//th[@name='ticket_name_header_col']" position="inside">
+            <t t-elif="groupby == 'sale_line_id'">
+                <span t-if="tickets[0].sudo().sale_line_id" t-field="tickets[0].sudo().sale_line_id"/>
+                <span t-else="">Not Billed</span>
+            </t>
+        </xpath>
+        <xpath expr="//th[@name='stage_id_header_col']" position="before">
+            <th t-if="show_spent_hours" name="time_spent_col">
+                <t t-set="ticket_hours_spent" t-value="tickets._get_portal_ticket_hours_spent()"/>
+                <t t-if="tickets">
+                    <div class="text-end w-100 text-muted fw-normal">
+                        <span>Total:
+                            <t t-if="is_uom_day">
+                                <t t-out="convert_hours_to_days(ticket_hours_spent)" t-options='{"widget": "timesheet_uom"}'/>
+                            </t>
+                            <t t-else="">
+                                <t t-out="ticket_hours_spent" t-options='{"widget": "float_time"}'/>
+                            </t>
+                        </span>
+                    </div>
+                </t>
+            </th>
+        </xpath>
         <xpath expr="//td[@id='ticket_user_body']" position="after">
-            <td class="text-end" t-if="show_spent_hours">
+            <td class="text-end" t-if="show_spent_hours and show_portal_timesheets">
                 <t t-if="ticket.use_helpdesk_sale_timesheet">
                     <t t-set='timesheet_lines' t-value='ticket.sudo().timesheet_ids._get_portal_helpdesk_timesheet()'/>
                     <t t-if="timesheet_lines">
@@ -97,16 +126,6 @@
                 </t>
             </td>
         </xpath>
-    </template>
-    <template id="portal_helpdesk_ticket_inherit" inherit_id="helpdesk.portal_helpdesk_ticket">
-        <xpath expr="//t[@t-foreach='grouped_tickets']/tbody/tr[hasclass('table-light')]" position="inside">
-            <t t-elif="groupby == 'sale_order_id'">
-                <th colspan="6">
-                    <span t-if="tickets[0].sudo().sale_line_id" t-field="tickets[0].sudo().sale_line_id"/>
-                    <span t-else="">Not Billed</span>
-                </th>
-            </t>
-        </xpath>        
     </template>
     <template id="portal_my_timesheets_inherit" inherit_id="sale_timesheet.portal_my_timesheets_inherit">
         <xpath expr='//th[@t-if="not groupby == &apos;task_id&apos;"]' position="replace">

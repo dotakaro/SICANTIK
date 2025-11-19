@@ -3,8 +3,7 @@ from odoo import models, _
 from odoo.exceptions import UserError
 
 
-class sale_order(models.Model):
-
+class SaleOrder(models.Model):
     _inherit = "sale.order"
 
     def _prepare_purchase_order_data(self, company, company_partner):

@@ -75,9 +75,9 @@ class AccountFollowupReport(models.AbstractModel):
                     'style': 'white-space:nowrap;text-align:left;',
                     'template': 'account_followup.line_template',
                 }
-                date_due = format_date(self.env, aml.date_maturity or aml.move_id.invoice_date or aml.date, lang_code=lang_code)
+                date_due = format_date(self.env, aml.date_maturity, lang_code=lang_code)
                 total += amount or 0
-                is_overdue = today > aml.date_maturity if aml.date_maturity else today > aml.date
+                is_overdue = today > aml.date_maturity if aml.date_maturity else False
                 is_payment = aml.payment_id
                 if is_overdue or is_payment:
                     total_issued += amount or 0
@@ -335,9 +335,11 @@ Best Regards,
         mail_template = options.get('mail_template', followup_line.mail_template_id)
         if mail_template:
             rendered_values = mail_template._generate_template_recipients(
-                [partner.id],
-                {'partner_to', 'email_cc', 'email_to'},
-                True)[partner.id]
+                res_ids=[partner.id],
+                render_fields={'partner_to', 'email_cc', 'email_to'},
+                allow_suggested=True,
+                find_or_create_partners=True
+            )[partner.id]
             recipients |= partner.browse(rendered_values.get('partner_ids'))
         return recipients
 
@@ -371,7 +373,7 @@ Best Regards,
         followup_contacts = partner._get_all_followup_contacts() or partner
         sent_at_least_once = False
         for to_send_partner in followup_contacts:
-            sms_number = to_send_partner.mobile or to_send_partner.phone
+            sms_number = to_send_partner.phone
             if sms_number:
                 sms_body = self.with_context(lang=partner.lang or self.env.user.lang)._get_sms_body(options)
                 partner._message_sms(
@@ -404,7 +406,7 @@ Best Regards,
                 # Otherwise, if the follow-up is automatic, the author_id will be the followup responsible or OdooBot.
                 author_id = options.get('author_id', partner._get_followup_responsible().partner_id.id)
 
-                partner.with_context(mail_post_autofollow=True, mail_notify_author=True, lang=partner.lang or self.env.user.lang).message_post(
+                partner.with_context(mail_post_autofollow=True, lang=partner.lang or self.env.user.lang).message_post(
                     partner_ids=[to_send_partner.id],
                     author_id=author_id,
                     email_from=self._get_email_from(options),
@@ -412,6 +414,7 @@ Best Regards,
                     subject=self._get_email_subject(options),
                     reply_to=self._get_email_reply_to(options),
                     model_description=_('payment reminder'),
+                    notify_author=True,
                     email_layout_xmlid='mail.mail_notification_light',
                     attachment_ids=attachment_ids,
                     subtype_id=self.env['ir.model.data']._xmlid_to_res_id('mail.mt_note'),

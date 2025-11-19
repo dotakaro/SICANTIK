@@ -7,15 +7,16 @@
     'category': "Sales/CRM",
     'summary': "Advanced features for CRM",
     'description': """
-Contains advanced features for CRM such as new views
+Contains advanced features for CRM such as new views and scanning
+business cards to generate new leads from them
     """,
     'depends': ['crm', 'web_cohort', 'web_map'],
     'data': [
         'views/crm_lead_views.xml',
-        'report/crm_activity_report_views.xml',
     ],
     'installable': True,
     'auto_install': ['crm'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

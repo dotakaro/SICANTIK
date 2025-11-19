@@ -1,7 +1,7 @@
 from odoo import models, api
 
 
-class L10nLatamIdentificationType(models.Model):
+class L10n_LatamIdentificationType(models.Model):
     _name = 'l10n_latam.identification.type'
     _inherit = ['l10n_latam.identification.type', 'pos.load.mixin']
 

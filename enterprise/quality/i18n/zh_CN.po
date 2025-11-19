@@ -3,16 +3,16 @@
 # 	* quality
 # 
 # Translators:
-# Wil Odoo, 2024
-# Odoo哥 <vnsoft.he@gmail.com>, 2024
+# Wil Odoo, 2025
+# Chloe Wang, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Odoo哥 <vnsoft.he@gmail.com>, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:10+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Chloe Wang, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -335,6 +335,16 @@ msgid "Failed"
 msgstr "失败的"
 
 #. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_check__failure_location_id
+msgid "Failure Location"
+msgstr "故障位置"
+
+#. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_point__failure_location_ids
+msgid "Failure Locations"
+msgstr "故障位置"
+
+#. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert_stage__folded
 msgid "Folded"
 msgstr "折叠"
@@ -436,6 +446,19 @@ msgid "If checked, some messages have a delivery error."
 msgstr "如果勾选此项， 某些消息将出现发送错误。"
 
 #. module: quality
+#: model:ir.model.fields,help:quality.field_quality_point__failure_location_ids
+msgid ""
+"If quality check fails, a destination location is chosen from this list for\n"
+"- each failed specific product quantity if control is per quantity\n"
+" /- all quantities of a product if control is per product\n"
+" /- all quantities of products in the operation if control is per operation"
+msgstr ""
+"如果质量检查不合格，则从该列表中，选择一个目标位置：\n"
+"- 若按数量进行控制，会为每项不合格的特定产品数量，选择目标位置。\n"
+" /- 若按每项产品进行控制，会为该产品的所有数量，选择目标位置。\n"
+" /- 若按每项操作进行控制，会为该操作所涉及的产品的所有数量，选择目标位置。"
+
+#. module: quality
 #: model:ir.model.fields,help:quality.field_quality_alert_team__alias_bounced_content
 msgid ""
 "If set, this content will automatically be sent out to unauthorized users "
@@ -527,6 +550,11 @@ msgid "Messages"
 msgstr "消息"
 
 #. module: quality
+#: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
+msgid "My Activities"
+msgstr "我的活动"
+
+#. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_alert__my_activity_date_deadline
 #: model:ir.model.fields,field_description:quality.field_quality_check__my_activity_date_deadline
 msgid "My Activity Deadline"
@@ -581,11 +609,9 @@ msgstr "下一活动类型"
 #. odoo-python
 #: code:addons/quality/models/quality.py:0
 msgid ""
-"No quality team found for this company.\n"
-"Please go to configuration and create one first."
-msgstr ""
-"找不到此公司的质量团队。\n"
-"请先转到“配置”并创建一个。"
+"No quality teams found for this company! Head over to the configuration menu"
+" to create your first quality team."
+msgstr "未找到该公司的质检团队！请前往配置菜单创建首个质检团队。"
 
 #. module: quality
 #: model:ir.model.fields.selection,name:quality.selection__quality_alert__priority__0
@@ -677,8 +703,8 @@ msgid ""
 " necessarily the model given by alias_model_id (example: project "
 "(parent_model) and task (model))"
 msgstr ""
-"父级模型拥有别名。拥有别名参考的模型不一定是alias_model_id给出的模型 (例如：project(parent_model) 和任务 "
-"(模型))"
+"拥有别名的母项模型。拥有别名参考的模型不一定是 alias_model_id给出的模型（例如：project(parent_model) 和任务 "
+"(模型)）"
 
 #. module: quality
 #: model:ir.model.fields,field_description:quality.field_quality_check__partner_id
@@ -756,6 +782,11 @@ msgstr "产品变体"
 #: model:ir.model.fields,field_description:quality.field_quality_point__product_ids
 msgid "Products"
 msgstr "产品"
+
+#. module: quality
+#: model:res.groups.privilege,name:quality.res_groups_privilege_quality
+msgid "Quality"
+msgstr "质量"
 
 #. module: quality
 #: model:ir.model,name:quality.model_quality_alert
@@ -870,9 +901,14 @@ msgid "Sequence"
 msgstr "序列"
 
 #. module: quality
+#: model:ir.model.fields,field_description:quality.field_quality_point__show_failure_location
+msgid "Show Failure Location"
+msgstr "显示不合格位置"
+
+#. module: quality
 #: model_terms:ir.ui.view,arch_db:quality.quality_alert_view_search
-msgid "Show all records which has next action date is before today"
-msgstr "显示下一操作日期早于今天的所有记录"
+msgid "Show all records whose next activity date is past"
+msgstr "显示所有逾期未完成活动的记录"
 
 #. module: quality
 #: model:quality.alert.stage,name:quality.quality_alert_stage_3

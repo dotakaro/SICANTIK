@@ -2,24 +2,17 @@
 
 {
     'name': 'UPS: Bill My Account',
-    'category': 'Inventory/Delivery',
+    'category': 'Shipping Connectors',
     'summary': 'Bill to your UPS account number',
     'description': """
 This module allows ecommerce users to enter their UPS account number and delivery fees will be charged on that account number.
     """,
-    'depends': ['delivery_ups', 'website_sale', 'payment_custom'],
+    'depends': ['delivery_ups', 'website_sale'],
     'data': [
-        'data/payment_method_data.xml',
-        'data/payment_provider_data.xml',  # Depends on `payment_method_cash_on_delivery`.
-
         'views/delivery_ups_templates.xml',
-        'views/res_config_settings_views.xml',
-    ],
-    'demo': [
-        'data/demo.xml',
     ],
     'auto_install': True,
-    'uninstall_hook': 'uninstall_hook',
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_frontend': [

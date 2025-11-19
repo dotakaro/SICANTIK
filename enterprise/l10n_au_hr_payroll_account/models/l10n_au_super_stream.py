@@ -11,8 +11,8 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.tools.float_utils import float_compare
 
 
-class L10auSuperStream(models.Model):
-    _name = "l10n_au.super.stream"
+class L10n_AuSuperStream(models.Model):
+    _name = 'l10n_au.super.stream'
     _description = "Super Contributions"
     _inherit = ["mail.thread", "mail.activity.mixin"]
 
@@ -70,19 +70,15 @@ class L10auSuperStream(models.Model):
         "l10n_au_super_stream_lines.other_third_party_contributions_amount",
     )
     def _compute_amount_total(self):
-        fields = self.env["l10n_au.super.stream.line"]._contribution_fields()
-        amounts = self.env["l10n_au.super.stream.line"].read_group(
+        fields_to_sum = self.env["l10n_au.super.stream.line"]._contribution_fields()
+        amounts = self.env["l10n_au.super.stream.line"]._read_group(
             [("l10n_au_super_stream_id", "in", self.ids)],
-            fields,
             ["l10n_au_super_stream_id"],
+            [f"{fname}:sum" for fname in fields_to_sum],
         )
-        amounts = {
-            amount["l10n_au_super_stream_id"][0]: sum(item[0] in fields and item[1]
-                                                    for item in amount.items())
-                                                    for amount in amounts
-                                                    }
+        amounts = {super_stream: sum(sums) for super_stream, *sums in amounts}
         for rec in self:
-            rec.amount_total = amounts[rec.id]
+            rec.amount_total = amounts.get(rec, 0)
 
     @api.constrains('state', 'journal_id')
     def _check_journal(self):
@@ -244,7 +240,7 @@ class L10auSuperStream(models.Model):
         if invalid:
             raise UserError(_(
                 "The employee(s) for following payslips do not have 100%% super contribution assigned: %s",
-                format_list(self.env, invalid.mapped("name")),
+                invalid.mapped("name"),
             ))
 
     @api.model
@@ -285,8 +281,8 @@ class L10auSuperStream(models.Model):
             rec.state = 'draft'
 
 
-class L10nauSuperStreamLine(models.Model):
-    _name = "l10n_au.super.stream.line"
+class L10n_AuSuperStreamLine(models.Model):
+    _name = 'l10n_au.super.stream.line'
     _description = "Super Contribution Line"
 
     name = fields.Char(compute="_compute_name", default="Draft")
@@ -327,7 +323,7 @@ class L10nauSuperStreamLine(models.Model):
     amount_total = fields.Monetary("Total Contribution", compute="_compute_amount_total", currency_field='currency_id')
 
     # Registration
-    employment_start_date = fields.Date(related="payslip_id.contract_id.date_start", store=True, readonly=False)
+    employment_start_date = fields.Date(related="payslip_id.version_id.date_start", store=True, readonly=False)
     annual_salary_for_benefits_amount = fields.Monetary()
     annual_salary_for_contributions_amount = fields.Monetary()
     annual_salary_for_contributions_effective_start_date = fields.Date()
@@ -364,7 +360,7 @@ class L10nauSuperStreamLine(models.Model):
         for rec in self:
             if rec.state != 'draft':
                 continue
-            contract = rec.payslip_id.contract_id
+            contract = rec.payslip_id.version_id
             rec.superannuation_guarantee_amount = super_lines_total['SUPER'][rec.payslip_id.id]['total'] * rec.proportion
             rec.salary_sacrificed_amount = contract.l10n_au_salary_sacrifice_superannuation * rec.proportion
             ote_amount = super_lines_total['OTE'][rec.payslip_id.id]['total']
@@ -385,14 +381,14 @@ class L10nauSuperStreamLine(models.Model):
             rec.amount_total = sum(rec.mapped(itemgetter(*fields))[0])
 
     def _get_data_line(self, idx) -> list[str]:
-        if self.employee_id.gender == "male":
-            gender = '1'
-        elif self.employee_id.gender == "female":
-            gender = '2'
-        elif self.employee_id.gender == "other":
-            gender = '3'
+        if self.employee_id.sex == "male":
+            sex = '1'
+        elif self.employee_id.sex == "female":
+            sex = '2'
+        elif self.employee_id.sex == "other":
+            sex = '3'
         else:
-            gender = '0'
+            sex = '0'
         is_smsf = self.payee_id.fund_type == "SMSF"
         line = [
             # name | excel columns ( inclusive ) | number of columns | 0-index of columns
@@ -439,12 +435,12 @@ class L10nauSuperStreamLine(models.Model):
 
             # super fund member common [AH:BE] (24) (33 - 56)
             self.employee_id.l10n_au_tfn,
-            self.employee_id.work_contact_id.title.shortcut or "",
+            "",
             "",
             ' '.join(self.employee_id.name.split(' ')[1:]),
             self.employee_id.name.split(' ')[0],
             self.employee_id.l10n_au_other_names or "",  # Other given name
-            gender,
+            sex,
             fields.Date.to_string(self.employee_id.birthday) or "",
             # contains "PO box", "P.O. Box", "PObox" ...
             "POS" if "pobox" in re.sub(r'\W+', '', self.employee_id.private_street.lower()) else "RES",

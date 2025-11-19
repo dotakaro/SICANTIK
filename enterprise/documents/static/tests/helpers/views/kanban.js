@@ -9,17 +9,24 @@ export const basicDocumentsKanbanArch = /* xml */ `
         <field name="access_token"/>
         <field name="mimetype"/>
         <field name="folder_id"/>
+        <field name="company_id"/>
         <field name="owner_id"/>
         <field name="partner_id"/>
         <field name="user_permission"/>
         <field name="active"/>
         <field name="type"/>
         <field name="attachment_id"/>
+        <field name="display_name"/>
+        <field name="lock_uid"/>
+        <field name="thumbnail_status"/>
         <t t-name="card">
             <div>
                 <div name="document_preview" class="o_kanban_image_wrapper">a thumbnail</div>
                 <i class="fa fa-circle o_record_selector"/>
                 <field name="name"/>
+                <t t-if="record.lock_uid.raw_value">
+                    <i class="fa fa-lock"/>
+                </t>
             </div>
         </t>
     </templates>
@@ -29,6 +36,7 @@ export const basicDocumentsKanbanArch = /* xml */ `
 export async function mountDocumentsKanbanView(params = {}, target = null) {
     return mountView(
         {
+            actionMenus: {},
             type: "kanban",
             resModel: "documents.document",
             arch: basicDocumentsKanbanArch,

@@ -3,7 +3,7 @@
 from odoo import fields, models, _
 
 
-class Job(models.Model):
+class HrJob(models.Model):
     _inherit = "hr.job"
 
     job_open_date = fields.Date('Job Start Recruitment Date', default=fields.Date.today())
@@ -53,7 +53,8 @@ class Job(models.Model):
             referral links. If not given, the current user is used.
         :param str channel: the channel to use for the referral links.
             Default to 'direct'.
-        :return dict: a dictionary mapping each user to its referral link.
+        :returns: a dictionary mapping each user to its referral link.
+        :rtype: dict
         '''
 
         # checks and defaults
@@ -108,7 +109,7 @@ class Job(models.Model):
 
     def set_recruit(self):
         self.write({'job_open_date': fields.Date.today()})
-        return super(Job, self).set_recruit()
+        return super().set_recruit()
 
     def get_referral_link(self, channel):
         self.ensure_one()

@@ -4,19 +4,13 @@ import {
     SpreadsheetModels,
     defineSpreadsheetModels,
 } from "@spreadsheet/../tests/helpers/data";
-import {
-    defineActions,
-    fields,
-    models,
-    serverState,
-    webModels,
-} from "@web/../tests/web_test_helpers";
-import { mockJoinSpreadsheetSession } from "@spreadsheet_edition/../tests/helpers/mock_server";
+import { defineActions, fields, models, onRpc, serverState } from "@web/../tests/web_test_helpers";
 import { Domain } from "@web/core/domain";
 import { getBasicPermissionPanelData, DocumentsModels } from "@documents/../tests/helpers/data";
 
 const ACCESS_TOKEN_MY_SPREADSHEET = "accessTokenMyspreadsheet";
 const {
+    IrEmbeddedActions,
     MailActivityType,
     MailAlias,
     MailAliasDomain,
@@ -49,18 +43,6 @@ export class DocumentsDocument extends Documents {
             }));
         const sliced = records.slice(offset, limit ? offset + limit : undefined);
         return { records: sliced, total: records.length };
-    }
-
-    join_spreadsheet_session(resId, accessToken) {
-        const result = mockJoinSpreadsheetSession("documents.document").call(
-            this,
-            resId,
-            accessToken
-        );
-        const record = this.env["documents.document"].search_read([["id", "=", resId]])[0];
-        result.is_favorited = record.is_favorited;
-        result.folder_id = record.folder_id[0];
-        return result;
     }
 
     dispatch_spreadsheet_message() {
@@ -155,10 +137,6 @@ export class SpreadsheetTemplate extends models.Model {
         };
     }
 
-    join_spreadsheet_session(resId, accessTokens) {
-        return mockJoinSpreadsheetSession("spreadsheet.template").call(this, resId, accessTokens);
-    }
-
     _records = [
         { id: 1, name: "Template 1", spreadsheet_data: "" },
         { id: 2, name: "Template 2", spreadsheet_data: "" },
@@ -169,24 +147,22 @@ export class SpreadsheetTemplate extends models.Model {
     };
 }
 
-export class IrModel extends SpreadsheetModels.IrModel {
-    has_searchable_parent_relation() {
-        return false;
-    }
-
-    get_available_models() {
-        return this.env["ir.model"].search_read([], ["display_name", "model"]);
-    }
-}
-
-export class IrUIMenu extends SpreadsheetModels.IrUIMenu {}
-
-export class ResCompany extends webModels.ResCompany {
-    document_spreadsheet_folder_id = fields.Many2one({
-        relation: "documents.document",
-        default: 1,
-    });
-}
+onRpc(
+    "/spreadsheet/data/documents.document/*",
+    function (request) {
+        const resId = parseInt(request.url.split("/").at(-1));
+        const document = this.env["documents.document"].search_read([["id", "=", resId]])[0];
+        return {
+            data: JSON.parse(document.spreadsheet_data),
+            name: document.name,
+            revisions: [],
+            isReadonly: false,
+            is_favorited: document.is_favorited,
+            folder_id: document.folder_id[0],
+        };
+    },
+    { pure: true }
+);
 
 export function defineDocumentSpreadsheetModels() {
     const SpreadsheetDocumentModels = {
@@ -196,9 +172,7 @@ export function defineDocumentSpreadsheetModels() {
         DocumentsDocument,
         DocumentsTag,
         SpreadsheetTemplate,
-        IrModel,
-        IrUIMenu,
-        ResCompany,
+        IrEmbeddedActions,
     };
     Object.assign(SpreadsheetModels, SpreadsheetDocumentModels);
     defineSpreadsheetModels();
@@ -271,7 +245,6 @@ export function getDocumentBasicData(views = {}) {
                 type: "folder",
                 id: 1,
                 available_embedded_actions_ids: [],
-                owner_id: serverState.odoobotId,
             },
         ],
     };

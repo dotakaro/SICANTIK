@@ -4,21 +4,22 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
+
 class HrContractSalaryBenefit(models.Model):
     _name = 'hr.contract.salary.benefit'
     _description = 'Salary Package Benefit'
     _order = 'sequence'
 
     def _get_field_domain(self):
-        fields_ids = self.env['hr.contract']._get_benefit_fields(triggers=False)
+        fields_ids = self.env['hr.version']._get_benefit_fields(triggers=False)
         return [
-            ('model', '=', 'hr.contract'),
+            ('model', '=', 'hr.version'),
             ('name', 'in', fields_ids),
             ('ttype', 'not in', ('one2many', 'many2one', 'many2many'))]
 
     def _get_binary_field_domain(self):
         return [
-            ('model', '=', 'hr.contract'),
+            ('model', '=', 'hr.version'),
             ('ttype', '=', 'binary')]
 
     def _get_public_field_names(self):
@@ -94,7 +95,7 @@ class HrContractSalaryBenefit(models.Model):
         help='Contract field used to manually encode an benefit value.')
     manual_field = fields.Char(related='manual_res_field_id.name', string="Manual Field Name", readonly=True)
     country_id = fields.Many2one('res.country')
-    structure_type_id = fields.Many2one('hr.payroll.structure.type', string="Salary Structure Type", required=True)
+    structure_type_id = fields.Many2one('hr.payroll.structure.type', string="Salary Structure Type", required=True, index=True)
     icon = fields.Char(compute='_compute_icon', store=True, readonly=False)
     display_type = fields.Selection(selection=[
         ('always', 'Always Selected'),
@@ -144,13 +145,10 @@ class HrContractSalaryBenefit(models.Model):
              '- When the benefit is set: Unique signature request the first time the employee will take the benefit\n'
              '- When the benefit is modified: Signature request will be created for each change regarding the benefit.')
 
-    _sql_constraints = [
-        (
-            'required_fold_res_field_id',
-            'check (folded = FALSE OR (folded = TRUE AND fold_res_field_id IS NOT NULL))',
-            'A folded field is required'
-        )
-    ]
+    _required_fold_res_field_id = models.Constraint(
+        'check (folded = FALSE OR (folded = TRUE AND fold_res_field_id IS NOT NULL))',
+        "A folded field is required",
+    )
 
     @api.depends('res_field_id')
     def _compute_res_field_public(self):
@@ -218,6 +216,7 @@ class HrContractSalaryBenefit(models.Model):
     def _compute_icon(self):
         self.filtered(lambda b: not b.show_name).icon = False
 
+
 class HrContractSalaryBenefitType(models.Model):
     _name = 'hr.contract.salary.benefit.type'
     _description = 'Contract Benefit Type'
@@ -238,7 +237,7 @@ class HrContractSalaryBenefitValue(models.Model):
 
     name = fields.Char(translate=True)
     sequence = fields.Integer(default=100)
-    benefit_id = fields.Many2one('hr.contract.salary.benefit')
+    benefit_id = fields.Many2one('hr.contract.salary.benefit', index='btree_not_null')
     value = fields.Float()
     selector_highlight = fields.Selection(selection=[('none', 'None'), ('red', 'Red')], string="Selector Highlight", default='none')
     always_show_description = fields.Boolean()

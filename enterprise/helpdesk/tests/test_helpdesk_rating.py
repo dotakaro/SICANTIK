@@ -9,12 +9,12 @@ from freezegun import freeze_time
 
 from .common import HelpdeskCommon
 from odoo.tests.common import HttpCase
+from odoo.addons.mail.tests.common import MailCase
 from odoo import fields, Command
-from odoo.addons.mail.tests.common import MailCommon
 from odoo.addons.mail.tests.common import mail_new_test_user
 
 
-class TestHelpdeskRating(HelpdeskCommon, HttpCase, MailCommon):
+class TestHelpdeskRating(HelpdeskCommon, HttpCase, MailCase):
 
     @classmethod
     def setUpClass(cls):
@@ -62,7 +62,7 @@ class TestHelpdeskRating(HelpdeskCommon, HttpCase, MailCommon):
             'name': 'SLA user',
             'login': 'sj@test.com',
             'tz': 'Asia/Singapore', # UTC +8
-            'groups_id': [
+            'group_ids': [
                 Command.link(cls.env.ref('helpdesk.group_use_sla').id),
                 Command.link(cls.env.ref('helpdesk.group_helpdesk_manager').id)
             ],

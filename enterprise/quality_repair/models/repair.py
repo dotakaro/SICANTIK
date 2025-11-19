@@ -4,7 +4,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
-class Repair(models.Model):
+class RepairOrder(models.Model):
     _inherit = "repair.order"
 
     quality_check_ids = fields.One2many("quality.check", "repair_id", string="Checks")

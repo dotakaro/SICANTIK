@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 
 registry.category("web_tour.tours").add("required_fields_tour", {
@@ -38,6 +36,11 @@ registry.category("web_tour.tours").add("required_fields_tour", {
             content: "Clicking on the selection field",
             trigger: 'input[type="text"]',
             run: "click",
+        },
+        {
+            content: "Filling the details",
+            trigger: 'input[type="text"]',
+            run: "edit Mitchell",
         },
         {
             content: "Select the host from the dropdown",

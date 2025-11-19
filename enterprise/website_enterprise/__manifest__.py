@@ -2,7 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 {
     'name': 'Website Enterprise',
-    'category': 'Hidden',
+    'category': 'Website/Website',
     'summary': 'Get the enterprise look and feel',
     'description': """
 This module overrides community website features and introduces enterprise look and feel.
@@ -12,9 +12,11 @@ This module overrides community website features and introduces enterprise look 
         'data/website_data.xml',
         'views/snippets/snippets.xml',
         'views/website_enterprise_templates.xml',
+        'views/res_config_settings_views.xml',
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

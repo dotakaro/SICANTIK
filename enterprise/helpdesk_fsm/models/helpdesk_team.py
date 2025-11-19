@@ -3,10 +3,12 @@
 
 from odoo import models, api, fields
 
+
 class HelpdeskTeam(models.Model):
     _inherit = 'helpdesk.team'
 
-    fsm_project_id = fields.Many2one('project.project', string='FSM Project', domain=[('is_fsm', '=', True)],
+    fsm_project_id = fields.Many2one('project.project', string='FSM Project',
+        domain=[('is_fsm', '=', True), ('is_template', '=', False)],
         readonly=False, store=True, compute='_compute_fsm_project_id')
 
     @api.depends('use_fsm', 'company_id')
@@ -17,17 +19,16 @@ class HelpdeskTeam(models.Model):
         '''
         fsm_teams_without_project = self.filtered(lambda t: t.use_fsm and not t.fsm_project_id)
         if fsm_teams_without_project:
-            project_read_group = self.env['project.project'].read_group(
+            mapped_project_per_company = dict(self.env['project.project']._read_group(
                 domain=[
                     ('is_fsm', '=', True),
                     ('company_id', 'in', fsm_teams_without_project.company_id.ids),
                 ],
-                fields=['ids:array_agg(id)'],
                 groupby=['company_id'],
-            )
-            mapped_project_per_company = {res['company_id'][0]: self.env['project.project'].browse(min(res['ids'])) for res in project_read_group}
-        for team in fsm_teams_without_project:
-            team.fsm_project_id = mapped_project_per_company.get(team.company_id.id, False)
+                aggregates=['id:min'],
+            ))
+            for team in fsm_teams_without_project:
+                team.fsm_project_id = mapped_project_per_company.get(team.company_id, False)
         (self - fsm_teams_without_project).fsm_project_id = False
 
     # ---------------------------------------------------

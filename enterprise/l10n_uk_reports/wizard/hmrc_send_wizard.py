@@ -7,13 +7,15 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
 
-class HmrcSendWizard(models.TransientModel):
+class L10n_UkHmrcSendWizard(models.TransientModel):
     _name = 'l10n_uk.hmrc.send.wizard'
     _description = "HMRC Send Wizard"
 
     @api.model
     def default_get(self, fields_list):
-        res = super(HmrcSendWizard, self).default_get(fields_list)
+        res = super().default_get(fields_list)
+        if 'client_data' not in self.env.context:
+            return res
 
         # Check obligations: should be logged in by now
         self.env['l10n_uk.vat.obligation'].import_vat_obligations(self.env.context['client_data'])

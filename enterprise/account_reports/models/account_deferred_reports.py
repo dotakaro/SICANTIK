@@ -9,9 +9,9 @@ from odoo.tools import groupby, SQL
 from odoo.addons.account_accountant.models.account_move import DEFERRED_DATE_MIN, DEFERRED_DATE_MAX
 
 
-class DeferredReportCustomHandler(models.AbstractModel):
+class AccountDeferredReportHandler(models.AbstractModel):
     _name = 'account.deferred.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.report.custom.handler']
     _description = 'Deferred Expense Report Custom Handler'
 
     def _get_deferred_report_type(self):
@@ -238,7 +238,14 @@ class DeferredReportCustomHandler(models.AbstractModel):
             'date_from': fields.Date.to_string(fields.Date.to_date(options['columns'][-1]['date_to']) + relativedelta(days=1)),
             'date_to': DEFERRED_DATE_MAX,
         }]
-        options['columns'] = total_column + not_started_column + before_column + options['columns'] + later_column
+        recognized_column = [{
+            **options['columns'][0],
+            'name': _('Recognized'),
+            'expression_label': 'recognized',
+            'date_from': DEFERRED_DATE_MIN,
+            'date_to': options['columns'][-1]['date_to'],  # Covers up to end of current period
+        }]
+        options['columns'] = total_column + not_started_column + before_column + options['columns'] + recognized_column + later_column
         options['column_headers'] = []
         options['deferred_report_type'] = self._get_deferred_report_type()
         options['deferred_grouping_field'] = previous_options.get('deferred_grouping_field') or 'account_id'
@@ -465,18 +472,13 @@ class DeferredReportCustomHandler(models.AbstractModel):
 
     def action_generate_entry(self, options):
         new_deferred_moves = self._generate_deferral_entry(options)
-        return {
-            'name': _('Deferred Entries'),
-            'type': 'ir.actions.act_window',
-            'views': [(False, "list"), (False, "form")],
-            'domain': [('id', 'in', new_deferred_moves.ids)],
-            'res_model': 'account.move',
-            'context': {
-                'search_default_group_by_move': True,
-                'expand': True,
-            },
-            'target': 'current',
-        }
+        report = self.env['account.report'].browse(options['report_id'])
+        domain = report._get_generated_deferral_entries_domain(options)
+        already_generated = self.env['account.move'].search_count(domain, limit=1)
+        if new_deferred_moves or already_generated:
+            return report.open_deferral_entries(options, {})
+
+        raise UserError(_("No entry to generate."))
 
     def _get_moves_to_defer(self, options):
         date_from = fields.Date.to_date(DEFERRED_DATE_MIN)
@@ -502,7 +504,7 @@ class DeferredReportCustomHandler(models.AbstractModel):
         if self.env.company._get_violated_lock_dates(date_to, False, journal):
             raise UserError(_("You cannot generate entries for a period that is locked."))
         if not move_lines:
-            raise UserError(_("No entry to generate."))
+            return self.env['account.move']
 
         deferred_move = self.env['account.move'].with_context(skip_account_deprecation_check=True).create({
             'move_type': 'entry',
@@ -645,18 +647,18 @@ class DeferredReportCustomHandler(models.AbstractModel):
         return deferred_lines + deferral_lines, original_move_ids
 
 
-class DeferredExpenseCustomHandler(models.AbstractModel):
+class AccountDeferredExpenseReportHandler(models.AbstractModel):
     _name = 'account.deferred.expense.report.handler'
-    _inherit = 'account.deferred.report.handler'
+    _inherit = ['account.deferred.report.handler']
     _description = 'Deferred Expense Custom Handler'
 
     def _get_deferred_report_type(self):
         return 'expense'
 
 
-class DeferredRevenueCustomHandler(models.AbstractModel):
+class AccountDeferredRevenueReportHandler(models.AbstractModel):
     _name = 'account.deferred.revenue.report.handler'
-    _inherit = 'account.deferred.report.handler'
+    _inherit = ['account.deferred.report.handler']
     _description = 'Deferred Revenue Custom Handler'
 
     def _get_deferred_report_type(self):

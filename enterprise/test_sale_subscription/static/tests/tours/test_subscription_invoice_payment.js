@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 
 const tourRegistry = registry.category("web_tour.tours");
@@ -25,7 +23,7 @@ const clickPayNowButton = {
 };
 
 const selectNewPaymentMethod =
-    selectDemoPaymentProvider("#o_payment_methods:contains(Choose a payment method)");
+    selectDemoPaymentProvider("#o_payment_methods:contains(Payment method)");
 
 const selectSavedPaymentMethod =
     selectDemoPaymentProvider("#o_payment_tokens_heading:contains(Your payment methods)");
@@ -35,10 +33,11 @@ const confirmPayment = [
         content: "click Pay button",
         trigger: "button[name=o_payment_submit_button]",
         run: "click",
+        expectUnloadPage: true,
     },
     {
         content: "wait for payment processing confirmation",
-        trigger: "#o_payment_status_message:contains(payment has been successfully processed)",
+        trigger: "#o_payment_status_message:contains(payment has been processed)",
     },
 ];
 
@@ -51,7 +50,7 @@ tourRegistry.add("test_subscription_invoice_tokenize", {
         clickPayNowButton,
         ...selectNewPaymentMethod,
         {
-            content: "automate Payment using new token",
+            content: "automate payment using new token",
             trigger: "input[name=o_payment_tokenize_checkbox]",
             run: "click",
         },
@@ -64,7 +63,7 @@ tourRegistry.add("test_subscription_invoice_automate", {
         clickPayNowButton,
         ...selectNewPaymentMethod,
         {
-            content: "automate Payment using new token",
+            content: "automate payment using new token",
             trigger: "input[name=o_payment_automate_payments_new_token]",
             run: "click",
         },
@@ -73,11 +72,7 @@ tourRegistry.add("test_subscription_invoice_automate", {
 });
 
 tourRegistry.add("test_subscription_invoice_tokenized_payment", {
-    steps: () => [
-        clickPayNowButton,
-        ...selectSavedPaymentMethod,
-        ...confirmPayment,
-    ],
+    steps: () => [clickPayNowButton, ...selectSavedPaymentMethod, ...confirmPayment],
 });
 
 tourRegistry.add("test_subscription_invoice_tokenized_automate", {

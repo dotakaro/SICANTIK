@@ -14,6 +14,11 @@ class QualityPoint(models.Model):
         quality_points_domain = super()._get_domain_for_production(quality_points_domain)
         return AND([quality_points_domain, [('operation_id', '=', False)]])
 
+    @api.constrains('measure_on', 'picking_type_ids')
+    def _check_picking_type_ids(self):
+        for point in self:
+            if point.measure_on == 'move_line' and self.operation_id and any(picking_type.code == 'mrp_operation' for picking_type in point.picking_type_ids):
+                raise UserError(_("The Quantity quality check type is not possible with manufacturing operation types."))
 
     @api.constrains('operation_id', 'measure_frequency_type')
     def _check_measure_frequency_type(self):
@@ -38,12 +43,17 @@ class QualityCheck(models.Model):
     def do_measure(self):
         self.ensure_one()
         res = super().do_measure()
-        return self._next() if self.workorder_id else res
+        if not self.workorder_id:
+            return res
+        next_res = self._next()
+        if isinstance(next_res, dict):
+            return next_res
+        return {'next_check_id': self._next()}
 
 
-    def _next(self, continue_production=False):
+    def _next(self):
         self.ensure_one()
-        result = super()._next(continue_production=continue_production)
+        result = super()._next()
         if self.quality_state == 'fail' and (self.warning_message or self.failure_message):
             return {
                 'name': _('Quality Check Failed'),
@@ -59,6 +69,7 @@ class QualityCheck(models.Model):
                     'default_failure_message': self.failure_message,
                     'default_warning_message': self.warning_message,
                 },
+                'next_check_id': result,
             }
         return result
 
@@ -76,9 +87,9 @@ class QualityCheck(models.Model):
     def action_pass_and_next(self):
         self.ensure_one()
         super().do_pass()
-        return self._next()
+        return {'next_check_id': self._next()}
 
     def action_fail_and_next(self):
         self.ensure_one()
         super().do_fail()
-        return self._next()
+        return {'next_check_id': self._next()}

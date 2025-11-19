@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import models
@@ -6,7 +5,7 @@ from odoo.tools import float_utils
 from datetime import timedelta
 
 
-class PlanningShift(models.Model):
+class PlanningSlot(models.Model):
     _inherit = 'planning.slot'
 
     def _init_remaining_hours_to_plan(self, remaining_hours_to_plan):
@@ -15,7 +14,7 @@ class PlanningShift(models.Model):
             if self.project_id.allocated_hours == 0:  # If the project has no allocated hours, we still want to copy the slot so we immediately return
                 return res
             if self.project_id not in remaining_hours_to_plan:
-                remaining_hours_to_plan[self.project_id] = self.project_id.allocated_hours - self.project_id.total_forecast_time
+                remaining_hours_to_plan[self.project_id] = self.project_id.allocated_hours - self.project_id.sudo().total_forecast_time
             if float_utils.float_compare(remaining_hours_to_plan[self.project_id], 0.0, precision_digits=2) != 1:
                 return False  # nothing left to allocate.
         return res

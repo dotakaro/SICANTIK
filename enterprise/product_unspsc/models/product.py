@@ -5,7 +5,6 @@ from odoo import fields, models, api
 from odoo.osv import expression
 
 
-
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
@@ -21,7 +20,7 @@ class UomUom(models.Model):
                                                 help='The UNSPSC code related to this UoM. ')
 
 
-class ProductCode(models.Model):
+class ProductUnspscCode(models.Model):
     """Product and UoM codes defined by UNSPSC
     Used by Mexico, Peru, Colombia and Denmark localizations
     """
@@ -42,17 +41,18 @@ class ProductCode(models.Model):
 
     @api.model
     def _search_display_name(self, operator, value):
+        if operator == 'in':
+            return expression.OR(self._search_display_name('=', v) for v in value)
+        if operator in expression.NEGATIVE_TERM_OPERATORS:
+            return NotImplemented
         if isinstance(value, str) and value:
             code_value = value.split(' ')[0]
-            is_negative = operator in expression.NEGATIVE_TERM_OPERATORS
-            positive_operator = expression.TERM_OPERATORS_NEGATION[operator] if is_negative else operator
-            domain = [
+            return [
                 '|',
-                ('code', '=', code_value) if positive_operator == '=' else
-                ('code', '=ilike', f'{code_value}%'),
-                ('name', positive_operator, value),
+                ('code', '=', code_value),
+                ('name', operator, value),
             ]
-            if is_negative:
-                domain = ['!', *domain]
-            return domain
+        if operator == '=':
+            operator = 'in'
+            value = [value]
         return super()._search_display_name(operator, value)

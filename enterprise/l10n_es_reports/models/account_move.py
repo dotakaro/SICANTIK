@@ -6,7 +6,6 @@ from odoo.exceptions import UserError
 from odoo.tools.sql import column_exists, create_column
 
 
-
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
@@ -25,11 +24,6 @@ class AccountMove(models.Model):
                     """, [tuple(mod349_countries.ids)]
                 )
         return super()._auto_init()
-
-    # TODO: remove in master
-    def _default_mod_347_invoice_type(self):
-        if self.is_invoice(True):
-            return 'regular'
 
     def _default_mod_349_invoice_type(self):
         return self._map_mod_349_invoice_type_to_code(self.env.context.get('move_type', False))
@@ -104,15 +98,14 @@ class AccountMove(models.Model):
         rslt = super(AccountMove, self)._get_refund_copy_fields()
         return rslt + ['l10n_es_reports_mod347_invoice_type', 'l10n_es_reports_mod349_invoice_type']
 
-    # TODO: remove in master
-    def _onchange_partner_id_set_347_invoice_type(self):
-        for record in self:
-            record.l10n_es_reports_mod347_invoice_type = False if record.partner_id.country_code != 'ES' else 'regular'
-
     @api.depends('partner_id.country_code')
     def _compute_l10n_es_reports_mod347_invoice_type(self):
         for record in self:
-            regular = record.is_invoice(True) and record.partner_id.country_code == 'ES'
+            # Here we check if the bill is from an employee by checking the parent ID. We do it this way
+            # because of the expense module that modify the commercial_partner_id to not invoice the company itself.
+            # See _compute_commercial_partner_id from account.move in hr_expense module
+            not_a_bill_from_employee = record.company_id.partner_id != record.partner_id.parent_id.commercial_partner_id
+            regular = record.is_invoice(True) and record.partner_id.country_code == 'ES' and not_a_bill_from_employee
             record.l10n_es_reports_mod347_invoice_type = 'regular' if regular else False
 
     @api.depends('partner_id.country_code', 'move_type')

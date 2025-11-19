@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import datetime
@@ -7,7 +6,7 @@ from collections import defaultdict
 import pytz
 
 from odoo import api, fields, models, Command, _
-from odoo.addons.resource.models.utils import Intervals
+from odoo.tools.intervals import Intervals
 from odoo.exceptions import UserError
 
 
@@ -27,7 +26,7 @@ class MaintenanceStage(models.Model):
 
 
 class MrpWorkcenter(models.Model):
-    _name = "mrp.workcenter"
+    _name = 'mrp.workcenter'
     _inherit = ["mrp.workcenter", 'maintenance.mixin', 'mail.thread', 'mail.activity.mixin']
 
     equipment_ids = fields.One2many(
@@ -67,7 +66,7 @@ class MaintenanceEquipment(models.Model):
     _check_company_auto = True
 
     workcenter_id = fields.Many2one(
-        'mrp.workcenter', string='Work Center', check_company=True)
+        'mrp.workcenter', string='Work Center', check_company=True, index='btree_not_null')
 
     def button_mrp_workcenter(self):
         self.ensure_one()
@@ -89,7 +88,7 @@ class MaintenanceRequest(models.Model):
     _check_company_auto = True
 
     production_id = fields.Many2one(
-        'mrp.production', string='Manufacturing Order', check_company=True)
+        'mrp.production', string='Manufacturing Order', check_company=True, index='btree_not_null')
     workorder_id = fields.Many2one(
         'mrp.workorder', string='Work Order', check_company=True)
     production_company_id = fields.Many2one(string='Production Company', related='production_id.company_id')
@@ -99,7 +98,7 @@ class MaintenanceRequest(models.Model):
         ('workcenter', 'Work Center')],
         string='For', default='equipment', required=True)
     equipment_id = fields.Many2one(compute='_compute_equipment_id', store=True, readonly=False)
-    workcenter_id = fields.Many2one('mrp.workcenter', string='Work Center', compute='_compute_workcenter_id', store=True, readonly=False, check_company=True)
+    workcenter_id = fields.Many2one('mrp.workcenter', string='Work Center', compute='_compute_workcenter_id', store=True, readonly=False, check_company=True, index='btree_not_null')
     block_workcenter = fields.Boolean('Block Workcenter', help="It won't be possible to plan work orders or other maintenances on this workcenter during this time.")
     recurring_leaves_count = fields.Integer('Additional Leaves to Plan Ahead', help='Block the workcenter for this many time slots in the future in advance.')
     leave_ids = fields.Many2many('resource.calendar.leaves', string="Leaves")
@@ -117,7 +116,7 @@ class MaintenanceRequest(models.Model):
     @api.depends('workcenter_id')
     def _compute_maintenance_team_id(self):
         for request in self:
-            if request.maintenance_for == 'workcenter':
+            if request.workcenter_id and request.workcenter_id.maintenance_team_id:
                 request.maintenance_team_id = request.workcenter_id.maintenance_team_id
         return super()._compute_maintenance_team_id()
 
@@ -190,7 +189,7 @@ class MaintenanceRequest(models.Model):
             if request.maintenance_type == 'preventive' and request.recurring_maintenance:
                 count += request.recurring_leaves_count
             leave_ids_vals = []
-            for dummy in range(count):
+            for _i in range(count):
                 from_date, to_date = request.workcenter_id._get_first_available_slot(date, duration * 60)
                 leave_ids_vals.append(Command.create({
                     'name': request.display_name,
@@ -215,10 +214,11 @@ class MaintenanceRequest(models.Model):
                 text = _("The schedule has changed from %(desired_date)s to %(effective_date)s due to planned manufacturing orders.", desired_date=desired_date.astimezone(user_pytz), effective_date=effective_date.astimezone(user_pytz))
                 self.activity_schedule(
                     'mail.mail_activity_data_warning',
-                    note=text
+                    note=text,
+                    user_id=self.env.uid,
                 )
                 if raise_on_schedule_date_already_planned:
-                    raise UserError("Manufacturing Orders are already scheduled for this time slot.")
+                    raise UserError(self.env._("Manufacturing Orders are already scheduled for this time slot."))
 
     def archive_equipment_request(self):
         res = super().archive_equipment_request()
@@ -272,7 +272,7 @@ class MrpProduction(models.Model):
         return action
 
 
-class MrpProductionWorkcenterLine(models.Model):
+class MrpWorkorder(models.Model):
     _inherit = "mrp.workorder"
 
     def button_maintenance_req(self):

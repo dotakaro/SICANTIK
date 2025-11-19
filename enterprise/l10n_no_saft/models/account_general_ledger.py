@@ -2,13 +2,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError, RedirectWarning
+from odoo.exceptions import UserError
 from odoo.tools import SQL
 
-import re
 
-
-class GeneralLedgerCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -27,31 +25,12 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         options['saft_allow_empty_address'] = self.env.company.country_code == 'NO'
         template_vals = self._saft_prepare_report_values(report, options)
 
-        if not self.env.ref('l10n_no_saft.balance_account', raise_if_not_found=False):
-            # The update to SAF-T 1.30 changed and added some templates. The module needs to be upgraded if those templates are not found
-            raise RedirectWarning(
-                message=_("The version for the SAF-T file has been updated. Please upgrade its module (l10n_no_saft) for the export to work properly."),
-                action=self.env.ref('base.open_module_tree').id,
-                button_text=_("Go to Apps"),
-                additional_context={
-                    'search_default_name': 'l10n_no_saft',
-                    'search_default_extra': True,
-                },
-            )
-
-        # The Norwegian version of the SAF-T asks for a standard tax code to be given. This code is only present in the name
-        # or description (depending on the Odoo version) of the tax. The code, as set in Odoo, is the first digit in the name or description.
-        # If no code is found, we set it to a default non-existant '02' tax code, as it was done since Odoo 13.
-        # TODO Create a dedicated field for the standard tax code for Norwegian loca in master and change to take the code from the description in 17.0 and later
-        for tax_vals in template_vals['tax_vals_list']:
-            for word in re.split(r'\W+', tax_vals['description']):
-                if word.isdigit():
-                    tax_vals['standard_code'] = int(word)
-                    break
-            if not tax_vals.get('standard_code'):
-                raise UserError(_("Please change your tax descriptions to include their Norwegian standard tax code, delimited by spaces.\n"
-                    "It should be the first number in your description.\n"
-                    "For example: 'Utgående mva lav sats 12%' => '33 Utgående mva lav sats 12%'"))
+        # The Norwegian version of the SAF-T asks for a standard tax code to be given.
+        norw_taxes_standard_codes = self.env['account.tax'].browse([tax_vals['id'] for tax_vals in template_vals['tax_vals_list']]).mapped('l10n_no_standard_code')
+        for tax_vals, standard_code in zip(template_vals['tax_vals_list'], norw_taxes_standard_codes):
+            if not standard_code:
+                raise UserError(_("Please set up standard tax codes for your Norwegian taxes."))
+            tax_vals['standard_code'] = standard_code
 
         # The Norwegian version of the SAF-T requires account code to be provided along with the opening/closing
         # credit/debit of customers and suppliers

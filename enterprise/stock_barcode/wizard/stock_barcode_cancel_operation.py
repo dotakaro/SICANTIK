@@ -4,7 +4,7 @@
 from odoo import fields, models
 
 
-class StockBarcodeCancelPicking(models.TransientModel):
+class Stock_BarcodeCancelOperation(models.TransientModel):
     _name = 'stock_barcode.cancel.operation'
     _description = 'Cancel Operation'
 

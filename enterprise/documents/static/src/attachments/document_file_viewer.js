@@ -1,16 +1,32 @@
-/* @odoo-module */
-
+import { DocumentsAction } from "@documents/views/action/documents_action";
 import { useService } from "@web/core/utils/hooks";
 import { FileViewer as WebFileViewer } from "@web/core/file_viewer/file_viewer";
-import { onWillUpdateProps } from "@odoo/owl";
+import { onWillStart, onWillUpdateProps, reactive, useState } from "@odoo/owl";
 
 export class FileViewer extends WebFileViewer {
     static template = "documents.FileViewer";
+    static components = {
+        DocumentsAction,
+    };
+
     setup() {
         super.setup();
         /** @type {import("@documents/core/document_service").DocumentService} */
         this.documentService = useService("document.document");
         this.onSelectDocument = this.documentService.documentList?.onSelectDocument;
+        this.previewed = reactive(
+            { document: this.documentService.documentList.documents[this.state.index] },
+            async () => {
+                this.documentService.setPreviewedDocument(this.previewed.document);
+                if (this.state.file.isDocumentEmail) {
+                    await this.state.file.loadDocumentEmailContent();
+                } else if (this.state.file.isMimetypeTextual) {
+                    await this.state.file.loadDocumentTextContent();
+                }
+            }
+        );
+        this.folderId = this.documentService.documentList?.folderId;
+        this.rightPanelState = useState(this.documentService.rightPanelReactive);
         onWillUpdateProps((nextProps) => {
             const indexOfFileToPreview = nextProps.startIndex;
             if (
@@ -19,54 +35,31 @@ export class FileViewer extends WebFileViewer {
             ) {
                 this.activateFile(indexOfFileToPreview);
             }
-            this.documentService.setPreviewedDocument(
-                this.documentService.documentList.documents[nextProps.startIndex]
-            );
+            this.previewed.document =
+                this.documentService.documentList.documents[nextProps.startIndex];
+        });
+        onWillStart(async () => {
+            if (this.state.file.isDocumentEmail) {
+                await this.state.file.loadDocumentEmailContent();
+            } else if (this.state.file.isMimetypeTextual) {
+                await this.state.file.loadDocumentTextContent();
+            }
         });
     }
-    get currentFolderId() {
-        return this.env.searchModel.getSelectedFolderId();
+
+    get isChatterButtonVisible() {
+        return this.documentService.userIsInternal && !this.env.isSmall;
     }
-    get hasSplitPdf() {
-        if (!this.documentService.userIsInternal) {
-            return false;
-        }
-        if (this.documentService.documentList?.initialRecordSelectionLength === 1) {
-            return this.documentService.documentList.selectedDocument.attachment.isPdf;
-        }
-        return this.documentService.documentList?.documents.every(
-            (document) => document.attachment.isPdf
-        );
-    }
-    get withDownload() {
-        if (this.documentService.documentList?.initialRecordSelectionLength === 1) {
-            return this.documentService.documentList.selectedDocument.attachment.isUrlYoutube;
-        }
-        return this.documentService.documentList?.documents.every(
-            (document) => document.attachment.isUrlYoutube
-        );
-    }
-    onClickPdfSplit() {
-        this.close();
-        if (this.documentService.documentList?.initialRecordSelectionLength === 1) {
-            return this.documentService.documentList?.pdfManagerOpenCallback([
-                this.documentService.documentList.selectedDocument.record,
-            ]);
-        }
-        return this.documentService.documentList?.pdfManagerOpenCallback(
-            this.documentService.documentList.documents.map((document) => document.record)
-        );
-    }
+
     close() {
         this.documentService.documentList?.onDeleteCallback();
-        this.documentService.setPreviewedDocument(null);
+        this.previewed.document = null;
         super.close();
     }
+
     next() {
         super.next();
-        this.documentService.setPreviewedDocument(
-            this.documentService.documentList.documents[this.state.index]
-        );
+        this.previewed.document = this.documentService.documentList.documents[this.state.index];
 
         if (this.onSelectDocument) {
             const documentList = this.documentService.documentList;
@@ -86,11 +79,10 @@ export class FileViewer extends WebFileViewer {
             this.onSelectDocument(documentList.selectedDocument.record);
         }
     }
+
     previous() {
         super.previous();
-        this.documentService.setPreviewedDocument(
-            this.documentService.documentList.documents[this.state.index]
-        );
+        this.previewed.document = this.documentService.documentList.documents[this.state.index];
 
         if (this.onSelectDocument) {
             const documentList = this.documentService.documentList;

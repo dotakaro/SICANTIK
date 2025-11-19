@@ -1,28 +1,23 @@
 import { Component, useState } from "@odoo/owl";
-import { useDateTimePicker } from "@web/core/datetime/datetime_hook";
 import { Dropdown } from "@web/core/dropdown/dropdown";
-import { useDropdownState } from "@web/core/dropdown/dropdown_hooks";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { formatDate } from "@web/core/l10n/dates";
 import { _t } from "@web/core/l10n/translation";
 import { pick } from "@web/core/utils/objects";
 import { debounce } from "@web/core/utils/timing";
-import {
-    diffColumn,
-    getRangeFromDate,
-    localStartOf,
-    useGanttResponsivePopover,
-} from "./gantt_helpers";
+import { diffColumn } from "./gantt_helpers";
+import { GanttScaleSelector } from "./gantt_scale_selector";
 
 const { DateTime } = luxon;
 
-const KEYS = ["startDate", "stopDate", "rangeId", "focusDate"];
+const KEYS = ["startDate", "stopDate", "rangeId", "focusDate", "rescheduleMethod"];
 
 export class GanttRendererControls extends Component {
     static template = "web_gantt.GanttRendererControls";
     static components = {
         Dropdown,
         DropdownItem,
+        GanttScaleSelector,
     };
     static props = ["model", "displayExpandCollapseButtons", "focusToday", "getCurrentFocusDate"];
     static toolbarContentTemplate = "web_gantt.GanttRendererControls.ToolbarContent";
@@ -31,142 +26,34 @@ export class GanttRendererControls extends Component {
     setup() {
         this.model = this.props.model;
         this.updateMetaData = debounce(() => this.model.fetchData(this.makeParams()), 500);
-
-        const { metaData } = this.model;
-        this.state = useState({
-            scaleIndex: this.getScaleIndex(metaData.scale.id),
-            ...pick(metaData, ...KEYS),
-        });
-        this.pickerValues = useState({
-            startDate: metaData.startDate,
-            stopDate: metaData.stopDate,
-        });
-        this.scalesRange = { min: 0, max: Object.keys(metaData.scales).length - 1 };
-
-        const getPickerProps = (key) => ({ type: "date", value: this.pickerValues[key] });
-        this.startPicker = useDateTimePicker({
-            target: "start-picker",
-            onApply: (date) => {
-                this.pickerValues.startDate = date;
-                if (this.pickerValues.stopDate < date) {
-                    this.pickerValues.stopDate = date;
-                } else if (date.plus({ year: 10, day: -1 }) < this.pickerValues.stopDate) {
-                    this.pickerValues.stopDate = date.plus({ year: 10, day: -1 });
-                }
-            },
-            get pickerProps() {
-                return getPickerProps("startDate");
-            },
-            createPopover: (...args) => useGanttResponsivePopover(_t("Gantt start date"), ...args),
-            ensureVisibility: () => false,
-        });
-        this.stopPicker = useDateTimePicker({
-            target: "stop-picker",
-            onApply: (date) => {
-                this.pickerValues.stopDate = date;
-                if (date < this.pickerValues.startDate) {
-                    this.pickerValues.startDate = date;
-                } else if (this.pickerValues.startDate.plus({ year: 10, day: -1 }) < date) {
-                    this.pickerValues.startDate = date.minus({ year: 10, day: -1 });
-                }
-            },
-            get pickerProps() {
-                return getPickerProps("stopDate");
-            },
-            createPopover: (...args) => useGanttResponsivePopover(_t("Gantt stop date"), ...args),
-            ensureVisibility: () => false,
-        });
-
-        this.dropdownState = useDropdownState();
+        this.state = useState(pick(this.model.metaData, ...KEYS));
     }
 
-    get dateDescription() {
-        const { focusDate, rangeId } = this.state;
-        switch (rangeId) {
-            case "quarter":
-                return focusDate.toFormat(`Qq yyyy`);
-            case "day":
-                return formatDate(focusDate);
-            default:
-                return this.model.metaData.ranges[rangeId].groupHeaderFormatter(
-                    focusDate,
-                    this.env
-                );
-        }
-    }
-
-    get formattedDateRange() {
-        return _t("From: %(from_date)s to: %(to_date)s", {
-            from_date: formatDate(this.state.startDate),
-            to_date: formatDate(this.state.stopDate),
-        });
-    }
-
-    getFormattedDate(date) {
-        return formatDate(date);
-    }
-
-    getScaleIdFromIndex(index) {
-        const keys = Object.keys(this.model.metaData.scales);
-        return keys[keys.length - 1 - index];
-    }
-
-    getScaleIndex(scaleId) {
-        const keys = Object.keys(this.model.metaData.scales);
-        return keys.length - 1 - keys.findIndex((id) => id === scaleId);
-    }
-
-    getScaleIndexFromRangeId(rangeId) {
-        const { ranges } = this.model.metaData;
-        const scaleId = ranges[rangeId].scaleId;
-        return this.getScaleIndex(scaleId);
-    }
-
-    /**
-     * @param {1|-1} inc
-     */
-    incrementScale(inc) {
-        if (
-            inc === 1
-                ? this.state.scaleIndex < this.scalesRange.max
-                : this.scalesRange.min < this.state.scaleIndex
-        ) {
-            this.state.scaleIndex += inc;
-            this.updateMetaData();
-        }
-    }
-
-    isSelected(rangeId) {
-        if (rangeId === "custom") {
-            return (
-                this.state.rangeId === rangeId ||
-                !localStartOf(this.state.focusDate, this.state.rangeId).equals(
-                    localStartOf(DateTime.now(), this.state.rangeId)
-                )
-            );
-        }
-        return (
-            this.state.rangeId === rangeId &&
-            localStartOf(this.state.focusDate, rangeId).equals(
-                localStartOf(DateTime.now(), rangeId)
-            )
-        );
-    }
-
-    makeParams() {
+    getGanttScaleSelectorProps() {
         return {
-            currentFocusDate: this.props.getCurrentFocusDate(),
-            scaleId: this.getScaleIdFromIndex(this.state.scaleIndex),
-            ...pick(this.state, ...KEYS),
+            scales: {
+                ...this.model.metaData.ranges,
+                custom: {
+                    description: _t("From: %(from_date)s to: %(to_date)s", {
+                        from_date: formatDate(this.state.startDate),
+                        to_date: formatDate(this.state.stopDate),
+                    }),
+                },
+            },
+            currentScale: this.state.rangeId,
+            setScale: this.selectRangeId.bind(this),
+            selectCustomRange: this.selectCustomRange.bind(this),
+            startDate: this.state.startDate,
+            stopDate: this.state.stopDate,
         };
     }
 
-    onApply() {
-        this.state.startDate = this.pickerValues.startDate;
-        this.state.stopDate = this.pickerValues.stopDate;
-        this.state.rangeId = "custom";
-        this.updateMetaData();
-        this.dropdownState.close();
+    makeParams() {
+        const params = pick(this.state, ...KEYS);
+        if (this.state.keepCurrentFocusDate) {
+            params.currentFocusDate = this.props.getCurrentFocusDate();
+        }
+        return params;
     }
 
     onTodayClicked() {
@@ -177,15 +64,21 @@ export class GanttRendererControls extends Component {
         this.state.focusDate = DateTime.local().startOf("day");
         if (this.state.rangeId === "custom") {
             const diff = diffColumn(this.state.startDate, this.state.stopDate, "day");
-            const n = Math.floor(diff / 2);
-            const m = diff - n;
-            this.state.startDate = this.state.focusDate.minus({ day: n });
-            this.state.stopDate = this.state.focusDate.plus({ day: m - 1 });
+            if (diff === 0) {
+                this.state.startDate = this.state.stopDate = this.state.focusDate;
+            } else {
+                const n = Math.floor(diff / 2);
+                const m = diff - n;
+                this.state.startDate = this.state.focusDate.minus({ day: n });
+                this.state.stopDate = this.state.focusDate.plus({ day: m - 1 });
+            }
         } else {
-            this.state.startDate = this.state.focusDate.startOf(this.state.rangeId);
-            this.state.stopDate = this.state.focusDate.endOf(this.state.rangeId).startOf("day");
+            Object.assign(
+                this.state,
+                this.model.getRangeFromDate(this.state.rangeId, this.state.focusDate)
+            );
         }
-        this.updatePickerValues();
+        delete this.state.keepCurrentFocusDate;
         this.updateMetaData();
     }
 
@@ -200,27 +93,39 @@ export class GanttRendererControls extends Component {
         } else {
             Object.assign(
                 this.state,
-                getRangeFromDate(rangeId, focusDate.plus({ [rangeId]: sign }))
+                this.model.getRangeFromDate(rangeId, focusDate.plus({ [rangeId]: sign }))
             );
         }
-        this.updatePickerValues();
+        delete this.state.keepCurrentFocusDate;
         this.updateMetaData();
     }
 
     selectRangeId(rangeId) {
-        Object.assign(this.state, getRangeFromDate(rangeId, DateTime.now().startOf("day")));
-        this.state.scaleIndex = this.getScaleIndexFromRangeId(rangeId);
-        this.updatePickerValues();
+        Object.assign(
+            this.state,
+            this.model.getRangeFromDate(rangeId, DateTime.now().startOf("day"))
+        );
+        delete this.state.keepCurrentFocusDate;
         this.updateMetaData();
     }
 
-    selectScale(index) {
-        this.state.scaleIndex = Number(index);
+    selectCustomRange(startDate, stopdDate) {
+        this.state.rangeId = "custom";
+        this.state.startDate = startDate;
+        this.state.stopDate = stopdDate;
+        this.state.keepCurrentFocusDate = true;
         this.updateMetaData();
     }
 
-    updatePickerValues() {
-        this.pickerValues.startDate = this.state.startDate;
-        this.pickerValues.stopDate = this.state.stopDate;
+    get displayRescheduleMethods() {
+        return this.model.metaData.dependencyEnabled && !this.model.useSampleModel && !this.env.isSmall;
+    }
+
+    selectRescheduleMethod(method) {
+        Object.assign(
+            this.state,
+            { rescheduleMethod: method }
+        );
+        this.updateMetaData();
     }
 }

@@ -21,28 +21,9 @@ class PosConfig(models.Model):
         help="Brazil: series number associated with this POS.",
     )
 
-    def _get_available_product_domain(self):
-        """Override."""
-        res = super()._get_available_product_domain()
-        if self.l10n_br_is_nfce:
-            return expression.AND(
-                [
-                    res,
-                    [
-                        (
-                            "taxes_id",
-                            "not any",
-                            [*self.env["account.tax"]._check_company_domain(self.company_id), ("price_include", "=", False)],
-                        ),
-                    ],
-                ]
-            )
-
-        return res
-
     def _check_before_creating_new_session(self):
         """Override."""
-        super()._check_before_creating_new_session()
+        res = super()._check_before_creating_new_session()
         if self.l10n_br_is_nfce:
             company = self.company_id
             missing_fields = []
@@ -70,6 +51,7 @@ class PosConfig(models.Model):
                     self.env.ref("point_of_sale.action_pos_configuration").id,
                     _("Go to Point of Sale settings"),
                 )
+        return res
 
     def _create_journal_and_payment_methods(self, cash_ref=None, cash_journal_vals=None):
         """Override."""

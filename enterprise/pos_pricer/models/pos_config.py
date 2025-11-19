@@ -1,7 +1,7 @@
 from odoo import api, models
 
 
-class PricerPosConfig(models.Model):
+class PosConfig(models.Model):
     _inherit = 'pos.config'
 
     @api.model

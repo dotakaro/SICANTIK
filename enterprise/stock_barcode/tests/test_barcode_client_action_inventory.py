@@ -47,9 +47,7 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
 
     def test_inventory_adjustment_dont_update_location(self):
         """ Ensures the existing quants location cannot be update."""
-        self.clean_access_rights()
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_stock_multi_locations').id)]})
         # Adds some quants and request a count.
         # Adds quants for the same product in two locations.
         self.env['stock.quant']._update_available_quantity(self.product1, self.stock_location, 5)
@@ -74,7 +72,6 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
     def test_inventory_adjustment_multi_company(self):
         """ When doing an Inventory Adjustment, ensures only products belonging
         to current company or to no company can be scanned."""
-        self.clean_access_rights()
         # Creates two companies and assign them to the user.
         company_a = self.env['res.company'].create({'name': 'Comp A - F2 FTW'})
         company_b = self.env['res.company'].create({'name': 'Comp B - F3 Wee-Wee Pool'})
@@ -88,7 +85,6 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         product_no_company = self.env['product.product'].create({
             'name': 'Company-less Product',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': 'product_no_company',
         })
         self.start_tour("/odoo", 'test_inventory_adjustment_multi_company', login='admin', timeout=180)
@@ -113,10 +109,7 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         WH/stock/shelf2 product1 qty: 1
         - Validate
         """
-        self.clean_access_rights()
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
-
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_stock_multi_locations').id)]})
         self.start_tour("/odoo/barcode", 'test_inventory_adjustment_multi_location', login='admin', timeout=180)
 
         inventory_moves = self.env['stock.move'].search([('product_id', 'in', [self.product1.id, self.product2.id]),
@@ -150,10 +143,7 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         productlot1 with a lot named lot3 (qty 1)
         - Validate
         """
-        self.clean_access_rights()
-        grp_lot = self.env.ref('stock.group_production_lot')
-        self.env.user.write({'groups_id': [(4, grp_lot.id, 0)]})
-
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_production_lot').id)]})
         self.start_tour("/odoo/barcode", 'test_inventory_adjustment_tracked_product', login='admin', timeout=180)
 
         inventory_moves = self.env['stock.move'].search([('product_id', 'in', [self.productlot1.id, self.productserial1.id]),
@@ -180,9 +170,13 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         - When scanning a tracked product, if this product alread has quants, it will retrieve and
         create a barcode line for each quant.
         """
-        self.clean_access_rights()
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
+        self.env.user.write({
+            'group_ids': [
+                Command.link(self.env.ref('stock.group_production_lot').id),
+                Command.link(self.env.ref('stock.group_stock_multi_locations').id),
+                Command.link(self.env.ref('stock.group_tracking_lot').id),
+            ],
+        })
         # Adds some quants for the product tracked by lots in two locations.
         lot_1 = self.env['stock.lot'].create({'product_id': self.productlot1.id, 'name': "lot1"})
         self.env['stock.quant']._update_available_quantity(self.productlot1, self.shelf1, 3, lot_id=lot_1)
@@ -210,10 +204,7 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
             - Set productlot1 quantity without lot to available
             - Validate
         """
-        self.env.ref('base.group_user').implied_ids += self.env.ref('stock.group_production_lot')
-        self.clean_access_rights()
-        grp_lot = self.env.ref('stock.group_production_lot')
-        self.env.user.write({'groups_id': [(4, grp_lot.id, 0)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_production_lot').id)]})
 
         lot1 = self.env["stock.lot"].create({
             'name': 'lot1',
@@ -238,7 +229,6 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
     def test_inventory_create_quant(self):
         """ Creates a quant and checks it will not be deleted until the inventory was validated.
         """
-        self.clean_access_rights()
         Quant = self.env['stock.quant']
         self.start_tour("/odoo/barcode", 'test_inventory_create_quant', login='admin', timeout=180)
 
@@ -260,17 +250,18 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         count them as missing when the inventory adjustment is applied.
         """
         self.env['ir.config_parameter'].set_param('stock_barcode.barcode_separator_regex', '[,;]')
-        self.clean_access_rights()
-        group_lot = self.env.ref('stock.group_production_lot')
-        group_location = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.groups_id = [Command.link(group_lot.id)]
-        self.env.user.groups_id = [Command.link(group_location.id)]
+        self.env.user.write({
+            'group_ids': [
+                Command.link(self.env.ref('stock.group_production_lot').id),
+                Command.link(self.env.ref('stock.group_stock_multi_locations').id),
+            ],
+        })
         Quant = self.env['stock.quant']
         # Creates some serial numbers and adds them in the stock.
         productserial2 = self.env['product.product'].create({
             'name': 'productserial2',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
+            'categ_id': self.env.ref('product.product_category_goods').id,
             'barcode': 'productserial2',
             'tracking': 'serial',
         })
@@ -323,13 +314,11 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
     def test_inventory_nomenclature(self):
         """ Simulate scanning a product and its weight
         thanks to the barcode nomenclature """
-        self.clean_access_rights()
         self.env.company.nomenclature_id = self.env.ref('barcodes.default_barcode_nomenclature')
 
         product_weight = self.env['product.product'].create({
             'name': 'product_weight',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': '2145631000000',
         })
 
@@ -344,9 +333,7 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
 
     def test_inventory_package(self):
         """ Simulate an adjustment where a package is scanned and edited """
-        self.clean_access_rights()
-        grp_pack = self.env.ref('stock.group_tracking_lot')
-        self.env.user.write({'groups_id': [(4, grp_pack.id, 0)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_tracking_lot').id)]})
 
         pack = self.env['stock.quant.package'].create({
             'name': 'PACK001',
@@ -367,30 +354,40 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         """ Scans a product's packaging and ensures its quantity is correctly
         counted regardless if there is already products in stock or not.
         """
-        self.clean_access_rights()
-        grp_pack = self.env.ref('product.group_stock_packaging')
-        self.env.user.write({'groups_id': [(4, grp_pack.id, 0)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('uom.group_uom').id)]})
 
-        self.env['product.packaging'].create({
-            'name': 'product1 x15',
-            'qty': 15,
+        pack_15 = self.env['uom.uom'].create({
+            'name': 'Pack of 15',
+            'relative_factor': 15,
+            'relative_uom_id': self.env.ref('uom.product_uom_unit').id,
+        })
+        self.product1.uom_ids = pack_15
+        self.env['product.uom'].create({
+            'uom_id': pack_15.id,
+            'product_id': self.product1.id,
             'barcode': 'pack007',
-            'product_id': self.product1.id
         })
         self.start_tour("/odoo/barcode", 'test_inventory_packaging', login='admin', timeout=180)
+        self.assertEqual(self.product1.qty_available, 15.0)
 
     def test_inventory_serial_product_packaging(self):
         """ This test ensures that correct packaging lines generated
         for serial product in inventory adjustments.
         """
-        self.clean_access_rights()
-        group_lot = self.env.ref('stock.group_production_lot')
-        group_packaging = self.env.ref('product.group_stock_packaging')
-        self.env.user.write({'groups_id': [(4, group_lot.id, 0)]})
-        self.env.user.write({'groups_id': [(4, group_packaging.id)]})
-        self.env['product.packaging'].create({
+        self.env.user.write({
+            'group_ids': [
+                Command.link(self.env.ref('stock.group_production_lot').id),
+                Command.link(self.env.ref('uom.group_uom').id),
+            ],
+        })
+        pack_3 = self.env['uom.uom'].create({
             'name': 'Product Serial 1 Packaging',
-            'qty': 3,
+            'relative_factor': 3,
+            'relative_uom_id': self.env.ref('uom.product_uom_unit').id,
+        })
+        self.productserial1.uom_ids = pack_3
+        self.env['product.uom'].create({
+            'uom_id': pack_3.id,
             'product_id': self.productserial1.id,
             'barcode': 'PCK3',
         })
@@ -402,27 +399,39 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         Check that the product packaging button are correctly dipslayed on the
         digipad when creating an invetory adjustment.
         """
-        self.clean_access_rights()
-        grp_pack = self.env.ref('product.group_stock_packaging')
-        self.env.user.write({'groups_id': [Command.link(grp_pack.id)]})
-
         self.product1.name = "Lovely Product"
-        self.env['product.packaging'].create({
+        self.product1.uom_ids = self.env['uom.uom'].create({
             'name': 'LP x15',
-            'qty': 15,
-            'product_id': self.product1.id
+            'relative_factor': 15,
+            'relative_uom_id': self.env.ref('uom.product_uom_unit').id,
         })
-        action_id = self.env.ref('stock_barcode.stock_barcode_action_main_menu')
-        url = "/web#action=" + str(action_id.id)
-        self.start_tour(url, 'test_inventory_packaging_button', login='admin', timeout=180)
+        self.start_tour("/odoo/barcode", "test_inventory_packaging_button", login="admin", timeout=180)
         quant = self.env['stock.quant'].search([("product_id", "=", self.product1.id)], limit=1)
         self.assertEqual(quant.inventory_quantity, 15.0)
+
+    def test_inventory_packaging_location(self):
+        """
+        Check that scanning a packaging on the barcode main screen shows the
+        location of the product contained in that packaging.
+        """
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('uom.group_uom').id)]})
+
+        self.env['product.uom'].create({
+            'product_id': self.product1.id,
+            'uom_id': self.env.ref('uom.product_uom_dozen').id,
+            'barcode': 'DOZENPACK001',
+        })
+
+        self.env['stock.quant']._update_available_quantity(self.product1, self.shelf1, 40.0)
+        self.env['stock.quant']._update_available_quantity(self.product1, self.shelf2, 80.0)
+
+        self.start_tour("/odoo/barcode", "test_inventory_packaging_location", login="admin")
 
     def test_inventory_owner_scan_package(self):
         group_owner = self.env.ref('stock.group_tracking_owner')
         group_pack = self.env.ref('stock.group_tracking_lot')
-        self.env.user.write({'groups_id': [(4, group_pack.id, 0)]})
-        self.env.user.write({'groups_id': [(4, group_owner.id, 0)]})
+        self.env.user.write({'group_ids': [(4, group_pack.id, 0)]})
+        self.env.user.write({'group_ids': [(4, group_owner.id, 0)]})
 
         self.env['stock.quant']._update_available_quantity(self.product1, self.stock_location, 7, package_id=self.package, owner_id=self.owner)
 
@@ -438,9 +447,8 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         Check the scenario when the "Count Entire Locations" setting is enabled,
         considering both tracked and untracked products and the usage of multiple locations.
         """
-        self.clean_access_rights()
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_stock_multi_locations').id)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_production_lot').id)]})
         Quant = self.env['stock.quant']
 
         # Create lots and serial numbers.
@@ -476,7 +484,7 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         # Set "Count Entire Locations" setting on after the count request, otherwise all quants for
         # this quant's location will be already marked as to count.
         grp_barcode_count_entire_location = self.env.ref('stock_barcode.group_barcode_count_entire_location')
-        self.env.user.write({'groups_id': [(4, grp_barcode_count_entire_location.id, 0)]})
+        self.env.user.write({'group_ids': [(4, grp_barcode_count_entire_location.id, 0)]})
         self.start_tour("/odoo/barcode", 'test_inventory_setting_count_entire_locations_on', login='admin', timeout=180)
 
     def test_inventory_setting_count_entire_locations_off(self):
@@ -484,9 +492,7 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         Check the scenario when the "Count Entire Locations" setting is disabled,
         considering both tracked and untracked products and the usage of multiple locations.
         """
-        self.clean_access_rights()
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_stock_multi_locations').id)]})
         Quant = self.env['stock.quant']
 
         # Adds quantity in WH/Stock/Shelf1.
@@ -510,12 +516,13 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         Check the scenario when "Show Quantity to Count" setting is enabled or
         disabled, considering both tracked and untracked products.
         """
-        self.clean_access_rights()
         # Enables multilocations and tracking.
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        grp_lot = self.env.ref('stock.group_production_lot')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
-        self.env.user.write({'groups_id': [(4, grp_lot.id, 0)]})
+        self.env.user.write({
+            'group_ids': [
+                Command.link(self.env.ref('stock.group_stock_multi_locations').id),
+                Command.link(self.env.ref('stock.group_production_lot').id),
+            ],
+        })
         Quant = self.env['stock.quant']
 
         # Creates some lots and serial numbers.
@@ -546,14 +553,13 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         grp_show_quantity_count = self.env.ref('stock_barcode.group_barcode_show_quantity_count')
         group_user = self.env.ref('base.group_user')
         group_user.write({'implied_ids': [(3, grp_show_quantity_count.id)]})
-        self.env.user.write({'groups_id': [(3, grp_show_quantity_count.id)]})
+        self.env.user.write({'group_ids': [(3, grp_show_quantity_count.id)]})
         self.start_tour("/odoo/barcode", 'test_inventory_setting_show_quantity_to_count_off', login='admin', timeout=180)
 
     def test_inventory_using_buttons(self):
         """ Creates an inventory from scratch, then scans products and verifies
         the buttons behavior is right.
         """
-        self.clean_access_rights()
         # Adds some quantities for product2.
         self.env['stock.quant']._update_available_quantity(self.product2, self.stock_location, 10)
 
@@ -576,10 +582,8 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         self.assertEqual(productlot1_quant.location_id.id, self.stock_location.id)
 
     def test_inventory_adjustment_with_no_internal_location_quant(self):
-        self.clean_access_rights()
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        self.env.user.write({'groups_id': [Command.link(grp_multi_loc.id)]})
-        
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_stock_multi_locations').id)]})
+
         # Simulate moving 1 unit of product1 from Customer Location to Inventory Adjustment Location
         self.env['stock.quant'].create({
             'product_id': self.product1.id,
@@ -614,15 +618,12 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
     def test_rfid_inventory_scan_sgtin(self):
         """ Checks multiple products can be scanned at once for an Inventory
         Adjustment using RFID."""
-        self.clean_access_rights()
-        group_lot = self.env.ref('stock.group_production_lot')
-        self.env.user.write({'groups_id': [Command.link(group_lot.id)]})
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_production_lot').id)]})
         self.env.company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
 
         # Create a bunch of products with EAN13.
         product_common_vals = {
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'uom_id': self.env.ref('uom.product_uom_unit').id
         }
         products = self.env['product.product'].create([{
@@ -670,11 +671,11 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         self1 = self
         get_specific_barcode_data_orig = StockBarcodeController.get_specific_barcode_data
 
-        @http.route('/stock_barcode/get_specific_barcode_data', type='json', auth='user')
+        @http.route('/stock_barcode/get_specific_barcode_data', type='jsonrpc', auth='user')
         def mocked_data_batch_method(self, **kwargs):
             if self1.call_count == 0:
                 # First call: product and serial numbers.
-                self1.assertEqual(list(kwargs['barcodes_by_model'].keys()), ['product.product', 'stock.lot'])
+                self1.assertEqual(list(kwargs['barcodes_by_model'].keys()), ['product.product', 'product.uom', 'stock.lot'])
             elif self1.call_count == 1:
                 # First call: serial numbers only (no new product's barcode scanned).
                 self1.assertEqual(list(kwargs['barcodes_by_model'].keys()), ['stock.lot'])
@@ -694,7 +695,6 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         Check that the quant data of the barcode cache is not
         corrupted by line deletions.
         """
-        self.clean_access_rights()
         # Put 5 units of prodcut1 in stock and start an inventory count
         self.env['stock.quant']._update_available_quantity(self.product1, self.stock_location, 5)
         self.start_tour("/odoo/barcode", 'test_inventory_count_with_line_deletion', login='admin')
@@ -702,13 +702,11 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
     # === GS1 TESTS ===#
     def test_gs1_inventory_gtin_8(self):
         """ Simulate scanning a product with his gs1 barcode """
-        self.clean_access_rights()
         self.env.company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
 
         product = self.env['product.product'].create({
             'name': 'PRO_GTIN_8',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': '82655853',  # GTIN-8 format
             'uom_id': self.env.ref('uom.product_uom_unit').id
         })
@@ -725,13 +723,11 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
 
     def test_gs1_inventory_product_units(self):
         """ Scans a product with a GS1 barcode containing multiple quantities."""
-        self.clean_access_rights()
         self.env.company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
 
         product = self.env['product.product'].create({
             'name': 'PRO_GTIN_8',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': '82655853',  # GTIN-8 format
             'uom_id': self.env.ref('uom.product_uom_unit').id
         })
@@ -751,17 +747,17 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         to the inventory adjustment. Then scans some products, scans a new package
         and checks the package was created and correclty assigned to those products.
         """
-        self.clean_access_rights()
         self.env.company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
-        grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
-        grp_pack = self.env.ref('stock.group_tracking_lot')
-        self.env.user.write({'groups_id': [(4, grp_multi_loc.id, 0)]})
-        self.env.user.write({'groups_id': [(4, grp_pack.id, 0)]})
+        self.env.user.write({
+            'group_ids': [
+                Command.link(self.env.ref('stock.group_stock_multi_locations').id),
+                Command.link(self.env.ref('stock.group_tracking_lot').id)
+            ]
+        })
 
         product = self.env['product.product'].create({
             'name': 'PRO_GTIN_8',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': '82655853',  # GTIN-8 format
             'uom_id': self.env.ref('uom.product_uom_unit').id
         })
@@ -783,15 +779,13 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         """ Checks tracking numbers and quantites are correctly got from GS1
         barcodes for tracked products.
         Also, this test is an opportunity to ensure custom GS1 separators are used clientside."""
-        self.env.ref('base.group_user').implied_ids += self.env.ref('stock.group_production_lot')
-        self.clean_access_rights()
+        self.env.user.write({'group_ids': [Command.link(self.env.ref('stock.group_production_lot').id)]})
         self.env.company.nomenclature_id = self.env.ref('barcodes_gs1_nomenclature.default_gs1_nomenclature')
         self.env.company.nomenclature_id.gs1_separator_fnc1 = r'(Alt029|#|\x1D|~)'
 
         product_lot = self.env['product.product'].create({
             'name': 'PRO_GTIN_12_lot',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': '111155555717',  # GTIN-12 format
             'uom_id': self.env.ref('uom.product_uom_unit').id,
             'tracking': 'lot',
@@ -800,7 +794,6 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         product_serial = self.env['product.product'].create({
             'name': 'PRO_GTIN_14_serial',
             'is_storable': True,
-            'categ_id': self.env.ref('product.product_category_all').id,
             'barcode': '15222222222219',  # GTIN-14 format
             'uom_id': self.env.ref('uom.product_uom_unit').id,
             'tracking': 'serial',
@@ -866,12 +859,11 @@ class TestInventoryAdjustmentBarcodeClientAction(TestBarcodeClientAction):
         self.start_tour("/odoo", 'stock_barcode_package_with_lot', login="admin")
 
     def test_inventory_count_lot_split_in_packages(self):
-        self.clean_access_rights()
         grp_multi_loc = self.env.ref('stock.group_stock_multi_locations')
         grp_lot = self.env.ref('stock.group_production_lot')
         grp_pack = self.env.ref('stock.group_tracking_lot')
         grp_barcode_count_entire_location = self.env.ref('stock_barcode.group_barcode_count_entire_location')
-        self.env.user.write({'groups_id': [(4, grp_barcode_count_entire_location.id, 0), (4, grp_pack.id, 0), (4, grp_multi_loc.id, 0), (4, grp_lot.id, 0)]})
+        self.env.user.write({'group_ids': [(4, grp_barcode_count_entire_location.id, 0), (4, grp_pack.id, 0), (4, grp_multi_loc.id, 0), (4, grp_lot.id, 0)]})
         shelf1 = self.env['stock.location'].create({
             'name': 'Shelf 11',
             'barcode': 'Shelf11',

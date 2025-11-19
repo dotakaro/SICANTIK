@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { RemainingDaysField } from "@web/views/fields/remaining_days/remaining_days_field";
@@ -11,7 +9,7 @@ export class AppraisalRemainingDays extends RemainingDaysField {
     get diffDays() {
         const result = super.diffDays;
         const state = this.props.record.data.state;
-        if (result != null && ['done', 'cancel'].includes(state)) {
+        if (result != null && state == '3_done') {
             // force the date's color to be grey
             return 1;
         }

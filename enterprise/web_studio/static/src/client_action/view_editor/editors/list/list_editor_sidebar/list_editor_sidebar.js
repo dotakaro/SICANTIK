@@ -1,4 +1,3 @@
-/** @odoo-module */
 import { Component, useState } from "@odoo/owl";
 import { InteractiveEditorSidebar } from "@web_studio/client_action/view_editor/interactive_editor/interactive_editor_sidebar";
 import {
@@ -8,6 +7,7 @@ import {
 import { Property } from "@web_studio/client_action/view_editor/property/property";
 import { SidebarViewToolbox } from "@web_studio/client_action/view_editor/interactive_editor/sidebar_view_toolbox/sidebar_view_toolbox";
 import { Properties } from "@web_studio/client_action/view_editor/interactive_editor/properties/properties";
+import { ButtonProperties } from "@web_studio/client_action/view_editor/interactive_editor/properties/button_properties/button_properties";
 import { _t } from "@web/core/l10n/translation";
 import { sprintf } from "@web/core/utils/strings";
 import { FieldProperties } from "@web_studio/client_action/view_editor/interactive_editor/properties/field_properties/field_properties";
@@ -52,6 +52,12 @@ export class ListEditorSidebar extends Component {
         this.viewEditorModel = useState(this.env.viewEditorModel);
         this.editArchAttributes = useEditNodeAttributes({ isRoot: true });
         this.propertiesComponents = {
+            button: {
+                component: ButtonProperties,
+                props: {
+                    availableOptions: ["invisible"],
+                },
+            },
             field: {
                 component: ListFieldNodeProperties,
                 props: {
@@ -62,6 +68,7 @@ export class ListEditorSidebar extends Component {
                         "string",
                         "help",
                         "optional",
+                        "width",
                     ],
                 },
             },
@@ -91,7 +98,10 @@ export class ListEditorSidebar extends Component {
     get sortChoices() {
         // only have stored fields that are present in arch
         const storeFieldsInArch = Object.fromEntries(
-            Object.values(this.archInfo.fieldNodes).map((field) => [field.name, this.viewEditorModel.fields[field.name]])
+            Object.values(this.archInfo.fieldNodes).map((field) => [
+                field.name,
+                this.viewEditorModel.fields[field.name],
+            ])
         );
         return fieldsToChoices(
             storeFieldsInArch,
@@ -111,7 +121,7 @@ export class ListEditorSidebar extends Component {
         return fieldsToChoices(
             this.viewEditorModel.fields,
             this.viewEditorModel.GROUPABLE_TYPES,
-            (field) => field.store
+            (field) => field.groupable
         );
     }
 
@@ -133,5 +143,13 @@ export class ListEditorSidebar extends Component {
 
     onAttributeChanged(value, name) {
         return this.editArchAttributes({ [name]: value });
+    }
+
+    onCanDuplicateChanged(value) {
+        return this.editArchAttributes({ duplicate: value ? "" : false });
+    }
+
+    editDefaultGroupBy(value) {
+        this.onAttributeChanged(value.join(","), "default_group_by");
     }
 }

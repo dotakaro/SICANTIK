@@ -4,7 +4,7 @@ from ast import literal_eval
 from odoo import api, models
 
 
-class WhatsAppTemplate(models.Model):
+class WhatsappTemplate(models.Model):
     _inherit = 'whatsapp.template'
 
     @api.model

@@ -8,14 +8,10 @@ patch(TicketScreen.prototype, {
     },
     getBrazilianEDIStatus() {
         switch (this.order.l10n_br_last_avatax_status) {
-            case "pending":
-                return _t("Pending");
             case "accepted":
                 return _t("Accepted");
             case "error":
                 return _t("Error");
-            case "cancelled":
-                return _t("Cancelled");
             default:
                 return "";
         }
@@ -24,11 +20,11 @@ patch(TicketScreen.prototype, {
     // @override
     postRefund(destinationOrder) {
         if (this.pos.config.l10n_br_is_nfce) {
-            destinationOrder.set_to_invoice(true);
-            this.pos.showScreen("PaymentScreen", { orderUuid: destinationOrder.uuid });
+            destinationOrder.to_invoice = true;
+            this.pos.navigate("PaymentScreen", { orderUuid: destinationOrder.uuid });
 
             // A partner will be required for refunds. Prompt the user to select one.
-            if (!destinationOrder.get_partner()) {
+            if (!destinationOrder.getPartner()) {
                 this.pos.selectPartner();
             }
         }

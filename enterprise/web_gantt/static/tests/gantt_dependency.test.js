@@ -23,6 +23,7 @@ import {
     getPill,
     getPillWrapper,
     mountGanttView,
+    dragPill,
 } from "./web_gantt_test_helpers";
 
 import { GanttRenderer } from "@web_gantt/gantt_renderer";
@@ -39,7 +40,7 @@ import { GanttRenderer } from "@web_gantt/gantt_renderer";
 
 const ganttViewParams = {
     resModel: "project.task",
-    arch: /* xml */ `<gantt date_start="planned_date_begin" date_stop="date_deadline" default_scale="month" dependency_field="depend_on_ids" color="color" />`,
+    arch: /* xml */ `<gantt date_start="planned_date_begin" date_stop="date_deadline" dependency_field="depend_on_ids" color="color" />`,
     groupBy: ["user_ids"],
 };
 
@@ -386,7 +387,7 @@ test("Connectors are correctly computed and rendered when consolidation is activ
 
     await mountGanttView({
         ...ganttViewParams,
-        arch: /* xml */ `<gantt date_start="planned_date_begin" date_stop="date_deadline" default_scale="month" dependency_field="depend_on_ids" consolidation_max="{'user_ids': 100 }"/>`,
+        arch: /* xml */ `<gantt date_start="planned_date_begin" date_stop="date_deadline" default_range="month" dependency_field="depend_on_ids" consolidation_max="{'user_ids': 100 }"/>`,
     });
 
     // groups have been created of r
@@ -438,7 +439,7 @@ test("Buttons are displayed when hovering a connector.", async () => {
     await hover(getConnectorStroke(1));
     await animationFrame();
 
-    expect(queryAll(SELECTORS.connectorStrokeButton, { root: getConnector(1) })).toHaveCount(3);
+    expect(queryAll(SELECTORS.connectorStrokeButton, { root: getConnector(1) })).toHaveCount(1);
 });
 
 test("Buttons are displayed when hovering a connector after a pill has been hovered.", async () => {
@@ -449,13 +450,13 @@ test("Buttons are displayed when hovering a connector after a pill has been hove
     await animationFrame();
 
     expect(queryAll(SELECTORS.connectorStrokeButton, { root: getConnector(1) })).toHaveCount(0);
-    expect(getConnector(1)).toHaveClass(CLASSES.highlightedConnector);
 
     await hover(getConnectorStroke(1));
     await animationFrame();
+    await animationFrame();
 
     expect(getConnector(1)).toHaveClass(CLASSES.highlightedConnector);
-    expect(queryAll(SELECTORS.connectorStrokeButton, { root: getConnector(1) })).toHaveCount(3);
+    expect(queryAll(SELECTORS.connectorStrokeButton, { root: getConnector(1) })).toHaveCount(1);
 });
 
 test("Connector buttons: remove a dependency", async () => {
@@ -469,238 +470,6 @@ test("Connector buttons: remove a dependency", async () => {
 
     await clickConnectorButton(getConnector(1), "remove");
     expect.verifySteps([["write", [[2], { depend_on_ids: [[3, 1, false]] }]]]);
-});
-
-test("Connector buttons: reschedule task backward date.", async () => {
-    onRpc(({ method, model, args }) => {
-        if (model === "project.task" && ["web_gantt_reschedule", "write"].includes(method)) {
-            expect.step([method, args]);
-            return {};
-        }
-    });
-    await mountGanttView(ganttViewParams);
-
-    await clickConnectorButton(getConnector(1), "reschedule-backward");
-    expect.verifySteps([
-        [
-            "web_gantt_reschedule",
-            ["backward", 1, 2, "depend_on_ids", null, "planned_date_begin", "date_deadline"],
-        ],
-    ]);
-});
-
-test("Connector buttons: reschedule task forward date.", async () => {
-    onRpc(({ args, method, model }) => {
-        if (model === "project.task" && ["web_gantt_reschedule", "write"].includes(method)) {
-            expect.step([method, args]);
-            return {};
-        }
-    });
-    await mountGanttView(ganttViewParams);
-
-    await clickConnectorButton(getConnector(1), "reschedule-forward");
-    expect.verifySteps([
-        [
-            "web_gantt_reschedule",
-            ["forward", 1, 2, "depend_on_ids", null, "planned_date_begin", "date_deadline"],
-        ],
-    ]);
-});
-
-test("Connector buttons: reschedule task start backward, different data.", async () => {
-    onRpc(({ method, model, args }) => {
-        if (model === "project.task" && ["web_gantt_reschedule", "write"].includes(method)) {
-            expect.step([method, args]);
-            return {};
-        }
-    });
-    await mountGanttView(ganttViewParams);
-
-    await clickConnectorButton(getConnector(1), "reschedule-backward");
-    expect(".o_notification").toHaveCount(1);
-    expect(".o_notification .o_notification_buttons button").toHaveCount(0, {
-        message:
-            "No button should be displayed in the notification since `old_vals_per_pill_id` is not given in the result of `web_gantt_reschedule` call",
-    });
-    expect.verifySteps([
-        [
-            "web_gantt_reschedule",
-            ["backward", 1, 2, "depend_on_ids", null, "planned_date_begin", "date_deadline"],
-        ],
-    ]);
-});
-
-test("Connector buttons: reschedule task forward, different data.", async () => {
-    onRpc(({ method, model, args }) => {
-        if (model === "project.task" && ["web_gantt_reschedule", "write"].includes(method)) {
-            expect.step([method, args]);
-            return {};
-        }
-    });
-    await mountGanttView(ganttViewParams);
-
-    await clickConnectorButton(getConnector(1), "reschedule-forward");
-    expect(".o_notification").toHaveCount(1);
-    expect(".o_notification .o_notification_buttons button").toHaveCount(0, {
-        message:
-            "No button should be displayed in the notification since `old_vals_per_pill_id` is not given in the result of `web_gantt_reschedule` call",
-    });
-    expect.verifySteps([
-        [
-            "web_gantt_reschedule",
-            ["forward", 1, 2, "depend_on_ids", null, "planned_date_begin", "date_deadline"],
-        ],
-    ]);
-});
-
-test("Connector buttons: reschedule task forward and undo.", async () => {
-    onRpc(({ method, model, args }) => {
-        if (
-            model === "project.task" &&
-            ["web_gantt_reschedule", "action_rollback_scheduling"].includes(method)
-        ) {
-            expect.step([method, args]);
-            return { old_vals_per_pill_id: { 1: { test: true }, 2: { foo: false } } };
-        }
-    });
-    await mountGanttView(ganttViewParams);
-
-    await clickConnectorButton(getConnector(1), "reschedule-forward");
-    expect(".o_notification").toHaveCount(1);
-    expect(".o_notification .o_notification_buttons button").toHaveCount(1);
-    await contains(".o_notification .o_notification_buttons button i.fa-undo").click();
-    expect.verifySteps([
-        [
-            "web_gantt_reschedule",
-            ["forward", 1, 2, "depend_on_ids", null, "planned_date_begin", "date_deadline"],
-        ],
-        ["action_rollback_scheduling", [[1, 2], { 1: { test: true }, 2: { foo: false } }]],
-    ]);
-});
-
-test("Hovering a task pill should highlight related tasks and dependencies", async () => {
-    /** @type {Map<ConnectorTaskIds, boolean>} */
-    const testMap = new Map([
-        ["[1,1,2,1]", true],
-        ["[1,1,2,3]", true],
-        ["[2,1,3,false]", true],
-        ["[2,3,3,false]", true],
-        ["[2,1,4,2]", true],
-        ["[2,3,4,3]", true],
-        ["[10,2,11,2]", false],
-    ]);
-
-    ProjectTask._records = [
-        {
-            id: 1,
-            name: "Task 1",
-            planned_date_begin: "2021-10-10 18:30:00",
-            date_deadline: "2021-10-11 19:29:59",
-            user_ids: [1],
-            depend_on_ids: [],
-        },
-        {
-            id: 2,
-            name: "Task 2",
-            planned_date_begin: "2021-10-12 11:30:00",
-            date_deadline: "2021-10-12 12:29:59",
-            user_ids: [1, 3],
-            depend_on_ids: [1],
-        },
-        {
-            id: 3,
-            name: "Task 3",
-            planned_date_begin: "2021-10-13 06:30:00",
-            date_deadline: "2021-10-13 07:29:59",
-            user_ids: [],
-            depend_on_ids: [2],
-        },
-        {
-            id: 4,
-            name: "Task 4",
-            planned_date_begin: "2021-10-14 22:30:00",
-            date_deadline: "2021-10-14 23:29:59",
-            user_ids: [2, 3],
-            depend_on_ids: [2],
-        },
-        {
-            id: 10,
-            name: "Task 10",
-            planned_date_begin: "2021-10-19 06:30:12",
-            date_deadline: "2021-10-19 07:29:59",
-            user_ids: [2],
-            depend_on_ids: [],
-            display_warning_dependency_in_gantt: false,
-        },
-        {
-            id: 11,
-            name: "Task 11",
-            planned_date_begin: "2021-10-18 06:30:12",
-            date_deadline: "2021-10-18 07:29:59",
-            user_ids: [2],
-            depend_on_ids: [10],
-        },
-    ];
-
-    const view = await mountGanttView(ganttViewParams);
-    const renderer = findComponent(view, (c) => c instanceof GanttRenderer);
-
-    const connectorMap = getConnectorMap(renderer);
-    const pills = [];
-    for (const wrapper of queryAll(SELECTORS.pillWrapper)) {
-        const pillId = wrapper.dataset.pillId;
-        pills.push({
-            el: queryFirst(SELECTORS.pill, { root: wrapper }),
-            recordId: renderer.pills[pillId].record.id,
-        });
-    }
-
-    const task2Pills = pills.filter((p) => p.recordId === 2);
-
-    expect(task2Pills).toHaveLength(2);
-    expect(CLASSES.highlightedPill).toHaveCount(0);
-
-    // Check that all connectors are not in hover state.
-    for (const testKey of testMap.keys()) {
-        expect(getConnector(connectorMap.get(testKey).id)).not.toHaveClass(
-            CLASSES.highlightedConnector
-        );
-    }
-
-    await contains(getPill("Task 2", { nth: 1 })).hover();
-    // Both pills should be highlighted
-    expect(getPillWrapper("Task 2", { nth: 1 })).toHaveClass(CLASSES.highlightedPill);
-    expect(getPillWrapper("Task 2", { nth: 2 })).toHaveClass(CLASSES.highlightedPill);
-
-    // The rest of the pills should not be highlighted nor display connector creators
-    for (const { el, recordId } of pills) {
-        if (recordId !== 2) {
-            expect(el).not.toHaveClass(CLASSES.highlightedPill);
-        }
-    }
-
-    // Check that all connectors are in the expected hover state.
-    for (const [testKey, shouldBeHighlighted] of testMap.entries()) {
-        const connector = getConnector(connectorMap.get(testKey).id);
-        if (shouldBeHighlighted) {
-            expect(connector).toHaveClass(CLASSES.highlightedConnector);
-        } else {
-            expect(connector).not.toHaveClass(CLASSES.highlightedConnector);
-        }
-        expect(queryAll(SELECTORS.connectorStrokeButton, { root: connector })).toHaveCount(0);
-    }
-});
-
-test("Hovering a connector should cause the connected pills to get highlighted.", async () => {
-    await mountGanttView(ganttViewParams);
-    expect(SELECTORS.highlightedConnector).toHaveCount(0);
-    expect(SELECTORS.highlightedPill).toHaveCount(0);
-
-    await hover(getConnectorStroke(1));
-    await animationFrame();
-
-    expect(SELECTORS.highlightedConnector).toHaveCount(1);
-    expect(SELECTORS.highlightedPill).toHaveCount(2);
 });
 
 test("Connectors are displayed behind pills, except on hover.", async () => {
@@ -857,31 +626,6 @@ test("Connector creators of initial pill are highlighted when creating a connect
     await cancel();
 });
 
-test("Connector creators of hovered pill are highlighted when creating a connector", async () => {
-    await mountGanttView(ganttViewParams);
-
-    // Explicitly shows the connector creator wrapper since its "display: none"
-    // disappears on native CSS hover, which cannot be programatically emulated.
-    const rightWrapper = queryFirst(SELECTORS.connectorCreatorWrapper);
-    rightWrapper.classList.add("d-block");
-
-    // Creating a connector and hover another pill while dragging it
-    const { cancel, moveTo } = await contains(SELECTORS.connectorCreatorBullet, {
-        root: rightWrapper,
-    }).drag();
-
-    const destinationWrapper = getPillWrapper("Task 2");
-    const destinationPill = queryFirst(SELECTORS.pill, { root: destinationWrapper });
-    await moveTo(destinationPill);
-
-    // moveTo only triggers a pointerenter event on destination pill,
-    // a pointermove event is still needed to highlight it
-    await contains(destinationPill).hover();
-    expect(destinationWrapper).toHaveClass(CLASSES.highlightedConnectorCreator);
-
-    await cancel();
-});
-
 test("Switch to full-size browser: the connections between pills should be diplayed", async () => {
     await resize({ width: 375, height: 667 });
 
@@ -948,3 +692,78 @@ test("Connect two very distant pills", async () => {
     expect.verifySteps([[[2], { depend_on_ids: [[4, 1, false]] }]]);
     expect(SELECTORS.connector).toHaveCount(1);
 });
+
+test("move a pill in the same row (Maintain Buffer Reschedule)", async () => {
+    onRpc(({ method, model, args }) => {
+        if (["web_gantt_reschedule", "action_rollback_scheduling"].includes(method)) {
+            expect.step([method, args]);
+            return {
+                type: "success",
+                message: "Tasks rescheduled",
+                old_vals_per_pill_id: {
+                    7: {
+                        start: "2021-10-17 11:30:00",
+                        stop: "2021-10-17 21:29:59",
+                    },
+                },
+            };
+        }
+    });
+
+    await mountGanttView({
+        ...ganttViewParams,
+        context: {
+            default_start_date: "2021-10-01",
+            default_stop_date: "2021-11-30",
+        },
+    });
+
+    const { moveTo, drop } = await dragPill("Task 7");
+    await moveTo({ columnHeader: "21", groupHeader: "October 2021", part: 2 });
+    expect(SELECTORS.startBadge).toHaveText("10/21/2021, 11:30 PM");
+    expect(SELECTORS.stopBadge).toHaveText("10/22/2021, 12:29 AM");
+    expect(SELECTORS.startBadge).toHaveClass("text-success");
+    expect(SELECTORS.stopBadge).toHaveClass("text-success");
+    await drop();
+    await animationFrame();
+
+    expect(".o_notification").toHaveCount(1);
+    expect(".o_notification .o_notification_buttons button").toHaveCount(1);
+    await contains(".o_notification .o_notification_buttons button i.fa-undo").click();
+    expect.verifySteps([
+        [
+          "web_gantt_reschedule",
+          [
+            {
+              date_deadline: "2021-10-21 23:29:59",
+              planned_date_begin: "2021-10-21 22:30:12",
+              user_ids: false,
+            },
+            "maintainBuffer",
+            [
+              7,
+            ],
+            "depend_on_ids",
+            null,
+            "planned_date_begin",
+            "date_deadline",
+          ],
+        ],
+        [
+          "action_rollback_scheduling",
+          [
+            [
+              7,
+            ],
+            {
+              7: {
+                start: "2021-10-17 11:30:00",
+                stop: "2021-10-17 21:29:59",
+              },
+            },
+          ],
+        ],
+      ]
+    );
+});
+

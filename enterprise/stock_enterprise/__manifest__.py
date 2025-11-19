@@ -4,7 +4,7 @@
 {
     'name': "Stock enterprise",
     'version': "1.0",
-    'category': 'Inventory/Inventory',
+    'category': 'Supply Chain/Inventory',
     'summary': "Advanced features for Stock",
     'description': """
 Contains the enterprise views for Stock management
@@ -24,5 +24,6 @@ Contains the enterprise views for Stock management
     },
     'installable': True,
     'auto_install': ['stock'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

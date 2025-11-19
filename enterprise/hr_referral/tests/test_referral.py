@@ -1,4 +1,3 @@
-# # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import json
 
@@ -22,9 +21,10 @@ class TestHrReferral(TestHrReferralBase):
     def test_referral_change_referrer(self):
         # Create an applicant
         job_applicant = self.env['hr.applicant'].create({
-            'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Technical worker', 'company_id': self.company_1.id}).id,
+            'partner_name': 'Technical worker',
             'job_id': self.job_dev.id,
-            'ref_user_id': self.richard_user.id
+            'ref_user_id': self.richard_user.id,
+            'company_id': self.company_1.id
         })
         self.assertEqual(job_applicant.ref_user_id, self.richard_user, "Referral is created with the right user")
         points_richard = self.env['hr.referral.points'].search([('ref_user_id', '=', self.richard_user.id)])
@@ -41,7 +41,7 @@ class TestHrReferral(TestHrReferralBase):
         with self.assertRaises(UserError):
             self.mug_shop.sudo().buy()
         job_applicant = self.env['hr.applicant'].create({
-            'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Technical worker', 'company_id': self.company_1.id}).id,
+            'partner_name': 'Technical worker',
             'job_id': self.job_dev.id,
             'ref_user_id': self.richard_user.id,
             'company_id': self.company_1.id
@@ -64,13 +64,12 @@ class TestHrReferral(TestHrReferralBase):
         self.env['hr.referral.link.to.share'].with_user(self.richard_user.id).create({'job_id': self.job_dev.id}).url
 
         job_applicant = self.env['hr.applicant'].create({
-            'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Technical worker', 'company_id': self.company_1.id}).id,
+            'partner_name': 'Technical worker',
+            'company_id': self.company_1.id,
             'job_id': self.job_dev.id,
-            'source_id': self.richard_user.utm_source_id.id
+            'source_id': self.richard_user.utm_source_id.id,
+            'ref_user_id': self.richard_user.id,
         })
-
-        self.assertEqual(job_applicant.ref_user_id, self.richard_user, "Referral is created with the right user")
-        # self.assertEqual(job_applicant_2.ref_user_id, self.richard_user, "Referral is created with the right user")
         points_richard_c1 = self.env['hr.referral.points'].search([('ref_user_id', '=', self.richard_user.id), ('company_id', '=', self.company_1.id)])
         points_richard_c2 = self.env['hr.referral.points'].search([('ref_user_id', '=', self.richard_user.id), ('company_id', '=', self.company_2.id)])
         # All points are created for employee of company 1 as it's a job offer from company 1. No point in company 2.
@@ -98,7 +97,7 @@ class TestHrReferral(TestHrReferralBase):
             'points': 1000,  # points must be ignored for 'not hired stage'
         })
         job_applicant = self.env['hr.applicant'].create({
-            'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Technical worker', 'company_id': self.company_1.id}).id,
+            'partner_name': 'Technical worker',
             'job_id': self.job_dev.id,
             'ref_user_id': self.richard_user.id,
             'company_id': self.company_1.id,
@@ -165,7 +164,7 @@ class TestHrReferral(TestHrReferralBase):
             'points': 0,
         })
         job_applicant = self.env['hr.applicant'].create({
-            'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Technical worker', 'company_id': self.company_1.id}).id,
+            'partner_name': 'Technical worker',
             'job_id': self.job_dev.id,
             'ref_user_id': self.richard_user.id,
             'company_id': self.company_1.id,
@@ -186,9 +185,9 @@ class TestHrReferral(TestHrReferralBase):
         # Create an applicant in 'progress' state
         applicant = self.env['hr.applicant'].create({
             'partner_name': 'Test Applicant',
-            'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Test Applicant', 'company_id': self.company_1.id}).id,
             'job_id': self.job_dev.id,
             'ref_user_id': self.richard_user.id,
+            'company_id': self.company_1.id,
             'referral_state': 'progress'
         })
         # Change state to 'hired'
@@ -212,23 +211,23 @@ class TestHrReferral(TestHrReferralBase):
         applicants = self.env['hr.applicant'].create([
             {
                 'partner_name': 'Applicant 1',
-                'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Applicant 1', 'company_id': self.company_1.id}).id,
                 'job_id': self.job_dev.id,
                 'ref_user_id': self.richard_user.id,
+                'company_id': self.company_1.id,
                 'referral_state': 'hired'
             },
             {
                 'partner_name': 'Applicant 2',
-                'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Applicant 2', 'company_id': self.company_1.id}).id,
                 'job_id': self.job_dev.id,
                 'ref_user_id': self.steve_user.id,
+                'company_id': self.company_1.id,
                 'referral_state': 'closed'
             },
             {
                 'partner_name': 'Applicant 3',
-                'candidate_id': self.env['hr.candidate'].create({'partner_name': 'Applicant 3', 'company_id': self.company_1.id}).id,
                 'job_id': self.job_dev.id,
                 'ref_user_id': self.richard_user.id,
+                'company_id': self.company_1.id,
                 'referral_state': 'progress'
             }
         ])

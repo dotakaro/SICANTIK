@@ -5,7 +5,7 @@ from odoo import models, api, fields
 from odoo.addons.phone_validation.tools.phone_validation import phone_format
 
 
-class DataCleaningRecord(models.Model):
+class Data_CleaningRecord(models.Model):
     _name = 'data_cleaning.record'
     _description = 'Cleaning Record'
 

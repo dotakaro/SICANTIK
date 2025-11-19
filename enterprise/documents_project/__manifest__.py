@@ -13,16 +13,16 @@ Add the ability to create invoices from the document module.
     'depends': ['documents', 'project'],
     'data': [
         'data/documents_document_data.xml',
-        'data/ir_actions_server_data.xml',
-        'views/documents_document_views.xml',
+        'data/res_company_data.xml',
         'views/project_views.xml',
-        'views/documents_templates_share.xml',
-        'views/project_templates.xml',
+        'views/res_config_settings.xml',
     ],
     'demo': [
+        'data/ir_actions_server_demo.xml',
         'data/documents_project_demo.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'post_init_hook': '_documents_project_post_init',
 }

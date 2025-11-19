@@ -1,14 +1,12 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { session } from "@web/session";
 import { user } from "@web/core/user";
 import { Dialog } from "@web/core/dialog/dialog";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
-import { EncryptedDialog } from "./encrypted_dialog";
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { isMobileOS } from "@web/core/browser/feature_detection";
+
 
 export class ThankYouDialog extends Component {
     static template = "sign.ThankYouDialog";
@@ -33,6 +31,14 @@ export class ThankYouDialog extends Component {
             optional: true,
         },
         close: Function,
+        reference: {
+            type: String,
+            optional: true
+        },
+        isRefused: {
+            type: Boolean,
+            optional: true
+        },
     };
 
     setup() {
@@ -42,6 +48,7 @@ export class ThankYouDialog extends Component {
         this.state = useState({
             nextDocuments: [],
             buttons: [],
+            signUpButton: null
         });
         this.redirectURL = this.processURL(this.props.redirectURL);
         this.message =
@@ -60,16 +67,7 @@ export class ThankYouDialog extends Component {
         };
     }
 
-    async checkIfEncryptedDialog() {
-        const route = `/sign/encrypted/${this.signInfo.get("documentId")}`;
-        return rpc(route);
-    }
-
     async willStart() {
-        const isEncrypted = await this.checkIfEncryptedDialog();
-        if (isEncrypted) {
-            this.dialog.add(EncryptedDialog);
-        }
         this.signRequestState = await rpc(
             `/sign/sign_request_state/${this.signInfo.get("documentId")}/${this.signInfo.get(
                 "signRequestToken"
@@ -85,7 +83,7 @@ export class ThankYouDialog extends Component {
             const closeContext = result.custom_action ? {} : { clearBreadcrumbs: true };
             this.closeContext = closeContext;
         }
-        if (!this.suggestSignUp && !session.is_website_user) {
+        if (!this.suggestSignUp && !session.is_website_user && !this.props.isRefused) {
             const result = await rpc("/sign/sign_request_items", {
                 request_id: this.signInfo.get("documentId"),
                 token: this.signInfo.get("signRequestToken"),
@@ -115,34 +113,36 @@ export class ThankYouDialog extends Component {
                 click: () => {
                     window.location.assign(this.redirectURL);
                 },
-                classes: 'o_sign_thankyou_redirect_button',
-            });
-        }
-        if (!this.redirectURL) {
-            this.state.buttons.push({
-                name: this.closeLabel,
-                click: () => {
-                    if (this.suggestSignUp) {
-                        window.open(`https://odoo.com/app/sign`);
-                    }
-                    if (session.is_frontend) {
-                        const signatureRequestId = this.signInfo.get("documentId");
-                        window.location.assign(`/my/signature/${signatureRequestId}`);
-                    } else {
-                        this.props.close();
-                        this.env.services.action.doAction(this.closeAction, this.closeContext);
-                    }
-                },
-                classes: 'o_sign_thankyou_close_button'
+                classes: 'btn btn-primary o_sign_thankyou_redirect_button',
             });
         }
 
-        for (let i = 0; i < this.state.buttons.length; i++) {
-            if (this.state.buttons[i].ignored) {
-                continue;
-            }
-            const buttonClass = "btn btn-secondary";
-            this.state.buttons[i].classes = `${this.state.buttons[i].classes} ${buttonClass}`;
+        if (this.suggestSignUp) {
+            this.state.signUpButton = {
+                name: _t("Sign Up for free"),
+                classes: "btn btn-primary mt-3",
+                ignored: true,
+                click: () => {
+                    window.open(
+                        "https://www.odoo.com/trial?selected_app=sign&utm_source=db&utm_medium=sign",
+                        "_blank"
+                    );
+                },
+            };
+        }
+    }
+
+    onClickClose() {
+        if (this.suggestSignUp) {
+            window.open(`https://odoo.com/app/sign`, "_self");
+            return;
+        }
+        if (session.is_frontend) {
+            const signRequestItemId = this.signInfo.get("signRequestItemId");
+            window.location.assign(`/my/signature/${signRequestItemId}`);
+        } else {
+            this.props.close();
+            this.env.services.action.doAction(this.closeAction, this.closeContext);
         }
     }
 
@@ -192,13 +192,13 @@ export class ThankYouDialog extends Component {
 
     async downloadDocument() {
         // Simply triggers a download of the document which the user just signed.
-        window.location.assign(
+        window.open(
             this.makeURI(
                 "/sign/download",
                 this.signInfo.get("documentId"),
                 this.signInfo.get("signRequestToken"),
                 "/completed"
-            )
+            ), "_blank"
         );
     }
 

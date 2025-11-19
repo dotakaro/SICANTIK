@@ -4,9 +4,10 @@ import json
 import base64
 
 from .common import SpreadsheetTestCommon, TEST_CONTENT, GIF
-from odoo.exceptions import AccessError, ValidationError
+from odoo.exceptions import AccessError
 from odoo.tests import Form
 from odoo.tests.common import new_test_user
+from odoo.tools import mute_logger
 
 
 class SpreadsheetDocuments(SpreadsheetTestCommon):
@@ -21,8 +22,7 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
 
     def test_action_open_new_spreadsheet(self):
         action = self.env["documents.document"].action_open_new_spreadsheet()
-        action_notification = action
-        action_open = action["params"]["next"]
+        action_open = action
         spreadsheet_id = action_open["params"]["spreadsheet_id"]
         document = self.env["documents.document"].browse(spreadsheet_id)
         self.assertTrue(document.exists())
@@ -32,8 +32,6 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         self.assertEqual(document.datas, document._empty_spreadsheet_data_base64())
         self.assertEqual(action_open["type"], "ir.actions.client")
         self.assertEqual(action_open["tag"], "action_open_spreadsheet")
-        self.assertEqual(action_notification["type"], "ir.actions.client")
-        self.assertEqual(action_notification["tag"], "display_notification")
 
     def test_action_open_new_spreadsheet_with_locale(self):
         self.env["res.lang"].create(
@@ -55,11 +53,10 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         })
 
         action = self.env["documents.document"].with_user(user).action_open_new_spreadsheet()
-        spreadsheet_id = action["params"]["next"]["params"]["spreadsheet_id"]
+        spreadsheet_id = action["params"]["spreadsheet_id"]
         document = self.env["documents.document"].browse(spreadsheet_id)
         self.assertTrue(document.exists())
 
-        data = document.join_spreadsheet_session()["data"]
         expected_locale = {
             "code": "en_FR",
             "name": "Custom Locale",
@@ -70,13 +67,13 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
             "formulaArgSeparator": ";",
             "weekStart": 1,
         }
-        self.assertEqual(data["settings"]["locale"], expected_locale)
+        self.assertEqual(json.loads(document.spreadsheet_data)["settings"]["locale"], expected_locale)
 
     def test_action_open_new_spreadsheet_in_folder(self):
         action = self.env["documents.document"].action_open_new_spreadsheet({
             "folder_id": self.folder.id
         })
-        spreadsheet_id = action["params"]["next"]["params"]["spreadsheet_id"]
+        spreadsheet_id = action["params"]["spreadsheet_id"]
         document = self.env["documents.document"].browse(spreadsheet_id)
         self.assertEqual(document.folder_id, self.folder)
 
@@ -130,43 +127,20 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         """Existing spreadsheet in the database can influence some test results"""
         self.env["documents.document"].search([("handler", "=", "spreadsheet")]).active = False
 
-    def test_spreadsheet_default_folder(self):
+    def test_spreadsheet_my_drive_folder(self):
         user1 = new_test_user(self.env, login="Alice", groups="base.group_user")
-        user2 = new_test_user(self.env, login="Bob", groups="base.group_user")
 
         document = self.env["documents.document"].with_user(user1).create({
             "spreadsheet_data": "{}",
             "handler": "spreadsheet",
             "mimetype": "application/o-spreadsheet",
         })
-        self.assertEqual(
-            document.folder_id,
-            self.env.company.document_spreadsheet_folder_id,
-            "It should have been assigned the default Spreadsheet Folder"
-        )
-        self.assertEqual(document.access_internal, 'edit')
+        self.assertFalse(document.folder_id, "The spreadsheet is created in My Drive")
+        # And only user1 have access to it
+        self.assertEqual(document.owner_id, user1)
+        self.assertEqual(document.access_internal, 'none')
         self.assertEqual(document.access_via_link, 'none')
-
-        # Bob can read the documents of Alice
-        result = self.env['documents.document'].with_user(user2).search(
-            [('folder_id', '=', document.folder_id.id)])
-        self.assertIn(document, result)
-
-        self.env.company.document_spreadsheet_folder_id = self.env['documents.document'].create({
-            'name': 'Spreadsheet - Test Folder',
-            'type': 'folder',
-            'access_internal': 'edit',
-        })
-        document = self.env["documents.document"].with_user(user1).create({
-            "spreadsheet_data": "{}",
-            "handler": "spreadsheet",
-            "mimetype": "application/o-spreadsheet",
-        })
-        self.assertEqual(
-            document.folder_id,
-            self.env.company.document_spreadsheet_folder_id,
-            "It should have been assigned the default Spreadsheet Folder"
-        )
+        self.assertFalse(document.access_ids.filtered(lambda a: a.partner_id != user1.partner_id))
 
     def test_spreadsheet_no_default_folder(self):
         """Folder is not overwritten by the default spreadsheet folder"""
@@ -205,13 +179,9 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
             'mimetype': 'application/o-spreadsheet',
         })
 
-        # inherit access from default parent folder (Spreadsheet)
-        self.assertEqual(
-            document_1.folder_id,
-            self.env.company.document_spreadsheet_folder_id,
-            'It should have been assigned the default Spreadsheet Folder'
-        )
-        self.assertEqual(document_1.access_internal, 'edit')
+        # inherit access from parent folder (My Drive)
+        self.assertFalse(document_1.folder_id, False)
+        self.assertEqual(document_1.access_internal, 'none')
         self.assertEqual(document_1.access_via_link, 'none')
 
         # inherit access from parent folder (My Drive)
@@ -373,7 +343,7 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
             spreadsheet1 = self.create_spreadsheet()
         with self._freeze_time("2020-02-15 18:00"):
             spreadsheet2 = self.create_spreadsheet()
-        spreadsheet1.join_spreadsheet_session()
+        spreadsheet1._get_serialized_spreadsheet_data_body()
         spreadsheets = self.env["documents.document"]._get_spreadsheets_to_display([])
         spreadsheet_ids = [s["id"] for s in spreadsheets]
         self.assertEqual(spreadsheet_ids, [spreadsheet1.id, spreadsheet2.id])
@@ -711,7 +681,8 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         #########
         # ADMIN #
         #########
-        copy_admin = spreadsheet.copy()
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            copy_admin = spreadsheet.copy()
         self.assertEqual(
             len(copy_admin.spreadsheet_revision_ids),
             1,
@@ -724,7 +695,7 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         spreadsheet.invalidate_recordset()
         copy_non_admin = spreadsheet.with_user(user).copy()
         self.assertEqual(
-            len(copy_non_admin.spreadsheet_revision_ids),
+            len(copy_non_admin.sudo().spreadsheet_revision_ids),
             1,
             "The revision should be copied with non-admin access right",
         )
@@ -736,7 +707,8 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
             spreadsheet,
             spreadsheet.current_revision_uuid, "snapshot-revision-id", {"sheets": [], "revisionId": "snapshot-revision-id"},
         )
-        copy = spreadsheet.copy()
+        with mute_logger('odoo.addons.documents.models.documents_document'):
+            copy = spreadsheet.copy()
         self.assertEqual(
             copy.spreadsheet_snapshot,
             spreadsheet.spreadsheet_snapshot,
@@ -745,20 +717,15 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
 
     def test_copy_sheet_name(self):
         spreadsheet = self.create_spreadsheet({"name": "spreadsheet"})
-        copy = spreadsheet.copy()
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            copy = spreadsheet.copy()
         self.assertEqual(copy.name, 'spreadsheet (copy)')
 
     def test_copy_default_sheet_name(self):
         spreadsheet = self.create_spreadsheet({"name": "spreadsheet"})
-        copy = spreadsheet.copy({'name': 'sheet'})
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            copy = spreadsheet.copy({'name': 'sheet'})
         self.assertEqual(copy.name, 'sheet')
-
-    def test_join_session_name_is_a_string(self):
-        spreadsheet = self.create_spreadsheet(name="")
-        self.assertEqual(spreadsheet.name, "")
-        self.assertFalse(spreadsheet.display_name)
-        session_data = spreadsheet.join_spreadsheet_session()
-        self.assertEqual(session_data["name"], "")
 
     def test_copy_image_in_snapshot(self):
         spreadsheet = self.create_spreadsheet()
@@ -803,12 +770,13 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         }
         spreadsheet.spreadsheet_data = json.dumps(spreadsheet_data)
         self.snapshot(spreadsheet, "START_REVISION", "NEW_REVISION", spreadsheet_data)
-        copy = spreadsheet.copy({
-            "spreadsheet_data": spreadsheet.spreadsheet_data,
-            "spreadsheet_snapshot": spreadsheet.spreadsheet_snapshot,
-        })
+        with mute_logger('odoo.addons.documents.models.documents_document'):
+            copy = spreadsheet.copy({
+                "spreadsheet_data": spreadsheet.spreadsheet_data,
+                "spreadsheet_snapshot": spreadsheet.spreadsheet_snapshot,
+            })
         copied_data = json.loads(copy.spreadsheet_data)
-        copied_snapshot = copy._get_spreadsheet_snapshot()
+        copied_snapshot = json.loads(copy._get_spreadsheet_serialized_snapshot())
         for data_copy in (copied_data, copied_snapshot):
             [figure, figure_with_token] = data_copy["sheets"][0]["figures"]
             image_definition = figure["data"]
@@ -840,7 +808,9 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         commands = [{
             "type": "CREATE_IMAGE",
             "figureId": "image-id",
-            "position": {"x": 0, "y": 0},
+            "col": 0,
+            "row": 0,
+            "offset": {"x": 0, "y": 0},
             "size": {"width": 1, "height": 1},
             "definition": {
                 "path": "/web/image/%s" % image.id,
@@ -848,7 +818,9 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         }, {
             "type": "CREATE_IMAGE",
             "figureId": "image-id2",
-            "position": {"x": 0, "y": 0},
+            "col": 0,
+            "row": 0,
+            "offset": {"x": 0, "y": 0},
             "size": {"width": 1, "height": 1},
             "definition": {
                 "path": "/web/image/%s?access_token=%s" % (image.id, image.generate_access_token()[0]),
@@ -856,7 +828,8 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         }]
 
         spreadsheet.dispatch_spreadsheet_message(self.new_revision_data(spreadsheet, commands=commands))
-        copy = spreadsheet.copy()
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            copy = spreadsheet.copy()
         revision = copy.spreadsheet_revision_ids
         [command, command_with_token] = json.loads(revision.commands)["commands"]
         path = command["definition"]["path"]
@@ -904,7 +877,8 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
         spreadsheet = self.create_spreadsheet({
             "spreadsheet_data": json.dumps(spreadsheet_data)
         })
-        copy = spreadsheet.copy({
+        with mute_logger('odoo.addons.documents.models.documents_document'):  # Creating document(s) as superuser
+            copy = spreadsheet.copy({
             "spreadsheet_data": spreadsheet.spreadsheet_data,
             "spreadsheet_snapshot": spreadsheet.spreadsheet_snapshot,
         })
@@ -978,45 +952,3 @@ class SpreadsheetDocuments(SpreadsheetTestCommon):
             }],
             "total": 1,
         })
-
-    def test_company_consistency(self):
-        """
-        A folder can be company-specific. A company can have one spreadsheet
-        folder. Several companies can share the same one. A default folder
-        exists and is used on company creation. This test checks several
-        scenarios to ensure that there isn't any inconsistency between the
-        company of the folders and the companies
-        """
-        folder01 = self.env.ref('documents_spreadsheet.document_spreadsheet_folder')
-        company01 = self.env.company
-
-        # Make sure the setup is as expected
-        folder01.company_id = False
-        company01.document_spreadsheet_folder_id = folder01
-
-        company02 = self.env['res.company'].create({
-            'name': 'Comp02',
-        })
-        self.assertEqual(company02.document_spreadsheet_folder_id, folder01)
-
-        with self.assertRaises(ValidationError):
-            # folder01 is used by both company01 and company02
-            folder01.company_id = company01
-
-        folder02 = folder01.copy()
-        company02.document_spreadsheet_folder_id = folder02
-        folder01.company_id = company01
-
-        company03 = self.env['res.company'].create({
-            'name': 'Comp03',
-        })
-        self.assertTrue(company03)
-        self.assertFalse(company03.document_spreadsheet_folder_id)
-
-        with self.assertRaises(ValidationError):
-            # folder01 belongs to company01
-            company03.document_spreadsheet_folder_id = folder01
-
-        with self.assertRaises(ValidationError):
-            # folder01 is used by company01
-            folder01.company_id = company03

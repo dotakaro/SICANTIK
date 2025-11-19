@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Keep BASIC as is -->
+    <record id="l10n_id_hr_payroll_structure_id_employee_salary_basic_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.BASIC"/>
+        <field name="name">Basic Salary</field>
+        <field name="sequence">1</field>
+        <field name="code">BASIC</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = payslip.paid_amount
+        </field>
+        <field name="struct_id" ref="hr_payroll_structure_id_employee_salary"/>
+    </record>
 
     <!-- Employee general allowances/benefits -->
     <record id="salary_rule_id_transport_allowance" model="hr.salary.rule">
@@ -117,10 +128,10 @@ result = categories['BASIC'] + categories['ALW']
         <field name="code">BPJS_JKK</field>
         <field name="sequence">4</field>
         <field name="condition_select">python</field>
-        <field name="condition_python">result = contract.l10n_id_bpjs_jkk and payslip.l10n_id_include_jkk_jkm</field>
+        <field name="condition_python">result = version.l10n_id_bpjs_jkk and payslip.l10n_id_include_jkk_jkm</field>
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
-result = payslip._l10n_id_get_worked_days_rate() * contract.wage * contract.l10n_id_bpjs_jkk
+result = payslip._l10n_id_get_worked_days_rate() * version.wage * version.l10n_id_bpjs_jkk
         </field>
         <field name="struct_id" ref="l10n_id_hr_payroll.hr_payroll_structure_id_employee_salary"/>
     </record>
@@ -134,7 +145,7 @@ result = payslip._l10n_id_get_worked_days_rate() * contract.wage * contract.l10n
         <field name="condition_python">result = payslip.l10n_id_include_jkk_jkm</field>
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
-result = payslip._l10n_id_get_worked_days_rate() * contract.wage
+result = payslip._l10n_id_get_worked_days_rate() * version.wage
 result_rate = payslip._rule_parameter('l10n_id_jkm_percentage')
         </field>
         <field name="struct_id" ref="l10n_id_hr_payroll.hr_payroll_structure_id_employee_salary"/>
@@ -149,21 +160,25 @@ result_rate = payslip._rule_parameter('l10n_id_jkm_percentage')
         <field name="condition_python">result = payslip.l10n_id_include_bpjs_kesehatan</field>
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
-result = min(payslip._l10n_id_get_worked_days_rate() * contract.wage, payslip._rule_parameter('l10n_id_bpjs_salary_threshold'))
+result = min(payslip._l10n_id_get_worked_days_rate() * version.wage, payslip._rule_parameter('l10n_id_bpjs_salary_threshold'))
 result_rate = payslip._rule_parameter('l10n_id_alw_bpjs_kesehatan_percent')
         </field>
         <field name="struct_id" ref="l10n_id_hr_payroll.hr_payroll_structure_id_employee_salary"/>
     </record>
 
     <!-- GROSS: BASIC + ALW + COMP -->
-    <function model="hr.salary.rule" name="write">
-        <value model="hr.salary.rule" search="[
-            ('struct_id', '=', ref('l10n_id_hr_payroll.hr_payroll_structure_id_employee_salary')),
-            ('code', '=', 'GROSS')]"/>
-        <value eval="{
-            'amount_python_compute': &quot;result = categories['BASE'] + categories['COMP']&quot;
-        }"/>
-    </function>
+    <record id="l10n_id_hr_payroll_structure_id_employee_salary_gross_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.GROSS"/>
+        <field name="name">Taxable Salary</field>
+        <field name="sequence">100</field>
+        <field name="code">GROSS</field>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = categories['BASE'] + categories['COMP']
+        </field>
+        <field name="struct_id" ref="hr_payroll_structure_id_employee_salary"/>
+    </record>
 
     <!-- DEDUCTIONS -->
     <record id="salary_rule_id_jht" model="hr.salary.rule">
@@ -176,7 +191,7 @@ result_rate = payslip._rule_parameter('l10n_id_alw_bpjs_kesehatan_percent')
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
 result_rate = payslip._rule_parameter('l10n_id_jht_percent')
-result = - payslip._l10n_id_get_worked_days_rate() * contract.wage
+result = - payslip._l10n_id_get_worked_days_rate() * version.wage
         </field>
         <field name="struct_id" ref="l10n_id_hr_payroll.hr_payroll_structure_id_employee_salary"/>
     </record>
@@ -190,7 +205,7 @@ result = - payslip._l10n_id_get_worked_days_rate() * contract.wage
         <field name="condition_python">result = payslip.l10n_id_include_bpjs_kesehatan</field>
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
-result = - min(payslip._l10n_id_get_worked_days_rate() * contract.wage, payslip._rule_parameter('l10n_id_bpjs_salary_threshold'))
+result = - min(payslip._l10n_id_get_worked_days_rate() * version.wage, payslip._rule_parameter('l10n_id_bpjs_salary_threshold'))
 result_rate = payslip._rule_parameter('l10n_id_ded_bpjs_kesehatan_percent')
         </field>
         <field name="struct_id" ref="l10n_id_hr_payroll.hr_payroll_structure_id_employee_salary"/>
@@ -205,7 +220,7 @@ result_rate = payslip._rule_parameter('l10n_id_ded_bpjs_kesehatan_percent')
         <field name="condition_python">result = payslip.l10n_id_include_jkk_jkm</field>
         <field name="amount_select">code</field>
         <field name="amount_python_compute">
-result = - min(payslip._l10n_id_get_worked_days_rate() * contract.wage, payslip._rule_parameter('l10n_id_jp_threshold'))
+result = - min(payslip._l10n_id_get_worked_days_rate() * version.wage, payslip._rule_parameter('l10n_id_jp_threshold'))
 result_rate = payslip._rule_parameter('l10n_id_jp_percent')
         </field>
         <field name="struct_id" ref="l10n_id_hr_payroll.hr_payroll_structure_id_employee_salary"/>
@@ -291,5 +306,94 @@ else:
 result = -result
         </field>
         <field name="struct_id" ref="l10n_id_hr_payroll.hr_payroll_structure_id_employee_salary"/>
+    </record>
+
+    <record id="l10n_id_hr_payroll_structure_id_employee_salary_attachment_of_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Attachment of Salary</field>
+        <field name="sequence">174</field>
+        <field name="code">ATTACH_SALARY</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'ATTACH_SALARY' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -inputs['ATTACH_SALARY'].amount
+result_name = inputs['ATTACH_SALARY'].name
+        </field>
+        <field name="struct_id" ref="hr_payroll_structure_id_employee_salary"/>
+    </record>
+
+    <record id="l10n_id_hr_payroll_structure_id_employee_salary_assignment_of_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Assignment of Salary</field>
+        <field name="sequence">174</field>
+        <field name="code">ASSIG_SALARY</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'ASSIG_SALARY' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -inputs['ASSIG_SALARY'].amount
+result_name = inputs['ASSIG_SALARY'].name
+        </field>
+        <field name="struct_id" ref="hr_payroll_structure_id_employee_salary"/>
+    </record>
+
+    <record id="l10n_id_hr_payroll_structure_id_employee_salary_child_support" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Child Support</field>
+        <field name="code">CHILD_SUPPORT</field>
+        <field name="amount_select">code</field>
+        <field name="sequence">174</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'CHILD_SUPPORT' in inputs</field>
+        <field name="amount_python_compute">
+result = -inputs['CHILD_SUPPORT'].amount
+result_name = inputs['CHILD_SUPPORT'].name
+        </field>
+        <field name="struct_id" ref="hr_payroll_structure_id_employee_salary"/>
+    </record>
+
+    <record id="l10n_id_hr_payroll_structure_id_employee_salary_deduction_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="name">Deduction</field>
+        <field name="sequence">198</field>
+        <field name="code">DEDUCTION</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'DEDUCTION' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = -inputs['DEDUCTION'].amount
+result_name = inputs['DEDUCTION'].name
+        </field>
+        <field name="struct_id" ref="hr_payroll_structure_id_employee_salary"/>
+    </record>
+
+    <record id="l10n_id_hr_payroll_structure_id_employee_salary_reimbursement_salary_rule" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="name">Reimbursement</field>
+        <field name="sequence">199</field>
+        <field name="code">REIMBURSEMENT</field>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = 'REIMBURSEMENT' in inputs</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = inputs['REIMBURSEMENT'].amount
+result_name = inputs['REIMBURSEMENT'].name
+        </field>
+        <field name="struct_id" ref="hr_payroll_structure_id_employee_salary"/>
+    </record>
+
+    <record id="l10n_id_hr_payroll_structure_id_employee_salary_net_salary" model="hr.salary.rule">
+        <field name="category_id" ref="hr_payroll.NET"/>
+        <field name="name">Net Salary</field>
+        <field name="sequence">200</field>
+        <field name="code">NET</field>
+        <field name="appears_on_employee_cost_dashboard" eval="True"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+result = categories['BASIC'] + categories['ALW'] + categories['DED']
+        </field>
+        <field name="struct_id" ref="hr_payroll_structure_id_employee_salary"/>
     </record>
 </odoo>

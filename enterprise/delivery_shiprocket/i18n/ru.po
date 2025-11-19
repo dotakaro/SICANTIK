@@ -7,10 +7,10 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Russian (https://app.transifex.com/odoo/teams/41243/ru/)\n"
 "MIME-Version: 1.0\n"
@@ -137,11 +137,6 @@ msgid "Authentication failed! Please check your credentials."
 msgstr "Аутентификация не удалась! Пожалуйста, проверьте свои учетные данные."
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__cod
-msgid "COD"
-msgstr "Наложенный платеж"
-
-#. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__package_carrier_type
 msgid "Carrier"
 msgstr "Перевозчик"
@@ -223,8 +218,13 @@ msgid "Created on"
 msgstr "Создано"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "Отображаемое имя"
 
@@ -320,8 +320,13 @@ msgid "Go to Shipping Methods"
 msgstr "Перейти к способам доставки"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -367,15 +372,15 @@ msgid "Package Type"
 msgstr "Тип размещения"
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid "Payment Method"
-msgstr "Способ оплаты"
+#: model:ir.model,name:delivery_shiprocket.model_payment_provider
+msgid "Payment Provider"
+msgstr "Поставщик платежей"
 
 #. module: delivery_shiprocket
 #. odoo-python
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
-msgid "Phone or Mobile is required!"
-msgstr "Телефон или мобильный телефон обязателен!"
+msgid "Phone is required!"
+msgstr ""
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_pickup_request
@@ -393,11 +398,6 @@ msgstr "Пинкод обязателен!"
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
 msgid "Please configure Shiprocket credentials in the shipping method"
 msgstr "Пожалуйста, настройте учетные данные Shiprocket в способе доставки"
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__prepaid
-msgid "Prepaid"
-msgstr "Оплачены по предоплате"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__delivery_type
@@ -546,6 +546,12 @@ msgid "Shiprocket order(s) not found to cancel the shipment!"
 msgstr "Заказ(ы) Shiprocket не найден(ы), чтобы отменить отправку!"
 
 #. module: delivery_shiprocket
+#. odoo-python
+#: code:addons/delivery_shiprocket/models/payment_provider.py:0
+msgid "Shiprocket provider is configured to use only Collect on Delivery."
+msgstr ""
+
+#. module: delivery_shiprocket
 #: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_default_package_type_id
 msgid ""
 "Shiprocket requires package dimensions for getting accurate rate, you can "
@@ -603,15 +609,6 @@ msgstr "Синхронизация курьеров с Shiprocket"
 #: model_terms:ir.ui.view,arch_db:delivery_shiprocket.view_delivery_carrier_form_inherit_delivery_shiprocket
 msgid "Test Connection"
 msgstr "Тест подключения"
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid ""
-"The method of payment. Can be either COD (Cash on delivery) Or Prepaid while"
-" creating Shiprocket order."
-msgstr ""
-"Способ оплаты. Может быть либо COD (наложенный платеж), либо предоплата при "
-"создании заказа на Shiprocket."
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_token_valid_upto

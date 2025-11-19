@@ -271,6 +271,10 @@ class ProviderUSPS(models.Model):
         return commodities
 
     def _get_picking_packages(self, picking):
+        self.ensure_one()
+        if self.delivery_type != 'usps_rest':
+            # Method will be renamed in master so that it doesn't clash with delivery_dhl_rest
+            return super()._get_picking_packages(picking)
         packages = []
 
         if picking.is_return_picking:

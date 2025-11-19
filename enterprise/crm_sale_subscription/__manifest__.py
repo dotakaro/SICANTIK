@@ -3,11 +3,12 @@
 {
     'name': 'CRM Sale Subscription',
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Sales/CRM',
     'description': """
 Bridge module between CRM and Sale subscription.
     """,
     'depends': ['crm', 'sale_subscription'],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

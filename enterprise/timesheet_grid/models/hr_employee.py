@@ -1,16 +1,18 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 from collections import defaultdict
 from datetime import datetime, time, timedelta
 from pytz import timezone, UTC
 
 from odoo import api, fields, models, _
 from odoo.tools import float_round
-from odoo.addons.resource.models.utils import sum_intervals, HOURS_PER_DAY
+from odoo.tools.date_utils import sum_intervals
 from odoo.exceptions import UserError
 
+from odoo.addons.resource.models.utils import HOURS_PER_DAY
 
-class Employee(models.Model):
+
+class HrEmployee(models.Model):
     _inherit = 'hr.employee'
 
     def _get_employees_working_hours(self, employees, start_datetime, end_datetime):
@@ -29,10 +31,10 @@ class Employee(models.Model):
 
     def _get_timesheet_manager_id_domain(self):
         group = self.env.ref('hr_timesheet.group_hr_timesheet_approver', raise_if_not_found=False)
-        return [('groups_id', 'in', [group.id])] if group else []
+        return [('all_group_ids', 'in', [group.id])] if group else []
 
     timesheet_manager_id = fields.Many2one(
-        'res.users', string='Timesheet',
+        'res.users', string='Timesheet Approver',
         compute='_compute_timesheet_manager', store=True, readonly=False,
         domain=_get_timesheet_manager_id_domain,
         help='Select the user responsible for approving "Timesheet" of this employee.\n'
@@ -145,7 +147,7 @@ class Employee(models.Model):
         about the hours employees have worked and should work.
 
         :param date_start: date start of the interval to search
-        :param state_stop: date stop of the interval to search
+        :param date_stop: date stop of the interval to search
         :return: Dictionary of dictionary
                  for each employee id =>
                      number of units to work,
@@ -203,10 +205,3 @@ class Employee(models.Model):
             employee.id: employee.last_validated_timesheet_date
             for employee in self.sudo()
         }
-
-
-class HrEmployeePublic(models.Model):
-    _inherit = 'hr.employee.public'
-
-    timesheet_manager_id = fields.Many2one('res.users', string='Timesheet',
-        help="User responsible of timesheet validation. Should be Timesheet Manager.")

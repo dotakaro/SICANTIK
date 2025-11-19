@@ -4,7 +4,7 @@
 from odoo import fields, models
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = 'res.company'
 
     planning_generation_interval = fields.Integer("Rate Of Shift Generation", required=True, readonly=False, default=6)
@@ -21,4 +21,7 @@ class Company(models.Model):
 
     planning_self_unassign_days_before = fields.Integer("Days before shift for unassignment", help="Deadline in days for shift unassignment")
 
-    _sql_constraints = [('planning_self_unassign_days_before_positive', 'CHECK(planning_self_unassign_days_before >= 0)', "The amount of days before unassignment must be positive or equal to zero.")]
+    _planning_self_unassign_days_before_positive = models.Constraint(
+        'CHECK(planning_self_unassign_days_before >= 0)',
+        "The amount of days before unassignment must be positive or equal to zero.",
+    )

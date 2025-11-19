@@ -6,8 +6,8 @@ from odoo import api, fields, models
 from odoo.tools.misc import clean_context
 
 
-class RequestWizard(models.TransientModel):
-    _name = "documents.request_wizard"
+class DocumentsRequest_Wizard(models.TransientModel):
+    _name = 'documents.request_wizard'
     _description = "Document Request"
 
     name = fields.Char(required=True)
@@ -16,7 +16,7 @@ class RequestWizard(models.TransientModel):
 
     activity_type_id = fields.Many2one('mail.activity.type',
                                        string="Activity type",
-                                       default=lambda self: self.env.ref('documents.mail_documents_activity_data_md',
+                                       default=lambda self: self.env.ref('mail.mail_activity_data_upload_document',
                                                                          raise_if_not_found=False),
                                        required=True,
                                        domain="[('category', '=', 'upload_file')]")
@@ -53,7 +53,6 @@ class RequestWizard(models.TransientModel):
             'name': self.name,
             'folder_id': self.folder_id.id,
             'tag_ids': [(6, 0, self.tag_ids.ids if self.tag_ids else [])],
-            'owner_id': self.env.user.id,
             'partner_id': self.partner_id.id if self.partner_id else False,
             'requestee_partner_id': self.requestee_id.id,
             'res_model': self.res_model,

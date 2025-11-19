@@ -16,9 +16,9 @@ class TestSaleSubscriptionProductTemplate(TestSubscriptionCommon):
         super().setUpClass()
 
         cls.subscription_product = cls._create_product(
-            product_subscription_pricing_ids=[
-                Command.create({'plan_id': cls.plan_week.id, 'price': 5}),
-                Command.create({'plan_id': cls.plan_month.id, 'price': 15}),
+            subscription_rule_ids=[
+                Command.create({'plan_id': cls.plan_week.id, 'fixed_price': 5}),
+                Command.create({'plan_id': cls.plan_month.id, 'fixed_price': 15}),
             ],
         )
 

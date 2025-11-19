@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import logging
 import requests
 from werkzeug.urls import url_join
 
 from odoo import http, _, tools
 from odoo.http import request
 
-_logger = logging.getLogger(__name__)
-
 
 class SocialPushNotificationsController(http.Controller):
-    @http.route('/social_push_notifications/fetch_push_configuration', type='json', auth='public', website=True)
+    @http.route('/social_push_notifications/fetch_push_configuration', type='jsonrpc', auth='public', website=True)
     def fetch_push_configuration(self):
         """ Fetches the firebase push configuration for the current website (if any). """
         current_website = request.website
@@ -31,19 +28,10 @@ class SocialPushNotificationsController(http.Controller):
         if not current_website.firebase_use_own_account \
            and (not current_website.firebase_project_id or
            not current_website.firebase_web_api_key or
+           not current_website.firebase_web_app_id or
            not current_website.firebase_push_certificate_key or
            not current_website.firebase_sender_id):
             self._register_iap_firebase_info(current_website)
-
-        firebase_web_app_id = request.env['ir.config_parameter'].sudo().get_param(
-            'social_push_notification.firebase_web_app_id')
-
-        if not firebase_web_app_id:
-            _logger.error(
-                'No Firebase App ID provided in the configuration. '
-                'Please, make sure to add an Odoo system parameter '
-                '`social_push_notification.firebase_web_app_id` '
-                'with the App ID of your Firebase App.')
 
         return {
             'notification_request_title': title,
@@ -52,7 +40,7 @@ class SocialPushNotificationsController(http.Controller):
             'notification_request_icon': icon,
             'firebase_project_id': current_website.firebase_project_id,
             'firebase_web_api_key': current_website.firebase_web_api_key,
-            'firebase_web_app_id': firebase_web_app_id,
+            'firebase_web_app_id': current_website.firebase_web_app_id,
             'firebase_push_certificate_key': current_website.firebase_push_certificate_key,
             'firebase_sender_id': current_website.firebase_sender_id
         }
@@ -74,13 +62,12 @@ class SocialPushNotificationsController(http.Controller):
             current_website.sudo().write({
                 'firebase_project_id': result_json['firebase_project_id'],
                 'firebase_web_api_key': result_json['firebase_web_api_key'],
+                'firebase_web_app_id': result_json['firebase_web_app_id'],
                 'firebase_push_certificate_key': result_json['firebase_push_certificate_key'],
                 'firebase_sender_id': result_json['firebase_sender_id'],
             })
-            request.env['ir.config_parameter'].sudo().set_param(
-                'social_push_notification.firebase_web_app_id', result_json['firebase_web_app_id'])
 
-    @http.route('/social_push_notifications/register', type='json', auth='public', website=True)
+    @http.route('/social_push_notifications/register', type='jsonrpc', auth='public', website=True)
     def register(self, token):
         """ Store the firebase token on the website visitor.
         If the visitor does not exists yet, create one and return the signed website.visitor id
@@ -96,7 +83,7 @@ class SocialPushNotificationsController(http.Controller):
 
         return res
 
-    @http.route('/social_push_notifications/unregister', type='json', auth='public')
+    @http.route('/social_push_notifications/unregister', type='jsonrpc', auth='public')
     def unregister(self, token):
         if token:
             visitor_sudo = request.env['website.visitor'].sudo()._get_visitor_from_request()

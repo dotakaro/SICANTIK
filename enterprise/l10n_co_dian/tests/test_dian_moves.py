@@ -99,7 +99,7 @@ class TestDianMoves(TestCoDianCommon):
                 'tax_ids': [Command.set([self.tax_iva_19.id])],
             }),
         ])
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_sugar.xml")
 
     def test_invoice_alcohol(self):
@@ -129,8 +129,47 @@ class TestDianMoves(TestCoDianCommon):
                 'tax_ids': [Command.set([self.tax_iva_19.id])],
             }),
         ])
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_alcohol.xml")
+
+    def test_invoice_service_aiu(self):
+        product_service = self.env['product.product'].create({
+            'name': 'Limpieza Instrumento',
+            'type': 'service',
+            'default_code': 'LU0000001'
+        })
+        exempt_tax = self.env['account.chart.template'].ref('l10n_co_tax_10')
+        invoice = self._create_move(
+            invoice_line_ids=[
+            Command.create({
+                'product_id': product_service.id,
+                'quantity': 1,
+                'price_unit': 1500.00,
+                'tax_ids': [Command.set([exempt_tax.id])],
+            }),
+            Command.create({
+                'product_id': self.env.ref('l10n_co_dian.product_product_administracion').id,
+                'quantity': 1,
+                'price_unit': 450.00,
+                'tax_ids': [Command.set([exempt_tax.id])],
+            }),
+            Command.create({
+                'product_id': self.env.ref('l10n_co_dian.product_product_imprevistos').id,
+                'quantity': 1,
+                'price_unit': 300.00,
+                'tax_ids': [Command.set([exempt_tax.id])],
+            }),
+            Command.create({
+                'product_id': self.env.ref('l10n_co_dian.product_product_utilidad').id,
+                'quantity': 1,
+                'price_unit': 750.00,
+                'tax_ids': [Command.set([self.tax_iva_19.id])],
+            }),
+        ])
+        invoice.l10n_co_edi_operation_type = '09'  # "AIU"
+
+        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_aiu.xml")
 
     def test_multicurrency(self):
         """
@@ -164,13 +203,13 @@ class TestDianMoves(TestCoDianCommon):
                 })
             ]
         )
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_multicurrency.xml")
 
     def test_credit_note_20(self):
         """ Credit note referencing an invoice """
         invoice = self._create_move()
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self.env['l10n_co_dian.document']._create_document(xml, invoice, state='invoice_accepted')
 
         credit_note = self._create_move(
@@ -181,7 +220,7 @@ class TestDianMoves(TestCoDianCommon):
             l10n_co_edi_operation_type='20',  # "Nota Crédito que referencia una factura electrónica"
             l10n_co_edi_description_code_credit='1',  # "Devolución parcial de los bienes"
         )
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(credit_note)[0]
+        xml = self._generate_xml(credit_note)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/credit_note_20.xml")
 
     def test_credit_note_22(self):
@@ -193,7 +232,7 @@ class TestDianMoves(TestCoDianCommon):
             l10n_co_edi_operation_type='22',  # "Nota Crédito sin referencia a facturas"
             l10n_co_edi_description_code_credit='6',  # "Descuento comercial por volumen de ventas"
         )
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(credit_note)[0]
+        xml = self._generate_xml(credit_note)
         self.env['l10n_co_dian.document']._create_document(xml, credit_note, state='invoice_accepted')
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/credit_note_22.xml")
 
@@ -220,7 +259,7 @@ class TestDianMoves(TestCoDianCommon):
                 }),
             ]
         )
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_exportation.xml")
 
     def test_invoice_with_stmt_lines_and_exchange_diff(self):
@@ -259,7 +298,7 @@ class TestDianMoves(TestCoDianCommon):
         self.assertEqual(invoice.amount_residual, 694.84)
 
         # The xml should include 2 'PrepaidPayment'
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_prepaid_payment_1.xml")
 
     def test_invoice_with_payment(self):
@@ -279,7 +318,7 @@ class TestDianMoves(TestCoDianCommon):
         self.assertEqual(invoice.amount_residual, 4114565.06)
 
         # The xml should already include 1 'PrepaidPayment'
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         root = etree.fromstring(xml)
         self.assertEqual(len(root.findall('.//{*}PrepaidPayment')), 1)
         self.assertEqual(root.findtext('.//{*}PrepaidPayment/{*}PaidAmount'), "500.00")
@@ -299,8 +338,21 @@ class TestDianMoves(TestCoDianCommon):
         self.assertEqual(invoice.amount_residual, 4114565.06)
 
         # The xml should still include 1 'PrepaidPayment'
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_prepaid_payment_2.xml")
+
+    def test_invoice_with_line_discount(self):
+        invoice = self._create_move(
+            invoice_line_ids=[
+                Command.create({
+                    'product_id': self.product_a.id,
+                    'price_unit': 100,
+                    'discount': 10,
+                }),
+            ],
+        )
+        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_with_line_discount.xml")
 
     def test_invoice_withholding(self):
         """ Invoice containing retention taxes (should fill the 'WithholdingTaxTotal' nodes) """
@@ -325,13 +377,41 @@ class TestDianMoves(TestCoDianCommon):
                 }),
             ],
         )
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/invoice_withholding.xml")
+
+    def test_credit_note_withholding(self):
+        """ Credit note containing retention taxes (should NOT fill the 'WithholdingTaxTotal' nodes) """
+        credit_note = self._create_move(
+            move_type='out_refund',
+            l10n_co_edi_type=L10N_CO_EDI_TYPE['Credit Note'],
+            invoice_line_ids=[
+                Command.create({
+                    'product_id': self.product_a.id,
+                    'price_unit': 100,
+                    'tax_ids': [Command.set([
+                        self.tax_iva_19.id,
+                        self.env["account.chart.template"].ref('l10n_co_tax_56').id,
+                        self.tax_ret_ica_0414.id,
+                    ])],
+                }),
+                Command.create({
+                    'product_id': self.product_b.id,
+                    'price_unit': 100,
+                    'tax_ids': [Command.set([
+                        self.tax_iva_5.id,
+                        self.env["account.chart.template"].ref('l10n_co_tax_55').id,
+                    ])],
+                }),
+            ],
+        )
+        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(credit_note)[0]
+        self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/credit_note_withholding.xml")
 
     def test_debit_note_30(self):
         """ Debit note referencing an invoice """
         invoice = self._create_move()
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self.env['l10n_co_dian.document']._create_document(xml, invoice, state='invoice_accepted')
 
         wizard = self.env['account.debit.note']\
@@ -347,7 +427,7 @@ class TestDianMoves(TestCoDianCommon):
         debit_note.l10n_co_edi_description_code_debit = '3'  # "Cambio del valor"
         debit_note.action_post()
         self.assertEqual(debit_note.l10n_co_edi_operation_type, '30')  # "Nota Débito que referencia una factura electrónica"
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(debit_note)[0]
+        xml = self._generate_xml(debit_note)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/debit_note_30.xml")
 
     def test_debit_note_32(self):
@@ -358,7 +438,7 @@ class TestDianMoves(TestCoDianCommon):
         )
         self.assertFalse(debit_note.debit_origin_id, False)
         self.assertEqual(debit_note.l10n_co_edi_operation_type, '32')
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(debit_note)[0]
+        xml = self._generate_xml(debit_note)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/debit_note_32.xml")
 
     def test_support_document(self):
@@ -383,7 +463,7 @@ class TestDianMoves(TestCoDianCommon):
             ],
         )
         bill.partner_id.country_id = self.env.ref('base.us')
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(bill)[0]
+        xml = self._generate_xml(bill)
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/support_document.xml")
 
     def test_support_document_credit_note(self):
@@ -399,7 +479,7 @@ class TestDianMoves(TestCoDianCommon):
                 }),
             ],
         )
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(bill)[0]
+        xml = self._generate_xml(bill)
         self.env['l10n_co_dian.document']._create_document(xml, bill, state='invoice_accepted')
 
         credit_note = self._create_move(
@@ -410,7 +490,7 @@ class TestDianMoves(TestCoDianCommon):
             l10n_co_edi_operation_type='10',  # "Estandar"
             l10n_co_edi_description_code_credit='1',  # "Devolución parcial de los bienes"
         )
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(credit_note)[0]
+        xml = self._generate_xml(credit_note)
         self._assert_document_dian(xml, 'l10n_co_dian/tests/attachments/support_document_credit_note.xml')
 
     def test_dian_import_vendor_xml(self):
@@ -430,9 +510,9 @@ class TestDianMoves(TestCoDianCommon):
         self._assert_imported_invoice_from_file(filename='import_attached_document.xml', **kwargs)
 
     def test_dian_invoicing_access_rights(self):
-        self.user.groups_id = [Command.unlink(self.env.ref('base.group_system').id)]
+        self.user.group_ids = [Command.unlink(self.env.ref('base.group_system').id)]
         invoice = self._create_move()
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)[0]
+        xml = self._generate_xml(invoice)
         self.env.invalidate_all()  # certificates are available in cache, we still need to test the access through `_build_and_send_request`
         self.env['l10n_co_dian.document']._create_document(xml, invoice, state='invoice_accepted')
         self._mock_get_status_zip(invoice, 'GetStatusZip_pending.xml')
@@ -453,6 +533,6 @@ class TestDianMoves(TestCoDianCommon):
             l10n_co_edi_description_code_credit='6',
             currency_id=self.env.ref('base.USD').id,
         )
-        xml = self.env['account.edi.xml.ubl_dian']._export_invoice(credit_note)[0]
+        xml = self._generate_xml(credit_note)
         self.env['l10n_co_dian.document']._create_document(xml, credit_note, state='invoice_accepted')
         self._assert_document_dian(xml, "l10n_co_dian/tests/attachments/credit_note_foreign_currency.xml")

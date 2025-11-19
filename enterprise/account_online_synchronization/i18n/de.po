@@ -3,16 +3,15 @@
 # 	* account_online_synchronization
 # 
 # Translators:
-# Wil Odoo, 2024
-# Larissa Manderfeld, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-07 20:46+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Larissa Manderfeld, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:10+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -108,7 +107,7 @@ msgid ""
 "                            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                                <tr>\n"
 "                                    <td style=\"text-align: center; font-size: 13px;\">\n"
-"                                        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=auth\" style=\"color: #875A7B;\">Odoo</a>\n"
+"                                        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=auth\" t-attf-style=\"color: {{object.company_id.email_secondary_color or '#875A7B'}};\">Odoo</a>\n"
 "                                    </td>\n"
 "                                </tr>\n"
 "                            </table>\n"
@@ -137,7 +136,7 @@ msgstr ""
 "                                                    <td valign=\"top\" style=\"font-size: 13px;\">\n"
 "                                                        <div>\n"
 "                                                            Hallo,<br/><br/>\n"
-"                                                            Die Verbindung zwischen <b><a t-att-href=\"object.get_base_url()\" t-out=\"object.get_base_url() or ''\">https://ihrunternehmen.odoo.com</a></b> und <t t-out=\"object.account_online_link_id.name or ''\">Belfius</t> <t t-if=\"not object.expiring_synchronization_due_day\"> ist abgelaufen.</t><t t-else=\"\">läuft in <t t-out=\"object.expiring_synchronization_due_day or ''\">10</t> Tagen ab.</t><br/>\n"
+"                                                            die Verbindung zwischen <b><a t-att-href=\"object.get_base_url()\" t-out=\"object.get_base_url() or ''\">https://ihrunternehmen.odoo.com</a></b> und <t t-out=\"object.account_online_link_id.name or ''\">Belfius</t> <t t-if=\"not object.expiring_synchronization_due_day\"> ist abgelaufen.</t><t t-else=\"\">läuft in <t t-out=\"object.expiring_synchronization_due_day or ''\">10</t> Tagen ab.</t><br/>\n"
 "                                                            <div style=\"margin: 16px 0px 16px 0px;\">\n"
 "                                                                <a t-attf-href=\"{{ website_url }}/renew_consent/{{ object.id }}?access_token={{object.access_token}}\" style=\"background-color: #4caf50; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
 "                                                                    Zustimmung erneuern\n"
@@ -165,7 +164,7 @@ msgstr ""
 "                            <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                                <tr>\n"
 "                                    <td style=\"text-align: center; font-size: 13px;\">\n"
-"                                        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=auth\" style=\"color: #875A7B;\">Odoo</a>\n"
+"                                        Powered by <a target=\"_blank\" href=\"https://www.odoo.com?utm_source=db&amp;utm_medium=auth\" t-attf-style=\"color: {{object.company_id.email_secondary_color or '#875A7B'}};\">Odoo</a>\n"
 "                                    </td>\n"
 "                                </tr>\n"
 "                            </table>\n"
@@ -290,6 +289,26 @@ msgid "Automatic synchronization"
 msgstr "Automatische Synchronisierung"
 
 #. module: account_online_synchronization
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_account__available_balance
+msgid "Available Balance"
+msgstr "Verfügbarer Saldo"
+
+#. module: account_online_synchronization
+#: model:ir.model.fields,help:account_online_synchronization.field_account_online_account__available_balance
+msgid ""
+"Available balance of the account sent by the third party provider. This is "
+"typically the balance plus/minus pending transactions."
+msgstr ""
+"Verfügbarer Saldo des Kontos, der von dem Drittanbieter übermittelt wird. "
+"Dies ist normalerweise der Saldo plus/minus ausstehende Transaktionen."
+
+#. module: account_online_synchronization
+#. odoo-javascript
+#: code:addons/account_online_synchronization/static/src/components/bank_reconciliation/statement_summary/statement_summary.xml:0
+msgid "Available balance with pending"
+msgstr "Verfügbarer Saldo mit ausstehenden Beträgen"
+
+#. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_account__balance
 msgid "Balance"
 msgstr "Saldo"
@@ -315,11 +334,6 @@ msgid "Bank Statement Line"
 msgstr "Kontoauszugszeile"
 
 #. module: account_online_synchronization
-#: model:mail.activity.type,name:account_online_synchronization.bank_sync_activity_update_consent
-msgid "Bank Synchronization: Update consent"
-msgstr "Banksynchronisierung: Einwilligung aktualisieren"
-
-#. module: account_online_synchronization
 #. odoo-python
 #: code:addons/account_online_synchronization/models/account_online.py:0
 msgid "Bank Synchronization: Update your consent"
@@ -329,11 +343,6 @@ msgstr "Banksynchronisierung: Ihre Einwilligung aktualisieren"
 #: model:mail.template,name:account_online_synchronization.email_template_sync_reminder
 msgid "Bank connection expiration reminder"
 msgstr "Erinnerung zum Ablauf der Bankverbindung"
-
-#. module: account_online_synchronization
-#: model:ir.model,name:account_online_synchronization.model_bank_rec_widget
-msgid "Bank reconciliation widget for a single statement line"
-msgstr "Bankabstimmungswidget für eine einzelne Auszugszeile"
 
 #. module: account_online_synchronization
 #: model_terms:ir.ui.view,arch_db:account_online_synchronization.account_missing_transaction_wizard_view_form
@@ -451,6 +460,11 @@ msgid "Contact"
 msgstr "Kontakt"
 
 #. module: account_online_synchronization
+#: model:ir.model,website_form_label:account_online_synchronization.model_res_partner
+msgid "Create a Customer"
+msgstr "Kunden erstellen"
+
+#. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_selection__create_uid
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line_transient__create_uid
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_duplicate_transaction_wizard__create_uid
@@ -489,11 +503,15 @@ msgstr "Datum, an dem die Einwilligung für diese Verbindung abläuft"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_selection__display_name
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line_transient__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_duplicate_transaction_wizard__display_name
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_journal__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_missing_transaction_wizard__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_account__display_name
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__display_name
+#: model:ir.model.fields,field_description:account_online_synchronization.field_res_company__display_name
+#: model:ir.model.fields,field_description:account_online_synchronization.field_res_partner__display_name
 msgid "Display Name"
 msgstr "Anzeigename"
 
@@ -626,11 +644,15 @@ msgstr "Hier"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_selection__id
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_bank_statement_line_transient__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_duplicate_transaction_wizard__id
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_journal__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_missing_transaction_wizard__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_account__id
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__id
+#: model:ir.model.fields,field_description:account_online_synchronization.field_res_company__id
+#: model:ir.model.fields,field_description:account_online_synchronization.field_res_partner__id
 msgid "ID"
 msgstr "ID"
 
@@ -867,6 +889,12 @@ msgid "Next synchronization"
 msgstr "Nächste Synchronisierung"
 
 #. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_journal.py:0
+msgid "No Pending Transactions"
+msgstr "Keine ausstehenden Transaktionen"
+
+#. module: account_online_synchronization
 #: model:ir.model.fields.selection,name:account_online_synchronization.selection__account_online_link__state__disconnected
 msgid "Not Connected"
 msgstr "Nicht verbunden"
@@ -960,6 +988,12 @@ msgid "Pending"
 msgstr "Ausstehend"
 
 #. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_journal.py:0
+msgid "Pending Transactions"
+msgstr "Ausstehende Transaktionen"
+
+#. module: account_online_synchronization
 #: model:ir.model.fields.selection,name:account_online_synchronization.selection__account_online_account__fetching_status__planned
 msgid "Planned"
 msgstr "Geplant"
@@ -1002,6 +1036,16 @@ msgstr "Verarbeitung"
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__provider_data
 msgid "Provider Data"
 msgstr "Anbieterdaten"
+
+#. module: account_online_synchronization
+#: model:ir.model.fields,field_description:account_online_synchronization.field_account_duplicate_transaction_wizard__provider_duplicate_ids
+msgid "Provider Duplicate"
+msgstr "Anbieterduplikat"
+
+#. module: account_online_synchronization
+#: model_terms:ir.ui.view,arch_db:account_online_synchronization.account_duplicate_transaction_wizard_view_form
+msgid "Provider Duplicates"
+msgstr "Anbieterduplikate"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__provider_type
@@ -1106,6 +1150,12 @@ msgid "Select a Bank Account"
 msgstr "Ein Bankkonto auswählen"
 
 #. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_online.py:0
+msgid "Select a Credit Card Account"
+msgstr "Wählen Sie ein Kreditkartenkonto aus"
+
+#. module: account_online_synchronization
 #: model_terms:ir.ui.view,arch_db:account_online_synchronization.view_account_bank_selection_form_wizard
 msgid "Select the"
 msgstr "Wählen Sie das"
@@ -1136,6 +1186,12 @@ msgstr "Bank einrichten"
 #: code:addons/account_online_synchronization/models/account_online.py:0
 msgid "Setup Bank Account"
 msgstr "Bankkonto einrichten"
+
+#. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_online.py:0
+msgid "Setup Credit Card Account"
+msgstr "Kreditkartenkonto einrichten"
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,field_description:account_online_synchronization.field_account_online_link__show_sync_actions
@@ -1194,6 +1250,12 @@ msgid ""
 msgstr ""
 "Der Online-Synchronisationsdienst ist im Moment nicht verfügbar. Bitte "
 "versuchen Sie es später erneut."
+
+#. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_journal.py:0
+msgid "There are no pending transactions for this journal."
+msgstr "Für dieses Journal gibt es keine ausstehenden Transaktionen."
 
 #. module: account_online_synchronization
 #: model:ir.model.fields,help:account_online_synchronization.field_account_online_link__provider_type
@@ -1383,6 +1445,12 @@ msgstr "-Konto, das verbunden werden soll:"
 #: code:addons/account_online_synchronization/static/src/components/bank_configure/bank_configure.xml:0
 msgid "banks"
 msgstr "Banken"
+
+#. module: account_online_synchronization
+#. odoo-python
+#: code:addons/account_online_synchronization/models/account_online.py:0
+msgid "default_contextduplicates_from_date"
+msgstr "default_contextduplicates_from_date"
 
 #. module: account_online_synchronization
 #. odoo-javascript

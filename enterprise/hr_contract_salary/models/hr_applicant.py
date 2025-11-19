@@ -14,18 +14,18 @@ class HrApplicant(models.Model):
 
     salary_offer_ids = fields.One2many('hr.contract.salary.offer', 'applicant_id')
     salary_offers_count = fields.Integer(compute='_compute_salary_offers_count', compute_sudo=True)
-    proposed_contracts = fields.Many2many('hr.contract', string="Proposed Contracts", domain="[('company_id', '=', company_id)]")
+    proposed_contracts = fields.Many2many('hr.version', string="Proposed Contracts", domain="[('company_id', '=', company_id)]")
     proposed_contracts_count = fields.Integer(compute="_compute_proposed_contracts_count", string="Proposed Contracts Count", compute_sudo=True)
 
     def _compute_proposed_contracts_count(self):
-        contracts_data = self.env['hr.contract'].with_context(active_test=False)._read_group(
+        versions_data = self.env['hr.version']._read_group(
             domain=[
                 ('applicant_id', 'in', self.ids),
                 ('active', '=', True),
             ],
             groupby=['applicant_id'],
             aggregates=['__count'])
-        mapped_data = {applicant.id: count for applicant, count in contracts_data}
+        mapped_data = {applicant.id: count for applicant, count in versions_data}
         for applicant in self:
             applicant.proposed_contracts_count = mapped_data.get(applicant.id, 0)
 
@@ -50,10 +50,10 @@ class HrApplicant(models.Model):
             self.stage_id = first_hired_stage[0].id
 
     def action_show_proposed_contracts(self):
-        self.candidate_id._check_interviewer_access()
+        self._check_interviewer_access()
         action_vals = {
             "type": "ir.actions.act_window",
-            "res_model": "hr.contract",
+            "res_model": "hr.version",
             "domain": [["applicant_id", "=", self.id], '|', ["active", "=", False], ["active", "=", True]],
             "name": _("Proposed Contracts"),
             "context": {'default_employee_id': self.employee_id.id, 'default_applicant_id': self.id},
@@ -61,7 +61,7 @@ class HrApplicant(models.Model):
         if self.proposed_contracts_count == 1:
             action_vals.update({
                 "views": [[False, "form"]],
-                "res_id": self.env['hr.contract'].search([("applicant_id", "=", self.id)]).id,
+                "res_id": self.env['hr.version'].search([("applicant_id", "=", self.id)]).id,
             })
         else:
             action_vals.update({
@@ -85,7 +85,7 @@ class HrApplicant(models.Model):
         message = _("The offer has been marked as refused when the linked applicant was declined.")
         refuse_reason = self.env.ref("hr_contract_salary.refusal_reason_others", raise_if_not_found=False)
 
-        self.salary_offer_ids.filtered(lambda o: o.state != "refused").action_refuse_offer(message=message, refusal_reason=refuse_reason)
+        self.salary_offer_ids.sudo().filtered(lambda o: o.state != "refused").action_refuse_offer(message=message, refusal_reason=refuse_reason)
         return super().archive_applicant()
 
     def action_generate_offer(self):
@@ -94,14 +94,12 @@ class HrApplicant(models.Model):
 
         offer_validity_period = int(self.env['ir.config_parameter'].sudo().get_param(
             'hr_contract_salary.access_token_validity', default=30))
-        validity_end = (fields.Date.context_today(self) + relativedelta(days=offer_validity_period))
         offer_values = self._get_offer_values()
 
         if not offer_values['contract_template_id']:
             raise UserError(_('You have to define contract templates to be used for offers. Go to Configuration / Contract Templates to define a contract template'))
 
         offer_values['validity_days_count'] = offer_validity_period
-        offer_values['offer_end_date'] = validity_end
         offer = self.env['hr.contract.salary.offer'].with_context(
             default_contract_template_id=self._get_contract_template().id).create(offer_values)
 
@@ -138,10 +136,20 @@ class HrApplicant(models.Model):
         }
 
     def _get_contract_template(self):
-        contract_template = self.job_id.default_contract_id if self.job_id else False
+        contract_template = self.job_id.contract_template_id if self.job_id else False
         if not contract_template:
-            contract_template = self.env['hr.contract'].search(domain=[
+            contract_template = self.env['hr.version'].search(domain=[
                 ('company_id', '=', self.company_id.id), ('employee_id', '=', False)
             ],
             limit=1)
         return contract_template
+
+    def unlink_archived_versions(self):
+        archived_versions = self.env['hr.version'].search([
+            ('applicant_id', 'in', self.ids),
+            ('active', '=', False)
+        ])
+        if archived_versions:
+            archived_versions.sign_request_ids.write({'state': 'canceled', 'active': False})
+            archived_versions.employee_id.unlink()
+            archived_versions.unlink()

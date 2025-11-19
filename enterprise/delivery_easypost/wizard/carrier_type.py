@@ -3,8 +3,9 @@
 
 from odoo import fields, models
 
-class CarrierType(models.TransientModel):
-    _name = "delivery.carrier.easypost"
+
+class DeliveryCarrierEasypost(models.TransientModel):
+    _name = 'delivery.carrier.easypost'
     _description = "Carrier Type"
 
     # This selection field gets its values from a custom widget: CarrierTypeSelection

@@ -4,16 +4,22 @@
 from collections import Counter
 from datetime import datetime
 
+from odoo import http
 from odoo.addons.appointment.tests.common import AppointmentCommon
 from odoo.addons.website_appointment.controllers.appointment import WebsiteAppointment
 from odoo.addons.website.tests.test_website_visitor import MockVisitor
-from odoo.addons.website.tools import MockRequest
+from odoo.addons.http_routing.tests.common import MockRequest
 from odoo.exceptions import ValidationError
 from odoo.tests import users, tagged
 from unittest.mock import patch
 
 
 class WebsiteAppointmentTest(AppointmentCommon, MockVisitor):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.apt_type_bxls_2days.write({'is_published': True})
 
     def test_apt_type_create_from_website(self):
         """ Test that when creating an appointment type from the website, we use
@@ -179,3 +185,39 @@ class WebsiteAppointmentTest(AppointmentCommon, MockVisitor):
                                  "US visitor should not have access to an Appointment Type restricted to Belgium.")
                 self.assertIn(appointment_usa, available_appointments,
                               "US visitor should have access to an Appointment Type restricted to the US.")
+
+    @tagged("security", "-at_install", "post_install")
+    def test_visitor_appointment_booker(self):
+        """Check that the calendar events created by a visitor have the same appointment_booker_id.
+
+        This should not be the case when CSRF token is unchecked, such as when used in an iframe.
+        """
+        visitors = self.env['website.visitor'].create([
+            {'access_token': '11111111111111111111111111111111'},
+            {'access_token': '22222222222222222222222222222222'},
+        ])
+        for with_csrf, visitor in zip([True, False], visitors):
+            with self.subTest(with_csrf=with_csrf), self.mock_visitor_from_request(force_visitor=visitor):
+                self.authenticate(None, None)
+                event_values = {
+                    'duration_str': '1.0',
+                    'email': 'visitor@test.example.com',
+                    'name': 'Visitor',
+                    'phone': '+1 555-555-5555',
+                    'staff_user_id': self.staff_user_bxls.id,
+                } | ({'csrf_token': http.Request.csrf_token(self)} if with_csrf else {})
+
+                for datetime_str in ['2022-02-14 10:00:00', '2022-02-15 10:00:00']:
+                    event_values['datetime_str'] = datetime_str
+                    self.url_open(f'/appointment/{self.apt_type_bxls_2days.id}/submit', event_values)
+
+                events = self.env['calendar.event'].search([], order='id DESC', limit=2)
+
+                # Check that visitor has been linked to the new events.
+                self.assertEqual(len(visitor.calendar_event_ids), 2)
+                self.assertEqual(visitor.calendar_event_ids, events)
+
+                # Check that the new events have the same appointment_booker_id.
+                self.assertTrue(all(event.appointment_booker_id for event in events))
+                self.assertEqual(len(events.appointment_booker_id), 1 if with_csrf else 2)
+                events.unlink()

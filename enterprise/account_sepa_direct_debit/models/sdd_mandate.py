@@ -4,13 +4,13 @@ from datetime import datetime
 
 from odoo import Command, api, fields, models, _
 from odoo.exceptions import RedirectWarning, UserError
-from odoo.tools import SQL
+from odoo.tools import date_utils, SQL
 
 SDD_MIN_PRENOT_PERIOD = 2
 SDD_FIRST_MIN_PRENOT_PERIOD = 5
 
 
-class SDDMandate(models.Model):
+class SddMandate(models.Model):
     """ A class containing the data of a mandate sent by a customer to give its
     consent to a company to collect the payments associated to his invoices
     using SEPA Direct Debit.
@@ -21,7 +21,10 @@ class SDDMandate(models.Model):
     _check_company_auto = True
     _order = 'start_date, id'
 
-    _sql_constraints = [('name_unique', 'unique(name)', "Mandate identifier must be unique! Please choose another one.")]
+    _name_unique = models.Constraint(
+        'unique(name)',
+        "Mandate identifier must be unique! Please choose another one.",
+    )
 
     def _get_default_start_date(self):
         return fields.Date.context_today(self)
@@ -56,6 +59,7 @@ class SDDMandate(models.Model):
         comodel_name='res.partner',
         string='Customer',
         required=True,
+        index=True,
         check_company=True,
         help="Customer whose payments are to be managed by this mandate.",
     )
@@ -202,7 +206,7 @@ class SDDMandate(models.Model):
         for mandate in active_mandates:
             expiry_date = expiry_date_per_mandate[mandate]
             if mandate.start_date <= today <= expiry_date:
-                if today + fields.date_utils.relativedelta(days=30) >= expiry_date:
+                if today + date_utils.relativedelta(days=30) >= expiry_date:
                     expiring_mandates += mandate  # Used to send warnings
                 else:
                     valid_mandates += mandate
@@ -226,7 +230,7 @@ class SDDMandate(models.Model):
         - SEPA regulation
         """
         expiry_date_per_mandate = {}
-        delay_36_months = fields.date_utils.relativedelta(months=36)
+        delay_36_months = date_utils.relativedelta(months=36)
         payments_collected_per_mandate = dict(self.env['account.payment']._read_group([
                 ('sdd_mandate_id', 'in', self.ids),
                 ('payment_method_code', 'in', self.env['account.payment.method']._get_sdd_payment_method_code()),

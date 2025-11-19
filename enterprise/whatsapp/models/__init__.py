@@ -1,7 +1,5 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-# Import compatibility layer first to ensure Constraint class is available
-from .. import compatibility
 
 from . import discuss_channel
 from . import discuss_channel_member

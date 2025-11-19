@@ -1,5 +1,5 @@
 import { mailModels } from "@mail/../tests/mail_test_helpers";
-import { fields, models, serverState } from "@web/../tests/web_test_helpers";
+import { fields, models, serverState, webModels } from "@web/../tests/web_test_helpers";
 
 export class DocumentsDocument extends models.Model {
     _name = "documents.document";
@@ -12,14 +12,10 @@ export class DocumentsDocument extends models.Model {
     is_favorited = fields.Boolean({ string: "Name" });
     is_folder = fields.Boolean({ string: "is_folder" }); // used for ordering
     is_multipage = fields.Boolean({ string: "Is multipage" });
-    is_pinned_folder = fields.Boolean({ string: "Pinned to Company roots" });
+    is_company_root_folder = fields.Boolean({ string: "Pinned to Company roots" });
     mimetype = fields.Char({ string: "Mimetype" });
     partner_id = fields.Many2one({ string: "Related partner", relation: "res.partner" });
-    owner_id = fields.Many2one({
-        string: "Owner",
-        relation: "res.users",
-        default: serverState.odoobotId,
-    });
+    owner_id = fields.Many2one({ string: "Owner", relation: "res.users" });
     previous_attachment_ids = fields.Many2many({
         string: "History",
         relation: "ir.attachment",
@@ -28,13 +24,19 @@ export class DocumentsDocument extends models.Model {
     folder_id = fields.Many2one({ string: "Folder", relation: "documents.document" });
     res_model = fields.Char({ string: "Model (technical)" });
     attachment_id = fields.Many2one({ relation: "ir.attachment" });
+    company_id = fields.Many2one({ string: "Company", relation: "res.company" });
     active = fields.Boolean({ default: true, string: "Active" });
     activity_ids = fields.One2many({ relation: "mail.activity" });
     checksum = fields.Char({ string: "Checksum" });
     file_extension = fields.Char({ string: "File extension" });
     thumbnail_status = fields.Selection({
         string: "Thumbnail status",
-        selection: [["none", "None"]],
+        selection: [
+            ["present", "Present"],
+            ["error", "Error"],
+            ["client_generated", "Client_Generated"],
+            ["restricted", "Inaccessible"],
+        ],
     });
     lock_uid = fields.Many2one({ relation: "res.users" });
     message_attachment_count = fields.Integer({ string: "Message attachment count" });
@@ -68,13 +70,13 @@ export class DocumentsDocument extends models.Model {
     });
     available_embedded_actions_ids = fields.Many2many({
         string: "Available Actions",
-        // relation: "ir.actions.server",
-        relation: "res.partner",
+        relation: "ir.embedded.actions",
     });
     alias_id = fields.Many2one({ relation: "mail.alias" });
     alias_domain_id = fields.Many2one({ relation: "mail.alias.domain" });
     alias_name = fields.Char({ string: "Alias name" });
     alias_tag_ids = fields.Many2many({ relation: "documents.tag" });
+    mail_alias_domain_count = fields.Integer();
     create_activity_type_id = fields.Many2one({ relation: "mail.activity.type" });
     create_activity_user_id = fields.Many2one({ relation: "res.users" });
     description = fields.Char({ string: "Attachment description" });
@@ -95,6 +97,21 @@ export class DocumentsDocument extends models.Model {
 
     get_document_max_upload_limit() {
         return 67000000;
+    }
+
+    get_details_panel_res_models() {
+        return ["res.partner"];
+    }
+
+    action_create_shortcut() {
+        return;
+    }
+
+    action_move_documents(recordIds, folderId) {
+        const records = this.filter((r) => recordIds.includes(r.id));
+        for (const record of records) {
+            record.folder_id = folderId;
+        }
     }
 
     /**
@@ -154,20 +171,29 @@ export class DocumentsDocument extends models.Model {
                 .map((record) => {
                     const recordValues = {};
                     if (!record.folder_id) {
-                        recordValues.folder_id =
-                            record.owner_id[0] === serverState.odoobotId
-                                ? "COMPANY"
-                                : record.owner_id[0] === serverState.userId
-                                ? "MY"
-                                : "SHARED";
+                        recordValues.folder_id = !record.owner_id
+                            ? "COMPANY"
+                            : record.owner_id[0] === serverState.userId
+                            ? "MY"
+                            : "SHARED";
                     } else {
                         recordValues.folder_id = record.folder_id[0];
                     }
                     if (!record.active) {
                         recordValues.folder_id = "TRASH";
                     }
+                    if (record.alias_tag_ids) {
+                        recordValues.alias_tag_ids = record.alias_tag_ids.map((id) => {
+                            const tag = this.env["documents.tag"].search_read([["id", "=", id]])[0];
+                            return { id, color: tag.color, display_name: tag.name };
+                        });
+                    }
                     [
+                        "alias_domain_id",
+                        "alias_name",
+                        "mail_alias_domain_count",
                         "company_id",
+                        "create_activity_type_id",
                         "owner_id",
                         "partner_id",
                         "description",
@@ -182,6 +208,11 @@ export class DocumentsDocument extends models.Model {
         ];
         return result;
     }
+
+    toggle_lock(id) {
+        const record = this.env["documents.document"].filter((doc) => doc.id === id)[0];
+        record.lock_uid = record.lock_uid ? false : serverState.odoobotId;
+    }
 }
 
 export class DocumentsTag extends models.Model {
@@ -191,10 +222,10 @@ export class DocumentsTag extends models.Model {
     color = fields.Integer({ default: 1 });
 }
 
-export class MailActivityType extends models.Model {
-    _name = "mail.activity.type";
+export class IrEmbeddedActions extends models.Model {
+    _name = "ir.embedded.actions";
 
-    name = fields.Char({ string: "Activity Type" });
+    name = fields.Char({ string: "Action Name" });
 }
 
 export class MailAlias extends models.Model {
@@ -207,6 +238,34 @@ export class MailAliasDomain extends models.Model {
     _name = "mail.alias.domain";
 
     name = fields.Char({ string: "Alias Domain Name" });
+}
+
+/**
+ * @param {Number} id
+ * @param {String} name
+ * @param {object?} data
+ * @return {{}}
+ */
+export function makeDocumentRecordData(id, name, data = {}) {
+    const strippedName = name.replace(/\s/g, "");
+    const defaultValues = {
+        available_embedded_actions_ids: [],
+        folder_id: false,
+        company_id: false,
+        owner_id: false,
+        partner_id: false,
+        type: "binary",
+    };
+    const documentType = data.type || defaultValues.type;
+    return {
+        ...defaultValues,
+        id: id,
+        access_token: `accessToken${strippedName}`,
+        is_folder: documentType === "folder",
+        name: name,
+        type: documentType,
+        ...data,
+    };
 }
 
 /**
@@ -228,17 +287,7 @@ export function getDocumentsTestServerData(additionalRecords = []) {
             },
             "documents.document": {
                 records: [
-                    {
-                        access_token: "accessTokenFolder1",
-                        available_embedded_actions_ids: [],
-                        id: 1,
-                        is_folder: true,
-                        folder_id: false,
-                        name: "Folder 1",
-                        type: "folder",
-                        owner_id: false,
-                        partner_id: false,
-                    },
+                    makeDocumentRecordData(1, "Folder 1", { type: "folder" }),
                     ...additionalRecords,
                 ],
             },
@@ -256,6 +305,18 @@ export function getDocumentsTestServerData(additionalRecords = []) {
                     },
                 ],
             },
+            "mail.alias": {
+                records: [{ id: 1, alias_name: "alias" }],
+            },
+            "mail.alias.domain": {
+                records: [
+                    { id: 1, name: "odoo.com" },
+                    { id: 2, name: "runbot.odoo.com" },
+                ],
+            },
+            "res.company": {
+                records: serverState.companies,
+            },
         },
     };
 }
@@ -266,7 +327,6 @@ export function getBasicPermissionPanelData(recordExtra) {
         access_via_link: "view",
         access_ids: [],
         active: true,
-        // Owner is not returned as it is odoobot
         owner_id: false,
         user_permission: "view",
         ...recordExtra,
@@ -296,9 +356,10 @@ export function getBasicPermissionPanelData(recordExtra) {
 
 export const DocumentsModels = {
     ...mailModels,
-    MailActivityType,
+    IrEmbeddedActions,
     MailAlias,
     MailAliasDomain,
+    ResCompany: webModels.ResCompany,
     DocumentsDocument,
     DocumentsTag,
 };
@@ -306,3 +367,7 @@ export const DocumentsModels = {
 export function getDocumentsModel(modelName) {
     return Object.values(DocumentsModels).find((model) => model._name === modelName);
 }
+
+export const mimetypeExamplesBase64 = {
+    WEBP: "UklGRjoAAABXRUJQVlA4IC4AAAAwAQCdASoBAAEAAUAmJaAAA3AA/u/uY//8s//2W/7LeM///5Bj/dl/pJxGAAAA",
+};

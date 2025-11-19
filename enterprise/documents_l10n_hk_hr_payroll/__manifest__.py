@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
     'name': 'Documents - Hong Kong Payroll',
     'version': '1.0',
+    'countries': ['hk'],
     'category': 'Human Resources/Payroll',
     'summary': 'Store ir56 forms in the Document app',
     'description': """
@@ -19,5 +19,6 @@ Employee ir56 forms will be automatically integrated to the Document app.
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

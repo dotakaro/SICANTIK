@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { Dialog } from "@web/core/dialog/dialog";
 import { SearchBar } from "@web/search/search_bar/search_bar";
 import { Pager } from "@web/core/pager/pager";
@@ -27,7 +25,6 @@ export class TemplateDialog extends Component {
         this.orm = useService("orm");
         this.viewService = useService("view");
         this.actionService = useService("action");
-        this.companyService = useService("company");
 
         this.data = this.env.dialogData;
         useHotkey("escape", () => this.data.close());
@@ -60,14 +57,16 @@ export class TemplateDialog extends Component {
         });
         useBus(this.model, "update", () => this._fetchTemplates());
         this.keepLast = new KeepLast();
-
+        this.folderOptions = [
+            // id false cannot be used by the template select option so we use 0 instead.
+            { id: 0, display_name: _t("My Drive") },
+            ...this.props.folders.map((folder) => ({
+                id: folder.id,
+                display_name: folder.display_name,
+            })),
+        ];
         onWillStart(async () => {
-            const defaultFolder = await this.orm.searchRead(
-                "res.company",
-                [["id", "=", this.companyService.currentCompany.id]],
-                ["document_spreadsheet_folder_id"]
-            );
-            this.documentsSpreadsheetFolderId = defaultFolder[0].document_spreadsheet_folder_id[0];
+            this.folderId = this.folderOptions[0].id;
             const views = await this.viewService.loadViews({
                 resModel: "spreadsheet.template",
                 context: this.props.context,
@@ -142,7 +141,7 @@ export class TemplateDialog extends Component {
             ? typeof this.props.folderId === "number"
                 ? this.props.folderId
                 : false
-            : this.documentsSpreadsheetFolderId;
+            : this.folderId || false; // convert 0 into false
         if (templateId) {
             return this.orm.call(
                 "spreadsheet.template",

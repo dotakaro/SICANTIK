@@ -33,6 +33,7 @@ test("Can set a value from a pivot header context menu", async function () {
                     <field name="product_id" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(getCellValue(model, "B3")).toBe(10);
     expect(getCellValue(model, "B4")).toBe(121.0);
@@ -72,7 +73,7 @@ test("Can set a value from a pivot header context menu", async function () {
     await animationFrame();
     // prettier-ignore
     expect(getEvaluatedGrid(model, "A1:B4")).toEqual([
-            ["(#1) Partner Pivot",  "Total"],
+            ["Partner Pivot",       "Total"],
             ["",                    "Probability"],
             ["xphone",              10],
             ["Total",               10],
@@ -81,7 +82,7 @@ test("Can set a value from a pivot header context menu", async function () {
     await animationFrame();
     // prettier-ignore
     expect(getEvaluatedGrid(model, "A1:B5")).toEqual([
-            ["(#1) Partner Pivot",  "Total"],
+            ["Partner Pivot",       "Total"],
             ["",                    "Probability"],
             ["xphone",              10],
             ["xpad",                121],
@@ -103,7 +104,6 @@ test("Can open context menu with positional argument", async function () {
         {
             id: "42",
             type: "relation",
-            defaultValue: [],
         },
         { pivot: { "PIVOT#1": { chain: "product_id", type: "many2one" } } }
     );
@@ -119,6 +119,7 @@ test("Can open context menu without argument", async function () {
                     <field name="product_id" type="row"/>
                     <field name="probability" type="measure"/>
                 </pivot>`,
+        pivotType: "static",
     });
     expect(getCell(model, "B5").content).toBe('=PIVOT.VALUE(1,"probability:avg")');
     await addGlobalFilter(
@@ -126,7 +127,6 @@ test("Can open context menu without argument", async function () {
         {
             id: "42",
             type: "relation",
-            defaultValue: [],
         },
         { pivot: { "PIVOT#1": { chain: "product_id", type: "many2one" } } }
     );
@@ -151,7 +151,6 @@ test("Can open context menu when there is a filter with no field defined", async
     await addGlobalFilter(model, {
         id: "42",
         type: "relation",
-        defaultValue: [],
     });
     selectCell(model, "B3");
     const root = cellMenuRegistry.getMenuItems().find((item) => item.id === "use_global_filter");
@@ -207,6 +206,7 @@ test("menu to set filter value is only visible on the PIVOT.HEADER formulas", as
                         <field name="product_id" type="row"/>
                         <field name="probability" type="measure"/>
                     </pivot>`,
+        pivotType: "static",
     });
     await addGlobalFilter(model, testGlobalFilter, testFieldMatching);
     const root = cellMenuRegistry.getMenuItems().find((item) => item.id === "use_global_filter");
@@ -270,7 +270,7 @@ test("UNDO/REDO filter creation reloads the related field matchings", async func
     await addGlobalFilter(model, filter, {
         pivot: { "PIVOT#1": { chain: "product_id", type: "many2one" } },
     });
-    expect(getCellValue(model, "B4")).toBe("");
+    expect(getCellValue(model, "B4")).toBe(null);
     model.dispatch("REQUEST_UNDO");
     expect(model.getters.getGlobalFilters().length).toBe(0);
     await waitForDataLoaded(model);
@@ -278,5 +278,5 @@ test("UNDO/REDO filter creation reloads the related field matchings", async func
     model.dispatch("REQUEST_REDO");
     expect(model.getters.getGlobalFilters().length).toBe(1);
     await waitForDataLoaded(model);
-    expect(getCellValue(model, "B4")).toBe("");
+    expect(getCellValue(model, "B4")).toBe(null);
 });

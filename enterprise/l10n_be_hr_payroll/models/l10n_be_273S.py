@@ -14,7 +14,7 @@ from odoo.tools import format_date
 from odoo.tools.misc import file_path
 
 
-class L10nBe273S(models.Model):
+class L10n_Be273s(models.Model):
     _name = 'l10n_be.273s'
     _description = '273S Sheet'
     _order = 'period'
@@ -22,7 +22,7 @@ class L10nBe273S(models.Model):
     @api.model
     def default_get(self, field_list=None):
         if self.env.company.country_id.code != "BE":
-            raise UserError(_('You must be logged in a Belgian company to use this feature'))
+            raise UserError(_('This feature seems to be as exclusive as Belgian chocolates. You must be logged in to a Belgian company to use it.'))
         return super().default_get(field_list)
 
     year = fields.Integer(required=True, default=lambda self: fields.Date.today().year)
@@ -109,7 +109,7 @@ class L10nBe273S(models.Model):
             ('company_id', '=', self.company_id.id),
             ('date_from', '>=', date_from),
             ('date_to', '<=', date_to)])
-        employees = payslips.filtered(lambda p: p.contract_id.ip).employee_id.filtered(lambda e: not e._is_niss_valid())
+        employees = payslips.filtered(lambda p: p.version_id.ip).employee_id.filtered(lambda e: not e._is_niss_valid())
         if employees:
             raise UserError(_('Invalid NISS number for those employees:\n %s', '\n'.join(employees.mapped('name'))))
 

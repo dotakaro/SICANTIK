@@ -70,20 +70,18 @@ class PaymentTransaction(models.Model):
         return mandate_values
 
     def _create_or_link_to_invoice(self):
-        tx_to_invoice = self.env['payment.transaction']
-        for tx in self:
-            if len(tx.sale_order_ids) > 1 or tx.invoice_ids or not tx.sale_order_ids.is_subscription:
-                continue
-            elif tx.renewal_state in ['draft', 'pending', 'cancel']:
-                # tx should be in an authorized renewal_state otherwise _reconcile_after_done will not be called
-                # but this is a safety to prevent issue when the code is called manually
-                continue
-            tx_to_invoice += tx
-            tx._cancel_draft_invoices()
-
-        tx_to_invoice._invoice_sale_orders()
-        tx_to_invoice.invoice_ids.with_company(self.company_id)._post()
-        tx_to_invoice.filtered(lambda t: not t.subscription_action).invoice_ids.transaction_ids._send_invoice()
+        self.ensure_one()
+        if len(self.sale_order_ids) > 1 or self.invoice_ids or not self.sale_order_ids.is_subscription:
+            return
+        elif self.renewal_state in ['draft', 'pending', 'cancel']:
+            # tx should be in an authorized renewal_state otherwise _reconcile_after_done will not be called
+            # but this is a safety to prevent issue when the code is called manually
+            return
+        self._cancel_draft_invoices()
+        self._invoice_sale_orders()
+        self.invoice_ids.with_company(self.company_id)._post()
+        if not self.subscription_action:
+            self.invoice_ids.transaction_ids._send_invoice()
 
     def _get_invoiced_subscription_transaction(self):
         # create the invoices for the transactions that are not yet linked to invoice
@@ -111,9 +109,15 @@ class PaymentTransaction(models.Model):
             elif len(order) > 1:
                 # we don't support multiple order per tx. Accounting should invoice manually
                 tx_with_partial_payments |= tx
-            elif order.currency_id.compare_amounts(
+                continue
+            expected_amount = (
+                order._next_billing_details()['tax_totals']['total_amount_currency']
+                if len(order._get_invoiced_subscriptions()) == 0
+                else order._next_billing_details()['next_invoice_amount']
+            )
+            if order.currency_id.compare_amounts(
                     sum(order.transaction_ids.filtered(lambda tx: tx.renewal_state == 'authorized' and not tx.invoice_ids).mapped('amount')),
-                    order.amount_total
+                    expected_amount
                 ) != 0:
                 # The payment amount and other unused transactions will confirm and pay the invoice
                 tx_with_partial_payments |= tx

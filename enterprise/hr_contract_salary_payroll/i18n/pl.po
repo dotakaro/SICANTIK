@@ -3,22 +3,61 @@
 # 	* hr_contract_salary_payroll
 # 
 # Translators:
-# Wil Odoo, 2024
-# Marta Wacławek, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:27+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Marta Wacławek, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Polish (https://app.transifex.com/odoo/teams/41243/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: pl\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+
+#. module: hr_contract_salary_payroll
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_employee_view_form
+msgid "/ day"
+msgstr "/ dzień"
+
+#. module: hr_contract_salary_payroll
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_employee_view_form
+msgid "/ half-month"
+msgstr "/ pół-miesiąc"
+
+#. module: hr_contract_salary_payroll
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_employee_view_form
+msgid "/ half-year"
+msgstr "/ półrocze"
+
+#. module: hr_contract_salary_payroll
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_employee_view_form
+msgid "/ quarter"
+msgstr "/ kwartał"
+
+#. module: hr_contract_salary_payroll
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_employee_view_form
+msgid "/ two months"
+msgstr "/ dwa miesiące"
+
+#. module: hr_contract_salary_payroll
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_employee_view_form
+msgid "/ two weeks"
+msgstr "/ dwa tygodnie"
+
+#. module: hr_contract_salary_payroll
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_employee_view_form
+msgid "/ week"
+msgstr "/ tydzień"
+
+#. module: hr_contract_salary_payroll
+#: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_employee_view_form
+msgid "/ year"
+msgstr "/ rok"
 
 #. module: hr_contract_salary_payroll
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.salary_package_sidebar_payroll
@@ -43,6 +82,13 @@ msgid "Contracts"
 msgstr "Umowy"
 
 #. module: hr_contract_salary_payroll
+#: model:ir.model.fields,field_description:hr_contract_salary_payroll.field_hr_contract_salary_resume__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary_payroll.field_hr_payroll_headcount_line__display_name
+#: model:ir.model.fields,field_description:hr_contract_salary_payroll.field_hr_payslip_worked_days__display_name
+msgid "Display Name"
+msgstr "Nazwa wyświetlana"
+
+#. module: hr_contract_salary_payroll
 #: model:ir.model.fields,field_description:hr_contract_salary_payroll.field_hr_payroll_headcount_line__employer_cost
 msgid "Employer Cost"
 msgstr "Koszt pracodawcy"
@@ -56,6 +102,13 @@ msgstr "Rodzaje zatrudnienia"
 #: model:ir.model,name:hr_contract_salary_payroll.model_hr_payroll_headcount_line
 msgid "Headcount Line"
 msgstr "Linia liczby pracowników"
+
+#. module: hr_contract_salary_payroll
+#: model:ir.model.fields,field_description:hr_contract_salary_payroll.field_hr_contract_salary_resume__id
+#: model:ir.model.fields,field_description:hr_contract_salary_payroll.field_hr_payroll_headcount_line__id
+#: model:ir.model.fields,field_description:hr_contract_salary_payroll.field_hr_payslip_worked_days__id
+msgid "ID"
+msgstr "ID"
 
 #. module: hr_contract_salary_payroll
 #: model_terms:ir.ui.view,arch_db:hr_contract_salary_payroll.hr_contract_salary_resume_view_search_inherit
@@ -80,8 +133,14 @@ msgid ""
 "Contract value: Get the value from a field on the contract record\n"
 "Payslip value: Get the value from a field on the payslip record\n"
 "Sum of Benefits value: You can pick in all benefits and compute a sum of them\n"
-"Monthly Total: The information will be a total of all the informations in the category Monthly Benefits"
+"Monthly Total: The information will be a total of all the information in the category Monthly Benefits"
 msgstr ""
+"Wybierz sposób obliczania wartości informacji:\n"
+"Stała wartość: Ustaw określoną wartość statyczną dla wszystkich linków\n"
+"Wartość umowy: Pobierz wartość z pola w zapisie umowy\n"
+"Wartość odcinka wypłaty: Pobierz wartość z pola w zapisie odcinka wypłaty\n"
+"Suma wartości świadczeń: Można wybrać wszystkie świadczenia i obliczyć ich sumę\n"
+"Miesięczna suma: Informacje będą sumą wszystkich informacji w kategorii Miesięczne świadczenia"
 
 #. module: hr_contract_salary_payroll
 #. odoo-javascript
@@ -133,11 +192,6 @@ msgstr ""
 msgid ""
 "This is the gross calculated for the current month with a total of %s hours."
 msgstr "Jest to brutto wyliczone za bieżący miesiąc z sumą %s godzin."
-
-#. module: hr_contract_salary_payroll
-#: model:ir.model.fields,help:hr_contract_salary_payroll.field_hr_payroll_headcount_line__employer_cost
-msgid "Total real monthly cost of the employee for the employer."
-msgstr "Całkowity rzeczywisty miesięczny koszt pracownika dla pracodawcy."
 
 #. module: hr_contract_salary_payroll
 #: model:ir.model.fields,field_description:hr_contract_salary_payroll.field_hr_contract_salary_resume__value_type

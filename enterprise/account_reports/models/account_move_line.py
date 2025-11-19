@@ -6,8 +6,8 @@ from odoo import api, models, fields, _
 from odoo.exceptions import UserError
 from odoo.tools import SQL
 
+
 class AccountMoveLine(models.Model):
-    _name = "account.move.line"
     _inherit = "account.move.line"
 
     exclude_bank_lines = fields.Boolean(compute='_compute_exclude_bank_lines', store=True)
@@ -20,22 +20,22 @@ class AccountMoveLine(models.Model):
     @api.constrains('tax_ids', 'tax_tag_ids')
     def _check_taxes_on_closing_entries(self):
         for aml in self:
-            if aml.move_id.tax_closing_report_id and (aml.tax_ids or aml.tax_tag_ids):
+            if aml.move_id.closing_return_id and (aml.tax_ids or aml.tax_tag_ids):
                 raise UserError(_("You cannot add taxes on a tax closing move line."))
 
-    @api.depends('product_id', 'product_uom_id', 'move_id.tax_closing_report_id')
+    @api.depends('product_id', 'product_uom_id', 'move_id.closing_return_id')
     def _compute_tax_ids(self):
         """ Some special cases may see accounts used in tax closing having default taxes.
         They would trigger the constrains above, which we don't want. Instead, we don't trigger
         the tax computation in this case.
         """
         # EXTEND account
-        lines_to_compute = self.filtered(lambda line: not line.move_id.tax_closing_report_id)
+        lines_to_compute = self.filtered(lambda line: not line.move_id.closing_return_id)
         (self - lines_to_compute).tax_ids = False
         super(AccountMoveLine, lines_to_compute)._compute_tax_ids()
 
     @api.model
-    def _prepare_aml_shadowing_for_report(self, change_equivalence_dict):
+    def _prepare_aml_shadowing_for_report(self, change_equivalence_dict, prefix_fields=False):
         """ Prepares the fields lists for creating a temporary table shadowing the account_move_line one.
         This is used to switch the computation mode of the reports, with analytics or financial budgets, for example.
 
@@ -43,6 +43,7 @@ class AccountMoveLine(models.Model):
                                         - aml_field: is a string containing the name of field of account.move.line
                                         - sql_equivalence: is the value to use to shadow aml_field. It can be an SQL object; if
                                           it's not, it'll be escaped in the query.
+        :param prefix_fields: True if you want the returned fields to be prefixed with the `account_move_line` table.
 
         :return: A tuple of 2 SQL objects, so that:
                  - The first one is the fields list to pass into the INSERT TO part of the query filling up the temporary table
@@ -74,4 +75,13 @@ class AccountMoveLine(models.Model):
                     fname=SQL('"account_move_line.%s"', SQL(fname)),
                 ))
 
-        return SQL(', ').join(SQL.identifier(fname) for fname in stored_fields), SQL(', ').join(fields_to_insert)
+        return (
+            SQL(', ').join(
+                SQL.identifier('account_move_line', fname) if prefix_fields else SQL.identifier(fname)
+                for fname in stored_fields
+            ),
+            SQL(', ').join(fields_to_insert)
+        )
+
+    def _affect_tax_report(self):
+        return super()._affect_tax_report() or self.move_id.closing_return_id

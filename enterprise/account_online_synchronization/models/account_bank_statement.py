@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-import threading
 import time
-import json
 
-from odoo import api, fields, models, SUPERUSER_ID, tools, _
+from odoo import api, fields, models, modules, SUPERUSER_ID, tools, _
 from odoo.tools import date_utils
 from odoo.exceptions import UserError, ValidationError
 
@@ -36,7 +33,7 @@ class AccountBankStatementLine(models.Model):
         bank_statement_lines = super().create(vals_list)
         moves_to_cancel = self.env['account.move']
         for bank_statement_line in bank_statement_lines:
-            transaction_details = json.loads(bank_statement_line.transaction_details) if bank_statement_line.transaction_details else {}
+            transaction_details = bank_statement_line.transaction_details or {}
             if not transaction_details.get('is_zero_balancing'):
                 continue
             moves_to_cancel |= bank_statement_line.move_id
@@ -85,7 +82,7 @@ class AccountBankStatementLine(models.Model):
 
                 filtered_transactions = online_account._get_filtered_transactions(sorted_transactions)
 
-                do_commit = not (hasattr(threading.current_thread(), 'testing') and threading.current_thread().testing)
+                do_commit = not modules.module.current_test
                 if filtered_transactions:
                     # split transactions import in batch and commit after each batch except in testing mode
                     for index in range(0, len(filtered_transactions), STATEMENT_LINE_CREATION_BATCH_SIZE):

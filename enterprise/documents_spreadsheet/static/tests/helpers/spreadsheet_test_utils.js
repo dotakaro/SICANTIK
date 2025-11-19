@@ -121,7 +121,7 @@ export async function createSpreadsheetTemplate(params = {}) {
 }
 
 /**
- * @param {typeof Services["action"].doAction}
+ * @param {typeof Services["action"].doAction} doAction
  */
 export function mockActionService(doAction) {
     mockService("action", { doAction });

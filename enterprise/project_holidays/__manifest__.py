@@ -1,10 +1,9 @@
-# -*- encoding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
     'name': "Project Time Off",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Services/Project',
     'summary': "Project and task integration with holidays",
     'description': """
 Project and task integration with holidays
@@ -14,5 +13,6 @@ Project and task integration with holidays
         'views/project_task_views.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

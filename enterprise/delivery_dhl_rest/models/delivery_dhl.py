@@ -120,7 +120,7 @@ class ProviderDHL(models.Model):
 
     def _get_order_packages(self, order):
         total_weight = order._get_estimated_weight()
-        total_weight = self._dhl_convert_weight(total_weight)
+        total_weight = self._dhl_rest_convert_weight(total_weight)
         if total_weight == 0.0:
             weight_uom_name = self.env['product.template']._get_weight_uom_name_from_ir_config_parameter()
             raise UserError(_("The package cannot be created because the total weight of the products in the picking is 0.0 %s", weight_uom_name))
@@ -162,6 +162,10 @@ class ProviderDHL(models.Model):
         return commodities
 
     def _get_picking_packages(self, picking):
+        self.ensure_one()
+        if self.delivery_type != 'dhl_rest':
+            # Method will be renamed in master so that it doesn't clash with delivery_usps_rest
+            return super()._get_picking_packages(picking)
         packages = []
 
         if picking.is_return_picking:
@@ -439,7 +443,7 @@ class ProviderDHL(models.Model):
         picking.message_post(body=_("You can't cancel DHL shipping without pickup date."))
         picking.write({'carrier_tracking_ref': '', 'carrier_price': 0.0})
 
-    def _dhl_convert_weight(self, weight):
+    def _dhl_rest_convert_weight(self, weight):
         weight_uom_id = self.env['product.template']._get_weight_uom_id_from_ir_config_parameter()
         unit = self.dhl_unit_system
         if unit == 'imperial':

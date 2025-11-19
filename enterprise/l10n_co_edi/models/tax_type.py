@@ -2,7 +2,7 @@
 from odoo import fields, models
 
 
-class TaxType(models.Model):
+class L10n_Co_EdiTaxType(models.Model):
     _name = 'l10n_co_edi.tax.type'
     _description = "Colombian EDI Tax Type"
 

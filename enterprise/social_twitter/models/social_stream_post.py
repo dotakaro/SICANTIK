@@ -14,7 +14,7 @@ from werkzeug.urls import url_join
 _logger = logging.getLogger(__name__)
 
 
-class SocialStreamPostTwitter(models.Model):
+class SocialStreamPost(models.Model):
     _inherit = 'social.stream.post'
 
     twitter_tweet_id = fields.Char('X Post ID', index=True)
@@ -35,20 +35,21 @@ class SocialStreamPostTwitter(models.Model):
     twitter_quoted_tweet_author_link = fields.Char('Quoted post author Link')
     twitter_quoted_tweet_profile_image_url = fields.Char('Quoted post profile image URL')
 
-    _sql_constraints = [
-        ('tweet_uniq', 'UNIQUE (twitter_tweet_id, stream_id)', 'You can not store two times the same post on the same stream!')
-    ]
+    _tweet_uniq = models.Constraint(
+        'UNIQUE (twitter_tweet_id, stream_id)',
+        "You can not store two times the same post on the same stream!",
+    )
 
     def _compute_author_link(self):
         twitter_posts = self._filter_by_media_types(['twitter'])
-        super(SocialStreamPostTwitter, (self - twitter_posts))._compute_author_link()
+        super(SocialStreamPost, (self - twitter_posts))._compute_author_link()
 
         for post in twitter_posts:
             post.author_link = 'https://twitter.com/intent/user?user_id=%s' % post.twitter_author_id
 
     def _compute_post_link(self):
         twitter_posts = self._filter_by_media_types(['twitter'])
-        super(SocialStreamPostTwitter, (self - twitter_posts))._compute_post_link()
+        super(SocialStreamPost, (self - twitter_posts))._compute_post_link()
 
         for post in twitter_posts:
             post.post_link = 'https://www.twitter.com/%s/statuses/%s' % (post.twitter_author_id, post.twitter_tweet_id)
@@ -87,7 +88,7 @@ class SocialStreamPostTwitter(models.Model):
 
     def _compute_is_author(self):
         twitter_posts = self._filter_by_media_types(['twitter'])
-        super(SocialStreamPostTwitter, (self - twitter_posts))._compute_is_author()
+        super(SocialStreamPost, (self - twitter_posts))._compute_is_author()
 
         for post in twitter_posts:
             post.is_author = post.twitter_author_id == post.account_id.twitter_user_id
@@ -142,7 +143,7 @@ class SocialStreamPostTwitter(models.Model):
         )
         if not result.ok:
             if result.json().get('errors', [{}])[0].get('parameters', {}).get('since_id'):
-                raise UserError(_("Replies from posts older than 7 days must be accessed on Twitter.com"))
+                raise UserError(_("See older replies on x.com"))
             raise UserError(_("Failed to fetch the posts in the same thread: '%(text)s' using the account %(account)s.", text=result.text, account=self.stream_id.account_id.name))
 
         users = {
@@ -215,9 +216,9 @@ class SocialStreamPostTwitter(models.Model):
         if not result.ok:
             raise UserError(_('Can not like / unlike the tweet\n%s.', result.text))
 
-        post = request.env['social.stream.post'].search([('twitter_tweet_id', '=', tweet_id)])
-        if post:
-            post.twitter_user_likes = like
+        posts = request.env['social.stream.post'].search([('twitter_tweet_id', '=', tweet_id)])
+        if posts:
+            posts.twitter_user_likes = like
 
         return True
 

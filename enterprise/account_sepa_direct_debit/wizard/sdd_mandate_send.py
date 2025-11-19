@@ -1,9 +1,9 @@
 from odoo import _, api, fields, models
 
 
-class SDDMandateSend(models.TransientModel):
-    _inherit = 'mail.composer.mixin'
+class SddMandateSend(models.TransientModel):
     _name = 'sdd.mandate.send'
+    _inherit = ['mail.composer.mixin']
     _description = "SDD Mandate Send"
 
     company_id = fields.Many2one(comodel_name='res.company', compute='_compute_company_id', store=True)
@@ -48,7 +48,7 @@ class SDDMandateSend(models.TransientModel):
     @api.depends('mandate_id')
     def _compute_recipient_ids(self):
         for wizard in self:
-            wizard.recipient_ids = wizard.partner_id | wizard.mandate_id.message_partner_ids - wizard.author_id
+            wizard.recipient_ids = wizard.partner_id
 
     @api.depends('mandate_id')
     def _compute_company_id(self):
@@ -122,6 +122,7 @@ class SDDMandateSend(models.TransientModel):
             partner_ids=self.recipient_ids.ids,
             subject=self.subject,
             attachment_ids=mandate_pdf.ids,
+            subtype_id=self.env.ref('mail.mt_comment').id,
         )
 
     def action_send_and_print(self):

@@ -6,6 +6,7 @@
     'summary': 'Test Suite for Discuss Enterprise',
     'auto_install': ['test_discuss_full', 'web_enterprise'],
     'depends': [
+        'ai',
         'account_accountant',
         'account_invoice_extract',
         'approvals',
@@ -21,5 +22,14 @@
         'web_studio',
         'whatsapp',
     ],
+    'assets': {
+        'web.assets_tests': [
+            'test_discuss_full_enterprise/static/tests/tours/**/*',
+        ],
+        'web.assets_unit_tests': [
+            'test_discuss_full_enterprise/static/tests/*',
+        ],
+    },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

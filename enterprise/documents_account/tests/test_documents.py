@@ -1,45 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import base64
+from unittest.mock import patch
 
-from odoo.tests import Form
-
+from odoo import Command
+from odoo.addons.documents_account.tests.common import DocumentsAccountTestCommon, TEXT, PDF
 from odoo.exceptions import UserError
 from odoo.tests.common import tagged
-from odoo.addons.account.tests.common import AccountTestInvoicingCommon
-
-GIF = b"R0lGODdhAQABAIAAAP///////ywAAAAAAQABAAACAkQBADs="
-TEXT = base64.b64encode(bytes("workflow bridge account", 'utf-8'))
-PDF = 'JVBERi0xLjYNJeLjz9MNCjI0IDAgb2JqDTw8L0ZpbHRlci9GbGF0ZURlY29kZS9GaXJzdCA0L0xlbmd0aCAyMTYvTiAxL1R5cGUvT2JqU3RtPj5zdHJlYW0NCmjePI9RS8MwFIX/yn1bi9jepCQ6GYNpFBTEMsW97CVLbjWYNpImmz/fVsXXcw/f/c4SEFarepPTe4iFok8dU09DgtDBQx6TMwT74vaLTE7uSPDUdXM0Xe/73r1FnVwYYEtHR6d9WdY3kX4ipRMV6oojSmxQMoGyac5RLBAXf63p38aGA7XPorLewyvFcYaJile8rB+D/YcwiRdMMGScszO8/IW0MdhsaKKYGA46gXKTr/cUQVY4We/cYMNpnLVeXPJUXHs9fECr7kAFk+eZ5Xr9LcAAfKpQrA0KZW5kc3RyZWFtDWVuZG9iag0yNSAwIG9iag08PC9GaWx0ZXIvRmxhdGVEZWNvZGUvRmlyc3QgNC9MZW5ndGggNDkvTiAxL1R5cGUvT2JqU3RtPj5zdHJlYW0NCmjeslAwULCx0XfOL80rUTDU985MKY42NAIKBsXqh1QWpOoHJKanFtvZAQQYAN/6C60NCmVuZHN0cmVhbQ1lbmRvYmoNMjYgMCBvYmoNPDwvRmlsdGVyL0ZsYXRlRGVjb2RlL0ZpcnN0IDkvTGVuZ3RoIDQyL04gMi9UeXBlL09ialN0bT4+c3RyZWFtDQpo3jJTMFAwVzC0ULCx0fcrzS2OBnENFIJi7eyAIsH6LnZ2AAEGAI2FCDcNCmVuZHN0cmVhbQ1lbmRvYmoNMjcgMCBvYmoNPDwvRmlsdGVyL0ZsYXRlRGVjb2RlL0ZpcnN0IDUvTGVuZ3RoIDEyMC9OIDEvVHlwZS9PYmpTdG0+PnN0cmVhbQ0KaN4yNFIwULCx0XfOzytJzSspVjAyBgoE6TsX5Rc45VdEGwB5ZoZGCuaWRrH6vqkpmYkYogGJRUCdChZgfUGpxfmlRcmpxUAzA4ryk4NTS6L1A1zc9ENSK0pi7ez0g/JLEktSFQz0QyoLUoF601Pt7AACDADYoCeWDQplbmRzdHJlYW0NZW5kb2JqDTIgMCBvYmoNPDwvTGVuZ3RoIDM1MjUvU3VidHlwZS9YTUwvVHlwZS9NZXRhZGF0YT4+c3RyZWFtDQo8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/Pgo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJBZG9iZSBYTVAgQ29yZSA1LjQtYzAwNSA3OC4xNDczMjYsIDIwMTIvMDgvMjMtMTM6MDM6MDMgICAgICAgICI+CiAgIDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CiAgICAgIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiCiAgICAgICAgICAgIHhtbG5zOnBkZj0iaHR0cDovL25zLmFkb2JlLmNvbS9wZGYvMS4zLyIKICAgICAgICAgICAgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIgogICAgICAgICAgICB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIKICAgICAgICAgICAgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIj4KICAgICAgICAgPHBkZjpQcm9kdWNlcj5BY3JvYmF0IERpc3RpbGxlciA2LjAgKFdpbmRvd3MpPC9wZGY6UHJvZHVjZXI+CiAgICAgICAgIDx4bXA6Q3JlYXRlRGF0ZT4yMDA2LTAzLTA2VDE1OjA2OjMzLTA1OjAwPC94bXA6Q3JlYXRlRGF0ZT4KICAgICAgICAgPHhtcDpDcmVhdG9yVG9vbD5BZG9iZVBTNS5kbGwgVmVyc2lvbiA1LjIuMjwveG1wOkNyZWF0b3JUb29sPgogICAgICAgICA8eG1wOk1vZGlmeURhdGU+MjAxNi0wNy0xNVQxMDoxMjoyMSswODowMDwveG1wOk1vZGlmeURhdGU+CiAgICAgICAgIDx4bXA6TWV0YWRhdGFEYXRlPjIwMTYtMDctMTVUMTA6MTI6MjErMDg6MDA8L3htcDpNZXRhZGF0YURhdGU+CiAgICAgICAgIDx4bXBNTTpEb2N1bWVudElEPnV1aWQ6ZmYzZGNmZDEtMjNmYS00NzZmLTgzOWEtM2U1Y2FlMmRhMmViPC94bXBNTTpEb2N1bWVudElEPgogICAgICAgICA8eG1wTU06SW5zdGFuY2VJRD51dWlkOjM1OTM1MGIzLWFmNDAtNGQ4YS05ZDZjLTAzMTg2YjRmZmIzNjwveG1wTU06SW5zdGFuY2VJRD4KICAgICAgICAgPGRjOmZvcm1hdD5hcHBsaWNhdGlvbi9wZGY8L2RjOmZvcm1hdD4KICAgICAgICAgPGRjOnRpdGxlPgogICAgICAgICAgICA8cmRmOkFsdD4KICAgICAgICAgICAgICAgPHJkZjpsaSB4bWw6bGFuZz0ieC1kZWZhdWx0Ij5CbGFuayBQREYgRG9jdW1lbnQ8L3JkZjpsaT4KICAgICAgICAgICAgPC9yZGY6QWx0PgogICAgICAgICA8L2RjOnRpdGxlPgogICAgICAgICA8ZGM6Y3JlYXRvcj4KICAgICAgICAgICAgPHJkZjpTZXE+CiAgICAgICAgICAgICAgIDxyZGY6bGk+RGVwYXJ0bWVudCBvZiBKdXN0aWNlIChFeGVjdXRpdmUgT2ZmaWNlIG9mIEltbWlncmF0aW9uIFJldmlldyk8L3JkZjpsaT4KICAgICAgICAgICAgPC9yZGY6U2VxPgogICAgICAgICA8L2RjOmNyZWF0b3I+CiAgICAgIDwvcmRmOkRlc2NyaXB0aW9uPgogICA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgog' + 682 * 'ICAg' + 'Cjw/eHBhY2tldCBlbmQ9InciPz4NCmVuZHN0cmVhbQ1lbmRvYmoNMTEgMCBvYmoNPDwvTWV0YWRhdGEgMiAwIFIvUGFnZUxhYmVscyA2IDAgUi9QYWdlcyA4IDAgUi9UeXBlL0NhdGFsb2c+Pg1lbmRvYmoNMjMgMCBvYmoNPDwvRmlsdGVyL0ZsYXRlRGVjb2RlL0xlbmd0aCAxMD4+c3RyZWFtDQpIiQIIMAAAAAABDQplbmRzdHJlYW0NZW5kb2JqDTI4IDAgb2JqDTw8L0RlY29kZVBhcm1zPDwvQ29sdW1ucyA0L1ByZWRpY3RvciAxMj4+L0ZpbHRlci9GbGF0ZURlY29kZS9JRFs8REI3Nzc1Q0NFMjI3RjZCMzBDNDQwREY0MjIxREMzOTA+PEJGQ0NDRjNGNTdGNjEzNEFCRDNDMDRBOUU0Q0ExMDZFPl0vSW5mbyA5IDAgUi9MZW5ndGggODAvUm9vdCAxMSAwIFIvU2l6ZSAyOS9UeXBlL1hSZWYvV1sxIDIgMV0+PnN0cmVhbQ0KaN5iYgACJjDByGzIwPT/73koF0wwMUiBWYxA4v9/EMHA9I/hBVCxoDOQeH8DxH2KrIMIglFwIpD1vh5IMJqBxPpArHYgwd/KABBgAP8bEC0NCmVuZHN0cmVhbQ1lbmRvYmoNc3RhcnR4cmVmDQo0NTc2DQolJUVPRg0K'
+from odoo.addons.account.tests.test_account_move_send import TestAccountMoveSendCommon
+from odoo.addons.documents.models.documents_document import DocumentsDocument
 
 
 @tagged('post_install', '-at_install', 'test_document_bridge')
-class TestCaseDocumentsBridgeAccount(AccountTestInvoicingCommon):
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.folder_a = cls.env['documents.document'].create({
-            'name': 'folder A',
-            'type': 'folder',
-        })
-        cls.folder_a_a = cls.env['documents.document'].create({
-            'name': 'folder A - A',
-            'folder_id': cls.folder_a.id,
-            'type': 'folder',
-        })
-        cls.document_txt = cls.env['documents.document'].create({
-            'datas': TEXT,
-            'name': 'file.txt',
-            'mimetype': 'text/plain',
-            'folder_id': cls.folder_a_a.id,
-        })
-        cls.document_gif = cls.env['documents.document'].create({
-            'datas': GIF,
-            'name': 'file.gif',
-            'mimetype': 'image/gif',
-            'folder_id': cls.folder_a.id,
-        })
+class TestCaseDocumentsBridgeAccount(DocumentsAccountTestCommon):
 
     def test_action_view_documents_account_move(self):
         """
@@ -88,7 +61,7 @@ class TestCaseDocumentsBridgeAccount(AccountTestInvoicingCommon):
         tests the create new business model (vendor bill & credit note).
 
         """
-        self.assertEqual(self.document_txt.res_model, 'documents.document', "failed at default res model")
+        self.assertFalse(self.document_txt.res_model, "failed at default res model")
         account_moves_count_pre = self.env['account.move'].sudo().search_count([])
         multi_return = (self.document_txt | self.document_gif).account_create_account_move('in_invoice')
         account_moves_count_post = self.env['account.move'].sudo().search_count([])
@@ -405,8 +378,7 @@ class TestCaseDocumentsBridgeAccount(AccountTestInvoicingCommon):
         self.assertEqual(len(attachment2), 1)
 
         self.env.flush_all()
-        with self.assertQueryCount(67):
-            (move1 | move2).unlink()
+        (move1 | move2).unlink()
 
         self.assertTrue(attachment1.exists())
         self.assertTrue(document1.exists())
@@ -441,9 +413,6 @@ class TestCaseDocumentsBridgeAccount(AccountTestInvoicingCommon):
 
     def test_workflow_create_vendor_receipt(self):
         # Activate the group for the vendor receipt
-        self.env['res.config.settings'].create({'group_show_purchase_receipts': True}).execute()
-        self.assertTrue(self.env.user.has_group('account.group_purchase_receipts'), 'The "purchase Receipt" feature should be enabled.')
-
         vendor_receipt_action = self.document_txt.account_create_account_move('in_receipt')
         move = self.env['account.move'].browse(self.document_txt.res_id)
         self.assertEqual(vendor_receipt_action.get('res_model'), 'account.move')
@@ -484,5 +453,104 @@ class TestCaseDocumentsBridgeAccount(AccountTestInvoicingCommon):
         self.assertFalse(documents, "pdf should not be attached if not main attachment")
         attachment_pdf.register_as_main_attachment(force=False)
         documents = self.env['documents.document'].search([('attachment_id', '=', attachment_pdf.id)])
-        self.assertTrue(documents, "Pdf registered as main attachment did not create a document")
+        self.assertEqual(len(documents), 1, "Pdf registered as main attachment did not create a single document")
         setting.unlink()
+
+    def test_embeddable_server_action_domain(self):
+        """Test the domain that filters server actions that can be embedded on a folder.
+
+        Especially that server actions that create a record with a journal of a company
+        different from the current one are filtered out.
+        """
+        IrActionServer = self.env['ir.actions.server']
+
+        def get_server_actions_for_company(company):
+            return IrActionServer.with_company(company).search(
+                self.env['documents.document'].with_company(company)._get_embeddable_server_action_domain())
+
+        company_1 = self.env.company
+        company_2 = self.setup_other_company()['company']
+        companies = company_1 | company_2
+        pre_existing = {company: get_server_actions_for_company(company) for company in companies}
+        action_base_vals = {'model_id': self.env['ir.model']._get_id('documents.document')}
+        action_create_base_vals = {
+            **action_base_vals,
+            'state': 'documents_account_record_create',
+            'documents_account_create_model': 'account.move.in_invoice',
+        }
+        journal_id_per_company = {
+            company: self.env['account.move'].with_company(company)._get_suitable_journal_ids('in_invoice').ids[0]
+            for company in companies
+        }
+        for company in companies:
+            other_company = companies - company
+            action_single_company_vals = {
+                **action_create_base_vals,
+                'name': f'single {company.name}',
+                'documents_account_journal_id': journal_id_per_company[company],
+            }
+            IrActionServer.with_company(company).create([
+                action_single_company_vals,
+                {
+                    **action_base_vals,
+                    'name': f'multi {company.name}',
+                    'state': 'multi',
+                    'child_ids': [Command.create(action_single_company_vals)],
+                },
+                {
+                    **action_base_vals,
+                    'name': 'multi invalid',
+                    'state': 'multi',
+                    'child_ids': [
+                        IrActionServer.with_company(company).create(action_single_company_vals).id,
+                        IrActionServer.with_company(other_company).create({
+                            **action_single_company_vals,
+                            'documents_account_journal_id': journal_id_per_company[other_company]
+                        }).id,
+                    ],
+                }])
+        action_single_vals = {
+            **action_create_base_vals,
+            'name': 'single',
+        }
+        IrActionServer.create([
+            action_single_vals,
+            {
+                **action_base_vals,
+                'name': 'multi',
+                'state': 'multi',
+                'child_ids': [Command.create(action_single_vals)],
+            }])
+
+        self.assertEqual(
+            set((get_server_actions_for_company(company_1) - pre_existing[company_1]).mapped('name')),
+            {'multi', f'multi {company_1.name}', 'single', f'single {company_1.name}'}
+        )
+        self.assertEqual(
+            set((get_server_actions_for_company(company_2) - pre_existing[company_2]).mapped('name')),
+            {'multi', f'multi {company_2.name}', 'single', f'single {company_2.name}'}
+        )
+
+
+@tagged('post_install_l10n', 'post_install', '-at_install')
+class TestAccountMoveSendDocument(DocumentsAccountTestCommon, TestAccountMoveSendCommon):
+
+    def test_send_and_print_document_creation(self):
+        """
+        Makes sure the documents are created when attaching pdf and xml to the move
+        """
+        self.env.user.company_id.documents_account_settings = True
+        folder_test = self.env['documents.document'].create({'name': 'Bills', 'type': 'folder'})
+        move = self.init_invoice("out_invoice", amounts=[1000], post=True)
+        setting = self.env['documents.account.folder.setting'].create({
+            'folder_id': folder_test.id,
+            'journal_id': move.journal_id.id,
+        })
+
+        wizard = self.create_send_and_print(move)
+        wizard.action_send_and_print()
+        attachments = move.attachment_ids | move.invoice_pdf_report_id
+        documents = self.env['documents.document'].search([('attachment_id', 'in', attachments.ids)])
+        self.assertEqual(len(documents), len(attachments), "Each move attachment should create a corresponding document")
+        with patch.object(DocumentsDocument, '_get_is_multipage', return_value=False):
+            setting.unlink()

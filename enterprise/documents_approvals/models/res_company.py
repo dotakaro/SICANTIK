@@ -7,10 +7,10 @@ from odoo.osv import expression
 class ResCompany(models.Model):
     _inherit = "res.company"
 
-    documents_approvals_settings = fields.Boolean(default=False)
+    documents_approvals_settings = fields.Boolean(default=True)
     approvals_folder_id = fields.Many2one(
         'documents.document',
-        string="Approvals Workspace",
+        string="Approvals Folder",
         compute='_compute_approvals_folder_id', store=True, readonly=False,
         check_company=True,
         domain=[('type', '=', 'folder'), ('shortcut_document_id', '=', False)],

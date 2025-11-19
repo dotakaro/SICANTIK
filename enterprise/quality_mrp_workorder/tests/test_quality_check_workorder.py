@@ -17,8 +17,6 @@ class TestQualityCheckWorkorder(TestMrpCommon):
     def test_01_quality_check_with_component_consumed_in_operation(self):
         """ Test quality check on a production with a component consumed in one operation
         """
-
-        picking_type_id = self.env.ref('stock.warehouse0').manu_type_id.id
         component = self.env['product.product'].create({
             'name': 'consumable component',
             'type': 'consu',
@@ -32,7 +30,7 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         # Create Quality Point for all products
         self.env['quality.point'].create({
             'product_ids': [],
-            'picking_type_ids': [picking_type_id],
+            'picking_type_ids': [self.picking_type_manu.id],
             'measure_on': 'product',
         })
 
@@ -56,8 +54,6 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         are tracked by serial. The auto-completion of the serial numbers should
         be correct
         """
-        warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
-
         finished = self.bom_4.product_id
         component = self.bom_4.bom_line_ids.product_id
         (finished | component).write({
@@ -69,16 +65,16 @@ class TestQualityCheckWorkorder(TestMrpCommon):
             'name': p.name,
             'product_id': p.id,
         } for p in (finished, component)])
-        self.env['stock.quant']._update_available_quantity(component, warehouse.lot_stock_id, 1, lot_id=component_sn)
+        self.env['stock.quant']._update_available_quantity(component, self.stock_location, 1, lot_id=component_sn)
 
         type_register_materials = self.env.ref('mrp_workorder.test_type_register_consumed_materials')
         operation = self.env['mrp.routing.workcenter'].create({
             'name': 'Super Operation',
             'bom_id': self.bom_4.id,
             'workcenter_id': self.workcenter_2.id,
-            'quality_point_ids': [(0, 0, {
-                'product_ids': [(4, finished.id)],
-                'picking_type_ids': [(4, warehouse.manu_type_id.id)],
+            'quality_point_ids': [Command.create({
+                'product_ids': [Command.link(finished.id)],
+                'picking_type_ids': [Command.link(self.picking_type_manu.id)],
                 'test_type_id': type_register_materials.id,
                 'component_id': component.id,
                 'bom_id': self.bom_4.id,
@@ -116,7 +112,6 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         update the appropriate backorder.
         """
         warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
-
         finished = self.bom_4.product_id
         component = self.bom_4.bom_line_ids.product_id
         component.write({
@@ -157,8 +152,8 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         self.assertEqual(mo.move_raw_ids.lot_ids, lots[:2])
         # Split the MO in 2
         action = mo.action_split()
-        wizard = Form(self.env[action['res_model']].with_context(action['context']))
-        wizard.counter = 2
+        wizard = Form.from_action(self.env, action)
+        wizard.max_batch_size = 1
         action = wizard.save().action_split()
         # Should have 2 mos /w 1 sn each
         self.assertEqual(len(mo.procurement_group_id.mrp_production_ids), 2)
@@ -166,12 +161,8 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         self.assertEqual(mo.procurement_group_id.mrp_production_ids[0].workorder_ids.lot_id, lots[0])
         self.assertEqual(mo.procurement_group_id.mrp_production_ids[1].workorder_ids.lot_id, lots[1])
         # Register sn3 on mo 1 and check that it is reflected on the associated move line
-        mo.workorder_ids.current_quality_check_id.lot_id = lots[2]
-        mo.workorder_ids.current_quality_check_id.action_next()
-        self.assertEqual(mo.move_raw_ids.move_line_ids.lot_id, lots[2])
-
-        mo.workorder_ids.do_finish()
-        mo.button_mark_done()
+        component_move = mo.workorder_ids.current_quality_check_id.move_id
+        component_move.action_add_from_quant(self.env['stock.quant'].search([('lot_id', '=', lots[2].id), ('location_id', '=', warehouse.lot_stock_id.id)], limit=1).id)
         self.assertRecordValues(mo.move_raw_ids, [
             {'quantity': 1.0, 'lot_ids': lots[2].ids},
         ])
@@ -188,12 +179,12 @@ class TestQualityCheckWorkorder(TestMrpCommon):
             'product_qty': 1,
             'type': 'normal',
             'operation_ids': [
-                (0, 0, {'name': 'Cut', 'workcenter_id': self.workcenter_1.id, 'time_cycle': 12, 'sequence': 1}),
-                (0, 0, {'name': 'Weld', 'workcenter_id': self.workcenter_1.id, 'time_cycle': 18, 'sequence': 2}),
+                Command.create({'name': 'Cut', 'workcenter_id': self.workcenter_1.id, 'time_cycle': 12, 'sequence': 1}),
+                Command.create({'name': 'Weld', 'workcenter_id': self.workcenter_1.id, 'time_cycle': 18, 'sequence': 2}),
             ],
             'bom_line_ids': [
-                (0, 0, {'product_id': self.product_3.id, 'product_qty': 2}),
-                (0, 0, {'product_id': self.product_2.id, 'product_qty': 3}),
+                Command.create({'product_id': self.product_3.id, 'product_qty': 2}),
+                Command.create({'product_id': self.product_2.id, 'product_qty': 3}),
             ]
         })
         operation_ids = bom.operation_ids
@@ -201,26 +192,26 @@ class TestQualityCheckWorkorder(TestMrpCommon):
             {
                 'product_id': self.product_3.id,
                 'product_uom_id': self.uom_unit.id,
-                'location_id': self.location_1.id,
+                'location_id': self.shelf_1.id,
                 'quantity': 4,
             },
             {
                 'product_id': self.product_2.id,
                 'product_uom_id': self.uom_unit.id,
-                'location_id': self.location_1.id,
+                'location_id': self.shelf_1.id,
                 'quantity': 6,
             },
         ])
         self.env['quality.point'].create([
             {
                 'title': 'test QP1',
-                'product_ids': [(4, self.product_6.id, 0)],
+                'product_ids': [Command.link(self.product_6.id)],
                 'operation_id': operation_ids[0].id,
                 'note': 'Cut',
             },
             {
                 'title': 'test QP2',
-                'product_ids': [(4, self.product_6.id, 0)],
+                'product_ids': [Command.link(self.product_6.id)],
                 'operation_id': operation_ids[1].id,
                 'note': 'Weld',
             }
@@ -269,7 +260,7 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         self.product_2.tracking = 'serial'
         self.env['quality.point'].create({
             'title': 'Test Step',
-            'picking_type_ids': [(Command.link(self.warehouse_1.manu_type_id.id))],
+            'picking_type_ids': [(Command.link(self.picking_type_manu.id))],
             'measure_on': 'product',
         })
         finished_sn = self.env['stock.lot'].create([{
@@ -280,7 +271,7 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         mo = self.env['mrp.production'].create({
             'product_id': self.product_2.id,
             'product_qty': 1,
-            'picking_type_id': self.warehouse_1.manu_type_id.id,
+            'picking_type_id': self.picking_type_manu.id,
         })
         mo.action_confirm()
         self.assertEqual(mo.state, 'confirmed')
@@ -305,7 +296,7 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         })
         self.env['quality.point'].create({
             'title': 'Test Step',
-            'picking_type_ids': [(Command.link(self.warehouse_1.manu_type_id.id))],
+            'picking_type_ids': [(Command.link(self.picking_type_manu.id))],
             'operation_id': bom_2.operation_ids.id,
             'measure_on': 'product',
             'test_type_id': self.env.ref('mrp_workorder.test_type_register_consumed_materials').id,
@@ -315,7 +306,7 @@ class TestQualityCheckWorkorder(TestMrpCommon):
             'product_id': self.product_3.id,
             'product_qty': 1,
             'bom_id': bom_2.id,
-            'picking_type_id': self.warehouse_1.manu_type_id.id,
+            'picking_type_id': self.picking_type_manu.id,
         })
         mo.action_confirm()
         self.assertEqual(len(mo.move_raw_ids), 1)
@@ -323,34 +314,20 @@ class TestQualityCheckWorkorder(TestMrpCommon):
         self.assertEqual(len(mo.workorder_ids), 1)
         quality_check = mo.workorder_ids.check_ids
         self.assertEqual(quality_check.component_id, self.product_2)
-        self.assertEqual(quality_check.qty_done, 1)
+        self.assertEqual(quality_check.move_id.quantity, 1)
         self.assertEqual(finished_sn.quality_check_qty, 2)
-        domain_sn_qc = ['|', ('lot_id', '=', finished_sn.id), ('finished_lot_id', '=', finished_sn.id)]
+        domain_sn_qc = ['|', ('lot_id', 'in', finished_sn.ids), ('finished_lot_id', 'in', finished_sn.ids)]
         self.assertEqual(finished_sn.action_open_quality_checks()['domain'], domain_sn_qc)
 
 
 @tagged('post_install', '-at_install')
 class TestPickingWorkorderClientActionQuality(test_tablet_client_action.TestWorkorderClientActionCommon, HttpCase):
 
-    def test_control_per_op_quantity_quality_check(self):
-        """ Test quality point control per product on workorder operation
-        """
-        point = self.env['quality.point'].create({
-            'title': 'test QP1',
-            'picking_type_ids': [Command.link(self.env['stock.picking.type'].search([('code', '=', 'mrp_operation')], limit=1).id)],
-            'measure_on': 'move_line',
-            'product_ids': [Command.link(self.bom_2.product_id.id)],
-            'note': 'Cut',
-        })
-        # measure_on == 'move_line' is forbidden for mrp
-        with self.assertRaises(UserError):
-            point.operation_id = self.bom_2.operation_ids[0]
-
     def test_measure_quality_check(self):
         self.env['quality.point'].create({
             'title': 'Measure Wand Step',
-            'product_ids': [(4, self.potion.id)],
-            'picking_type_ids': [(4, self.picking_type_manufacturing.id)],
+            'product_ids': [Command.link(self.potion.id)],
+            'picking_type_ids': [Command.link(self.picking_type_manu.id)],
             'operation_id': self.wizard_op_1.id,
             'test_type_id': self.env.ref('quality_control.test_type_measure').id,
             'norm': 15,
@@ -371,3 +348,12 @@ class TestPickingWorkorderClientActionQuality(test_tablet_client_action.TestWork
 
         self.assertEqual(mo.workorder_ids.check_ids.filtered(lambda x: x.test_type == 'measure').quality_state, 'fail', 'The measure quality check should have failed')
         self.assertEqual(res_action.get('res_model'), 'quality.check.wizard', 'The action should return a wizard when failing')
+
+    def test_quantity_control_point_with_production(self):
+        """Test that it's not possible to create a Quantity quality check type with a manufacturing operation type."""
+        with self.assertRaises(UserError):
+            self.qality_point_test1 = self.env['quality.point'].create({
+                'picking_type_ids': [Command.link(self.picking_type_manu.id)],
+                'operation_id': self.wizard_op_1.id,
+                'measure_on': 'move_line',
+            })

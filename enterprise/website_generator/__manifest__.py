@@ -2,7 +2,7 @@
 {
     'name': 'Website Generator',
     'version': '1.0.0',
-    'category': 'Hidden/Tools',
+    'category': 'Website/Website',
     'summary': 'Import a pre-existing website',
     'description': """
         Generates a new website in Odoo, with the goal of recreating an external website as close as possible.
@@ -12,7 +12,7 @@
         'security/ir.model.access.csv',
         'cron/cron.xml',
         'views/website_generator_views.xml',
-        'data/website_generator_data.xml',
+        'data/mail_template.xml',
     ],
     'assets': {
         'web.assets_backend': [
@@ -21,5 +21,6 @@
         ],
     },
     'installable': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 
 from odoo import Command
-from odoo.tools import html2plaintext
+from odoo.tools import html2plaintext, format_duration
 
 from urllib.parse import quote
 from werkzeug.urls import url_join
@@ -32,10 +32,9 @@ class UrbanPiperClient:
         """
         Make an api call, return response for multiple api requests of urban piper.
         """
-        user_name = self.config.env['ir.config_parameter'].sudo().get_param('pos_urban_piper.urbanpiper_username')
-        api_key = self.config.env['ir.config_parameter'].sudo().get_param('pos_urban_piper.urbanpiper_apikey')
         headers = {
-            'Authorization': f'apikey {user_name}:{api_key}',
+            'Authorization': f'apikey {self.config.env.company.pos_urbanpiper_username}:'
+                             f'{self.config.env.company.pos_urbanpiper_apikey}',
             'Content-Type': 'application/json'
         }
         urbanpiper_url = 'https://pos-int.urbanpiper.com/' if self.config.env['ir.config_parameter'].sudo().get_param('pos_urban_piper.is_production_mode') == 'False' else 'https://api.urbanpiper.com/'
@@ -226,6 +225,9 @@ class UrbanPiperClient:
                 'recommended': product.is_recommended_on_urbanpiper,
                 'img_url': self._get_public_image_url(product),
                 'available': True,
+                'included_platforms': (
+                    [provider.technical_name for provider in (product.urbanpiper_pos_platform_ids & self.config.urbanpiper_delivery_provider_ids)]
+                ),
             }
             name_translations = product.get_field_translations('name')
             description_translations = product.get_field_translations('public_description')
@@ -240,7 +242,7 @@ class UrbanPiperClient:
                         'description': desc_dict.get(lang, '')
                     })
             item['translations'] = translations
-            for provider in self.config.urbanpiper_delivery_provider_ids:
+            for provider in (product.urbanpiper_pos_platform_ids & self.config.urbanpiper_delivery_provider_ids):
                 tags = item.setdefault('tags', {})
                 alcohol_tags = tags.setdefault(provider.technical_name, [])
                 alcohol_tag = 'alcohol-present' if product.is_alcoholic_on_urbanpiper else 'alcohol-absent'
@@ -279,24 +281,18 @@ class UrbanPiperClient:
         - Attribute values are options.
         """
         value_lst = []
-        for product in pos_products:
-            for option_group in product.attribute_line_ids:
-                for option in option_group.value_ids:
-                    product_option = self.config.env['product.template.attribute.value'].search([
-                        ('ptav_active', '=', True),
-                        ('product_tmpl_id', '=', product.id),
-                        ('product_attribute_value_id', '=', option.id)
-                    ], limit=1)
-                    value_dict = {
-                        'ref_id': f'{product.id}-{option.id}',
-                        'title': option.with_context(lang="en_US").name,
-                        'available': True,
-                        'opt_grp_ref_ids': [f'{product.id}-{i}' for i in option.attribute_id.ids],
-                        'price': product_option.price_extra or option.default_extra_price
-                    }
-                    name_translations = option.get_field_translations('name')
-                    value_dict['translations'] = self._get_translations(name_translations, 'title')
-                    value_lst.append(value_dict)
+        active_ptav = pos_products.attribute_line_ids.product_template_value_ids.filtered(lambda ptav: ptav.ptav_active)
+        for option in active_ptav:
+            value_dict = {
+                'ref_id': f'{option.product_tmpl_id.id}-{option.product_attribute_value_id.id}',
+                'title': option.product_attribute_value_id.with_context(lang="en_US").name,
+                'available': True,
+                'opt_grp_ref_ids': [f'{option.product_tmpl_id.id}-{i}' for i in option.attribute_id.ids],
+                'price': option.price_extra or option.product_attribute_value_id.default_extra_price
+            }
+            name_translations = option.product_attribute_value_id.get_field_translations('name')
+            value_dict['translations'] = self._get_translations(name_translations, 'title')
+            value_lst.append(value_dict)
         return value_lst
 
     def _prepare_charges_data(self):
@@ -323,6 +319,37 @@ class UrbanPiperClient:
             for product in [product_packaging, product_delivery]
             if product
         ]
+
+    def request_category_timing(self):
+        """
+        Sync category timings from Odoo to UrbanPiper.
+        """
+        endpoint = 'external/api/v1/inventory/categories/timing-groups/'
+        pos_categories = self.config.env['pos.category'].search([]).filtered(lambda categ: (categ.hour_until - categ.hour_after) != 0)
+        timing_groups = []
+        week_days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        for category in pos_categories:
+            day_slots = []
+            for day in week_days:
+                day_slots.append({
+                    'day': day,
+                    'slots': [
+                        {
+                            'start_time': "23:59" if category.hour_after == 24.0 else format_duration(category.hour_after),
+                            'end_time': "23:59" if category.hour_until == 24.0 else format_duration(category.hour_until)
+                        }
+                    ]
+                })
+            timing_groups.append({
+                'title': f'{category.name} timings',
+                'category_ref_ids': [str(category.id)],
+                'day_slots': day_slots
+            })
+        payload = {
+            'timing_groups': timing_groups
+        }
+        response_json = self._make_api_request(endpoint, method='POST', data=payload)
+        return response_json
 
     def register_item_toggle(self, products, status):
         """

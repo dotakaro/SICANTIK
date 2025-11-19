@@ -4,9 +4,9 @@
 from odoo import api, fields, models, Command
 
 
-class FollowupManualReminder(models.TransientModel):
+class Account_FollowupManual_Reminder(models.TransientModel):
     _name = 'account_followup.manual_reminder'
-    _inherit = 'mail.composer.mixin'
+    _inherit = ['mail.composer.mixin']
     _description = "Wizard for sending manual reminders to clients"
 
     def default_get(self, fields_list):
@@ -43,6 +43,20 @@ class FollowupManualReminder(models.TransientModel):
 
     # attachments fields
     attachment_ids = fields.Many2many(comodel_name='ir.attachment')
+
+    # Wizard buttons visibility controllers
+    show_send_button = fields.Boolean(compute="_compute_show_send_button")
+    show_print_button = fields.Boolean(compute="_compute_show_print_button")
+
+    @api.depends('email', 'sms')
+    def _compute_show_send_button(self):
+        for wizard in self:
+            wizard.show_send_button = wizard.email or wizard.sms
+
+    @api.depends('print')
+    def _compute_show_print_button(self):
+        for wizard in self:
+            wizard.show_print_button = wizard.print
 
     def _compute_render_model(self):
         # OVERRIDES mail.renderer.mixin
@@ -86,7 +100,7 @@ class FollowupManualReminder(models.TransientModel):
                 rendered_values = template._generate_template_recipients(
                     [partner.id],
                     {'partner_to', 'email_cc', 'email_to'},
-                    True
+                    find_or_create_partners=True,
                 )[partner.id]
                 if rendered_values.get('partner_ids'):
                     wizard.email_recipient_ids = [Command.link(partner_id) for partner_id in rendered_values['partner_ids']]

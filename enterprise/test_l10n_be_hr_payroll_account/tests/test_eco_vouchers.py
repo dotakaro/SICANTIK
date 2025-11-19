@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 
+from freezegun import freeze_time
 from datetime import date, datetime
 
 from odoo.tests import tagged, loaded_demo_data
@@ -15,7 +16,9 @@ class TestEcoVouchers(AccountTestInvoicingCommon):
     @AccountTestInvoicingCommon.setup_country('be')
     def setUpClass(cls):
         super().setUpClass()
+        cls.env.user.group_ids += cls.quick_ref('hr_holidays.group_hr_holidays_manager')
 
+    @freeze_time("2021-01-01")
     def test_eco_vouchers(self):
         # The reference year is 2021, so the reference period is 01/06/2020 -> 31/05/2021 (12 months)
         # Employee is working on:
@@ -24,7 +27,6 @@ class TestEcoVouchers(AccountTestInvoicingCommon):
         # Employees is on unpaid time off from the 01/04/2021 to 21/04/2021 (9 working days over 2.5 weeks)
 
         # Expected result = 250*5/12 + 200*(7-1)/12 = 104.67 + 100 = 204.17
-        employee = self.env['hr.employee'].create({'name': 'Test Employee'})
 
         full_time_calendar = self.env['resource.calendar'].create([{
             'name': "Test Calendar : 38 Hours/Week",
@@ -88,38 +90,37 @@ class TestEcoVouchers(AccountTestInvoicingCommon):
             ]],
         }])
 
-
-        dummy = self.env['hr.contract'].create({
-            'name': 'Full Time Contract',
-            'date_start': date(2020, 6, 1),
-            'date_end': date(2020, 10, 31),
-            'employee_id': employee.id,
+        employee = self.env['hr.employee'].create({
+            'name': 'Test Employee',
+            'date_version': date(2020, 6, 1),
+            'contract_date_start': date(2020, 6, 1),
+            'contract_date_end': date(2020, 10, 31),
             'resource_calendar_id': full_time_calendar.id,
-            'state': 'open',
             'wage': 1000,
         })
-        contract_2 = self.env['hr.contract'].create({
+
+        contract_2 = self.env['hr.version'].create({
             'name': 'Part Time Contract',
-            'date_start': date(2020, 11, 1),
-            'date_end': date(2021, 12, 31),
+            'date_version': date(2020, 11, 1),
+            'contract_date_start': date(2020, 11, 1),
+            'contract_date_end': date(2021, 12, 31),
             'employee_id': employee.id,
             'resource_calendar_id': part_time_calendar_3_5.id,
             'standard_calendar_id': full_time_calendar.id,
             'time_credit': True,
             'work_time_rate': 0.6,
-            'time_credit_type_id': self.env.ref('l10n_be_hr_payroll.work_entry_type_credit_time').id,
-            'state': 'open',
+            'time_credit_type_id': self.env.ref('hr_work_entry.l10n_be_work_entry_type_credit_time').id,
             'wage': 1000,
         })
 
         unpaid_time_off_type = self.env['hr.leave.type'].create({
             'name': 'Unpaid',
-            'requires_allocation': 'no',
+            'requires_allocation': False,
             'leave_validation_type': 'both',
             'request_unit': 'hour',
             'unpaid': True,
             'company_id': self.env.company.id,
-            'work_entry_type_id': self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id,
+            'work_entry_type_id': self.env.ref('hr_work_entry.work_entry_type_unpaid_leave').id,
         })
 
         unpaid_leave_2019 = self.env['hr.leave'].create({
@@ -130,11 +131,10 @@ class TestEcoVouchers(AccountTestInvoicingCommon):
             'employee_id': employee.id,
         })
         unpaid_leave_2019.action_approve()
-        unpaid_leave_2019.action_validate()
 
         april_payslip = self.env['hr.payslip'].create({
             'name': 'Payslip Apr 2021',
-            'contract_id': contract_2.id,
+            'version_id': contract_2.id,
             'date_from': datetime(2021, 4, 1),
             'date_to': datetime(2021, 4, 30),
             'employee_id': employee.id,
@@ -148,5 +148,5 @@ class TestEcoVouchers(AccountTestInvoicingCommon):
             'reference_year': '2021',
         })
         employee_line = wizard.line_ids.filtered(lambda l: l.employee_id == employee)
-        expected_result = 211.1 if loaded_demo_data(self.env) else 213.29
+        expected_result = 211.1
         self.assertAlmostEqual(employee_line.amount, expected_result)

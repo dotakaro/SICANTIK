@@ -1,4 +1,4 @@
-import { Record } from "@mail/core/common/record";
+import { fields } from "@mail/core/common/record";
 import { Thread } from "@mail/core/common/thread_model";
 import { patch } from "@web/core/utils/patch";
 
@@ -6,13 +6,13 @@ import { patch } from "@web/core/utils/patch";
 const threadPatch = {
     setup() {
         super.setup(...arguments);
-        this.whatsapp_partner_id = Record.one("Persona");
-        this.whatsappMember = Record.one("ChannelMember", {
+        this.whatsapp_partner_id = fields.One("Persona");
+        this.whatsappMember = fields.One("discuss.channel.member", {
             /** @this {import("models").Thread} */
             compute() {
                 return (
                     this.channel_type === "whatsapp" &&
-                    this.channelMembers.find((member) =>
+                    this.channel_member_ids.find((member) =>
                         member.persona?.eq(this.whatsapp_partner_id)
                     )
                 );

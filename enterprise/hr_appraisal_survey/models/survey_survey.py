@@ -4,6 +4,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 from werkzeug.urls import url_encode
 
+
 class SurveySurvey(models.Model):
     _inherit = 'survey.survey'
 
@@ -71,7 +72,7 @@ class SurveySurvey(models.Model):
         return super().get_formview_id(access_uid=access_uid)
 
 
-class SurveyUserInput(models.Model):
+class SurveyUser_Input(models.Model):
     _inherit = 'survey.user_input'
 
     appraisal_id = fields.Many2one('hr.appraisal', index='btree_not_null')
@@ -98,11 +99,11 @@ class SurveyUserInput(models.Model):
 
     def action_ask_feedback(self):
         if len(self.appraisal_id) > 1:
-            raise ValidationError("You can't selected feedback linked to multiples appraisals.")
+            raise ValidationError(self.env._("You can't selected feedback linked to multiples appraisals."))
         if len(self.survey_id) > 1:
-            raise ValidationError("You can't selected multiple feedback template.")
+            raise ValidationError(self.env._("You can't selected multiple feedback template."))
         appraisal_id = self.appraisal_id
-        set_emails = set(self.mapped('email'))
+        set_emails = set(self.partner_id.mapped('email'))
         if appraisal_id.employee_feedback_ids:
             employee_ids = appraisal_id.employee_feedback_ids.filtered(
                 lambda e: e.work_email in set_emails or\
@@ -125,6 +126,7 @@ class SurveyUserInput(models.Model):
     def _mark_done(self):
         self.appraisal_id._notify_answer_360_feedback()
         return super()._mark_done()
+
 
 class SurveyQuestionAnswer(models.Model):
     _inherit = 'survey.question.answer'

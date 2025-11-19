@@ -4,7 +4,7 @@
 {
     'name': 'MRP features for Quality Control',
     'version': '1.0',
-    'category': 'Manufacturing/Quality',
+    'category': 'Supply Chain/Quality',
     'sequence': 50,
     'summary': 'Quality Management with MRP',
     'depends': ['quality_control', 'mrp_workorder', 'barcodes'],
@@ -29,5 +29,6 @@ Adds Quality Control to workorders.
         ],
     },
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

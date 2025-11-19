@@ -13,14 +13,14 @@ from collections import defaultdict
 _logger = logging.getLogger(__name__)
 
 
-class StudioApprovers(models.Model):
-    _name = "studio.approval.rule.approver"
+class StudioApprovalRuleApprover(models.Model):
+    _name = 'studio.approval.rule.approver'
     _description = "Approval Rule Approvers Enriched"
     _order = "id desc"
     _log_access = True  # explicit: we need create_uid and create_date
 
     user_id = fields.Many2one("res.users", required=True, ondelete="cascade")
-    rule_id = fields.Many2one("studio.approval.rule", required=True, ondelete="cascade")
+    rule_id = fields.Many2one("studio.approval.rule", required=True, index=True, ondelete="cascade")
     date_to = fields.Date()
     is_delegation = fields.Boolean(default=True)
 
@@ -44,8 +44,9 @@ class StudioApprovers(models.Model):
     def _filtered_valid(self):
         return self.filtered(lambda rec: rec._is_valid())
 
+
 class StudioApprovalRule(models.Model):
-    _name = "studio.approval.rule"
+    _name = 'studio.approval.rule'
     _description = "Studio Approval Rule"
     _inherit = ["studio.mixin", 'mail.thread']
 
@@ -118,14 +119,14 @@ class StudioApprovalRule(models.Model):
     entry_ids = fields.One2many('studio.approval.entry', 'rule_id', string='Entries')
     entries_count = fields.Integer('Number of Entries', compute='_compute_entries_count')
 
-    _sql_constraints = [
-        ('method_or_action_together',
-         'CHECK(method IS NULL OR action_id IS NULL)',
-         'A rule must apply to an action or a method (but not both).'),
-        ('method_or_action_not_null',
-         'CHECK(method IS NOT NULL OR action_id IS NOT NULL)',
-         'A rule must apply to an action or a method.'),
-    ]
+    _method_or_action_together = models.Constraint(
+        'CHECK(method IS NULL OR action_id IS NULL)',
+        "A rule must apply to an action or a method (but not both).",
+    )
+    _method_or_action_not_null = models.Constraint(
+        'CHECK(method IS NOT NULL OR action_id IS NOT NULL)',
+        "A rule must apply to an action or a method.",
+    )
 
     @api.depends("notification_order")
     def _compute_display_name(self):
@@ -219,14 +220,10 @@ class StudioApprovalRule(models.Model):
                                             "are forbidden."))
 
     def _search_action_xmlid(self, operator, value):
-        supported_ops = ("=", "in", "!=", "not in")
-        if operator not in supported_ops:
-            raise UserError(_("Unsupported operator '%s' to search action_xmlid", operator))
-
-        is_list = isinstance(value, list)
-        value = value if is_list else [value]
+        if operator not in ('in', 'not in'):
+            return NotImplemented
         action_ids = [self._parse_action_from_button(v) for v in value]
-        return [("action_id", operator, action_ids if is_list else action_ids[0])]
+        return [("action_id", operator, action_ids)]
 
     def default_get(self, fields_list):
         vals = super().default_get(fields_list)
@@ -500,7 +497,7 @@ class StudioApprovalRule(models.Model):
     def _compute_can_validate(self):
         user = self.env.user
         for rule in self:
-            rule.can_validate = user in rule.approver_ids or user in rule.approval_group_id.users
+            rule.can_validate = user in rule.approver_ids or (rule.approval_group_id and user.has_group(rule.approval_group_id.id))
 
     @api.depends('can_validate')
     def _compute_kanban_color(self):
@@ -903,7 +900,7 @@ class StudioApprovalRule(models.Model):
                     "all_rules": { [id]: rule },
                     [model_name]: [((res_id, method, action_id), { rules: [], entries: [] }), ... ]
                 }
-        :rtype dict:
+        :rtype: dict
         :raise: UserError if action_id and method are both truthy (rules can only apply to a method
                 or an action, not both)
         :raise: AccessError if the user does not have read access to the underlying model (and record
@@ -966,7 +963,7 @@ class StudioApprovalRule(models.Model):
         :param str method: method of the action that the user wants to run
         :param int action_id: database ID of the ir.actions.action that the user wants to run
         :return: a dict describing the result of the approval flow
-        :rtype dict:
+        :rtype: dict
         :raise: UserError if action_id and method are both truthy (rules can only apply to a method
                 or an action, not both)
         :raise: AccessError if the user does not have write access to the underlying record
@@ -1193,12 +1190,11 @@ class StudioApprovalEntry(models.Model):
     reference = fields.Char(string='Reference', compute='_compute_reference')
     approved = fields.Boolean(string='Approved')
 
-    _sql_constraints = [('uniq_combination', 'unique(rule_id,model,res_id)', 'A rule can only be approved/rejected once per record.')]
-
-    def init(self):
-        self._cr.execute("""SELECT indexname FROM pg_indexes WHERE indexname = 'studio_approval_entry_model_res_id_idx'""")
-        if not self._cr.fetchone():
-            self._cr.execute("""CREATE INDEX studio_approval_entry_model_res_id_idx ON studio_approval_entry (model, res_id)""")
+    _uniq_combination = models.Constraint(
+        'unique(rule_id,model,res_id)',
+        "A rule can only be approved/rejected once per record.",
+    )
+    _model_res_id_idx = models.Index("(model, res_id)")
 
     @api.depends('user_id', 'model', 'res_id')
     def _compute_name(self):
@@ -1273,7 +1269,7 @@ class StudioApprovalRequest(models.Model):
 
 
 class StudioApprovalRuleDelegate(models.TransientModel):
-    _name = "studio.approval.rule.delegate"
+    _name = 'studio.approval.rule.delegate'
     _description = "Approval Rule Delegate"
 
     approval_rule_id = fields.Many2one("studio.approval.rule", required=True)
@@ -1285,8 +1281,9 @@ class StudioApprovalRuleDelegate(models.TransientModel):
         string="Notify to")
     date_to = fields.Date(string="Until")
 
-    def create(self, vals):
-        records = super().create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
         for rec in records:
             rule = rec.approval_rule_id.sudo()
             rule._delegate_to(rec.approver_ids, rec.date_to)

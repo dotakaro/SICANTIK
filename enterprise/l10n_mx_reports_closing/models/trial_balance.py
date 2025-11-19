@@ -3,13 +3,14 @@
 
 from odoo import models, fields, _
 
-class L10nMXTrialBalanceCustomHandler(models.AbstractModel):
+
+class AccountTrialBalanceReportHandler(models.AbstractModel):
     _inherit = 'account.trial.balance.report.handler'
 
     def _get_custom_display_config(self):
         return {
             'components': {
-                'AccountReportFilters': 'l10n_mx_reports_closing.TrialBalanceFilters',
+                'AccountReportFilters': 'L10nMXTrialBalanceReportFilters',
             },
         }
 
@@ -40,7 +41,7 @@ class L10nMXTrialBalanceCustomHandler(models.AbstractModel):
 
         # Retrieve the options dictionaries corresponding to each column group.
         initial_col_group_key = options['columns'][0]['column_group_key']
-        current_col_group_key = options['columns'][2]['column_group_key']
+        current_col_group_key = options['columns'][1]['column_group_key']
 
         initial_col_group_data = options['column_groups'][initial_col_group_key]
         current_col_group_data = options['column_groups'][current_col_group_key]

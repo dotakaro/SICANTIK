@@ -13,10 +13,12 @@ Accounting reports for Dominican Republic
         'account_reports',
     ],
     'data': [
+        'data/account_return_data.xml',
         'data/profit_and_loss.xml',
         'data/balance_sheet.xml',
     ],
     'auto_install': True,
     'installable': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

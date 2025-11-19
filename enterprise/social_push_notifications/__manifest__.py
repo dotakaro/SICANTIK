@@ -9,7 +9,10 @@
     'description': """Send live notifications to your web visitors""",
     'depends': ['social', 'website'],
     'external_dependencies': {
-        'python': ['google_auth'],
+        'python': ['google-auth'],
+        'apt': {
+            'google-auth': 'python3-google-auth',
+        }
     },
     'data': [
         'security/ir.model.access.csv',
@@ -34,5 +37,6 @@
             'social_push_notifications/static/src/scss/social_push_notifications.scss',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

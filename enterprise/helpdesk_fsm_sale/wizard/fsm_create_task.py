@@ -3,7 +3,8 @@
 
 from odoo import models
 
-class CreateTask(models.TransientModel):
+
+class HelpdeskCreateFsmTask(models.TransientModel):
     _inherit = 'helpdesk.create.fsm.task'
 
     def _generate_task_values(self):

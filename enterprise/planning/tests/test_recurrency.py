@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from freezegun import freeze_time
 
 from .common import TestCommonPlanning
+from .common import TestPlanningContractCommon
 
 import unittest
 from odoo.exceptions import UserError
@@ -39,7 +40,7 @@ class TestRecurrencySlotGeneration(TestCommonPlanning):
                 initial_start :         2019-06-27
                 generated slots:
                                         2019-06-27
-                                        2019-07-4
+                                        2019-07-04
                                         2019-07-11
                                         2019-07-18
                                         2019-07-25
@@ -104,12 +105,12 @@ class TestRecurrencySlotGeneration(TestCommonPlanning):
             stop repeating upon creation
             company_span:               1 month
             first run:
-                now :                   2019-6-27
-                initial_start :         2019-6-27
-                repeat_until :          2019-6-29
+                now :                   2019-06-27
+                initial_start :         2019-06-27
+                repeat_until :          2019-06-29
                 generated slots:
-                                        2019-6-27
-                                        NOT 2019-7-4 because it's after the recurrency's repeat_until
+                                        2019-06-27
+                                        NOT 2019-07-04 because it's after the recurrency's repeat_until
         """
         self.configure_recurrency_span(1)
 
@@ -136,11 +137,11 @@ class TestRecurrencySlotGeneration(TestCommonPlanning):
                 repeat_end :            2019-07-10  recurrency's repeat_until
                 generated slots:
                                         2019-06-27
-                                        2019-07-4
+                                        2019-07-04
                                         NOT 2019-07-11 because it hits the recurrency's repeat_until
             first cron:
                 now:                    2019-07-12
-                last generated start:   2019-07-4
+                last generated start:   2019-07-04
                 repeat_end:             2019-07-10  still recurrency's repeat_until
                 generated slots:
                                         NOT 2019-07-11 because it still hits the repeat end
@@ -171,23 +172,23 @@ class TestRecurrencySlotGeneration(TestCommonPlanning):
             Check that if a cron is triggered, it doesn't generate more slots (since the date limit
             in generated slots has been reached).
             first run:
-                now :                   2019-8-31
-                initial_start :         2019-9-1
+                now :                   2019-08-31
+                initial_start :         2019-09-01
                 repeat_end :            forever
                 generated slots:
-                                        2019-9-1
-                                        2019-9-8
-                                        2019-9-15
-                                        2019-9-22
-                                        2019-9-29
+                                        2019-09-01
+                                        2019-09-08
+                                        2019-09-15
+                                        2019-09-22
+                                        2019-09-29
             first cron:
-                now:                    2019-9-14  two weeks later
+                now:                    2019-09-14  two weeks later
                 repeat_end:             forever
                 generated slots:
-                                        2019-10-6
+                                        2019-10-06
                                         2019-10-13
             second cron:
-                now:                    2019-9-16  two days later
+                now:                    2019-09-16  two days later
                 last generated start:   2019-10-13
                 repeat_end:             forever
                 generated slots:
@@ -222,19 +223,19 @@ class TestRecurrencySlotGeneration(TestCommonPlanning):
         """Since the recurrency cron is meant to run every week, make sure generation works accordingly when
             the company's repeat span is much larger
             first run:
-                now :                   2019-6-1
-                initial_start :         2019-6-1
-                repeat_end :            2019-12-1  initial_start + 6 months
+                now :                   2019-06-01
+                initial_start :         2019-06-01
+                repeat_end :            2019-12-01  initial_start + 6 months
                 generated slots:
-                                        2019-6-1
+                                        2019-06-01
                                         ...
                                         2019-11-30  (27 items)
             first cron:
-                now:                    2019-6-8
+                now:                    2019-06-08
                 last generated start    2019-11-30
-                repeat_end              2019-12-8
+                repeat_end              2019-12-08
                 generated slots:
-                                        2019-12-7
+                                        2019-12-07
             only one slot generated: since we are one week later, repeat_end is only one week later and slots are generated every week.
             So there is just enough room for one.
             This ensure slots are always generated up to x time in advance with x being the company's repeat span
@@ -287,24 +288,24 @@ class TestRecurrencySlotGeneration(TestCommonPlanning):
             both the company's repeat span and the repeat interval are much larger
             Company's span is 6 months and repeat_interval is 4 weeks
             first run:
-                now :                   2019-5-16
-                initial_start :         2019-6-1
+                now :                   2019-05-16
+                initial_start :         2019-06-01
                 repeat_end :            2019-11-16  now + 6 months
                 generated slots:
-                                        2019-6-1
-                                        2019-6-29
-                                        2019-7-27
-                                        2019-8-24
-                                        2019-9-21
+                                        2019-06-01
+                                        2019-06-29
+                                        2019-07-27
+                                        2019-08-24
+                                        2019-09-21
                                         2019-10-19
             first cron:
-                now:                    2019-5-24
+                now:                    2019-05-24
                 last generated start    2019-10-19
                 repeat_end              2019-11-24
                 generated slots:
                                         2019-11-16
             second cron:
-                now:                    2019-5-31
+                now:                    2019-05-31
                 last generated start    2019-11-16
                 repeat_end              2019-12-01
                 generated slots:
@@ -346,23 +347,23 @@ class TestRecurrencySlotGeneration(TestCommonPlanning):
             Test Case:
             ---------
             First Automated Run:
-                now :                   2020-4-20
-                initial_start :         2020-4-20
+                now :                   2020-04-20
+                initial_start :         2020-04-20
                 repeat_end :            2020-05-25  now + 1 month
                 generated slots:
-                                        2020-4-20
-                                        2020-4-27
-                                        2020-5-04
-                                        2020-5-11
-                                        2020-5-18
+                                        2020-04-20
+                                        2020-04-27
+                                        2020-05-04
+                                        2020-05-11
+                                        2020-05-18
             First Cron:
-                now:                    2020-4-27
-                last generated start    2020-5-18
+                now:                    2020-04-27
+                last generated start    2020-05-18
                 repeat_end              2020-05-25
                 generated slots:
                                         2020-05-25
             Second Cron:
-                now:                    2020-5-4
+                now:                    2020-05-04
                 last generated start    2020-05-25
                 repeat_end              2020-05-25
                 generated slots:
@@ -1195,3 +1196,112 @@ class TestRecurrencySlotGeneration(TestCommonPlanning):
             for original_end_date, modified_end_date
             in zip(original_end_dates, slot.recurrency_id.slot_ids.mapped('end_datetime'))
         ))
+
+    def test_recurrent_shifts_without_archive_resource(self):
+        shift=self.env['planning.slot'].create({
+            'start_datetime': datetime(2024, 12, 25, 8, 0, 0),
+            'end_datetime': datetime(2024, 12, 25, 17, 0, 0),
+            'resource_id': self.resource_joseph.id,
+        })
+        self.resource_joseph.action_archive()
+        shift.write({'repeat': True, 'repeat_interval': 1, 'repeat_type': 'forever'})
+        self.assertFalse((shift.recurrency_id.slot_ids - shift).resource_id)
+
+
+class TestPlanningContract(TestPlanningContractCommon):
+
+    @freeze_time('2024-03-11 08:00:00')
+    def test_recurrence_permanent_contract(self):
+        """
+        This test covers the default use case in which a recurrent shift is planned inside of the employee contract date range.
+        Specifically, the contract is a permanent one (it does not have an ending date).
+        In this use case, the recurrent shifts will be planned normally until the end of the planning period. This is by default 6 months.
+        """
+        # This contract does not have a date_end, thus it is permanent.
+        self.employee_bert.version_id.write({
+            'date_version': datetime.strptime('2024-01-01', '%Y-%m-%d'),
+            'contract_date_start': datetime.strptime('2024-01-01', '%Y-%m-%d'),
+            'contract_date_end': False,
+            'name': 'Long contract for Bert',
+            'resource_calendar_id': self.calendar_40h.id,
+            'wage': 5000.0,
+        })
+        recurrent_slot = self.env['planning.slot'].create({  # this should be a Monday
+            'start_datetime': self.random_monday_date + timedelta(hours=15),
+            'end_datetime': self.random_monday_date + timedelta(hours=16),
+            'resource_id': self.resource_bert.id,
+            'repeat': True,
+            'repeat_type': 'forever',
+            'repeat_interval': 1,
+            'repeat_unit': 'week',
+        })
+
+        self.assertEqual(
+            len(recurrent_slot.recurrency_id.slot_ids),
+            27,  # There are 27 Mondays in the next 6 month period :(
+            'Since the employee\'s contract is permanent, shifts will be planned for the next 6 months (the cron period).'
+        )
+
+    @freeze_time('2024-03-11 08:00:00')
+    def test_recurrence_fixed_contract(self):
+        """
+        This test covers the use case in which a recurrent shift is planned inside of the employee contract date range,
+        but the employee has a fixed term contract (it has an ending date).
+        In this use case, the recurrent shifts will be planned normally until the end of the contract.
+        """
+        # This contract ends at the 27th of the month - it is a fixed term contract.
+        self.employee_bert.version_id.write({
+            'contract_date_end': datetime.strptime('2024-03-27', '%Y-%m-%d'),
+            'contract_date_start': datetime.strptime('2024-01-01', '%Y-%m-%d'),
+            'date_version': datetime.strptime('2024-01-01', '%Y-%m-%d'),
+            'name': 'Short contract for Bert',
+            'resource_calendar_id': self.calendar_40h.id,
+            'wage': 5000.0,
+        })
+        recurrent_slot = self.env['planning.slot'].create({  # this should land on a Monday
+            'start_datetime': self.random_monday_date + timedelta(hours=15),
+            'end_datetime': self.random_monday_date + timedelta(hours=16),
+            'resource_id': self.resource_bert.id,
+            'repeat': True,
+            'repeat_type': 'forever',
+            'repeat_interval': 1,
+            'repeat_unit': 'week',
+        })
+
+        self.assertEqual(
+            len(recurrent_slot.recurrency_id.slot_ids),
+            3,  # There are 3 Mondays until the 27th of March :(
+            'Since the employee\'s contract is fixed, shifts will be planned until the end of the contract.'
+        )
+
+    @freeze_time('2024-03-11 08:00:00')
+    def test_recurrence_with_slot_outside_fixed_contract(self):
+        """
+        This test covers the use case in which the initial shift (to be repeated) is planned outisde of the employee contract date range.
+        Specifically in the test case, the contract has ended prior to the slot's date.
+        In this use case, the recurrent shifts will be planned again normally until the end of the planning period (6 months) as if it was within contract.
+        """
+        # This contract ends at the 8th of the month - it should already be over
+        self.employee_bert.version_id.write({  # Fixed term contract
+            'contract_date_end': datetime.strptime('2024-03-08', '%Y-%m-%d'),
+            'contract_date_start': datetime.strptime('2024-01-01', '%Y-%m-%d'),
+            'date_version': datetime.strptime('2024-01-01', '%Y-%m-%d'),
+            'name': 'Outdated contract for Bert',
+            'resource_calendar_id': self.calendar_40h.id,
+            'wage': 5000.0,
+        })
+        recurrent_slot = self.env['planning.slot'].create({  # this should be a Monday
+            'start_datetime': self.random_monday_date + timedelta(hours=15),
+            'end_datetime': self.random_monday_date + timedelta(hours=16),
+            'resource_id': self.resource_bert.id,
+            'repeat': True,
+            'repeat_type': 'forever',
+            'repeat_interval': 1,
+            'repeat_unit': 'week',
+        })
+
+        self.assertEqual(
+            len(recurrent_slot.recurrency_id.slot_ids),
+            27,
+            'Since the initial shift was planned outside of the employee\'s contract, shifts will be planned normally for the next 6 months.'
+        )

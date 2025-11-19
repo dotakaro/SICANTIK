@@ -3,16 +3,16 @@
 # 	* crm_enterprise
 # 
 # Translators:
-# Sanne Kristensen <sanne@vkdata.dk>, 2024
-# Martin Trigaux, 2024
+# Wil Odoo, 2025
+# Kira Petersen, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:26+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Martin Trigaux, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:10+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Kira Petersen, 2025\n"
 "Language-Team: Danish (https://app.transifex.com/odoo/teams/41243/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -21,9 +21,21 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: crm_enterprise
-#: model:ir.model,name:crm_enterprise.model_crm_activity_report
-msgid "CRM Activity Analysis"
-msgstr "CRM aktivitetsanalyse"
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "%(contact_name)s's opportunity"
+msgstr "%(contact_name)ss mulighed"
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "Could not extract lead information from this image."
+msgstr "Kundemneoplysninger kunne ikke udtrækkes fra dette billede."
+
+#. module: crm_enterprise
+#: model:ir.model,website_form_label:crm_enterprise.model_crm_lead
+msgid "Create an Opportunity"
+msgstr "Opret en salgsmulighed"
 
 #. module: crm_enterprise
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_lead_view_map
@@ -36,20 +48,37 @@ msgid "Days To Convert"
 msgstr "Dage til konvertering"
 
 #. module: crm_enterprise
-#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__days_exceeding_closing
-msgid "Exceeded Closing Days"
-msgstr "Overskridelse lukkedage"
+#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__display_name
+msgid "Display Name"
+msgstr "Vis navn"
 
 #. module: crm_enterprise
-#: model:ir.model.fields,field_description:crm_enterprise.field_crm_activity_report__won_status
-#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__won_status
-msgid "Is Won"
-msgstr "Er vundet"
+#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__days_exceeding_closing
+msgid "Exceeded Closing Days"
+msgstr "Overskredne afslutningsdatoer"
+
+#. module: crm_enterprise
+#: model:ir.model.fields,field_description:crm_enterprise.field_crm_lead__id
+msgid "ID"
+msgstr "ID"
+
+#. module: crm_enterprise
+#. odoo-javascript
+#: code:addons/crm_enterprise/static/src/crm_business_card_scanner.xml:0
+#: code:addons/crm_enterprise/static/src/crm_business_card_scanner_cog_menu.xml:0
+msgid "Import Business Cards"
+msgstr "Importér visitkort"
 
 #. module: crm_enterprise
 #: model:ir.model,name:crm_enterprise.model_crm_lead
-msgid "Lead/Opportunity"
-msgstr "Kundeemne/Salgsmulighed"
+msgid "Lead"
+msgstr "Emne"
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "Lead generated from this image."
+msgstr "Kundeemne genereret ud fra dette billede."
 
 #. module: crm_enterprise
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_lead_view_pivot
@@ -57,16 +86,31 @@ msgid "Leads"
 msgstr "Kundeemner"
 
 #. module: crm_enterprise
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_activity_report__won_status__lost
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_lead__won_status__lost
-#: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_activity_report_view_search
-msgid "Lost"
-msgstr "Tabt"
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "Network error while processing the business cards."
+msgstr "Der opstod en netværksfejl ved behandling af visitkortet."
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid "New Lead Scan"
+msgstr "Ny kundeemnescanning"
 
 #. module: crm_enterprise
 #: model_terms:ir.actions.act_window,help:crm_enterprise.crm_opportunity_action_dashboard
 msgid "No data found!"
 msgstr "Ingen data fundet!"
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/tools/business_card_scanner.py:0
+msgid ""
+"Oops, the AI service is not working 🤖. Please contact your administrator to "
+"verify settings."
+msgstr ""
+"Hov, KI-tjenesten virker ikke 🤖. Kontakt din administrator for at "
+"kontrollere indstillingerne."
 
 #. module: crm_enterprise
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_lead_view_cohort
@@ -75,26 +119,30 @@ msgid "Opportunities"
 msgstr "Salgsmuligheder"
 
 #. module: crm_enterprise
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_activity_report__won_status__pending
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_lead__won_status__pending
-msgid "Pending"
-msgstr "Afventer"
-
-#. module: crm_enterprise
 #: model:ir.actions.act_window,name:crm_enterprise.crm_opportunity_action_dashboard
 msgid "Pipeline Analysis"
-msgstr "Pipeline analyse"
+msgstr "Pipelineanalyse"
+
+#. module: crm_enterprise
+#. odoo-javascript
+#: code:addons/crm_enterprise/static/src/crm_business_card_scanner.xml:0
+msgid "Scan Business Cards"
+msgstr "Scan visitkort"
+
+#. module: crm_enterprise
+#. odoo-python
+#: code:addons/crm_enterprise/models/crm_lead.py:0
+msgid ""
+"The AI agent was not able to generate a lead from the provided image. *sad "
+"robot noises* 🤖"
+msgstr ""
+"KI-agenten var ikke i stand til at generere et kundeemne baseret på det "
+"indsendte billede. *triste robotlyde* 🤖"
 
 #. module: crm_enterprise
 #: model_terms:ir.actions.act_window,help:crm_enterprise.crm_opportunity_action_dashboard
 msgid "Use this menu to have an overview of your Pipeline."
 msgstr "Brug denne menu til at få et overblik over din pipeline."
-
-#. module: crm_enterprise
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_activity_report__won_status__won
-#: model:ir.model.fields.selection,name:crm_enterprise.selection__crm_lead__won_status__won
-msgid "Won"
-msgstr "Vundet"
 
 #. module: crm_enterprise
 #: model_terms:ir.ui.view,arch_db:crm_enterprise.crm_lead_view_graph

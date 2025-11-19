@@ -3,17 +3,15 @@
 # 	* account_budget
 # 
 # Translators:
-# Wil Odoo, 2024
-# Manon Rondou, 2025
-# Camille Dantinne <cmd@odoo.com>, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-25 09:13+0000\n"
-"PO-Revision-Date: 2024-09-25 09:43+0000\n"
-"Last-Translator: Camille Dantinne <cmd@odoo.com>, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:22+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: French (https://app.transifex.com/odoo/teams/41243/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -33,6 +31,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "<i class=\"fa fa-long-arrow-right mx-2\" aria-label=\"to\" title=\"to\"/>"
 msgstr "<i class=\"fa fa-long-arrow-right mx-2\" aria-label=\"to\" title=\"to\"/>"
+
+#. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
+msgid "<span class=\"o_stat_text\">Budget Report</span>"
+msgstr "<span class=\"o_stat_text\">Rapport budgétaire</span>"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.budget_report_view_search
@@ -126,6 +129,11 @@ msgid "Attachment Count"
 msgstr "Nombre de pièces jointes"
 
 #. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
+msgid "Audit"
+msgstr "Audit"
+
+#. module: account_budget
 #: model:ir.model.fields.selection,name:account_budget.selection__budget_analytic__budget_type__both
 msgid "Both"
 msgstr "Les deux"
@@ -185,6 +193,8 @@ msgid "Budget Name"
 msgstr "Nom du budget"
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
 #: model:ir.actions.act_window,name:account_budget.budget_report_action
 #: model:ir.model,name:account_budget.model_budget_report
 #: model:ir.ui.menu,name:account_budget.budget_report_menu
@@ -211,7 +221,15 @@ msgid "Budget Type"
 msgstr "Type de budget"
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
+msgid "Budget end date may not be before the starting date."
+msgstr ""
+"La date de fin du budget ne peut pas être antérieure à la date de début."
+
+#. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__budget_amount
+#: model_terms:ir.ui.view,arch_db:account_budget.budget_report_view_search
 msgid "Budgeted"
 msgstr "Budgeté"
 
@@ -309,15 +327,13 @@ msgid "Description"
 msgstr "Description"
 
 #. module: account_budget
-#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
-msgid "Details..."
-msgstr "Détails..."
-
-#. module: account_budget
+#: model:ir.model.fields,field_description:account_budget.field_account_analytic_account__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_report__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_split_wizard__display_name
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order__display_name
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order_line__display_name
 msgid "Display Name"
 msgstr "Nom d'affichage"
 
@@ -403,10 +419,13 @@ msgid "Has Message"
 msgstr "A un message"
 
 #. module: account_budget
+#: model:ir.model.fields,field_description:account_budget.field_account_analytic_account__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_report__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_split_wizard__id
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order__id
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order_line__id
 msgid "ID"
 msgstr "ID"
 
@@ -491,6 +510,11 @@ msgstr "Modèle"
 #: model:ir.model.fields.selection,name:account_budget.selection__budget_split_wizard__period__month
 msgid "Month"
 msgstr "Mois"
+
+#. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_search
+msgid "My Activities"
+msgstr "Mes activités"
 
 #. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__my_activity_date_deadline
@@ -654,10 +678,10 @@ msgstr "Séquence"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_search
-msgid "Show all records which has next action date is before today"
+msgid "Show all records whose next activity date is past"
 msgstr ""
-"Montrez tous les enregistrements pour lesquels la date des prochaines "
-"actions est pour aujourd'hui ou avant. "
+"Afficher tous les enregistrements dont la date de la prochaine activité est "
+"dépassée"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.budget_split_wizard_form_view
@@ -697,6 +721,7 @@ msgstr "La \"Date de fin\" doit être supérieure ou égale à la \"Date de déb
 
 #. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__theoritical_amount
+#: model:ir.model.fields,field_description:account_budget.field_budget_report__theoretical
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "Theoretical"
 msgstr "Théorique"
@@ -771,6 +796,18 @@ msgid "You cannot create recursive revision of budget."
 msgstr "Vous ne pouvez pas créer des révisions récursives du budget. "
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
+msgid "budget_analytic_id"
+msgstr "budget_analytic_id"
+
+#. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "e.g. Budget 2023"
 msgstr "par ex. Budget 2023"
+
+#. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/wizards/budget_split_wizard.py:0
+msgid "id"
+msgstr "id"

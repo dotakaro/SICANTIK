@@ -9,11 +9,12 @@
     'installable': True,
     'auto_install': True,
     'depends': [
-        'hr_work_entry_contract_planning',
+        'hr_work_entry_planning',
         'hr_payroll',
     ],
     'data': [
         'views/hr_payslip_views.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -5,34 +5,33 @@
     <record id="product_fire_insurance" model="product.product">
         <field name="name">Fire Insurance (SUB)</field>
         <field name="recurring_invoice">True</field>
-        <field name="categ_id" ref="product.product_category_3"/>
+        <field name="categ_id" ref="product.product_category_services"/>
         <field name="type">service</field>
         <field name="list_price">200.0</field>
         <field name="invoice_policy">order</field>
         <field name="uom_id" ref="uom.product_uom_unit"/>
-        <field name="uom_po_id" ref="uom.product_uom_unit"/>
     </record>
 
-    <record id="product_pricing_insurance1" model="sale.subscription.pricing">
+    <record id="product_pricing_insurance1" model="product.pricelist.item">
         <field name="plan_id" ref="sale_subscription.subscription_plan_month"/>
-        <field name="price" eval="30"/>
+        <field name="fixed_price" eval="30"/>
         <field name="currency_id" ref="base.USD"/>
     </record>
 
-    <record id="product_pricing_insurance2" model="sale.subscription.pricing">
+    <record id="product_pricing_insurance2" model="product.pricelist.item">
         <field name="plan_id" ref="sale_subscription.subscription_plan_6_month"/>
-        <field name="price" eval="300"/>
+        <field name="fixed_price" eval="300"/>
         <field name="currency_id" ref="base.USD"/>
     </record>
 
-    <record id="product_pricing_insurance3" model="sale.subscription.pricing">
+    <record id="product_pricing_insurance3" model="product.pricelist.item">
         <field name="plan_id" ref="sale_subscription.subscription_plan_year"/>
-        <field name="price" eval="750"/>
+        <field name="fixed_price" eval="750"/>
         <field name="currency_id" ref="base.USD"/>
     </record>
 
     <record id="product_fire_insurance" model="product.product">
-            <field name="product_subscription_pricing_ids"
+            <field name="subscription_rule_ids"
                    eval="[(6,0,[ref('product_pricing_insurance1'), ref('product_pricing_insurance2'), ref('product_pricing_insurance3')])]"/>
     </record>
 
@@ -109,7 +108,6 @@
         <field name="product_id" ref="product_fire_insurance"/>
         <field name="product_uom_qty">10</field>
         <field name="price_unit">200.0</field>
-        <field name="product_uom" ref="uom.product_uom_unit"/>
     </record>
 
     <function  model="sale.order" name="_test_demo_generate_subscriptions"/>

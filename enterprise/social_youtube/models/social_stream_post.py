@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 from werkzeug.urls import url_join
 
 
-class SocialStreamPostYoutube(models.Model):
+class SocialStreamPost(models.Model):
     _inherit = 'social.stream.post'
 
     youtube_video_id = fields.Char('YouTube Video ID', index=True)
@@ -21,14 +21,14 @@ class SocialStreamPostYoutube(models.Model):
 
     def _compute_author_link(self):
         youtube_posts = self._filter_by_media_types(['youtube'])
-        super(SocialStreamPostYoutube, (self - youtube_posts))._compute_author_link()
+        super(SocialStreamPost, (self - youtube_posts))._compute_author_link()
 
         for post in youtube_posts:
             post.author_link = 'http://www.youtube.com/channel/%s' % (post.stream_id.account_id.youtube_channel_id)
 
     def _compute_post_link(self):
         youtube_posts = self._filter_by_media_types(['youtube'])
-        super(SocialStreamPostYoutube, (self - youtube_posts))._compute_post_link()
+        super(SocialStreamPost, (self - youtube_posts))._compute_post_link()
 
         for post in youtube_posts:
             post.post_link = 'https://www.youtube.com/watch?v=%s' % post.youtube_video_id
@@ -40,7 +40,7 @@ class SocialStreamPostYoutube(models.Model):
 
     def _compute_is_author(self):
         youtube_posts = self._filter_by_media_types(['youtube'])
-        super(SocialStreamPostYoutube, (self - youtube_posts))._compute_is_author()
+        super(SocialStreamPost, (self - youtube_posts))._compute_is_author()
         youtube_posts.is_author = True
 
     # ========================================================
@@ -135,16 +135,20 @@ class SocialStreamPostYoutube(models.Model):
         result = requests.get(comments_endpoint_url, params=params, timeout=5)
         result_json = result.json()
 
-        if not result.ok:
-            error_message = _('An error occurred.')
+        error_code = error_reason = False
+        if result_json.get('error'):
+            error_code = result_json['error'].get('code')
+            error_reason = result_json['error'].get('errors', [{}])[0].get('reason')
 
-            if result_json.get('error'):
-                error_code = result_json['error'].get('code')
-                error_reason = result_json['error'].get('errors', [{}])[0].get('reason')
-                if error_code == 404 and error_reason == 'videoNotFound':
-                    error_message = _("Video not found. It could have been removed from Youtube.")
-                elif error_code == 403 and error_reason == 'commentsDisabled':
-                    error_message = _("Comments are marked as 'disabled' for this video. It could have been set as 'private'.")
+        # At the moment, the YouTube API does not provide us with a field to know if comments are
+        # disabled for the video (while fetching videos), and so we have to do it when fetching comments.
+        # TODO: keep checking the API if we can find any relevant field while fetching videos.
+        comments_disabled = not result.ok and error_code == 403 and error_reason == 'commentsDisabled'
+
+        if not result.ok and not comments_disabled:
+            error_message = _('An error occurred.')
+            if error_code == 404 and error_reason == 'videoNotFound':
+                error_message = _("Video not found. It could have been removed from Youtube.")
 
             raise UserError(error_message)
 
@@ -165,6 +169,7 @@ class SocialStreamPostYoutube(models.Model):
 
         return {
             'comments': comments,
+            'commentsDisabled': comments_disabled,
             'nextPageToken': result_json.get('nextPageToken')
         }
 
@@ -180,7 +185,7 @@ class SocialStreamPostYoutube(models.Model):
                 [('youtube_video_id', '=', self.youtube_video_id)], limit=1
             ).post_id
         else:
-            return super(SocialStreamPostYoutube, self)._fetch_matching_post()
+            return super()._fetch_matching_post()
 
     @api.autovacuum
     def _gc_youtube_data(self):

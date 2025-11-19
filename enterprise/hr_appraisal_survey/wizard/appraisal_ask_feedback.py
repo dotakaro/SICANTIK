@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 class AppraisalAskFeedback(models.TransientModel):
     _name = 'appraisal.ask.feedback'
-    _inherit = 'mail.composer.mixin'
+    _inherit = ['mail.composer.mixin']
     _description = "Ask Feedback for Appraisal"
 
     @api.model
@@ -23,7 +23,18 @@ class AppraisalAskFeedback(models.TransientModel):
             result['survey_template_id'] = appraisal.department_id.appraisal_survey_template_id.id or appraisal.company_id.appraisal_survey_template_id.id
         return result
 
-    appraisal_id = fields.Many2one('hr.appraisal', default=lambda self: self.env.context.get('active_id', None))
+    def _default_appraisal_id(self):
+        active_id = self.env.context.get('active_id', None)
+        if active_id:
+            return active_id
+
+        active_domain = self.env.context.get('active_domain', [])
+        for d in active_domain:
+            if isinstance(d, (list, tuple)) and len(d) == 3 and d[0] == 'appraisal_id':
+                return d[2]
+        return None
+
+    appraisal_id = fields.Many2one('hr.appraisal', default=_default_appraisal_id)
     employee_id = fields.Many2one(related='appraisal_id.employee_id', string='Appraisal Employee')
     template_id = fields.Many2one(default=lambda self: self.env.ref('hr_appraisal_survey.mail_template_appraisal_ask_feedback', raise_if_not_found=False),
                                   domain=lambda self: [('model_id', '=', self.env['ir.model']._get('hr.appraisal').id)])
@@ -47,7 +58,7 @@ class AppraisalAskFeedback(models.TransientModel):
     @api.depends('employee_id')
     def _compute_subject(self):
         for wizard_su in self.filtered(lambda w: w.employee_id and w.template_id).sudo():
-            wizard_su.subject = wizard_su._render_template(
+            wizard_su.subject = wizard_su.with_context(employee_id=wizard_su.employee_id)._render_template(
                 wizard_su.template_id.subject,
                 'hr.appraisal',
                 wizard_su.appraisal_id.ids,
@@ -164,6 +175,9 @@ class AppraisalAskFeedback(models.TransientModel):
 
     def action_send(self):
         self.ensure_one()
+
+        if fields.Date.today() > self.deadline:
+            raise UserError(_("Please set an Answer Deadline in the future"))
 
         answers = self._prepare_survey_anwers(self.employee_ids)
         answers.sudo().write({'appraisal_id': self.appraisal_id.id, 'deadline': self.deadline})

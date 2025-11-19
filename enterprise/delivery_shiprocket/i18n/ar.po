@@ -3,15 +3,15 @@
 # 	* delivery_shiprocket
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Arabic (https://app.transifex.com/odoo/teams/41243/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -133,11 +133,6 @@ msgid "Authentication failed! Please check your credentials."
 msgstr "فشلت عملية المصادقة! يرجى التحقق من بيانات الاعتماد الخاصة بك. "
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__cod
-msgid "COD"
-msgstr "الدفع عند التسليم"
-
-#. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__package_carrier_type
 msgid "Carrier"
 msgstr "شركة الشحن"
@@ -217,8 +212,13 @@ msgid "Created on"
 msgstr "أنشئ في"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "اسم العرض "
 
@@ -311,8 +311,13 @@ msgid "Go to Shipping Methods"
 msgstr "الذهاب إلى طرق الشحن "
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__id
 msgid "ID"
 msgstr "المُعرف"
 
@@ -359,15 +364,15 @@ msgid "Package Type"
 msgstr "نوع الطرد"
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid "Payment Method"
-msgstr "طريقة الدفع "
+#: model:ir.model,name:delivery_shiprocket.model_payment_provider
+msgid "Payment Provider"
+msgstr "مزود الدفع "
 
 #. module: delivery_shiprocket
 #. odoo-python
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
-msgid "Phone or Mobile is required!"
-msgstr "رقم الهاتف أو الهاتف المحمول مطلوب! "
+msgid "Phone is required!"
+msgstr "Phone is required!"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_pickup_request
@@ -385,11 +390,6 @@ msgstr "الرمز السري مطلوب! "
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
 msgid "Please configure Shiprocket credentials in the shipping method"
 msgstr "يرجى تهيئة بيانات اعتماد Shiprocket في طريقة الشحن "
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__prepaid
-msgid "Prepaid"
-msgstr "مدفوع مسبقاً "
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__delivery_type
@@ -538,6 +538,12 @@ msgid "Shiprocket order(s) not found to cancel the shipment!"
 msgstr "لم يتم العثور على طلبات Shiprocket لإلغاء الشحنة! "
 
 #. module: delivery_shiprocket
+#. odoo-python
+#: code:addons/delivery_shiprocket/models/payment_provider.py:0
+msgid "Shiprocket provider is configured to use only Collect on Delivery."
+msgstr "Shiprocket provider is configured to use only Collect on Delivery."
+
+#. module: delivery_shiprocket
 #: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_default_package_type_id
 msgid ""
 "Shiprocket requires package dimensions for getting accurate rate, you can "
@@ -594,15 +600,6 @@ msgstr "مزامنة شركات الشحن من Shiprocket "
 #: model_terms:ir.ui.view,arch_db:delivery_shiprocket.view_delivery_carrier_form_inherit_delivery_shiprocket
 msgid "Test Connection"
 msgstr "اختبار الاتصال "
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid ""
-"The method of payment. Can be either COD (Cash on delivery) Or Prepaid while"
-" creating Shiprocket order."
-msgstr ""
-"طريقة الدفع. يمكن أن تكون إما COD (الدفع عند الاستلام) أو مدفوعة مسبقاً عند "
-"إنشاء طلب Shiprocket. "
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_token_valid_upto

@@ -9,9 +9,9 @@ from odoo.exceptions import UserError
 from odoo.tools.translate import _
 
 
-class L10nClDteCaf(models.Model):
+class L10n_ClDteCaf(models.Model):
     _name = 'l10n_cl.dte.caf'
-    _inherit = 'l10n_cl.edi.util'
+    _inherit = ['l10n_cl.edi.util']
     _description = 'CAF Files for chilean electronic invoicing'
     _rec_name = 'filename'
     """
@@ -38,9 +38,10 @@ class L10nClDteCaf(models.Model):
         help='In Use: means that the CAF file is being used. Spent: means that the number interval '
              'has been exhausted.')
 
-    _sql_constraints = [
-        ('filename_unique', 'unique(filename)', 'Error! Filename Already Exist!')
-    ]
+    _filename_unique = models.Constraint(
+        'unique(filename)',
+        "Error! Filename Already Exist!",
+    )
 
     def _decode_caf(self):
         """

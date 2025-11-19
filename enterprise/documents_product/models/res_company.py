@@ -9,7 +9,7 @@ class ResCompany(models.Model):
 
     documents_product_settings = fields.Boolean()
     product_folder_id = fields.Many2one(
-        'documents.document', string="Product Workspace", check_company=True,
+        'documents.document', string="Product Folder", check_company=True,
         compute='_compute_product_folder_id', store=True, readonly=False,
         domain=[('type', '=', 'folder'), ('shortcut_document_id', '=', False)])
     product_tag_ids = fields.Many2many('documents.tag', 'product_tags_table')

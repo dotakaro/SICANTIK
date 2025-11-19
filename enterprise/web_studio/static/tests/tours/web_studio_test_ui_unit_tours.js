@@ -1,7 +1,6 @@
-/** @odoo-module */
 import { registry } from "@web/core/registry";
 import { stepNotInStudio, assertEqual } from "@web_studio/../tests/tours/tour_helpers";
-import { queryFirst, drag, waitFor } from "@odoo/hoot-dom";
+import { queryAll, queryFirst, queryOne, drag, waitFor } from "@odoo/hoot-dom";
 import { rpcBus } from "@web/core/network/rpc";
 
 registry
@@ -393,7 +392,7 @@ registry.category("web_tour.tours").add("web_studio_set_tree_node_conditional_in
             run: "click",
         },
         {
-            trigger: ".o_web_studio_list_view_editor th[data-name='title']",
+            trigger: ".o_web_studio_list_view_editor th[data-name='color']",
             run: "click",
         },
         {
@@ -417,7 +416,86 @@ registry.category("web_tour.tours").add("web_studio_set_tree_node_conditional_in
             run: "click",
         },
         {
-            trigger: ".o_web_studio_list_view_editor th[data-name='title']",
+            trigger: ".o_web_studio_list_view_editor th[data-name='color']",
+        },
+    ],
+});
+
+registry.category("web_tour.tours").add("web_studio_set_view_default_group_by", {
+    steps: () => [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']",
+            run: "click",
+        },
+        {
+            trigger: ".o_list_view",
+        },
+        {
+            trigger: ".o_web_studio_navbar_item .o_nav_entry",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_view",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_property [name='default_group_by'] .o_select_menu_toggler",
+            run: "click",
+        },
+        {
+            trigger: ".o-dropdown-item:contains('Active (active)')",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_leave > a",
+            run: "click",
+        },
+        {
+            trigger: "body:not(.o_in_studio):has(.o_searchview_facet):has(.o_list_table)",
+            run() {
+                assertEqual(queryAll(".o_group_name").length, 1);
+                assertEqual(queryAll(".o_searchview_facet").length, 1);
+                assertEqual(queryOne(".o_searchview_facet").textContent, "Active");
+            },
+        },
+        {
+            trigger: ".o_web_studio_navbar_item > .o_nav_entry",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_view",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_property [name='default_group_by'] .o_select_menu_toggler",
+            run: "click",
+        },
+        {
+            trigger: ".o-dropdown-item:contains('City (city)')",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_leave > a",
+            run: "click",
+        },
+        {
+            trigger: "body:not(.o_in_studio):has(.o_searchview_facet):has(.o_list_table)",
+            run() {
+                assertEqual(queryAll(".o_searchview_facet").length, 1);
+                assertEqual(queryOne(".o_searchview_facet").textContent, "Active>City");
+            },
+        },
+        {
+            trigger: ".o_group_name > div",
+            run: "click",
+        },
+        {
+            trigger: ".o_group_name:eq(1)",
+            run() {
+                if (queryAll(".o_group_name").length < 2) {
+                    throw new Error("There should be at least 2 group headers");
+                }
+            },
         },
     ],
 });
@@ -500,10 +578,10 @@ registry.category("web_tour.tours").add("test_element_group_in_sidebar", {
             run: "click",
         },
         {
-            trigger: ".o_field_many2many_tags[name='groups_id'] .badge",
+            trigger: ".o_field_many2many_tags[name='group_ids'] .badge",
             run() {
                 const tag = document.querySelector(
-                    ".o_field_many2many_tags[name='groups_id'] .badge"
+                    ".o_field_many2many_tags[name='group_ids'] .badge"
                 );
                 if (!tag || !tag.textContent.includes("Test Group")) {
                     throw new Error("The groups should be displayed in the sidebar");
@@ -764,7 +842,7 @@ registry.category("web_tour.tours").add("web_studio_test_create_model_with_click
             run: "click",
         },
         {
-            trigger: ".o_form_view",
+            trigger: ".o_form_view.check",
         },
         {
             trigger: ".o_web_studio_navbar_item button:enabled",
@@ -794,8 +872,8 @@ registry.category("web_tour.tours").add("web_studio_test_create_model_with_click
             run: "click",
         },
         {
-            content: "Wait the modal is closed before continue",
-            trigger: "body:not(:has(.modal))",
+            content: "Wait for the new model to be created",
+            trigger: ".o_web_studio_editor_manager .o_form_view:not(.check)",
         },
         {
             trigger: ".o_web_studio_leave",
@@ -986,7 +1064,7 @@ registry.category("web_tour.tours").add("web_studio_test_edit_form_subview_attri
             trigger: ".o_view_controller.o_form_view.test-subview-form",
         },
         {
-            trigger: ".o_web_studio_sidebar.o_notebook .nav-link:contains(View)",
+            trigger: ".o_web_studio_sidebar .o_notebook .nav-link:contains(View)",
             run: "click",
         },
         {
@@ -1389,7 +1467,7 @@ registry.category("web_tour.tours").add("web_studio_no_fetch_subview", {
             run: "click",
         },
         {
-            trigger: ".o_wrap_field label:contains('New Many2Many')",
+            trigger: ".o_inner_group label:contains('New Many2Many')",
         },
     ],
 });
@@ -1445,24 +1523,6 @@ registry.category("web_tour.tours").add("web_studio.test_button_rainbow_effect",
     ],
 });
 
-registry.category("web_tour.tours").add("web_studio.test_res_users_fake_fields", {
-    steps: () => [
-        {
-            trigger: ".o_web_studio_existing_fields_header",
-            run: "click",
-        },
-        {
-            trigger: ".o_web_studio_existing_fields",
-            run() {
-                const elements = [...document.querySelectorAll(".o_web_studio_component")];
-                const fieldStrings = elements.map((el) => el.innerText.split("\n")[0]);
-                assertEqual(fieldStrings.includes("Administration"), false);
-                assertEqual(fieldStrings.includes("Multi Companies"), false);
-            },
-        },
-    ],
-});
-
 registry.category("web_tour.tours").add("web_studio_test_reload_after_restoring_default_view", {
     steps: () => [
         {
@@ -1502,34 +1562,6 @@ registry.category("web_tour.tours").add("web_studio_test_reload_after_restoring_
         {
             trigger:
                 ".o_web_studio_form_view_editor .o_field_widget[name='name'] span:contains('Name')",
-        },
-    ],
-});
-
-registry.category("web_tour.tours").add("web_studio_test_edit_reified_field", {
-    steps: () => [
-        {
-            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']",
-            run: "click",
-        },
-        {
-            trigger: ".o_form_view",
-        },
-        {
-            trigger: ".o_web_studio_navbar_item button:enabled",
-            run: "click",
-        },
-        {
-            trigger:
-                ".o_web_studio_form_view_editor .o_field_widget[name^='sel_groups_'],.o_web_studio_form_view_editor .o_field_widget[name^='in_groups_']",
-            run: "click",
-        },
-        {
-            trigger: ".o_web_studio_sidebar input[name='string']",
-            run: "edit new name && click body",
-        },
-        {
-            trigger: ".o_web_studio_leave",
         },
     ],
 });
@@ -1751,11 +1783,9 @@ registry.category("web_tour.tours").add("web_studio_test_kanban_menu_ribbon", {
         },
         {
             trigger: ".nav .o_web_studio_new.active",
-            run() {
-                return waitFor(".o_web_studio_component.o_web_studio_field_menu", {
-                    timeout: 3000,
-                });
-            },
+        },
+        {
+            trigger: ".o_web_studio_component.o_web_studio_field_menu",
         },
         {
             trigger: ".o_web_studio_view_renderer .o_web_studio_hook[data-type='t']",
@@ -1883,15 +1913,99 @@ registry.category("web_tour.tours").add("web_studio_test_negated_groups", {
         },
         {
             trigger: ".o_web_studio_sidebar [name='negated_groups_id'] input",
-            run: "edit Access Rights",
+            run: "edit Role",
         },
         {
-            trigger: "a.dropdown-item:contains(Administration / Access Rights)",
+            trigger: "a.dropdown-item:contains(Role / Administrator)",
             run: "click",
         },
         {
             trigger:
-                ".o_web_studio_sidebar [name='negated_groups_id'] .o_badge:contains(Administration / Access Rights)",
+                ".o_web_studio_sidebar [name='negated_groups_id'] .o_badge:contains(Role / Administrator)",
+        },
+    ],
+});
+
+registry.category("web_tour.tours").add("web_studio_test_edit_duplicate_attribute_form", {
+    steps: () => [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']",
+            run: "click",
+        },
+        {
+            trigger: ".o_form_view",
+        },
+        {
+            trigger: ".o_web_studio_navbar_item button:enabled",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_sidebar .o_web_studio_view",
+            run: "click",
+        },
+        {
+            content: "Uncheck 'create' property to hide 'duplicate'",
+            trigger: ".o_web_studio_property [for='create']",
+            run: "click",
+        },
+        {
+            content: "'duplicate' property should be hidden, 4th item is show_visible",
+            trigger: ".o_web_studio_property:nth-child(4) [for='show_invisible']",
+        },
+        {
+            content: "Check 'create' property to show 'duplicate'",
+            trigger: ".o_web_studio_property [for='create']",
+            run: "click",
+        },
+        {
+            content: "'duplicate' property should be visible and the 4th item",
+            trigger: ".o_web_studio_property:nth-child(4) [for='duplicate']",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_snackbar:not(:has(.fa-spin))",
+        },
+    ],
+});
+
+registry.category("web_tour.tours").add("web_studio_test_edit_duplicate_attribute_list", {
+    steps: () => [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']",
+            run: "click",
+        },
+        {
+            trigger: ".o_list_view",
+        },
+        {
+            trigger: ".o_web_studio_navbar_item button:enabled",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_sidebar .o_web_studio_view",
+            run: "click",
+        },
+        {
+            content: "Uncheck 'create' property to hide 'duplicate'",
+            trigger: ".o_web_studio_property [for='create']",
+            run: "click",
+        },
+        {
+            content: "'duplicate' property should be hidden, 4th item is show_visible",
+            trigger: ".o_web_studio_property:nth-child(4) [for='show_invisible']",
+        },
+        {
+            content: "Check 'create' property to show 'duplicate'",
+            trigger: ".o_web_studio_property [for='create']",
+            run: "click",
+        },
+        {
+            content: "'duplicate' property should be visible and the 4th item",
+            trigger: ".o_web_studio_property:nth-child(4) [for='duplicate']",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_snackbar:not(:has(.fa-spin))",
         },
     ],
 });
@@ -1993,11 +2107,36 @@ registry.category("web_tour.tours").add("web_studio_test_default_value_company",
                 rpcBus.addEventListener("RPC:REQUEST", cb);
                 await helpers.edit("from studio");
                 await helpers.press("ENTER");
-                return waitFor(
-                    ".o_web_studio_sidebar input[id='default_value']:value(from studio)",
-                    { timeout: 5000 }
-                );
             },
+        },
+        {
+            trigger: ".o_web_studio_sidebar input[id='default_value']:value(from studio)",
+        },
+    ],
+});
+
+registry.category("web_tour.tours").add("web_studio_empty_default_group_by", {
+    steps: () => [
+        {
+            trigger: "a[data-menu-xmlid='web_studio.studio_test_partner_menu']",
+            run: "click",
+        },
+        {
+            trigger: ".o_kanban_view",
+        },
+        {
+            trigger: ".o_web_studio_navbar_item button",
+            run: "click",
+        },
+        {
+            trigger: ".o_web_studio_kanban_view_editor",
+        },
+        {
+            trigger: 'div[name="default_group_by"] .o_select_menu_toggler_clear',
+            run: "click",
+        },
+        {
+            trigger: 'div[name="default_group_by"]:not(:has(.o_select_menu_toggler_clear))',
         },
     ],
 });

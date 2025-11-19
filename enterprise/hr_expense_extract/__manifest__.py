@@ -10,13 +10,13 @@
     'data': [
         'security/ir.model.access.csv',
         'wizard/expense_sample_receipt_views.xml',
-        'wizard/expense_sample_register_views.xml',
         'views/hr_expense_views.xml',
         'views/res_config_settings_views.xml',
         'data/crons.xml',
         'data/expense_tour.xml',
         ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

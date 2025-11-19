@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import base64
-from contextlib import contextmanager
-from freezegun import freeze_time
-from unittest.mock import patch
 
 from odoo import Command
 from odoo.tools import file_open
 from odoo.tests.common import TransactionCase, new_test_user
 from odoo.addons.mail.tests.common import mail_new_test_user
+from unittest.mock import patch
+from freezegun import freeze_time
+from contextlib import contextmanager
 
 class SignRequestCommon(TransactionCase):
     @classmethod
@@ -16,6 +15,7 @@ class SignRequestCommon(TransactionCase):
         super().setUpClass()
         with file_open('sign/static/demo/sample_contract.pdf', "rb") as f:
             pdf_content = f.read()
+            cls.pdf_data_64 = base64.b64encode(pdf_content)
 
         cls.attachment = cls.env['ir.attachment'].create({
             'type': 'binary',
@@ -37,15 +37,28 @@ class SignRequestCommon(TransactionCase):
         cls.role_company = cls.env.ref('sign.sign_item_role_user')
         cls.role_company.change_authorized = True
 
+        cls.role_1 = cls.env['sign.item.role'].create({
+            'name': 'Customer'
+        })
+
         cls.template_no_item = cls.env['sign.template'].create({
             'name': 'template_no_item',
-            'attachment_id': cls.attachment.id,
         })
 
         cls.template_1_role = cls.env['sign.template'].create({
             'name': 'template_1_role',
-            'attachment_id': cls.attachment.id,
         })
+
+        cls.document_1 = cls.env['sign.document'].create({
+            'attachment_id': cls.attachment.id,
+            'template_id': cls.template_no_item.id,
+        })
+
+        cls.document_2 = cls.env['sign.document'].create({
+            'attachment_id': cls.attachment.id,
+            'template_id': cls.template_1_role.id,
+        })
+
         cls.env['sign.item'].create([
             {
                 'type_id': cls.env.ref('sign.sign_item_type_text').id,
@@ -54,7 +67,7 @@ class SignRequestCommon(TransactionCase):
                 'page': 1,
                 'posX': 0.273,
                 'posY': 0.158,
-                'template_id': cls.template_1_role.id,
+                'document_id': cls.document_2.id,
                 'width': 0.150,
                 'height': 0.015,
             }
@@ -63,7 +76,10 @@ class SignRequestCommon(TransactionCase):
 
         cls.template_3_roles = cls.env['sign.template'].create({
             'name': 'template_3_roles',
+        })
+        cls.document_3 = cls.env['sign.document'].create({
             'attachment_id': cls.attachment.id,
+            'template_id': cls.template_3_roles.id,
         })
         cls.env['sign.item'].create([
             {
@@ -73,7 +89,7 @@ class SignRequestCommon(TransactionCase):
                 'page': 1,
                 'posX': 0.273,
                 'posY': 0.158,
-                'template_id': cls.template_3_roles.id,
+                'document_id': cls.document_3.id,
                 'width': 0.150,
                 'height': 0.015,
             }, {
@@ -83,7 +99,7 @@ class SignRequestCommon(TransactionCase):
                 'page': 1,
                 'posX': 0.373,
                 'posY': 0.258,
-                'template_id': cls.template_3_roles.id,
+                'document_id': cls.document_3.id,
                 'width': 0.150,
                 'height': 0.015,
             }, {
@@ -93,11 +109,33 @@ class SignRequestCommon(TransactionCase):
                 'page': 1,
                 'posX': 0.373,
                 'posY': 0.358,
-                'template_id': cls.template_3_roles.id,
+                'document_id': cls.document_3.id,
                 'width': 0.150,
                 'height': 0.015,
             },
         ])
+
+        cls.template_constant = cls.env['sign.template'].create({
+            'name': 'template_constant',
+        })
+
+        cls.document_constant = cls.env['sign.document'].create({
+            'attachment_id': cls.attachment.id,
+            'template_id': cls.template_constant.id
+        })
+
+        cls.env['sign.item'].create({
+                'type_id': cls.env.ref('sign.sign_item_type_text').id,
+                'required': False,
+                'constant': True,
+                'responsible_id': cls.role_1.id,
+                'page': 1,
+                'posX': 0.273,
+                'posY': 0.158,
+                'document_id': cls.document_constant.id,
+                'width': 0.150,
+                'height': 0.015,
+        })
 
         cls.signature_fake = base64.b64encode(b"fake_signature")
         cls.customer_sign_values = cls.create_sign_values(cls, cls.template_3_roles.sign_item_ids, cls.role_customer.id)
@@ -174,11 +212,11 @@ class SignRequestCommon(TransactionCase):
         sign_request = self.env['sign.request'].with_context(no_sign_mail=no_sign_mail).create({
             'template_id': self.template_no_item.id,
             'reference': self.template_no_item.display_name,
-            'validity': validity,
             'request_item_ids': [Command.create({
                 'partner_id': signer.id,
                 'role_id': self.env.ref('sign.sign_item_role_default').id,
             })],
+            'validity': validity,
         })
         sign_request.message_subscribe(partner_ids=cc_partners.ids)
         return sign_request
@@ -218,6 +256,18 @@ class SignRequestCommon(TransactionCase):
         sign_request.message_subscribe(partner_ids=cc_partners.ids)
         return sign_request
 
+    def create_sign_request_with_constant_field(self, customer, cc_partners):
+        sign_request = self.env['sign.request'].create({
+            'template_id': self.template_constant.id,
+            'reference': self.template_constant.display_name,
+            'request_item_ids': [Command.create({
+                'partner_id': customer.id,
+                'role_id': self.role_1.id
+            })],
+        })
+        sign_request.message_subscribe(partner_ids=cc_partners.ids)
+        return sign_request
+
     def get_sign_item_config(self, role_id):
         return {
                 'type_id': self.env.ref('sign.sign_item_type_text').id,
@@ -228,7 +278,8 @@ class SignRequestCommon(TransactionCase):
                 'posX': 0.1,
                 'posY': 0.2,
                 'width': 0.15,
-                'height': 0.15
+                'height': 0.15,
+                'document_id': self.document_3.id,
         }
 
     def create_sign_values(self, sign_item_ids, role_id):
@@ -236,5 +287,5 @@ class SignRequestCommon(TransactionCase):
             str(sign_id): 'a'
             for sign_id in sign_item_ids
             .filtered(lambda r: not r.responsible_id or r.responsible_id.id == role_id)
-            .mapped('id')
+            .ids
         }

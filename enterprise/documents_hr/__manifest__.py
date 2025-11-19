@@ -15,15 +15,19 @@ Easily access your documents from your employee profile.
         'data/documents_folder_data.xml',
         'data/documents_tag_data.xml',
         'data/res_company_data.xml',
-        'data/mail_template_data.xml',
-        'data/ir_actions_server_data.xml',
         'views/documents_templates_portal.xml',
         'views/res_config_settings_views.xml',
         'views/hr_employee_views.xml',
         'views/res_users_views.xml',
-        'wizard/hr_departure_wizard_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'documents_hr/static/src/components/**/*',
+        ],
+    },
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
+    'post_init_hook': '_documents_hr_post_init',
 }

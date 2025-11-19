@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import MainComponent from "@stock_barcode/components/main";
 import BarcodeMRPModel from "../models/barcode_mrp_model";
 import HeaderComponent from "./header";
@@ -48,8 +46,8 @@ patch(MainComponent.prototype, {
     },
 
     get addLineBtnName() {
-        if (this.env.model.resModel == 'mrp.production' && this.env.model.record.product_id) {
-            return _t('Add Component');
+        if (this.env.model.resModel == "mrp.production" && this.env.model.record.product_id) {
+            return _t("Add Component");
         }
         return super.addLineBtnName;
     },
@@ -64,18 +62,16 @@ patch(MainComponent.prototype, {
     },
 
     async cancel() {
-        if (this.resModel == 'mrp.production') {
+        if (this.resModel == "mrp.production") {
             await new Promise((resolve) => {
                 this.dialog.add(ConfirmationDialog, {
                     body: _t("Are you sure you want to cancel this manufacturing order?"),
                     title: _t("Cancel manufacturing order?"),
                     cancel: () => {},
                     confirm: async () => {
-                        await this.orm.call(
-                            this.resModel,
-                            'action_cancel',
-                            [[this.env.model.resId]]
-                        );
+                        await this.orm.call(this.resModel, "action_cancel", [
+                            [this.env.model.resId],
+                        ]);
                         resolve();
                     },
                 });
@@ -99,7 +95,7 @@ patch(MainComponent.prototype, {
     },
 
     onOpenProductPage(line) {
-        if (this.resModel == 'mrp.production' && !this.env.model.record.product_id) {
+        if (this.resModel == "mrp.production" && !this.env.model.record.product_id) {
             this.toggleHeaderView();
             return;
         }
@@ -115,7 +111,7 @@ patch(MainComponent.prototype, {
     },
 
     async saveFormView(lineRecord) {
-        if (lineRecord.resModel === 'mrp.production') {
+        if (lineRecord.resModel === "mrp.production") {
             const recordId = lineRecord.resId;
             let update = Boolean(this.resId);
             if (!this.resId) {
@@ -123,19 +119,17 @@ patch(MainComponent.prototype, {
                 await this.env.model.confirmAndSetData(recordId);
                 this.toggleBarcodeLines();
             }
-            if (lineRecord.context.set_qty_producing === true && lineRecord.data.lot_producing_id &&
-                lineRecord.data.lot_producing_id[0] != this.env.model.record.lot_producing_id?.id) {
-                await this.orm.call('mrp.production', 'set_qty_producing', [[recordId]]);
+            if (
+                lineRecord.context.set_qty_producing === true && lineRecord.data.lot_producing_id &&
+                lineRecord.data.lot_producing_id[0] != this.env.model.record.lot_producing_id?.id
+            ) {
+                await this.orm.call("mrp.production", "set_qty_producing", [[recordId]]);
                 update = true;
             }
             if (update) {
                 if (lineRecord.data.product_qty != this.env.model.record.product_qty) {
                     // need to reassign moves to update the quants on screen
-                    await this.orm.call(
-                        this.resModel,
-                        'action_assign',
-                        [[this.resId]]
-                    );
+                    await this.orm.call(this.resModel, "action_assign", [[this.resId]]);
                 }
                 this._onRefreshState({ recordId });
             }
@@ -157,18 +151,17 @@ patch(MainComponent.prototype, {
         this.toggleBarcodeLines();
     },
 
-    _getModel() {
-        const { resId, resModel, rpc, notification, orm, action } = this;
-        if (this.resModel === 'mrp.production') {
-            return new BarcodeMRPModel(resModel, resId, { rpc, notification, orm, action });
+    _getBarcodeModel() {
+        if (this.resModel === "mrp.production") {
+            return BarcodeMRPModel;
         }
-        return super._getModel(...arguments);
+        return super._getBarcodeModel(...arguments);
     },
 
     _getHeaderHeight() {
         const headerHeight = super._getHeaderHeight();
-        const mo_header = document.querySelector('.o_header');
-        return mo_header ? headerHeight + mo_header.offsetHeight: headerHeight;
+        const mo_header = document.querySelector(".o_header");
+        return mo_header ? headerHeight + mo_header.offsetHeight : headerHeight;
     },
 });
 

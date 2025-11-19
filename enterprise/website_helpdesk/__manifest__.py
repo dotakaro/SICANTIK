@@ -3,7 +3,7 @@
 
 {
     'name': 'Website Helpdesk',
-    'category': 'Hidden',
+    'category': 'Services/Helpdesk',
     'sequence': 57,
     'summary': 'Bridge module for helpdesk modules using the website.',
     'description': 'Bridge module for helpdesk modules using the website.',
@@ -19,6 +19,7 @@
         'views/snippets.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'post_init_hook': '_configure_teams',
     'assets': {
@@ -27,7 +28,7 @@
             ('remove', 'website_helpdesk/static/src/js/website_helpdesk_form_editor.js'),
             ('remove', 'website_helpdesk/static/src/js/website_helpdesk_edit_menu.js'),
         ],
-        'website.assets_wysiwyg': [
+        'website.website_builder_assets': [  # Should use website.website_builder
             'website_helpdesk/static/src/js/website_helpdesk_form_editor.js',
         ],
         'website.assets_editor': [

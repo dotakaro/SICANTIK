@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from collections import defaultdict
 
 from odoo import models
-from odoo.addons.resource.models.utils import Intervals
+from odoo.tools.intervals import Intervals
 
-class User(models.Model):
+
+class ResUsers(models.Model):
     _inherit = 'res.users'
 
     # -----------------------------------------

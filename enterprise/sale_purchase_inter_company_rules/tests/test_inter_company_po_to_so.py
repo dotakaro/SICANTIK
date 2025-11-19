@@ -4,6 +4,11 @@ from odoo.tests import Form, tagged
 
 @tagged('post_install', '-at_install')
 class TestInterCompanyPurchaseToSale(TestInterCompanyRulesCommonSOPO):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.env['res.currency']._activate_group_multi_currency()
 
     def generate_purchase_order(self, company, partner):
         """ Generate purchase order and confirm its state """
@@ -135,7 +140,7 @@ class TestInterCompanyPurchaseToSale(TestInterCompanyRulesCommonSOPO):
              'intercompany_generate_sales_orders': True,
         })
         # Archive all the sales team and create a sales team for COMP A but not for COMP B
-        self.env['crm.team'].search([]).toggle_active()
+        self.env['crm.team'].search([]).action_archive()
         self.env['crm.team'].create({
             'name': 'Team A',
             'company_id': self.company_a.id,

@@ -1,4 +1,3 @@
-/** @odoo-module */
 import { Component } from "@odoo/owl";
 import { useOwnedDialogs, useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
@@ -35,11 +34,11 @@ function getViewCategories() {
         },
         timeline: {
             title: _t("Timeline views"),
-            viewTypes: ["calendar", "cohort", "gantt"],
+            viewTypes: ["calendar", "gantt"],
         },
         reporting: {
             title: _t("Reporting views"),
-            viewTypes: ["graph", "pivot"],
+            viewTypes: ["graph", "pivot", "cohort"],
         },
     };
 }
@@ -48,7 +47,7 @@ const actionFieldsGet = {
     id: { type: "integer" },
     name: { type: "char" },
     help: { type: "text" },
-    groups_id: { type: "many2many", relation: "res.groups", string: "Groups" },
+    group_ids: { type: "many2many", relation: "res.groups", string: "Groups" },
 };
 
 function getActionActiveFields() {
@@ -60,7 +59,7 @@ function getActionActiveFields() {
     const groups_idRelated = Object.fromEntries(
         many2ManyTagsField.relatedFields({ options: {} }).map((f) => [f.name, f])
     );
-    activeFields.groups_id.related = { activeFields: groups_idRelated, fields: groups_idRelated };
+    activeFields.group_ids.related = { activeFields: groups_idRelated, fields: groups_idRelated };
 
     return activeFields;
 }
@@ -95,6 +94,10 @@ class ActionEditor extends Component {
         this.actionFieldsGet = { ...actionFieldsGet };
     }
 
+    get isActionEditable() {
+        return !!this.studio.editedAction.id;
+    }
+
     get actionRecordProps() {
         const values = getActionValues(this.studio.editedAction);
         return {
@@ -104,8 +107,8 @@ class ActionEditor extends Component {
             mode: "edit",
             values,
             activeFields: getActionActiveFields(),
-            onRecordChanged: (record, changes) => {
-                return this.editAction(changes);
+            hooks: {
+                onRecordChanged: (record, changes) => this.editAction(changes),
             },
         };
     }
@@ -117,22 +120,18 @@ class ActionEditor extends Component {
     getOrderedViewTypes(viewTypes) {
         const activeViews = this.activeViews;
         const currentDefaultView = activeViews[0];
-        const viewInfos = viewTypes.map((viewType) => {
-            return {
-                name: viewType,
-                title: viewTypeToString(viewType),
-                isActive: activeViews.includes(viewType),
-                isDefault: currentDefaultView === viewType,
-                imgUrl: `/web_studio/static/src/img/view_type/${viewType}.png`,
-                canBeDefault: !["form", "search"].includes(viewType),
-                canBeDisabled: viewType !== "search",
-            };
-        });
+        const viewInfos = viewTypes.map((viewType) => ({
+            name: viewType,
+            title: viewTypeToString(viewType),
+            isActive: activeViews.includes(viewType),
+            isDefault: currentDefaultView === viewType,
+            imgUrl: `/web_studio/static/src/img/view_type/${viewType}.png`,
+            canBeDefault: !["form", "search"].includes(viewType),
+            canBeDisabled: viewType !== "search",
+        }));
         return sortBy(
             viewInfos,
-            ({ isDefault, isActive }) => {
-                return isDefault ? 2 : isActive ? 1 : 0;
-            },
+            ({ isDefault, isActive }) => (isDefault ? 2 : isActive ? 1 : 0),
             "desc"
         );
     }
@@ -216,15 +215,13 @@ class ActionEditor extends Component {
         }
         const resModel = this.studio.editedAction.res_model;
         if (viewType === "activity") {
-            const activityAllowed = await this.studio.isAllowed("activity", resModel);
+            const modelInfo = await this.studio.IrModelInfo.read(resModel);
+            const activityAllowed = modelInfo.is_mail_activity || modelInfo.state === "manual";
             if (!activityAllowed) {
-                this.notification.add(
-                    _t("Activity view unavailable on this model"),
-                    {
-                        title: false,
-                        type: "danger",
-                    }
-                );
+                this.notification.add(_t("Activity view unavailable on this model"), {
+                    title: false,
+                    type: "danger",
+                });
                 return;
             }
         }

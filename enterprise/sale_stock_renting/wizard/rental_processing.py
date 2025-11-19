@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from markupsafe import Markup
 
-from odoo import api, fields, models, _
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
-class RentalProcessing(models.TransientModel):
+class RentalOrderWizard(models.TransientModel):
     _inherit = 'rental.order.wizard'
 
     has_tracked_lines = fields.Boolean(
@@ -27,11 +26,11 @@ class RentalProcessing(models.TransientModel):
             wizard.has_lines_missing_stock = any(line.is_product_storable and line.status == 'pickup' and line.qty_delivered > line.qty_available for line in wizard.rental_wizard_line_ids)
 
 
-class RentalProcessingLine(models.TransientModel):
+class RentalOrderWizardLine(models.TransientModel):
     _inherit = 'rental.order.wizard.line'
 
     def _default_wizard_line_vals(self, line, status):
-        default_line_vals = super(RentalProcessingLine, self)._default_wizard_line_vals(line, status)
+        default_line_vals = super()._default_wizard_line_vals(line, status)
 
         default_line_vals.update({
             'tracking': line.product_id.tracking,
@@ -191,9 +190,9 @@ class RentalProcessingLine(models.TransientModel):
                 msg += Markup("<li> %s") % (order_line.product_id.display_name)
 
                 if old_qty > 0:
-                    msg += Markup(": %s -> <b> %s </b> %s ") % (old_qty, new_qty, order_line.product_uom.name)
+                    msg += Markup(": %s -> <b> %s </b> %s ") % (old_qty, new_qty, order_line.product_uom_id.name)
                 elif new_qty != 1 or order_line.product_uom_qty > 1.0:
-                    msg += ": %s %s " % (new_qty, order_line.product_uom.name)
+                    msg += ": %s %s " % (new_qty, order_line.product_uom_id.name)
                 # If qty = 1, product has been picked up, no need to specify quantity
                 # But if ordered_qty > 1.0: we need to still specify pickedup/returned qty
 

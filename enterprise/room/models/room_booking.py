@@ -6,14 +6,15 @@ from markupsafe import Markup
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
+
 class RoomBooking(models.Model):
-    _name = "room.booking"
+    _name = 'room.booking'
     _inherit = ["mail.thread"]
     _description = "Room Booking"
     _order = "start_datetime desc, id"
 
     name = fields.Char(string="Booking Name", required=True, tracking=1)
-    room_id = fields.Many2one("room.room", string="Room", required=True, ondelete="cascade", group_expand="_read_group_room_id", tracking=4)
+    room_id = fields.Many2one("room.room", string="Room", required=True, index=True, ondelete="cascade", group_expand="_read_group_room_id", tracking=4)
     start_datetime = fields.Datetime(string="Start Datetime", required=True, tracking=2)
     stop_datetime = fields.Datetime(string="End Datetime", required=True, tracking=3)
     organizer_id = fields.Many2one("res.users", string="Organizer", default=lambda self: self.env.user.id if not self.env.user._is_public() else False, tracking=5)
@@ -51,10 +52,10 @@ class RoomBooking(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        bookings = super(RoomBooking, self).create(vals_list)
+        bookings = super().create(vals_list)
         # Notify frontend views of new bookings
-        for room, bookings in bookings.grouped("room_id").items():
-            room._notify_booking_view("create", bookings)
+        for room, bookings_ in bookings.grouped("room_id").items():
+            room._notify_booking_view("create", bookings_)
         return bookings
 
     def unlink(self):

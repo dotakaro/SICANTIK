@@ -1,8 +1,7 @@
-/** @odoo-module */
-
 import { ModelFieldSelector } from "@web/core/model_field_selector/model_field_selector";
 
 import { Component } from "@odoo/owl";
+import { FilterFieldOffset } from "../filter_field_offset";
 
 /**
  * @typedef {import("@spreadsheet").FieldMatching} FieldMatching
@@ -12,14 +11,16 @@ export class FilterEditorFieldMatching extends Component {
     static template = "spreadsheet_edition.FilterEditorFieldMatching";
     static components = {
         ModelFieldSelector,
+        FilterFieldOffset,
     };
 
     static props = {
         // See AbstractFilterEditorSidePanel fieldMatchings
         fieldMatchings: Array,
-        wrongFieldMatchings: Array,
         selectField: Function,
         filterModelFieldSelectorField: Function,
+        sortModelFieldSelectorFields: Function,
+        onOffsetSelected: { type: Function, optional: true },
     };
 
     /**

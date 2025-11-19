@@ -37,17 +37,14 @@ class HrPayslip(models.Model):
     def _action_create_account_move(self):
         precision = self.env['decimal.precision'].precision_get('Payroll')
 
-        # Add payslip without run
-        payslips_to_post = self.filtered(lambda slip: not slip.payslip_run_id)
-
-        # Adding pay slips from a batch and deleting pay slips with a batch that is not ready for validation.
-        payslip_runs = (self - payslips_to_post).payslip_run_id
-        for run in payslip_runs:
+        all_payslips = self
+        # Adding pay slips from a batch.
+        for run in self.payslip_run_id:
             if run._are_payslips_ready():
-                payslips_to_post |= run.slip_ids
+                all_payslips |= run.slip_ids
 
         # A payslip need to have a done state and not an accounting move.
-        payslips_to_post = payslips_to_post.filtered(lambda slip: slip.state == 'done' and not slip.move_id)
+        payslips_to_post = all_payslips.filtered(lambda slip: slip.state == 'done' and not slip.move_id)
 
         # Check that a journal exists on all the structures
         if any(not payslip.struct_id for payslip in payslips_to_post):
@@ -87,7 +84,7 @@ class HrPayslip(models.Model):
                     }
 
                     for slip in slip_mapped_data[journal_id][slip_date]:
-                        move_dict['narration'] += plaintext2html(slip.number or '' + ' - ' + slip.employee_id.name or '')
+                        move_dict['narration'] += plaintext2html(f'{slip.id or ""} - {slip.employee_id.name or ""}')
                         move_dict['narration'] += Markup('<br/>')
                         slip_lines = slip._prepare_slip_lines(date, line_ids)
                         line_ids.extend(slip_lines)
@@ -127,7 +124,7 @@ class HrPayslip(models.Model):
             'debit': debit,
             'credit': credit,
             'analytic_distribution': (line.salary_rule_id.analytic_account_id and {line.salary_rule_id.analytic_account_id.id: 100}) or
-                                     (line.slip_id.contract_id.analytic_account_id.id and {line.slip_id.contract_id.analytic_account_id.id: 100}),
+                                     (line.slip_id.version_id.analytic_account_id.id and {line.slip_id.version_id.analytic_account_id.id: 100}),
             'tax_tag_ids': line.debit_tag_ids.ids if account_id == line.salary_rule_id.account_debit.id else line.credit_tag_ids.ids,
         }
 
@@ -220,10 +217,10 @@ class HrPayslip(models.Model):
                     (
                         not line_id['analytic_distribution'] and
                         not line.salary_rule_id.analytic_account_id.id and
-                        not line.slip_id.contract_id.analytic_account_id.id
+                        not line.slip_id.version_id.analytic_account_id.id
                     )
                     or line_id['analytic_distribution'] and line.salary_rule_id.analytic_account_id.id in line_id['analytic_distribution']
-                    or line_id['analytic_distribution'] and line.slip_id.contract_id.analytic_account_id.id in line_id['analytic_distribution']
+                    or line_id['analytic_distribution'] and line.slip_id.version_id.analytic_account_id.id in line_id['analytic_distribution']
 
                 )
             and self._check_debit_credit_tags(line_id, line, account_id)

@@ -14,6 +14,7 @@ import {
     defineModels,
     fields,
     getService,
+    makeMockEnv,
     mockService,
     models,
     mountView,
@@ -21,6 +22,7 @@ import {
     onRpc,
     patchWithCleanup,
     selectFieldDropdownItem,
+    serverState,
     toggleMenuItem,
     toggleSearchBarMenu,
 } from "@web/../tests/web_test_helpers";
@@ -170,9 +172,7 @@ beforeEach(() => {
     mockDate("2017-01-30 00:00:00");
 });
 
-onRpc("grid_unavailability", () => {
-    return {};
-});
+onRpc("grid_unavailability", () => ({}));
 onRpc("has_group", () => true);
 
 describe.tags("desktop");
@@ -593,7 +593,7 @@ describe("grid_view_desktop", () => {
     test("groupBy with column field should not be supported", async () => {
         expect.assertions(7);
         mockDate("2017-01-25 00:00:00");
-        onRpc("web_read_group", ({ kwargs }) => {
+        onRpc("formatted_read_group", ({ kwargs }) => {
             expect(kwargs.groupby).toEqual(["date:day", "task_id", "project_id"]);
         });
         mockService("notification", {
@@ -1161,11 +1161,87 @@ describe("grid_view_desktop", () => {
         ]);
     });
 
+    for (const [locale, expected] of Object.entries({
+        en_US: "Sun,\nJan 29",
+        fr_FR: "dim.\n29 janv.",
+        de_DE: "So.,\n29. Jan.",
+        ru_RU: "вс,\n29 янв.",
+        ar_SY: "الأحد،\n٢٩ كانون الثاني",
+        he_IL: "יום א׳,\n29 בינו׳",
+        fa_IR: "یکشنبه\n۱۰ بهمن",
+        th_TH: "อา.\n29 ม.ค.",
+        tr_TR: "29 Oca Paz",
+        pl_PL: "niedz.,\n29 sty",
+        // for CJK locales: keep everything on one line
+        ja_JP: "1月29日(日)",
+        zh_CN: "1月29日周日",
+        ko_KR: "1월 29일 (일)",
+    })) {
+        test(`header label should be adapted to the ${locale} locale (day step)`, async () => {
+            mockDate("2017-01-30 00:00:00");
+            const view = {
+                type: "grid",
+                resModel: "analytic.line",
+                arch: `<grid barchart_total="1" editable="1">
+                    <field name="project_id" type="row"/>
+                    <field name="task_id" type="row"/>
+                    <field name="date" type="col">
+                        <range name="week" string="Week" span="week" step="day"/>
+                    </field>
+                    <field name="unit_amount" type="measure" widget="float_time"/>
+                </grid>`,
+            };
+
+            serverState.lang = locale;
+            await makeMockEnv();
+            await mountView(view);
+            const text = queryAllTexts(".o_grid_column_title")[1];
+            expect(text).toEqual(expected);
+        });
+    }
+
+    for (const [locale, expected] of Object.entries({
+        en_US: "January\n2025",
+        fr_FR: "janvier\n2025",
+        de_DE: "Januar\n2025",
+        ru_RU: "январь\n2025 г.",
+        ar_SY: "كانون الثاني\n٢٠٢٥",
+        he_IL: "ינואר\n2025",
+        fa_IR: "۱۴۰۳ دی", // 10th month of year 1403, Solar Hijri calendar
+        th_TH: "มกราคม\n2568", // Buddhist calendar
+        tr_TR: "Ocak\n2025",
+        pl_PL: "styczeń\n2025",
+        // for CJK locales: keep everything on one line
+        ja_JP: "2025年1月",
+        zh_CN: "2025年1月",
+        ko_KR: "2025년 1월",
+    })) {
+        test(`header label should be adapted to the ${locale} locale (month step)`, async () => {
+            mockDate("2025-01-15 00:00:00");
+            const view = {
+                type: "grid",
+                resModel: "analytic.line",
+                arch: `<grid barchart_total="1" editable="1">
+                    <field name="project_id" type="row"/>
+                    <field name="task_id" type="row"/>
+                    <field name="date" type="col">
+                        <range name="quarter" string="Quarter" span="year" step="month"/>
+                    </field>
+                    <field name="unit_amount" type="measure" widget="float_time"/>
+                </grid>`,
+            };
+
+            serverState.lang = locale;
+            await makeMockEnv();
+            await mountView(view);
+            const text = queryAllTexts(".o_grid_column_title")[1];
+            expect(text).toEqual(expected);
+        });
+    }
+
     test("dialog should not close when clicking the link to many2one field", async () => {
         // create an action manager to test the interactions with the search view
-        onRpc("/web/dataset/call_kw/task/get_formview_id", (route, args) => {
-            return false;
-        });
+        onRpc("task", "get_formview_id", () => false);
         await mountWithCleanup(WebClient);
         await getService("action").doAction({
             res_model: "analytic.line",
@@ -1685,7 +1761,7 @@ describe("grid_view_desktop", () => {
     test("date should be grouped by month in year range", async () => {
         expect.assertions(1);
 
-        onRpc("web_read_group", (args) => {
+        onRpc("formatted_read_group", (args) => {
             expect(args.kwargs.groupby).toEqual(["date:month", "project_id", "task_id"]);
         });
         await mountView({
@@ -1708,7 +1784,7 @@ describe("grid_view_desktop", () => {
         expect.assertions(8 + 7);
 
         let rangeStep = "day";
-        onRpc("web_read_group", (args) => {
+        onRpc("formatted_read_group", (args) => {
             expect(args.kwargs.groupby).toEqual([`date:${rangeStep}`, "project_id", "task_id"]);
         });
         await mountView({
@@ -1882,7 +1958,9 @@ describe("grid_view_desktop", () => {
         patchWithCleanup(browser, {
             localStorage: {
                 setItem(key, value) {
-                    expect.step(`${key}-${value}`);
+                    if (key === "grid.isWeekendVisible") {
+                        expect.step(`${key}-${value}`);
+                    }
                 },
                 getItem(key) {
                     if (key === "grid.isWeekendVisible") {
@@ -2017,6 +2095,7 @@ describe("grid_view_desktop", () => {
     });
 
     test("Scale: scale default is fetched from localStorage", async () => {
+        let view;
         patchWithCleanup(browser.localStorage, {
             getItem(key) {
                 if (String(key).startsWith("scaleOf-viewId")) {
@@ -2024,13 +2103,13 @@ describe("grid_view_desktop", () => {
                 }
             },
             setItem(key, value) {
-                if (key === `scaleOf-viewId-${view.env.config.viewId}`) {
+                if (key === `scaleOf-viewId-${view?.env.config.viewId}`) {
                     expect.step(`scale_${value}`);
                 }
             },
         });
 
-        const view = await mountView({
+        view = await mountView({
             type: "grid",
             resModel: "analytic.line",
             arch: /* xml */ `

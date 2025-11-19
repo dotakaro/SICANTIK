@@ -40,47 +40,6 @@ test("Can create a new spreadsheet from File menu", async function () {
     expect.verifySteps(["action_open_new_spreadsheet"]);
 });
 
-test("Display notification for new spreadsheet creation based on action response", async function () {
-    const spreadsheet = DocumentsDocument._records[1];
-    const action = {
-        type: "ir.actions.client",
-        tag: "display_notification",
-        params: {
-            type: "info",
-            message: "New spreadsheet created in Documents",
-            next: {
-                type: "ir.actions.client",
-                tag: "action_open_spreadsheet",
-                params: {
-                    spreadsheet_id: spreadsheet.id,
-                    is_new_spreadsheet: true,
-                },
-            },
-        },
-    };
-
-    const { env } = await createSpreadsheet({
-        spreadsheetId: spreadsheet.id,
-        mockRPC: async function (route, args) {
-            if (
-                args.method === "action_open_new_spreadsheet" &&
-                args.model === "documents.document"
-            ) {
-                expect.step("action_open_new_spreadsheet");
-                return action;
-            }
-        },
-    });
-
-    const file = topbarMenuRegistry.getAll().find((item) => item.id === "file");
-    const newSheet = file.children.find((item) => item.id === "new_sheet");
-    await newSheet.execute(env);
-    expect.verifySteps(["action_open_new_spreadsheet"]);
-
-    await animationFrame(); // Wait for the notification to be displayed
-    expect(".o_notification_content").toHaveText("New spreadsheet created in Documents");
-});
-
 test("Action action_download_spreadsheet is correctly fired with topbar menu", async function () {
     onRpc("/spreadsheet/xlsx", () => {});
     let actionParam;
@@ -123,7 +82,6 @@ test("Datasources are loaded before exporting in Excel", async function () {
     };
     const serverData = getBasicServerData();
     serverData.models["documents.document"].records = [
-        DocumentsDocument._records[0], // keep the res_company.document_spreadsheet_folder_id
         {
             id: 45,
             spreadsheet_data: JSON.stringify(spreadsheetData),

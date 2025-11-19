@@ -15,8 +15,6 @@ class QualityPoint(models.Model):
     _inherit = "quality.point"
 
     failure_message = fields.Html('Failure Message')
-    failure_location_ids = fields.Many2many('stock.location', string="Failure Locations", domain="[('usage', '=', 'internal')]",
-                            help="If a quality check fails, a location is chosen from this list for each failed quantity.")
     measure_on = fields.Selection([
         ('operation', 'Operation'),
         ('product', 'Product'),
@@ -191,10 +189,10 @@ class QualityPoint(models.Model):
         - At least one category that is a parent of the product_ids categories
 
         :param product_ids: the products that could require a quality check
-        :type product: :class:`~odoo.addons.product.models.product.ProductProduct`
+        :type product_ids: :class:`~odoo.addons.product.models.product.ProductProduct`
         :param picking_type_id: the products that could require a quality check
-        :type product: :class:`~odoo.addons.stock.models.stock_picking.PickingType`
-        :return: the domain for quality point with given picking_type_id for all the product_ids
+        :type picking_type_id: :class:`~odoo.addons.stock.models.stock_picking.StockPickingType`
+        :returns: the domain for quality point with given picking_type_id for all the product_ids
         :rtype: list
         """
         domain = [('picking_type_ids', 'in', picking_type_id.ids)]
@@ -222,8 +220,8 @@ class QualityCheck(models.Model):
     tolerance_max = fields.Float('Max Tolerance', related='point_id.tolerance_max', readonly=True)
     warning_message = fields.Text(compute='_compute_warning_message')
     norm_unit = fields.Char(related='point_id.norm_unit', readonly=True)
-    qty_to_test = fields.Float(compute="_compute_qty_to_test", string="Quantity to Test", help="Quantity of product to test within the lot", digits='Product Unit of Measure')
-    qty_tested = fields.Float(string="Quantity Tested", help="Quantity of product tested within the lot", digits='Product Unit of Measure')
+    qty_to_test = fields.Float(compute="_compute_qty_to_test", string="Quantity to Test", help="Quantity of product to test within the lot", digits='Product Unit')
+    qty_tested = fields.Float(string="Quantity Tested", help="Quantity of product tested within the lot", digits='Product Unit')
     measure_on = fields.Selection([
         ('operation', 'Operation'),
         ('product', 'Product'),
@@ -238,13 +236,12 @@ class QualityCheck(models.Model):
         help="In case of Quality Check by Quantity, Move Line on which the Quality Check applies",
         index="btree_not_null",
     )
-    failure_location_id = fields.Many2one('stock.location', string="Failure Location")
-    lot_name = fields.Char('Lot/Serial Number Name', related='move_line_id.lot_name', store=True)
+    lot_name = fields.Char('Lot/Serial Number Name', related='move_line_id.lot_name')
     lot_line_id = fields.Many2one('stock.lot', store=True, compute='_compute_lot_line_id')
     qty_line = fields.Float(compute='_compute_qty_line', string="Quantity")
     qty_passed = fields.Float('Quantity Passed', help="Quantity of product that passed the quality check", compute='_compute_qty_passed', store=True)
     qty_failed = fields.Float('Quantity Failed', help="Quantity of product that failed the quality check", compute='_compute_qty_failed', store=True)
-    uom_id = fields.Many2one(related='product_id.uom_id', string="Product Unit of Measure")
+    uom_id = fields.Many2one(related='product_id.uom_id', string="Unit")
     show_lot_text = fields.Boolean(compute='_compute_show_lot_text')
     is_lot_tested_fractionally = fields.Boolean(related='point_id.is_lot_tested_fractionally')
     testing_percentage_within_lot = fields.Float(related="point_id.testing_percentage_within_lot")
@@ -431,11 +428,11 @@ class QualityCheck(models.Model):
             self.spreadsheet_id.unlink()
         return super().unlink()
 
-    def _can_move_line_to_failure_location(self):
+    def _can_move_to_failure_location(self):
         self.ensure_one()
-        return self.quality_state == 'fail' and self.point_id.measure_on == 'move_line' and self.move_line_id and self.picking_id
+        return self.quality_state == 'fail' and self.picking_id
 
-    def _move_line_to_failure_location(self, failure_location_id, failed_qty=None):
+    def _move_to_failure_location(self, failure_location_id, failed_qty=None):
         """ This function is used to fail move lines and can optionally:
              - split it into failed and passed qties (i.e. 2 moves w/1 check each)
              - send the failed qty to a failure location
@@ -443,51 +440,66 @@ class QualityCheck(models.Model):
         :param failed_qty: qty failed on check, defaults to None, if None all quantity of the move is failed
         """
         for check in self:
-            if not check._can_move_line_to_failure_location():
+            if not check._can_move_to_failure_location():
                 continue
-            failed_qty = failed_qty or check.move_line_id.quantity
-            move_line = check.move_line_id
-            move = move_line.move_id
-            move.picked = True
-            dest_location = failure_location_id or move_line.location_dest_id.id
-            if failed_qty == move_line.quantity:
-                move_line.location_dest_id = dest_location
-                if move_line.quantity == move.quantity:
-                    move.location_dest_id = dest_location
-                else:
-                    move.product_uom_qty -= failed_qty
+            match check.measure_on:
+                case 'operation':
+                    if not failure_location_id:
+                        return
+                    check._move_to_failure_location_operation(failure_location_id)
+                case 'product':
+                    if not failure_location_id:
+                        return
+                    check._move_to_failure_location_product(failure_location_id)
+                case 'move_line':
+                    if not failed_qty:
+                        check.do_pass()
+                        return
+                    move_line = check.move_line_id
+                    move = move_line.move_id
+                    dest_location = failure_location_id or move_line.location_dest_id.id
+                    if failed_qty == move_line.quantity:
+                        move_line.location_dest_id = dest_location
+                        if move_line.quantity == move.quantity:
+                            move.location_dest_id = dest_location
+                        return
+                    move_line.quantity -= min(failed_qty, move_line.quantity)
+                    failed_move_line = move_line.with_context(default_check_ids=None, no_checks=True).copy({
+                        'location_dest_id': dest_location,
+                        'quantity': failed_qty,
+                    })
                     move.copy({
                         'location_dest_id': dest_location,
+                        'move_dest_ids': move.move_dest_ids,
                         'move_orig_ids': move.move_orig_ids,
-                        'product_uom_qty': failed_qty,
+                        'product_uom_qty': 0,
                         'state': 'assigned',
-                        'move_line_ids': [Command.link(move_line.id)],
-                        'picked': True,
+                        'move_line_ids': [Command.link(failed_move_line.id)],
                     })
-                check.failure_location_id = dest_location
-                return
-            move.product_uom_qty -= min(failed_qty, move_line.quantity)
-            move_line.quantity -= min(failed_qty, move_line.quantity)
-            failed_move_line = move_line.with_context(default_check_ids=None, no_checks=True).copy({
-                'location_dest_id': dest_location,
-                'quantity': failed_qty,
-            })
-            move.copy({
-                'location_dest_id': dest_location,
-                'move_orig_ids': move.move_orig_ids,
-                'product_uom_qty': min(failed_qty, move_line.quantity),
-                'state': 'assigned',
-                'move_line_ids': [Command.link(failed_move_line.id)],
-                'picked': True,
-            })
-            # switch the checks, check in self should always be the failed one,
-            # new check linked to original move line will be passed check
-            new_check = self.create(failed_move_line._get_check_values(check.point_id))
-            check.move_line_id = failed_move_line
-            check.failure_location_id = dest_location
-            new_check.move_line_id = move_line
-            new_check.qty_tested = 0
-            new_check.do_pass()
+                    # switch the checks, check in self should always be the failed one,
+                    # new check linked to original move line will be passed check
+                    new_check = check.create(failed_move_line._get_check_values(check.point_id))
+                    check.move_line_id = failed_move_line
+                    new_check.move_line_id = move_line
+                    new_check.qty_tested = 0
+                    new_check.do_pass()
+                    check.failure_location_id = dest_location
+                case _:
+                    return
+
+    def _move_to_failure_location_operation(self, failure_location_id):
+        self.ensure_one()
+        if self.picking_id and failure_location_id:
+            self.picking_id.move_ids.location_dest_id = failure_location_id
+            self.failure_location_id = failure_location_id
+
+    def _move_to_failure_location_product(self, failure_location_id):
+        self.ensure_one()
+        if self.picking_id and failure_location_id:
+            self.picking_id.move_ids.filtered(
+                lambda m: m.product_id == self.product_id
+            ).location_dest_id = failure_location_id
+        self.failure_location_id = failure_location_id
 
     def _get_check_action_name(self):
         self.ensure_one()
@@ -532,9 +544,6 @@ class QualityAlert(models.Model):
 
     @api.model
     def message_new(self, msg_dict, custom_values=None):
-        """ Override, used with creation by email alias. The purpose of the override is
-        to use the subject for title and body for description instead of the name.
-        """
         # We need to add the name in custom_values or it will use the subject.
         custom_values['name'] = self.env['ir.sequence'].next_by_code('quality.alert') or _('New')
         if msg_dict.get('subject'):

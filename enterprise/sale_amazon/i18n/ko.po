@@ -3,16 +3,15 @@
 # 	* sale_amazon
 # 
 # Translators:
-# Wil Odoo, 2024
-# Daye Jeong, 2025
+# Wil Odoo, 2025
 # Sarah Park, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-07 20:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Sarah Park, 2025\n"
 "Language-Team: Korean (https://app.transifex.com/odoo/teams/41243/ko/)\n"
 "MIME-Version: 1.0\n"
@@ -41,9 +40,9 @@ msgid ""
 "        "
 msgstr ""
 "<div>\n"
-"            <p>아마존 주문 참조번호 <t t-out=\"ctx.get('amazon_order_ref') or ''\">REF</t>가 오류로 인해 동기화되지 못했습니다.</p>\n"
-"            <p>판매자 페이지에서 주문이 취소되지 않는 한, 동기화는 더 실행되지 않습니다.</p>\n"
-"            <p>새로 동기화를 시도하도록 예약하려면 다음과 같이 진행하십시오:\n"
+"            <p>아마존 주문 참조번호 <t t-out=\"ctx.get('amazon_order_ref') or ''\">REF</t>가 오류로 인해 동기화가 완료되지 않았습니다.</p>\n"
+"            <p>판매자 페이지에서 주문이 취소되어야 다시 동기화를 실행할 수 있습니다.</p>\n"
+"            <p>새로 동기화 시도를 예약하려면 다음과 같이 진행하세요:\n"
 "                </p><ol>\n"
 "                    <li>개발자 도구에 접속합니다.</li>\n"
 "                    <li>주문받은 Amazon 계정의 양식을 엽니다.</li>\n"
@@ -52,7 +51,7 @@ msgstr ""
 "                    <li>변경 사항을 저장하고 <em>주문 동기화</em> 버튼을 클릭합니다.</li>\n"
 "                </ol>\n"
 "            \n"
-"            <p>문제가 계속될 경우에는 <a href=\"https://www.odoo.com/help/\">Odoo 고객지원</a>으로 문의주시기 바랍니다.</p>\n"
+"            <p>문제가 계속될 경우에는 <a href=\"https://www.odoo.com/help/\">Odoo 고객지원팀</a>으로 문의주시기 바랍니다.</p>\n"
 "        </div>\n"
 "        "
 
@@ -303,40 +302,41 @@ msgid "Account Name"
 msgstr "계정 이름"
 
 #. module: sale_amazon
+#: model:ir.ui.menu,name:sale_amazon.accounts_menu
+msgid "Accounts"
+msgstr "계정"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__active
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_search
 msgid "Active"
 msgstr "활성화"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid ""
-"After validation of the credentials, the marketplaces\n"
-"                                                to which this account has access will be\n"
-"                                                synchronized and automatically made available."
-msgstr ""
-"자격 증명을 확인한 후 이 계정이 접근할 수 있는 \n"
-"                                                  마켓플레이스가 동기화되어 \n"
-"                                                  자동으로 사용할 수 있게 됩니다."
+"Add any new marketplace that this account has gained"
+"                                           access to."
+msgstr "이 계정이 액세스할 수 있는 새로운 마켓플레이스를 추가하세요."
+
+#. module: sale_amazon
+#: model:ir.ui.menu,name:sale_amazon.root_menu
+msgid "Amazon"
+msgstr "아마존"
 
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_amazon_account
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_search
 msgid "Amazon Account"
 msgstr "아마존 계정"
 
 #. module: sale_amazon
 #: model:ir.actions.act_window,name:sale_amazon.list_amazon_account_action
+#: model:ir.actions.act_window,name:sale_amazon.quick_create_account_action
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_tree
 #: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
 msgid "Amazon Accounts"
 msgstr "아마존 계정"
-
-#. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_res_partner__amazon_email
-#: model:ir.model.fields,field_description:sale_amazon.field_res_users__amazon_email
-msgid "Amazon Email"
-msgstr "아마존 이메일"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__amazon_feed_ref
@@ -356,9 +356,7 @@ msgid "Amazon Marketplace"
 msgstr "아마존 마켓 플레이스"
 
 #. module: sale_amazon
-#: model:ir.actions.act_window,name:sale_amazon.list_amazon_marketplace_action
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_marketplace_view_tree
-#: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
 msgid "Amazon Marketplaces"
 msgstr "아마존 마켓 플레이스"
 
@@ -389,6 +387,11 @@ msgid "Amazon Reference"
 msgstr "Amazon 참조 번호"
 
 #. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__sku
+msgid "Amazon SKU"
+msgstr "아마존 SKU"
+
+#. module: sale_amazon
 #: model:product.template,name:sale_amazon.default_product_product_template
 msgid "Amazon Sale"
 msgstr "아마존 세일"
@@ -417,9 +420,20 @@ msgstr "아마존 마켓 플레이스는 삭제할 수 없습니다."
 
 #. module: sale_amazon
 #. odoo-python
-#: code:addons/sale_amazon/models/amazon_account.py:0
+#: code:addons/sale_amazon/models/stock_move.py:0
 msgid "Amazon move: %s"
 msgstr "Amazon 이동: %s"
+
+#. module: sale_amazon
+#. odoo-python
+#: code:addons/sale_amazon/models/stock_picking.py:0
+msgid ""
+"Amazon require certain information for the shipping location. Please make "
+"sure the following information are set on '%(location_name)s' "
+"(%(location)s): street, country and country code."
+msgstr ""
+"아마존에서는 배송 위치에 대한 특정한 정보를 요구합니다. '%(location_name)s'(%(location)s)에 지역, 국가 및 "
+"국가 코드 등 다음 내용이 설정되어 있는지 확인하세요."
 
 #. module: sale_amazon
 #. odoo-python
@@ -511,6 +525,11 @@ msgid "Amazon.fr"
 msgstr "Amazon.fr"
 
 #. module: sale_amazon
+#: model:amazon.marketplace,name:sale_amazon.marketplace_IE
+msgid "Amazon.ie"
+msgstr "Amazon.ie"
+
+#. module: sale_amazon
 #: model:amazon.marketplace,name:sale_amazon.marketplace_IN
 msgid "Amazon.in"
 msgstr "Amazon.in"
@@ -591,6 +610,17 @@ msgid "An error occurred while linking your account with Amazon."
 msgstr "계정을 Amazon 과 연결하는 동안 오류가 발생했습니다."
 
 #. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_search
+msgid "Archived"
+msgstr "보관됨"
+
+#. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Are you sure you want to disconnect this account?"
+msgstr "이 계정을 연결 해제하시겠습니까?"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__available_marketplace_ids
 msgid "Available Marketplaces"
 msgstr "사용 가능한 마켓 플레이스"
@@ -599,6 +629,11 @@ msgstr "사용 가능한 마켓 플레이스"
 #: model_terms:ir.ui.view,arch_db:sale_amazon.authorization_error
 msgid "Back to my account"
 msgstr "내 계정으로 돌아가기"
+
+#. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.quick_create_account_form
+msgid "Cancel"
+msgstr "취소"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__company_id
@@ -610,6 +645,18 @@ msgstr "회사"
 #: model:ir.model,name:sale_amazon.model_res_config_settings
 msgid "Config Settings"
 msgstr "환경 설정"
+
+#. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+#: model_terms:ir.ui.view,arch_db:sale_amazon.quick_create_account_form
+msgid "Connect"
+msgstr "연결"
+
+#. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_account__state__connected
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Connected"
+msgstr "연결됨"
 
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_res_partner
@@ -647,6 +694,11 @@ msgid "Could not process the feed document send by Amazon."
 msgstr "Amazon에서 전송된 피드 문서를 처리할 수 없습니다."
 
 #. module: sale_amazon
+#: model:ir.model,website_form_label:sale_amazon.model_res_partner
+msgid "Create a Customer"
+msgstr "고객 만들기"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__create_uid
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__create_uid
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__create_uid
@@ -668,9 +720,8 @@ msgid "Credentials"
 msgstr "자격 증명"
 
 #. module: sale_amazon
-#. odoo-python
-#: code:addons/sale_amazon/models/res_config_settings.py:0
-#: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__default_product_ids
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Default Products"
 msgstr "기본 제품"
 
@@ -680,10 +731,29 @@ msgid "Discard"
 msgstr "취소"
 
 #. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Disconnect"
+msgstr "연결 해제"
+
+#. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_account__state__disconnected
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Disconnected"
+msgstr "연결 해제됨"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__display_name
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__display_name
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__display_name
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_recover_order_wizard__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_product_product__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_product_template__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_res_partner__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_sale_order__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_sale_order_line__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_stock_move__display_name
+#: model:ir.model.fields,field_description:sale_amazon.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "표시명"
 
@@ -703,7 +773,7 @@ msgstr "오류"
 #. odoo-python
 #: code:addons/sale_amazon/models/amazon_account.py:0
 msgid "Error (%(code)s): %(message)s"
-msgstr "오류 (%(code)s): %(message)s"
+msgstr "오류(%(code)s): %(message)s"
 
 #. module: sale_amazon
 #. odoo-python
@@ -717,21 +787,34 @@ msgid "Europe"
 msgstr "유럽"
 
 #. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__location_id
+msgid "FBA Stock Location"
+msgstr "FBA 재고 위치"
+
+#. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__synchronize_inventory
+msgid "FBM Stock"
+msgstr "FBM 재고"
+
+#. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_marketplace__region__us-west-2
 msgid "Far East"
 msgstr "극동 지역"
 
 #. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_offer__amazon_channel__fba
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_order_view_form
 msgid "Fulfilled by Amazon"
 msgstr "아마존이 고객 주문 처리함"
 
 #. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_offer__amazon_channel__fbm
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_order_view_form
 msgid "Fulfilled by Merchant"
 msgstr "판매자가 고객 주문 처리함"
 
 #. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__amazon_channel
 #: model:ir.model.fields,field_description:sale_amazon.field_sale_order__amazon_channel
 msgid "Fulfillment Channel"
 msgstr "고객 주문 처리 채널"
@@ -757,6 +840,11 @@ msgstr ""
 "%s"
 
 #. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_res_config_settings__has_amazon_account
+msgid "Has Amazon Account"
+msgstr "아마존 계정 보유 여부"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__base_marketplace_id
 msgid "Home Marketplace"
 msgstr "홈 마켓플레이스"
@@ -766,6 +854,14 @@ msgstr "홈 마켓플레이스"
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__id
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__id
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_recover_order_wizard__id
+#: model:ir.model.fields,field_description:sale_amazon.field_product_product__id
+#: model:ir.model.fields,field_description:sale_amazon.field_product_template__id
+#: model:ir.model.fields,field_description:sale_amazon.field_res_config_settings__id
+#: model:ir.model.fields,field_description:sale_amazon.field_res_partner__id
+#: model:ir.model.fields,field_description:sale_amazon.field_sale_order__id
+#: model:ir.model.fields,field_description:sale_amazon.field_sale_order_line__id
+#: model:ir.model.fields,field_description:sale_amazon.field_stock_move__id
+#: model:ir.model.fields,field_description:sale_amazon.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -793,27 +889,9 @@ msgid ""
 msgstr "판매를 잠글 경우 더이상 수정불가합니다. 그러나 청구서 발행이나 납품은 가능합니다."
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid ""
-"If this account gained access to new marketplaces,"
-"                                         synchronize and add them to the "
-"current sync marketplaces"
-msgstr "이 계정으로 새로운 마켓 플레이스에 액세스 한 경우 동기화하여 현재 동기화 마켓 플레이스에 추가하십시오"
-
-#. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.picking_view_form
 msgid "In Processing by Amazon"
 msgstr "Amazon에서 처리 중"
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_search
-msgid "Inactive"
-msgstr "비활성"
-
-#. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__is_follow_up_displayed
-msgid "Is Follow Up Displayed"
-msgstr "후속조치 표시 여부"
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__access_token
@@ -852,23 +930,16 @@ msgid "Last Updated on"
 msgstr "최근 갱신 일자"
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Link with Amazon"
-msgstr "Amazon과 연결"
+#: model_terms:ir.ui.view,arch_db:sale_amazon.res_config_settings_view_form
+msgid "Link My Account"
+msgstr "내 계정 연결"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid ""
-"Link your Amazon account with Odoo to start synchronizing your\n"
-"                                Amazon orders."
-msgstr ""
-"Amazon 계정을 Odoo와 연결하시면 Amazon 주문 동기화를\n"
-"                                시작하실 수 있습니다."
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Linked Account"
-msgstr "연결된 계정"
+"Link your Amazon account with Odoo to start synchronizing your Amazon"
+"                               orders."
+msgstr "Amazon 계정을 Odoo와 연결하시면 Amazon 주문 동기화를 시작하실 수 있습니다."
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_order_view_form
@@ -876,12 +947,18 @@ msgid "Lock"
 msgstr "잠금"
 
 #. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_search
+msgid "MarketPlace"
+msgstr "마켓플레이스"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__marketplace_id
 msgid "Marketplace"
 msgstr "마켓 플레이스"
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__active_marketplace_ids
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__active_marketplace_ids
 msgid "Marketplaces"
 msgstr "마켓 플레이스"
 
@@ -890,6 +967,17 @@ msgstr "마켓 플레이스"
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__name
 msgid "Name"
 msgstr "이름"
+
+#. module: sale_amazon
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_tree
+msgid "New"
+msgstr "신규"
+
+#. module: sale_amazon
+#. odoo-python
+#: code:addons/sale_amazon/models/amazon_offer.py:0
+msgid "Non-storable product cannot be synced."
+msgstr "저장용이 아닌 품목은 동기화할 수 없습니다."
 
 #. module: sale_amazon
 #: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_marketplace__region__us-east-1
@@ -908,7 +996,9 @@ msgstr "제안 수"
 #: code:addons/sale_amazon/models/amazon_account.py:0
 #: code:addons/sale_amazon/models/product_product.py:0
 #: code:addons/sale_amazon/models/product_template.py:0
+#: model:ir.actions.act_window,name:sale_amazon.amazon_offer_action
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__offer_ids
+#: model:ir.ui.menu,name:sale_amazon.offers_menu
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_product_product_view_form
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_product_template_view_form
@@ -925,11 +1015,6 @@ msgstr "사용 가능한 마켓 플레이스만 선택할 수 있습니다"
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__order_count
 msgid "Order Count"
 msgstr "주문 수"
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Order Follow-up"
-msgstr "주문 후속조치"
 
 #. module: sale_amazon
 #. odoo-python
@@ -952,6 +1037,7 @@ msgstr "처리 중"
 #. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_product_template
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__product_id
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_search
 msgid "Product"
 msgstr "품목"
 
@@ -1005,6 +1091,11 @@ msgid "Register yours to start synchronizing your orders into Odoo."
 msgstr "주문을 Odoo로 동기화하기 위해 등록하십시오."
 
 #. module: sale_amazon
+#: model:ir.model.fields.selection,name:sale_amazon.selection__amazon_offer__amazon_sync_status__reset
+msgid "Reset FBM stock"
+msgstr "FBM 재고 초기화"
+
+#. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__restricted_data_token
 msgid "Restricted Data Token"
 msgstr "특별 취급 데이터 토큰"
@@ -1018,11 +1109,6 @@ msgstr "제한된 데이터 토큰 만료"
 #: model_terms:ir.ui.view,arch_db:sale_amazon.picking_view_form
 msgid "Retry Amazon Sync"
 msgstr "Amazon 동기화 재시도"
-
-#. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__sku
-msgid "SKU"
-msgstr "SKU"
 
 #. module: sale_amazon
 #: model:ir.model.constraint,message:sale_amazon.constraint_amazon_offer_unique_sku
@@ -1047,7 +1133,7 @@ msgstr "영업팀"
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__user_id
 msgid "Salesperson"
-msgstr "영업 담당자"
+msgstr "영업사원"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.picking_view_form
@@ -1055,13 +1141,9 @@ msgid "Scheduled for Amazon Synchronization"
 msgstr "Amazon 동기화 예약"
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid ""
-"Select the marketplace on which your seller account\n"
-"                                                was initially created."
-msgstr ""
-"판매자 계정이 처음 생성된 마켓플레이스를\n"
-"                                                선택합니다."
+#: model_terms:ir.ui.view,arch_db:sale_amazon.quick_create_account_form
+msgid "Select the amazon marketplace to log in from."
+msgstr "로그인할 아마존 마켓플레이스를 선택하세요."
 
 #. module: sale_amazon
 #: model:ir.model.fields,field_description:sale_amazon.field_amazon_marketplace__seller_central_url
@@ -1074,9 +1156,19 @@ msgid "Seller Key"
 msgstr "판매자 키"
 
 #. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__location_id
-msgid "Stock Location"
-msgstr "재고 공간"
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__state
+msgid "State"
+msgstr "시/도"
+
+#. module: sale_amazon
+#: model:ir.model,name:sale_amazon.model_stock_move
+msgid "Stock Move"
+msgstr "재고 이동"
+
+#. module: sale_amazon
+#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__sync_stock
+msgid "Stock Synchronization"
+msgstr "재고 동기화"
 
 #. module: sale_amazon
 #. odoo-python
@@ -1098,12 +1190,6 @@ msgstr "FBM 재고 동기화"
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "Sync Feeds Status"
 msgstr "피드 상태 동기화"
-
-#. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__active_marketplace_ids
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_offer__active_marketplace_ids
-msgid "Sync Marketplaces"
-msgstr "마켓 플레이스 동기화"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
@@ -1132,9 +1218,9 @@ msgid "Synchronization with Amazon failed"
 msgstr "Amazon 동기화에 실패했습니다"
 
 #. module: sale_amazon
-#: model:ir.model.fields,field_description:sale_amazon.field_amazon_account__synchronize_inventory
-msgid "Synchronize FBM Inventory"
-msgstr "FBM 재고 동기화"
+#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
+msgid "Synchronize"
+msgstr "동기화"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.picking_view_form
@@ -1204,6 +1290,13 @@ msgid "The Stock Keeping Unit."
 msgstr "재고 관리 단위"
 
 #. module: sale_amazon
+#: model:ir.model.fields,help:sale_amazon.field_amazon_offer__amazon_channel
+msgid ""
+"The channel will be updated with the incomming orders or during the next "
+"stock synchronization."
+msgstr "채널은 주문을 수신하거나 다음 재고 동기화를 하는 시점에 업데이트됩니다."
+
+#. module: sale_amazon
 #. odoo-python
 #: code:addons/sale_amazon/utils.py:0
 msgid "The communication with the API failed."
@@ -1218,12 +1311,6 @@ msgid ""
 msgstr ""
 "API와의 통신에 실패했습니다.\n"
 "오류 코드: %(error_code)s; 설명: %(error_message)s"
-
-#. module: sale_amazon
-#: model:ir.model.fields,help:sale_amazon.field_res_partner__amazon_email
-#: model:ir.model.fields,help:sale_amazon.field_res_users__amazon_email
-msgid "The encrypted email of the customer. Does not forward mails."
-msgstr "암호화된 고객 이메일. 메일을 포워딩하지 않습니다."
 
 #. module: sale_amazon
 #: model:ir.model.fields,help:sale_amazon.field_amazon_account__base_marketplace_id
@@ -1351,12 +1438,14 @@ msgid ""
 "The synchronization status of the product's stock level to Amazon:\n"
 "- Processing: The stock level has been sent and is being processed.\n"
 "- Done: The stock level has been processed.\n"
-"- Error: The synchronization of the stock level failed."
+"- Error: The synchronization of the stock level failed.\n"
+"- Reset: The next stock synchronization will reset the FBM stock level to 0."
 msgstr ""
-"Amazon에 대한 품목 재고 수준의 동기화 상태입니다:\n"
+"Amazon 제품 재고 수준의 동기화 상태는 다음과 같습니다:\n"
 "- 처리 중: 재고 수준이 전송되어 처리 중입니다.\n"
-"- 완료: 재고 수준 동기화가 완료되었습니다.\n"
-"- 오류: 재고 수준 동기화에 실패했습니다."
+"- 완료: 재고 수준 처리가 완료되었습니다.\n"
+"- 오류: 재고 수준 동기화에 실패했습니다.\n"
+"- 초기화: 다음 재고 동기화 시 FBM 재고 수준이 0으로 초기화됩니다."
 
 #. module: sale_amazon
 #. odoo-python
@@ -1397,32 +1486,14 @@ msgid ""
 msgstr "이 Amazon 파트너는 잘못된 상태(%s)로 생성되었습니다. 올바른 상태를 수동 업데이트하세요."
 
 #. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid ""
-"This action will disconnect your account with Amazon and"
-"                                          cannot be undone. Are you sure you"
-" want to proceed?"
-msgstr "이 작업 실행 시 Amazon과의 계정 연결이 해제되며 취소할 수 없게 됩니다. 계속하시겠습니까?"
-
-#. module: sale_amazon
 #: model:ir.model,name:sale_amazon.model_stock_picking
 msgid "Transfer"
 msgstr "전송"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Unlink account"
-msgstr "계정 연결 해제"
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Unlinked Account"
-msgstr "연결 해제된 계정"
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Update Available Marketplaces"
-msgstr "사용 가능한 마켓 플레이스 업데이트"
+msgid "Update available marketplaces"
+msgstr "사용 가능한 마켓플레이스 업데이트"
 
 #. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_offer_view_tree
@@ -1449,6 +1520,14 @@ msgstr "가격에 세금 포함 여부"
 
 #. module: sale_amazon
 #. odoo-python
+#: code:addons/sale_amazon/models/amazon_account.py:0
+msgid ""
+"You cannot delete an account that is linked to sale orders. Please archive "
+"it instead."
+msgstr "판매 주문과 연결된 계정은 삭제할 수 없습니다. 대신 해당 계정을 보관 처리 할 수 있습니다."
+
+#. module: sale_amazon
+#. odoo-python
 #: code:addons/sale_amazon/utils.py:0
 msgid "You first need to authorize the Amazon account %s."
 msgstr "먼저 Amazon 계정 %s에 권한을 지정해야 합니다."
@@ -1468,11 +1547,6 @@ msgid ""
 "You reached the maximum number of requests for this operation; please try "
 "again later."
 msgstr "이 작업에서 가능한 최대 요청 수에 도달했습니다. 나중에 다시 시도하시기 바랍니다."
-
-#. module: sale_amazon
-#: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
-msgid "Your Amazon account is linked with Odoo."
-msgstr "귀하의 Amazon 계정은 Odoo와 연결되어 있습니다."
 
 #. module: sale_amazon
 #. odoo-python
@@ -1497,6 +1571,18 @@ msgstr ""
 "조건: %(main_condition)s - %(sub_condition)s"
 
 #. module: sale_amazon
+#. odoo-python
+#: code:addons/sale_amazon/models/amazon_account.py:0
+msgid "account_id"
+msgstr "account_id"
+
+#. module: sale_amazon
 #: model_terms:ir.ui.view,arch_db:sale_amazon.amazon_account_view_form
 msgid "e.g. American Market"
 msgstr "예: 미국 시장"
+
+#. module: sale_amazon
+#. odoo-python
+#: code:addons/sale_amazon/models/amazon_account.py:0
+msgid "id"
+msgstr "id"

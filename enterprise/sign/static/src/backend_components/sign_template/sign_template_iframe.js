@@ -1,13 +1,9 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
-import { renderToString } from "@web/core/utils/render";
 import { shallowEqual } from "@web/core/utils/arrays";
 import { normalizePosition, startResize, generateRandomId } from "@sign/components/sign_request/utils";
 import { SignItemCustomPopover } from "@sign/backend_components/sign_template/sign_item_custom_popover";
 import { PDFIframe } from "@sign/components/sign_request/PDF_iframe";
 import { EditablePDFIframeMixin } from "@sign/backend_components/editable_pdf_iframe_mixin";
-import { user } from "@web/core/user";
 import { Deferred } from "@web/core/utils/concurrency";
 import { isMobileOS } from "@web/core/browser/feature_detection";
 
@@ -25,12 +21,9 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
         this.deletedSignItemIds = [];
         this.currentRole = this.props.signRoles[0].id;
         this.closePopoverFns = {};
+        this.roleColors = {};
         this.signItemTypesById = this.props.signItemTypes.reduce((obj, type) => {
             obj[type.id] = type;
-            return obj;
-        }, {});
-        this.signRolesById = this.props.signRoles.reduce((obj, role) => {
-            obj[role.id] = role;
             return obj;
         }, {});
         this.selectionOptionsById = this.props.signItemOptions.reduce((obj, option) => {
@@ -44,20 +37,11 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
          */
         this.negativeIds = {};
         this.radioSets = this.props.radioSets;
+        this.documentId = this.props.documentId;
     }
 
     get allowEdit() {
         return !this.props.hasSignRequests;
-    }
-
-    renderSidebar() {
-        super.renderSidebar();
-        if (this.allowEdit && !isMobileOS()) {
-            const sideBar = renderToString("sign.signItemTypesSidebar", {
-                signItemTypes: this.props.signItemTypes,
-            });
-            this.root.body.insertAdjacentHTML("afterbegin", sideBar);
-        }
     }
 
     /**
@@ -125,7 +109,7 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
         const w2 = signItem2.data.width * page2.clientWidth;
         const h2 = signItem2.data.height * page2.clientHeight;
         const c2 = {x: x2 + w2 / 2, y: y2 + h2 / 2};
-        
+
         if (!(x2 > x1 + w1 || x1 > x2 + w2)) {
             //One vertical line
             let midx = (Math.max(x1, x2) + Math.min(x1 + w1, x2 + w2)) / 2;
@@ -314,6 +298,10 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
         super.registerDragEventsForSignItem(signItem);
         const display = signItem.el.querySelector(".o_sign_item_display");
         display.addEventListener("click", () => this.openSignItemPopup(signItem));
+
+        if (signItem.data?.type === "selection" && signItem.data?.updated && signItem.data?.option_ids?.length === 0){
+            display.click();
+        }
     }
 
     /**
@@ -321,28 +309,31 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
      * @param {SignItem} signItem
      */
     async openSignItemPopup(signItem) {
+        // Save the item to the backend if it has a negative ID, as it indicates the item is new and not yet linked to the template.
+        if (signItem.data.id < 0) {
+            await this.saveChangesOnBackend();
+        }
         const shouldOpenNewPopover = !(signItem.data.id in this.closePopoverFns);
         this.closePopover();
         if (shouldOpenNewPopover) {
             if (signItem.data.id in this.negativeIds) {
                 await this.negativeIds[signItem.data.id];
             }
-            const header_title = signItem.data.type == "radio" ? "Radio Button" : signItem.data.placeholder;
+            const header_title = signItem.data.type == "radio" ? "Radio Button" : signItem.data.name;
             const closeFn = this.popover.add(
                 signItem.el,
                 SignItemCustomPopover,
                 {
                     debug: this.env.debug,
-                    responsible: signItem.data.responsible,
-                    roles: this.signRolesById,
                     alignment: signItem.data.alignment,
                     required: signItem.data.required,
+                    constant: signItem.data.constant,
                     header_title: header_title,
                     placeholder: signItem.data.placeholder,
                     id: signItem.data.id,
                     type: signItem.data.type,
                     option_ids: signItem.data.option_ids,
-                    num_options: this.getSignItemById(signItem.data.id).data.num_options,
+                    num_options: this.getSignItemById(signItem.data.id)?.data.num_options,
                     radio_set_id: signItem.data.radio_set_id,
                     onValidate: (data) => {
                         this.updateSignItem(signItem, data);
@@ -352,18 +343,26 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
                         this.closePopover();
                         this.deleteSignItem(signItem);
                     },
+                    onDuplicate: () => {
+                        this.closePopover();
+                        this.duplicateSignItem(signItem);
+                    },
                     onClose: () => {
                         this.closePopover();
                     },
-                    updateSelectionOptions: (ids) => this.updateSelectionOptions(ids),
-                    updateRoles: (id) => this.updateRoles(id),
+                    onCopyItem: (id) => this.onCopyItem(id),
                 },
                 {
                     position: "right",
                     onClose: () => {
                         this.closePopoverFns = {};
                     },
-                    closeOnClickAway: (target) => !target.closest(".modal"),
+                    closeOnClickAway: (target) => {
+                        if (!target.closest(".popover")) {
+                            this.closePopover();
+                        }
+                        return !target.closest(".popover");
+                    },
                     popoverClass: "sign-popover",
                 }
             );
@@ -371,6 +370,20 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
                 close: closeFn,
                 signItem,
             };
+        }
+
+    }
+
+    //Handle copying a single sign item
+    onCopyItem(id) {
+        const data = this.getSignItemById(id).data;
+        const { type, radio_set_id } = data;
+        if (type == 'radio') {
+            this.copiedItems = this.radioSets[radio_set_id]
+                .radio_item_ids
+                .map((radio_item_id) => Object.assign({}, this.getSignItemById(radio_item_id).data));
+        } else {
+            this.copiedItems = [Object.assign({}, this.getSignItemById(id).data)]
         }
     }
 
@@ -381,6 +394,13 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
         if (Object.keys(this.closePopoverFns)) {
             for (const id in this.closePopoverFns) {
                 this.closePopoverFns[id].close();
+                const signItem = this.getSignItemById(id);
+                if (signItem.data.type === 'selection' && !signItem.data.option_ids.length) {
+                    signItem.el.classList.add("o_sign_field_error");
+                    this.notification.add(_t("Selection field cannot be empty. Please add at least one option."), {
+                        type: "warning",
+                    });
+                }
             }
             this.closePopoverFns = {};
         }
@@ -393,14 +413,11 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
      */
     async updateRadioButton(sign_item_id, data) {
         const signItem = this.getSignItemById(sign_item_id);
-        const { radio_set_id, num_options, responsible, required, placeholder } = signItem.data;
+        const { radio_set_id, num_options, required, placeholder } = signItem.data;
         if (num_options != data.num_options){
             await this.updateRadioNumOptions(radio_set_id, Number(data.num_options));
         }
         let changes = {};
-        if (responsible != data.responsible) {
-            changes['responsible'] = Number(data.responsible);
-        }
         if (required != data.required) {
             changes['required'] = data.required;
         }
@@ -428,11 +445,13 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
                 } else if (signItem.data[key] !== data[key]) {
                     changes[key] = data[key];
                 }
+            } else {
+                changes[key] = data[key];
             }
             return changes;
         }, {});
 
-        if (Object.keys(changes).length) {
+        if (Object.keys(changes).length ) {
             const pageNumber = signItem.data.page;
             const page = this.getPageContainer(pageNumber);
             signItem.el.parentElement.removeChild(signItem.el);
@@ -446,8 +465,7 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
                 el: this.renderSignItem(newData, page),
             };
             this.refreshSignItems();
-            this.currentRole = newData.responsible;
-            this.saveChanges();
+            this.saveChangesOnBackend();
         }
     }
 
@@ -465,6 +483,62 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
         delete this.radioSets[radio_set_id];
         this.renderAllConnectingLines();
         this.orm.unlink('sign.item.radio.set', [radio_set_id]);
+    }
+
+    /**
+     * Duplicates a sign item in the document.
+     * @param {SignItem} signItem
+     */
+    duplicateSignItem(signItem) {
+        if (signItem.data.type == "radio"){
+            return this.duplicateRadioSet(signItem.data.radio_set_id);
+        }
+        const page = this.getPageContainer(signItem.data.page);
+        const newId = generateRandomId();
+        const newData = Object.assign({}, signItem.data, {
+            id: newId,
+            updated: true,
+            posX: signItem.data.posX + 0.005,
+            posY: signItem.data.posY + 0.005,
+        });
+        this.signItems[newData.page][newId] = {
+            data: newData,
+            el: this.renderSignItem(newData, page),
+        };
+        this.refreshSignItems();
+        this.setTemplateChanged();
+    }
+
+    /**
+     * Duplicates a radio set in the document.
+     * @param {Number} radio_set_id
+     */
+    async duplicateRadioSet(radio_set_id) {
+        const radioSet = this.radioSets[radio_set_id];
+        const newRadioSet = {
+            num_options: 0,
+            radio_item_ids: [],
+        };
+        const [newRadioSetId] = await this.orm.create('sign.item.radio.set', [{}]);
+        for (const id of radioSet.radio_item_ids) {
+            const signItem = this.getSignItemById(id);
+            const newId = generateRandomId();
+            const newData = Object.assign({}, signItem.data, {
+                id: newId,
+                updated: true,
+                posX: signItem.data.posX + 0.025,
+                posY: signItem.data.posY + 0.025,
+                radio_set_id: newRadioSetId,
+            });
+            this.signItems[newData.page][newId] = {
+                data: newData,
+                el: this.renderSignItem(newData, this.getPageContainer(newData.page)),
+            };
+            newRadioSet.radio_item_ids.push(newId);
+        }
+        this.radioSets[newRadioSet.id] = newRadioSet;
+        this.refreshSignItems();
+        this.setTemplateChanged();
     }
 
     /**
@@ -502,10 +576,14 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
             Math.round(normalizePosition(signItem.posY, signItem.height) * 1000) / 1000;
         const responsible = signItem.responsible ?? (signItem.responsible_id?.[0] || 0);
         const type = this.signItemTypesById[signItem.type_id[0]].item_type;
+        const icon = this.signItemTypesById[signItem.type_id[0]].icon;
         if (type === "selection") {
             const options = signItem.option_ids.map((id) => this.selectionOptionsById[id]);
             signItem.options = options;
         }
+        const error_class = type === 'selection' && !signItem.option_ids.length && !signItem.just_dropped ? 'o_sign_field_error' : '';
+        const colorClass = signItem.constant ? "o_color_constant" : `o_color_responsible_${this.roleColors[responsible]}`;
+
         return Object.assign(signItem, {
             readonly: true,
             editMode: true,
@@ -513,12 +591,23 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
             responsible,
             type,
             placeholder: signItem.placeholder || signItem.name || "",
-            responsibleName: this.signRolesById[responsible].name,
-            classes: `o_color_responsible_${this.signRolesById[responsible].color} o_readonly_mode`,
+            classes: `${colorClass} o_readonly_mode ${error_class}`,
             style: `top: ${normalizedPosY * 100}%; left: ${normalizedPosX * 100}%;
                     width: ${signItem.width * 100}%; height: ${signItem.height * 100}%;
-                    text-align: ${signItem.alignment}`,
+                    text-align: ${this.getAlignmentByItem(signItem)}`,
+            icon: icon,
         });
+    }
+
+    /**
+     * Returns specific alignment according to the sign item type
+     * @param {SignItem.data} signItem
+     * @returns {String}: alignment for the sign item type
+     */
+    getAlignmentByItem(signItem) {
+        if (signItem.type === "radio")
+            return "center";
+        return signItem.alignment;
     }
 
     /**
@@ -528,10 +617,6 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
         super.preRender();
         if (this.allowEdit && !isMobileOS()) {
             const outerContainer = this.root.querySelector("#outerContainer");
-            Object.assign(outerContainer.style, {
-                width: "auto",
-                marginLeft: "14rem",
-            });
             outerContainer.classList.add("o_sign_field_type_toolbar_visible");
             this.root.dispatchEvent(new Event("resize"));
         } else if (!this.allowEdit) {
@@ -552,7 +637,7 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
     }
 
     insertRotatePDFButton() {
-        const printButton = this.root.querySelector("#print");
+        const printButton = this.root.querySelector("#printButton");
         const button = this.root.createElement("button");
         button.setAttribute("id", "pageRotateCw");
         button.className = "toolbarButton o_sign_rotate rotateCw";
@@ -576,6 +661,20 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
                 { capture: true }
             );
             this.root.addEventListener("keyup", (e) => this.handleKeyUp(e));
+            this.setupResizeObserver();
+        }
+    }
+
+    /**
+     * Sets up a resize observer to adjust the sign images on page resize (zoom in/out)
+     */
+    setupResizeObserver() {
+        const viewerContainer = this.root.querySelector("#viewerContainer");
+        if (viewerContainer) {
+            const resizeObserver = new ResizeObserver(() => {
+                this.adjustSignImagesOnPageResize();
+            });
+            resizeObserver.observe(viewerContainer);
         }
     }
 
@@ -591,7 +690,12 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
         }
     }
 
-    async saveChanges() {
+    async setTemplateChanged() {
+        this.props.setTemplateChangedState(true);
+    }
+
+    async saveChangesOnBackend() {
+        this.props.signStatus.isTemplateChanged = false;
         const items = this.signItems;
         for (const page in items) {
             for (const id in items[page]) {
@@ -636,14 +740,15 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
                 }
                 this.radioSets[radio_set_id].num_options = num_options;
                 this.radioSets[radio_set_id].radio_item_ids.push(id);
-                this.signItems[page] = {
-                  ...this.signItems[page],
-                  [id]: {
+                this.signItems[page][id] = {
                     data: updatedData,
                     el: el,
-                  },
                 };
             });
+        }
+        // After saving there should be no negative sign item ids, so we just filter them out.
+        for (const radioSet of Object.values(this.radioSets)) {
+            radioSet.radio_item_ids = radioSet.radio_item_ids.filter(id => id > 0);
         }
         this.deletedSignItemIds = [];
         this.renderAllConnectingLines();
@@ -654,23 +759,6 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
      * @property {Object} data // sign item data returned from the search_read
      * @property {HTMLElement} el // html element of the sign item
      */
-
-    /**
-     * Updates the local selection options to include the new records
-     * @param {Array<Number>} optionIds
-     */
-    async updateSelectionOptions(optionIds) {
-        const newIds = optionIds.filter((id) => !(id in this.selectionOptionsById));
-        const newOptions = await this.orm.searchRead(
-            "sign.item.option",
-            [["id", "in", newIds]],
-            ["id", "value"],
-            { context: user.context }
-        );
-        for (const option of newOptions) {
-            this.selectionOptionsById[option.id] = option;
-        }
-    }
 
     /**
      * Creates #count new sign radio items and chains them vertically to the lastSignItem
@@ -684,16 +772,18 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
             const new_id = generateRandomId();
             const new_data = { ...tail.data };
             new_data['id'] = new_id;
-            new_data['posY'] += 0.025;
+            new_data['posY'] += 0.02;
             this.signItems[new_data.page][new_id] = {
                 data: new_data,
                 el: this.renderSignItem(new_data, this.getPageContainer(new_data.page)),
             }
+            this.radioSets[new_data['radio_set_id']].num_options++;
+            this.radioSets[new_data['radio_set_id']].radio_item_ids.push(new_id);
             tail = this.signItems[new_data.page][new_id];
             new_data.updated = true;
         }
         this.refreshSignItems();
-        await this.saveChanges();
+        await this.setTemplateChanged();
     }
 
     /**
@@ -708,6 +798,7 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
             const signItem = this.getSignItemById(id);
             deleted_sign_items.push(signItem);
         }
+        this.refreshSignItems();
         await this.deleteSignItems(deleted_sign_items);
     }
 
@@ -738,7 +829,7 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
             };
         });
         this.refreshSignItems();
-        await this.saveChanges();
+        await this.setTemplateChanged();
     }
 
     /**
@@ -761,14 +852,35 @@ export class SignTemplateIframe extends EditablePDFIframeMixin(PDFIframe) {
         })
     }
 
+    setRoleColor(roleId, colorId) {
+        this.roleColors[roleId] = colorId;
+    }
+
+    async deleteRole(roleId) {
+        for (const page in this.signItems) {
+            for (const [, signItem] of Object.entries(this.signItems[page])) {
+                if (signItem.data.responsible === roleId) {
+                    this.deleteSignItem(signItem);
+                }
+            }
+        }
+        this.refreshSignItems();
+        await this.saveChangesOnBackend();
+    }
+
     /**
-     * Updates the local roles to include new records
-     * @param {Number} id role id
+     * Adjusts the sign images on page resize (zoom in/out)
      */
-    async updateRoles(id) {
-        if (!(id in this.signRolesById)) {
-            const newRole = await this.orm.searchRead("sign.item.role", [["id", "=", id]], []);
-            this.signRolesById[newRole[0].id] = newRole[0];
+    adjustSignImagesOnPageResize() {
+        for (const page in this.signItems) {
+            for (const id in this.signItems[page]) {
+                const signItem = this.signItems[page][id];
+                if (signItem.data.type === "signature") {
+                    this.setSignatureImage(signItem, signItem.data.roleName);
+                } else if (signItem.data.type === "initial") {
+                    this.setSignatureImage(signItem, this.getInitialsText(signItem.data.roleName));
+                }
+            }
         }
     }
 }

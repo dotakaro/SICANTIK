@@ -53,7 +53,7 @@ services:
       - HOST=postgres_companion
       - USER=odoo
       - PASSWORD=odoo_password_secure
-      - POSTGRES_DB=sicantik_companion
+      #- POSTGRES_DB=postgres
     volumes:
       - odoo_data:/var/lib/odoo
       - ./addons_odoo:/mnt/extra-addons:ro
@@ -67,15 +67,21 @@ services:
     networks:
       - sicantik_network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
 
   # PostgreSQL for Odoo Companion
   postgres_companion:
     image: postgres:15
     container_name: postgres_companion
-    ports:
-      - "5434:5432"
+    # Port tidak di-expose untuk menghindari konflik dengan container lain
+    # Akses via network: postgres_companion:5432
     environment:
-      - POSTGRES_DB=sicantik_companion
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=odoo
       - POSTGRES_PASSWORD=odoo_password_secure
       - PGDATA=/var/lib/postgresql/data/pgdata
@@ -84,6 +90,12 @@ services:
     networks:
       - sicantik_network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
   # MinIO for Document Storage
   minio_storage:
@@ -95,7 +107,7 @@ services:
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin123
-      - MINIO_DOMAIN=""  # Disable virtual-host style, use path-style only
+      - MINIO_DOMAIN="" # Disable virtual-host style, use path-style only
     volumes:
       - minio_data:/data
     networks:
@@ -136,7 +148,6 @@ services:
     networks:
       - sicantik_network
     restart: unless-stopped
-
   # Odoo 18 Enterprise - Standalone Companion App
   odoo_companion_standalone:
     build:
@@ -147,15 +158,16 @@ services:
     ports:
       - "8065:8069" # Different port to avoid conflicts
     environment:
-      - HOST=postgres_companion_standalone
-      - USER=odoo
-      - PASSWORD=odoo_password_secure
-      - POSTGRES_DB=sicantik_companion_standalone
+      - PGHOST=postgres_companion_standalone
+      - PGPORT=5432
+      - PGUSER=odoo
+      - PGPASSWORD=odoo_password_secure
+      #- PGDATABASE=sicantik_companion_standalone
     volumes:
       - odoo_companion_data:/var/lib/odoo
       - ./addons_odoo:/mnt/extra-addons
       - ./enterprise:/mnt/enterprise-addons
-      - ./config_odoo:/etc/odoo
+      - ./config_odoo/odoo.conf:/etc/odoo/odoo.conf:ro
       - ./uploads:/mnt/sicantik_uploads:ro
     depends_on:
       - postgres_companion_standalone
@@ -163,16 +175,22 @@ services:
     networks:
       - sicantik_network
     restart: unless-stopped
-    #command: ["odoo", "--config=/etc/odoo/odoo.conf", "--dev=all"]
+    command: ["python3", "odoo-bin", "--config=/etc/odoo/odoo.conf"]
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
 
   # PostgreSQL for Odoo Companion (Standalone)
   postgres_companion_standalone:
     image: postgres:15
     container_name: postgres_companion_standalone
-    ports:
-      - "5435:5432" # Different port to avoid conflicts
+    # Port tidak di-expose untuk menghindari konflik dengan container lain
+    # Akses via network: postgres_companion_standalone:5432
     environment:
-      - POSTGRES_DB=sicantik_companion_standalone
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=odoo
       - POSTGRES_PASSWORD=odoo_password_secure
       - PGDATA=/var/lib/postgresql/data/pgdata
@@ -181,6 +199,12 @@ services:
     networks:
       - sicantik_network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
   # Nginx Reverse Proxy
   nginx_proxy:

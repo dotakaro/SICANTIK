@@ -102,15 +102,11 @@ class TestReconciliationReport(TestAccountReportsCommon):
 
         st_line = statement_2.line_ids.filtered(lambda line: line.payment_ref == 'line_1')
         payment_line = payment_1.move_id.line_ids.filtered(lambda line: line.account_id == payment_1.payment_method_line_id.payment_account_id)
-        wizard = self.env['bank.rec.widget'].with_context(default_st_line_id=st_line.id).new({})
-        wizard._action_add_new_amls(payment_line, allow_partial=False)
-        wizard._action_validate()
+        st_line.set_line_bank_statement_line(payment_line.id)
 
         st_line = statement_2.line_ids.filtered(lambda line: line.payment_ref == 'line_3')
         payment_line = payment_2.move_id.line_ids.filtered(lambda line: line.account_id == payment_2.payment_method_line_id.payment_account_id)
-        wizard = self.env['bank.rec.widget'].with_context(default_st_line_id=st_line.id).new({})
-        wizard._action_add_new_amls(payment_line, allow_partial=False)
-        wizard._action_validate()
+        st_line.set_line_bank_statement_line(payment_line.id)
 
         # ==== Report ====
 
@@ -122,25 +118,28 @@ class TestReconciliationReport(TestAccountReportsCommon):
         options = self._generate_options(report, '2016-01-02', '2016-01-02')
         options['unfold_all'] = True
         lines = report._get_lines(options)
+        account = bank_journal.default_account_id.display_name
 
         self.assertLinesValues(
             lines,
             #   Name                                            Date            Amount
             [0,                                                   1,                3],
             [
-                ('Balance of \'101403 Bank\'',                   '',           -200.0),
+                (f'Balance of \'{account}\'',                    '',           -200.0),
                 ('Last statement balance',                       '',           -200.0),
                 ('Including Unreconciled Receipts',              '',            200.0),
                 ('BNKKK/2015/00002',                   '01/02/2015',            200.0),
-                ('Including Unreconciled Payments',              '',           -400.0),
+                ('Including Unreconciled Payments',              '',           -450.0),
                 ('BNKKK/2015/00004',                   '01/04/2015',           -400.0),
+                ('BNKKK/2015/00003',                   '01/03/2015',            -50.0),
                 ('Transactions without statement',               '',              0.0),
                 ('Including Unreconciled Receipts',              '',              0.0),
                 ('Including Unreconciled Payments',              '',              0.0),
                 ('Misc. operations',                             '',              0.0),
-                ('Outstanding Receipts/Payments',                '',            100.0),
-                ('(+) Outstanding Receipts',                     '',            450.0),
+                ('Outstanding Receipts/Payments',                '',            150.0),
+                ('(+) Outstanding Receipts',                     '',            500.0),
                 ('PBNKKK/2015/00004',                  '01/04/2015',            450.0),
+                ('PBNKKK/2015/00001',                  '01/01/2015',             50.0),
                 ('(-) Outstanding Payments',                     '',           -350.0),
                 ('PBNKKK/2015/00003',                  '01/03/2015',           -350.0),
             ],
@@ -151,8 +150,8 @@ class TestReconciliationReport(TestAccountReportsCommon):
 
     def test_reconciliation_report_multi_currencies(self):
         """ Tests the management of multi-currencies in the reconciliation report. """
-        self.env.user.groups_id |= self.env.ref('base.group_multi_currency')
-        self.env.user.groups_id |= self.env.ref('base.group_no_one')
+        self.env.user.group_ids |= self.env.ref('base.group_multi_currency')
+        self.env.user.group_ids |= self.env.ref('base.group_no_one')
 
         company_currency = self.company_data['currency']  # USD
         journal_currency = self.other_currency  # EUR
@@ -268,6 +267,30 @@ class TestReconciliationReport(TestAccountReportsCommon):
         })
         (payment_1 + payment_2 + payment_3).action_post()
 
+        # ==== Misc Entry ====
+
+        move = self.env['account.move'].create({
+            'journal_id': self.company_data['default_journal_misc'].id,
+            'date': '2016-01-01',
+            'line_ids': [
+                Command.create({
+                    'name': 'Line1',
+                    'debit': 100,
+                    'credit': 0,
+                    'amount_currency': 200,
+                    'account_id': bank_journal.default_account_id.id,
+                    'currency_id': journal_currency.id
+                }),
+                Command.create({
+                    'name': 'Line2',
+                    'debit': 0,
+                    'credit': 100,
+                    'account_id': other_account.id,
+                }),
+            ]
+        })
+        move.action_post()
+
         # ==== Report ====
 
         report = self.env.ref('account_reports.bank_reconciliation_report').with_context(
@@ -279,13 +302,14 @@ class TestReconciliationReport(TestAccountReportsCommon):
             options = self._generate_options(report, '2016-01-02', '2016-01-02')
             options['unfold_all'] = True
             lines = report._get_lines(options)
+            account = bank_journal.default_account_id.display_name
 
             self.assertLinesValues(
                 lines,
                 #   Name                                                Date   Am. Cur.                  Cur.       Amount
                 [0,                                                       1,       3,                      4,           5],
                 [
-                    ('Balance of \'101403 Bank\'',                       '',      '',                     '',       200.0),
+                    (f'Balance of \'{account}\'',                       '',      '',                     '',       400.0),
                     ('Last statement balance',                           '',      '',                     '',       200.0),
                     ('Including Unreconciled Receipts',                  '',      '',                     '',       170.005),
                     ('BNKKK/2016/00002',                       '01/01/2016',  900.00,    choco_currency.name,        90.001),
@@ -294,7 +318,7 @@ class TestReconciliationReport(TestAccountReportsCommon):
                     ('Transactions without statement',                   '',      '',                     '',         0.0),
                     ('Including Unreconciled Receipts',                  '',      '',                     '',         0.0),
                     ('Including Unreconciled Payments',                  '',      '',                     '',         0.0),
-                    ('Misc. operations',                                 '',      '',                     '',         0.0),
+                    ('Misc. operations',                                 '',      '',                     '',       200.0),
                     ('Outstanding Receipts/Payments',                    '',      '',                     '',      5900.0),
                     ('(+) Outstanding Receipts',                         '',      '',                     '',      5900.0),
                     ('PBNKKK/2016/00003',                      '01/01/2016',  3000.0,    choco_currency.name,       900.0),
@@ -472,13 +496,14 @@ class TestReconciliationReport(TestAccountReportsCommon):
         options = self._generate_options(report, '2016-01-02', '2016-01-02')
         options['unfold_all'] = True
         lines = report._get_lines(options)
+        account = bank_journal.default_account_id.display_name
 
         self.assertLinesValues(
             lines,
             #   Name                                                  Date         Amount
             [0,                                                         1,             3],
             [
-                ('Balance of \'101403 Bank\'',                         '',           0.0),
+                (f'Balance of \'{account}\'',                          '',           0.0),
                 ('Last statement balance',                             '',           0.0),
                 ('Including Unreconciled Receipts',                    '',           0.0),
                 ('Including Unreconciled Payments',                    '',           0.0),
@@ -534,13 +559,14 @@ class TestReconciliationReport(TestAccountReportsCommon):
         options = self._generate_options(report, '2016-01-02', '2016-01-02')
         options['unfold_all'] = True
         lines = report._get_lines(options)
+        account = bank_journal.default_account_id.display_name
 
         self.assertLinesValues(
             lines,
             #   Name                                                  Date         Amount
             [0,                                                         1,             3],
             [
-                ('Balance of \'101403 Bank\'',                         '',         800.0),
+                (f'Balance of \'{account}\'',                          '',         800.0),
                 ('Last statement balance',                             '',           0.0),
                 ('Including Unreconciled Receipts',                    '',           0.0),
                 ('Including Unreconciled Payments',                    '',           0.0),
@@ -567,7 +593,7 @@ class TestReconciliationReport(TestAccountReportsCommon):
             #   Name                                                  Date         Amount
             [0,                                                         1,             3],
             [
-                ('Balance of \'101403 Bank\'',                         '',           0.0),
+                (f'Balance of \'{account}\'',                          '',           0.0),
                 ('Last statement balance',                             '',           0.0),
                 ('Including Unreconciled Receipts',                    '',           0.0),
                 ('Including Unreconciled Payments',                    '',           0.0),
@@ -744,9 +770,7 @@ class TestReconciliationReport(TestAccountReportsCommon):
         payment.action_post()
 
         payment_line = payment.move_id.line_ids.filtered(lambda line: line.account_id == payment.payment_method_line_id.payment_account_id)
-        wizard = self.env['bank.rec.widget'].with_context(default_st_line_id=bank_statement_lines[1].id).new({})
-        wizard._action_add_new_amls(payment_line, allow_partial=False)
-        wizard._action_validate()
+        bank_statement_lines[1].set_line_bank_statement_line(payment_line.id)
 
         options = self._generate_options(report, '2019-01-01', '2019-01-12')
         options['all_entries'] = True

@@ -7,9 +7,9 @@ from odoo.tools import SQL
 _logger = logging.getLogger(__name__)
 
 
-class BankReconciliationReportCustomHandler(models.AbstractModel):
+class AccountBankReconciliationReportHandler(models.AbstractModel):
     _name = 'account.bank.reconciliation.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.report.custom.handler']
     _description = 'Bank Reconciliation Report Custom Handler'
 
     ######################
@@ -101,7 +101,7 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
             """
             SELECT
                 %(select_from_groupby)s,
-                COALESCE(SUM(account_move_line.balance), 0)
+                COALESCE(SUM(COALESCE(NULLIF(account_move_line.amount_currency, 0), account_move_line.balance)), 0)
             FROM %(table_references)s
             WHERE %(search_condition)s
             %(groupby_sql)s
@@ -176,6 +176,7 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
                     currency=foreign_currency.display_name if res['foreign_currency_id'] else None,
                     amount=-res['amount_residual'] * rate if res['amount_residual'] else None,
                     amount_currency_id=journal_currency.id,
+                    has_sublines=True,
                 )
             else:
                 amount = 0
@@ -244,7 +245,7 @@ class BankReconciliationReportCustomHandler(models.AbstractModel):
             table_references=query.from_clause,
             search_condition=query.where_clause,
             is_receipt=SQL("st_line.amount > 0") if internal_type == "receipts" else SQL("st_line.amount < 0"),
-            is_unreconciled=SQL("AND NOT st_line.is_reconciled") if unreconciled else SQL(""),
+            is_unreconciled=SQL("AND st_line.is_reconciled IS NOT TRUE") if unreconciled else SQL(""),
             st_line_amount_condition=st_line_amount_condition,
             last_statement_id_condition=last_statement_id_condition,
             group_by=groupby_field_sql if current_groupby else SQL('st_line.id'),  # Same key in the groupby because we can't put a null key in a group by

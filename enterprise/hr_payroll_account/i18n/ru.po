@@ -3,15 +3,16 @@
 # 	* hr_payroll_account
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
+# Anastasiia Koroleva, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:27+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2024\n"
+"POT-Creation-Date: 2025-07-01 12:11+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Anastasiia Koroleva, 2025\n"
 "Language-Team: Russian (https://app.transifex.com/odoo/teams/41243/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -23,20 +24,30 @@ msgstr ""
 #: model:ir.model.fields,field_description:hr_payroll_account.field_account_bank_statement_line__payslip_count
 #: model:ir.model.fields,field_description:hr_payroll_account.field_account_move__payslip_count
 msgid "# of Payslips"
-msgstr ""
+msgstr "# расчетных листков"
 
 #. module: hr_payroll_account
-#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_run_view_form
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_view_form
 msgid ""
 "<span class=\"o_stat_text\" invisible=\"move_state != 'draft'\">Journal Entry <br/>(Draft)</span>\n"
 "                        <span class=\"o_stat_text\" invisible=\"move_state != 'posted'\">Journal Entry <br/>(Posted)</span>\n"
 "                        <span class=\"o_stat_text\" invisible=\"move_state != 'cancel'\">Journal Entry <br/>(Canceled)</span>"
 msgstr ""
+"<span class=\"o_stat_text\" invisible=\"move_state != 'draft'\">Проводка <br/>(Черновик) </span>\n"
+"                        <span class=\"o_stat_text\" invisible=\"move_state != 'posted'\">Проводка <br/>(Проведена)</span>\n"
+"                        <span class=\"o_stat_text\" invisible=\"move_state != 'cancel'\">Проводка <br/>(Отменена)</span>"
 
 #. module: hr_payroll_account
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.view_move_form_inherit
 msgid "<span class=\"o_stat_text\">Payslip</span>"
+msgstr "<span class=\"o_stat_text\">Расчетный листок</span>"
+
+#. module: hr_payroll_account
+#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_run_view_form
+msgid ""
+"<span invisible=\"move_state != 'draft'\">Journal Entry <br/>(Draft)</span>\n"
+"                    <span invisible=\"move_state != 'posted'\">Journal Entry <br/>(Posted)</span>\n"
+"                    <span invisible=\"move_state != 'cancel'\">Journal Entry <br/>(Canceled)</span>"
 msgstr ""
 
 #. module: hr_payroll_account
@@ -51,7 +62,7 @@ msgid "Account Payslip Houserental"
 msgstr "Счет Платежная ведомость Аренда жилья"
 
 #. module: hr_payroll_account
-#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_contract_view_form
+#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_employee_view_form
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_salary_rule_view_form
 msgid "Accounting"
 msgstr "Бухгалтерия"
@@ -68,9 +79,9 @@ msgid "Adjustment Entry"
 msgstr "Корректировка ввода"
 
 #. module: hr_payroll_account
-#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_contract__analytic_account_id
-#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_contract_history__analytic_account_id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_employee__analytic_account_id
 #: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__analytic_account_id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_version__analytic_account_id
 msgid "Analytic Account"
 msgstr "Аналитический Счёт"
 
@@ -86,6 +97,11 @@ msgstr "Вы уверены, что хотите продолжить?"
 #: model:ir.ui.menu,name:hr_payroll_account.menu_hr_employee_bank_account
 msgid "Bank Accounts"
 msgstr "Банковские Счета"
+
+#. module: hr_payroll_account
+#: model_terms:ir.ui.view,arch_db:hr_payroll_account.view_partner_bank_tree_inherit
+msgid "Bank Identifier Code"
+msgstr "Банковский идентификационный код (BIC)"
 
 #. module: hr_payroll_account
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.res_config_settings_view_form
@@ -108,11 +124,6 @@ msgstr "Компании"
 #: model:ir.model,name:hr_payroll_account.model_res_config_settings
 msgid "Config Settings"
 msgstr "Параметры конфигурации"
-
-#. module: hr_payroll_account
-#: model:ir.model,name:hr_payroll_account.model_hr_contract_history
-msgid "Contract history"
-msgstr "История контрактов"
 
 #. module: hr_payroll_account
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_run_view_form
@@ -153,7 +164,26 @@ msgid "Debit Tax Grids"
 msgstr ""
 
 #. module: hr_payroll_account
-#: model:ir.model,name:hr_payroll_account.model_hr_contract
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_chart_template__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_journal__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_move__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_payment__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_payment_register__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payroll_payment_report_wizard__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payroll_structure__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_line__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_run__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_version__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_partner_bank__display_name
+msgid "Display Name"
+msgstr "Отображаемое название"
+
+#. module: hr_payroll_account
+#: model:ir.model,name:hr_payroll_account.model_hr_version
 msgid "Employee Contract"
 msgstr "Договор с Сотрудником"
 
@@ -181,6 +211,9 @@ msgid ""
 " the payslip line name. It could be useful for deduction/reimbursement or "
 "salary attachments for instance."
 msgstr ""
+"Включите этот параметр, чтобы разбивать проводки по названию строки в "
+"расчетном листке. Полезно, например, для учета вычетов, возмещений или "
+"удержаний с зарплаты."
 
 #. module: hr_payroll_account
 #: model_terms:ir.actions.act_window,help:hr_payroll_account.action_res_partner_bank_account_form
@@ -191,15 +224,39 @@ msgstr ""
 "вашим контактам."
 
 #. module: hr_payroll_account
+#: model_terms:ir.ui.view,arch_db:hr_payroll_account.hr_payslip_run_view_form
+msgid "Generated Journal Entries"
+msgstr ""
+
+#. module: hr_payroll_account
 #: model:ir.model,name:hr_payroll_account.model_hr_payroll_payment_report_wizard
 msgid "HR Payroll Payment Report Wizard"
-msgstr ""
+msgstr "Инструмент для создания отчетов о выплате зарплат"
 
 #. module: hr_payroll_account
 #: model:ir.model.fields,field_description:hr_payroll_account.field_account_setup_bank_manual_config__has_alt_bank_account
 #: model:ir.model.fields,field_description:hr_payroll_account.field_res_partner_bank__has_alt_bank_account
 msgid "Has Alt Bank Account"
-msgstr ""
+msgstr "Имеет счет в другом банке"
+
+#. module: hr_payroll_account
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_chart_template__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_journal__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_move__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_payment__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_account_payment_register__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payroll_payment_report_wizard__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payroll_structure__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_line__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_run__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_hr_version__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_company__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_payroll_account.field_res_partner_bank__id
+msgid "ID"
+msgstr "ID"
 
 #. module: hr_payroll_account
 #. odoo-python
@@ -217,6 +274,8 @@ msgid ""
 "Invalid IBAN for the following employees:\n"
 "%s"
 msgstr ""
+"Неверный IBAN у следующих сотрудников:\n"
+"%s"
 
 #. module: hr_payroll_account
 #: model:ir.model,name:hr_payroll_account.model_account_journal
@@ -245,7 +304,7 @@ msgstr "Переместить"
 #. module: hr_payroll_account
 #: model:ir.model.fields,field_description:hr_payroll_account.field_hr_payslip_run__move_state
 msgid "Move State"
-msgstr ""
+msgstr "Статус проводки"
 
 #. module: hr_payroll_account
 #: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__not_computed_in_net
@@ -272,6 +331,11 @@ msgid "Pay"
 msgstr "Оплатить"
 
 #. module: hr_payroll_account
+#: model:ir.model,name:hr_payroll_account.model_hr_payslip_run
+msgid "Pay Run"
+msgstr ""
+
+#. module: hr_payroll_account
 #: model:ir.model,name:hr_payroll_account.model_hr_payslip
 msgid "Pay Slip"
 msgstr "Платежная ведомость"
@@ -286,11 +350,6 @@ msgstr "Оплата произведена в %s"
 #: model:ir.model,name:hr_payroll_account.model_account_payment
 msgid "Payments"
 msgstr "Платежи"
-
-#. module: hr_payroll_account
-#: model:ir.model,name:hr_payroll_account.model_hr_payslip_run
-msgid "Payslip Batches"
-msgstr "Пакеты платежных ведомостей"
 
 #. module: hr_payroll_account
 #: model:ir.model,name:hr_payroll_account.model_hr_payslip_line
@@ -334,7 +393,7 @@ msgstr "Структура заработной платы"
 #. module: hr_payroll_account
 #: model:ir.model.fields,field_description:hr_payroll_account.field_hr_salary_rule__split_move_lines
 msgid "Split account line based on name"
-msgstr ""
+msgstr "Разбивать строки проводки по названию"
 
 #. module: hr_payroll_account
 #: model:ir.model.fields,help:hr_payroll_account.field_hr_payslip_line__credit_tag_ids
@@ -344,6 +403,9 @@ msgid ""
 "into an accounting journal entry.They will be applied on the credit account "
 "line in the journal entry."
 msgstr ""
+"Теги, назначенные этой строке, будут участвовать в формировании финансовой "
+"отчетности после трансформации в бухгалтерскую проводку. Они будут применены"
+" к строке с кредитовым счетом."
 
 #. module: hr_payroll_account
 #: model:ir.model.fields,help:hr_payroll_account.field_hr_payslip_line__debit_tag_ids
@@ -353,6 +415,9 @@ msgid ""
 "into an accounting journal entry.They will be applied on the debit account "
 "line in the journal entry."
 msgstr ""
+"Теги, назначенные этой строке, будут участвовать в формировании финансовой "
+"отчетности после трансформации в бухгалтерскую проводку. Они будут применены"
+" к строке с дебетовым счетом."
 
 #. module: hr_payroll_account
 #. odoo-python
@@ -389,7 +454,7 @@ msgstr ""
 #. module: hr_payroll_account
 #: model_terms:ir.ui.view,arch_db:hr_payroll_account.view_partner_bank_form_inherit_hr_payroll_account
 msgid "This will replace the employee existing bank account."
-msgstr ""
+msgstr "Это действие заменит текущий банковский счет сотрудника."
 
 #. module: hr_payroll_account
 #. odoo-python
@@ -403,17 +468,16 @@ msgstr ""
 #. odoo-python
 #: code:addons/hr_payroll_account/models/hr_payslip.py:0
 msgid "You can only register payments for unpaid documents."
-msgstr ""
+msgstr "Платеж можно зарегистрировать только для неоплаченных документов."
+
+#. module: hr_payroll_account
+#. odoo-python
+#: code:addons/hr_payroll_account/models/hr_payslip.py:0
+msgid "You can't create a journal entry for a paid payslip."
+msgstr "Нельзя создать проводку по уже выплаченному расчетному листку."
 
 #. module: hr_payroll_account
 #. odoo-python
 #: code:addons/hr_payroll_account/models/account_journal.py:0
 msgid "You cannot delete the journal linked to a Salary Structure"
 msgstr "Вы не можете удалить журнал, связанный со структурой заработной платы"
-
-#. module: hr_payroll_account
-#. odoo-python
-#: code:addons/hr_payroll_account/models/hr_payroll_account.py:0
-#, python-format
-msgid "You can't create a journal entry for a paid payslip."
-msgstr ""

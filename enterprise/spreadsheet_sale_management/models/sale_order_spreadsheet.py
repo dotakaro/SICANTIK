@@ -10,21 +10,21 @@ SALE_ORDER_LINE_FIELDS = [
     'qty_delivered',
     'qty_invoiced',
     'qty_to_invoice',
-    'product_uom',
+    'product_uom_id',
     'price_unit',
     'price_tax',
     'price_subtotal',
 ]
 
 
-class SpreadsheetSaleOrder(models.Model):
+class SaleOrderSpreadsheet(models.Model):
     _name = 'sale.order.spreadsheet'
-    _inherit = 'spreadsheet.mixin'
+    _inherit = ['spreadsheet.mixin']
     _description = 'Quotation Spreadsheet'
 
     name = fields.Char(required=True, default=lambda self: self.env._('Untitled spreadsheet'))
     company_id = fields.Many2one('res.company', default=lambda self: self.env.company)
-    order_id = fields.Many2one('sale.order')
+    order_id = fields.Many2one('sale.order', index='btree_not_null', ondelete='cascade')
 
     def get_formview_action(self, access_uid=None):
         return self.action_open_spreadsheet()
@@ -46,8 +46,8 @@ class SpreadsheetSaleOrder(models.Model):
             },
         }
 
-    def join_spreadsheet_session(self, access_token=None):
-        data = super().join_spreadsheet_session(access_token)
+    def _get_spreadsheet_metadata(self, access_token=None):
+        data = super()._get_spreadsheet_metadata(access_token)
         data["order_id"] = self.order_id.id
         data["order_display_name"] = self.order_id.display_name
         return data
@@ -122,6 +122,7 @@ class SpreadsheetSaleOrder(models.Model):
         }
         self._dispatch_commands([command, table_command])
 
+    @api.readonly
     @api.model
     def get_spreadsheets(self, domain=(), offset=0, limit=None):
         domain = expression.AND([domain, [("order_id", "=", False)]])
@@ -135,6 +136,3 @@ class SpreadsheetSaleOrder(models.Model):
             'sequence': 20,
             'allow_create': False,
         }
-
-    def _check_access(self, operation):
-        return super()._check_access(operation) or self.order_id._check_access(operation)

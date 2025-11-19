@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
@@ -8,6 +6,7 @@ import { orderByToString } from "@web/search/utils/order_by";
 import { Field } from "@web/views/fields/field";
 import { Record } from "@web/model/record";
 import { useSetupAction } from "@web/search/action_hook";
+import { user } from "@web/core/user";
 
 /**
  * This component is actually a dumbed down list view for our notes.
@@ -22,7 +21,6 @@ export class PayrollDashboardTodo extends Component {
     static props = ["orderBy"];
 
     setup() {
-        this.company = useService("company");
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.state = useState({
@@ -33,6 +31,9 @@ export class PayrollDashboardTodo extends Component {
         this.recordInfo = {
             model: "hr.payroll.note",
             specification: { name: {} },
+        };
+        this.recordHooks = {
+            onRecordChanged: this.onRecordChanged.bind(this),
         };
         this.autofocusInput = useAutofocus({selectAll: true});
         useSetupAction({
@@ -67,7 +68,7 @@ export class PayrollDashboardTodo extends Component {
         const result = await this.orm.create("hr.payroll.note", [
             {
                 name: "Untitled",
-                company_id: this.company.currentCompany.id,
+                company_id: user.activeCompany.id,
                 note: '',
             },
         ]);

@@ -4,7 +4,7 @@
 from odoo import fields, models
 
 
-class TaskStopRunningTimersConfirmation(models.TransientModel):
+class ProjectTaskStopTimersWizard(models.TransientModel):
     _name = 'project.task.stop.timers.wizard'
     _description = 'Task stop running timers confirmation wizard'
 
@@ -14,7 +14,7 @@ class TaskStopRunningTimersConfirmation(models.TransientModel):
         self.line_ids.task_id.action_fsm_validate(stop_running_timers=True)
 
 
-class TaskStopRunningTimersConfirmationLine(models.TransientModel):
+class ProjectTaskStopTimersWizardLine(models.TransientModel):
     _name = 'project.task.stop.timers.wizard.line'
     _description = 'Task stop running timers confirmation wizard line'
 

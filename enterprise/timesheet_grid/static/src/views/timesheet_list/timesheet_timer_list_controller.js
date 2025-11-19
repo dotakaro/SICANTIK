@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { useState, useSubEnv } from "@odoo/owl";
 
 import { ListController } from "@web/views/list/list_controller";
@@ -22,9 +20,8 @@ export class TimesheetTimerListController extends ListController {
         this.timerState.reload = false;
         const dialogProps = super.deleteConfirmationDialogProps;
         if (this.model.root.selection.some((t) => t.data.is_timer_running)) {
-            const oldConfirm = dialogProps.confirm;
             dialogProps.confirm = async () => {
-                await oldConfirm();
+                await this.model.root.deleteRecords();
                 this.timerState.reload = true;
             }
         }

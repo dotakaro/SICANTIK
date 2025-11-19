@@ -1,21 +1,18 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
 import io
-
 from collections import defaultdict
 from datetime import date
+
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import format_date
-from odoo.tools.misc import xlsxwriter
 
 from odoo.addons.l10n_hk_hr_payroll.models.l10n_hk_ird import MONTH_SELECTION
 
 
-class L10nHkManulifeMpf(models.Model):
+class L10n_HkManulifeMpf(models.Model):
     _name = 'l10n_hk.manulife.mpf'
     _description = 'Manulife MPF'
     _order = 'period'
@@ -134,8 +131,8 @@ class L10nHkManulifeMpf(models.Model):
                 'amount_ervc': abs(mapped_total['ERVC']),
                 'surcharge_percentage': line.surcharge_percentage,
                 'amount_surcharge': line.amount_surcharge,
-                'basic_salary': employee.contract_id.wage,
-                'last_date_of_employment': employee.contract_id.date_end.strftime('%m/%d/%Y') if employee.contract_id.date_end and employee.contract_id.date_end <= end_period else '',
+                'basic_salary': employee.version_id.wage,
+                'last_date_of_employment': employee.version_id.date_end.strftime('%m/%d/%Y') if employee.version_id.date_end and employee.version_id.date_end <= end_period else '',
             }
             if not employee_data['member_acount'] and employee_data['hkid']:
                 employee_data['surname'] = ''
@@ -148,7 +145,7 @@ class L10nHkManulifeMpf(models.Model):
             'total_amount_eevc': abs(sum(all_line_values['EEVC'][p.id]['total'] for p in all_payslips)),
             'total_amount_ervc': abs(sum(all_line_values['ERVC'][p.id]['total'] for p in all_payslips)),
             'total_amount_surcharge': sum(self.line_ids.mapped('amount_surcharge')),
-            'total_basic_salary': sum(all_employees.contract_id.mapped('wage')),
+            'total_basic_salary': sum(all_employees.version_id.mapped('wage')),
         }
         return {'data': main_data, 'employees_data': employees_data, 'total_data': total_data}
 
@@ -160,6 +157,7 @@ class L10nHkManulifeMpf(models.Model):
             raise UserError(_('No employees to generate the report for.'))
 
         file = io.BytesIO()
+        import xlsxwriter  # noqa: PLC0415
         workbook = xlsxwriter.Workbook(file, {'in_memory': True})
         worksheet = workbook.add_worksheet()
 
@@ -268,13 +266,14 @@ class L10nHkManulifeMpf(models.Model):
             })
 
 
-class L10nHkManulifeMpfLine(models.Model):
+class L10n_HkManulifeMpfLine(models.Model):
     _name = 'l10n_hk.manulife.mpf.line'
     _description = 'Manulife MPF Line'
 
-    _sql_constraints = [
-        ('unique_employee', 'unique(employee_id, sheet_id)', 'An employee can only have one line per sheet'),
-    ]
+    _unique_employee = models.Constraint(
+        'unique(employee_id, sheet_id)',
+        "An employee can only have one line per sheet",
+    )
 
     employee_id = fields.Many2one('hr.employee', required=True)
     surcharge_percentage = fields.Float('Surcharge Percentage')

@@ -3,7 +3,7 @@
 from odoo import api, models
 
 
-class TaskCustomReport(models.AbstractModel):
+class ReportIndustry_FsmWorksheet_Custom(models.AbstractModel):
     _name = 'report.industry_fsm.worksheet_custom'
     _description = 'Task Worksheet Custom Report'
 

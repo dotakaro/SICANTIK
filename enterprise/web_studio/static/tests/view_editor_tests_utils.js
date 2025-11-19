@@ -1,18 +1,26 @@
-import { Component, useSubEnv, xml } from "@odoo/owl";
 import { getFixture } from "@odoo/hoot";
+import { waitFor } from "@odoo/hoot-dom";
+import { Component, useSubEnv, xml } from "@odoo/owl";
 
+import { getMockEnv } from "@web/../tests/_framework/env_test_helpers";
+import { parseViewProps } from "@web/../tests/_framework/view_test_helpers";
+import {
+    contains,
+    makeMockEnv,
+    MockServer,
+    mountWithCleanup,
+    onRpc,
+} from "@web/../tests/web_test_helpers";
+import { useOwnDebugContext } from "@web/core/debug/debug_context";
 import { MainComponentsContainer } from "@web/core/main_components_container";
 import { registry } from "@web/core/registry";
-import { getMockEnv } from "@web/../tests/_framework/env_test_helpers";
-import { MockServer, mountWithCleanup, makeMockEnv, onRpc } from "@web/../tests/web_test_helpers";
-import { getDefaultConfig } from "@web/views/view";
-import { parseViewProps } from "@web/../tests/_framework/view_test_helpers";
 import { useService } from "@web/core/utils/hooks";
-import { useOwnDebugContext } from "@web/core/debug/debug_context";
+import { getDefaultConfig } from "@web/views/view";
 
-import { useStudioServiceAsReactive } from "@web_studio/studio_service";
-import { ViewEditor } from "@web_studio/client_action/view_editor/view_editor";
+import { registerInlineViewArchs } from "@web/../tests/_framework/mock_server/mock_model";
 import { EditionFlow } from "@web_studio/client_action/editor/edition_flow";
+import { ViewEditor } from "@web_studio/client_action/view_editor/view_editor";
+import { useStudioServiceAsReactive } from "@web_studio/studio_service";
 
 const serviceRegistry = registry.category("services");
 
@@ -53,23 +61,22 @@ class ViewEditorParent extends Component {
 }
 
 /**
- * @param {string} type
+ * @param {Request | { model: string, view_id: number | false }} params
+ * @param {string} viewType
  * @param {string} arch
- * @param {import("@web/../tests/web_test_helpers")["models"]["Model"]} model
  */
-export async function createMockViewResult(type, arch, model) {
-    const { models } = MockServer.current;
-    return {
-        models: Object.fromEntries(
-            Object.entries(models).map(([name, model]) => [name, { fields: model._fields }])
-        ),
-        views: {
-            [type]: {
-                arch,
-                model: model._name,
-            },
-        },
-    };
+export async function editView(params, viewType, arch) {
+    if (params instanceof Request) {
+        ({ params } = await params.json());
+    }
+    const { model: modelName, view_id: viewId } = params;
+    const model = MockServer.env[modelName];
+    registerInlineViewArchs(modelName, {
+        [[viewType, viewId]]: arch,
+    });
+    const result = model.get_views([[viewId || false, viewType]]);
+    result.models[modelName].fields = model.fields_get(); // return all fields
+    return result;
 }
 
 export function disableHookAnimation() {
@@ -80,14 +87,17 @@ export function disableHookAnimation() {
     });
 }
 
-function makeMockRPC() {
-    onRpc("/web_studio/activity_allowed", () => false);
-    onRpc("/web_studio/chatter_allowed", () => false);
+export function handleDefaultStudioRoutes() {
+    onRpc("ir.model", "studio_model_infos", () => ({
+        is_mail_thread: false,
+        is_mail_activity: false,
+        state: "base",
+        record_ids: [1],
+    }));
     onRpc("/web_studio/edit_view", () => {});
     onRpc("/web_studio/edit_view_arch", () => {});
-    onRpc("/web_studio/get_default_value", () => {
-        return { default_value: undefined };
-    });
+    onRpc("/web_studio/get_actions_for_model", () => []);
+    onRpc("/web_studio/get_default_value", () => ({ default_value: undefined }));
     onRpc("/web_studio/get_studio_view_arch", () => ({ studio_view_arch: "" }));
     onRpc("get_approval_spec", ({ args }) => {
         const result = { all_rules: {} };
@@ -104,16 +114,13 @@ export async function mountViewEditor(params) {
     const config = { ...getDefaultConfig(), ...params.config };
     params.viewId = params.viewId || 99999999;
 
-    prepareRegistry();
+    prepareRegistry(params.filterRegistry ?? true);
     const env = params.env || getMockEnv() || (await makeMockEnv({ config }));
 
-    if (params.type && params.arch) {
-        parseViewProps(params);
-        actionToEdit.views = [[params.viewId, params.type]];
-    }
+    params = parseViewProps(params);
+    actionToEdit.views = [[params.viewId, params.type]];
 
-    makeMockRPC();
-
+    handleDefaultStudioRoutes();
     env.services.studio.setParams({
         viewType: params.type,
         editorTab: "views",
@@ -128,16 +135,21 @@ export async function mountViewEditor(params) {
     });
 }
 
-function prepareRegistry() {
+function prepareRegistry(filterRegistry) {
     registry.category("main_components").remove("mail.ChatHub");
     registry.category("main_components").remove("discuss.CallInvitations");
-    registry.category("main_components").remove("bus.connection_alert");
+    registry.category("main_components").remove("bus.ConnectionAlert");
+    serviceRegistry.add("messaging", makeFakeMessagingService());
+    if (!filterRegistry) {
+        return;
+    }
     const REQUIRED_SERVICES = [
         "mail.popout",
         "title",
         "orm",
         "field",
         "name",
+        "http",
         "home_menu",
         "menu",
         "action",
@@ -159,7 +171,6 @@ function prepareRegistry() {
             serviceRegistry.remove(e);
         }
     });
-    serviceRegistry.add("messaging", makeFakeMessagingService());
 }
 
 function makeFakeMessagingService() {
@@ -195,4 +206,17 @@ function makeFakeMessagingService() {
             return service;
         },
     };
+}
+
+export async function openStudio(params = {}) {
+    await contains(".o_main_navbar .o_web_studio_navbar_item button").click();
+    if (params.noEdit) {
+        await contains(".o_menu_sections a").click();
+        await waitFor(".o_web_studio_views");
+    }
+    if (params.report) {
+        await contains(".o_menu_sections a:eq(1)").click();
+        await contains(`.o_kanban_record [data-id="${params.report}"`).click();
+        await waitFor(".o_web_studio_report_editor_manager");
+    }
 }

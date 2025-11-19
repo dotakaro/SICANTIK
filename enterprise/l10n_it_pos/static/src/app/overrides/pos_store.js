@@ -1,6 +1,6 @@
 import { patch } from "@web/core/utils/patch";
-import { PosStore, posService } from "@point_of_sale/app/store/pos_store";
-import { isFiscalPrinterActive, isFiscalPrinterConfigured } from "./helpers/utils";
+import { PosStore, posService } from "@point_of_sale/app/services/pos_store";
+import { isFiscalPrinterActive } from "./helpers/utils";
 
 patch(posService, {
     dependencies: [...posService.dependencies, "epson_fiscal_printer"],
@@ -30,18 +30,35 @@ patch(PosStore.prototype, {
         return context;
     },
     // override
-    async printReceipt() {
+    async printReceipt({
+        basic = false,
+        order = this.getOrder(),
+        printBillActionTriggered = false,
+    } = {}) {
         if (!isFiscalPrinterActive(this.config)) {
             return super.printReceipt(...arguments);
         }
 
-        this.fiscalPrinter.printDuplicateReceipt();
-    },
+        if (!order.nb_print) {
+            const result = order.to_invoice
+                ? await this.fiscalPrinter.printFiscalInvoice()
+                : await this.fiscalPrinter.printFiscalReceipt();
 
-    // EXTENDS 'point_of_sale'
-    prepareProductBaseLineForTaxesComputationExtraValues(product, p = false) {
-        const extraValues = super.prepareProductBaseLineForTaxesComputationExtraValues(product, p);
-        extraValues.l10n_it_epson_printer = isFiscalPrinterConfigured(this.config);
-        return extraValues;
+            if (result.success) {
+                this.data.write("pos.order", [order.id], {
+                    it_fiscal_receipt_number: result.addInfo.fiscalReceiptNumber,
+                    it_fiscal_receipt_date: result.addInfo.fiscalReceiptDate,
+                    it_z_rep_number: result.addInfo.zRepNumber,
+                    //update the number of times the order got printed, handling undefined
+                    nb_print: order.nb_print ? order.nb_print + 1 : 1,
+                });
+                if (this.config.it_fiscal_cash_drawer) {
+                    await this.fiscalPrinter.openCashDrawer();
+                }
+                return true;
+            }
+        } else {
+            this.fiscalPrinter.printDuplicateReceipt();
+        }
     },
 });

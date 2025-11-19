@@ -13,7 +13,7 @@ DR_CREATE_STEP_AUTO = 5000
 DR_CREATE_STEP_MANUAL = 50000
 
 
-class DataCleaningModel(models.Model):
+class Data_CleaningModel(models.Model):
     _name = 'data_cleaning.model'
     _description = 'Cleaning Model'
     _order = 'name'
@@ -37,7 +37,7 @@ class DataCleaningModel(models.Model):
     # User Notifications for Manual clean
     notify_user_ids = fields.Many2many(
         'res.users', string='Notify Users',
-        domain=lambda self: [('groups_id', 'in', self.env.ref('base.group_system').id)],
+        domain=lambda self: [('all_group_ids', 'in', self.env.ref('base.group_system').id)],
         default=lambda self: self.env.user,
         help='List of users to notify when there are new records to clean')
     notify_frequency = fields.Integer(string='Notify', default=1)
@@ -47,9 +47,10 @@ class DataCleaningModel(models.Model):
         ('months', 'Months')], string='Notify Frequency Period', default='weeks')
     last_notification = fields.Datetime(readonly=True)
 
-    _sql_constraints = [
-        ('check_notif_freq', 'CHECK(notify_frequency > 0)', 'The notification frequency should be greater than 0'),
-    ]
+    _check_notif_freq = models.Constraint(
+        'CHECK(notify_frequency > 0)',
+        "The notification frequency should be greater than 0",
+    )
 
     @api.onchange('res_model_id')
     def _compute_name(self):
@@ -220,7 +221,6 @@ class DataCleaningModel(models.Model):
                     )
                 ),
                 model=self._name,
-                notify_author=True,
                 partner_ids=partner_ids,
                 res_id=self.id,
                 subject=self.env._('Data to Clean'),

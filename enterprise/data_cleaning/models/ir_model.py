@@ -27,7 +27,7 @@ class IrModel(models.Model):
          Typically, models like res.partner or crm.lead already has a custom merge action and we do not want to
          enable generic merge action on those models."""
         for model in self:
-            model.hide_merge_action = getattr(self.env[model.model], "_disable_data_merge", False)
+            model.hide_merge_action = getattr(self.env.get(model.model), "_disable_data_merge", False)
 
     @api.depends('ref_merge_ir_act_server_id')
     def _compute_is_merge_enabled(self):
@@ -49,7 +49,7 @@ class IrModel(models.Model):
             'binding_view_types': 'list',
             'state': 'code',
             'code': "action = env['data_merge.record'].action_deduplicates(records)",
-            'groups_id': [(4, self.env.ref('base.group_system').id)]    # only the system admins have the rights on data_merge models.
+            'group_ids': [(4, self.env.ref('base.group_system').id)]    # only the system admins have the rights on data_merge models.
         }
 
         for model in self:

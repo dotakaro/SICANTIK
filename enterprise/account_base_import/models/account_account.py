@@ -4,8 +4,9 @@
 from odoo import _, api, models
 from odoo.exceptions import UserError
 
+
 class AccountAccount(models.Model):
-    _inherit = ["account.account"]
+    _inherit = "account.account"
 
     @api.model
     def load(self, fields, data):

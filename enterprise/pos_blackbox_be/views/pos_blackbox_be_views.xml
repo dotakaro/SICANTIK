@@ -75,6 +75,7 @@
                     <t t-if="record.certified_blackbox_identifier.value">
                         <div class="badge text-bg-info o_kanban_inline_block me-2" t-esc="record.pos_version.value"/>
                         <div class="badge text-bg-info o_kanban_inline_block me-2" t-esc="record.certified_blackbox_identifier.value"/>
+                        <span invisible="not self_ordering_mode == 'kiosk' or not has_active_session" class="text-warning d-block">In order to clock out from the kiosk, make sure to have a kiosk window open.</span>
                     </t>
                 </field>
             </field>
@@ -96,8 +97,8 @@
             <field name="arch" type="xml">
                 <xpath expr="//div[@name='row_scale']" position="after">
                     <div class="row">
-                        <label string="Belgian Fiscal Data Module" for="iface_fiscal_data_module" class="col-lg-4 o_light_label"/>
-                        <field name="iface_fiscal_data_module"/>
+                        <label string="Belgian Fiscal Data Module" for="iface_fiscal_data_module" class="col-lg-5 o_light_label"/>
+                        <field name="iface_fiscal_data_module" placeholder="none"/>
                     </div>
                 </xpath>
             </field>

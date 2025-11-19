@@ -1,10 +1,10 @@
 import io
-import xlsxwriter
+from collections import defaultdict
 
 from odoo import models, _, api
 from odoo.exceptions import UserError
-from odoo.tools import get_quarter_number, format_date
-from collections import defaultdict
+from odoo.tools import format_date
+from odoo.tools.date_utils import get_quarter_number
 
 INCOME_FIELDS = (
     'year', 'period', 'activity_code', 'activity_type', 'activity_group', 'invoice_type', 'income_concept',
@@ -42,7 +42,7 @@ SURCHARGE_TAX_EQUIVALENT = {
 }
 
 
-class GenericTaxReportCustomHandler(models.AbstractModel):
+class AccountGenericTaxReportHandler(models.AbstractModel):
     _inherit = 'account.generic.tax.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -160,7 +160,7 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
         }
         if (not partner.country_id or partner.country_id.code == 'ES') and partner.vat:
             common_line_vals['partner_nif_id'] = partner.vat[2:] if partner.vat.startswith('ES') else partner.vat
-        elif partner.vat and partner.country_id in self.env.ref('base.europe').country_ids:
+        elif partner.vat and 'EU' in partner.country_id.country_group_codes:
             common_line_vals['partner_nif_id'] = partner.vat
             common_line_vals['partner_nif_type'] = "02"
         elif partner.vat:
@@ -354,6 +354,7 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
     def export_libros_de_iva(self, options):
         report = self.env['account.report'].browse(options['report_id'])
         output = io.BytesIO()
+        import xlsxwriter  # noqa: PLC0415
         workbook = xlsxwriter.Workbook(output, {'in_memory': True, 'strings_to_formulas': False})
 
         number_format = workbook.add_format({'num_format': '0.00'})
@@ -376,7 +377,7 @@ class GenericTaxReportCustomHandler(models.AbstractModel):
         }
 
 
-class SpanishLibrosRegistroExportHandler(models.AbstractModel):  # TODO: Remove in master
+class L10n_EsLibrosRegistroExportHandler(models.AbstractModel):  # TODO: Remove in master
     _name = 'l10n_es.libros.registro.export.handler'
-    _inherit = 'account.generic.tax.report.handler'
+    _inherit = ['account.generic.tax.report.handler']
     _description = 'Spanish Libros Registro de IVA'

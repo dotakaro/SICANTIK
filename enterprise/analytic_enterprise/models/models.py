@@ -3,6 +3,7 @@
 
 from odoo import api, fields, models
 
+
 class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
 

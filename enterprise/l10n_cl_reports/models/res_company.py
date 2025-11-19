@@ -4,7 +4,7 @@
 from odoo import models, fields
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = 'res.company'
 
     l10n_cl_report_tasa_ppm = fields.Float(string="PPM rate (%)")

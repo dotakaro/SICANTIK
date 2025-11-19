@@ -3,25 +3,33 @@
 # 	* account_sepa_direct_debit
 # 
 # Translators:
-# 山西清水欧度(QQ:54773801) <54773801@qq.com>, 2024
-# 何彬 <vnsoft.he@gmail.com>, 2024
 # Wil Odoo, 2025
 # Chloe Wang, 2025
-# Raymond Yu <cl_yu@hotmail.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-23 18:45+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Raymond Yu <cl_yu@hotmail.com>, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:22+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Chloe Wang, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: account_sepa_direct_debit
+#: model:ir.actions.report,print_report_name:account_sepa_direct_debit.sdd_mandate_form_report_main
+msgid ""
+"\n"
+"                '%s_sdd_mandate_form_%s' % ((object.partner_id.name).replace(' ', '_'), object.name)\n"
+"            "
+msgstr ""
+"\n"
+"                '%s_sdd_mandate_form_%s' % ((object.partner_id.name).replace(' ', '_'), object.name)\n"
+"            "
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
@@ -32,6 +40,15 @@ msgstr "（如适用）"
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "(optional)"
 msgstr "（可选）"
+
+#. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sepa_direct_debit_mandate_form
+msgid ""
+".\n"
+"                                Make sure the mandate isn't meant for the parent contact."
+msgstr ""
+"。\n"
+"                                请确保授权不是指向母级联络人。"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.view_batch_payment_form_inherit
@@ -84,7 +101,7 @@ msgid ""
 "                        Best regards,\n"
 "                        <t t-if=\"not is_html_empty(user.signature)\" data-o-mail-quote-container=\"1\">\n"
 "                            <br/><br/>\n"
-"                            <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
@@ -92,20 +109,19 @@ msgid ""
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"                        <t t-out=\"object.partner_id.display_name or ''\">Azure Interior</t> 您好！\n"
+"                        <t t-out=\"object.partner_id.display_name or ''\">Azure Interior</t>您好！\n"
 "                        <br/>\n"
 "                        <br/>\n"
-"                        SEPA 只接受欧元付款。有些付款使用其他货币。\n"
+"                        附上您的 SEPA 直接扣账授权委托书，请签名授权 \n"
 "                        <t t-out=\"object.company_id.display_name or ''\">YourCompany</t>\n"
-"                        向您的银行发送指示，以便按照\n"
-"                        <t t-out=\"object.company_id.display_name or ''\">YourCompany</t>\n"
-"                        的指示从您的账户扣款。\n"
-"                       如有任何疑问，欢迎联系我们。\n"
+"                        向您的银行发出指示，要求其按照\n"
+"                        <t t-out=\"object.company_id.display_name or ''\">YourCompany</t>的指示从您的账户中扣款。\n"
+"                        如有任何疑问，请随时联系我们。\n"
 "                        <br/>\n"
-"                        顺祝  安康\n"
+"                        祝好，\n"
 "                        <t t-if=\"not is_html_empty(user.signature)\" data-o-mail-quote-container=\"1\">\n"
 "                            <br/><br/>\n"
-"                            <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                            <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                        </t>\n"
 "                    </p>\n"
 "                </div>\n"
@@ -138,13 +154,6 @@ msgstr "<strong>债权人标识符：</strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid ""
-"<strong>Date and place of signature:</strong> "
-"......................................"
-msgstr "<strong>签字日期和地点：</strong> ......................................"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "<strong>Email:</strong>"
 msgstr "<strong>电子邮箱：</strong>"
 
@@ -160,20 +169,8 @@ msgstr "<strong>授权标识符：</strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid ""
-"<strong>Name of the reference party:</strong> "
-"......................................"
-msgstr "<strong>参考方名称：</strong> ......................................"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
 msgid "<strong>Phone:</strong>"
 msgstr "<strong>电话：</strong>"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid "<strong>Signature:</strong>"
-msgstr "<strong>签名：</strong>"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
@@ -740,6 +737,11 @@ msgid "Could a SDD mandate be used?"
 msgstr "是否可使用SDD授权？"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model,website_form_label:account_sepa_direct_debit.model_res_partner
+msgid "Create a Customer"
+msgstr "创建客户"
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.actions.act_window,help:account_sepa_direct_debit.account_sepa_direct_debit_mandate_tree_act
 msgid "Create a new direct debit customer mandate"
 msgstr "创建新的直接借记客户授权"
@@ -839,7 +841,6 @@ msgstr "Demo@email.com"
 
 #. module: account_sepa_direct_debit
 #: model:ir.actions.act_window,name:account_sepa_direct_debit.account_sepa_direct_debit_mandate_tree_act
-#: model:ir.actions.act_window,name:account_sepa_direct_debit.account_sepa_direct_debit_partner_mandates
 #: model:ir.ui.menu,name:account_sepa_direct_debit.account_sepa_direct_debit_customer_mandates_menu
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sdd_res_partner_view
 msgid "Direct Debit Mandates"
@@ -862,6 +863,16 @@ msgid "Direct debit payments to collect"
 msgstr "待收直接借记付款"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_batch_payment__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_journal__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_method__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_company__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__display_name
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner_bank__display_name
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__display_name
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate_send__display_name
 msgid "Display Name"
@@ -995,6 +1006,16 @@ msgid "IBAN"
 msgstr "IBAN"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_batch_payment__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_journal__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_method__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_company__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_config_settings__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__id
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner_bank__id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate_send__id
 msgid "ID"
@@ -1183,6 +1204,11 @@ msgid "Next Activity Type"
 msgstr "下一活动类型"
 
 #. module: account_sepa_direct_debit
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment_register__no_sdd_mandate_partner_ids
+msgid "No Sdd Mandate Partner"
+msgstr ""
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.actions.act_window,help:account_sepa_direct_debit.action_sdd_payments_to_collect
 msgid "No direct debit payment to collect"
 msgstr "无待收直接借记付款"
@@ -1239,8 +1265,6 @@ msgstr ""
 "                    并发送至银行，以有效获得付款。"
 
 #. module: account_sepa_direct_debit
-#: model:ir.model.fields,help:account_sepa_direct_debit.field_account_bank_statement_line__sdd_mandate_id
-#: model:ir.model.fields,help:account_sepa_direct_debit.field_account_move__sdd_mandate_id
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_account_payment__sdd_mandate_id
 msgid ""
 "Once this invoice has been paid with Direct Debit, contains the mandate that"
@@ -1269,6 +1293,10 @@ msgstr "只有处于草案状态的任务才能删除。"
 
 #. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_payment_register_form_inherit_account_sepa_direct_debit
+msgid "Oops! No valid SEPA mandate for the following partner(s):"
+msgstr ""
+
+#. module: account_sepa_direct_debit
 #: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_account_payment_form
 msgid "Oops! No valid SEPA mandate for this customer."
 msgstr "哎呀！该客户没有有效单一欧元支付区（SEPA）授权。"
@@ -1324,15 +1352,21 @@ msgid "Paid via direct debit"
 msgstr "通过直接借记付款"
 
 #. module: account_sepa_direct_debit
-#: model:ir.model,name:account_sepa_direct_debit.model_account_partial_reconcile
-msgid "Partial Reconcile"
-msgstr "部分对账"
+#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_sdd_mandate__partner_parent_id
+msgid "Parent Partner"
+msgstr ""
 
 #. module: account_sepa_direct_debit
 #. odoo-python
 #: code:addons/account_sepa_direct_debit/wizard/sdd_mandate_send.py:0
 msgid "Partner should have an email address."
 msgstr "合作伙伴应有电子邮件地址。"
+
+#. module: account_sepa_direct_debit
+#. odoo-python
+#: code:addons/account_sepa_direct_debit/models/sdd_mandate.py:0
+msgid "Partner's Parent"
+msgstr ""
 
 #. module: account_sepa_direct_debit
 #: model:ir.model,name:account_sepa_direct_debit.model_account_payment_register
@@ -1596,8 +1630,6 @@ msgid "Sdd Has Usable Mandate"
 msgstr "单一欧元支付区直接借记（SDD）有可用授权"
 
 #. module: account_sepa_direct_debit
-#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_bank_statement_line__sdd_mandate_id
-#: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_move__sdd_mandate_id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_account_payment__sdd_mandate_id
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_partner__sdd_mandate_ids
 #: model:ir.model.fields,field_description:account_sepa_direct_debit.field_res_users__sdd_mandate_ids
@@ -1631,11 +1663,6 @@ msgstr "已发送给客户"
 #: model:mail.template,description:account_sepa_direct_debit.email_template_sdd_pre_notification
 msgid "Sent to the customer to indicate their account will be charged"
 msgstr "发送给客户，以表明他们的帐户将被收取费用"
-
-#. module: account_sepa_direct_debit
-#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.sdd_mandate_form
-msgid "Signature"
-msgstr "签名"
 
 #. module: account_sepa_direct_debit
 #. odoo-python
@@ -1785,6 +1812,11 @@ msgid ""
 "The payment must be linked to a SEPA Direct Debit mandate in order to "
 "generate a Direct Debit XML."
 msgstr "付款须链接至单一欧元支付区（SEPA）直接借记授权，以生成直接借记XML。"
+
+#. module: account_sepa_direct_debit
+#: model_terms:ir.ui.view,arch_db:account_sepa_direct_debit.account_sepa_direct_debit_mandate_form
+msgid "The selected customer is a child of"
+msgstr ""
 
 #. module: account_sepa_direct_debit
 #: model:ir.model.fields,help:account_sepa_direct_debit.field_sdd_mandate__name

@@ -4,15 +4,14 @@
 # 
 # Translators:
 # Wil Odoo, 2025
-# Tony Ng, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-16 20:44+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Tony Ng, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Chinese (Taiwan) (https://app.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -353,6 +352,12 @@ msgid "Allows us to filter relevant Campaigns"
 msgstr "允許我們過濾相關行銷活動"
 
 #. module: marketing_automation
+#. odoo-python
+#: code:addons/marketing_automation/wizard/marketing_campaign_test.py:0
+msgid "Another test has been launched for this participant"
+msgstr ""
+
+#. module: marketing_automation
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__domain
 msgid "Applied Filter"
 msgstr "已套用的篩選"
@@ -590,7 +595,7 @@ msgstr "用於了解何時確定和發送優勝郵件的日期"
 #: model:ir.model.fields.selection,name:marketing_automation.selection__marketing_activity__interval_type__days
 #: model:ir.model.fields.selection,name:marketing_automation.selection__marketing_activity__validity_duration_type__days
 msgid "Days"
-msgstr "天"
+msgstr "天內"
 
 #. module: marketing_automation
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__interval_type
@@ -630,11 +635,17 @@ msgid "Discard"
 msgstr "捨棄"
 
 #. module: marketing_automation
+#: model:ir.model.fields,field_description:marketing_automation.field_mail_compose_message__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_mailing__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_trace__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_trace_report__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign_test__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_participant__display_name
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_trace__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_utm_campaign__display_name
+#: model:ir.model.fields,field_description:marketing_automation.field_utm_source__display_name
 msgid "Display Name"
 msgstr "顯示名稱"
 
@@ -784,11 +795,17 @@ msgid "Hours"
 msgstr "小時"
 
 #. module: marketing_automation
+#: model:ir.model.fields,field_description:marketing_automation.field_mail_compose_message__id
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_mailing__id
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_trace__id
+#: model:ir.model.fields,field_description:marketing_automation.field_mailing_trace_report__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_campaign_test__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_participant__id
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_trace__id
+#: model:ir.model.fields,field_description:marketing_automation.field_utm_campaign__id
+#: model:ir.model.fields,field_description:marketing_automation.field_utm_source__id
 msgid "ID"
 msgstr "識別號"
 
@@ -991,8 +1008,8 @@ msgid "Marketing Activity"
 msgstr "推廣活動"
 
 #. module: marketing_automation
-#: model:ir.module.category,name:marketing_automation.module_marketing_automation_category
 #: model:ir.ui.menu,name:marketing_automation.marketing_automation_menu
+#: model:res.groups.privilege,name:marketing_automation.res_groups_privilege_automation
 msgid "Marketing Automation"
 msgstr "自動化推廣"
 
@@ -1089,7 +1106,7 @@ msgstr "模型"
 #. module: marketing_automation
 #: model_terms:ir.ui.view,arch_db:marketing_automation.ir_model_view_tree_marketing
 msgid "Model Description"
-msgstr "模型說明"
+msgstr "模型描述"
 
 #. module: marketing_automation
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__model_name
@@ -1577,8 +1594,8 @@ msgstr "狀態"
 
 #. module: marketing_automation
 #: model_terms:ir.ui.view,arch_db:marketing_automation.marketing_participant_view_form
-msgid "State: #{record.state.raw_value}"
-msgstr "狀態: #{record.state.raw_value}"
+msgid "State: {{0}}"
+msgstr "狀態：{{0}}"
 
 #. module: marketing_automation
 #: model:ir.model.fields,field_description:marketing_automation.field_marketing_activity__statistics_graph_data
@@ -1781,10 +1798,9 @@ msgid ""
 "                For model 'Customers', select email field here if you don't\n"
 "                want to process records which have the same email address"
 msgstr ""
-"用於根據模型欄位，避免出現重複項目。\n"
-"例如：\n"
-"                對於模型「客戶」，若不想處理電郵地址相同的記錄，\n"
-"                請在此處選擇電郵欄位。"
+"用於根據模型欄位避免重複。\n"
+"例如，\n"
+"對於模型「客戶」，如果您不想處理具有相同電子信件地址的記錄，則在此處選擇電子信件欄位"
 
 #. module: marketing_automation
 #: model:res.groups,name:marketing_automation.group_marketing_automation_user
@@ -1947,6 +1963,12 @@ msgstr "例如，電子商務提議"
 #: model_terms:ir.ui.view,arch_db:marketing_automation.marketing_campaign_view_form
 msgid "e.g. eCommerce Offers Plan"
 msgstr "例：電子商務優惠計劃"
+
+#. module: marketing_automation
+#. odoo-python
+#: code:addons/marketing_automation/models/marketing_campaign.py:0
+msgid "email"
+msgstr "電子郵件"
 
 #. module: marketing_automation
 #: model_terms:ir.ui.view,arch_db:marketing_automation.marketing_activity_summary_template

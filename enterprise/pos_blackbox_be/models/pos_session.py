@@ -5,11 +5,10 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from itertools import groupby
 from collections import Counter
-from odoo.http import request
-from odoo.tools import SQL
+from odoo.service.common import exp_version
 
 
-class pos_session(models.Model):
+class PosSession(models.Model):
     _inherit = "pos.session"
 
     cash_box_opening_number = fields.Integer(
@@ -40,29 +39,32 @@ class pos_session(models.Model):
         help="Sum of the amount of the corrections during the session"
     )
 
-    @api.model
-    def _load_pos_data_fields(self, config_id):
-        result = super()._load_pos_data_fields(config_id)
-        config_id = self.env["pos.config"].browse(config_id)
-        if config_id.iface_fiscal_data_module:
-            result += ["users_clocked_ids", "employees_clocked_ids"]
-        return result
+    def _post_read_pos_data(self, data):
+        if self.config_id.certified_blackbox_identifier or \
+            (self.env.context.get("config_id") and self.env['pos.config'].browse(self.env.context.get("config_id")).certified_blackbox_identifier):
+            data[0]["_product_product_work_in"] = self.env.ref("pos_blackbox_be.product_product_work_in").id
+            data[0]["_product_product_work_out"] = self.env.ref("pos_blackbox_be.product_product_work_out").id
+            data[0]["_users_clocked_ids"] = self.users_clocked_ids.ids
+            data[0]["_employees_clocked_ids"] = self.employees_clocked_ids.ids
+        return super()._post_read_pos_data(data)
 
-    def _load_pos_data(self, data):
-        response = super()._load_pos_data(data)
-        if self.config_id.iface_fiscal_data_module:
-            response['data'][0]["_product_product_work_in"] = self.env.ref("pos_blackbox_be.product_product_work_in").id
-            response['data'][0]["_product_product_work_out"] = self.env.ref("pos_blackbox_be.product_product_work_out").id
-        return response
+    def _post_read_pos_self_data(self, data):
+        if (self.config_id.certified_blackbox_identifier or
+            (self.env.context.get("config_id") and self.env['pos.config'].browse(self.env.context.get("config_id")).certified_blackbox_identifier)) and \
+                len(data) > 0:
+            data[0]['_server_version'] = exp_version()
+            data[0]["_product_product_work_in"] = self.env.ref("pos_blackbox_be.product_product_work_in").id
+            data[0]["_product_product_work_out"] = self.env.ref("pos_blackbox_be.product_product_work_out").id
+        return super()._post_read_pos_self_data(data)
 
-    def load_data(self, models_to_load, only_data=False):
-        response = super().load_data(models_to_load, only_data)
+    def load_data(self, models_to_load):
+        response = super().load_data(models_to_load)
         if self.config_id.iface_fiscal_data_module and self.config_id.module_pos_hr:
-            employees = response['hr.employee']['data']
+            employees = response['hr.employee']
             employee_ids = [employee['id'] for employee in employees]
             employees_insz_or_bis_number = self.env['hr.employee'].sudo().browse(employee_ids).read(['insz_or_bis_number'])
             insz_or_bis_number_per_employee_id = {employee['id']: employee['insz_or_bis_number'] for employee in employees_insz_or_bis_number}
-            response['pos.session']['data'][0]['_employee_insz_or_bis_number'] = insz_or_bis_number_per_employee_id
+            response['pos.session'][0]['_employee_insz_or_bis_number'] = insz_or_bis_number_per_employee_id
         return response
 
     @api.depends("order_ids")
@@ -71,122 +73,73 @@ class pos_session(models.Model):
             rec.amount_of_vat_tickets = len(rec.order_ids)
 
     def set_opening_control(self, cashbox_value: int, notes: str):
-        self._log_ip(None)
+        self.env['pos.blackbox.log.ip']._log_ip(self.config_id, None)
         super().set_opening_control(cashbox_value, notes)
-
-    def _log_ip(self, ip):
-        # due to an error in the test when pos_blackbox_be is installed,
-        # ip is now None and we check the ip in this method instead.
-        # in the test, the request is unbound, so the ip can not be retrieved
-        # from the request.
-
-        if not request:
-            return
-        ip = request.geoip.ip
-        self.env.cr.execute(SQL("""CREATE TABLE IF NOT EXISTS pos_blackbox_log_ip (
-            ip varchar UNIQUE
-        );"""))
-
-        # insert IP or check that IP is not certified
-        if bool(self.config_id.certified_blackbox_identifier):
-            self.env.cr.execute(SQL("""insert into pos_blackbox_log_ip (ip) values (%(ip)s) on conflict do nothing""", ip=ip))
-        else:
-            certified_ips = self.env.execute_query(SQL("""select count(1) from pos_blackbox_log_ip where ip=%s""", ip))
-            if certified_ips[0][0]:
-                raise UserError(_("Fiscal Data Module Error. You cannot open an uncertified Point of Sale with this device."))
-
-    def get_user_session_work_status(self, user_id):
-        return ((self.config_id.module_pos_hr and user_id in self.employees_clocked_ids.ids) or
-            (not self.config_id.module_pos_hr and user_id in self.users_clocked_ids.ids))
 
     def increase_cash_box_opening_counter(self):
         self.cash_box_opening_number += 1
 
     def increase_correction_counter(self, amount):
         self.correction_number += 1
-        self.correction_amount += round(amount, self.currency_id.decimal_places)
+        self.correction_amount += self.currency_id.round(amount)
 
-    def set_user_session_work_status(self, user_id, status):
+    def set_user_session_work_status(self, user_id, status, all_insz):
         context = (
             "employees_clocked_ids"
             if self.config_id.module_pos_hr
             else "users_clocked_ids"
         )
-        if status:
+        if all_insz:
+            self.write({context: [(5,)]})
+        elif status:
             self.write({context: [(4, user_id)]})
         else:
             self.write({context: [(3, user_id)]})
-        return self[context].ids
-
-    def _get_sequence_number(self):
-        if self.state == "closed":
-            return self.env["ir.sequence"].next_by_code(
-                "report.point_of_sale.report_saledetails.sequenceZUser"
-            )
-        return self.env["ir.sequence"].next_by_code(
-            "report.point_of_sale.report_saledetails.sequenceXUser"
-        )
+        self.config_id._notify("CLOCKING", {
+            'session_id': self.id,
+            'data': {
+                'pos.session': self._read_pos_record(self.id, self.config_id.id),
+            }
+        })
 
     def _get_user_report_data(self):
-        def sorted_key_insz(order):
-            order.ensure_one()
-            if order.employee_id:
-                insz = order.sudo().employee_id.insz_or_bis_number
-            else:
-                insz = order.user_id.insz_or_bis_number
-            return [insz, order.date_order]
+        data = []
 
-        def groupby_key_insz(order):
-            if order.employee_id:
-                insz = order.sudo().employee_id.insz_or_bis_number
-            else:
-                insz = order.user_id.insz_or_bis_number
-            return [insz]
+        orders = self.order_ids[::-1]  # orders are sorted by date_order asc and we want date_order desc, then it needs to be filtered by user_id and employee_id
+        orders = orders.sorted(lambda order: order.employee_id.id or order.user_id.id)  # if one order has an employee id, every order should have one. Otherwise, no orders has an employee id.
 
-        data = {}
-        if not self.config_id.certified_blackbox_identifier:
-            return data
-
-        currency = self.currency_id
-
-        work_in = self.env.ref("pos_blackbox_be.product_product_work_in").id
-        work_out = self.env.ref("pos_blackbox_be.product_product_work_out").id
-
-        for k, g in groupby(sorted(self.order_ids, key=sorted_key_insz), key=groupby_key_insz):
-            i = 0
-            insz = k[0]
-            data[insz] = []
+        for k, g in groupby(orders, lambda order: order.employee_id or order.user_id):
+            insz = k.sudo().insz_or_bis_number
             for order in g:
-                if order.lines and order.lines[0].product_id.id == work_in:
-                    data[insz].append({
-                        'login': order.employee_id.name if order.employee_id else order.user_id.name,
-                        'insz_or_bis_number': order.sudo().employee_id.insz_or_bis_number if order.employee_id else order.user_id.insz_or_bis_number,
-                        'revenue': 0,
-                        'revenue_per_category': Counter(),
-                        'first_ticket_time': order.date_order,
-                        'last_ticket_time': False,
-                        'fdmIdentifier': order.config_id.certified_blackbox_identifier,
-                        'cash_rounding_applied': 0,
-                    })
-
-                data[insz][i]['revenue'] += order.amount_paid
-                data[insz][i]['cash_rounding_applied'] += round(order.amount_total - order.amount_paid, currency.decimal_places)
-                total_sold_per_category = {}
-                for line in order.lines:
-                    category_names = line.product_id.pos_categ_ids.mapped('name') or ["None"]
-                    for category_name in category_names:
+                if order.is_clock:
+                    if order.lines[0].product_id.id == self.env.ref('pos_blackbox_be.product_product_work_in').id:
+                        data.append({
+                            'login': k.name,
+                            'insz_or_bis_number': insz,
+                            'revenue': 0,
+                            'revenue_per_category': Counter(),
+                            'first_ticket_time': order.date_order,
+                            'last_ticket_time': False,
+                            'fdmIdentifier': self.config_id.certified_blackbox_identifier,
+                            'cash_rounding_applied': 0,
+                        })
+                    else:
+                        data[-1]['last_ticket_time'] = order.date_order
+                elif len(data) > 0 and not data[-1]['last_ticket_time']:
+                    data[-1]['revenue'] += order.amount_paid
+                    data[-1]['cash_rounding_applied'] += self.currency_id.round(order.amount_total - order.amount_paid)
+                    total_sold_per_category = {}
+                    for line in order.lines:
+                        category_name = line.product_id.pos_categ_ids[0].name if len(line.product_id.pos_categ_ids) > 0 else "None"
                         if category_name not in total_sold_per_category:
                             total_sold_per_category[category_name] = 0
-                        total_sold_per_category[category_name] += round(line.price_subtotal_incl, currency.decimal_places)
+                        total_sold_per_category[category_name] += self.currency_id.round(line.price_subtotal_incl)
 
-                data[insz][i]['revenue_per_category'].update(Counter(total_sold_per_category))
+                    data[-1]['revenue_per_category'].update(Counter(total_sold_per_category))
 
-                if order.lines and order.lines[0].product_id.id == work_out:
-                    data[insz][i]['last_ticket_time'] = order.date_order
-                    i = i + 1
-        for user in data.values():
-            for session in user:
-                session['revenue_per_category'] = list(session['revenue_per_category'].items())
+        for info in data:
+            info['revenue_per_category'] = list(info['revenue_per_category'].items())
+
         return data
 
     def action_report_journal_file(self):
@@ -206,10 +159,10 @@ class pos_session(models.Model):
             amount_total = order['amount_total']
             if amount_total < 0:
                 self.pro_forma_refund_number += 1
-                self.pro_forma_refund_amount += round(amount_total, self.currency_id.decimal_places)
+                self.pro_forma_refund_amount += self.currency_id.round(amount_total)
             else:
                 self.pro_forma_sales_number += 1
-                self.pro_forma_sales_amount += round(amount_total, self.currency_id.decimal_places)
+                self.pro_forma_sales_amount += self.currency_id.round(amount_total)
 
     def get_total_discount_positive_negative(self, positive):
         order_ids = self.order_ids.ids
@@ -224,7 +177,7 @@ class pos_session(models.Model):
             for line in orderlines
         )
 
-        return round(amount, self.currency_id.decimal_places)
+        return self.currency_id.round(amount)
 
     def check_everyone_is_clocked_out(self):
         if (
@@ -233,3 +186,13 @@ class pos_session(models.Model):
             not self.config_id.module_pos_hr and len(self.users_clocked_ids.ids) > 0
         ):
             raise UserError(_("You cannot close the POS with employees still clocked in. Please clock them out first."))
+
+    def get_insz_clocked(self):
+        insz_map = {}
+        if self.config_id.module_pos_hr:
+            for employee in self.employees_clocked_ids:
+                insz_map[employee.id] = employee.sudo().insz_or_bis_number
+        else:
+            for user in self.users_clocked_ids:
+                insz_map[user.id] = user.sudo().insz_or_bis_number
+        return insz_map

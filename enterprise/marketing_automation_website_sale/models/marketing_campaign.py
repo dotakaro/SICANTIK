@@ -1,3 +1,6 @@
+from datetime import date
+
+from dateutil.relativedelta import relativedelta
 from markupsafe import Markup
 
 from odoo import api, models, _
@@ -13,6 +16,12 @@ class MarketingCampaign(models.Model):
             'sales': {
                 'label': _("eCommerce"),
                 'templates': {
+                    'anniversary': {
+                        'title': _('Anniversary Discount'),
+                        'description': _('Celebrate contacts that registered one year ago.'),
+                        'icon': '/marketing_automation_website_sale/static/img/campaign_icons/cake.svg',
+                        'function': '_get_marketing_template_anniversary',
+                    },
                     'purchase_followup': {
                         'title': _('Purchase Follow-up'),
                         'description': _('Send an email to customers that bought a specific product after their purchase.'),
@@ -29,6 +38,86 @@ class MarketingCampaign(models.Model):
             }
         })
         return campaign_templates_info
+
+    def _get_marketing_template_anniversary(self):
+        anniversary_mailing_template = self.env.ref(
+            'marketing_automation_website_sale.mailing_anniversary_arch',
+            raise_if_not_found=False,
+        )
+        anniversary_arch = self.env['ir.ui.view']._render_template(
+            anniversary_mailing_template.id,
+        ) if anniversary_mailing_template else ''
+
+        one_year_ago = date.today() - relativedelta(years=1)
+        almost_one_year = one_year_ago + relativedelta(days=1)
+
+        domain = [
+            '&',
+            ('create_date', '>=', one_year_ago.strftime('%Y-%m-%d')),
+            ('create_date', '<', almost_one_year.strftime('%Y-%m-%d')),
+        ]
+
+        campaign = self.env['marketing.campaign'].create({
+            'domain': repr(domain),
+            'model_id': self.env['ir.model']._get_id('res.partner'),
+            'name': _('Anniversary Discount'),
+        })
+        anniversary_mailing = self.env['mailing.mailing'].create({
+            'body_arch': anniversary_arch,
+            'body_html': anniversary_arch,
+            'mailing_model_id': self.env['ir.model']._get_id('res.partner'),
+            'mailing_type': 'mail',
+            'preview': _('✨ We have a surprise for you ✨'),
+            'reply_to_mode': 'update',
+            'subject': _('Happy non-birthday!'),
+            'use_in_marketing_automation': True,
+        })
+        # Add a partner tag to the participants of any instance of this campaign
+        anniversary_tag = self.env.ref(
+            'marketing_automation_website_sale.res_partner_category_anniversary_discount_recipient',
+            raise_if_not_found=False
+        )
+        if not anniversary_tag:
+            anniversary_tag = self.env['res.partner.category'].create({
+                'name': _("Anniversary Discount Coupon Recipient"),
+            })
+            self.env['ir.model.data'].create({
+                'module': 'marketing_automation_website_sale',
+                'name': 'res_partner_category_anniversary_discount_recipient',
+                'model': anniversary_tag._name,
+                'res_id': anniversary_tag.id,
+            })
+        server_action = self.env['ir.actions.server'].create({
+            'evaluation_type': 'value',
+            'model_id': self.env['ir.model']._get_id('res.partner'),
+            'state': 'object_write',
+            'name': _('Add Coupon Recipient Tag'),
+            'resource_ref': f'res.partner.category,{anniversary_tag.id}',
+            'update_m2m_operation': 'add',
+            'update_path': 'category_id',
+        })
+        self.env['marketing.activity'].create({
+            'activity_domain': '[]',
+            'activity_type': 'email',
+            'campaign_id': campaign.id,
+            'interval_type': 'days',
+            'interval_number': 0,
+            'mass_mailing_id': anniversary_mailing.id,
+            'name': _('Send Anniversary Email'),
+            'trigger_type': 'begin',
+            'child_ids': [
+                (0, 0, {
+                    'activity_type': 'action',
+                    'campaign_id': campaign.id,
+                    'interval_type': 'hours',
+                    'interval_number': 8,
+                    'name': _('Tag User With Promotion'),
+                    'server_action_id': server_action.id,
+                    'trigger_type': 'mail_open',
+                }),
+            ]
+        })
+        return campaign
 
     def _get_marketing_template_purchase_followup(self):
         campaign = self.env['marketing.campaign'].create({

@@ -4,7 +4,7 @@
 {
     'name': 'Product Lifecycle Management (PLM)',
     'version': '1.0',
-    'category': 'Manufacturing/Product Lifecycle Management (PLM)',
+    'category': 'Supply Chain/Product Lifecycle Management (PLM)',
     'sequence': 155,
     'summary': """Manage engineering change orders on products, bills of material""",
     'website': 'https://www.odoo.com/app/plm',
@@ -20,7 +20,6 @@ Product Life Management
     'data': [
         'security/mrp_plm.xml',
         'security/ir.model.access.csv',
-        'data/mail_activity_type_data.xml',
         'data/mrp_data.xml',
         'views/mrp_bom_views.xml',
         'views/mrp_document_views.xml',
@@ -33,6 +32,7 @@ Product Life Management
         'data/mrp_demo.xml',
     ],
     'application': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

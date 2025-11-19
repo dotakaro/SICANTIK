@@ -4,6 +4,7 @@
 from odoo import api, models, _
 from odoo.exceptions import UserError
 
+
 class IrAttachment(models.Model):
     _inherit = 'ir.attachment'
 

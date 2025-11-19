@@ -204,7 +204,7 @@ class AppointmentUITest(AppointmentUICommon):
             'search_default_appointment_type_id': appointment_types[1].id,
             'default_mode': 'month',
             'default_partner_ids': [],
-            'default_resource_total_capacity_reserved': 1,
+            'default_total_capacity_reserved': 1,
             'default_start_date': now,
             'initial_date': datetime(2022, 3, 1),
         }]
@@ -274,7 +274,7 @@ class AppointmentUITest(AppointmentUICommon):
             url = f"/appointment/{appointment.id}/submit"
             res = self.url_open(url, data=appointment_data)
             self.assertEqual(res.status_code, 200, "Response should = OK")
-            event = CalendarEvent.search([('appointment_type_id', '=', appointment.id), ('start', '=', new_appt_datetime.astimezone(pytz.utc))])
+            event = CalendarEvent.search([('appointment_type_id', '=', appointment.id), ('start', '=', new_appt_datetime.astimezone(pytz.utc).replace(tzinfo=None))])
             self.assertIn(event.access_token, res.url)
             with self.subTest(expect_discuss=expect_discuss, access_token=event.access_token):
                 if expect_discuss:
@@ -297,7 +297,7 @@ class AppointmentUITest(AppointmentUICommon):
         }])
         self.apt_type_resource.sudo().write({
             "appointment_manual_confirmation": True,
-            "resource_manual_confirmation_percentage": 0.5,  # Set Manual Confirmation at 50%
+            "manual_confirmation_percentage": 0.5,  # Set Manual Confirmation at 50%
         })
         appointment_data = {
             "asked_capacity": 4,
@@ -319,7 +319,7 @@ class AppointmentUITest(AppointmentUICommon):
         self.assertEqual(meeting.appointment_status, "request")
         self.assertEqual(meeting.attendee_ids.state, "accepted",
             "Crossing over the manual confirmation percentage should confirm the attendees immediately.")
-        self.assertEqual(meeting.resource_total_capacity_reserved, 4)
+        self.assertEqual(meeting.total_capacity_reserved, 4)
 
     @freeze_time('2022-02-14')
     @users('apt_manager')
@@ -355,9 +355,10 @@ class AppointmentUITest(AppointmentUICommon):
     def test_get_appointment_type_page_view(self):
         """ Test if the appointment_type_page always shows available slots if there are some. """
         now = self.reference_monday
+        user_admin = self.env.ref('base.user_admin')
         slot_time = now.replace(hour=9, minute=0, second=0, microsecond=0) + timedelta(days=1)
 
-        staff_users = self.user_employee | self.user_admin
+        staff_users = self.std_user | user_admin
         appointment_type = self.env['appointment.type'].create([{
             'name': 'Type Test Appointment View',
             'schedule_based_on': 'users',

@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import pytz
 from calendar import monthrange
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 
 from odoo import api, fields, models, _
-from odoo.tools import get_timedelta
+from odoo.tools.date_utils import get_timedelta
 from odoo.exceptions import ValidationError
 
 
@@ -29,10 +28,14 @@ class PlanningRecurrency(models.Model):
     last_generated_end_datetime = fields.Datetime(readonly=True, export_string_translation=False)
     company_id = fields.Many2one('res.company', string="Company", readonly=True, required=True, default=lambda self: self.env.company)
 
-    _sql_constraints = [
-        ('check_repeat_interval_positive', 'CHECK(repeat_interval >= 1)', 'The recurrence should be greater than 0.'),
-        ('check_until_limit', "CHECK((repeat_type = 'until' AND repeat_until IS NOT NULL) OR (repeat_type != 'until'))", 'A recurrence repeating itself until a certain date must have its limit set'),
-    ]
+    _check_repeat_interval_positive = models.Constraint(
+        'CHECK(repeat_interval >= 1)',
+        "The recurrence should be greater than 0.",
+    )
+    _check_until_limit = models.Constraint(
+        "CHECK((repeat_type = 'until' AND repeat_until IS NOT NULL) OR (repeat_type != 'until'))",
+        "A recurrence repeating itself until a certain date must have its limit set",
+    )
 
     @api.constrains('repeat_number', 'repeat_type')
     def _check_repeat_number(self):
@@ -225,4 +228,13 @@ class PlanningRecurrency(models.Model):
         if we plan a shift on 1/1/25 to repeat weekly until 1/4/25 but the resource's contract ends in 1/3/25, we will only repeat the
         slot until 1/3/25 and not until 1/4/25. This method should thus return the detatime 1/3/25 23:59:59.
         """
-        return datetime.max
+        res = datetime.max
+        sorted_slots = self.slot_ids.sorted('end_datetime')
+        initial_slot, last_slot = sorted_slots[0], sorted_slots[-1]
+        end_contract = last_slot.employee_id.sudo().version_id.contract_date_end
+        end_contract = datetime.combine(end_contract, time.max) if end_contract else res
+        # If the initial slot that we are repeating is planned after the end of the resource contract, we generate the slots
+        # on out-of-contract dates normally.
+        if initial_slot.start_datetime > end_contract:
+            return res
+        return min(end_contract, res)

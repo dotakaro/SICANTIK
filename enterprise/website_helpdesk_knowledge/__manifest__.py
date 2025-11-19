@@ -4,7 +4,7 @@
 {
     'name': 'Helpdesk Knowledge',
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Website/Website',
     'summary': 'Helpdesk integration with knowledge',
     'depends': [
         'website_helpdesk',
@@ -19,6 +19,7 @@ Helpdesk integration with knowledge
         'data/knowledge_data.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_tests': [

@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { useViewButtons } from "@web/views/view_button/view_button_hook";
 import { useBus } from "@web/core/utils/hooks";
@@ -69,9 +67,9 @@ export class WorkorderFormController extends FormController {
                     const res = await update(...args);
                     this.props.onRecordChanged(root);
                     return res;
-                }
+                };
                 return res;
-            }
+            };
         }
     }
 }

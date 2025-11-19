@@ -3,7 +3,7 @@
 
 {
     'name': "Employees cost registration on production",
-    'category': "Hidden",
+    'category': "Supply Chain/Manufacturing",
     'summary': 'Analytic cost of employee work in manufacturing',
 
     'description': """ """,
@@ -12,5 +12,6 @@
 
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

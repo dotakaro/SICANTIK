@@ -64,7 +64,7 @@ class TestDeliveryUSPS(TransactionCase):
     def test_01_usps_basic_us_domestic_flow(self):
         sol_vals = {'product_id': self.iPadMini.id,
                     'name': "[A1232] Large Cabinet",
-                    'product_uom': self.uom_unit.id,
+                    'product_uom_id': self.uom_unit.id,
                     'product_uom_qty': 1.0,
                     'price_unit': self.iPadMini.lst_price}
 
@@ -102,7 +102,7 @@ class TestDeliveryUSPS(TransactionCase):
     def test_02_usps_basic_us_international_flow(self):
         sol_vals = {'product_id': self.iPadMini.id,
                     'name': "[A1232] Large Cabinet",
-                    'product_uom': self.uom_unit.id,
+                    'product_uom_id': self.uom_unit.id,
                     'product_uom_qty': 1.0,
                     'price_unit': self.iPadMini.lst_price}
 
@@ -141,14 +141,14 @@ class TestDeliveryUSPS(TransactionCase):
         sol_1_vals = {
             'product_id': self.iPadMini.id,
             'name': "[A1232] Large Cabinet",
-            'product_uom': self.uom_unit.id,
+            'product_uom_id': self.uom_unit.id,
             'product_uom_qty': 1.0,
             'price_unit': self.iPadMini.lst_price
         }
         sol_2_vals = {
             'product_id': self.large_desk.id,
             'name': "[A1233] Large Desk",
-            'product_uom': self.uom_unit.id,
+            'product_uom_id': self.uom_unit.id,
             'product_uom_qty': 1.0,
             'price_unit': self.large_desk.lst_price
         }

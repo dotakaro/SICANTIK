@@ -3,24 +3,28 @@
 # 	* frontdesk
 # 
 # Translators:
-# 何彬 <vnsoft.he@gmail.com>, 2024
-# Raymond Yu <cl_yu@hotmail.com>, 2024
-# Chloe Wang, 2025
 # Wil Odoo, 2025
+# Chloe Wang, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:51+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Chloe Wang, 2025\n"
 "Language-Team: Chinese (China) (https://app.transifex.com/odoo/teams/41243/zh_CN/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid " - Manager: %(manager_name)s"
+msgstr " - 经理：%(manager_name)s"
 
 #. module: frontdesk
 #. odoo-python
@@ -42,6 +46,12 @@ msgstr "%(station)s签到: %(visitor)s与%(host)s会面"
 
 #. module: frontdesk
 #. odoo-python
+#: code:addons/frontdesk/models/frontdesk_frontdesk.py:0
+msgid "%s (copy)"
+msgstr "%s（副本）"
+
+#. module: frontdesk
+#. odoo-python
 #: code:addons/frontdesk/models/frontdesk_visitor.py:0
 msgid "%s just checked-in."
 msgstr "%s 刚刚签到。"
@@ -52,24 +62,34 @@ msgid "'Badge - %s' % (object.name).replace('/', '')"
 msgstr "'Badge - %s' % (object.name).replace('/', '')"
 
 #. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid ",<br/>I hope this message finds you well. This is to inform you that"
+msgstr ",<br/>谨此通知您："
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid ""
+".\n"
+"                    <br/>Please let us know if you would like us to direct them to a meeting room or if you require any further assistance.\n"
+"                    <br/>After a successful meeting with the visitor, please proceed to check out their login."
+msgstr ""
+".\n"
+"                    <br/>请告知是否需要我们将访客引导至会议室或需其他协助。\n"
+"                    <br/>与访客成功会面后，请办理其登出手续。"
+
+#. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.print_visitor_badge
 msgid "22 Oct 24 14:20:10"
 msgstr "2024 年 10 月 22 日 14:20:10"
 
 #. module: frontdesk
-#: model:mail.template,body_html:frontdesk.frontdesk_mail_template
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_check_out
 msgid ""
-"<div>\n"
-"                    <p>Hello <t t-if=\"ctx.get('host_name')\"><t t-out=\"ctx.get('host_name')\"/>, </t><b><t t-out=\"object.name\"/></b> <t t-if=\"object.phone\">(<t t-out=\"object.phone\"/>)</t><t t-if=\"object.company\">, coming from <t t-out=\"object.company\"/></t> is asking to meet you at <t t-out=\"object.station_id.name\"/>. Please let them know you'll be there shortly.\n"
-"                    </p>\n"
-"                </div>\n"
-"            "
+"<i class=\"fa fa-check-circle fa-3x d-block mb-3 text-success\"/>\n"
+"                    The visitor has been successfully <br/> checked out"
 msgstr ""
-"<div>\n"
-"                    <p>您好 <t t-if=\"ctx.get('host_name')\"><t t-out=\"ctx.get('host_name')\"/>！ </t><b><t t-out=\"object.name\"/></b><t t-if=\"object.phone\">（电话：<t t-out=\"object.phone\"/>）</t><t t-if=\"object.company\">（公司：<t t-out=\"object.company\"/>）</t>要求与您在 <t t-out=\"object.station_id.name\"/> 见面。请让他们知道您很快就会到达。\n"
-"                    </p>\n"
-"                </div>\n"
-"            "
+"<i class=\"fa fa-check-circle fa-3x d-block mb-3 text-success\"/>\n"
+"                    访客已成功<br/>登出"
 
 #. module: frontdesk
 #: model_terms:web_tour.tour,rainbow_man_message:frontdesk.frontdesk_tour
@@ -84,6 +104,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:frontdesk.print_visitor_badge
 msgid "<strong>Visiting:</strong>"
 msgstr "<strong>到访：</strong>"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_needaction
+msgid "Action Needed"
+msgstr "待处理"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_drink__active
@@ -129,6 +154,11 @@ msgid "Are you one of these people?"
 msgstr "你是其中之一吗？"
 
 #. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_attachment_count
+msgid "Attachment Count"
+msgstr "附件数量"
+
+#. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__authenticate_guest
 msgid "Authenticate Guest"
 msgstr "验证访客身份"
@@ -138,6 +168,11 @@ msgstr "验证访客身份"
 #: code:addons/frontdesk/static/src/navbar/navbar.xml:0
 msgid "Back"
 msgstr "返回"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid "Best regards,<br/>"
+msgstr "此致，<br/>"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_search
@@ -165,6 +200,11 @@ msgstr "签到"
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__check_out
 msgid "Check Out"
 msgstr "签退"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid "Check Out Visitor"
+msgstr "访客登出"
 
 #. module: frontdesk
 #. odoo-javascript
@@ -215,6 +255,7 @@ msgstr "签退"
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/end_page/end_page.xml:0
 #: code:addons/frontdesk/static/src/register_page/register_page.xml:0
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_check_out
 msgid "Close"
 msgstr "关闭"
 
@@ -271,6 +312,17 @@ msgstr "深色"
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_search
 msgid "Date"
 msgstr "日期"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid "Dear"
+msgstr "亲爱的"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "Dear %(visitor_name)s,"
+msgstr "尊敬的 %(visitor_name)s，"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__description
@@ -360,11 +412,6 @@ msgid "Email"
 msgstr "邮箱"
 
 #. module: frontdesk
-#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__mail_template_id
-msgid "Email Template"
-msgstr "邮件模板"
-
-#. module: frontdesk
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/js/tours/frontdesk.js:0
 msgid "Enter the visitor's name."
@@ -376,9 +423,20 @@ msgid "Favorite"
 msgstr "收藏"
 
 #. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_follower_ids
+msgid "Followers"
+msgstr "关注者"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "关注者(合作伙伴)"
+
+#. module: frontdesk
 #: model:ir.actions.client,name:frontdesk.frontdesk_action_install_kiosk_pwa
 #: model:ir.model,name:frontdesk.model_frontdesk_frontdesk
 #: model:ir.ui.menu,name:frontdesk.frontdesk_menu_root
+#: model:res.groups.privilege,name:frontdesk.res_groups_privilege_frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_form
 msgid "Frontdesk"
 msgstr "前台"
@@ -387,11 +445,6 @@ msgstr "前台"
 #: model:ir.model,name:frontdesk.model_frontdesk_drink
 msgid "Frontdesk Drink"
 msgstr "前台饮料"
-
-#. module: frontdesk
-#: model:mail.template,name:frontdesk.frontdesk_mail_template
-msgid "Frontdesk Email Template"
-msgstr "前台电子邮件模板"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__name
@@ -423,6 +476,11 @@ msgstr "现场嘉宾"
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__guest_on_site
 msgid "Guests On Site"
 msgstr "现场嘉宾"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__has_message
+msgid "Has Message"
+msgstr "有消息"
 
 #. module: frontdesk
 #: model:sms.template,body:frontdesk.frontdesk_sms_template
@@ -477,6 +535,17 @@ msgid "ID"
 msgstr "ID"
 
 #. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "如果勾选此项，有新消息会提醒你。"
+
+#. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_has_error
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_has_sms_error
+msgid "If checked, some messages have a delivery error."
+msgstr "如果勾选此项，有些消息会有传递错误。"
+
+#. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__image
 msgid "Image"
 msgstr "图片"
@@ -490,6 +559,11 @@ msgstr "安装"
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__is_favorite
 msgid "Is Favorite"
 msgstr "已收藏"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_is_follower
+msgid "Is Follower"
+msgstr "是关注者"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.print_visitor_badge
@@ -576,6 +650,16 @@ msgid "Message"
 msgstr "信息"
 
 #. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_has_error
+msgid "Message Delivery error"
+msgstr "消息传递错误"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_ids
+msgid "Messages"
+msgstr "消息"
+
+#. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_search
 msgid "My Station"
 msgstr "我的岗位"
@@ -644,6 +728,26 @@ msgstr "通过电子邮件通知"
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_form
 msgid "Notify the host on guest arrival"
 msgstr "客人抵达时通知接待人"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_needaction_counter
+msgid "Number of Actions"
+msgstr "操作数"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_has_error_counter
+msgid "Number of errors"
+msgstr "错误数"
+
+#. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "需要采取行动的信息数量"
+
+#. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "发送错误的消息数"
 
 #. module: frontdesk
 #: model_terms:ir.actions.act_window,help:frontdesk.action_frontdesk_visitor
@@ -744,6 +848,7 @@ msgstr "打印访客徽标"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__visitor_properties
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_search
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_tree
 msgid "Properties"
 msgstr "属性"
@@ -764,6 +869,11 @@ msgstr "二维码已过期。"
 #: code:addons/frontdesk/static/src/quick_check_in/quick_check_in.xml:0
 msgid "Quick Check In"
 msgstr "快捷签到"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__rating_ids
+msgid "Ratings"
+msgstr "点评"
 
 #. module: frontdesk
 #: model:ir.ui.menu,name:frontdesk.frontdesk_menu_report
@@ -791,6 +901,11 @@ msgstr "负责人"
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__responsible_ids
 msgid "Responsibles"
 msgstr "负责人"
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__message_has_sms_error
+msgid "SMS Delivery error"
+msgstr "短信发送错误"
 
 #. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__sms_template_id
@@ -830,15 +945,15 @@ msgid "Send an SMS to the host on guest arrival"
 msgstr "在客人抵达时向接待人员发送短信"
 
 #. module: frontdesk
-#: model:mail.template,description:frontdesk.frontdesk_mail_template
-msgid "Sent to hosts on guest arrival"
-msgstr "在访客抵达时发送给"
-
-#. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_drink__sequence
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_drink_view_form
 msgid "Sequence"
 msgstr "序列"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_visitor_view_form
+msgid "Set as Planned"
+msgstr "设置为已计划"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_frontdesk_view_form
@@ -900,6 +1015,12 @@ msgid "Thank you for registering!"
 msgstr "感谢您的注册！"
 
 #. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "Thanks for your understanding."
+msgstr "感谢您的理解。"
+
+#. module: frontdesk
 #: model:ir.model.fields,field_description:frontdesk.field_frontdesk_frontdesk__theme
 msgid "Theme"
 msgstr "主题"
@@ -947,6 +1068,24 @@ msgid "Visitors"
 msgstr "访客"
 
 #. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid ""
+"We regret to inform you that the following %(host_status)s currently "
+"unavailable:"
+msgstr "很遗憾通知您，以下%(host_status)s当前不可用："
+
+#. module: frontdesk
+#: model:ir.model.fields,field_description:frontdesk.field_frontdesk_visitor__website_message_ids
+msgid "Website Messages"
+msgstr "网站消息"
+
+#. module: frontdesk
+#: model:ir.model.fields,help:frontdesk.field_frontdesk_visitor__website_message_ids
+msgid "Website communication history"
+msgstr "网站沟通记录"
+
+#. module: frontdesk
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/welcome_page/welcome_page.xml:0
 msgid "Welcome to"
@@ -974,6 +1113,14 @@ msgstr "写留言..."
 #: code:addons/frontdesk/static/src/register_page/register_page.xml:0
 msgid "Yes, please"
 msgstr "是的，请"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid ""
+"You can contact the host's manager or frontdesk responsible for further "
+"assistance."
+msgstr "您可以联系主办方经理或前台负责人获取进一步协助。"
 
 #. module: frontdesk
 #. odoo-javascript
@@ -1006,15 +1153,31 @@ msgid "Your Phone Number"
 msgstr "你的电话号码"
 
 #. module: frontdesk
-#: model:mail.template,subject:frontdesk.frontdesk_mail_template
-msgid "Your Visitor {{ object.name }} Requested To Meet You"
-msgstr "您的访客 {{ object.name }}请求与您见面"
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "Your Visitor %(name)s Requested To Meet You"
+msgstr "您的访客%(name)s请求与您会面"
 
 #. module: frontdesk
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/end_page/end_page.xml:0
 msgid "Your drink is on the way."
 msgstr "您的饮料马上就到。"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "Your host isn't available"
+msgstr "您的主办方不可用"
+
+#. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid ""
+"and is here for their scheduled meeting with you.\n"
+"                    They are currently waiting in the"
+msgstr ""
+"并按预约时间前来与您会晤。\n"
+"                    该访客当前正在"
 
 #. module: frontdesk
 #: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_drink_view_form
@@ -1040,10 +1203,33 @@ msgid "e.g. john@company.com"
 msgstr "例如：john@company.com"
 
 #. module: frontdesk
+#: model_terms:ir.ui.view,arch_db:frontdesk.frontdesk_mail_template
+msgid "has arrived from"
+msgstr "已抵达，从"
+
+#. module: frontdesk
 #. odoo-javascript
 #: code:addons/frontdesk/static/src/end_page/end_page.xml:0
 msgid "has been informed."
 msgstr "已获悉。"
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "host is"
+msgstr ""
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_visitor.py:0
+msgid "hosts are"
+msgstr ""
+
+#. module: frontdesk
+#. odoo-python
+#: code:addons/frontdesk/models/frontdesk_frontdesk.py:0
+msgid "station_id.id"
+msgstr "station_id.id"
 
 #. module: frontdesk
 #. odoo-javascript

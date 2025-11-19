@@ -4,14 +4,13 @@
 {
     'name': 'MRP II - Expiry',
     'version': '1.0',
-    'category': 'Manufacturing/Manufacturing',
+    'category': 'Supply Chain/Manufacturing',
     'summary': 'MRP Workorder Expiry',
     'description': """
 Technical module.
     """,
     'depends': ['mrp_workorder', 'product_expiry'],
     'data': [
-        'views/quality_views.xml',
         'wizard/confirm_expiry_view.xml',
     ],
     'installable': True,
@@ -21,5 +20,6 @@ Technical module.
             'mrp_workorder_expiry/static/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

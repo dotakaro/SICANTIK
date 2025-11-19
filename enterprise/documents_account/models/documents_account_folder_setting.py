@@ -3,7 +3,7 @@
 from odoo import fields, models
 
 
-class DocumentsFolderSetting(models.Model):
+class DocumentsAccountFolderSetting(models.Model):
     _name = 'documents.account.folder.setting'
     _description = 'Journal and Folder settings'
 
@@ -20,6 +20,7 @@ class DocumentsFolderSetting(models.Model):
     )
     tag_ids = fields.Many2many('documents.tag', string="Tags")
 
-    _sql_constraints = [
-        ('journal_unique', 'unique (journal_id)', "A setting already exists for this journal"),
-    ]
+    _journal_unique = models.Constraint(
+        'unique (journal_id)',
+        "A setting already exists for this journal",
+    )

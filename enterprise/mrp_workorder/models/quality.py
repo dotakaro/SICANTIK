@@ -10,7 +10,7 @@ from odoo.fields import Command
 from odoo.tools import float_compare, float_round, is_html_empty
 
 
-class TestType(models.Model):
+class QualityPointTest_Type(models.Model):
     _inherit = "quality.point.test_type"
 
     allow_registration = fields.Boolean(
@@ -21,10 +21,10 @@ class TestType(models.Model):
         if value:
             return []
         else:
-            return [('technical_name', 'not in', ['register_byproducts', 'register_consumed_materials', 'print_label'])]
+            return [('technical_name', 'not in', ['register_production', 'register_byproducts', 'register_consumed_materials', 'print_label'])]
 
 
-class MrpRouting(models.Model):
+class MrpRoutingWorkcenter(models.Model):
     _inherit = "mrp.routing.workcenter"
 
     quality_point_ids = fields.One2many('quality.point', 'operation_id', copy=True)
@@ -32,9 +32,11 @@ class MrpRouting(models.Model):
 
     employee_ratio = fields.Float("Employee Capacity", default=1, help="Number of employees needed to complete operation.")
 
-    def _compute_operation_cost(self):
-        expected_employee_cost = (self.time_cycle / 60) * self.workcenter_id.employee_costs_hour * (self.employee_ratio or 1)
-        return super()._compute_operation_cost() + expected_employee_cost
+    @api.depends('employee_ratio')
+    def _compute_cost(self):
+        super()._compute_cost()
+        for operation in self:
+            operation.cost += (operation.time_total / 60.0) * operation.workcenter_id.employee_costs_hour * (operation.employee_ratio or 1)
 
     @api.depends('quality_point_ids')
     def _compute_quality_point_count(self):
@@ -47,6 +49,8 @@ class MrpRouting(models.Model):
             operation.quality_point_count = data.get(operation.id, 0)
 
     def write(self, vals):
+        if 'active' in vals:
+            self.with_context(active_test=False).quality_point_ids.write({'active': vals['active']})
         res = super().write(vals)
         if 'bom_id' in vals:
             self.quality_point_ids._change_product_ids_for_bom(self.bom_id)
@@ -58,10 +62,6 @@ class MrpRouting(models.Model):
             for new_workcenter in new_workcenters:
                 new_workcenter.quality_point_ids._change_product_ids_for_bom(new_workcenter.bom_id)
         return new_workcenters
-
-    def toggle_active(self):
-        self.with_context(active_test=False).quality_point_ids.toggle_active()
-        return super().toggle_active()
 
     def action_mrp_workorder_show_steps(self):
         self.ensure_one()
@@ -78,17 +78,6 @@ class MrpRouting(models.Model):
         action.update({'context': ctx, 'domain': [('operation_id', '=', self.id)]})
         return action
 
-    def _get_fields_for_tablet(self):
-        """ List of fields on the operation object that are needed by the tablet
-        client action. The purpose of this function is to be overridden in order
-        to inject new fields to the client action.
-        """
-        return [
-            'worksheet',
-            'worksheet_google_slide',
-            'id',
-        ]
-
 
 class QualityPoint(models.Model):
     _inherit = "quality.point"
@@ -102,7 +91,7 @@ class QualityPoint(models.Model):
 
     is_workorder_step = fields.Boolean(compute='_compute_is_workorder_step')
     operation_id = fields.Many2one(
-        'mrp.routing.workcenter', 'Step', check_company=True)
+        'mrp.routing.workcenter', 'Step', check_company=True, index='btree_not_null')
     bom_id = fields.Many2one(related='operation_id.bom_id')
     bom_active = fields.Boolean('Related Bill of Material Active', related='bom_id.active')
     component_ids = fields.One2many('product.product', compute='_compute_component_ids')
@@ -114,13 +103,7 @@ class QualityPoint(models.Model):
         'quality.point.test_type',
         domain="[('allow_registration', '=', operation_id and is_workorder_step)]")
     test_report_type = fields.Selection([('pdf', 'PDF'), ('zpl', 'ZPL')], string="Report Type", default="pdf", required=True)
-    source_document = fields.Selection(
-        selection=[('operation', 'Specific Page of Operation Worksheet'), ('step', 'Custom')],
-        string="Step Document",
-        default='operation')
-    worksheet_page = fields.Integer('Worksheet Page', default=1)
     worksheet_document = fields.Binary('Image/PDF')
-    worksheet_url = fields.Char('Google doc URL', tracking=True)
     # Used with type register_consumed_materials the product raw to encode.
     component_id = fields.Many2one('product.product', 'Product To Register', check_company=True)
 
@@ -162,6 +145,12 @@ class QualityPoint(models.Model):
             quality_point.is_workorder_step = quality_point.picking_type_ids and\
                 all(pt.code == 'mrp_operation' for pt in quality_point.picking_type_ids)
 
+    @api.depends('operation_id')
+    def _compute_show_failure_location(self):
+        super()._compute_show_failure_location()
+        for point in self:
+            point.show_failure_location = point.show_failure_location and not point.operation_id
+
     def _change_product_ids_for_bom(self, bom_id):
         products = bom_id.product_id or bom_id.product_tmpl_id.product_variant_ids
         self.product_ids = [Command.set(products.ids)]
@@ -186,9 +175,9 @@ class QualityPoint(models.Model):
 class QualityAlert(models.Model):
     _inherit = "quality.alert"
 
-    workorder_id = fields.Many2one('mrp.workorder', 'Operation', check_company=True)
+    workorder_id = fields.Many2one('mrp.workorder', 'Operation', check_company=True, index='btree_not_null')
     workcenter_id = fields.Many2one('mrp.workcenter', 'Work Center', check_company=True)
-    production_id = fields.Many2one('mrp.production', "Production Order", check_company=True)
+    production_id = fields.Many2one('mrp.production', "Production Order", check_company=True, index='btree_not_null')
 
 
 class QualityCheck(models.Model):
@@ -196,7 +185,7 @@ class QualityCheck(models.Model):
 
     workorder_id = fields.Many2one(
         'mrp.workorder', 'Operation', check_company=True, index='btree_not_null')
-    workcenter_id = fields.Many2one('mrp.workcenter', related='workorder_id.workcenter_id', store=True, readonly=True)  # TDE: necessary ?
+    workcenter_id = fields.Many2one('mrp.workcenter', related='workorder_id.workcenter_id')
     production_id = fields.Many2one(
         'mrp.production', 'Production Order', check_company=True, index='btree_not_null')
     product_tracking = fields.Selection(related='production_id.product_tracking')
@@ -207,21 +196,16 @@ class QualityCheck(models.Model):
 
     # For components registration
     move_id = fields.Many2one(
-        'stock.move', 'Stock Move', check_company=True)
-    move_line_id = fields.Many2one(
-        'stock.move.line', 'Stock Move Line', check_company=True, index='btree_not_null')
+        'stock.move', 'Stock Move', check_company=True, index='btree_not_null')
     component_id = fields.Many2one(
         'product.product', 'Component', check_company=True)
-    component_uom_id = fields.Many2one('uom.uom', related='move_id.product_uom', readonly=True)
+    component_barcode = fields.Char(related='component_id.barcode')
+    component_uom_id = fields.Many2one('uom.uom', related='move_id.product_uom', string='Component Unit', readonly=True)
 
-    qty_done = fields.Float('Done', digits='Product Unit of Measure')
-    finished_lot_id = fields.Many2one('stock.lot', 'Finished Lot/Serial', related='production_id.lot_producing_id', store=True)
-    additional = fields.Boolean('Register additional product', compute='_compute_additional')
+    finished_lot_id = fields.Many2one('stock.lot', 'Finished Lot/Serial', related='production_id.lot_producing_id')
     component_tracking = fields.Selection(related='component_id.tracking', string="Is Component Tracked")
 
     # Workorder specific fields
-    component_remaining_qty = fields.Float('Remaining Quantity for Component', compute='_compute_component_data', digits='Product Unit of Measure')
-    component_qty_to_do = fields.Float(compute='_compute_component_qty_to_do', digits='Product Unit of Measure')
     is_user_working = fields.Boolean(related="workorder_id.is_user_working")
     consumption = fields.Selection(related="workorder_id.consumption")
     working_state = fields.Selection(related="workorder_id.working_state")
@@ -235,28 +219,25 @@ class QualityCheck(models.Model):
     # We use a float because it is actually filled in by the produced quantity at the step creation.
     finished_product_sequence = fields.Float('Finished Product Sequence Number')
     worksheet_document = fields.Binary('Image/PDF')
-    worksheet_url = fields.Char(related='point_id.worksheet_url')
-    worksheet_page = fields.Integer(related='point_id.worksheet_page')
-    source_document = fields.Selection(related='point_id.source_document')
 
     # Employees
     employee_id = fields.Many2one('hr.employee', string="Employee")
 
     @api.model_create_multi
-    def create(self, values):
-        quality_points = {value['point_id'] for value in values if value.get('point_id')}
+    def create(self, vals_list):
+        quality_points = {value['point_id'] for value in vals_list if value.get('point_id')}
         quality_points_component_mapping = {
             point.id: point.component_id.id
             for point in self.env['quality.point'].browse(list(quality_points))
             if point.component_id
         }
-        for value in values:
+        for value in vals_list:
             if value.get('component_id') or not value.get('point_id'):
                 continue
             component = quality_points_component_mapping.get(value['point_id'])
             if component:
                 value['component_id'] = component
-        return super(QualityCheck, self).create(values)
+        return super().create(vals_list)
 
     @api.depends('test_type_id', 'component_id', 'component_id.name', 'workorder_id', 'workorder_id.name')
     def _compute_title(self):
@@ -265,7 +246,7 @@ class QualityCheck(models.Model):
             if not check.point_id and check.component_id:
                 check.title = '{} "{}"'.format(check.test_type_id.display_name, check.component_id.name or check.workorder_id.name)
 
-    @api.depends('point_id', 'quality_state', 'component_id', 'component_uom_id', 'lot_id', 'qty_done')
+    @api.depends('point_id', 'quality_state', 'component_id', 'component_uom_id', 'lot_id')
     def _compute_result(self):
         for check in self:
             if check.quality_state == 'none':
@@ -273,41 +254,13 @@ class QualityCheck(models.Model):
             else:
                 check.result = check._get_check_result()
 
-    @api.depends('move_id')
-    def _compute_additional(self):
-        """ The stock_move is linked to additional workorder line only at
-        record_production. So line without move during production are additionnal
-        ones. """
-        for check in self:
-            check.additional = not check.move_id
-
-    @api.depends('qty_done', 'component_remaining_qty')
-    def _compute_component_qty_to_do(self):
-        for wo in self:
-            wo.component_qty_to_do = wo.qty_done - wo.component_remaining_qty
-
     def _get_check_result(self):
         if self.test_type in ('register_consumed_materials', 'register_byproducts') and self.lot_id:
-            return '{} - {}, {} {}'.format(self.component_id.name, self.lot_id.name, self.qty_done, self.component_uom_id.name)
+            return f'{self.component_id.name} - {self.lot_id.name}, {self.component_uom_id.name}'
         elif self.test_type in ('register_consumed_materials', 'register_byproducts'):
-            return '{}, {} {}'.format(self.component_id.name, self.qty_done, self.component_uom_id.name)
+            return f'{self.component_id.name}, {self.component_uom_id.name}'
         else:
             return ''
-
-    @api.depends('workorder_id.state', 'quality_state', 'workorder_id.qty_producing',
-                 'component_tracking', 'test_type', 'component_id', 'move_line_id.lot_id'
-                 )
-    def _compute_component_data(self):
-        self.component_remaining_qty = False
-        for check in self:
-            if check.test_type in ('register_byproducts', 'register_consumed_materials'):
-                if check.quality_state == 'none':
-                    completed_lines = check.workorder_id.move_line_ids.filtered(lambda l: l.picked and (check.component_id.tracking == 'none' or l.lot_id))
-                    if check.move_id.additional:
-                        qty = check.workorder_id.qty_remaining
-                    else:
-                        qty = check.workorder_id.qty_producing or check.workorder_id.qty_remaining
-                    check.component_remaining_qty = self._prepare_component_quantity(check.move_id, qty) - sum(completed_lines.mapped('quantity'))
 
     def action_print(self):
         quality_point_id = self.point_id
@@ -323,11 +276,12 @@ class QualityCheck(models.Model):
                                 'the final product'))
 
         # The button goes immediately to the next step
-        self._next()
+        res['next_check_id'] = self._next()
         return res
 
     def _get_print_qty(self):
-        if self.product_id.uom_id.category_id == self.env.ref('uom.product_uom_categ_unit'):
+        uom_unit = self.env.ref('uom.product_uom_unit')
+        if self.product_id.uom_id._has_common_reference(uom_unit):
             qty = int(self.workorder_id.qty_producing) or int(self.workorder_id.qty_production)
         else:
             qty = 1
@@ -356,11 +310,7 @@ class QualityCheck(models.Model):
 
     def action_next(self):
         self.ensure_one()
-        return self._next()
-
-    def action_continue(self):
-        self.ensure_one()
-        self._next(continue_production=True)
+        return {'next_check_id': self._next()}
 
     def add_check_in_chain(self, notify_bom=True):
         self.ensure_one()
@@ -378,89 +328,19 @@ class QualityCheck(models.Model):
             attachments = []
             if self.worksheet_document:
                 attachments = [('document', base64.b64decode(self.worksheet_document))]
-            if self.worksheet_url:
-                body += Markup("<br/><a href='%s'>%s</a>") % (self.worksheet_url, _("Google Doc"))
             self.workorder_id.production_id.bom_id.message_post(body=body, attachments=attachments)
 
-    @api.model
-    def _prepare_component_quantity(self, move, qty_producing):
-        """ helper that computes quantity to consume (or to create in case of byproduct)
-        depending on the quantity producing and the move's unit factor"""
-        if move.product_id.tracking == 'serial':
-            uom = move.product_id.uom_id
-        else:
-            uom = move.product_uom
-        return move.product_uom._compute_quantity(
-            qty_producing * move.unit_factor,
-            uom,
-            round=False
-        )
-
-    def _create_extra_move_lines(self):
-        """Create new sml if quantity produced is bigger than the reserved one"""
-        vals_list = []
-        # apply putaway
-        location_dest_id = self.move_id.location_dest_id._get_putaway_strategy(self.move_id.product_id)
-        quants = self.env['stock.quant']._gather(self.product_id, self.move_id.location_id, lot_id=self.lot_id, strict=False)
-        # Search for a sub-locations where the product is available.
-        # Loop on the quants to get the locations. If there is not enough
-        # quantity into stock, we take the move location. Anyway, no
-        # reservation is made, so it is still possible to change it afterwards.
-        move_uom = self.move_id.product_uom
-        shared_vals = {
-            'move_id': self.move_id.id,
-            'product_id': self.move_id.product_id.id,
-            'location_dest_id': location_dest_id.id,
-            'product_uom_id': move_uom.id,
-            'lot_id': self.lot_id.id,
-            'company_id': self.move_id.company_id.id,
-        }
-        qty_done = self.qty_done
-        for quant in quants:
-            vals = shared_vals.copy()
-            quantity = quant.quantity - quant.reserved_quantity
-            quantity = self.component_id.uom_id._compute_quantity(quantity, move_uom, rounding_method='HALF-UP')
-            rounding = quant.product_uom_id.rounding
-            if (float_compare(quant.quantity, 0, precision_rounding=rounding) <= 0 or
-                    float_compare(quantity, 0, precision_rounding=move_uom.rounding) <= 0):
-                continue
-            vals.update({
-                'location_id': quant.location_id.id,
-                'quantity': min(quantity, qty_done),
-                'picked': True,
-            })
-
-            vals_list.append(vals)
-            qty_done -= vals['quantity']
-            # If all the qty_done is distributed, we can close the loop
-            if float_compare(qty_done, 0, precision_rounding=self.product_id.uom_id.rounding) <= 0:
-                break
-
-        if float_compare(qty_done, 0, precision_rounding=self.product_id.uom_id.rounding) > 0:
-            vals = shared_vals.copy()
-            vals.update({
-                'location_id': self.move_id.location_id.id,
-                'quantity': qty_done,
-                'picked': True,
-            })
-
-            vals_list.append(vals)
-        return vals_list
-
-    def action_generate_serial(self):
+    def action_register_production(self):
         self.ensure_one()
-        self.production_id.action_generate_serial()
-        self.lot_id = self.production_id.lot_producing_id
+        if self.product_tracking == 'none':
+            self.production_id.qty_producing = self.production_id.product_qty
+            self.production_id._set_qty_producing(False)
+        elif not self.lot_id:
+            self.production_id.action_generate_serial()
+            self.lot_id = self.production_id.lot_producing_id
+        return {'next_check_id': self._next()}
 
-    def action_generate_serial_number_and_pass(self):
-        self.action_generate_serial()
-        if self.product_tracking == 'serial':
-            self.qty_done = 1
-        elif self.product_tracking == 'lot' and self.qty_done == 0:
-            self.qty_done = self.production_id.product_qty
-        return self._next()
-
-    def _next(self, continue_production=False):
+    def _next(self):
         """ This function:
 
         - first: fullfill related move line with right lot and validated quantity.
@@ -469,89 +349,6 @@ class QualityCheck(models.Model):
         """
         self.ensure_one()
         self.workorder_id.current_quality_check_id = self.id
-        rounding = self.workorder_id.product_uom_id.rounding
-        if self.test_type == 'register_production':
-            if self.product_tracking != 'none':
-                if not self.lot_id and self.qty_done != 0:
-                    raise UserError(_('Please enter a Lot/SN.'))
-                self.production_id.lot_producing_id = self.lot_id
-            if float_compare(self.qty_done, 0, precision_rounding=rounding) <= 0:
-                raise UserError(_('Please enter a positive quantity.'))
-            self.workorder_id.production_id.qty_producing = self.qty_done
-        elif self.test_type in ('register_byproducts', 'register_consumed_materials'):
-            # Form validation
-            # in case we use continue production instead of validate button.
-            # We would like to consume 0 and leave lot_id blank to close the consumption
-            rounding = self.component_uom_id.rounding
-            if self.component_tracking != 'none' and not self.lot_id and self.qty_done != 0:
-                raise UserError(_('Please enter a Lot/SN.'))
-            if float_compare(self.qty_done, 0, precision_rounding=rounding) < 0:
-                raise UserError(_('Please enter a positive quantity.'))
-
-            def _find_quant(lot, location):
-                quants = lot.quant_ids.filtered(lambda quant:
-                    float_compare(quant.quantity, 0, precision_rounding=rounding) > 0
-                    and float_compare(quant.quantity, quant.reserved_quantity, precision_rounding=rounding) > 0
-                    and quant.location_id.usage in ['internal', 'transit']
-                    and (quant.location_id._child_of(self.move_id.location_id) if self.move_id else True)
-                )
-                if not location:
-                    return quants[0] if quants else quants
-                lot_quant = self.env['stock.quant']
-                for quant in quants:
-                    if not lot_quant or quant.location_id._child_of(location):
-                        lot_quant = quant
-                        if quant.location_id == location:
-                            break
-                return lot_quant
-
-            # Write the lot and qty to the move line
-            if self.move_line_id:
-                sml_vals = {}
-                # In case of a tracked component, another SML may already exists for
-                # the reservation of self.lot_id, so let's try to find and use it
-                if self.move_line_id.product_id.tracking != 'none':
-                    self.move_line_id = next((sml
-                                              for sml in self.move_line_id.move_id.move_line_ids
-                                              if sml.lot_id == self.lot_id and not sml.picked),
-                                             self.move_line_id)
-                    # in case the lot of the quality check does not match any reserved lot
-                    if self.test_type == 'register_consumed_materials' and self.move_line_id.lot_id != self.lot_id:
-                        quant = _find_quant(lot=self.lot_id, location=self.move_line_id.location_id)
-                        if quant:
-                            sml_vals.update({'quant_id': quant.id})
-                        else:
-                            sml_vals.update({'location_id': self.move_id.location_id})
-                rounding = self.move_line_id.product_uom_id.rounding
-                if float_compare(self.qty_done, self.move_line_id.quantity, precision_rounding=rounding) >= 0:
-                    sml_vals.update({
-                        'quantity': self.qty_done,
-                        'lot_id': self.lot_id.id,
-                        'picked': True,
-                    })
-                    self.move_line_id.write(sml_vals)
-                else:
-                    new_qty_reserved = self.move_line_id.quantity - self.qty_done
-                    new_picked = self.move_line_id.picked
-                    sml_vals.update({
-                        'quantity': self.qty_done,
-                        'lot_id': self.lot_id.id,
-                        'picked': True,
-                    })
-                    self.move_line_id.write(sml_vals)
-                    if continue_production and float_compare(new_qty_reserved, 0, precision_rounding=rounding) >= 0:
-                        self.move_line_id.copy(default={'quantity': new_qty_reserved, 'picked': new_picked})
-            else:
-                sml_vals = self._create_extra_move_lines()
-                if self.test_type == 'register_consumed_materials' and self.lot_id:
-                    quant = _find_quant(lot=self.lot_id, location=self.env['stock.location'])
-                    if quant:
-                        for val in sml_vals:
-                            val.update({'quant_id': quant.id})
-                line = self.env['stock.move.line'].create(sml_vals)
-                self.move_line_id = line[:1]
-            if continue_production:
-                self.workorder_id._create_subsequent_checks()
 
         if self.test_type == 'picture' and not self.picture:
             raise UserError(_('Please upload a picture.'))
@@ -559,22 +356,7 @@ class QualityCheck(models.Model):
         if self.quality_state == 'none':
             self.do_pass()
 
-        self.workorder_id._change_quality_check(position='next')
-
-    def _update_component_quantity(self):
-        if self.component_tracking == 'serial':
-            self._origin.qty_done = self.component_id.uom_id._compute_quantity(1, self.component_uom_id, rounding_method='HALF-UP')
-            return
-        move = self.move_id
-        # Compute the new quantity for the current component
-        rounding = move.product_uom.rounding
-        new_qty = self._prepare_component_quantity(move, self.workorder_id.qty_producing)
-        qty_todo = float_round(new_qty, precision_rounding=rounding)
-        if (move.picked and self.quality_state != 'pass'):
-            qty_todo = qty_todo - move.quantity
-        if self.move_line_id and self.move_line_id.lot_id:
-            qty_todo = min(self.move_line_id.quantity, qty_todo)
-        self.qty_done = qty_todo
+        return self.workorder_id._change_quality_check(position='next')
 
     def _insert_in_chain(self, position, relative):
         """Insert the quality check `self` in a chain of quality checks.
@@ -602,14 +384,11 @@ class QualityCheck(models.Model):
             new_next.previous_check_id = self
             relative.next_check_id = self
 
-    def _update_lots(self):
-        for check in self:
-            if check.component_tracking:
-                check.lot_id = check.move_line_id.lot_id
-
     def do_pass(self):
         res = super().do_pass()
         for check in self:
+            if check.move_id:
+                check.move_id.picked = True
             if check.workorder_id:
                 if check.workorder_id.employee_id:
                     check.employee_id = self.workorder_id.employee_id

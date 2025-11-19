@@ -16,21 +16,21 @@ class TestEdiResults(TestMxExtendedEdiCommon, ValuationReconciliationTestCommon)
             'partner_id': self.customer.id,
             'order_line': [(0, 0, ope) for ope in [{
                 'name': p.name, 'product_id': p.id, 'product_uom_qty': 2,
-                'product_uom': p.uom_id.id, 'price_unit': p.list_price,
-                'tax_id': [(4, self.tax_positive.id)],
+                'price_unit': p.list_price,
+                'tax_ids': [(4, self.tax_positive.id)],
             } for (_, p) in self.products.items()]],
         })
 
     def test_invoice_cfdi_landing(self):
-        self.env.user.groups_id |= self.env.ref('purchase.group_purchase_manager')
-        self.env.user.groups_id |= self.env.ref('stock.group_stock_manager')
-        self.env.user.groups_id |= self.env.ref('sales_team.group_sale_manager')
+        self.env.user.group_ids |= self.env.ref('purchase.group_purchase_manager')
+        self.env.user.group_ids |= self.env.ref('stock.group_stock_manager')
+        self.env.user.group_ids |= self.env.ref('sales_team.group_sale_manager')
 
         inventory_user = self.env['res.users'].with_context({'no_reset_password': True}).create({
             'name': 'Inventory user',
             'login': 'sliwa',
             'email': 'queen@goth.mx',
-            'groups_id': [(6, 0, [self.env.ref('stock.group_stock_user').id])]
+            'group_ids': [(6, 0, [self.env.ref('stock.group_stock_user').id])]
         })
 
         with freeze_time(self.frozen_today):
@@ -48,9 +48,9 @@ class TestEdiResults(TestMxExtendedEdiCommon, ValuationReconciliationTestCommon)
                         'name': self.product.name,
                         'product_id': self.product.id,
                         'product_qty': 2,
-                        'product_uom': self.product.uom_id.id,
+                        'product_uom_id': self.product.uom_id.id,
                         'price_unit': self.product.list_price,
-                        'taxes_id': [(6, 0, self.product.supplier_taxes_id.filtered_domain(self.env['account.tax']._check_company_domain(self.env.company)).ids)],
+                        'tax_ids': [(6, 0, self.product.supplier_taxes_id.filtered_domain(self.env['account.tax']._check_company_domain(self.env.company)).ids)],
                         'date_planned': fields.Datetime.now(),
                     })
                 ],
@@ -82,9 +82,8 @@ class TestEdiResults(TestMxExtendedEdiCommon, ValuationReconciliationTestCommon)
                         'name': self.product.name,
                         'product_id': self.product.id,
                         'product_uom_qty': 2,
-                        'product_uom': self.product.uom_id.id,
                         'price_unit': self.product.list_price,
-                        'tax_id': [(6, 0, self.product.taxes_id.filtered_domain(self.env['account.tax']._check_company_domain(self.env.company)).ids)],
+                        'tax_ids': [(6, 0, self.product.taxes_id.filtered_domain(self.env['account.tax']._check_company_domain(self.env.company)).ids)],
                     })
                 ],
             })

@@ -4,9 +4,9 @@ from odoo.tools import  date_utils
 L10N_MA_CUSTOMS_VAT_ICE = '20727020'
 
 
-class MoroccanTaxReportCustomHandler(models.AbstractModel):
+class L10n_MaTaxReportHandler(models.AbstractModel):
     _name = 'l10n_ma.tax.report.handler'
-    _inherit = 'account.tax.report.handler'
+    _inherit = ['account.tax.report.handler']
     _description = 'Moroccan Tax Report Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -117,7 +117,7 @@ class MoroccanTaxReportCustomHandler(models.AbstractModel):
     def _l10n_ma_prepare_vat_report_values(self, options):
         date_from = fields.Date.from_string(options['date'].get('date_from'))
         date_to = fields.Date.from_string(options['date'].get('date_to'))
-        period_type = options['tax_periodicity']['periodicity']
+        period_type = options['return_periodicity']['periodicity']
         company = self.env.company
 
         prorata_expression = self.env.ref('l10n_ma.l10n_ma_vat_d_prorata_pro')

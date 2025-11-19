@@ -1,7 +1,6 @@
-/* @odoo-module **/
-
 import { FileViewer } from "@documents/attachments/document_file_viewer";
 import { Component, useEffect, useRef, useState } from "@odoo/owl";
+import { useService } from "@web/core/utils/hooks";
 
 export class DocumentsFileViewer extends Component {
     static template = "documents.DocumentsFileViewer";
@@ -14,11 +13,10 @@ export class DocumentsFileViewer extends Component {
     ];
 
     setup() {
+        this.documentService = useService("document.document");
         this.root = useRef("root");
-        this.state = useState({
-            topOffset: 0,
-            leftOffset: 0,
-        });
+        this.rightPanelState = useState(this.documentService.rightPanelReactive);
+        this.state = useState({ topOffset: 0 });
 
         const onKeydown = this.onIframeKeydown.bind(this);
         useEffect(
@@ -47,10 +45,8 @@ export class DocumentsFileViewer extends Component {
                     return;
                 }
                 this.state.topOffset = el.scrollTop;
-                this.state.leftOffset = el.scrollLeft;
                 const scrollHandler = () => {
                     this.state.topOffset = el.scrollTop;
-                    this.state.leftOffset = el.scrollLeft;
                 };
                 el.addEventListener("scroll", scrollHandler);
                 return () => {
@@ -63,6 +59,10 @@ export class DocumentsFileViewer extends Component {
 
     get parentRoot() {
         return this.props.parentRoot;
+    }
+
+    get isRightPanelVisible() {
+        return this.rightPanelState.visible && !this.env.isSmall;
     }
 
     onGlobalKeydown(ev) {

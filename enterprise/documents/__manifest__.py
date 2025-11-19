@@ -40,6 +40,9 @@ App to upload and manage your documents.
         'views/documents_menu_views.xml',
         'views/documents_templates_portal.xml',
         'views/documents_templates_share.xml',
+        'views/documents_templates_thumbnails.xml',
+        'views/ir_actions_views.xml',
+        'wizard/documents_access_invite_views.xml',
         'wizard/documents_link_to_record_wizard_views.xml',
         'wizard/documents_request_wizard_views.xml',
         # Need the `ir.actions.act_window` to exist
@@ -49,6 +52,7 @@ App to upload and manage your documents.
     'demo': [
         'demo/documents_document_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [
@@ -102,11 +106,6 @@ App to upload and manage your documents.
         ],
         'web.qunit_suite_tests': [
             'documents/static/tests/legacy/**/*',
-            ('remove', 'documents/static/tests/legacy/**/*mobile_tests.js'),
-        ],
-        'web.qunit_mobile_suite_tests': [
-            'documents/static/tests/legacy/documents_test_utils.js',
-            'documents/static/tests/legacy/documents_kanban_mobile_tests.js',
         ],
     }
 }

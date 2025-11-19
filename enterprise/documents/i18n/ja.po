@@ -3,16 +3,15 @@
 # 	* documents
 # 
 # Translators:
-# Tiffany Chang, 2024
 # Wil Odoo, 2025
 # Junko Augias, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-06 18:47+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-03 12:20+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Junko Augias, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
@@ -22,10 +21,10 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid " (%s locked)"
-msgstr " (%s ロック済)"
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "%(record)s (in %(parent)s)"
+msgstr "%(record)s (%(parent)s内)"
 
 #. module: documents
 #. odoo-python
@@ -41,21 +40,9 @@ msgstr "%s (残っているページ)"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "%s Files"
-msgstr "%s ファイル"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "%s Folders"
-msgstr "%s フォルダ"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/list/document_count_field.js:0
-msgid "%s documents"
-msgstr "%s ドキュメント"
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid "%s document(s) sent to trash."
+msgstr "%sドキュメントをゴミ箱に移動しました。"
 
 #. module: documents
 #. odoo-javascript
@@ -65,21 +52,27 @@ msgstr "%s ドキュメントが移動されました。"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "%s file(s) not moved because they are locked by another user"
-msgstr "%s他のユーザによってロックされているため、ファイルが移動されません。"
+#: code:addons/documents/static/src/core/document_service.js:0
+msgid "%s documents/folders have been moved to the Company root."
+msgstr "%sドキュメント/フォルダーは会社のルートに移動されました。"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "%s has been copied in My Drive."
 msgstr "%s がマイドライブにコピーされました。"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "%s have been copied in My Drive."
 msgstr "%s がマイドライブにコピーされました。"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/wizard/documents_access_invite.py:0
+msgid "%s members added successfully."
+msgstr "%s メンバーが正常に追加されました。"
 
 #. module: documents
 #. odoo-javascript
@@ -92,12 +85,6 @@ msgstr "%s新規ドキュメントが作成されました "
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "%s page(s) deleted"
 msgstr "%sページが削除されました "
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "%s shared with you"
-msgstr "%s あなたとシェアされました"
 
 #. module: documents
 #. odoo-javascript
@@ -113,29 +100,6 @@ msgid ""
 "request a signature, convert to vendor bills with AI, etc."
 msgstr ""
 "。スキャンしたファイルは自動的にワークスペースに表示されます。次に、分割ツールでドキュメントを一括処理します。ユーザ定義アクションの起動、署名の依頼、AIを使用した仕入先請求書への変換など。"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid ".<br/>"
-msgstr ".<br/>"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "1 File"
-msgstr "1ファイル"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "1 Folder"
-msgstr "1フォルダ"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/list/document_count_field.js:0
-msgid "1 document"
-msgstr "1ドキュメント"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_tag_year_previous
@@ -163,6 +127,17 @@ msgstr "全ての請求書を先に処理する予定なので、<b>このペー
 #: code:addons/documents/static/src/js/tours/documents.js:0
 msgid "<b>Select</b> this page to continue."
 msgstr "このページを<b>選択</b>して継続。"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.document_request_done_page
+msgid "<b>You're done!</b>"
+msgstr "<b>完了しました!</b>"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/core/document_service.js:0
+msgid "<br/>At least one document hasn't been moved."
+msgstr "<br/>少なくとも1つのドキュメントが移動されていません。"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_page_layout
@@ -195,9 +170,9 @@ msgid "<i class=\"fa fa-eye\"/> Preview file"
 msgstr "<i class=\"fa fa-eye\"/> プレビューファイル"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "<i class=\"fa fa-lock oe_inline\" title=\"Locked\" invisible=\"not lock_uid\"/>"
-msgstr "<i class=\"fa fa-lock oe_inline\" title=\"Locked\" invisible=\"not lock_uid\"/>"
+#: model_terms:ir.ui.view,arch_db:documents.document_request_page
+msgid "<i class=\"fa fa-upload fa-fw\"/> Add file"
+msgstr "<i class=\"fa fa-upload fa-fw\"/> ファイルを追加"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -207,17 +182,12 @@ msgstr "<i class=\"fa fa-upload\"/>  アップロード"
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.share_file
 msgid "<i class=\"fa fa-upload\"/> Replace file"
-msgstr "<i class=\"fa fa-upload\"/>ファイルを入替え"
+msgstr "<i class=\"fa fa-upload\"/>ファイルを置き換え"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.documents_document_res_partner_view
 msgid "<span class=\"o_stat_text\">Documents</span>"
 msgstr "<span class=\"o_stat_text\">ドキュメント</span>"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "<span class=\"o_stat_text\">Related <br/> Record</span>"
-msgstr "<span class=\"o_stat_text\">関連した <br/>レコード</span>"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -288,7 +258,7 @@ msgid ""
 "                                                </div>\n"
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                                    <a t-att-href=\"object.access_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                                                    <a t-att-href=\"object.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                                        Upload the requested document\n"
 "                                                    </a>\n"
 "                                                </div>\n"
@@ -296,7 +266,7 @@ msgid ""
 "                                            Please provide us with the missing document before <t t-out=\"object.request_activity_id.date_deadline\">2021-05-17</t>.\n"
 "                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
 "                                                <br/>\n"
-"                                                <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                                                <br data-o-mail-quote=\"1\"/>\n"
 "                                            </t>\n"
 "                                        </div>\n"
@@ -333,7 +303,7 @@ msgid ""
 "                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Documents</a>\n"
 "                          </td></tr>\n"
 "                        </table>\n"
 "                    </td></tr>\n"
@@ -386,7 +356,7 @@ msgstr ""
 "                                                </div>\n"
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                                    <a t-att-href=\"object.access_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                                                    <a t-att-href=\"object.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                                        要求されたドキュメントをアップロード\n"
 "                                                    </a>\n"
 "                                                </div>\n"
@@ -394,7 +364,7 @@ msgstr ""
 "                                            不足しているドキュメントを <t t-out=\"object.request_activity_id.date_deadline\">2021-05-17</t>までにご提出下さい。\n"
 "                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
 "                                                <br/>\n"
-"                                                <t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature or ''\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                                                <br data-o-mail-quote=\"1\"/>\n"
 "                                            </t>\n"
 "                                        </div>\n"
@@ -431,7 +401,7 @@ msgstr ""
 "                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Documents</a>\n"
 "                          </td></tr>\n"
 "                        </table>\n"
 "                    </td></tr>\n"
@@ -487,7 +457,7 @@ msgid ""
 "                                                </div>\n"
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                                    <a t-att-href=\"object.access_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                                                    <a t-att-href=\"object.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                                        Upload the requested document\n"
 "                                                    </a>\n"
 "                                                </div>\n"
@@ -497,7 +467,7 @@ msgid ""
 "                                            Thank you,\n"
 "                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
 "                                                <br/>\n"
-"                                                <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                                                <br data-o-mail-quote=\"1\"/>\n"
 "                                            </t>\n"
 "                                        </div>\n"
@@ -534,7 +504,7 @@ msgid ""
 "                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Documents</a>\n"
 "                          </td></tr>\n"
 "                        </table>\n"
 "                    </td></tr>\n"
@@ -572,7 +542,7 @@ msgstr ""
 "                                        <div>\n"
 "                                            こんにちは <t t-out=\"object.owner_id.name or ''\">OdooBot</t>,\n"
 "                                            <br/><br/>\n"
-"                                            要求されたドキュメントアップロードのリマインダです:\n"
+"                                            要求されているドキュメントアップロードのリマインダーです:\n"
 "                                            <br/><br/>\n"
 "                                            <center>\n"
 "                                                <div>\n"
@@ -587,7 +557,7 @@ msgstr ""
 "                                                </div>\n"
 "                                                <br/>\n"
 "                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
-"                                                    <a t-att-href=\"object.access_url\" style=\"background-color: #875A7B; padding: 20px 30px 20px 30px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                                                    <a t-att-href=\"object.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                                        要求されたドキュメントをアップロード\n"
 "                                                    </a>\n"
 "                                                </div>\n"
@@ -597,7 +567,7 @@ msgstr ""
 "                                            宜しくお願い致します。\n"
 "                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
 "                                                <br/>\n"
-"                                                <t t-out=\"user.signature\" data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/>Mitchell Admin</t>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\">Mitchell Admin</t></div>\n"
 "                                                <br data-o-mail-quote=\"1\"/>\n"
 "                                            </t>\n"
 "                                        </div>\n"
@@ -634,7 +604,196 @@ msgstr ""
 "                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
 "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
 "                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
-"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" style=\"color: #875A7B;\">Odoo Documents</a>\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Documents</a>\n"
+"                          </td></tr>\n"
+"                        </table>\n"
+"                    </td></tr>\n"
+"                </table>\n"
+"            "
+
+#. module: documents
+#: model:mail.template,body_html:documents.mail_template_document_share
+msgid ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;\"><tr><td align=\"center\">\n"
+"                    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"padding: 16px; background-color: white; color: #454748; border-collapse:separate;\">\n"
+"                    <tbody>\n"
+"                        <!-- HEADER -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"middle\">\n"
+"                                        <span style=\"font-size: 10px;\">\n"
+"                                            Shared Document<br/>\n"
+"                                            <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.document_id.name or ''\"/>\n"
+"                                        </span><br/>\n"
+"                                    </td><td valign=\"middle\" align=\"right\" t-if=\"not user.company_id.uses_default_logo\">\n"
+"                                        <img t-attf-src=\"/logo.png?company={{ user.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.create_uid.company_id.name\"/>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <!-- CONTENT -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
+"                                        <div>\n"
+"                                            Hello <t t-out=\"object.partner_id.name\"/>,\n"
+"                                            <br/><br/>\n"
+"                                            <t t-if=\"object.document_id.type == 'folder'\" t-set=\"share_message\">share the following folder with you</t>\n"
+"                                            <t t-else=\"\" t-set=\"share_message\">share the following document with you</t>\n"
+"                                            <t t-out=\"user.name or ''\">OdooBot</t> (<t t-out=\"user.email or ''\">odoobot@example.com</t>) <t t-out=\"share_message\"/>:\n"
+"                                            <br/><br/>\n"
+"                                            <center>\n"
+"                                                <div t-if=\"object.document_id.name\">\n"
+"                                                    <b t-out=\"object.document_id.name\"/>\n"
+"                                                </div>\n"
+"                                                <div t-if=\"ctx.get('message')\">\n"
+"                                                    <i t-out=\"ctx['message']\"/>\n"
+"                                                </div>\n"
+"                                                <br/>\n"
+"                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
+"                                                    <a t-att-href=\"object.document_id.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
+"                                                        <b>Get your files</b>\n"
+"                                                    </a>\n"
+"                                                </div>\n"
+"                                            </center><br/>\n"
+"                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
+"                                                <br/>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\"/></div>\n"
+"                                                <br data-o-mail-quote=\"1\"/>\n"
+"                                            </t>\n"
+"                                        </div>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td style=\"text-align:center;\">\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <!-- FOOTER -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; font-size: 11px; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"middle\" align=\"left\">\n"
+"                                        <t t-out=\"user.company_id.name or ''\">YourCompany</t>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td valign=\"middle\" align=\"left\" style=\"opacity: 0.7;\">\n"
+"                                        <t t-out=\"user.company_id.phone or ''\">+1 650-123-4567</t>\n"
+"                                        <t t-if=\"user.company_id.email\">\n"
+"                                            | <a t-attf-href=\"'mailto:%s' % {{ user.company_id.email }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"user.company_id.email\">info@yourcompany.com</a>\n"
+"                                        </t>\n"
+"                                        <t t-if=\"user.company_id.website\">\n"
+"                                            | <a t-attf-href=\"'%s' % {{ user.company_id.website }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"user.company_id.website\">http://www.example.com</a>\n"
+"                                        </t>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                    </table>\n"
+"                    </td></tr>\n"
+"                    <!-- POWERED BY -->\n"
+"                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
+"                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odoo Documents</a>\n"
+"                          </td></tr>\n"
+"                        </table>\n"
+"                    </td></tr>\n"
+"                </table>\n"
+"            "
+msgstr ""
+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;\"><tr><td align=\"center\">\n"
+"                    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"padding: 16px; background-color: white; color: #454748; border-collapse:separate;\">\n"
+"                    <tbody>\n"
+"                        <!-- HEADER -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"middle\">\n"
+"                                        <span style=\"font-size: 10px;\">\n"
+"                                            共有済みドキュメント<br/>\n"
+"                                            <span style=\"font-size: 20px; font-weight: bold;\" t-out=\"object.document_id.name or ''\"/>\n"
+"                                        </span><br/>\n"
+"                                    </td><td valign=\"middle\" align=\"right\" t-if=\"not user.company_id.uses_default_logo\">\n"
+"                                        <img t-attf-src=\"/logo.png?company={{ user.company_id.id }}\" style=\"padding: 0px; margin: 0px; height: auto; width: 80px;\" t-att-alt=\"object.create_uid.company_id.name\"/>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td colspan=\"2\" style=\"text-align:center;\">\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <!-- CONTENT -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"top\" style=\"font-size: 13px;\">\n"
+"                                        <div>\n"
+"                                            <t t-out=\"object.partner_id.name\"/>様\n"
+"                                            <br/><br/>\n"
+"                                            <t t-if=\"object.document_id.type == 'folder'\" t-set=\"share_message\">が以下のフォルダを共有しています</t>\n"
+"                                            <t t-else=\"\" t-set=\"share_message\">share が以下のドキュメントを共有しています</t>\n"
+"                                            <t t-out=\"user.name or ''\">OdooBot</t> (<t t-out=\"user.email or ''\">odoobot@example.com</t>) <t t-out=\"share_message\"/>:\n"
+"                                            <br/><br/>\n"
+"                                            <center>\n"
+"                                                <div t-if=\"object.document_id.name\">\n"
+"                                                    <b t-out=\"object.document_id.name\"/>\n"
+"                                                </div>\n"
+"                                                <div t-if=\"ctx.get('message')\">\n"
+"                                                    <i t-out=\"ctx['message']\"/>\n"
+"                                                </div>\n"
+"                                                <br/>\n"
+"                                                <div style=\"margin: 16px 0px 16px 0px;\">\n"
+"                                                    <a t-att-href=\"object.document_id.access_url\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 20px 30px 20px 30px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
+"                                                        <b>ファイルを入手する</b>\n"
+"                                                    </a>\n"
+"                                                </div>\n"
+"                                            </center><br/>\n"
+"                                            <t t-if=\"user and user.signature\" data-o-mail-quote-container=\"1\">\n"
+"                                                <br/>\n"
+"                                                <div data-o-mail-quote=\"1\">--<br data-o-mail-quote=\"1\"/><t t-out=\"user.signature\" data-o-mail-quote=\"1\"/></div>\n"
+"                                                <br data-o-mail-quote=\"1\"/>\n"
+"                                            </t>\n"
+"                                        </div>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td style=\"text-align:center;\">\n"
+"                                      <hr width=\"100%\" style=\"background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;\"/>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                        <!-- FOOTER -->\n"
+"                        <tr>\n"
+"                            <td align=\"center\" style=\"min-width: 590px;\">\n"
+"                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: white; font-size: 11px; padding: 0px 8px 0px 8px; border-collapse:separate;\">\n"
+"                                    <tr><td valign=\"middle\" align=\"left\">\n"
+"                                        <t t-out=\"user.company_id.name or ''\">YourCompany</t>\n"
+"                                    </td></tr>\n"
+"                                    <tr><td valign=\"middle\" align=\"left\" style=\"opacity: 0.7;\">\n"
+"                                        <t t-out=\"user.company_id.phone or ''\">+1 650-123-4567</t>\n"
+"                                        <t t-if=\"user.company_id.email\">\n"
+"                                            | <a t-attf-href=\"'mailto:%s' % {{ user.company_id.email }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"user.company_id.email\">info@yourcompany.com</a>\n"
+"                                        </t>\n"
+"                                        <t t-if=\"user.company_id.website\">\n"
+"                                            | <a t-attf-href=\"'%s' % {{ user.company_id.website }}\" style=\"text-decoration:none; color: #454748;\" t-out=\"user.company_id.website\">http://www.example.com</a>\n"
+"                                        </t>\n"
+"                                    </td></tr>\n"
+"                                </table>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                    </table>\n"
+"                    </td></tr>\n"
+"                    <!-- POWERED BY -->\n"
+"                    <tr><td align=\"center\" style=\"min-width: 590px;\">\n"
+"                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"590\" style=\"min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;\">\n"
+"                          <tr><td style=\"text-align: center; font-size: 13px;\">\n"
+"                            Powered by <a target=\"_blank\" href=\"https://www.odoo.com/app/documents\" t-attf-style=\"color: {{user.company_id.email_secondary_color or '#875A7B'}};\">Odooドキュメント</a>\n"
 "                          </td></tr>\n"
 "                        </table>\n"
 "                    </td></tr>\n"
@@ -655,6 +814,12 @@ msgid "A destination is required when creating multiple shortcuts at once."
 msgstr " 複数のショートカットを一度に作成する場合は、保存先が必要です。"
 
 #. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "A document can not be linked to itself or another document."
+msgstr "ドキュメントをそれ自体や他のドキュメントにリンクすることはできません。"
+
+#. module: documents
 #: model:ir.model.constraint,message:documents.constraint_documents_document_folder_id_not_id
 msgid "A folder cannot be included in itself"
 msgstr "フォルダはそれ自体に含めることはできません"
@@ -669,18 +834,6 @@ msgstr "ショートカットはそれ自体を指すことはできません"
 #: code:addons/documents/static/src/core/document_service.js:0
 msgid "A shortcut has been created."
 msgstr "ショートカットが作成されました。"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "Access"
-msgstr "アクセス"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "Access Error"
-msgstr "アクセスエラー"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__access_token
@@ -712,17 +865,12 @@ msgid "Access to Server Actions"
 msgstr "サーバアクションへのアクセス"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Access to a folder or a document"
-msgstr "フォルダまたはドキュメントにアクセス"
-
-#. module: documents
 #: model:ir.model.constraint,message:documents.constraint_documents_document_document_token_unique
 msgid "Access tokens already used."
 msgstr "アクセストークンが既に使用されています。"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__access_url
 #: model:ir.model.fields,field_description:documents.field_documents_document__access_url
 msgid "Access url"
 msgstr "アクセスURL"
@@ -731,7 +879,6 @@ msgstr "アクセスURL"
 #. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.xml:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
 msgid "Action"
 msgstr "アクション"
 
@@ -760,7 +907,6 @@ msgstr "活動"
 
 #. module: documents
 #: model:ir.model,name:documents.model_mail_activity
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 msgid "Activity"
 msgstr "活動"
 
@@ -841,11 +987,6 @@ msgid "Add Folder"
 msgstr "フォルダ追加"
 
 #. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_tag_add_bill
-msgid "Add Tag Bill"
-msgstr "タグ仕入先請求書追加"
-
-#. module: documents
 #: model:ir.actions.server,name:documents.ir_actions_server_tag_add_validated
 msgid "Add Tag Validated"
 msgstr "タグ追加が検証されました"
@@ -858,14 +999,13 @@ msgstr "URL追加"
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-msgid "Add a tag..."
-msgstr "タグを追加..."
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
 msgid "Add an alias tag..."
 msgstr "エイリアスタグを追加..."
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.document_request_page
+msgid "Add file"
+msgstr "ファイルを追加"
 
 #. module: documents
 #. odoo-javascript
@@ -874,16 +1014,15 @@ msgid "Add new file"
 msgstr "新規ファイルを追加"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Add people or email addresses..."
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
+msgid "Add people or email addresses"
 msgstr "人またはメールアドレスを追加..."
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Add people or email addresses:"
-msgstr "人またはメールアドレスを追加:"
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "Add people or email addresses..."
+msgstr "人またはメールアドレスを追加..."
 
 #. module: documents
 #. odoo-javascript
@@ -898,12 +1037,31 @@ msgid "Add star"
 msgstr "星を追加"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "Add tags..."
+msgstr "タグを追加..."
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/attachments/attachment_list_patch.js:0
+#: code:addons/documents/static/src/attachments/attachment_list_patch.xml:0
+msgid "Add to My Drive"
+msgstr "マイドライブに追加"
+
+#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "Additional documents you have access to."
 msgstr "追加でアクセスできるドキュメント。"
 
 #. module: documents
+#: model:documents.document,name:documents.document_internal_folder
+msgid "Administrative"
+msgstr "総務"
+
+#. module: documents
+#: model:documents.document,name:documents.document_administrator_folder
 #: model:res.groups,name:documents.group_documents_manager
 msgid "Administrator"
 msgstr "管理者"
@@ -919,11 +1077,6 @@ msgid "Alias"
 msgstr "エイリアス"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_contact
-msgid "Alias Contact Security"
-msgstr "エイリアス連絡先セキュリティ"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__alias_domain_id
 msgid "Alias Domain"
 msgstr "エイリアスドメイン"
@@ -934,34 +1087,14 @@ msgid "Alias Domain Name"
 msgstr "エイリアスドメイン名"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_full_name
-msgid "Alias Email"
-msgstr "エイリアスEメール"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__alias_name
 msgid "Alias Name"
 msgstr "エイリアス名"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_status
-msgid "Alias Status"
-msgstr "エイリアスステータス"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__alias_tag_ids
 msgid "Alias Tags"
 msgstr "エイリアスタグ"
-
-#. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_status
-msgid "Alias status assessed on the last message received."
-msgstr "最後に受信したメッセージで評価されたエイリアスステータス"
-
-#. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_model_id
-msgid "Aliased Model"
-msgstr "エイリアス対象モデル"
 
 #. module: documents
 #. odoo-javascript
@@ -971,16 +1104,25 @@ msgstr "全て"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.js:0
-msgid ""
-"All users with access to this %(documentType)s or its parent will have edit "
-"permissions."
-msgstr "この %(documentType)s にアクセスできる全ユーザまたはその親に編集権があります。"
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "All companies"
+msgstr "すべての会社"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "All users with access to this"
+msgstr "これにアクセス権のあるすべてのユーザ"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__access_ids
 msgid "Allowed Access"
 msgstr "許可されたアクセス"
+
+#. module: documents
+#: model:res.groups,comment:documents.group_documents_user
+msgid "Allows you to manage his documents."
+msgstr "ユーザ自身のドキュメントを管理できます。"
 
 #. module: documents
 #. odoo-python
@@ -1004,7 +1146,7 @@ msgid ""
 "launch user defined actions, request a signature, convert to vendor bills "
 "with AI, etc."
 msgstr ""
-"受信メールを処理する簡単な方法は、スキャナでワークスペースEメールにPDFを送信するように設定することです。スキャンしたファイルは自動的にワークスペースに表示されます。次に、分割ツールでドキュメントを一括処理します:"
+"受信メールを処理する簡単な方法は、スキャナで作業区EメールにPDFを送信するように設定することです。スキャンしたファイルは自動的にワークスペースに表示されます。次に、分割ツールでドキュメントを一括処理します:"
 " ユーザ定義アクションの起動、署名の依頼、AIを使用した仕入先請求書への変換など。"
 
 #. module: documents
@@ -1012,18 +1154,6 @@ msgstr ""
 #: code:addons/documents/static/src/views/hooks.js:0
 msgid "An error occured while uploading."
 msgstr "アップロード中にエラーが発生しました。"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
-msgid "Anyone on the internet with the link can edit"
-msgstr "リンクを知っているインターネットユーザーなら誰でも編集できます"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
-msgid "Anyone on the internet with the link can view"
-msgstr "リンクを知っている人なら誰でも見ることができます"
 
 #. module: documents
 #. odoo-javascript
@@ -1083,10 +1213,8 @@ msgstr "このPDFには複数の文書が含まれているので、分割して
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/core/document_service.js:0
-msgid ""
-"At least one document couldn't be moved due to access rights. Shortcuts have"
-" been created."
-msgstr "アクセス権の問題により、少なくとも1つのドキュメントを移動できませんでした。ショートカットが作成されました。"
+msgid "At least one document could not be moved due to access rights."
+msgstr "アクセス権の問題により、少なくとも 1 つのドキュメントを仕訳できませんでした。"
 
 #. module: documents
 #: model:ir.model,name:documents.model_ir_attachment
@@ -1137,6 +1265,16 @@ msgid "Blank Page"
 msgstr "空白ページ"
 
 #. module: documents
+#: model:documents.document,name:documents.document_marketing_brand1_folder
+msgid "Brand 1"
+msgstr "ブランド1"
+
+#. module: documents
+#: model:documents.document,name:documents.document_marketing_brand2_folder
+msgid "Brand 2"
+msgstr "ブランド2"
+
+#. module: documents
 #: model:documents.tag,name:documents.documents_tag_brochures
 msgid "Brochures"
 msgstr "パンフレット"
@@ -1147,9 +1285,39 @@ msgid "By defining a folder, the upload activities will generate a document"
 msgstr "フォルダを定義することで、アップロード活動はドキュメントを生成します。"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
+msgid "Can add, modify, and delete files within this folder."
+msgstr "このフォルダ内のファイルを追加、変更、削除できます。"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
+msgid "Can modify, delete, and rename."
+msgstr "変更、削除、および名前の変更が可能です。"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
+msgid "Can only view contents. Cannot add, modify, or delete items."
+msgstr "内容の表示のみ可能です。項目の追加、変更、削除はできません。"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
+msgid "Can only view. Cannot rename, move, or delete."
+msgstr "表示のみ可能です。名前の変更、移動、削除はできません。"
+
+#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.documents_link_to_record_form_view
 msgid "Cancel"
 msgstr "キャンセル"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/widget/documents_server_action_evaluation_type_field.js:0
+msgid "Change"
+msgstr "お釣り"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__checksum
@@ -1166,13 +1334,6 @@ msgstr "子"
 #: code:addons/documents/models/documents_document.py:0
 msgid "Choose a record to link"
 msgstr "レコードを選択してリンク"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
-msgid "Choose or Configure Email Servers"
-msgstr "メールサーバの選択または設定"
 
 #. module: documents
 #. odoo-javascript
@@ -1231,6 +1392,11 @@ msgid "Color"
 msgstr "色"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_data_comercial_tenancy_agreement
+msgid "Commercial-Tenancy-Agreement.pdf"
+msgstr "商業テナント契約.pdf"
+
+#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "Common roots for all company users."
@@ -1262,8 +1428,6 @@ msgid "Configuration"
 msgstr "設定"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
 #: model:ir.model,name:documents.model_res_partner
 #: model:ir.model.fields,field_description:documents.field_documents_document__partner_id
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__partner_id
@@ -1297,20 +1461,20 @@ msgstr "リンクをコピー"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Copy Links"
 msgstr "リンクをコピー"
 
 #. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_create_activity
-msgid "Create Activity"
-msgstr "活動を作成"
-
-#. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Create Shortcut"
 msgstr "ショートカット作成"
+
+#. module: documents
+#: model:ir.model,website_form_label:documents.model_res_partner
+msgid "Create a Customer"
+msgstr "顧客を作成する"
 
 #. module: documents
 #: model_terms:ir.actions.act_window,help:documents.mail_activity_plan_action_document
@@ -1326,21 +1490,10 @@ msgstr "新規の活動を作成"
 #. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 msgid "Create a new document for the remaining page."
-msgstr ""
+msgstr "残りのページに新しいドキュメントを作成してください。"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Create and edit new contact \""
-msgstr "新規連絡先を作成・編集 \""
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Create new contact \""
-msgstr "新規連絡先を作成 \""
-
-#. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__create_uid
 #: model:ir.model.fields,field_description:documents.field_documents_document__create_uid
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__create_uid
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__create_uid
@@ -1350,6 +1503,7 @@ msgid "Created by"
 msgstr "作成者"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__create_date
 #: model:ir.model.fields,field_description:documents.field_documents_document__create_date
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__create_date
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__create_date
@@ -1367,11 +1521,6 @@ msgstr "作成日"
 #: code:addons/documents/static/src/components/documents_manage_versions_panel/documents_manage_versions_panel.xml:0
 msgid "Current Version"
 msgstr "現在のバージョン"
-
-#. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_bounced_content
-msgid "Custom Bounced Message"
-msgstr "カスタムバウンスメッセージ"
 
 #. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__create_activity_date_deadline_range_type__days
@@ -1395,9 +1544,9 @@ msgstr "ドキュメントがゴミ箱から完全に削除されるまでの日
 #: code:addons/documents/static/src/components/documents_manage_versions_panel/documents_manage_versions_panel.xml:0
 #: code:addons/documents/static/src/owl/components/pdf_exit_dialog/pdf_exit_dialog.xml:0
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
+#: code:addons/documents/static/src/views/documents_renderer_mixin.js:0
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
-#: code:addons/documents/static/src/views/list/documents_list_controller.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
 msgid "Delete"
 msgstr "削除"
 
@@ -1435,10 +1584,10 @@ msgstr "非推奨"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 #: code:addons/documents/static/src/views/hooks.js:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form_rename
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
 #: model_terms:ir.ui.view,arch_db:documents.documents_request_form_view
 #: model_terms:ir.ui.view,arch_db:documents.documents_upload_url_view
 #: model_terms:ir.ui.view,arch_db:documents.folder_deletion_form
@@ -1454,11 +1603,25 @@ msgstr "閲覧可能"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__display_name
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_document__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__display_name
+#: model:ir.model.fields,field_description:documents.field_documents_mixin__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_redirect__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__display_name
 #: model:ir.model.fields,field_description:documents.field_documents_tag__display_name
+#: model:ir.model.fields,field_description:documents.field_documents_unlink_mixin__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_actions_server__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_attachment__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_binary__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_embedded_actions__display_name
+#: model:ir.model.fields,field_description:documents.field_ir_http__display_name
+#: model:ir.model.fields,field_description:documents.field_mail_activity__display_name
+#: model:ir.model.fields,field_description:documents.field_mail_activity_type__display_name
+#: model:ir.model.fields,field_description:documents.field_res_company__display_name
+#: model:ir.model.fields,field_description:documents.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:documents.field_res_partner__display_name
+#: model:ir.model.fields,field_description:documents.field_res_users__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -1474,6 +1637,7 @@ msgstr "保存せずに終了しますか、それともページを1つの文�
 #: model:ir.model.fields,field_description:documents.field_documents_redirect__document_id
 #: model:ir.model.fields,field_description:documents.field_documents_tag__document_ids
 #: model_terms:ir.ui.view,arch_db:documents.document_view_kanban
+#: model_terms:ir.ui.view,arch_db:documents.document_view_search
 msgid "Document"
 msgstr "ドキュメント"
 
@@ -1495,13 +1659,12 @@ msgid "Document Access Link"
 msgstr "ドキュメントアクセスリンク"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__document_count
 #: model:ir.model.fields,field_description:documents.field_res_partner__document_count
+#: model:ir.model.fields,field_description:documents.field_res_users__document_count
 msgid "Document Count"
 msgstr "ドキュメント数"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 #: model_terms:ir.ui.view,arch_db:documents.documents_request_form_view
 msgid "Document Name"
 msgstr "ドキュメント名"
@@ -1561,21 +1724,27 @@ msgid "Document: Document Request"
 msgstr "ドキュメント: ドキュメント要求"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/list/document_count_field.js:0
-msgid "DocumentCountIntegerField"
-msgstr "DocumentCountIntegerField"
+#: model:mail.template,name:documents.mail_template_document_share
+msgid "Document: Document Share"
+msgstr "ドキュメント: ドキュメント共有"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-#: code:addons/documents/models/res_partner.py:0
+#. odoo-javascript
+#: code:addons/documents/static/src/views/list/document_size_field.js:0
+msgid "DocumentSizeIntegerField"
+msgstr "DocumentSizeIntegerField"
+
+#. module: documents
 #: model:ir.actions.act_window,name:documents.document_action
 #: model:ir.actions.act_window,name:documents.document_action_portal
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__document_id
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__document_ids
-#: model:ir.model.fields,field_description:documents.field_res_users__document_count
+#: model:ir.model.fields,field_description:documents.field_res_partner__document_ids
+#: model:ir.model.fields,field_description:documents.field_res_users__document_ids
+#: model:ir.model.fields.selection,name:documents.selection__ir_actions_server__usage__documents_embedded
 #: model:ir.ui.menu,name:documents.dashboard
 #: model:ir.ui.menu,name:documents.menu_root
+#: model:res.groups.privilege,name:documents.res_groups_privilege_documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_search
 #: model_terms:ir.ui.view,arch_db:documents.documents_view_activity
 #: model_terms:ir.ui.view,arch_db:documents.portal_my_home_documents
@@ -1584,20 +1753,24 @@ msgid "Documents"
 msgstr "ドキュメント"
 
 #. module: documents
+#: model:ir.model,name:documents.model_documents_access_invite
+msgid "Documents Access Invite"
+msgstr "ドキュメントアクセス招待"
+
+#. module: documents
 #: model:ir.model,name:documents.model_documents_link_to_record_wizard
 msgid "Documents Link to Record"
 msgstr "レコードするドキュメントリンク"
 
 #. module: documents
+#: model:ir.actions.client,name:documents.document_action_preference
+msgid "Documents View Preference"
+msgstr "ドキュメント表示設定"
+
+#. module: documents
 #: model:ir.model,name:documents.model_documents_mixin
 msgid "Documents creation mixin"
 msgstr "ドキュメント作成mixin"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-msgid "Documents in the Trash cannot be shared"
-msgstr "ゴミ箱にあるドキュメントは共有できません"
 
 #. module: documents
 #. odoo-javascript
@@ -1624,7 +1797,7 @@ msgstr "完了"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
+#: code:addons/documents/static/src/attachments/attachment_list_patch.js:0
 msgid "Done!"
 msgstr "完了'"
 
@@ -1632,15 +1805,9 @@ msgstr "完了'"
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_manage_versions_panel/documents_manage_versions_panel.xml:0
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_download.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Download"
 msgstr "ダウンロード"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Download #{document.name}"
-msgstr "ダウンロード #{document.name}"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -1659,8 +1826,13 @@ msgstr "フォルダをzipとしてダウンロード"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Download zip #{subfolder.name}"
-msgstr "zipをダウンロード #{subfolder.name}"
+msgid "Download zip {{0}}"
+msgstr "ダウンロード zip {{0}}"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
+msgid "Download {{0}}"
+msgstr "ダウンロード {{0}}"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_tag_draft
@@ -1687,22 +1859,27 @@ msgstr "期限タイプ"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
 msgid "Duplicate"
 msgstr "複製"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
+#: code:addons/documents/static/src/attachments/document_file_viewer.xml:0
+#: model_terms:ir.ui.view,arch_db:documents.document_view_kanban
+msgid "EMAIL"
+msgstr "Eメール"
+
+#. module: documents
+#. odoo-javascript
 #: code:addons/documents/static/src/views/search/documents_search_panel.xml:0
 msgid "Edit"
 msgstr "編集"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
 #: model:ir.model.fields.selection,name:documents.selection__documents_access__role__edit
+#: model:ir.model.fields.selection,name:documents.selection__documents_access_invite__role__edit
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_internal__edit
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_via_link__edit
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__user_permission__edit
@@ -1710,20 +1887,9 @@ msgid "Editor"
 msgstr "エディター"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-msgid "Email"
-msgstr "メール"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__alias_email
 msgid "Email Alias"
 msgstr "Eメールエイリアス"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
-msgid "Email Upload"
-msgstr "Eメールアップロード"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__email_cc
@@ -1741,6 +1907,17 @@ msgid "Email links"
 msgstr "Eメールリンク"
 
 #. module: documents
+#: model:ir.model,name:documents.model_ir_embedded_actions
+msgid "Embedded Actions"
+msgstr "埋込アクション"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "Enable access"
+msgstr "アクセスを有効にする"
+
+#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 #: code:addons/documents/static/src/views/hooks.js:0
@@ -1753,6 +1930,12 @@ msgstr "エラー"
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "Escape Preview/Deselect/Exit"
 msgstr "エスケープ プレビュー/選択解除/終了"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/widget/documents_server_action_evaluation_type_field.js:0
+msgid "Evaluation type field for Documents server actions"
+msgstr "ドキュメントサーバのアクション用の評価タイプフィールド"
 
 #. module: documents
 #. odoo-javascript
@@ -1783,13 +1966,7 @@ msgid "Expiration"
 msgstr "有効期限"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/list/documents_list_controller.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-msgid "Export"
-msgstr "エクスポート"
-
-#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
 #: model_terms:ir.ui.view,arch_db:documents.documents_request_form_view
 msgid "Extra comments..."
 msgstr "追加コメント..."
@@ -1801,9 +1978,8 @@ msgstr "お気に入り"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_type_icon/documents_type_icon.xml:0
+#: code:addons/documents/static/src/views/fields/documents_type_icon/documents_type_icon.xml:0
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__type__binary
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 msgid "File"
 msgstr "ファイル"
 
@@ -1856,6 +2032,11 @@ msgid "Files will be sent to trash and deleted forever after %s days."
 msgstr "ファイルはゴミ箱に移動され、%s日後永久に削除されます。"
 
 #. module: documents
+#: model:documents.document,name:documents.document_finance_folder
+msgid "Finance"
+msgstr "財務"
+
+#. module: documents
 #: model:documents.tag,name:documents.documents_tag_financial
 msgid "Financial"
 msgstr "財務"
@@ -1892,7 +2073,7 @@ msgstr "前ページにフォーカス"
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-#: code:addons/documents/static/src/views/documents_type_icon/documents_type_icon.xml:0
+#: code:addons/documents/static/src/views/fields/documents_type_icon/documents_type_icon.xml:0
 #: model:ir.model.fields,field_description:documents.field_documents_document__folder_id
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__folder_id
 #: model:ir.model.fields,field_description:documents.field_mail_activity_type__folder_id
@@ -1930,11 +2111,6 @@ msgid "Gather in one document"
 msgstr "1ドキュメントにまとめる"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
-msgid "General"
-msgstr "一般"
-
-#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.xml:0
 msgid "General access"
@@ -1956,6 +2132,11 @@ msgid "HR"
 msgstr "HR"
 
 #. module: documents
+#: model:ir.model,name:documents.model_ir_http
+msgid "HTTP Routing"
+msgstr "HTTPルーティング"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__has_message
 msgid "Has Message"
 msgstr "メッセージあり"
@@ -1972,20 +2153,27 @@ msgstr "履歴"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__id
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__id
 #: model:ir.model.fields,field_description:documents.field_documents_document__id
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__id
+#: model:ir.model.fields,field_description:documents.field_documents_mixin__id
 #: model:ir.model.fields,field_description:documents.field_documents_redirect__id
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__id
 #: model:ir.model.fields,field_description:documents.field_documents_tag__id
+#: model:ir.model.fields,field_description:documents.field_documents_unlink_mixin__id
+#: model:ir.model.fields,field_description:documents.field_ir_actions_server__id
+#: model:ir.model.fields,field_description:documents.field_ir_attachment__id
+#: model:ir.model.fields,field_description:documents.field_ir_binary__id
+#: model:ir.model.fields,field_description:documents.field_ir_embedded_actions__id
+#: model:ir.model.fields,field_description:documents.field_ir_http__id
+#: model:ir.model.fields,field_description:documents.field_mail_activity__id
+#: model:ir.model.fields,field_description:documents.field_mail_activity_type__id
+#: model:ir.model.fields,field_description:documents.field_res_company__id
+#: model:ir.model.fields,field_description:documents.field_res_config_settings__id
+#: model:ir.model.fields,field_description:documents.field_res_partner__id
+#: model:ir.model.fields,field_description:documents.field_res_users__id
 msgid "ID"
 msgstr "ID"
-
-#. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_parent_thread_id
-msgid ""
-"ID of the parent record holding the alias (example: project holding the task"
-" creation alias)"
-msgstr "エイリアスを保持する親レコードのID(例：プロジェクトは、タスク作成エイリアスを保持)"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__activity_exception_icon
@@ -2019,13 +2207,6 @@ msgid "If checked, some messages have a delivery error."
 msgstr "チェックした場合は、一部のメッセージに配信エラーが発生されました。"
 
 #. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_bounced_content
-msgid ""
-"If set, this content will automatically be sent out to unauthorized users "
-"instead of the default message."
-msgstr "設定されている場合、このコンテンツはデフォルトのメッセージではなく、許可されていないユーザーに自動的に送信されます。"
-
-#. module: documents
 #: model:documents.tag,name:documents.documents_tag_images
 msgid "Images"
 msgstr "画像"
@@ -2035,12 +2216,6 @@ msgstr "画像"
 #: code:addons/documents/models/documents_document.py:0
 msgid "Impossible to delete folders used by other applications."
 msgstr "他のアプリケーションで使用中のフォルダは削除できません。"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Impossible to invite partners on multiple documents at once."
-msgstr " 一度に複数のドキュメントで取引先を招待することができません。"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_kanban
@@ -2055,6 +2230,7 @@ msgstr "アクセス不可"
 #. module: documents
 #: model:documents.tag,name:documents.documents_tag_inbox
 #: model:mail.activity.type,name:documents.mail_documents_activity_data_Inbox
+#: model:mail.activity.type,summary:documents.mail_documents_activity_data_Inbox
 msgid "Inbox"
 msgstr "受信トレイ"
 
@@ -2079,6 +2255,7 @@ msgstr "情報 & タグ"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
 msgid "Info & tags"
 msgstr "情報 & タグ"
@@ -2101,16 +2278,10 @@ msgid "Internal Users Rights"
 msgstr "内部ユーザ権"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
-msgid "Internal users can edit"
-msgstr "内部ユーザは編集できます"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
-msgid "Internal users can view"
-msgstr "内部ユーザは閲覧できます"
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "Invalid document token"
+msgstr "無効なドキュメントトークン"
 
 #. module: documents
 #. odoo-python
@@ -2120,16 +2291,31 @@ msgstr "無効なフォルダID"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 #: code:addons/documents/static/src/views/search/documents_search_panel.js:0
 msgid "Invalid operation"
-msgstr "無効なオペレーション"
+msgstr "無効な工程"
 
 #. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "Invalid role."
 msgstr "無効な役割。"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "Invite People"
+msgstr "招待対象"
+
+#. module: documents
+#: model:documents.document,name:documents.documents_email_as_vendor_bill
+msgid "Invoice #INV-2025-001 - Payment Due April 24, 2025"
+msgstr "請求書 #INV-2025-001 - 支払期日: 2025年4月24日"
+
+#. module: documents
+#: model:documents.document,name:documents.documents_vendor_bill_inv_007
+msgid "Invoice-INV_2018_0007.pdf"
+msgstr "請求書-INV_2018_0007.pdf"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__is_editable_attachment
@@ -2150,6 +2336,12 @@ msgstr "フォロー中　"
 #: model:ir.model.fields,field_description:documents.field_documents_document__is_multipage
 msgid "Is considered multipage"
 msgstr "複数ページを含む"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "It is not possible to create documents in an archived folder."
+msgstr "アーカイブされたフォルダではドキュメントを作成できません。"
 
 #. module: documents
 #. odoo-python
@@ -2182,12 +2374,18 @@ msgid "Items moved to the trash will be deleted forever after %s days."
 msgstr "ゴミ箱に移動された項目は、%s日後永久に削除されます。"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_image_La_landscape_document
+msgid "LA landscape.jpg"
+msgstr "LA landscape.jpg"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__last_access_date
 #: model:ir.model.fields,field_description:documents.field_documents_document__last_access_date_group
 msgid "Last Accessed On"
 msgstr "最終アクセス"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__write_uid
 #: model:ir.model.fields,field_description:documents.field_documents_document__write_uid
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__write_uid
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__write_uid
@@ -2196,6 +2394,7 @@ msgid "Last Updated by"
 msgstr "最終更新者"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__write_date
 #: model:ir.model.fields,field_description:documents.field_documents_document__write_date
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__write_date
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__write_date
@@ -2215,18 +2414,19 @@ msgid ""
 "Let's move this document to Finance<br/> <i>Tips: actions can be tailored to"
 " your process, according to the folder.</i>"
 msgstr ""
+"このドキュメントを会計に移動しましょう。<br/><i>ヒント: フォルダに応じて、アクションは自分のプロセスに合わせてカスタマイズできます。</i>"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 msgid "Let's process documents in this folder.<br/>"
-msgstr ""
+msgstr "このフォルダのドキュメントを処理しましょう。<br/>"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 msgid "Let's process these bills: send to Finance folder."
-msgstr ""
+msgstr "これらの請求書を処理しましょう: 会計フォルダに送信してください。"
 
 #. module: documents
 #. odoo-javascript
@@ -2237,7 +2437,7 @@ msgstr "スキャナから来たこのドキュメントを処理しましょう
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-#: code:addons/documents/static/src/views/documents_type_icon/documents_type_icon.xml:0
+#: code:addons/documents/static/src/views/fields/documents_type_icon/documents_type_icon.xml:0
 #: model_terms:ir.ui.view,arch_db:documents.documents_link_to_record_form_view
 msgid "Link"
 msgstr "リンク"
@@ -2259,7 +2459,7 @@ msgstr "リンクURL"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "Link copied to clipboard!"
 msgstr "クリップボードにリンクがコピーされました！"
 
@@ -2270,33 +2470,25 @@ msgid "Link copied to the clipboard."
 msgstr "クリップボードにリンクがコピーされました。"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-msgid "Linked To"
-msgstr "以下にリンク:"
+#: model_terms:ir.ui.view,arch_db:documents.documents_view_list_main
+msgid "Link to"
+msgstr "リンク先:"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "Links copied to clipboard!"
 msgstr "リンクがクリップボードにコピーされました!"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_incoming_local
-msgid "Local-part based incoming detection"
-msgstr "ローカルパートに基づく着信検知"
-
-#. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Lock"
 msgstr "ロック"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-#: model:ir.model.fields,field_description:documents.field_documents_document__is_locked
 msgid "Locked"
 msgstr "ロック済"
 
@@ -2304,11 +2496,6 @@ msgstr "ロック済"
 #: model:ir.model.fields,field_description:documents.field_documents_document__lock_uid
 msgid "Locked by"
 msgstr "ロック者"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "Log a note..."
-msgstr "メモを記録..."
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_page_layout
@@ -2321,14 +2508,24 @@ msgid "Logout"
 msgstr "ログアウト"
 
 #. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_document__mail_alias_domain_count
+msgid "Mail Alias Domain Count"
+msgstr "メールエイリアスドメイン数"
+
+#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "Mail: %s"
 msgstr "メール: %s"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_data_multi_pdf_document
+msgid "Mails_inbox.pdf"
+msgstr "Mails_inbox.pdf"
+
+#. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Manage Versions"
 msgstr "バージョンを管理"
 
@@ -2339,18 +2536,25 @@ msgid "Manage Versions of \"%s\""
 msgstr "\"%s\" のバージョンを管理"
 
 #. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_remove_activities
-msgid "Mark activities as completed"
-msgstr "活動を完了としてマーク"
+#: model:documents.document,name:documents.document_marketing_folder
+msgid "Marketing"
+msgstr "マーケティング"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/wizard/documents_access_invite.py:0
+msgid "Member added successfully."
+msgstr "メンバーが正常に追加されました。"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Merge PDFs"
 msgstr "PDFをマージ"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__activity_note
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
 msgid "Message"
 msgstr "メッセージ"
 
@@ -2399,7 +2603,7 @@ msgstr "月"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/action/documents_actions.xml:0
 msgid "More"
 msgstr "さらに"
 
@@ -2411,7 +2615,7 @@ msgstr "このグループをゴミ箱に移動"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Move to Trash"
 msgstr "ゴミ箱に移動"
 
@@ -2419,6 +2623,7 @@ msgstr "ゴミ箱に移動"
 #. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.xml:0
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_archive.js:0
+#: code:addons/documents/static/src/views/documents_renderer_mixin.js:0
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
 #: code:addons/documents/static/src/views/hooks.js:0
 #: model_terms:ir.ui.view,arch_db:documents.folder_deletion_form
@@ -2430,11 +2635,6 @@ msgstr "ゴミ箱に移動"
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
 msgid "Move to trash?"
 msgstr "ゴミ箱に移動しますか？"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "Moved to trash"
-msgstr "ゴミ箱へ移動"
 
 #. module: documents
 #. odoo-python
@@ -2476,14 +2676,8 @@ msgstr "NULLロールには、last_access_dateを設定する必要がありま�
 #: model:ir.model.fields,field_description:documents.field_documents_document__name
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__name
 #: model:ir.model.fields,field_description:documents.field_documents_tag__name
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 msgid "Name"
 msgstr "名称"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_search
-msgid "Name / Extension"
-msgstr "名前 / 拡張"
 
 #. module: documents
 #. odoo-javascript
@@ -2542,9 +2736,15 @@ msgid "No activity"
 msgstr "活動なし"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No activity assignee"
+msgstr "活動の担当者なし"
+
+#. module: documents
 #: model_terms:ir.actions.act_window,help:documents.mail_activity_type_action_document
 msgid "No activity types found. Let's create one!"
-msgstr "活動タイプが見つかりません。作成しましょう！"
+msgstr "活動タイプが見つかりません。作成しましょう!"
 
 #. module: documents
 #. odoo-javascript
@@ -2554,21 +2754,51 @@ msgstr "作成されたエイリアスがありません"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No alias tags"
+msgstr "エイリアスタグなし"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No contact"
+msgstr "連絡先なし"
+
+#. module: documents
+#. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "No document has been selected"
 msgstr "ドキュメントが選択されていません"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/chatter/documents_chatter_overlay.xml:0
-msgid "No item selected"
-msgstr "項目が選択されていません"
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No email alias"
+msgstr "Eメールエイリアスなし"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No linked model"
+msgstr "リンク済のモデルなし"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No linked record"
+msgstr "リンク済レコードなし"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_access_settings.js:0
 msgid "No one on the internet can access"
 msgstr "インターネット上の誰もアクセスできません。"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No owner"
+msgstr "所有者なし"
 
 #. module: documents
 #. odoo-python
@@ -2582,29 +2812,17 @@ msgid "No shared links"
 msgstr "共有されたリンクはありません"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
+msgid "No tags"
+msgstr "タグなし"
+
+#. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_internal__none
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_via_link__none
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__user_permission__none
 msgid "None"
 msgstr "なし"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Not a file"
-msgstr "ファイルではない"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Not a folder."
-msgstr "フォルダではありません。"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Not attached"
-msgstr "添付なし"
 
 #. module: documents
 #. odoo-javascript
@@ -2618,8 +2836,12 @@ msgid "Note"
 msgstr "メモ"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__notify_message
+msgid "Notification Message"
+msgstr "通知メッセージ"
+
+#. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__notify
 msgid "Notify"
 msgstr "通知"
 
@@ -2690,25 +2912,19 @@ msgstr "アクセス権限のある人だけがリンクから開くことがで
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Open #{document_url.name}"
-msgstr "開く #{document_url.name}"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Open folder #{subfolder.name}"
-msgstr "フォルダを開く #{subfolder.name}"
+msgid "Open folder {{0}}"
+msgstr "フォルダを開く {{0}}"
 
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 msgid "Open the actions menu"
-msgstr ""
+msgstr "アクションメニューを開く"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-msgid "Open the permissions panel"
-msgstr "権限パネルを開く"
+#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
+msgid "Open {{0}}"
+msgstr "開く {{0}}"
 
 #. module: documents
 #. odoo-python
@@ -2727,20 +2943,6 @@ msgid ""
 msgstr "操作はサポートされていません。代わりに \"復元\" / `action_unarchive`  を使用して下さい。"
 
 #. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_force_thread_id
-msgid ""
-"Optional ID of a thread (record) to which all incoming messages will be "
-"attached, even if they did not reply to it. If set, this will disable the "
-"creation of new records completely."
-msgstr "すべての受信メッセージに添付されるスレッド(レコード)のオプションIDです。設定した場合は新しいレコードの作成を無効にします。"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.js:0
-msgid "Optional message..."
-msgstr "オプションメッセージ..."
-
-#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/helper/documents_action_helper.xml:0
 msgid "Or send emails to"
@@ -2753,7 +2955,6 @@ msgstr "その他"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_partner_access.xml:0
 #: model:ir.model.fields,field_description:documents.field_documents_document__owner_id
 #: model:ir.model.fields,field_description:documents.field_documents_request_wizard__requestee_id
@@ -2763,23 +2964,8 @@ msgstr "オーナー"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Owner: #{document.owner_id.name}"
-msgstr "所有者: #{document.owner_id.name}"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Owner: #{document_url.owner_id.name}"
-msgstr "所有者: #{document_url.owner_id.name}"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.public_folder_page
-msgid "Owner: #{subfolder.owner_id.name}"
-msgstr "所有者: #{subfolder.owner_id.name}"
-
-#. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_parent_model_id
-msgid "Parent Model"
-msgstr "親モデル"
+msgid "Owner: {{0}}"
+msgstr "所有者: {{0}}"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__parent_path
@@ -2787,29 +2973,15 @@ msgid "Parent Path"
 msgstr "親パス"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_parent_thread_id
-msgid "Parent Record Thread ID"
-msgstr "親レコードスレッドID"
-
-#. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_parent_model_id
-msgid ""
-"Parent model holding the alias. The model holding the alias reference is not"
-" necessarily the model given by alias_model_id (example: project "
-"(parent_model) and task (model))"
-msgstr ""
-"エイリアスを保持する親モデル。エイリアスの参照を保持しているモデルは、必ずしもalias_model_idによって与えられたモデルではありません(例：プロジェクト(parent_model)とタスク(model))"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "Partial transfer"
-msgstr "部分転送"
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__partner_id
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__partner_ids
 msgid "Partner"
 msgstr "取引先"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
+msgid "People"
+msgstr "メンバー"
 
 #. module: documents
 #. odoo-javascript
@@ -2818,7 +2990,7 @@ msgid "People with access"
 msgstr "アクセス権のある人"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__is_pinned_folder
+#: model:ir.model.fields,field_description:documents.field_documents_document__is_company_root_folder
 msgid "Pinned to Company roots"
 msgstr "会社ルーツにピン済"
 
@@ -2828,19 +3000,6 @@ msgid ""
 "Please login or contact the person that shared this link for more "
 "information."
 msgstr "ログインするか、このリンクを共有した連絡先までお問い合わせ下さい。"
-
-#. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_contact
-msgid ""
-"Policy to post a message on the document using the mailgateway.\n"
-"- everyone: everyone can post\n"
-"- partners: only authenticated partners\n"
-"- followers: only followers of the related document or members of following channels\n"
-msgstr ""
-"メールゲートウェイを使用したメッセージドキュメント投稿のポリシー\n"
-"- 全員: 誰でも投稿可能\n"
-"- 取引先: 認証済みの取引先のみ\n"
-"- フォロワー: 関連ドキュメントのフォロワーか、フォローしているチャネルのメンバーのみ\n"
 
 #. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__thumbnail_status__present
@@ -2897,11 +3056,6 @@ msgid "Record"
 msgstr "レコード"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__alias_force_thread_id
-msgid "Record Thread ID"
-msgstr "レコードのスレッドID"
-
-#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "Remaining Pages"
@@ -2933,21 +3087,6 @@ msgid "Remove Member"
 msgstr "メンバーを削除"
 
 #. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_tag_remove_inbox
-msgid "Remove Tag Inbox"
-msgstr "タグ受信トレイを削除"
-
-#. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_tag_remove_to_validate
-msgid "Remove Tag To Validate"
-msgstr "未検証タグを削除"
-
-#. module: documents
-#: model:ir.actions.server,name:documents.ir_actions_server_remove_tags
-msgid "Remove all tags"
-msgstr "全タグを削除"
-
-#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_star.js:0
 msgid "Remove star"
@@ -2957,7 +3096,7 @@ msgstr "星を削除"
 #. odoo-javascript
 #: code:addons/documents/static/src/core/document_service.js:0
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_rename.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form_rename
 msgid "Rename"
 msgstr "名前の変更"
@@ -2989,18 +3128,6 @@ msgstr "ドキュメントを要求"
 #: model:ir.actions.act_window,name:documents.action_request_form
 msgid "Request a file"
 msgstr "ファイルを要求"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_request_page
-msgid ""
-"Requested\n"
-"                                ∙"
-msgstr "要求済"
-
-#. module: documents
-#: model:mail.activity.type,name:documents.mail_documents_activity_data_md
-msgid "Requested Document"
-msgstr "要求されたドキュメント"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_search
@@ -3035,6 +3162,8 @@ msgid "Resource Name"
 msgstr "リソース名"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
 #: model:ir.model.fields,field_description:documents.field_documents_document__create_activity_user_id
 msgid "Responsible"
 msgstr "担当者"
@@ -3046,9 +3175,8 @@ msgstr "担当ユーザ"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: code:addons/documents/static/src/views/form/folder_form_controller.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 msgid "Restore"
 msgstr "リストア"
 
@@ -3072,6 +3200,7 @@ msgstr "変更を元に戻す"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_access__role
+#: model:ir.model.fields,field_description:documents.field_documents_access_invite__role
 msgid "Role"
 msgstr "役割"
 
@@ -3088,7 +3217,6 @@ msgstr "販売"
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
 #: model_terms:ir.ui.view,arch_db:documents.tag_view_form
 msgid "Save"
 msgstr "保存"
@@ -3107,9 +3235,9 @@ msgstr "保存中..."
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Search people"
-msgstr "人を検索する"
+#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.js:0
+msgid "Select a Record To Link"
+msgstr "リンクするレコードを選択"
 
 #. module: documents
 #. odoo-javascript
@@ -3123,6 +3251,12 @@ msgstr "ドキュメントをアップロードするフォルダを選択して
 #: code:addons/documents/static/src/views/list/documents_list_renderer.js:0
 msgid "Select all"
 msgstr "全て選択"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/chatter/documents_chatter_overlay.xml:0
+msgid "Select an item to open the chatter"
+msgstr "チャターを開くには、項目を選択して下さい。"
 
 #. module: documents
 #. odoo-javascript
@@ -3162,12 +3296,6 @@ msgstr "全ページを選択/選択解除"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Send"
-msgstr "送信"
-
-#. module: documents
-#. odoo-javascript
 #: code:addons/documents/static/src/js/tours/documents.js:0
 #: model:ir.actions.server,name:documents.ir_actions_server_send_to_finance
 msgid "Send To Finance"
@@ -3179,6 +3307,12 @@ msgid "Sent to partner when requesting a document from them"
 msgstr "ドキュメントを要求するときに取引先に送信"
 
 #. module: documents
+#: model:mail.template,description:documents.mail_template_document_share
+msgid "Sent to partner when sharing a document with them"
+msgstr "取引先とドキュメントを共有する際に送信されます"
+
+#. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_document__sequence
 #: model:ir.model.fields,field_description:documents.field_documents_tag__sequence
 msgid "Sequence"
 msgstr "シーケンス"
@@ -3193,11 +3327,6 @@ msgstr "サーバーアクション"
 #: code:addons/documents/models/ir_actions_server.py:0
 msgid "Server Actions"
 msgstr "サーバアクション"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.res_config_settings_view_form
-msgid "Set deletion delay for documents in the Trash"
-msgstr "ゴミ箱にあるドキュメントの削除遅延を設定する"
 
 #. module: documents
 #. odoo-javascript
@@ -3221,11 +3350,11 @@ msgstr "管理設定"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
 #: code:addons/documents/static/src/views/cog_menu/documents_cog_menu_item_share.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 #: code:addons/documents/static/src/views/search/documents_search_panel.xml:0
 #: code:addons/documents/static/src/web/error_dialog/error_dialog_patch.xml:0
+#: model_terms:ir.ui.view,arch_db:documents.documents_access_invite_view_form
 msgid "Share"
 msgstr "共有"
 
@@ -3234,6 +3363,11 @@ msgstr "共有"
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.js:0
 msgid "Share: %(documentName)s"
 msgstr "共有: %(documentName)s"
+
+#. module: documents
+#: model:documents.document,name:documents.document_marketing_brand1_shared_folder
+msgid "Shared"
+msgstr "共有"
 
 #. module: documents
 #. odoo-javascript
@@ -3245,26 +3379,13 @@ msgid "Shared with me"
 msgstr "自分とシェア済"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
-msgid "Sharing..."
-msgstr "シェア中..."
-
-#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__shortcut_ids
 msgid "Shortcut"
 msgstr "ショートカット"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "Shortcut created"
-msgstr "ショートカットが作成されました"
-
-#. module: documents
-#. odoo-javascript
 #: code:addons/documents/static/src/core/document_service.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.js:0
 msgid "Shortcuts can only be created one at a time."
 msgstr "ショートカットは1度に1つのみ作成可能です。"
 
@@ -3286,15 +3407,19 @@ msgid "Some files could not be uploaded (max size: %s)."
 msgstr "いくつかのファイルはアップロードできませんでした (最大サイズ: %s)"
 
 #. module: documents
-#: model:ir.model.fields,field_description:documents.field_documents_document__shortcut_document_id
-msgid "Source Document"
-msgstr "参照元"
+#: model:documents.document,name:documents.documents_attachment_sorry_netsuite_document
+msgid "Sorry Netsuite.jpg"
+msgstr "Sorry Netsuite.jpg"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-msgid "Special folders cannot be shared"
-msgstr "特別フォルダは共有することはできません"
+#: model:ir.model.fields,field_description:documents.field_documents_document__shortcut_document_id
+msgid "Source Document"
+msgstr "元ドキュメント"
+
+#. module: documents
+#: model:ir.model.fields,field_description:documents.field_documents_document__shortcut_document_owner_id
+msgid "Source Document Owner"
+msgstr "元ドキュメント所有者"
 
 #. module: documents
 #. odoo-javascript
@@ -3304,9 +3429,8 @@ msgstr "分割"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/attachments/document_file_viewer.xml:0
 #: code:addons/documents/static/src/js/tours/documents.js:0
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
 msgid "Split PDF"
 msgstr "PDFを分割"
 
@@ -3353,9 +3477,20 @@ msgid "Structure"
 msgstr "構成"
 
 #. module: documents
+#. odoo-python
+#: code:addons/documents/wizard/documents_access_invite.py:0
+msgid "Successfully Shared"
+msgstr "正常に共有されました"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__create_activity_summary
 msgid "Summary"
 msgstr "概要"
+
+#. module: documents
+#: model:documents.document,name:documents.document_support_folder
+msgid "Support"
+msgstr "サポート"
 
 #. module: documents
 #: model:res.groups,name:documents.group_documents_system
@@ -3400,6 +3535,12 @@ msgid "Text shown when hovering on this tag"
 msgstr "このタグにカーソルを置いたときに表示されるテキスト"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/attachments/attachment_list_patch.js:0
+msgid "The attachment has been successfully added to 'My Drive' in Documents."
+msgstr "添付ファイルは、ドキュメントの「マイドライブ」に正常に追加されました。"
+
+#. module: documents
 #: model:ir.model.constraint,message:documents.constraint_res_config_settings_check_deletion_delay
 msgid "The deletion delay should be positive."
 msgstr "削除遅延は正にして下さい。"
@@ -3418,6 +3559,12 @@ msgid "The document has been moved."
 msgstr "ドキュメントが移動されました。"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/core/document_service.js:0
+msgid "The document/folder has been moved to the Company root."
+msgstr "ドキュメント/フォルダは会社のルートフォルダに移動されました。"
+
+#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid ""
@@ -3426,16 +3573,6 @@ msgid ""
 msgstr ""
 "次のドキュメントはエイリアスを持つことはできません:\n"
 "- %(records)s"
-
-#. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid ""
-"The following documents/folders can't be owned by a Portal User: \n"
-"- %(partners)s"
-msgstr ""
-"次のドキュメント/フォルダはポータルユーザが所有することはできません: \n"
-"- %(partners)s"
 
 #. module: documents
 #. odoo-python
@@ -3456,13 +3593,14 @@ msgid "The following shortcuts cannot be set as documents parents: \n"
 msgstr "次のショートカットはドキュメント親として設定できません: \n"
 
 #. module: documents
-#: model:ir.model.fields,help:documents.field_documents_document__alias_model_id
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
 msgid ""
-"The model (Odoo Document Kind) to which this alias corresponds. Any incoming"
-" email that does not reply to an existing record will cause the creation of "
-"a new record of this model (e.g. a Project Task)"
+"The following user(s) cannot own root documents/folders: \n"
+"- %(lines)s"
 msgstr ""
-"このエイリアスに対応した(Odooドキュメント種別)モデル。既存のレコードに返信しない任意の受信メールは、このモデルの新しいレコード(例えば、プロジェクトタスク)の作成を引き起こします"
+"次のユーザは、ルートドキュメント/フォルダを所有できません: \n"
+"- %(lines)s"
 
 #. module: documents
 #: model:ir.model.fields,help:documents.field_documents_document__alias_name
@@ -3470,6 +3608,13 @@ msgid ""
 "The name of the email alias, e.g. 'jobs' if you want to catch emails for "
 "<jobs@example.odoo.com>"
 msgstr "eメールのエイリアス.例えば<jobs@example.odoo.com>のメールを受け取りたい場合'jobs’を選択"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid ""
+"There is at least one document you cannot move to trash in your selection."
+msgstr "選択したドキュメントのうち、ゴミ箱に移動できないものが少なくとも 1 つあります。"
 
 #. module: documents
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__last_access_date_group__1_month
@@ -3480,6 +3625,12 @@ msgstr "今月"
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__last_access_date_group__2_week
 msgid "This Week"
 msgstr "今週"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/ir_actions_server.py:0
+msgid "This action can not be executed on the current document."
+msgstr "この操作は、現在のドキュメントでは実行できません。"
 
 #. module: documents
 #. odoo-python
@@ -3498,19 +3649,20 @@ msgid "This document does not exist or is not publicly available."
 msgstr "このドキュメントは存在しないまたは公開されていません。"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_request_page
-msgid ""
-"This document has been requested.\n"
-"                <b onclick=\"document.querySelector('.o_request_upload').click()\" style=\"cursor:pointer;\">Upload it</b>."
-msgstr ""
-"このドキュメントが要求されました。\n"
-"　　　　　<b onclick=\"document.querySelector('.o_request_upload').click()\" style=\"cursor:pointer;\">アップロードして下さい</b>"
-
-#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "This document has been restored."
 msgstr "このドキュメントは復元されました。"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
+msgid ""
+"This document is locked by %s.\n"
+"Are you sure you want to unlock it?"
+msgstr ""
+"このドキュメントは %s によってロックされています。\n"
+"ロックを解除してもよろしいですか? "
 
 #. module: documents
 #. odoo-python
@@ -3548,6 +3700,12 @@ msgid "This partner is already set on this document."
 msgstr "この取引先はこのドキュメントに既に設定されています。"
 
 #. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_access.py:0
+msgid "This user can not be member."
+msgstr "このユーザはメンバーになることはできません。"
+
+#. module: documents
 #: model_terms:ir.actions.act_window,help:documents.mail_activity_type_action_document
 msgid ""
 "Those represent the different categories of things you have to do (e.g. "
@@ -3565,6 +3723,11 @@ msgid "Thumbnail Status"
 msgstr "サムネイルステータス"
 
 #. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.res_config_settings_view_form
+msgid "Time before documents in the Trash are permanently deleted."
+msgstr "ゴミ箱内のドキュメントが永久に削除されるまでの時間。"
+
+#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/views/helper/documents_action_helper.xml:0
 msgid "Tip: configure your scanner to send all documents to this address."
@@ -3577,11 +3740,6 @@ msgstr "ヒント:ペーパーレス企業になるためには"
 
 #. module: documents
 #: model:documents.tag,name:documents.documents_tag_to_validate
-msgid "To Validate"
-msgstr "未検証"
-
-#. module: documents
-#: model:mail.activity.type,name:documents.mail_documents_activity_data_tv
 msgid "To validate"
 msgstr "承認する"
 
@@ -3656,16 +3814,10 @@ msgstr "利用不可能なアクション。"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_control_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
+#: code:addons/documents/static/src/views/documents_controller_mixin.js:0
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
 msgid "Unlock"
 msgstr "ロック解除"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "Unnamed"
-msgstr "無名"
 
 #. module: documents
 #. odoo-javascript
@@ -3697,6 +3849,18 @@ msgid "Upload file request"
 msgstr "ファイルアップロード要求"
 
 #. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/fields/documents_type_icon/documents_type_icon.xml:0
+msgid "Upload the requested file"
+msgstr "リクエストされたファイルをアップロード"
+
+#. module: documents
+#: model:ir.model.fields,field_description:documents.field_ir_actions_server__usage
+#: model:ir.model.fields,field_description:documents.field_ir_cron__usage
+msgid "Usage"
+msgstr "用途"
+
+#. module: documents
 #: model:ir.model,name:documents.model_res_users
 #: model:res.groups,name:documents.group_documents_user
 msgid "User"
@@ -3704,7 +3868,6 @@ msgstr "ユーザ"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_member_invite.xml:0
 #: code:addons/documents/static/src/components/documents_permission_panel/documents_partner_access.xml:0
 msgid "User Access Role"
 msgstr "ユーザアクセスロール"
@@ -3735,14 +3898,18 @@ msgstr ""
 "                    最新のバージョンを削除すると、前のバージョンが自動的に現在のバージョンとして復元されます。"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_attachment_video_documents
+msgid "Video: Odoo Documents"
+msgstr "動画: Odooドキュメント"
+
+#. module: documents
 #: model:documents.tag,name:documents.documents_tag_videos
 msgid "Videos"
 msgstr "ビデオ"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
 #: model:ir.model.fields.selection,name:documents.selection__documents_access__role__view
+#: model:ir.model.fields.selection,name:documents.selection__documents_access_invite__role__view
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_internal__view
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__access_via_link__view
 #: model:ir.model.fields.selection,name:documents.selection__documents_document__user_permission__view
@@ -3755,6 +3922,12 @@ msgstr "ビューア"
 msgid ""
 "Want to become a <b>paperless company</b>? Let's discover Odoo Documents."
 msgstr "<b>ペーパーレスな会社</b>を目指しますか？Odooドキュメントを試してみましょう。"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/views/documents_model_mixin.js:0
+msgid "Warning"
+msgstr "警告"
 
 #. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_document__website_message_ids
@@ -3837,6 +4010,12 @@ msgstr "許可パネルのデータを読み取ることは許可されていま
 #. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
+msgid "You are not allowed to update these access rights."
+msgstr "これらのアクセス権を更新する権利はありません。"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
 msgid "You are not allowed to write in this folder."
 msgstr "このフォルダに書込む権利はありません。"
 
@@ -3868,6 +4047,13 @@ msgstr "あのfolder_idにアクセスすることはできません。"
 
 #. module: documents
 #. odoo-javascript
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid ""
+"You can't create shortcuts in nor move documents to this special folder."
+msgstr "この特別なフォルダには、ドキュメントのショートカットを作成したり、ドキュメントを移動したりすることはできません。"
+
+#. module: documents
+#. odoo-javascript
 #: code:addons/documents/static/src/views/search/documents_search_panel.js:0
 msgid ""
 "You can't create shortcuts in or move documents to this special folder."
@@ -3878,6 +4064,12 @@ msgstr "この特別なフォルダにショートカットを作成したり、
 #: code:addons/documents/models/documents_document.py:0
 msgid "You can't move documents out of folders you cannot edit."
 msgstr "編集できないフォルダからドキュメントを移動することはできません。"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/core/document_service.js:0
+msgid "You can't move this/those folder(s) to the Company root."
+msgstr "この/これらのフォルダは、会社のルートフォルダには移動できません。"
 
 #. module: documents
 #. odoo-python
@@ -3905,15 +4097,9 @@ msgstr "ゴミ箱のドキュメントは複製できません。"
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-msgid "You cannot move folders or files when in the trash."
-msgstr "ゴミ箱内のフォルダやファイルを移動することはできません。"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid "You cannot move request in the company folder"
-msgstr "会社フォルダのリクエストを移動できません"
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid "You cannot move a folder into itself or a children."
+msgstr "フォルダをそれ自身またはその子フォルダにファイルすることはできません。"
 
 #. module: documents
 #. odoo-python
@@ -3934,12 +4120,6 @@ msgid "You cannot remove this partner"
 msgstr "この取引先を削除できません。"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/documents_controller_mixin.xml:0
-msgid "You cannot share multiple documents at the same time"
-msgstr "1度に複数のドキュメントを共有できません。"
-
-#. module: documents
 #. odoo-python
 #: code:addons/documents/models/documents_document.py:0
 msgid "You do not have sufficient access rights to delete these documents."
@@ -3947,12 +4127,9 @@ msgstr "これらのドキュメントを削除するアクセス権はありま
 
 #. module: documents
 #. odoo-javascript
-#: code:addons/documents/static/src/views/documents_model_mixin.js:0
-#: code:addons/documents/static/src/views/search/documents_search_panel.js:0
-msgid ""
-"You don't have the rights to move documents nor create shortcut to that "
-"folder."
-msgstr "そのフォルダにドキュメントを移動したり、ショートカットを作成する権限はありません。"
+#: code:addons/documents/static/src/views/helper/documents_draggable.js:0
+msgid "You don't have the rights to write in this folder."
+msgstr "このフォルダに書き込む権限がありません。"
 
 #. module: documents
 #. odoo-javascript
@@ -3961,10 +4138,10 @@ msgid "You must be in a specific writable workspace to upload files"
 msgstr "ファイルをアップロードするには特定の書き込み可能なワークスペースにいる必要があります。"
 
 #. module: documents
-#. odoo-python
-#: code:addons/documents/models/documents_document.py:0
-msgid "Your Role: %s"
-msgstr "あなたのロール: %s"
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "You've added external users, but external sharing is disabled."
+msgstr "外部ユーザを追加しましたが、外部共有が無効になっています。"
 
 #. module: documents
 #. odoo-python
@@ -3979,11 +4156,9 @@ msgid "Your personal space"
 msgstr "あなた個人のスペース"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
-msgid "alias"
-msgstr "エイリアス"
+#: model_terms:ir.ui.view,arch_db:documents.document_request_done_page
+msgid "Your upload is successful"
+msgstr "アップロードが完了しました"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.format_file_size
@@ -3991,15 +4166,14 @@ msgid "bytes"
 msgstr "バイト"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_image_city_document
+msgid "city.jpg"
+msgstr "city.jpg"
+
+#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.folder_deletion_form
 msgid "days."
 msgstr "日数"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.js:0
-msgid "document"
-msgstr "ドキュメント"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -4007,15 +4181,15 @@ msgid "documents"
 msgstr "ドキュメント"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form
-msgid "e.g. Discuss proposal"
-msgstr "例: 提案内容説明"
-
-#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form_new_folder
 #: model_terms:ir.ui.view,arch_db:documents.document_view_form_rename
 msgid "e.g. Finance"
 msgstr "例: 財務"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.ir_actions_server_view_form_documents
+msgid "e.g. Mass archive"
+msgstr "例: 一括アーカイブ"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.documents_request_form_view
@@ -4035,9 +4209,14 @@ msgstr "例:  https://www.youtube.com/watch?v=CP96yVnXNrY"
 #. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/components/documents_details_panel/documents_details_panel.xml:0
-#: model_terms:ir.ui.view,arch_db:documents.document_view_form_details
 msgid "e.g. mycompany.com"
 msgstr "例: mycompany.com"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/documents_document.py:0
+msgid "email"
+msgstr "Eメール"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
@@ -4045,26 +4224,29 @@ msgid "files"
 msgstr "ファイル"
 
 #. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.js:0
-msgid "folder"
-msgstr "フォルダ"
-
-#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
 msgid "folders,"
 msgstr "フォルダ、"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_vendor_bill_extract_azure_interior_document
+msgid "invoice Azure Interior.pdf"
+msgstr "請求書 Azure Interior.pdf"
+
+#. module: documents
+#: model:documents.document,name:documents.documents_vendor_bill_extract_open_value_document
+msgid "invoice OpenValue.pdf"
+msgstr "請求書 OpenValue.pdf"
+
+#. module: documents
+#: model_terms:ir.ui.view,arch_db:documents.document_request_page
+msgid "is requesting"
+msgstr "要求しています"
+
+#. module: documents
 #: model:ir.model.fields,field_description:documents.field_documents_link_to_record_wizard__is_readonly_model
 msgid "is_readonly_model"
 msgstr "is_readonly_model"
-
-#. module: documents
-#. odoo-javascript
-#: code:addons/documents/static/src/views/chatter/documents_chatter_overlay.xml:0
-msgid "items selected"
-msgstr "選択済アイテム"
 
 #. module: documents
 #. odoo-javascript
@@ -4078,35 +4260,37 @@ msgid "kiB"
 msgstr "kiB"
 
 #. module: documents
+#: model:documents.document,name:documents.documents_image_mail_document
+msgid "mail.png"
+msgstr "mail.png"
+
+#. module: documents
+#. odoo-python
+#: code:addons/documents/models/ir_actions_server.py:0
+msgid "model_name"
+msgstr "model_name"
+
+#. module: documents
+#. odoo-javascript
+#: code:addons/documents/static/src/components/documents_permission_panel/documents_permission_panel.xml:0
+msgid "or its parent will have edit permissions."
+msgstr "または、その親フォルダに編集権限があります。"
+
+#. module: documents
+#: model:documents.document,name:documents.documents_image_people_document
+msgid "people.jpg"
+msgstr "people.jpg"
+
+#. module: documents
 #. odoo-javascript
 #: code:addons/documents/static/src/owl/components/pdf_page/pdf_page.xml:0
 msgid "select"
 msgstr "選択"
 
 #. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid "shared a document with you.<br/>"
-msgstr "あなたとドキュメントを共有しました。<br/>"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid "shared a folder with you.<br/>"
-msgstr "あなたとフォルダを共有しました。<br/>"
-
-#. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page
 msgid "shared by"
 msgstr "共有者:"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid "shared this document with you:"
-msgstr "あなたとこのドキュメントを共有しました:"
-
-#. module: documents
-#: model_terms:ir.ui.view,arch_db:documents.mail_template_document_share
-msgid "shared this folder with you:"
-msgstr "あなたとこのフォルダを共有しました:"
 
 #. module: documents
 #. odoo-javascript
@@ -4125,6 +4309,11 @@ msgstr "sub-doc-%s"
 #: code:addons/documents/static/src/owl/components/pdf_manager/pdf_manager.js:0
 msgid "unnamed"
 msgstr "無名"
+
+#. module: documents
+#: model:mail.template,subject:documents.mail_template_document_share
+msgid "{{ object.document_id.name or 'Document' }} shared with you"
+msgstr "{{ object.document_id.name or 'Document' }} があなたと共有されました"
 
 #. module: documents
 #: model_terms:ir.ui.view,arch_db:documents.public_folder_page

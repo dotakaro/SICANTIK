@@ -2,6 +2,7 @@ import { Component, onWillStart, onWillUpdateProps, useState, toRaw } from "@odo
 import { _t } from "@web/core/l10n/translation";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { rpc } from "@web/core/network/rpc";
+import { user } from "@web/core/user";
 import { Property } from "@web_studio/client_action/view_editor/property/property";
 import { SelectionContentDialog } from "@web_studio/client_action/view_editor/interactive_editor/field_configuration/selection_content_dialog";
 import { TypeWidgetProperties } from "@web_studio/client_action/view_editor/interactive_editor/properties/type_widget_properties/type_widget_properties";
@@ -19,13 +20,10 @@ class TechnicalName extends Component {
     static components = { Property };
 
     setup() {
-        this.renameField = (value) => {
-            return this.env.viewEditorModel.renameField(
-                this.props.node.attrs.name,
-                `x_studio_${value}`,
-                { autoUnique: false }
-            );
-        };
+        this.renameField = (value) =>
+            this.env.viewEditorModel.renameField(this.props.node.attrs.name, `x_studio_${value}`, {
+                autoUnique: false,
+            });
     }
 
     get canEdit() {
@@ -60,10 +58,11 @@ export class FieldProperties extends Component {
 
     setup() {
         this.dialog = useService("dialog");
-        this.companyService = useService("company");
-        this.multiCompany = Object.keys(this.companyService.allowedCompanies).length > 1;
+        this.multiCompany = user.allowedCompanies.length > 1;
+        this.activeCompany = user.activeCompany;
         this.state = useState({});
         this.editNodeAttributes = useEditNodeAttributes();
+
         onWillStart(async () => {
             if (this._canShowDefaultValue(this.props.node)) {
                 this.state.defaultValue = await this.getDefaultValue(this.props.node);
@@ -109,7 +108,7 @@ export class FieldProperties extends Component {
             model_name: this.env.viewEditorModel.resModel,
             field_name: this.props.node.field.name,
             value,
-            company_id: this.companyService.currentCompany.id,
+            company_id: user.activeCompany.id,
         });
         this.state.defaultValue = value;
     }
@@ -127,7 +126,7 @@ export class FieldProperties extends Component {
         const defaultValueObj = await rpc("/web_studio/get_default_value", {
             model_name: this.env.viewEditorModel.resModel,
             field_name: node.field.name,
-            company_id: this.companyService.currentCompany.id,
+            company_id: user.activeCompany.id,
         });
         return defaultValueObj.default_value;
     }
@@ -151,12 +150,10 @@ export class FieldProperties extends Component {
             inputAttributes: {},
         };
         if (field.selection) {
-            props.childProps.choices = this.props.node.field.selection.map(([value, label]) => {
-                return {
-                    label,
-                    value,
-                };
-            });
+            props.childProps.choices = this.props.node.field.selection.map(([value, label]) => ({
+                label,
+                value,
+            }));
         }
         const fieldType = field.type;
         const widget = attrs.widget;
@@ -168,9 +165,6 @@ export class FieldProperties extends Component {
     }
 
     _canShowDefaultValue(node) {
-        if (/^(in_group_|sel_groups_)/.test(node.attrs.name)) {
-            return false;
-        }
         return !["image", "many2many", "one2many", "many2one", "binary"].includes(node.field.type);
     }
 

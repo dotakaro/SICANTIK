@@ -1,7 +1,6 @@
 const { DateTime } = luxon;
 
 import { registry } from '@web/core/registry';
-import { delay } from "@odoo/hoot-dom";
 
 function getValidNextStartDatetime() {
     return DateTime
@@ -32,22 +31,19 @@ registry
                 content: 'Select Computer',
                 trigger: '.oe_product_cart:first a:contains("Computer")',
                 run: 'click',
+                expectUnloadPage: true,
             },
             {
-                trigger: ".oe_website_sale:contains(computer)",
+                trigger: "#product_detail_main #product_details:contains(computer)",
             },
             {
                 content: 'Pick an invalid start date',
                 trigger: 'input[name=renting_start_date]',
-                async run(helpers) {
-                    await delay(1000);
-                    await helpers.edit("01/01/2000");
-                    await helpers.press("Tab");
-                },
+                run: 'edit 01/01/2000 && press Tab',
             },
             {
                 content: 'Check that css_not_available has been added to the product form',
-                trigger: 'form[action="/shop/cart/update"].css_not_available'
+                trigger: 'form.css_not_available'
             },
             {
                 content: 'Pick a valid end date first (otherwise start date after end date)',
@@ -61,7 +57,7 @@ registry
             },
             {
                 content: 'Check that css_not_available has been removed',
-                trigger: 'form[action="/shop/cart/update"]:not(.css_not_available)'
+                trigger: 'form:not(.css_not_available)'
             },
         ],
    });

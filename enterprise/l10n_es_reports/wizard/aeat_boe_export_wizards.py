@@ -6,7 +6,8 @@ from odoo.exceptions import RedirectWarning, UserError, ValidationError
 
 import re
 
-class AEATBOEExportWizard(models.TransientModel):
+
+class L10n_Es_ReportsAeatBoeExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.export.wizard'
     _description = "BOE Export Wizard"
 
@@ -26,9 +27,10 @@ class AEATBOEExportWizard(models.TransientModel):
             options = self.env.context.get('l10n_es_reports_report_options', {})
             return self.report_id.export_file({**options, 'l10n_es_reports_boe_wizard_id': self.id}, 'export_boe')
 
-class Mod111And115And303CommonBOEWizard(models.TransientModel):
-    _inherit = 'l10n_es_reports.aeat.boe.export.wizard'
+
+class L10n_Es_ReportsAeatBoeMod111and115and303ExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.mod111and115and303.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.export.wizard']
     _description = "BOE Export Wizard for (mod111, mod115 & 303)"
 
     def _get_current_company(self):
@@ -48,9 +50,9 @@ class Mod111And115And303CommonBOEWizard(models.TransientModel):
                 raise ValidationError(_("Please select an IBAN account."))
 
 
-class Mod347And349CommonBOEWizard(models.TransientModel):
-    _inherit = 'l10n_es_reports.aeat.boe.export.wizard'
+class L10n_Es_ReportsAeatBoeMod347and349ExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.mod347and349.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.export.wizard']
     _description = "BOE Export Wizard for (mod347 & mod349)"
 
     def _default_contact_name(self):
@@ -69,9 +71,9 @@ class Mod347And349CommonBOEWizard(models.TransientModel):
         return re.sub(r'\D', '', self.contact_person_phone or '')
 
 
-class Mod111BOEWizard(models.TransientModel):
-    _inherit = 'l10n_es_reports.aeat.boe.mod111and115and303.export.wizard'
+class L10n_Es_ReportsAeatBoeMod111ExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.mod111.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.mod111and115and303.export.wizard']
     _description = "BOE Export Wizard for (mod111)"
 
     MODELO_NUMBER = 111
@@ -79,9 +81,9 @@ class Mod111BOEWizard(models.TransientModel):
     # No field, but keeping it so is mandatory for the genericity of the modelling
 
 
-class Mod115BOEWizard(models.TransientModel):
-    _inherit = 'l10n_es_reports.aeat.boe.mod111and115and303.export.wizard'
+class L10n_Es_ReportsAeatBoeMod115ExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.mod115.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.mod111and115and303.export.wizard']
     _description = "BOE Export Wizard for (mod115)"
 
     MODELO_NUMBER = 115
@@ -89,9 +91,21 @@ class Mod115BOEWizard(models.TransientModel):
     # No field, but keeping it so is mandatory for the genericity of the modelling
 
 
-class Mod303BOEWizard(models.TransientModel):
-    _inherit = 'l10n_es_reports.aeat.boe.mod111and115and303.export.wizard'
+class L10n_Es_ReportsAeatBoeMod130ExportWizard(models.TransientModel):
+    _name = 'l10n_es_reports.aeat.boe.mod130.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.mod111and115and303.export.wizard']
+    _description = "BOE Export Wizard for (mod130)"
+
+    MODELO_NUMBER = 130
+
+    taxpayer_id = fields.Char(string="Taxpayer ID")
+    taxpayer_first_name = fields.Char(string="Taxpayer first name")
+    taxpayer_last_name = fields.Char(string="Taxpayer last name")
+
+
+class L10n_Es_ReportsAeatBoeMod303ExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.mod303.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.mod111and115and303.export.wizard']
     _description = "BOE Export Wizard for (mod303)"
 
     MODELO_NUMBER = 303
@@ -139,9 +153,10 @@ class Mod303BOEWizard(models.TransientModel):
             return 1 if self.exempted_from_mod_390 else 2
         return 0
 
-class Mod347BOEWizard(models.TransientModel):
-    _inherit = 'l10n_es_reports.aeat.boe.mod347and349.export.wizard'
+
+class L10n_Es_ReportsAeatBoeMod347ExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.mod347.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.mod347and349.export.wizard']
     _description = "BOE Export Wizard for (mod347)"
 
     MODELO_NUMBER = 347
@@ -163,7 +178,7 @@ class Mod347BOEWizard(models.TransientModel):
         return {'cash_basis': cash_basis_dict}
 
 
-class Mod347BOEManuaPartnerData(models.TransientModel):
+class L10n_Es_ReportsAeatMod347ManualPartnerData(models.TransientModel):
     _name = 'l10n_es_reports.aeat.mod347.manual.partner.data'
     _description = "Manually Entered Data for Mod 347 Report"
 
@@ -175,18 +190,19 @@ class Mod347BOEManuaPartnerData(models.TransientModel):
     operation_class = fields.Selection(selection=[('local_negocio', 'Arrendamiento Local Negocio'), ('seguros', 'Operaciones de Seguros'), ('otras', 'Otras operaciones')], required=True, string='Operation Class')
 
 
-class Mod349BOEWizard(models.TransientModel):
-    _inherit = 'l10n_es_reports.aeat.boe.mod347and349.export.wizard'
+class L10n_Es_ReportsAeatBoeMod349ExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.mod349.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.mod347and349.export.wizard']
     _description = "BOE Export Wizard for (mod349)"
 
     MODELO_NUMBER = 349
 
     trimester_2months_report = fields.Boolean(string="Trimester monthly report", help="Whether or not this BOE file must be generated with the data of the first two months of the trimester (in case its total amount of operation is above the threshold fixed by the law)")
 
-class Mod390BOEWizard(models.TransientModel):
-    _inherit = 'l10n_es_reports.aeat.boe.export.wizard'
+
+class L10n_Es_ReportsAeatBoeMod390ExportWizard(models.TransientModel):
     _name = 'l10n_es_reports.aeat.boe.mod390.export.wizard'
+    _inherit = ['l10n_es_reports.aeat.boe.export.wizard']
     _description = "BOE Export Wizard for (mod390)"
 
     MODELO_NUMBER = 390

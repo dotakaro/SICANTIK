@@ -1,10 +1,9 @@
-import { describe, expect, test, beforeEach } from "@odoo/hoot";
-import { click } from "@odoo/hoot-dom";
-import { delay } from "@odoo/hoot-mock";
-import { onRpc, mountView } from "@web/../tests/web_test_helpers";
+import { beforeEach, describe, expect, test } from "@odoo/hoot";
+import { advanceTime, waitFor } from "@odoo/hoot-dom";
+import { contains, mountView, onRpc } from "@web/../tests/web_test_helpers";
 
-import { defineTimesheetModels } from "./hr_timesheet_models";
 import { patchSession } from "@hr_timesheet/../tests/hr_timesheet_models";
+import { defineTimesheetModels } from "./hr_timesheet_models";
 
 defineTimesheetModels();
 beforeEach(() => {
@@ -18,14 +17,10 @@ test("timesheet.grid (list)(timer): start & stop", async () => {
         type: "list",
         resModel: "account.analytic.line",
     });
-    expect(".btn_start_timer").toHaveCount(1);
-
-    await click(".btn_start_timer");
-    await delay(50);
-    expect(".btn_stop_timer").toHaveCount(1);
-
-    await click(".btn_stop_timer");
-    await delay(50);
+    await contains(".btn_start_timer").click();
+    await contains(".btn_stop_timer").click();
+    await advanceTime(100);
+    await waitFor(".btn_start_timer");
     expect(".btn_start_timer").toHaveCount(1);
 });
 
@@ -33,16 +28,12 @@ test("timesheet.grid (list)(timer): start & stop, view is grouped", async () => 
     await mountView({
         type: "list",
         resModel: "account.analytic.line",
-        groupBy: [ "project_id"],
+        groupBy: ["project_id"],
     });
-    expect(".btn_start_timer").toHaveCount(1);
-
-    await click(".btn_start_timer");
-    await delay(50);
-    expect(".btn_stop_timer").toHaveCount(1);
-
-    await click(".btn_stop_timer");
-    await delay(50);
+    await contains(".btn_start_timer").click();
+    await contains(".btn_stop_timer").click();
+    await advanceTime(100);
+    await waitFor(".btn_start_timer");
     expect(".btn_start_timer").toHaveCount(1);
 });
 
@@ -50,16 +41,12 @@ test("timesheet.grid (list)(timer): start & stop, view is grouped multiple times
     await mountView({
         type: "list",
         resModel: "account.analytic.line",
-        groupBy: [ "project_id", "task_id", "name"],
+        groupBy: ["project_id", "task_id", "name"],
     });
-    expect(".btn_start_timer").toHaveCount(1);
-
-    await click(".btn_start_timer");
-    await delay(50);
-    expect(".btn_stop_timer").toHaveCount(1);
-
-    await click(".btn_stop_timer");
-    await delay(50);
+    await contains(".btn_start_timer").click();
+    await contains(".btn_stop_timer").click();
+    await advanceTime(100);
+    await waitFor(".btn_start_timer");
     expect(".btn_start_timer").toHaveCount(1);
 });
 
@@ -73,15 +60,12 @@ test("timesheet.grid (list)(timer): start without a valid project", async () => 
         type: "list",
         resModel: "account.analytic.line",
     });
-    expect(".btn_start_timer").toHaveCount(1);
-
-    await click(".btn_start_timer");
-    await delay(50);
-    expect(".btn_stop_timer").toHaveCount(1);
-
-    await click(".btn_stop_timer");
-    await delay(50);
+    await contains(".btn_start_timer").click();
+    await contains(".btn_stop_timer").click();
+    await advanceTime(100);
+    await waitFor("div.o_notification_manager h5:contains(Invalid fields:)");
     expect("div.o_notification_manager h5:contains(Invalid fields:)").toHaveCount(1, {
-        message: "The default notification of 'required fields' of a Many2one relation should be raised."
+        message:
+            "The default notification of 'required fields' of a Many2one relation should be raised.",
     });
 });

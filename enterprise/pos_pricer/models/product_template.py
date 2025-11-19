@@ -1,7 +1,7 @@
 from odoo import models
 
 
-class PricerProductTemplate(models.Model):
+class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     def write(self, vals):

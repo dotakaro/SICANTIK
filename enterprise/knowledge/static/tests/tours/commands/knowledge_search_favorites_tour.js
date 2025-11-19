@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { endKnowledgeTour, openCommandBar } from "../knowledge_tour_utils.js";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
@@ -65,7 +63,7 @@ const embedKnowledgeKanbanViewSteps = function (article) {
         trigger: ".o_app[data-menu-xmlid='knowledge.knowledge_menu_root']",
         run: "click",
     }, { // click on the search menu
-        trigger: "[role='menuitem']:contains(Search)",
+        trigger: "[role='menuitem']:contains(Articles)",
         run: "click",
     }, { // toggle on the kanban view
         trigger: ".o_switch_view.o_kanban",

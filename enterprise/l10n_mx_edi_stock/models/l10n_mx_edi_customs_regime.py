@@ -1,7 +1,7 @@
 from odoo import fields, models
 
 
-class MexicanEDICustomsRegime(models.Model):
+class L10n_Mx_EdiCustomsRegime(models.Model):
     _name = 'l10n_mx_edi.customs.regime'
     _description = 'Mexican Customs Regime'
 
@@ -17,6 +17,7 @@ class MexicanEDICustomsRegime(models.Model):
         required=True,
     )
 
-    _sql_constraints = [
-        ('uniq_code', 'UNIQUE(code)', 'This code is already used.'),
-    ]
+    _uniq_code = models.Constraint(
+        'UNIQUE(code)',
+        "This code is already used.",
+    )

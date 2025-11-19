@@ -4,6 +4,7 @@
 from odoo import fields, models, _
 from odoo.tools.misc import unique
 
+
 class HelpdeskStage(models.Model):
     _name = 'helpdesk.stage'
     _description = 'Helpdesk Stage'
@@ -49,11 +50,11 @@ class HelpdeskStage(models.Model):
     def write(self, vals):
         if 'active' in vals and not vals['active']:
             self.env['helpdesk.ticket'].search([('stage_id', 'in', self.ids)]).write({'active': False})
-        return super(HelpdeskStage, self).write(vals)
+        return super().write(vals)
 
-    def toggle_active(self):
-        res = super().toggle_active()
-        stage_active = self.filtered('active')
+    def action_unarchive(self):
+        res = super().action_unarchive()
+        stage_active = self.filtered(self._active_name)
         if stage_active and sum(stage_active.with_context(active_test=False).mapped('ticket_count')) > 0:
             wizard = self.env['helpdesk.stage.delete.wizard'].create({
                 'stage_ids': stage_active.ids,

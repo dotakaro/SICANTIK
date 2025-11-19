@@ -5,7 +5,7 @@ import { patch } from "@web/core/utils/patch";
 
 patch(OrderTabs.prototype, {
     newFloatingOrder() {
-        if (this.pos.get_order()?.tyro_payment_in_progress()) {
+        if (this.pos.getOrder()?.tyroPaymentInProgress()) {
             this.dialog.add(AlertDialog, {
                 title: _t("Payment in progress"),
                 body: _t("Please complete or cancel the payment before navigatating away."),

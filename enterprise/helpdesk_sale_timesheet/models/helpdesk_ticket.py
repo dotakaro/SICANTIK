@@ -8,6 +8,8 @@ from odoo.exceptions import ValidationError
 from odoo.osv import expression
 from odoo.tools.misc import unquote
 
+from odoo.addons.sale_timesheet_enterprise.models.sale_order_line import DEFAULT_INVOICED_TIMESHEET
+
 
 class HelpdeskTicket(models.Model):
     _inherit = 'helpdesk.ticket'
@@ -78,6 +80,7 @@ class HelpdeskTicket(models.Model):
         (self - billable_tickets).update({
             'sale_line_id': False
         })
+        sol_per_domain = dict()
         for ticket in billable_tickets:
             if ticket.project_id and ticket.project_id.pricing_type != 'task_rate':
                 ticket.sale_line_id = ticket.project_id.sale_line_id
@@ -85,31 +88,37 @@ class HelpdeskTicket(models.Model):
             if ticket.sale_line_id.sudo().order_partner_id.commercial_partner_id != ticket.commercial_partner_id:
                 ticket.sale_line_id = False
             if not ticket.sale_line_id:
-                ticket.sale_line_id = ticket._get_last_sol_of_customer()
+                domain = tuple(ticket._get_last_sol_of_customer_domain())
+                if not domain:
+                    ticket.sale_line_id = False
+                    continue
+                if domain not in sol_per_domain:
+                    sol_per_domain[domain] = self.env['sale.order.line'].search(domain, limit=1)
+                ticket.sale_line_id = sol_per_domain[domain]
 
     def _compute_display_invoice_button(self):
         for ticket in self:
             ticket.display_invoice_button = ticket.use_helpdesk_sale_timesheet and\
                 (ticket.sale_order_id or ticket.sale_line_id) and ticket.invoice_count > 0
 
-    def _get_last_sol_of_customer(self):
-        # Get the last SOL made for the customer in the current task where we need to compute
+    def _get_last_sol_of_customer_domain(self):
+        # Get the domain of the last SOL made for the customer in the current task where we need to compute
         self.ensure_one()
         if not self.commercial_partner_id or not self.project_id.allow_billable or not self.use_helpdesk_sale_timesheet:
-            return False
+            return []
         SaleOrderLine = self.env['sale.order.line']
         domain = expression.AND([
             SaleOrderLine._domain_sale_line_service(check_state=False),
             [
                 ('company_id', '=', self.company_id.id),
                 ('order_partner_id', 'child_of', self.commercial_partner_id.id),
-                ('state', 'in', ['sale', 'done']),
+                ('state', 'in', ('sale', 'done')),
                 ('remaining_hours', '>', 0),
             ],
         ])
         if self.project_id.pricing_type != 'task_rate' and (order_id := self.project_id.sale_order_id) and self.commercial_partner_id == self.project_id.partner_id.commercial_partner_id:
-            domain = expression.AND([domain, [('order_id', '=?', order_id.id)]])
-        return SaleOrderLine.search(domain, limit=1)
+            domain = expression.AND([domain, [('order_id', '=', order_id.id)]])
+        return domain
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -142,7 +151,7 @@ class HelpdeskTicket(models.Model):
                 # We need to search the timesheets of other employee to update the so_line
                 other_timesheets = self.env['account.analytic.line'].sudo().search([('id', 'not in', timesheet_ids), ('helpdesk_ticket_id', '=', self.id)])
 
-        res = super(HelpdeskTicket, self).write(values)
+        res = super().write(values)
         if sol_id := values.get('sale_line_id'):
             self._ensure_sale_order_linked([sol_id])
         if other_timesheets:
@@ -211,3 +220,15 @@ class HelpdeskTicket(models.Model):
             "domain": [('id', 'in', invoices.ids)],
             "res_id": invoices.id if len(invoices) == 1 else False,
         }
+
+    def _get_portal_ticket_hours_spent(self):
+        if not (timesheet_tickets := self.filtered('team_id.use_helpdesk_sale_timesheet')):
+            return 0.0
+        return self.env['account.analytic.line'].sudo()._read_group(
+            [
+                ('helpdesk_ticket_id', 'in', timesheet_tickets.ids),
+                ('validated', 'in', [True, self.env['ir.config_parameter'].sudo().get_param('sale.invoiced_timesheet', DEFAULT_INVOICED_TIMESHEET) == 'approved']),
+            ],
+            [],
+            ['unit_amount:sum']
+        )[0][0] or 0.0

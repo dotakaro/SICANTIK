@@ -1,7 +1,5 @@
-/** @odoo-module **/
-
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
-import { PromoteStudioAutomationDialog } from "@web_enterprise/webclient/promote_studio_dialog/promote_studio_dialog";
+import { PromoteStudioAutomationDialog } from "@web_enterprise/webclient/promote_studio/promote_studio_dialog";
 import { _t } from "@web/core/l10n/translation";
 import { user } from "@web/core/user";
 import { useBus, useService } from "@web/core/utils/hooks";
@@ -9,11 +7,16 @@ import { escape } from "@web/core/utils/strings";
 import { useSetupAction } from "@web/search/action_hook";
 import { DocumentsPermissionPanel } from "@documents/components/documents_permission_panel/documents_permission_panel";
 import { PdfManager } from "@documents/owl/components/pdf_manager/pdf_manager";
-import { EventBus, onMounted, onWillStart, markup, useComponent, useEnv, useRef, useSubEnv } from "@odoo/owl";
-
-// TODO: clean in master
-import { loadMaxUploadSize as loadMaxUploadSizeDocumentService } from "@documents/core/document_service";
-export const loadMaxUploadSize = loadMaxUploadSizeDocumentService;
+import {
+    EventBus,
+    onMounted,
+    onWillStart,
+    markup,
+    useComponent,
+    useEnv,
+    useRef,
+    useSubEnv,
+} from "@odoo/owl";
 
 /**
  * Controller/View hooks
@@ -47,7 +50,7 @@ export function openDeleteConfirmationDialog(model, isPermanent) {
 
 export async function toggleArchive(model, resModel, resIds, doArchive) {
     if (doArchive && !(await openDeleteConfirmationDialog(model, false))) {
-        return;
+        return false;
     }
     const action = await model.orm.call(
         resModel,
@@ -60,6 +63,7 @@ export async function toggleArchive(model, resModel, resIds, doArchive) {
     if (doArchive) {
         await model.env.documentsView.bus.trigger("documents-close-preview");
     }
+    return true;
 }
 
 export function preSuperSetupFolder() {
@@ -117,7 +121,7 @@ export function useDocumentView(helpers) {
 
     // Opens Share Dialog
     const _openShareDialog = async ({ id, shortcut_document_id }) => {
-        const document = shortcut_document_id ? { id: shortcut_document_id[0] } : { id };
+        const document = shortcut_document_id ? { id: shortcut_document_id.id } : { id };
         dialogService.add(DocumentsPermissionPanel, {
             document,
             onChangesSaved: () => env.searchModel.trigger("update"),
@@ -175,11 +179,7 @@ export function useDocumentView(helpers) {
         _openAutomations(ev.detail);
     });
 
-    onWillStart(async () => {
-        component.isDocumentsManager = await user.hasGroup("documents.group_documents_manager");
-    });
-
-    onMounted(async() => {
+    onMounted(async () => {
         documentService.updateDocumentURLRefresh();
     });
 
@@ -234,9 +234,7 @@ export function useDocumentView(helpers) {
                     default_folder_id: env.searchModel.getSelectedFolderId(),
                     default_res_id: props.context.default_res_id || false,
                     default_res_model: props.context.default_res_model || false,
-                    ...(folderId === "COMPANY"
-                        ? { default_owner_id: documentService.store.odoobot.userId }
-                        : {}),
+                    ...(folderId === "COMPANY" ? { default_owner_id: false } : {}),
                 },
                 fullscreen: env.isSmall,
                 onClose: async () => {
@@ -255,7 +253,7 @@ export function useDocumentView(helpers) {
                     ...(currentFolder === "COMPANY"
                         ? {
                               default_access_internal: "edit",
-                              default_owner_id: documentService.store.odoobot.userId,
+                              default_owner_id: false,
                           }
                         : {}),
                 },
@@ -347,20 +345,17 @@ function useDocumentsViewFilePreviewer({
                                 await record.model.root.deleteRecords(record);
                             }
                         }
-                        let count = 0;
                         for (const record of env.model.root.records.filter((r) =>
-                            newDocumentIds.includes(r.resId),
+                            newDocumentIds.includes(r.resId)
                         )) {
-                            record.onRecordClick(null, {
-                                isKeepSelection: count++ !== 0,
-                                isRangeSelection: false,
-                            });
+                            record.toggleSelection(true);
                         }
                     },
                 }
             );
         };
         if (isPdfSplit) {
+            setPreviewStore({}); // Close preview
             openPdfSplitter(documents);
             return;
         }
@@ -373,8 +368,8 @@ function useDocumentsViewFilePreviewer({
                 const getRecordAttachment = (rec) => {
                     rec = rec.shortcutTarget;
                     return {
-                        id: rec.data.attachment_id[0],
-                        name: rec.data.attachment_id[1],
+                        id: rec.data.attachment_id.id,
+                        name: rec.data.attachment_id.display_name,
                         mimetype: rec.data.mimetype,
                         url: rec.data.url,
                         documentId: rec.resId,
@@ -393,13 +388,14 @@ function useDocumentsViewFilePreviewer({
             });
         // If there is a scrollbar we don't want it whenever the previewer is opened
         if (component.root.el) {
-            component.root.el.querySelector(".o_documents_view").classList.add("overflow-hidden");
+            component.root.el.querySelector(".o_documents_view")?.classList.add("overflow-hidden");
         }
         const selectedDocument = documentsRecords.find(
             (rec) => rec.id === (mainDocument || documents[0]).resId
         );
         documentService.documentList = {
             documents: documentsRecords || [],
+            folderId: env.searchModel.getSelectedFolderId(),
             initialRecordSelectionLength: documents.length,
             pdfManagerOpenCallback: (documents) => {
                 openPdfSplitter(documents);
@@ -409,6 +405,10 @@ function useDocumentsViewFilePreviewer({
                 const elements = getSelectedDocumentsElements();
                 if (elements.length) {
                     elements[0].focus();
+                    const focusedDocument = documentService.documentList.documents.find(
+                        (d) => d.record.id === elements[0].dataset.id
+                    );
+                    documentService.focusRecord(focusedDocument?.record || null);
                 }
                 if (component.root?.el) {
                     component.root.el
@@ -501,9 +501,9 @@ function useDocumentsViewFileUpload() {
                 error: _t("status code: %(status)s, message: %(message)s", {
                     status: xhr.status,
                     message: xhr.response,
-                })
+                }),
             });
-            return
+            return;
         }
         // Depending on the controller called, the response is different:
         // /documents/upload/xx: returns an array of document ids
@@ -515,17 +515,10 @@ function useDocumentsViewFileUpload() {
         if (!newDocumentIds) {
             return;
         }
-        const records = env.model.root.records;
-        let count = 0;
-        for (const record of records) {
-            if (!newDocumentIds.includes(record.resId)) {
-                continue;
-            }
-            record.onRecordClick(null, {
-                isKeepSelection: count++ !== 0,
-                isRangeSelection: false,
-            });
-        }
+        component.model.root.selection.forEach((el) => el.toggleSelection(false));
+        const newRecords = env.model.root.records.filter((r) => newDocumentIds.includes(r.resId));
+        newRecords.map((record) => record.toggleSelection(true));
+        documentService.focusRecord(newRecords[0]);
     });
 
     /**
@@ -535,7 +528,8 @@ function useDocumentsViewFileUpload() {
     const uploadFiles = async ({ files, accessToken, context }) => {
         if (env.searchModel.getSelectedFolderId() === "COMPANY") {
             // to upload in the COMPANY folder, we need to set Odoobot as owner
-            context.default_owner_id = documentService.store.odoobot.userId;
+            // (value will be passed as string, so we need to use 0 instead of false)
+            context.default_owner_id = "0";
         }
         await documentService.uploadDocument(files, accessToken, context);
     };

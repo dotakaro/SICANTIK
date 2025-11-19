@@ -68,11 +68,6 @@ class StockQuant(models.Model):
         action = self.env['ir.actions.actions']._for_xml_id('stock_barcode.stock_barcode_inventory_client_action')
         return action
 
-    @api.model
-    def get_existing_quant_and_related_data(self, domain):
-        quants = self.search(domain)
-        return quants.get_stock_barcode_data_records()
-
     def _get_stock_barcode_data(self):
         locations = self.env['stock.location']
         company_id = self.env.company.id
@@ -96,12 +91,11 @@ class StockQuant(models.Model):
 
     def get_stock_barcode_data_records(self):
         products = self.product_id
-        packagings = products.packaging_ids
         companies = self.company_id or self.env.company
         lots = self.lot_id
         owners = self.owner_id
         packages = self.package_id
-        uoms = products.uom_id
+        uoms = products.uom_id | products.uom_ids
         # If UoM setting is active, fetch all UoM's data.
         if self.env.user.has_group('uom.group_uom'):
             uoms = self.env['uom.uom'].search([])
@@ -109,7 +103,6 @@ class StockQuant(models.Model):
         data = {
             "records": {
                 "stock.quant": self.read(self._get_fields_stock_barcode(), load=False),
-                "product.packaging": packagings.read(packagings._get_fields_stock_barcode(), load=False),
                 "product.product": products.read(products._get_fields_stock_barcode(), load=False),
                 "stock.quant.package": packages.read(packages._get_fields_stock_barcode(), load=False),
                 "res.company": companies.read(['name']),

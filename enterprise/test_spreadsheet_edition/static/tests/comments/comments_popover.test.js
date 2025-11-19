@@ -1,4 +1,4 @@
-import { expect, test, getFixture } from "@odoo/hoot";
+import { describe, expect, test, getFixture } from "@odoo/hoot";
 import { hover, waitFor, press } from "@odoo/hoot-dom";
 import { animationFrame } from "@odoo/hoot-mock";
 import { helpers, registries, stores } from "@odoo/o-spreadsheet";
@@ -12,16 +12,18 @@ defineTestSpreadsheetEditionModels();
 preloadBundle("web.assets_emoji");
 
 const { topbarMenuRegistry } = registries;
-const { HoveredCellStore } = stores;
+const { DelayedHoveredCellStore } = stores;
 
 const { toCartesian } = helpers;
+
+describe.current.tags("desktop");
 
 test("Hover cell only shows messages, Composer appears on click", async () => {
     const { model, pyEnv, env } = await setupWithThreads();
     const sheetId = model.getters.getActiveSheetId();
     await createThread(model, pyEnv, { sheetId, ...toCartesian("A2") }, ["wave"]);
 
-    env.getStore(HoveredCellStore).hover({ col: 0, row: 1 });
+    env.getStore(DelayedHoveredCellStore).hover({ col: 0, row: 1 });
     await animationFrame();
 
     expect(".o-thread-popover .o-mail-Thread").toHaveCount(1);
@@ -89,7 +91,7 @@ test("Send messages from the popover", async () => {
 
     await contains(".o-mail-Composer textarea", { visible: false }).edit("msg2");
     await animationFrame();
-    await contains(".o-mail-Composer-send").click();
+    await contains(".o-mail-Composer button[name='send-message']").click();
     expect(".o-mail-Message").toHaveCount(2);
 
     threadIds = model.getters.getCellThreads(model.getters.getActivePosition());
@@ -108,6 +110,19 @@ test("Open side panel from thread popover", async () => {
 });
 
 test.tags("desktop");
+test("Upload button is not visible for spreadsheet cell threads", async () => {
+    const { model, pyEnv } = await setupWithThreads();
+    const sheetId = model.getters.getActiveSheetId();
+    await createThread(model, pyEnv, { sheetId, ...toCartesian("A2") }, ["wave"]);
+    selectCell(model, "A2");
+    await hover(waitFor(".o-mail-Message"));
+    expect(".o-mail-Composer button[name='upload-files']").toHaveCount(0);
+    await contains(".o-mail-Message [title='Expand']").click();
+    await contains(".o-dropdown-item:contains('Edit')").click();
+    expect(".o-mail-Message button[name='upload-files']").toHaveCount(0);
+});
+
+test.tags("desktop");
 test("edit comment from the thread popover", async () => {
     const { model, pyEnv } = await setupWithThreads();
     const sheetId = model.getters.getActiveSheetId();
@@ -122,15 +137,15 @@ test("edit comment from the thread popover", async () => {
     expect(".o-mail-Message-content").toHaveText("msg1 (edited)");
 });
 
-test.tags("desktop");
-test("Upload button is not visible for spreadsheet cell threads", async () => {
+test("Spreadsheet cell thread composer shows only one send button", async () => {
     const { model, pyEnv } = await setupWithThreads();
     const sheetId = model.getters.getActiveSheetId();
     await createThread(model, pyEnv, { sheetId, ...toCartesian("A2") }, ["wave"]);
+
     selectCell(model, "A2");
-    await hover(waitFor(".o-mail-Message"));
-    expect(".o-mail-Composer .o_input_file").toHaveCount(0);
-    await contains(".o-mail-Message [title='Expand']").click();
-    await contains(".o-mail-Message-moreMenu [title='Edit']").click();
-    expect(".o-mail-Message .o_input_file").toHaveCount(0);
+    await animationFrame();
+
+    // There should only be one send button (from chat window composer)
+    expect(".o-mail-Composer .o-mail-Composer-send").toHaveCount(0);
+    expect(".o-mail-Composer button[name='send-message']").toHaveCount(1);
 });

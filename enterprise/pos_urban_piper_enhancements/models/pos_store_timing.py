@@ -18,7 +18,7 @@ class PosStoreTiming(models.Model):
     end_hour = fields.Float('Ending Hour', required=True, default=17.0)
     config_ids = fields.Many2many('pos.config', string='Point of Sale accociated to this timing')
 
-    _sql_constraints = [(
-        'check_start_and_end_hour',
-        """CHECK(start_hour < end_hour)""",
-        'The end time must be later than the start time.')]
+    _check_start_and_end_hour = models.Constraint(
+        'CHECK(start_hour < end_hour)',
+        "The end time must be later than the start time.",
+    )

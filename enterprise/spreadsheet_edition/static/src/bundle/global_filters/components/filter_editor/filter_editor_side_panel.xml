@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates>
-
-    <t t-name="spreadsheet_edition.FilterEditorLabel">
-        <div class="o-section-title">Label</div>
-        <div t-att-class="props.inputClass" class="o_required_modifier">
-            <input
-                type="text"
-                class="o-input o_global_filter_label"
-                t-att-value="props.label"
-                t-on-change="props.setLabel"
-                t-ref="labelInput"
-                t-att-placeholder="props.placeholder"/>
-        </div>
-    </t>
-
     <t t-name="spreadsheet_edition.FilterEditorButtons">
         <button t-if="onDelete" t-on-click="onDelete" class="o-button o_global_filter_delete o-button-danger">Remove</button>
         <button t-on-click="onCancel" class="o-button o_global_filter_cancel">Cancel</button>
@@ -26,29 +12,37 @@
         </div>
 
         <div t-foreach="props.fieldMatchings"
-                t-as="object"
-                t-key="object_index"
-                t-att-class="object.fieldMatch.chain ? '' : 'o_missing_field'"
+                t-as="match"
+                t-key="match.id"
+                t-att-class="match.fieldMatch.chain ? '' : 'o_missing_field'"
                 class="o_spreadsheet_field_matching o_required_field">
             <div>
-                <span class="fw-medium" t-esc="object.name"/>
-                <span class="o_spreadsheet_model_technical_name text-muted"> (<t t-esc="object.tag"/>)</span>
+                <span class="fw-medium" t-esc="match.name"/>
+                <span class="o_spreadsheet_model_technical_name text-muted"> (<t t-esc="match.tag"/>)</span>
             </div>
-            <div class="d-flex justify-content-between">
-                <div t-att-class="props.wrongFieldMatchings.includes(object_index) ? 'o_field_invalid' : ''"
-                    class="d-flex flex-column justify-content-end w-50 flex-grow-1"
+            <div class="d-flex justify-content-between flex-column">
+                <div t-att-class="match.isValid ? '' : 'o_field_invalid'"
+                    class="d-flex flex-row justify-content-start"
                     name="field-match"
                 >
+                    <span class="text-muted pe-2">Field</span>
                     <ModelFieldSelector
-                            path="getModelField(object.fieldMatch)"
-                            resModel="object.model()"
+                            path="getModelField(match.fieldMatch)"
+                            resModel="match.model()"
                             readonly="false"
                             allowEmpty="true"
                             isDebugMode="!!env.debug"
-                            update="(path, fieldInfo) => props.selectField(object_index, path, fieldInfo.fieldDef)"
+                            update="(path, fieldInfo) => props.selectField(match.id, path, fieldInfo.fieldDef)"
                             filter.bind="props.filterModelFieldSelectorField"
-                            t-key="object_index"/>
+                            sort.bind="props.sortModelFieldSelectorFields"
+                            t-key="match.id"/>
                 </div>
+                <FilterFieldOffset
+                    t-if="props.onOffsetSelected"
+                    active="!!match.fieldMatch.chain"
+                    onOffsetSelected="(value) => props.onOffsetSelected(match.id, value)"
+                    selectedOffset="match.fieldMatch and match.fieldMatch.offset || 0"
+                />
             </div>
         </div>
     </t>

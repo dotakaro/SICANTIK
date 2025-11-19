@@ -54,7 +54,13 @@ class AccountIntrastatCode(models.Model):
     country_id = fields.Many2one('res.country', string='Country', help='Restrict the applicability of code to a country.', domain="[('intrastat', '=', True)]")
     description = fields.Char(string='Description')
     type = fields.Selection(string='Type', required=True,
-        selection=[('commodity', 'Commodity'), ('transport', 'Transport'), ('transaction', 'Transaction'), ('region', 'Region')],
+        selection=[
+            ('commodity', 'Commodity'),
+            ('service', 'Service'),
+            ('transport', 'Transport'),
+            ('transaction', 'Transaction'),
+            ('region', 'Region'),
+        ],
         default='commodity',
         help='''Type of intrastat code used to filter codes by usage.
             * commodity: Code to be set on invoice lines for European Union statistical purposes.
@@ -78,6 +84,7 @@ class AccountIntrastatCode(models.Model):
             text = r.name or r.description
             r.display_name = f'{r.code} {text}' if text else r.code
 
-    _sql_constraints = [
-        ('intrastat_region_code_unique', 'UNIQUE (code, type, country_id)', 'Triplet code/type/country_id must be unique.'),
-    ]
+    _intrastat_region_code_unique = models.Constraint(
+        'UNIQUE (code, type, country_id)',
+        "Triplet code/type/country_id must be unique.",
+    )

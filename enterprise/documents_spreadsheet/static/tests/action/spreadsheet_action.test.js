@@ -19,6 +19,8 @@ import {
     getService,
     mountWithCleanup,
     patchWithCleanup,
+    onRpc,
+    mockService,
 } from "@web/../tests/web_test_helpers";
 import { downloadFile } from "@web/core/network/download";
 import { WebClient } from "@web/webclient/webclient";
@@ -64,16 +66,11 @@ const TEST_LOCALES = [
 
 test("open spreadsheet with deprecated `active_id` params", async function () {
     await prepareWebClientForSpreadsheet();
+    onRpc("/spreadsheet/data/documents.document/1", () => expect.step("spreadsheet-loaded"), {
+        pure: true,
+    });
     await makeDocumentsSpreadsheetMockEnv({
         serverData: { models: getBasicData() },
-        mockRPC: async function (route, args) {
-            if (args.method === "join_spreadsheet_session") {
-                expect.step("spreadsheet-loaded");
-                expect(args.args[0]).toBe(1, {
-                    message: "It should load the correct spreadsheet",
-                });
-            }
-        },
     });
     await mountWithCleanup(WebClient);
     await getService("action").doAction({
@@ -87,6 +84,68 @@ test("open spreadsheet with deprecated `active_id` params", async function () {
         message: "It should have opened the spreadsheet",
     });
     expect.verifySteps(["spreadsheet-loaded"]);
+});
+
+test("should redirect to home menu when spreadsheet is not found", async function () {
+    onRpc(
+        "/spreadsheet/data/documents.document/2",
+        () => {
+            expect.step("try-open-spreadsheet");
+            return new Response("{}", { status: 404 });
+        },
+        {
+            pure: true,
+        }
+    );
+    mockService("action", {
+        doAction(actionRequest) {
+            if (actionRequest === "menu") {
+                expect.step("redirect-to-home-menu");
+            } else {
+                return super.doAction(...arguments);
+            }
+        },
+    });
+    await mountWithCleanup(WebClient);
+    await getService("action").doAction({
+        type: "ir.actions.client",
+        tag: "action_open_spreadsheet",
+        params: {
+            spreadsheet_id: 2,
+        },
+    });
+    expect.verifySteps(["try-open-spreadsheet", "redirect-to-home-menu"]);
+});
+
+test("should redirect to home menu when spreadsheet access is denied", async function () {
+    onRpc(
+        "/spreadsheet/data/documents.document/2",
+        () => {
+            expect.step("try-open-spreadsheet");
+            return new Response("{}", { status: 403 });
+        },
+        {
+            pure: true,
+        }
+    );
+    mockService("action", {
+        doAction(actionRequest) {
+            if (actionRequest === "menu") {
+                expect.step("redirect-to-home-menu");
+            } else {
+                return super.doAction(...arguments);
+            }
+        },
+    });
+    await mountWithCleanup(WebClient);
+    await getService("action").doAction({
+        type: "ir.actions.client",
+        tag: "action_open_spreadsheet",
+        params: {
+            spreadsheet_id: 2,
+        },
+    });
+    expect.verifySteps(["try-open-spreadsheet", "redirect-to-home-menu"]);
 });
 
 test("breadcrumb is rendered the navbar", async function () {
@@ -128,39 +187,37 @@ test("breadcrumb is rendered the navbar", async function () {
 });
 
 test("Can open a spreadsheet in readonly", async function () {
-    const { model } = await createSpreadsheet({
-        mockRPC: async function (route, args) {
-            if (args.method === "join_spreadsheet_session") {
-                return {
-                    data: {},
-                    name: "name",
-                    revisions: [],
-                    isReadonly: true,
-                };
-            }
-        },
-    });
+    onRpc(
+        "/spreadsheet/data/documents.document/*",
+        () => ({
+            data: {},
+            name: "name",
+            revisions: [],
+            isReadonly: true,
+        }),
+        { pure: true }
+    );
+    const { model } = await createSpreadsheet();
     expect(model.getters.isReadonly()).toBe(true);
 });
 
 test("format menu with default currency", async function () {
-    const { model, env } = await createSpreadsheet({
-        mockRPC: async function (route, args) {
-            if (args.method === "join_spreadsheet_session") {
-                return {
-                    data: {},
-                    name: "name",
-                    revisions: [],
-                    default_currency: {
-                        code: "θdoo",
-                        symbol: "θ",
-                        position: "after",
-                        decimalPlaces: 2,
-                    },
-                };
-            }
-        },
-    });
+    onRpc(
+        "/spreadsheet/data/documents.document/*",
+        () => ({
+            data: {},
+            name: "name",
+            revisions: [],
+            default_currency: {
+                code: "θdoo",
+                symbol: "θ",
+                position: "after",
+                decimalPlaces: 2,
+            },
+        }),
+        { pure: true }
+    );
+    const { model, env } = await createSpreadsheet();
     await doMenuAction(
         topbarMenuRegistry,
         ["format", "format_number", "format_number_currency"],
@@ -249,7 +306,7 @@ test("menu > download as json", async function () {
     const spreadsheet = DocumentsDocument._records[1];
     spreadsheet.name = "My spreadsheet";
     spreadsheet.spreadsheet_data = JSON.stringify({
-        sheets: [{ cells: { A3: { content: "Hello World" } } }],
+        sheets: [{ cells: { A3: "Hello World" } }],
     });
 
     const { env, model } = await createSpreadsheet({
@@ -271,7 +328,7 @@ test("menu > copy", async function () {
     const spreadsheet = DocumentsDocument._records[1];
     spreadsheet.name = "My spreadsheet";
     spreadsheet.spreadsheet_data = JSON.stringify({
-        sheets: [{ cells: { A3: { content: "Hello World" } } }],
+        sheets: [{ cells: { A3: "Hello World" } }],
     });
 
     const { env, model } = await createSpreadsheet({
@@ -281,7 +338,7 @@ test("menu > copy", async function () {
             if (method === "copy") {
                 expect.step("copy");
                 expect(args[0]).toEqual([2]);
-                expect("default" in kwargs).toBe(true);
+                expect(kwargs).toInclude("default");
             }
         },
     });
@@ -296,7 +353,6 @@ test("Spreadsheet is created with locale in data", async function () {
     const serverData = getBasicServerData();
     serverData.models["documents.document"] = {
         records: [
-            DocumentsDocument._records[0], // res_company.document_spreadsheet_folder_id
             {
                 id: 3000,
                 name: "My template spreadsheet",

@@ -54,7 +54,7 @@ class TestCommissions(TestCommissionsSetup):
             comm = inv.commission_po_line_id.price_subtotal
             self.assertEqual(po.partner_id, self.referrer, '%s - %s: referrer != vendor' % (spec.grade.name, spec.pricelist.name))
             self.assertEqual(comm, spec.commission, '%s - %s: commission != expected' % (spec.grade.name, spec.pricelist.name))
-            self.assertEqual(po.user_id, self.salesman)
+            self.assertFalse(po.user_id)
             self.assertEqual(po.purchase_type, 'commission')
 
         # global checks
@@ -215,7 +215,7 @@ class TestCommissions(TestCommissionsSetup):
         })
         self.referrer.commission_plan_id = plan
         # make sure the sale_order_template_id field is in the view
-        self.salesman.groups_id += self.env.ref('sale_management.group_sale_order_template')
+        self.salesman.group_ids += self.env.ref('sale_management.group_sale_order_template')
         form = Form(self.env['sale.order'].with_user(self.salesman).with_context(tracking_disable=True))
         form.partner_id = self.customer
         form.referrer_id = self.referrer

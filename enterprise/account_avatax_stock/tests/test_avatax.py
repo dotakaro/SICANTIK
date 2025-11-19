@@ -1,10 +1,13 @@
-from odoo import Command
-from odoo.tests.common import tagged
-from odoo.addons.account_avatax.tests.common import TestAccountAvataxCommon
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from odoo.fields import Command
+from odoo.tests import tagged
+
+from odoo.addons.account_avatax_sale.tests.common import TestAccountAvataxSaleCommon
 
 
 @tagged("-at_install", "post_install")
-class TestAccountAvalaraStock(TestAccountAvataxCommon):
+class TestAccountAvalaraStock(TestAccountAvataxSaleCommon):
     """https://developer.avalara.com/certification/avatax/sales-tax-badge/"""
 
     @classmethod
@@ -54,7 +57,7 @@ class TestAccountAvalaraStock(TestAccountAvataxCommon):
                 'order_line': [
                     (0, 0, {
                         'product_id': self.product.id,
-                        'tax_id': None,
+                        'tax_ids': None,
                         'price_unit': self.product.list_price,
                     }),
                 ]
@@ -91,17 +94,17 @@ class TestAccountAvalaraStock(TestAccountAvataxCommon):
                 'order_line': [
                     (0, 0, {
                         'product_id': self.product.id,
-                        'tax_id': None,
+                        'tax_ids': None,
                         'price_unit': self.product.list_price,
                     }),
                     (0, 0, {
                         'product_id': self.product_user.id,
-                        'tax_id': None,
+                        'tax_ids': None,
                         'price_unit': self.product_user.list_price,
                     }),
                     (0, 0, {
                         'product_id': self.product_accounting.id,
-                        'tax_id': None,
+                        'tax_ids': None,
                         'price_unit': self.product_accounting.list_price,
                     }),
                 ]
@@ -159,7 +162,7 @@ class TestAccountAvalaraStock(TestAccountAvataxCommon):
                 'order_line': [
                     Command.create({
                         'product_id': self.product.id,
-                        'tax_id': None,
+                        'tax_ids': None,
                         'price_unit': self.product.list_price,
                         'product_uom_qty': 2,
                     }),

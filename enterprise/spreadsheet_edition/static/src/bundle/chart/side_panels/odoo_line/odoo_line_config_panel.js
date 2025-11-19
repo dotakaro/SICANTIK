@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { CommonOdooChartConfigPanel } from "../common/config_panel";
 import { components } from "@odoo/o-spreadsheet";
 
@@ -12,6 +10,13 @@ export class OdooLineChartConfigPanel extends CommonOdooChartConfigPanel {
         Checkbox,
     };
 
+    get stackedLabel() {
+        const definition = this.props.definition;
+        return definition.fillArea
+            ? this.chartTerms.StackedAreaChart
+            : this.chartTerms.StackedLineChart;
+    }
+
     onUpdateStacked(stacked) {
         this.props.updateChart(this.props.figureId, {
             stacked,
@@ -20,6 +25,11 @@ export class OdooLineChartConfigPanel extends CommonOdooChartConfigPanel {
     onUpdateCumulative(cumulative) {
         this.props.updateChart(this.props.figureId, {
             cumulative,
+        });
+    }
+    onUpdateCumulatedStart(cumulatedStart) {
+        this.props.updateChart(this.props.figureId, {
+            cumulatedStart,
         });
     }
 }

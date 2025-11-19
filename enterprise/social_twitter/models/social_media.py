@@ -18,7 +18,7 @@ from odoo.exceptions import UserError, AccessError
 from werkzeug.urls import url_join, url_quote
 
 
-class SocialMediaTwitter(models.Model):
+class SocialMedia(models.Model):
     _inherit = 'social.media'
 
     _TWITTER_ENDPOINT = 'https://api.twitter.com'
@@ -85,7 +85,10 @@ class SocialMediaTwitter(models.Model):
         ).text
 
         if iap_add_accounts_url == 'unauthorized':
-            raise UserError(_("Please activate developer mode, add the credentials to the configurations, then go to social media to link your account"))
+            raise UserError(_(
+                "Oops! You currently don't have an active subscription. No worries, though! "
+                "You can easily get one here: %s.\n"
+                "Grab a subscription and unlock a world of amazing features!", 'https://www.odoo.com/buy'))
         if iap_add_accounts_url == 'wrong_configuration':
             raise UserError(_("The url that this service requested returned an error. Please contact the author of the app."))
 

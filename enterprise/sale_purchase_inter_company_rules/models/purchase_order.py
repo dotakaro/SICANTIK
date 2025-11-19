@@ -2,8 +2,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
-class purchase_order(models.Model):
-
+class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
     auto_generated = fields.Boolean(string='Auto Generated Purchase Order', copy=False)
@@ -11,7 +10,7 @@ class purchase_order(models.Model):
 
     def button_approve(self, force=False):
         """ Generate inter company sales order base on conditions."""
-        res = super(purchase_order, self).button_approve(force=force)
+        res = super().button_approve(force=force)
         for order in self:
             # get the company from partner then trigger action of intercompany relation
             company_rec = self.env['res.company']._find_company_from_partner(order.partner_id.id)
@@ -120,13 +119,13 @@ class purchase_order(models.Model):
         """
         # it may not affected because of parallel company relation
         price = line.price_unit or 0.0
-        quantity = line.product_id and line.product_uom._compute_quantity(line.product_qty, line.product_id.uom_id) or line.product_qty
-        price = line.product_id and line.product_uom._compute_price(price, line.product_id.uom_id) or price
+        quantity = line.product_id and line.product_uom_id._compute_quantity(line.product_qty, line.product_id.uom_id) or line.product_qty
+        price = line.product_id and line.product_uom_id._compute_price(price, line.product_id.uom_id) or price
         return {
             'name': line.name,
             'product_uom_qty': quantity,
             'product_id': line.product_id and line.product_id.id or False,
-            'product_uom': line.product_id and line.product_id.uom_id.id or line.product_uom.id,
+            'product_uom_id': line.product_id and line.product_id.uom_id.id or line.product_uom_id.id,
             'price_unit': price,
             'discount': line.discount or 0.0,
             'company_id': company.id,

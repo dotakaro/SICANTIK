@@ -7,8 +7,8 @@ from odoo.addons.sale.models.sale_order import SALE_ORDER_STATE
 from odoo.addons.sale_renting.models.sale_order import RENTAL_STATUS
 
 
-class RentalSchedule(models.Model):
-    _name = "sale.rental.schedule"
+class SaleRentalSchedule(models.Model):
+    _name = 'sale.rental.schedule'
     _description = "Rental Schedule"
     _auto = False
     _order = 'order_date desc'
@@ -38,7 +38,7 @@ class RentalSchedule(models.Model):
             )
         ):
             # If there are less rental products in the database than the given limit, drop the limit
-            # so that the read_group is lazy and the `group_expand` is called
+            # so that the `group_expand` is called
             limit = None
         return super().get_gantt_data(domain, groupby, read_specification, limit=limit, offset=offset, unavailability_fields=unavailability_fields, progress_bar_fields=progress_bar_fields, start_date=start_date, stop_date=stop_date, scale=scale)
 
@@ -49,7 +49,7 @@ class RentalSchedule(models.Model):
     pickup_date = fields.Datetime('Pickup Date', readonly=True)
     return_date = fields.Datetime('Return Date', readonly=True)
     product_id = fields.Many2one('product.product', 'Product', readonly=True, group_expand="_read_group_product_ids")
-    product_uom = fields.Many2one('uom.uom', 'Unit of Measure', readonly=True)
+    product_uom_id = fields.Many2one('uom.uom', 'Unit', readonly=True)
     product_uom_qty = fields.Float('Qty Ordered', readonly=True)
     qty_delivered = fields.Float('Qty Picked-Up', readonly=True)
     qty_returned = fields.Float('Qty Returned', readonly=True)
@@ -94,7 +94,7 @@ class RentalSchedule(models.Model):
 
     def _late(self) -> SQL:
         return SQL("""
-            CASE WHEN sol.state != 'sale' THEN FALSE
+            CASE WHEN s.state != 'sale' THEN FALSE
                 WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN TRUE
                 WHEN s.rental_return_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_returned < sol.qty_delivered THEN TRUE
             ELSE FALSE
@@ -111,9 +111,17 @@ class RentalSchedule(models.Model):
         """)
 
     def _color(self) -> SQL:
-        """2 = orange (pickedup), 4 = blue(reserved), 6 = red(late return), 7 = green(returned)"""
+        """2 = orange (pickedup),
+           3 = yellow (late pickup),
+           4 = blue (reserved),
+           5 = purple (quotation),
+           6 = red (late return),
+           7 = green (returned)
+        """
         return SQL("""
-            CASE WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN 4
+            CASE WHEN s.state IN ('draft', 'sent') THEN 5
+                WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN 3
+                WHEN s.rental_start_date > NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN 4
                 WHEN s.rental_return_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_returned < sol.qty_delivered THEN 6
                 WHEN sol.qty_returned = sol.qty_delivered AND sol.qty_delivered = sol.product_uom_qty THEN 7
                 WHEN sol.qty_delivered = sol.product_uom_qty THEN 2
@@ -125,7 +133,7 @@ class RentalSchedule(models.Model):
         return SQL("""%s,
             %s,
             sol.product_id as product_id,
-            t.uom_id as product_uom,
+            t.uom_id as product_uom_id,
             sol.name as description,
             s.name as name,
             %s,
@@ -159,7 +167,7 @@ class RentalSchedule(models.Model):
                 join res_partner partner on s.partner_id = partner.id
                 left join product_product p on (sol.product_id=p.id)
                 left join product_template t on (p.product_tmpl_id=t.id)
-                left join uom_uom u on (u.id=sol.product_uom)
+                left join uom_uom u on (u.id=sol.product_uom_id)
                 left join uom_uom u2 on (u2.id=t.uom_id)
         """)
 

@@ -3,15 +3,15 @@
 # 	* delivery_sendcloud
 # 
 # Translators:
-# Wil Odoo, 2024
+# Wil Odoo, 2025
 # Thi Huong Nguyen, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-10 15:41+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Thi Huong Nguyen, 2025\n"
 "Language-Team: Vietnamese (https://app.transifex.com/odoo/teams/41243/vi/)\n"
 "MIME-Version: 1.0\n"
@@ -172,12 +172,12 @@ msgstr "Được tạo vào"
 #. module: delivery_sendcloud
 #: model_terms:ir.ui.view,arch_db:delivery_sendcloud.view_delivery_carrier_form
 msgid "Default Package Type"
-msgstr "Kiểu đóng gói mặc định"
+msgstr "Loại kiện hàng mặc định"
 
 #. module: delivery_sendcloud
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_delivery_carrier__sendcloud_default_package_type_id
 msgid "Default Package Type for Sendcloud"
-msgstr "Kiểu đóng gói mặc định cho Sendcloud"
+msgstr "Loại kiện hàng mặc định cho Sendcloud"
 
 #. module: delivery_sendcloud
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_wizard__carrier_id
@@ -199,8 +199,11 @@ msgstr ""
 "Quy tắc có thể ghi đè sản phẩm vận chuyển được chọn trong Odoo"
 
 #. module: delivery_sendcloud
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_product__display_name
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "Tên hiển thị"
 
@@ -259,8 +262,11 @@ msgid "Has Multicollo"
 msgstr "Has Multicollo"
 
 #. module: delivery_sendcloud
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_product__id
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -537,7 +543,7 @@ msgid ""
 "type that you set as default"
 msgstr ""
 "Một số đơn vị vận chuyển quy định kích thước kiện hàng, bạn có thể xác định "
-"chúng trong kiểu đóng gói được đặt làm mặc định."
+"chúng trong loại kiện hàng được đặt làm mặc định."
 
 #. module: delivery_sendcloud
 #. odoo-python
@@ -562,13 +568,31 @@ msgstr ""
 #. module: delivery_sendcloud
 #: model:ir.model,name:delivery_sendcloud.model_stock_package_type
 msgid "Stock package type"
-msgstr "Kiểu đóng gói tồn kho"
+msgstr "Loại kiện hàng tồn kho"
 
 #. module: delivery_sendcloud
 #. odoo-python
 #: code:addons/delivery_sendcloud/models/sendcloud_service.py:0
 msgid "The %s address needs to have the street, city, zip, and country"
 msgstr "Địa chỉ %s cần có tên đường, thành phố, mã bưu điện và quốc gia"
+
+#. module: delivery_sendcloud
+#. odoo-python
+#: code:addons/delivery_sendcloud/models/delivery_carrier.py:0
+msgid ""
+"The cancellation was rejected for the parcel(s) with the following id:\n"
+"%(details)s\n"
+"Either:\n"
+"\t - The parcel is already cancelled\n"
+"\t - The parcel has been announced more than 42 days ago\n"
+"\t - The parcel has already been delivered"
+msgstr ""
+"Việc hủy đã bị từ chối đối với (các) kiện hàng có ID sau:\n"
+"%(details)s\n"
+"Do một trong các lý do sau:\n"
+"\t - Kiện hàng đã bị hủy trước đó\n"
+"\t - Kiện hàng đã được thông báo hơn 42 ngày trước\n"
+"\t - Kiện hàng đã được giao thành công"
 
 #. module: delivery_sendcloud
 #. odoo-python
@@ -636,6 +660,7 @@ msgstr ""
 #. module: delivery_sendcloud
 #. odoo-python
 #: code:addons/delivery_sendcloud/models/sendcloud_service.py:0
+#: code:addons/delivery_sendcloud/tests/test_delivery_sendcloud.py:0
 msgid ""
 "There is no shipping method available for this order with the selected "
 "carrier"

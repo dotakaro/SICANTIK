@@ -1,7 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, Command, fields, models, _
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 class ApprovalRequest(models.Model):
@@ -17,6 +17,7 @@ class ApprovalRequest(models.Model):
         return [('share', '=', False), ('company_ids', 'in', self.env.companies.ids)]
 
     name = fields.Char(string="Approval Subject", tracking=True)
+    active = fields.Boolean(default=True, tracking=True)
     category_id = fields.Many2one('approval.category', string="Category", required=True)
     category_image = fields.Binary(related='category_id.image')
     approver_ids = fields.One2many('approval.approver', 'request_id', string="Approvers", check_company=True,
@@ -60,6 +61,7 @@ class ApprovalRequest(models.Model):
     attachment_ids = fields.One2many(comodel_name='ir.attachment', inverse_name='res_id', domain=[('res_model', '=', 'approval.request')], string='Attachments')
     attachment_number = fields.Integer('Number of Attachments', compute='_compute_attachment_number')
     product_line_ids = fields.One2many('approval.product.line', 'approval_request_id', check_company=True)
+    approval_properties = fields.Properties('Properties', definition='category_id.approval_properties_definition')
 
     has_date = fields.Selection(related="category_id.has_date")
     has_period = fields.Selection(related="category_id.has_period")
@@ -102,6 +104,10 @@ class ApprovalRequest(models.Model):
             if request.date_start and request.date_end and request.date_start > request.date_end:
                 raise ValidationError(_("Start date should precede the end date."))
 
+    def copy_data(self, default=None):
+        vals_list = super().copy_data(default=default)
+        return [dict(vals, name=self.env._("%s (copy)", request.name)) for request, vals in zip(self, vals_list)]
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -121,6 +127,12 @@ class ApprovalRequest(models.Model):
         ])
         if attachment_ids:
             attachment_ids.unlink()
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_status_is_approved(self):
+        for request in self:
+            if request.request_status == 'approved':
+                raise UserError(_("You can't delete an approved request. Archive it instead."))
 
     def unlink(self):
         self.filtered(lambda a: a.has_product).product_line_ids.unlink()
@@ -172,10 +184,6 @@ class ApprovalRequest(models.Model):
         activities = self.env['mail.activity'].search(domain)
         return activities
 
-    def _ensure_can_approve(self):
-        if any(approval.approver_sequence and approval.user_status == 'waiting' for approval in self):
-            raise ValidationError(_('You cannot approve before the previous approver.'))
-
     def _update_next_approvers(self, new_status, approver, only_next_approver, cancel_activities=False):
         approvers_updated = self.env['approval.approver']
         for approval in self.filtered('approver_sequence'):
@@ -197,29 +205,24 @@ class ApprovalRequest(models.Model):
         activities = self.activity_ids.filtered(lambda a: a.activity_type_id == approval_activity)
         activities.unlink()
 
+    def _action_force_approval(self):
+        if not self.env.user.has_group('approvals.group_approval_user'):
+            raise UserError(_('You do not have the rights to execute that action.'))
+        approval_requests = self.filtered(lambda request: request.request_status in ('pending', 'refused'))
+        approval_requests.approver_ids.write({'status': 'approved'})
+        approval_requests._cancel_activities()
+        for approval_request in approval_requests:
+            approval_request.message_post(body=_('The request has been approved by an Approval Officer'))
+
     def action_approve(self, approver=None):
-        self._ensure_can_approve()
+        if any(approval.approver_sequence and approval.user_status == 'waiting' for approval in self):
+            raise ValidationError(_('You cannot approve before the previous approver.'))
 
         if not isinstance(approver, models.BaseModel):
             approver = self.mapped('approver_ids').filtered(
                 lambda approver: approver.user_id == self.env.user
             )
         approver.write({'status': 'approved'})
-        # Send approval accepted message
-        for approval in self:
-            if approval.request_owner_id.partner_id:
-                body = _("The request created on %(create_date)s by %(request_owner)s has been accepted.",
-                         create_date=approval.create_date.date(),
-                         request_owner=approval.request_owner_id.name)
-                subject = _("The request %(request_name)s for %(request_owner)s has been accepted",
-                            request_name=approval.name,
-                            request_owner=approval.request_owner_id.name)
-                approval.message_notify(
-                    body=body,
-                    subject=subject,
-                    partner_ids=approval.request_owner_id.partner_id.ids,
-                )
-
         self.sudo()._update_next_approvers('pending', approver, only_next_approver=True)
         self.sudo()._get_user_approval_activities(user=self.env.user).action_feedback()
 
@@ -229,22 +232,6 @@ class ApprovalRequest(models.Model):
                 lambda approver: approver.user_id == self.env.user
             )
         approver.write({'status': 'refused'})
-
-        # Send approval refused message
-        for approval in self:
-            if approval.request_owner_id.partner_id:
-                body = _("The request created on %(create_date)s by %(request_owner)s has been refused.",
-                         create_date=approval.create_date.date(),
-                         request_owner=approval.request_owner_id.name)
-                subject = _("The request %(request_name)s for %(request_owner)s has been refused",
-                            request_name=approval.name,
-                            request_owner=approval.request_owner_id.name)
-                approval.message_notify(
-                    body=body,
-                    subject=subject,
-                    partner_ids=approval.request_owner_id.partner_id.ids,
-                )
-
         self.sudo()._update_next_approvers('refused', approver, only_next_approver=False, cancel_activities=True)
         self.sudo()._get_user_approval_activities(user=self.env.user).action_feedback()
 
@@ -272,6 +259,7 @@ class ApprovalRequest(models.Model):
     @api.depends('approver_ids.status', 'approver_ids.required')
     def _compute_request_status(self):
         for request in self:
+            old_status = request.request_status
             status_lst = request.mapped('approver_ids.status')
             required_approved = all(a.status == 'approved' for a in request.approver_ids.filtered('required'))
             minimal_approver = request.approval_minimum if len(status_lst) >= request.approval_minimum else len(status_lst)
@@ -289,6 +277,28 @@ class ApprovalRequest(models.Model):
             else:
                 status = 'new'
             request.request_status = status
+
+            # Send approval accepted/refused message
+            if status != old_status and status in ('approved', 'refused') and request.request_owner_id.partner_id:
+                if status == 'approved':
+                    body = _("The request created on %(create_date)s by %(request_owner)s has been approved.",
+                            create_date=request.create_date.date(),
+                            request_owner=request.request_owner_id.name)
+                    subject = _("The request %(request_name)s for %(request_owner)s has been approved",
+                                request_name=request.name,
+                                request_owner=request.request_owner_id.name)
+                else:
+                    body = _("The request created on %(create_date)s by %(request_owner)s has been refused.",
+                            create_date=request.create_date.date(),
+                            request_owner=request.request_owner_id.name)
+                    subject = _("The request %(request_name)s for %(request_owner)s has been refused",
+                                request_name=request.name,
+                                request_owner=request.request_owner_id.name)
+                request.message_notify(
+                    body=body,
+                    subject=subject,
+                    partner_ids=request.request_owner_id.partner_id.ids,
+                )
 
         self.filtered_domain([('request_status', 'in', ['approved', 'refused', 'cancel'])])._cancel_activities()
 
@@ -327,6 +337,18 @@ class ApprovalRequest(models.Model):
             request.update({'approver_ids': approver_id_vals})
 
     def write(self, vals):
+        if not self.env.is_admin():
+            for approval in self:
+                if self.env.user != approval.request_owner_id:
+                    continue
+                # A owner cannot approve or refuse his own requests
+                if vals.get('request_status') in ('approved', 'refused'):
+                    raise AccessError(_("You are not allowed to approved or refused your own approval."))
+                # For a processed request, the only action for the owner is to cancel the request
+                if approval.request_status in ('pending', 'approved', 'refused') \
+                    and (set(vals.keys()) != {'request_status'} or vals['request_status'] != 'cancel'):
+                    raise AccessError(_("You must cancel and then back to draft the approval first."))
+
         if 'request_owner_id' in vals:
             for approval in self:
                 approval.message_unsubscribe(partner_ids=approval.request_owner_id.partner_id.ids)
@@ -360,62 +382,3 @@ class ApprovalRequest(models.Model):
             # make sure the approver_ids are unique per request
             if len(request.approver_ids) != len(request.approver_ids.user_id):
                 raise UserError(_("You cannot assign the same approver multiple times on the same request."))
-
-class ApprovalApprover(models.Model):
-    _name = 'approval.approver'
-    _description = 'Approver'
-    _order = 'sequence, id'
-
-    _check_company_auto = True
-
-    sequence = fields.Integer('Sequence', default=10)
-    user_id = fields.Many2one('res.users', string="User", required=True, check_company=True, domain="['|', ('id', 'not in', existing_request_user_ids), ('id', '=', user_id)]")
-    existing_request_user_ids = fields.Many2many('res.users', compute='_compute_existing_request_user_ids')
-    status = fields.Selection([
-        ('new', 'New'),
-        ('pending', 'To Approve'),
-        ('waiting', 'Waiting'),
-        ('approved', 'Approved'),
-        ('refused', 'Refused'),
-        ('cancel', 'Cancel')], string="Status", default="new", readonly=True)
-    request_id = fields.Many2one('approval.request', string="Request",
-        ondelete='cascade', check_company=True)
-    company_id = fields.Many2one(
-        string='Company', related='request_id.company_id',
-        store=True, readonly=True, index=True)
-    required = fields.Boolean(default=False, readonly=True)
-    category_approver = fields.Boolean(compute='_compute_category_approver')
-    can_edit = fields.Boolean(compute='_compute_can_edit')
-    can_edit_user_id = fields.Boolean(compute='_compute_can_edit', help="Simple users should not be able to remove themselves as approvers because they will lose access to the record if they misclick.")
-
-    def action_approve(self):
-        self.request_id.action_approve(self)
-
-    def action_refuse(self):
-        self.request_id.action_refuse(self)
-
-    def _create_activity(self):
-        for approver in self:
-            approver.request_id.activity_schedule(
-                'approvals.mail_activity_data_approval',
-                user_id=approver.user_id.id)
-
-    @api.depends('request_id.request_owner_id', 'request_id.approver_ids.user_id')
-    def _compute_existing_request_user_ids(self):
-        for approver in self:
-            approver.existing_request_user_ids = \
-                self.mapped('request_id.approver_ids.user_id')._origin \
-              | self.request_id.request_owner_id._origin
-
-    @api.depends('category_approver', 'user_id')
-    def _compute_category_approver(self):
-        for approval in self:
-            approval.category_approver = approval.user_id in approval.request_id.category_id.approver_ids.user_id
-
-    @api.depends_context('uid')
-    @api.depends('user_id', 'category_approver')
-    def _compute_can_edit(self):
-        is_user = self.env.user.has_group('approvals.group_approval_user')
-        for approval in self:
-            approval.can_edit = not approval.user_id or not approval.category_approver or is_user
-            approval.can_edit_user_id = is_user or approval.request_id.request_owner_id == self.env.user or not approval.user_id

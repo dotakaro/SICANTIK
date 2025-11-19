@@ -1,4 +1,3 @@
-/** @odoo-module */
 import { _t } from "@web/core/l10n/translation";
 import { localization } from "@web/core/l10n/localization";
 import { registry } from "@web/core/registry";
@@ -130,9 +129,9 @@ export class EditorMenu extends Component {
 }
 
 editorTabRegistry
-    .add("views", { name: _t("Views"), action: "web_studio.action_editor" })
-    .add("reports", { name: _t("Reports") })
-    .add("automations", { name: _t("Automations") })
-    .add("automation_webhooks", { name: _t("Webhooks") })
-    .add("acl", { name: _t("Access Control") })
-    .add("filters", { name: _t("Filter Rules") });
+    .add("views", { name: _t("Views"), action: "web_studio.action_editor" }, { sequence: 10 })
+    .add("automations", { name: _t("Automations") }, { sequence: 20 })
+    .add("actions_server", { name: _t("Actions") }, { sequence: 30 })
+    .add("automation_webhooks", { name: _t("Webhooks") }, { sequence: 40 })
+    .add("acl", { name: _t("Access Control") }, { sequence: 50 })
+    .add("filters", { name: _t("Filter Rules") }, { sequence: 60 });

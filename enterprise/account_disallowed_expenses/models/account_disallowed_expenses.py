@@ -3,6 +3,7 @@
 
 from odoo import fields, models, api, _
 from odoo.osv import expression
+from odoo.tools import SQL
 
 
 class AccountDisallowedExpensesCategory(models.Model):
@@ -17,9 +18,10 @@ class AccountDisallowedExpensesCategory(models.Model):
     account_ids = fields.One2many('account.account', 'disallowed_expenses_category_id', check_company=True)
     current_rate = fields.Char(compute='_compute_current_rate', string='Current Rate')
 
-    _sql_constraints = [
-        ('unique_code', 'UNIQUE(code)', 'Disallowed expenses category code should be unique.')
-    ]
+    _unique_code = models.Constraint(
+        'UNIQUE(code)',
+        "Disallowed expenses category code should be unique.",
+    )
 
     @api.depends('current_rate', 'code')
     def _compute_display_name(self):
@@ -32,30 +34,34 @@ class AccountDisallowedExpensesCategory(models.Model):
     def _compute_current_rate(self):
         rates = self._get_current_rates()
         for rec in self:
-            rec.current_rate = ('%g%%' % rates[rec.id]) if rates.get(rec.id) else None
+            rate = rates.get(rec._origin.id, 0)
+            rec.current_rate = ('%g%%' % rate)
 
     def _get_current_rates(self):
-        sql = """
-            SELECT
-                DISTINCT category_id,
-                first_value(rate) OVER (PARTITION BY category_id ORDER BY date_from DESC)
-            FROM account_disallowed_expenses_rate
-            WHERE date_from < CURRENT_DATE
-            AND category_id IN %(ids)s
-        """
-        self.env.cr.execute(sql, {'ids': tuple(self.ids)})
-        return dict(self.env.cr.fetchall())
+        if not self.ids:
+            return {}
+        return dict(self.env.execute_query(SQL(
+            """ SELECT
+                    DISTINCT category_id,
+                    first_value(rate) OVER (PARTITION BY category_id ORDER BY date_from DESC)
+                FROM account_disallowed_expenses_rate
+                WHERE date_from <= CURRENT_DATE
+                AND category_id IN %s """,
+            tuple(self.ids),
+        )))
 
     @api.model
     def _search_display_name(self, operator, value):
+        if operator in expression.NEGATIVE_TERM_OPERATORS:
+            return NotImplemented
+        if operator == 'in':
+            return expression.OR(self._search_display_name('=', v) for v in value)
         if value and isinstance(value, str):
             code_value = value.split(' ')[0]
-            is_negative = operator in expression.NEGATIVE_TERM_OPERATORS
-            positive_operator = expression.TERM_OPERATORS_NEGATION[operator] if is_negative else operator
-            domain = ['|', ('code', '=ilike', f'{code_value}%'), ('name', positive_operator, value)]
-            if is_negative:
-                domain = ['!', *domain]
-            return domain
+            return ['|', ('code', '=ilike', f'{code_value}%'), ('name', operator, value)]
+        if operator == '=':
+            operator = 'in'
+            value = [value]
         return super()._search_display_name(operator, value)
 
     def action_read_category(self):
@@ -69,12 +75,13 @@ class AccountDisallowedExpensesCategory(models.Model):
             'res_id': self.id,
         }
 
+
 class AccountDisallowedExpensesRate(models.Model):
     _name = 'account.disallowed.expenses.rate'
     _description = "Disallowed Expenses Rate"
     _order = 'date_from desc'
 
-    rate = fields.Float(string='Disallowed %', required=True)
+    rate = fields.Float(string='Fiscal Rate (%)', required=True)
     date_from = fields.Date(string='Start Date', required=True)
-    category_id = fields.Many2one('account.disallowed.expenses.category', string='Category', required=True, ondelete='cascade')
+    category_id = fields.Many2one('account.disallowed.expenses.category', string='Category', required=True, index=True, ondelete='cascade')
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.company)

@@ -3,16 +3,15 @@
 # 	* delivery_shiprocket
 # 
 # Translators:
-# Wil Odoo, 2024
-# Junko Augias, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-25 09:25+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Junko Augias, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -78,7 +77,7 @@ msgid ""
 "days."
 msgstr ""
 "<i class=\"fa fa-exclamation-triangle\"/> "
-"テスト環境では、課金を避けるため、配送はラベル作成後に自動的に<b>取消</b>されます。取消済の配送金額は3-4日後に返金されます。"
+"テスト環境では、課金を避けるため、配送はラベル作成後に自動的に<b>キャンセル</b>されます。キャンセル済の配送金額は3-4日後に返金されます。"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_manifests_generate
@@ -126,11 +125,6 @@ msgstr "新規チャネルを追加"
 #: code:addons/delivery_shiprocket/models/delivery_carrier.py:0
 msgid "Authentication failed! Please check your credentials."
 msgstr "認証に失敗しました。認証情報を確認して下さい。"
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__cod
-msgid "COD"
-msgstr "代金引換"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__package_carrier_type
@@ -212,8 +206,13 @@ msgid "Created on"
 msgstr "作成日"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__display_name
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -302,8 +301,13 @@ msgid "Go to Shipping Methods"
 msgstr "配送方法へ移動"
 
 #. module: delivery_shiprocket
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_payment_provider__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_res_config_settings__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_channel__id
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_shiprocket_courier__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_shiprocket.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -341,7 +345,7 @@ msgstr "%sから生成されたマニフェスト"
 #. odoo-python
 #: code:addons/delivery_shiprocket/models/delivery_carrier.py:0
 msgid "Order cancelled successfully!"
-msgstr "オーダが無事に取消されました!"
+msgstr "オーダがキャンセルされました!"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_default_package_type_id
@@ -349,15 +353,15 @@ msgid "Package Type"
 msgstr "梱包タイプ"
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid "Payment Method"
-msgstr "支払方法"
+#: model:ir.model,name:delivery_shiprocket.model_payment_provider
+msgid "Payment Provider"
+msgstr "決済プロバイダー"
 
 #. module: delivery_shiprocket
 #. odoo-python
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
-msgid "Phone or Mobile is required!"
-msgstr "電話または携帯電話番号が必要です！"
+msgid "Phone is required!"
+msgstr "電話番号が必要です"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_pickup_request
@@ -375,11 +379,6 @@ msgstr "ピンコードが必要です。"
 #: code:addons/delivery_shiprocket/models/shiprocket_request.py:0
 msgid "Please configure Shiprocket credentials in the shipping method"
 msgstr "配送方法でShiprocket認証情報を設定して下さい。"
-
-#. module: delivery_shiprocket
-#: model:ir.model.fields.selection,name:delivery_shiprocket.selection__delivery_carrier__shiprocket_payment_method__prepaid
-msgid "Prepaid"
-msgstr "前払済"
 
 #. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__delivery_type
@@ -526,6 +525,12 @@ msgid "Shiprocket order(s) not found to cancel the shipment!"
 msgstr "配送をキャンセルするためのShiprocketオーダが見つかりません。"
 
 #. module: delivery_shiprocket
+#. odoo-python
+#: code:addons/delivery_shiprocket/models/payment_provider.py:0
+msgid "Shiprocket provider is configured to use only Collect on Delivery."
+msgstr "Shiprocket プロバイダは、着払いのみを使用するように設定されています。"
+
+#. module: delivery_shiprocket
 #: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_default_package_type_id
 msgid ""
 "Shiprocket requires package dimensions for getting accurate rate, you can "
@@ -542,7 +547,7 @@ msgstr "Shiprocketトークンの有効期限は10日です。トークンはこ
 #. module: delivery_shiprocket
 #: model_terms:ir.ui.view,arch_db:delivery_shiprocket.view_delivery_carrier_form_inherit_delivery_shiprocket
 msgid "Sign up"
-msgstr "サインアップ"
+msgstr "登録"
 
 #. module: delivery_shiprocket
 #: model:ir.model,name:delivery_shiprocket.model_stock_package_type
@@ -554,7 +559,7 @@ msgstr "在庫梱包タイプ"
 msgid ""
 "Store shiprocket order(s) in a (+) separated string, used in cancelling the "
 "order."
-msgstr "Shiprocketオーダを(+)別の文字列に保管し、オーダを取消するために使用されます。"
+msgstr "Shiprocketオーダを(+)別の文字列に保管し、オーダをキャンセルするために使用されます。"
 
 #. module: delivery_shiprocket
 #. odoo-python
@@ -578,13 +583,6 @@ msgid "Test Connection"
 msgstr "接続テスト"
 
 #. module: delivery_shiprocket
-#: model:ir.model.fields,help:delivery_shiprocket.field_delivery_carrier__shiprocket_payment_method
-msgid ""
-"The method of payment. Can be either COD (Cash on delivery) Or Prepaid while"
-" creating Shiprocket order."
-msgstr "決済方法。Shiprocketオーダ作成時に、代金引換(代引き)または前払のいずれかにすることができます。"
-
-#. module: delivery_shiprocket
 #: model:ir.model.fields,field_description:delivery_shiprocket.field_delivery_carrier__shiprocket_token_valid_upto
 msgid "Token Expiry"
 msgstr "トークン有効期限"
@@ -592,7 +590,7 @@ msgstr "トークン有効期限"
 #. module: delivery_shiprocket
 #: model:ir.model,name:delivery_shiprocket.model_stock_picking
 msgid "Transfer"
-msgstr "転送"
+msgstr "移動"
 
 #. module: delivery_shiprocket
 #. odoo-python

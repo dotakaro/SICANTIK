@@ -1,4 +1,4 @@
-import { defineMailModels, click } from "@mail/../tests/mail_test_helpers";
+import { click } from "@mail/../tests/mail_test_helpers";
 import { beforeEach, describe, expect, test } from "@odoo/hoot";
 import { animationFrame, mockDate, mockTimeZone } from "@odoo/hoot-mock";
 import { queryAll, queryAllTexts } from "@odoo/hoot-dom";
@@ -27,20 +27,11 @@ import { Domain } from "@web/core/domain";
 import { useService } from "@web/core/utils/hooks";
 import { View } from "@web/views/view";
 import { SelectCreateDialog } from "@web/views/view_dialogs/select_create_dialog";
+import { definePlanningModels, planningModels } from "@planning/../tests/planning_mock_models";
 
 describe.current.tags("desktop");
 
-class PlanningSlot extends models.Model {
-    _name = "planning.slot";
-
-    name = fields.Char({ string: "Name" });
-    role_id = fields.Many2one({ relation: "planning.role" });
-    sale_line_id = fields.Many2one({ string: "Sale Order Item", relation: "sale.order.line" });
-    resource_id = fields.Many2one({ string: "Resource", relation: "resource.resource" });
-    start_datetime = fields.Datetime({ string: "Start Datetime" });
-    end_datetime = fields.Datetime({ string: "End Datetime" });
-    allocated_percentage = fields.Float({ string: "Allocated percentage" });
-
+class PlanningSlot extends planningModels.PlanningSlot {
     _records = [
         {
             id: 1,
@@ -55,22 +46,14 @@ class PlanningSlot extends models.Model {
     ];
 }
 
-class PlanningRole extends models.Model {
-    _name = "planning.role";
-
-    name = fields.Char();
-
+class PlanningRole extends planningModels.PlanningRole {
     _records = [
         { id: 1, name: "Developer" },
         { id: 2, name: "Support Tech" },
     ];
 }
 
-class Resource extends models.Model {
-    _name = "resource.resource";
-
-    name = fields.Char({ string: "Name" });
-
+class Resource extends planningModels.ResourceResource {
     _records = [
         { id: 1, name: "Chaganlal" },
         { id: 2, name: "Jarvo" },
@@ -85,8 +68,12 @@ class SaleOrderLine extends models.Model {
     _records = [{ id: 1, name: "Computer Configuration" }];
 }
 
-defineMailModels();
-defineModels([PlanningSlot, PlanningRole, Resource, SaleOrderLine]);
+planningModels.PlanningSlot = PlanningSlot;
+planningModels.PlanningRole = PlanningRole;
+planningModels.ResourceResource = Resource;
+
+definePlanningModels();
+defineModels([SaleOrderLine]);
 
 beforeEach(() => {
     mockDate("2021-10-10 07:00:00", +1);
@@ -207,7 +194,7 @@ test("check default planned dates on the plan dialog", async function () {
         resModel: "planning.slot",
         arch: `<gantt js_class="planning_gantt" date_start="start_datetime" date_stop="end_datetime" default_scale="week"/>`,
     });
-    await clickCell("11 W41 2021");
+    await clickCell("Monday 11", "Week 41, Oct 10 - Oct 16");
 });
 
 test("Show shift form dialog only when shifts to plan", async function () {
@@ -230,8 +217,8 @@ test("Show shift form dialog only when shifts to plan", async function () {
         resModel: "planning.slot",
         arch: `<gantt js_class="planning_gantt" date_start="start_datetime" date_stop="end_datetime" default_scale="week"/>`,
     });
-    await hoverGridCell("13 W41 2021");
-    await clickCell("13 W41 2021");
+    await hoverGridCell("Wednesday 13", "Week 41, Oct 10 - Oct 16");
+    await clickCell("Wednesday 13", "Week 41, Oct 10 - Oct 16");
 
     expect(".o_dialog").toHaveCount(1);
     expect(".modal-title").toHaveText("Plan");
@@ -245,20 +232,22 @@ test("Show shift form dialog only when shifts to plan", async function () {
         {
             pills: [
                 {
-                    colSpan: "12 W41 2021 -> 12 W41 2021",
+                    colSpan:
+                        "Tuesday 12 Week 41, Oct 10 - Oct 16 -> Tuesday 12 Week 41, Oct 10 - Oct 16",
                     level: 0,
                     title: "Shift 1",
                 },
                 {
-                    colSpan: "13 W41 2021 -> 13 W41 2021",
+                    colSpan:
+                        "Wednesday 13 Week 41, Oct 10 - Oct 16 -> Wednesday 13 Week 41, Oct 10 - Oct 16",
                     level: 0,
                     title: "Shift 2",
                 },
             ],
         },
     ]);
-    await hoverGridCell("13 W41 2021");
-    await clickCell("13 W41 2021");
+    await hoverGridCell("Wednesday 13", "Week 41, Oct 10 - Oct 16");
+    await clickCell("Wednesday 13", "Week 41, Oct 10 - Oct 16");
     expect(".o_dialog").toHaveCount(1);
     expect(".modal-title").toHaveText("Add Shift");
 });
@@ -289,14 +278,14 @@ test("Open a dialog to schedule a plan using Open Shift", async function () {
         arch: '<gantt js_class="planning_gantt" date_start="start_datetime" date_stop="end_datetime" default_scale="week"/>',
         groupBy: ["resource_id"],
     });
-    await hoverGridCell("13 W41 2021");
-    await clickCell("13 W41 2021");
+    await hoverGridCell("Wednesday 13", "Week 41, Oct 10 - Oct 16");
+    await clickCell("Wednesday 13", "Week 41, Oct 10 - Oct 16");
     await click(".modal-footer .o_create_button");
 
     await selectFieldDropdownItem("resource_id", "Jarvo");
     await contains(`[name='name'] input`).edit("Shift-2");
-    await contains(`[name='start_datetime'] input`).edit('2021-10-12 09:00:00');
-    await contains(`[name='end_datetime'] input`).edit('2021-10-12 12:00:00');
+    await contains(`[name='start_datetime'] input`).edit("2021-10-12 09:00:00");
+    await contains(`[name='end_datetime'] input`).edit("2021-10-12 12:00:00");
 
     await click(".o_form_button_save");
     await animationFrame();

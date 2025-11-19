@@ -343,7 +343,8 @@ class ProductProduct(models.Model):
                 raise UserError(_("Cannot register '%(name)s' on eTIMS:\n%(msg)s", name=self.name, msg=message['message']))
         error, _content = self._l10n_ke_oscu_save_item()
         if error:
-            raise UserError(f"[{error['code']}] {error['message']}")
+            error_msg = f"[{error['code']}] {error['message']}"
+            raise UserError(error_msg)
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -401,7 +402,7 @@ class ProductProduct(models.Model):
         )
 
 
-class ProductCode(models.Model):
+class ProductUnspscCode(models.Model):
     _inherit = 'product.unspsc.code'
 
     l10n_ke_tax_type_id = fields.Many2one('l10n_ke_edi_oscu.code')
@@ -422,7 +423,8 @@ class ProductCode(models.Model):
             if error.get('code') == '001':
                 _logger.info("No new UNSPSC codes fetched from the OSCU.")
                 return
-            raise UserError(f"[{error['code']}] {error['message']}")
+            error_msg = f"[{error['code']}] {error['message']}"
+            raise UserError(error_msg)
 
         cls_list = {item['itemClsCd']: item for item in data['itemClsList']}
         existing_codes = self.with_context(active_test=False).search([

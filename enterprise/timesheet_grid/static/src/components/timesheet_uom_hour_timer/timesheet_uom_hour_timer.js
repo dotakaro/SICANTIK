@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -64,7 +62,6 @@ export const timesheetUOMHourTimer = {
         };
     },
     fieldDependencies: [
-        { name: "duration_unit_amount", type: "float" },
         { name: "display_timer", type: "boolean" },
         { name: "is_timer_running", type: "boolean" },
     ],

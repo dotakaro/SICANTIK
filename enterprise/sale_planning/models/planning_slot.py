@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from collections import defaultdict
@@ -8,8 +7,8 @@ import pytz
 from odoo import _, api, fields, models
 from odoo.osv import expression
 from odoo.tools import float_utils, DEFAULT_SERVER_DATETIME_FORMAT
+from odoo.tools.intervals import Intervals
 
-from odoo.addons.resource.models.utils import Intervals
 
 class PlanningSlot(models.Model):
     _inherit = 'planning.slot'
@@ -34,11 +33,10 @@ class PlanningSlot(models.Model):
     sale_line_plannable = fields.Boolean(related='sale_line_id.product_id.planning_enabled', export_string_translation=False)
     allocated_hours = fields.Float(compute_sudo=True)
 
-    _sql_constraints = [
-        ('check_datetimes_set_or_plannable_slot',
-         'CHECK((start_datetime IS NOT NULL AND end_datetime IS NOT NULL) OR sale_line_id IS NOT NULL)',
-         'Only slots linked to a Sales Order with a plannable service can be unscheduled.')
-    ]
+    _check_datetimes_set_or_plannable_slot = models.Constraint(
+        'CHECK((start_datetime IS NOT NULL AND end_datetime IS NOT NULL) OR sale_line_id IS NOT NULL)',
+        "Only slots linked to a Sales Order with a plannable service can be unscheduled.",
+    )
 
     @api.depends('sale_line_id')
     def _compute_role_id(self):
@@ -448,7 +446,7 @@ class PlanningSlot(models.Model):
 
     @api.model
     def _get_employee_to_assign_priority_list(self):
-        return ['previous_slot', 'default_role', 'roles']
+        return ['previous_slot', 'closest_so_line_slot', 'default_role', 'roles']
 
     def _get_employee_per_priority(self, priority, employee_ids_to_exclude, cache):
         """
@@ -465,6 +463,17 @@ class PlanningSlot(models.Model):
                 ('employee_id', 'not in', employee_ids_to_exclude),
             ], ['employee_id'], order='end_datetime:max desc, employee_id')
             cache[priority] = [employee.id for [employee] in search]
+        elif priority == 'closest_so_line_slot':
+            closest_slots = self.search([
+                ('sale_line_id.product_id', '=', self.sale_line_id.product_id.id),
+                ('sale_line_id.order_id.partner_id', '=', self.sale_line_id.order_id.partner_id.id),
+                ('employee_id', '!=', False),
+                ('start_datetime', '!=', False),
+                ('employee_id', 'not in', employee_ids_to_exclude),
+            ])
+            now = fields.Datetime.now()
+            closest_slots = closest_slots.sorted(key=lambda s: abs(s.end_datetime - now))
+            cache[priority] = closest_slots.employee_id.ids
         elif priority == 'default_role':
             search = self.env['hr.employee'].sudo().search([
                 ('default_planning_role_id', '=', self.role_id.id),
@@ -557,7 +566,7 @@ class PlanningSlot(models.Model):
 
     @api.model
     def auto_plan_ids(self, view_domain):
-        res = super(PlanningSlot, self).auto_plan_ids(view_domain)
+        res = super().auto_plan_ids(view_domain)
         if self._context.get('planning_slot_id'):
             # It means we are looking to assign one shift in particular to an available resource, which we do in planning.
             res["sale_line_planned"] = []

@@ -2,18 +2,18 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models, _
-from odoo.tools import format_list
 from lxml import etree
 
 GANTT_VALID_ATTRIBUTES = set([
     '__validate__',                     # ir.ui.view implementation detail
     'date_start',
     'date_stop',
-    'default_scale',
+    'default_scale', # should be dropped
     'default_range',
     'class',
     'js_class',
     'form_view_id',
+    'kanban_view_id',
     'progress',
     'consolidation',
     'consolidation_max',
@@ -33,7 +33,7 @@ GANTT_VALID_ATTRIBUTES = set([
     'total_row',
     'collapse_first_level',
     'offset',
-    'scales',
+    'scales', # should be renamed to ranges
     'thumbnails',
     'precision',
     'color',
@@ -50,7 +50,8 @@ GANTT_VALID_ATTRIBUTES = set([
     'groups_limit'
 ])
 
-class View(models.Model):
+
+class IrUiView(models.Model):
     _inherit = 'ir.ui.view'
 
     type = fields.Selection(selection_add=[('gantt', 'Gantt')])
@@ -100,8 +101,8 @@ class View(models.Model):
         if remaining:
             msg = _(
                 "Invalid attributes (%(invalid_attributes)s) in gantt view. Attributes must be in (%(valid_attributes)s)",
-                invalid_attributes=format_list(self.env, remaining),
-                valid_attributes=format_list(self.env, GANTT_VALID_ATTRIBUTES),
+                invalid_attributes=remaining,
+                valid_attributes=GANTT_VALID_ATTRIBUTES,
             )
             self._raise_view_error(msg, node)
 

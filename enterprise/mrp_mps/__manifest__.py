@@ -4,7 +4,7 @@
 {
     'name': 'Master Production Schedule',
     'version': '1.0',
-    'category': 'Manufacturing/Manufacturing',
+    'category': 'Supply Chain/Manufacturing',
     'sequence': 50,
     'summary': 'Master Production Schedule',
     'depends': ['base_import', 'mrp', 'purchase_stock'],
@@ -20,7 +20,7 @@ orders or purchase orders.
 
 You need to choose the products you want to add to the report.  You can choose
 the period for the report: day, week, month, ...  It is also possible to define
-safety stock, min/max to supply and to manually override the amount you will
+safety stock, minimum to supply and to manually override the amount you will
 procure.
 """,
     'data': [
@@ -38,6 +38,7 @@ procure.
     'demo': [
         'data/mps_demo.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

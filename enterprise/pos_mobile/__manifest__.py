@@ -18,5 +18,6 @@ This module provides the point of sale function of the Odoo Mobile App.
             'pos_mobile/static/src/**/*'
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -1,3 +1,4 @@
+import { fields } from "@mail/core/common/record";
 import { Thread } from "@mail/core/common/thread_model";
 import { patch } from "@web/core/utils/patch";
 import { deserializeDateTime } from "@web/core/l10n/dates";
@@ -5,6 +6,10 @@ import { deserializeDateTime } from "@web/core/l10n/dates";
 import { toRaw } from "@odoo/owl";
 
 patch(Thread.prototype, {
+    setup() {
+        super.setup();
+        this.wa_account_id = fields.One("whatsapp.account");
+    },
     get importantCounter() {
         if (this.channel_type === "whatsapp") {
             return this.selfMember?.message_unread_counter || this.message_needaction_counter;
@@ -17,13 +22,9 @@ patch(Thread.prototype, {
     get canLeave() {
         return this.channel_type !== "whatsapp" && super.canLeave;
     },
-    get canUnpin() {
-        if (this.channel_type === "whatsapp") {
-            return this.importantCounter === 0;
-        }
-        return super.canUnpin;
+    get allowedToUnpinChannelTypes() {
+        return [...super.allowedToUnpinChannelTypes, "whatsapp"];
     },
-
     get avatarUrl() {
         if (this.channel_type === "whatsapp" && this.correspondent) {
             return this.correspondent.persona.avatarUrl;

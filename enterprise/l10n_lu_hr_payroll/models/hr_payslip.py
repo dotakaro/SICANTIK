@@ -66,8 +66,8 @@ class HrPayslip(models.Model):
             period_taxable_days = 0
             month_taxable_days = 0
             date_to = payslip.date_to
-            if payslip.contract_id.date_end and payslip.contract_id.date_end < date_to:
-                date_to = payslip.contract_id.date_end
+            if payslip.version_id.date_end and payslip.version_id.date_end < date_to:
+                date_to = payslip.version_id.date_end
             for d in rrule(DAILY, dtstart=start_month, until=end_month):
                 if d.weekday() != SUNDAY:
                     month_taxable_days += 1
@@ -85,10 +85,10 @@ class HrPayslip(models.Model):
     @api.depends('date_from', 'date_to', 'employee_id', 'worked_days_line_ids')
     def _compute_prorated_wage(self):
         for payslip in self:
-            if payslip.company_id.country_id.code != "LU" and payslip.contract_id.wage_type == "hourly":
+            if payslip.company_id.country_id.code != "LU" and payslip.version_id.wage_type == "hourly":
                 continue
             payslip.l10n_lu_presence_prorata = payslip._get_month_presence_prorata()
-            payslip.l10n_lu_prorated_wage = payslip.contract_id.l10n_lu_indexed_wage * payslip.l10n_lu_presence_prorata
+            payslip.l10n_lu_prorated_wage = payslip.version_id.l10n_lu_indexed_wage * payslip.l10n_lu_presence_prorata
 
     @api.depends('employee_id.l10n_lu_tax_id_number', 'state')
     def _compute_l10n_lu_tax_id_number(self):
@@ -210,35 +210,15 @@ class HrPayslip(models.Model):
                 'data/rule_parameters/general_rules_data.xml',
                 'data/rule_parameters/tax_credit_rules_data.xml',
                 'data/rule_parameters/withholding_taxes_rules_data.xml',
-                'data/hr_work_entry_type_data.xml',
                 'data/hr_salary_rule_category_data.xml',
                 'data/hr_payroll_structure_type_data.xml',
-                'data/hr_work_entry_data.xml',
                 'data/hr_payroll_structure_data.xml',
                 'data/hr_payslip_input_type_data.xml',
-                'data/hr_holidays_data.xml',
-                'data/hr_payroll_dashboard_warning_data.xml',
             ])]
-
-    def _get_rule_name(self, localdict, rule, employee_lang):
-        if rule.struct_id.country_id.code == 'LU':
-            if rule.struct_id.code == 'LUX_MONTHLY':
-                if rule.code == 'GROSS':
-                    return _('Total Gross')
-                elif rule.code == 'NET':
-                    return _('Net To Pay')
-            if rule.struct_id.code in ['LUX_GRATIFICATION', 'LUX_13TH_MONTH']:
-                if rule.code == 'BASIC':
-                    return _('Basic Gratification')
-                elif rule.code == 'GROSS':
-                    return _('Gross Gratification')
-                elif rule.code == 'NET':
-                    return _('Net Gratification')
-        return super()._get_rule_name(localdict, rule, employee_lang)
 
     def _get_paid_amount(self):
         self.ensure_one()
-        if self.struct_id.country_id.code == 'LU' and self.struct_id.code == 'LUX_MONTHLY' and self.contract_id.wage_type == 'monthly':
+        if self.struct_id.country_id.code == 'LU' and self.struct_id.code == 'LUX_MONTHLY' and self.version_id.wage_type == 'monthly':
             return self.l10n_lu_prorated_wage
         elif self.struct_id.country_id.code == 'LU' and self.struct_id.code == 'LUX_13TH_MONTH':
             return self._get_paid_amount_l10n_lu_13th_month()
@@ -246,13 +226,15 @@ class HrPayslip(models.Model):
 
     def _get_month_presence_prorata(self):
         self.ensure_one()
-        worked_hours = self._get_paid_worked_days_line_number_of_hours()
+        unpaid_codes = self.struct_id.unpaid_work_entry_type_ids.mapped('code')
+        paid_lines = self.worked_days_line_ids.filtered(lambda wd: wd.code not in unpaid_codes)
+        paid_hours = sum(paid_lines.mapped('number_of_hours'))
 
         # YTI TOFIX: Localise start_date/end_date according to employee.tz
         start_date = self.date_from + relativedelta(day=1, hour=0, minute=0, second=0)
         end_date = self.date_to + relativedelta(day=1, months=1, days=-1, hour=23, minute=59, second=59)
         total_hours = self.employee_id.resource_calendar_id.get_work_hours_count(start_date, end_date)
-        return min(1, worked_hours / total_hours)
+        return min(1, paid_hours / total_hours)
 
     def _get_yearly_simulated_gross(self, current_gross=0):
         taxable_scale_days = self._rule_parameter('l10n_lu_days_per_month')

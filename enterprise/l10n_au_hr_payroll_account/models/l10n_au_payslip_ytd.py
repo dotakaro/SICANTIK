@@ -4,16 +4,20 @@ from collections import defaultdict
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from odoo.addons.l10n_au_hr_payroll.models.hr_version import INCOME_STREAM_TYPES
 from odoo.tools import create_index
 
 
-class L10nAUPayslipYTD(models.Model):
-    _name = "l10n_au.payslip.ytd"
+class L10n_AuPayslipYtd(models.Model):
+    _name = 'l10n_au.payslip.ytd'
     _description = "YTD Opening Balances"
 
     name = fields.Char(string="Description", compute="_compute_name", required=True)
     start_date = fields.Date(string="Fiscal Start Date", inverse="_fiscal_start_date", required=True, help="The date should be the start of the fiscal year.")
     employee_id = fields.Many2one("hr.employee", string="Employee", required=True)
+    l10n_au_income_stream_type = fields.Selection(
+        selection=INCOME_STREAM_TYPES,
+        string="Income Stream Type", readonly=True, required=True)
     company_id = fields.Many2one(related="employee_id.company_id", required=True)
     currency_id = fields.Many2one(related="company_id.currency_id")
     code = fields.Char(related="rule_id.code")
@@ -31,6 +35,9 @@ class L10nAUPayslipYTD(models.Model):
     start_value = fields.Monetary(string="Start Value")
     ytd_amount = fields.Float(string="YTD Amount", compute="_compute_total_ytd")
     finalised = fields.Boolean(string="Finalised")
+
+    _unique_employee = models.Constraint("unique(employee_id, rule_id, l10n_au_income_stream_type, start_date)",
+        "Opening balances for an employee with the same income stream type can only be imported once.")
 
     ####################################################
     # HELPER METHODS
@@ -80,20 +87,11 @@ class L10nAUPayslipYTD(models.Model):
     @api.depends("employee_id")
     def _compute_struct_id(self):
         for rec in self:
-            rec.struct_id = rec.employee_id.contract_id.structure_type_id.default_struct_id
+            rec.struct_id = rec.employee_id.version_id.structure_type_id.default_struct_id
 
     @api.constrains("employee_id", "rule_id", "start_value")
     def _check_unique_rule(self):
         for rec in self:
-            if not rec.finalised:
-                if self.search_count([
-                    ("employee_id", "=", rec.employee_id.id),
-                    ("rule_id", "=", rec.rule_id.id),
-                    ("id", "!=", rec.id),
-                    ("start_date", "=", rec.start_date),
-                ]):
-                    raise UserError(_("A record for %(rule)s rule for %(employee)s already exists for the selected fiscal year. "
-                        "Please update that before creating new one.", rule=rec.rule_id.name, employee=rec.employee_id.name))
             start_date = self._get_start_date(rec.start_date)
             end_date = start_date + relativedelta(years=1, days=-1)
             if self.env["hr.payslip"].search_count([
@@ -137,7 +135,8 @@ class L10nAUPayslipYTD(models.Model):
         ote_work_entry_type_ids = self.env["hr.work.entry.type"].search([
             ("l10n_au_is_ote", "=", True)
         ]).ids
-        opening_balances = self.env["l10n_au.payslip.ytd.input"].read_group([
+        opening_balances = self.env["l10n_au.payslip.ytd.input"]._read_group(
+            domain=[
                 ("l10n_au_payslip_ytd_id.employee_id", "in", employee_ids),
                 ("l10n_au_payslip_ytd_id.start_date", "=", start_date),
                 '|',
@@ -148,11 +147,11 @@ class L10nAUPayslipYTD(models.Model):
                         ('res_model', '=', 'hr.work.entry.type'),
                         ('res_id', 'in', ote_work_entry_type_ids)
             ],
-            ["ytd_amount:sum"],
-            ["employee_id"],
+            groupby=["employee_id"],
+            aggregates=["ytd_amount:sum"],
         )
-        opening_balances = {r["employee_id"][0]: r["ytd_amount"] for r in opening_balances}
-        res = defaultdict(float, opening_balances)
+
+        res = defaultdict(float, {r[0].id: r[1] for r in opening_balances})
         rtw_lines = self.search_read([
                 ("employee_id", "in", employee_ids),
                 ("start_date", "=", start_date),

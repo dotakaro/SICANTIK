@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { useRecordObserver } from "@web/model/relational_model/utils";
 import { standardWidgetProps } from "@web/views/widgets/standard_widget_props";
@@ -16,31 +14,30 @@ export class Digipad extends Component {
     };
 
     setup() {
-        this.orm = useService('orm');
+        this.orm = useService("orm");
         const { data } = this.props.record;
         const context = this.props.record.evalContext.context;
         this.quantity = data[this.props.fieldToEdit];
         this.value = String(this.quantity);
-        this.fulfillQuantity = this.props.fulfilledAt && !context.hide_qty_to_count
-            ? data[this.props.fulfilledAt]
-            : 0;
+        this.fulfillQuantity =
+            this.props.fulfilledAt && !context.hide_qty_to_count ? data[this.props.fulfilledAt] : 0;
         if (context.force_fullfil_quantity) {
             this.fulfillQuantity = context.force_fullfil_quantity;
         }
         const field = this.props.record.model.config.fields[this.props.fieldToEdit];
         this.precision = field.digits[1];
-        this.productId = this.props.record.data.product_id[0];
+        this.productId = this.props.record.data.product_id.id;
         this.state = useState({
             packagingButtons: [],
         });
         useRecordObserver(async (record) => {
-            if (this.productId != record.data.product_id[0]) {
-                this.productId = record.data.product_id[0];
+            if (this.productId != record.data.product_id.id) {
+                this.productId = record.data.product_id.id;
                 await this._fetchPackagingButtons();
             }
         });
         onWillStart(async () => {
-            this.displayUOM = await user.hasGroup('uom.group_uom');
+            this.displayUOM = await user.hasGroup("uom.group_uom");
             await this._fetchPackagingButtons();
         });
     }
@@ -59,7 +56,7 @@ export class Digipad extends Component {
     }
 
     get buttonContainerClass() {
-        return this.fulfillQuantity ? 'col-3' : 'col-4';
+        return this.fulfillQuantity ? "col-3" : "col-4";
     }
 
     get buttonFulfillClass() {
@@ -94,7 +91,7 @@ export class Digipad extends Component {
      * @private
      * @param {integer} [interval=1]
      */
-    async _increment(interval=1, enforceQuantity=false) {
+    async _increment(interval = 1, enforceQuantity = false) {
         if (enforceQuantity) {
             this.quantity = interval;
         } else {
@@ -115,20 +112,32 @@ export class Digipad extends Component {
      */
     async _fetchPackagingButtons() {
         const record = this.props.record.data;
-        if (record.product_id[0]) {
-            const domain = [["product_id", "=", record.product_id[0]]];
-            if (this.quantityToFulfill) { // Doesn't fetch packaging with a too high quantity.
-                domain.push(["qty", "<=", this.quantityToFulfill]);
+        this.productUom = (await this.orm.searchRead("uom.uom", [["id", "=", record.product_uom_id?.id]], ["factor"]))?.[0];
+        if (record.product_id.id) {
+            let domain = [["id", "=", record.product_id.id]];
+            const product_uoms = await this.orm.searchRead(
+                "product.product",
+                domain,
+                ["uom_ids"]
+            );
+            if (product_uoms.length === 0) {
+                return;
+            }
+            domain = [["id", "in", product_uoms[0].uom_ids]];
+            if (this.quantityToFulfill) {
+                // Doesn't fetch packaging with a too high quantity.
+                domain.push(["factor", "<=", this.quantityToFulfill]);
             }
             this.state.packagingButtons = await this.orm.searchRead(
-                "product.packaging",
+                "uom.uom",
                 domain,
-                ["name", "product_uom_id", "qty"],
+                ["name", "factor", "package_type_id"],
                 { limit: 2 }
             );
+        } else {
+            this.state.packagingButtons = [];
         }
     }
-
     //--------------------------------------------------------------------------
     // Handlers
     //--------------------------------------------------------------------------
@@ -175,4 +184,4 @@ export const digipad = {
         };
     },
 };
-registry.category('view_widgets').add('digipad', digipad);
+registry.category("view_widgets").add("digipad", digipad);

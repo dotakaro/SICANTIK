@@ -1,4 +1,4 @@
-from odoo import fields, models, api, Command, _
+from odoo import fields, models, api, _
 
 
 class StockWarehouse(models.Model):
@@ -34,10 +34,10 @@ class StockWarehouse(models.Model):
         depends=['company_id']
     )
 
-    _sql_constraints = [(
-        'unique_warehouse_ec_entity_and_emission', 'UNIQUE(l10n_ec_entity, l10n_ec_emission, company_id)',
-        'Duplicated warehouse (entity, emission) pair. You probably encoded twice the same warehouse.'
-    )]
+    _unique_warehouse_ec_entity_and_emission = models.Constraint(
+        'UNIQUE(l10n_ec_entity, l10n_ec_emission, company_id)',
+        "Duplicated warehouse (entity, emission) pair. You probably encoded twice the same warehouse.",
+    )
 
     def _l10n_ec_create_delivery_guide_sequence(self):
         """

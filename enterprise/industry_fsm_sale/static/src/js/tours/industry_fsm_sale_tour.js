@@ -25,7 +25,7 @@ patch(registry.category("web_tour.tours").get("industry_fsm_tour"), {
                 run: "click",
             },
             {
-                trigger: ".o-kanban-button-new",
+                trigger: ".o-kanban-button-new, .o_view_nocontent_smiling_face button",
             content: markup(_t('Let\'s create a new <b>product</b>.')),
                 tooltipPosition: 'right',
                 run: "click",
@@ -37,9 +37,9 @@ patch(registry.category("web_tour.tours").get("industry_fsm_tour"), {
                 run: "edit Test",
             },
             {
-                trigger: ".breadcrumb-item.o_back_button",
+                trigger: ".modal .o_form_button_save, .breadcrumb-item.o_back_button",
             content: markup(_t("Use the breadcrumbs to navigate to your <b>list of products</b>.")),
-                tooltipPosition: "bottom",
+                tooltipPosition: "right",
                 run: "click",
             },
             {
@@ -56,9 +56,9 @@ patch(registry.category("web_tour.tours").get("industry_fsm_tour"), {
                 trigger: ".o_fsm_product_kanban_view",
             },
             {
-                trigger: ".breadcrumb-item.o_back_button",
-            content: markup(_t("Use the breadcrumbs to return to your <b>task</b>.")),
-                tooltipPosition: "bottom",
+                trigger: ".o-kanban-button-back",
+            content: markup(_t("Go back to your <b>task</b>.")),
+                tooltipPosition: "right",
                 run: "click",
             }
         );

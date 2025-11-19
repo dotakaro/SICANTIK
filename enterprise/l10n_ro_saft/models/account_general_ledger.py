@@ -11,7 +11,7 @@ from odoo.tools import float_repr, SQL, Query
 from odoo.addons.account_edi_ubl_cii.models.account_edi_common import UOM_TO_UNECE_CODE
 
 
-class GeneralLedgerCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -153,9 +153,9 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 'action': values['company'].partner_id._get_records_action(name=_("Invalid Company/ies")),
             }
 
-        # The company must have a telephone number defined.
-        if not values['company'].partner_id.phone and not values['company'].partner_id.mobile:
-            errors['company_phone_missing'] = get_company_action(_('Please define a `Telephone Number` for your company.'))
+        # The company must have a phone number defined.
+        if not values['company'].partner_id.phone:
+            errors['company_phone_missing'] = get_company_action(_('Please define a `Phone Number` for your company.'))
 
         # The company must either have a VAT number defined (if it is registered for VAT in Romania),
         # or have its CUI number in the company_registry field (if not registered for VAT).
@@ -235,7 +235,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 partner_type in ('supplier', 'customer')
                 and partner.vat
                 and partner.vat[:2].isalpha()
-                and partner.country_code.lower() != partner._split_vat(partner.vat)[0]
+                and partner.country_code != partner._split_vat(partner.vat)[0]
             ):
                 faulty_partners['partner_vat_doesnt_match_country'] |= partner
             # Romanian company partners should have their VAT number or CUI number set in the Tax ID or company_registry field.
@@ -251,7 +251,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                     cui = partner.company_registry or vat_number
                     if not stdnum.ro.cui.is_valid(cui):
                         faulty_partners['partner_registry_incorrect'] |= partner
-                elif not partner.vat or not partner.simple_vat_check(vat_country, vat_number):
+                elif not partner.vat or not partner._check_vat_number(vat_country, vat_number):
                     faulty_partners['partner_vat_invalid'] |= partner
                 elif partner.perform_vies_validation and not partner.vies_valid:
                     faulty_partners['partner_vies_failed'] |= partner
@@ -308,17 +308,17 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                     # Alternatively, we can get the CUI from the VAT number by removing the 'RO' prefix.
                     cui = partner.company_registry or vat_number
                     return '00' + stdnum.ro.cui.compact(cui)
-                elif partner.country_id in partner.env.ref('base.europe').country_ids:
-                    return '01' + vat_country.upper() + vat_number
+                elif partner.country_id and 'EU' in partner.country_id.country_group_codes:
+                    return '01' + vat_country + vat_number
                 else:
-                    return '02' + vat_country.upper() + vat_number
+                    return '02' + vat_country + vat_number
             else:
                 if partner.company_registry and stdnum.ro.cnp.is_valid(partner.company_registry):
                     # For individuals having a valid CNP or NIF, that should be used
                     return stdnum.ro.cnp.compact(partner.company_registry)
                 elif partner.country_code == 'RO' or not partner.country_code:
                     return '04' + partner.country_code + str(partner.id)
-                elif partner.country_id in partner.env.ref('base.europe').country_ids:
+                elif partner.country_id and 'EU' in partner.country_id.country_group_codes:
                     return '05' + partner.country_code + str(partner.id)
                 else:
                     return '06' + partner.country_code + str(partner.id)
@@ -329,7 +329,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             partner_vals['registration_number'] = get_registration_number(partner_vals['partner'])
             partner_vals['l10n_ro_saft_contacts'] = partner_vals['contacts'].filtered(
                 # Only provide partners which have a first name, last name and phone number.
-                lambda contact: ' ' in contact.name[1:-1] and (contact.phone or contact.mobile)
+                lambda contact: ' ' in contact.name[1:-1] and contact.phone
             )
 
     @api.model
@@ -400,10 +400,6 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             if line_vals['product_uom_id']
         })
         uoms = self.env['uom.uom'].browse(encountered_product_uom_ids)
-        non_ref_uoms = uoms.filtered(lambda uom: uom.uom_type != 'reference')
-        if non_ref_uoms:
-            # search base UoM for UoM master table
-            uoms |= self.env['uom.uom'].search([('category_id', 'in', non_ref_uoms.category_id.ids), ('uom_type', '=', 'reference')])
 
         # Provide a dict that links each UOM id to its UNECE code
         uom_xmlids = uoms.get_external_id()

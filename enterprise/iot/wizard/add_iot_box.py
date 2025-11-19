@@ -1,84 +1,197 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from datetime import timedelta
-import random
+from odoo import _, fields, models
+
+import logging
 import requests
-import time
 
-from odoo import _, api, fields, models
-from odoo.exceptions import UserError
-
-TIMEOUT = 20
+_logger = logging.getLogger(__name__)
 
 
 class AddIotBox(models.TransientModel):
     _name = 'add.iot.box'
     _description = 'Add IoT Box wizard'
 
-    def _default_token(self):
-        web_base_url = self.get_base_url()
-        token = str(random.randint(1000000000, 9999999999))
-        iot_token = self.env['ir.config_parameter'].sudo().search([('key', '=', 'iot_token')], limit=1)
-        if iot_token:
-            # token valable 60 minutes
-            if iot_token.write_date + timedelta(minutes=60) > fields.datetime.now():
-                token = iot_token.value
-            else:
-                iot_token.write({'value': token})
-        else:
-            self.env['ir.config_parameter'].sudo().create({'key': 'iot_token', 'value': token})
-        db_uuid = self.env['ir.config_parameter'].sudo().get_param('database.uuid', default='')
-        enterprise_code = self.env['ir.config_parameter'].sudo().get_param('database.enterprise_code', default='')
-        return web_base_url + '?token=' + token + '&db_uuid=' + db_uuid + '&enterprise_code=' + enterprise_code
+    # Depending on the stage different window actions are available
+    stage = fields.Selection([
+        ('start', 'Start'),
+        ('connect', 'Connect'),
+        ('manual', 'Manual'),
+        ('pair_offline', 'Offline Pairing'),
+    ], string='Stage', default='start')
 
-    token = fields.Char(string='Token', default=_default_token, store=False)
+    discovered_box_ids = fields.One2many("iot.discovered.box", "add_iot_box_wizard_id")
+    iot_box_to_connect = fields.Many2one("iot.discovered.box")
+    serial_number = fields.Char(string='Serial Number')
     pairing_code = fields.Char(string='Pairing Code')
 
-    def box_pairing(self):
-        if not self.pairing_code:
-            raise UserError(_("Please enter a pairing code."))
+    offline_pairing_token = fields.Char(
+        "Token", default=lambda self: self._compute_pairing_token(), readonly=True, store=False
+    )
 
-        data = {
-            'params': {
-                'pairing_code': (self.pairing_code or '').upper().strip(),
-                'db_uuid': self.env['ir.config_parameter'].sudo().get_param('database.uuid'),
-                'database_url': self.env['ir.config_parameter'].sudo().get_param('web.base.url'),
-                'enterprise_code': self.env['ir.config_parameter'].sudo().get_param('database.enterprise_code'),
-                'token': self.env['ir.config_parameter'].sudo().get_param('iot_token'),
-            },
-        }
+    # ------------------------- IOT-PROXY CALLING METHODS -------------------------
+    def _connect_iot_box_with_pairing_code(self):
+        """
+        Calls the route /odoo-enterprise/iot/connect-db to connect the IoT Box with the provided pairing code
+
+        :return: the action to open the wizard view with the next step
+        """
+        # Pairing code can be entered manually or recovered from the selected IoT Box
+        if self.iot_box_to_connect:
+            self.pairing_code = self.iot_box_to_connect.pairing_code
+            self.serial_number = self.iot_box_to_connect.serial_number
         try:
-            req = requests.post('https://iot-proxy.odoo.com/odoo-enterprise/iot/connect-db', json=data, timeout=TIMEOUT)
-        except requests.exceptions.ReadTimeout:
-            raise UserError(_("We had troubles pairing your IoT Box. Please try again later."))
-
-        response = req.json()
-
-        if 'error' in response:
-            if response['error']['code'] == 404:
-                raise UserError(_(
-                    "The pairing code you provided was not found in our system. Please check that you "
-                    "entered it correctly."
-                ))
-            else:
-                raise requests.exceptions.ConnectionError()
-        else:
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'type': 'info',
-                    'message': _("Using Pairing Code to connect..."),
-                    'sticky': False,
+            icp_sudo = self.env['ir.config_parameter'].sudo()
+            response = requests.post(
+                'https://iot-proxy.odoo.com/odoo-enterprise/iot/connect-db',
+                json={
                     'params': {
-                        'next': {'type': 'ir.actions.act_window_close'},
-                    }
+                        'pairing_code': self.pairing_code,
+                        'database_url': self.get_base_url(),
+                        'token': self.env['iot.box']._default_token(),
+                        'db_uuid': icp_sudo.get_param('database.uuid'),
+                        'enterprise_code': icp_sudo.get_param('database.enterprise_code'),
+                    },
                 },
-            }
+                timeout=5
+            )
 
-    # TODO: Dead code to remove
-    # Since https://github.com/odoo/enterprise/pull/68394 we don't need to reload the page anymore
-    # For clients that did not upgrade, we keep this method as their old views still call it
-    def reload_page(self):
-        return self.env["ir.actions.actions"]._for_xml_id("iot.iot_box_action")
+            response.raise_for_status()
+            json = response.json()
+
+            # Typically occurs when the used pairing code wasn't found on iot proxy
+            error = json.get('error')  # e.g {'code': 404, 'message': '404: Not Found', ...}
+            if error:
+                _logger.warning("Error when using pairing code %s. IoT Proxy responded with an error message: %s", self.pairing_code, error)
+                return self._open_no_iot_box_found_action()
+            result = json.get('result')  # e.g [{'id': 1, 'serial_number': '12345'}]}
+            if result and result[0]:
+                return self._open_connecting_action()
+            else:
+                _logger.warning("Failed to connect the IoT Box with pairing code %s: %s", self.pairing_code, json)
+        except (requests.exceptions.RequestException, ValueError):
+            _logger.exception("Failed to use the provided pairing code %s to connect an iot box", self.pairing_code)
+        return self._open_no_iot_box_found_action()
+
+    # ------------------------- WIZARD OPEN ACTIONS -------------------------
+    def _open_select_box_to_connect_action(self):
+        self.stage = 'connect'
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'add.iot.box',
+            'res_id': self.id,
+            'name': _("Several IoT's detected"),
+            'views': [[self.env.ref('iot.view_select_box_to_connect').id, 'form']],
+            'target': 'new',
+        }
+
+    def _open_enter_pairing_code_action(self):
+        self.stage = 'connect'
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'add.iot.box',
+            'res_id': self.id,
+            'name': _("Searching for an IoT Box..."),
+            'views': [[self.env.ref('iot.view_enter_pairing_code').id, 'form']],
+            'target': 'new',
+        }
+
+    def _open_no_iot_box_found_action(self):
+        self.stage = 'manual'
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'add.iot.box',
+            'res_id': self.id,
+            'name': _("Searching for an IoT Box..."),
+            'views': [[self.env.ref('iot.view_no_iot_box_found').id, 'form']],
+            'target': 'new',
+            'no_iot_found_found': True,
+        }
+
+    def _open_connecting_action(self):
+        if self.serial_number:
+            name = _('IoT Box %s found. Connecting...', self.serial_number)
+        else:
+            name = _('IoT Box found. Connecting...')
+
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'add.iot.box',
+            'res_id': self.id,
+            'name': name,
+            'views': [[self.env.ref('iot.view_add_iot_box').id, 'form']],
+            'target': 'new',
+        }
+
+    def open_documentation_url(self):
+        return {
+            'type': 'ir.actions.act_url',
+            'url': 'https://www.odoo.com/documentation/master/applications/general/iot/iot_box.html',
+            'target': 'new',
+        }
+
+    # ------------------------- WIZARD STAGE ACTIONS -------------------------
+
+    def _start_stage(self):
+        """
+        Make a request to discover local IoT Boxes
+        If none are found, open the pairing code wizard
+        If only 1 is found, attempt to connect it directly
+        If > 1 is found, open the select box wizard
+        """
+        n_detected_iot_boxes = len(self.discovered_box_ids)
+
+        # If multiple IoT Boxes are found, ask the user to select one
+        if n_detected_iot_boxes > 1:
+            return self._open_select_box_to_connect_action()
+        # If only one IoT Box is found, connect it directly without showing the wizard to the user
+        elif n_detected_iot_boxes == 1:
+            self.pairing_code = self.discovered_box_ids[0].pairing_code
+            self.serial_number = self.discovered_box_ids[0].serial_number
+            return self._connect_iot_box_with_pairing_code()
+        # If no IoT Boxes are found, ask the user to enter the pairing code manually
+        else:
+            return self._open_no_iot_box_found_action()
+
+    def add_iot_box_wizard_action(self):
+        """
+        Base action for the wizard used to connect IoT Boxes
+        Depending on the stage of the wizard, different actions are available
+        """
+        match self.stage:
+            case 'start':
+                return self._start_stage()
+            case 'manual':
+                return self._open_enter_pairing_code_action()
+            case 'connect':
+                return self._connect_iot_box_with_pairing_code()
+        return None
+
+    def pair_offline(self):
+        """Use the token to pair an IoT Box.
+        Allows to pair an IoT Box that is not connected to the internet
+        """
+        if self.stage == 'pair_offline':
+            self.stage = 'start'
+            return self._start_stage()
+
+        self.stage = 'pair_offline'
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'add.iot.box',
+            'res_id': self.id,
+            'name': _("Pair an IoT Box offline"),
+            'views': [[self.env.ref('iot.view_pair_offline').id, 'form']],
+            'target': 'new',
+        }
+
+    def _compute_pairing_token(self):
+        icp_sudo = self.env['ir.config_parameter'].sudo()
+        token = self.env['iot.box']._default_token()
+        url = self.get_base_url()
+        db_uuid = icp_sudo.get_param('database.uuid', default='')
+        db_name = self.env.cr.dbname
+        enterprise_code = icp_sudo.get_param('database.enterprise_code', default='')
+
+        return f"{url}?token={token}&db_uuid={db_uuid}&enterprise_code={enterprise_code}&db_name={db_name}"

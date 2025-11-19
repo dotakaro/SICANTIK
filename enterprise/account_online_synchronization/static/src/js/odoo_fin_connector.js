@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { loadJS } from "@web/core/assets";
 import { cookie } from "@web/core/browser/cookie";
@@ -9,6 +7,7 @@ const actionRegistry = registry.category('actions');
 
 function OdooFinConnector(parent, action) {
     const orm = parent.services.orm;
+    const currency = parent.services.currency;
     const actionService = parent.services.action;
     const notificationService = parent.services.notification;
     const debugMode = parent.debug;
@@ -51,6 +50,8 @@ function OdooFinConnector(parent, action) {
                             mode = data.mode || mode;
                             actionResult = await orm.call('account.online.link', 'success', [[id], mode, data], {context: action.context});
                             actionResult.help = markup(actionResult.help)
+                            // Reload the currency otherwise in might not be in the session for the getCurrency
+                            await currency.reloadCurrencies();
                             return actionService.doAction(actionResult);
                         case 'connect_existing_account':
                             actionResult = await orm.call('account.online.link', 'connect_existing_account', [data], {context: action.context});
@@ -60,11 +61,13 @@ function OdooFinConnector(parent, action) {
                             return;
                     }
                 },
-                onAddBank: async function () {
-                    // If the user doesn't find his bank
-                    actionResult = await orm.call('account.online.link', 'create_new_bank_account_action',
-                    [], {context: action.context});
-                    actionResult.help = markup(actionResult.help)
+                onAddBank: async function (data) {
+                    actionResult = await orm.call(
+                        "account.online.link",
+                        "create_new_bank_account_action",
+                        [[id], data],
+                        { context: action.context }
+                    );
                     return actionService.doAction(actionResult);
                 }
             };

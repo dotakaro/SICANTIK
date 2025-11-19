@@ -1,13 +1,14 @@
 from odoo import _, api, fields, models
 
+
 class SpreadsheetCellThread(models.Model):
-    _name = "spreadsheet.cell.thread"
+    _name = 'spreadsheet.cell.thread'
 
     _description = "Spreadsheet discussion thread"
 
     _inherit = ["mail.thread"]
 
-    display_name = fields.Char(compute="_compute_display_name", compute_sudo=True)
+    display_name = fields.Char(compute_sudo=True)
 
     def _compute_display_name(self):
         for record in self:
@@ -19,23 +20,18 @@ class SpreadsheetCellThread(models.Model):
             SpreadsheetCellThread, self.with_context(mail_create_nolog=True)
         ).create(vals_list)
 
-
-    def _notify_thread_by_email(self, message, recipients_data, **kwargs):
-        """ We need to override this method to set our own mail template to be sent to users that
-        have been tagged inside a comment. We are using the template 'documents_spreadsheet.mail_notification_layout'
-        which is a simple template comprised of the comment sent and the person that tagged the notified user.
-        """
-
-        kwargs["msg_vals"] = {
-            **kwargs["msg_vals"],
-            "email_layout_xmlid": "spreadsheet_edition.mail_notification_layout",
-        }
-        return super()._notify_thread_by_email(message, recipients_data, **kwargs)
+    def _notify_thread_by_email(self, message, recipients_data, *, msg_vals=False, **kwargs):
+        # Set a specific mail template to be sent to users that have been tagged inside a comment.
+        # It is a simple template comprised of the comment sent and the person that tagged the notified user.
+        msg_vals = msg_vals or {}
+        msg_vals['email_layout_xmlid'] = "spreadsheet_edition.mail_notification_layout"
+        return super()._notify_thread_by_email(message, recipients_data, msg_vals=msg_vals, **kwargs)
 
     def _message_compute_subject(self):
         self.ensure_one()
         return _("New Mention in %s") % self.display_name
 
+    @api.readonly
     def get_spreadsheet_access_action(self):
         related_record = self._get_spreadsheet_record()
         if related_record and related_record.has_access("read"):

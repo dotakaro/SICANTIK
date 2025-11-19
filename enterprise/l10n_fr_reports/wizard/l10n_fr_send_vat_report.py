@@ -1,6 +1,6 @@
 from odoo import api, Command, fields, models, _
 from odoo.tools import cleanup_xml_node, float_repr, float_compare, format_date
-from odoo.exceptions import ValidationError, UserError
+from odoo.exceptions import ValidationError, UserError, RedirectWarning
 from odoo.addons.l10n_fr_reports.models.account_report_async_export import ENDPOINT
 
 from lxml import etree
@@ -116,7 +116,7 @@ LINES_CODE_NOT_FILLED_IF_0 = {
 }
 
 
-class L10nFRSendVatReportBankAccountLine(models.TransientModel):
+class L10n_Fr_ReportsSendVatReportBankAccountLine(models.TransientModel):
     _name = 'l10n_fr_reports.send.vat.report.bank.account.line'
     _description = "Bank Account Line for French Vat Report"
 
@@ -153,8 +153,8 @@ class L10nFRSendVatReportBankAccountLine(models.TransientModel):
             line.is_wrongly_configured = line.bank_partner_id and (not line.bank_bic or not line.account_number)
 
 
-class L10nFrSendVatReport(models.TransientModel):
-    _name = "l10n_fr_reports.send.vat.report"
+class L10n_Fr_ReportsSendVatReport(models.TransientModel):
+    _name = 'l10n_fr_reports.send.vat.report'
     _description = "Send VAT Report Wizard"
 
     recipient = fields.Selection([
@@ -232,8 +232,8 @@ class L10nFrSendVatReport(models.TransientModel):
             raise ValidationError(", ".join(error_list))
 
     def _check_siret(self, company):
-        if not siret.is_valid(company.siret):
-            raise ValidationError(_("%(company)s has an invalid siret: %(siret)s.", company=company.display_name, siret=company.siret))
+        if not siret.is_valid(company.company_registry):
+            raise ValidationError(_("%(company)s has an invalid siret: %(siret)s.", company=company.display_name, siret=company.company_registry))
 
     def _check_bank_accounts(self):
         self.ensure_one()
@@ -244,7 +244,8 @@ class L10nFrSendVatReport(models.TransientModel):
 
     def _check_vat_to_pay(self):
         self.ensure_one()
-        if any(float_compare(line.vat_amount, 0, precision_digits=line.currency_id.decimal_places) <= 0 for line in self.bank_account_line_ids):
+        if any(float_compare(line.vat_amount, 0, precision_digits=line.currency_id.decimal_places) <= 0 for line in
+               self.bank_account_line_ids):
             raise UserError(_("You can't set an amount with a negative value or a value set to 0."))
 
     def _check_values_export(self, options):
@@ -252,11 +253,11 @@ class L10nFrSendVatReport(models.TransientModel):
         sender_company = self.report_id._get_sender_company_for_export(options)
         # Assume Emitor = Writer -> omit the emitor
         writer = sender_company.account_representative_id or sender_company
-        self._check_constraints(writer, ['siret', 'street', 'zip', 'city', 'country_id'])
+        self._check_constraints(writer, ['company_registry', 'street', 'zip', 'city', 'country_id'])
         self._check_siret(writer)
         # Debtor
         debtor = sender_company
-        self._check_constraints(debtor, ['siret', 'street', 'zip', 'city', 'country_id'])
+        self._check_constraints(debtor, ['company_registry', 'street', 'zip', 'city', 'country_id'])
         self._check_siret(debtor)
 
         self._check_bank_accounts()
@@ -280,6 +281,12 @@ class L10nFrSendVatReport(models.TransientModel):
                     'id': edi_id,
                     'value': float_repr(self.currency_id.round(column_value), self.currency_id.decimal_places).replace('.', ','),
                 })
+
+        if self.currency_id.is_zero(self.vat_amount):
+            edi_values.append({
+                'id': "KF",
+                'value': "X",
+            })
 
         return edi_values
 
@@ -313,13 +320,13 @@ class L10nFrSendVatReport(models.TransientModel):
         writer = sender_company.account_representative_id or sender_company
         debtor = sender_company
         writer_vals = {
-            'siret': writer.siret,
+            'siret': writer.company_registry,
             'designation': "CEC_EDI_TVA",
             'designation_cont_1': writer.name,  # "raison sociale"
             'address': self._get_address_dict(writer),
         }
         debtor_vals = {
-            'identifier': debtor.siret and debtor.siret[:9],  # siren
+            'identifier': debtor.company_registry and debtor.company_registry[:9],  # siren
             'designation': debtor.name,  # "raison sociale"
             'address': self._get_address_dict(debtor),
             'rof': "TVA1",  # "référence obligation fiscale"
@@ -341,7 +348,7 @@ class L10nFrSendVatReport(models.TransientModel):
         identif_vals = [
             {
                 'id': 'AA',
-                'identifier': debtor.siret and debtor.siret[:9],
+                'identifier': debtor.company_registry and debtor.company_registry[:9],
                 'designation': debtor.display_name,
                 'address': self._get_address_dict(debtor),
             },
@@ -398,7 +405,19 @@ class L10nFrSendVatReport(models.TransientModel):
             :param options: dict - Report options for the VAT period selection.
             :return: account.move - Represents the carryover reimbursement.
         """
-        tax_closing_entry = self.env[self.report_id.custom_handler_model_name]._get_periodic_vat_entries(options)
+        account_return = self.env['account.return']._get_return_from_report_options(options)
+        tax_closing_entry = account_return.closing_move_ids if account_return else None
+        if not tax_closing_entry:
+            raise RedirectWarning(
+                _("No closing entry was found. Please create one it before sending your report."),
+                self.env['account.return'].action_open_tax_return_view(additional_return_domain=[
+                    ('date_to', '<=', options['date']['date_to']),
+                    ('date_from', '>=', options['date']['date_from']),
+                    ('type_id.report_id', '=', options['report_id']),
+                ]),
+                _("Create Closing Entry"),
+            )
+
         tax_receivable_account_ids = self.env['account.tax.group'].search(
             [('tax_receivable_account_id', '!=', False)]
         ).tax_receivable_account_id
@@ -455,7 +474,8 @@ class L10nFrSendVatReport(models.TransientModel):
     def send_vat_return(self):
         self.ensure_one()
 
-        options = self.report_id.get_options({'no_format': True, 'date': {'date_from': self.date_from, 'date_to': self.date_to}, 'unfold_all': True})
+        options = self.report_id.get_options(
+            {'no_format': True, 'date': {'date_from': self.date_from, 'date_to': self.date_to}, 'unfold_all': True})
         self._check_values_export(options)
 
         lines = self.report_id._get_lines(options)
@@ -472,7 +492,8 @@ class L10nFrSendVatReport(models.TransientModel):
         xml_content = etree.tostring(cleanup_xml_node(xml_content), encoding='ISO-8859-15', standalone='yes')
 
         if not self.is_vat_due and self.computed_vat_amount:
-            if external_value_26 := self.env.ref('l10n_fr_account.tax_report_26_external_tag', raise_if_not_found=False):
+            if external_value_26 := self.env.ref('l10n_fr_account.tax_report_26_external_tag',
+                                                 raise_if_not_found=False):
                 # xml_id in module l10n_fr_account may not be updated yet
                 self.env['account.report.external.value'].create({
                     'name': _(
@@ -578,7 +599,8 @@ class L10nFrSendVatReport(models.TransientModel):
 
             xml_content = etree.tostring(cleanup_xml_node(xml_content), encoding='ISO-8859-15', standalone='yes')
             report_common_name = self._get_vat_report_name(self.date_from, self.date_to)
-            reimbursement_name = _('%(report_common_name)s_reimbursement_%(index)s', report_common_name=report_common_name, index=index)
+            reimbursement_name = _('%(report_common_name)s_reimbursement_%(index)s',
+                                   report_common_name=report_common_name, index=index)
             self._send_xml_to_aspone(xml_content, reimbursement_name)
 
     def _send_xml_to_aspone(self, xml_content, export_name):

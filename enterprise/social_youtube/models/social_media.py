@@ -9,7 +9,7 @@ from odoo.exceptions import UserError
 from werkzeug.urls import url_encode, url_join
 
 
-class SocialMediaYoutube(models.Model):
+class SocialMedia(models.Model):
     _inherit = 'social.media'
 
     _YOUTUBE_ENDPOINT = 'https://www.googleapis.com'
@@ -20,7 +20,7 @@ class SocialMediaYoutube(models.Model):
         self.ensure_one()
 
         if self.media_type != 'youtube':
-            return super(SocialMediaYoutube, self)._action_add_account()
+            return super()._action_add_account()
 
         youtube_oauth_client_id = self.env['ir.config_parameter'].sudo().get_param('social.youtube_oauth_client_id')
         youtube_oauth_client_secret = self.env['ir.config_parameter'].sudo().get_param('social.youtube_oauth_client_secret')
@@ -71,7 +71,10 @@ class SocialMediaYoutube(models.Model):
         ).text
 
         if iap_add_accounts_url == 'unauthorized':
-            raise UserError(_("Please activate developer mode, add the credentials to the configurations, then go to social media to link your account"))
+            raise UserError(_(
+                "Oops! You currently don't have an active subscription. No worries, though! "
+                "You can easily get one here: %s.\n"
+                "Grab a subscription and unlock a world of amazing features!", 'https://www.odoo.com/buy'))
         elif iap_add_accounts_url == 'youtube_missing_configuration':
             raise UserError(_("The url that this service requested returned an error. Please contact the author of the app."))
 

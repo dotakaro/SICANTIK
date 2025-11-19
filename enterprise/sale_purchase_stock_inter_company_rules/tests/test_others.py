@@ -42,7 +42,7 @@ class TestInterCompanyOthersWithStock(TestInterCompanyRulesCommonStock):
         self.assertEqual(receipt.state, 'done')
         self.assertEqual(purchase_order.order_line.qty_received, 10.0)
         # return the units to the inter company transit location
-        self.env.user.groups_id |= self.env.ref('stock.group_stock_multi_locations')
+        self.env.user.group_ids |= self.env.ref('stock.group_stock_multi_locations')
         stock_return_picking_form = Form(self.env['stock.return.picking'].with_company(self.company_a).with_context(active_ids=receipt.ids, active_id=receipt.sorted().ids[0], active_model='stock.picking'))
         return_wiz = stock_return_picking_form.save()
         return_wiz.product_return_moves.write({'quantity': 10.0})
@@ -136,8 +136,8 @@ class TestInterCompanyOthersWithStock(TestInterCompanyRulesCommonStock):
             'type': 'phantom',
             'company_id': False,
             'bom_line_ids': [
-                Command.create({'product_id': components[0].id,'product_qty': 2}),
-                Command.create({'product_id': components[1].id,'product_qty': 3})
+                Command.create({'product_id': components[0].id, 'product_qty': 2}),
+                Command.create({'product_id': components[1].id, 'product_qty': 3})
             ],
         })
         self.env['mrp.bom'].create({
@@ -147,8 +147,8 @@ class TestInterCompanyOthersWithStock(TestInterCompanyRulesCommonStock):
             'type': 'phantom',
             'company_id': False,
             'bom_line_ids': [
-                Command.create({'product_id': components[1].id,'product_qty': 4}),
-                Command.create({'product_id': components[2].id,'product_qty': 5})
+                Command.create({'product_id': components[1].id, 'product_qty': 4}),
+                Command.create({'product_id': components[2].id, 'product_qty': 5})
             ],
         })
         sale_order = self.env['sale.order'].create({

@@ -46,7 +46,7 @@ test("The chart mode is the selected one", async () => {
     expect(model.getters.getChart(chartId).type).toBe("odoo_pie");
 });
 
-test("Line charts are inserted as stacked area charts", async (assert) => {
+test("Line charts are inserted as stacked area charts with data markers", async (assert) => {
     const { model } = await createSpreadsheetFromGraphView({
         actions: async (target) => {
             await contains(".fa-line-chart").click();
@@ -57,6 +57,7 @@ test("Line charts are inserted as stacked area charts", async (assert) => {
     const definition = model.getters.getChartDefinition(chartId);
     expect(definition.fillArea).toBe(true);
     expect(definition.stacked).toBe(true);
+    expect(definition.hideDataMarkers).toBe(undefined);
 });
 
 test("The chart order is the selected one when selecting desc", async () => {
@@ -189,11 +190,11 @@ test("graph with a contextual domain", async () => {
         serverData,
         additionalContext: { search_default_filter: 1 },
         mockRPC: function (route, args) {
-            if (args.method === "web_read_group") {
+            if (args.method === "formatted_read_group") {
                 expect(args.kwargs.domain).toEqual([["foo", "=", uid]], {
                     message: "data should be fetched with the evaluated the domain",
                 });
-                expect.step("web_read_group");
+                expect.step("formatted_read_group");
             }
         },
     });
@@ -206,7 +207,7 @@ test("graph with a contextual domain", async () => {
         '[("foo", "=", uid)]',
         { message: "domain is exported with the dynamic value" }
     );
-    expect.verifySteps(["web_read_group", "web_read_group"]);
+    expect.verifySteps(["formatted_read_group", "formatted_read_group"]);
 });
 
 test("'cumulated_start' is fetched from the graph view", async () => {
@@ -216,10 +217,12 @@ test("'cumulated_start' is fetched from the graph view", async () => {
             <field name="foo" type="measure"/>
         </graph>
     `;
-    const { model } = await createSpreadsheetFromGraphView({ serverData });
+    const { model } = await createSpreadsheetFromGraphView({
+        serverData,
+    });
 
     const sheetId = model.getters.getActiveSheetId();
-    const chartIds = model.getters.getChartIds(sheetId)
+    const chartIds = model.getters.getChartIds(sheetId);
     expect(chartIds.length).toBe(1);
     expect(model.getters.getChart(chartIds[0]).metaData.cumulatedStart).toBe(true);
-})
+});

@@ -4,7 +4,7 @@
 {
     'name': "Subcontract with Barcode",
     'summary': "Allows the subcontracting process with the barcode views",
-    'category': 'Hidden',
+    'category': 'Supply Chain/Inventory',
     'version': '1.0',
     'description': """
 This bridge module is auto-installed when the modules stock_barcode and mrp_subcontracting are installed.
@@ -12,6 +12,7 @@ This bridge module is auto-installed when the modules stock_barcode and mrp_subc
     'depends': ['stock_barcode', 'mrp_subcontracting'],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

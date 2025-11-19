@@ -48,7 +48,6 @@ class TestWorkOrderDependencies(TestMrpWorkorderCommon):
             ],
             'allow_operation_dependencies': True,
         })
-        cls.stock_location = cls.env.ref('stock.stock_location_stock')
         cls.env['stock.quant']._update_available_quantity(cls.component1, cls.stock_location, 100)
         cls.env['stock.quant']._update_available_quantity(cls.component2, cls.stock_location, 100)
 
@@ -81,7 +80,7 @@ class TestWorkOrderDependencies(TestMrpWorkorderCommon):
         mo.action_confirm()
         wo1, wo2, wo3 = mo.workorder_ids
         # Check workorders initial state
-        self.assertEqual(wo1.state, 'pending', "Workorder for Operation-A should be Waiting for another WO (the 3rd).")
+        self.assertEqual(wo1.state, 'blocked', "Workorder for Operation-A should be Waiting for another WO (the 3rd).")
         self.assertEqual(wo2.state, 'ready', "Workorder for Operation-B should be ready.")
         self.assertEqual(wo3.state, 'ready', "Workorder for Operation-C should be ready.")
         mo.button_plan()
@@ -90,7 +89,7 @@ class TestWorkOrderDependencies(TestMrpWorkorderCommon):
         wo2.qty_producing = 2
         wo2.record_production()
         # Check 3rd WO (not dependent on 1st)
-        self.assertEqual(wo1.state, 'pending', "Workorder for Operation-A should STILL be Waiting for another WO (the 3rd).")
+        self.assertEqual(wo1.state, 'blocked', "Workorder for Operation-A should STILL be Waiting for another WO (the 3rd).")
         # Mark 2nd initial WO as done
         wo3.button_start()
         wo3.qty_producing = 2
@@ -119,7 +118,7 @@ class TestWorkOrderDependencies(TestMrpWorkorderCommon):
 
         wo_1, wo_2, wo_3 = mo.workorder_ids
         self.assertEqual(mo.state, 'confirmed')
-        self.assertEqual(wo_1.state, 'pending')
+        self.assertEqual(wo_1.state, 'blocked')
         self.assertEqual(wo_2.state, 'ready')
         self.assertEqual(wo_3.state, 'ready')
 
@@ -128,7 +127,7 @@ class TestWorkOrderDependencies(TestMrpWorkorderCommon):
         # backorder for 15 created with
         # - wo5 'cancel' (fully processed)
         # - wo6 'ready' for 10
-        # - wo4 'pending' for 15
+        # - wo4 'blocked' for 15
 
         wo_2.button_start()
         wo_2.qty_producing = 20
@@ -148,7 +147,7 @@ class TestWorkOrderDependencies(TestMrpWorkorderCommon):
 
         bo = self.env['mrp.production.backorder'].create({
             "mrp_production_backorder_line_ids": [
-                [0, 0, {"mrp_production_id": mo.id, "to_backorder": True}]
+                Command.create({"mrp_production_id": mo.id, "to_backorder": True})
             ]
         })
         bo.action_backorder()
@@ -158,7 +157,7 @@ class TestWorkOrderDependencies(TestMrpWorkorderCommon):
         mo_2 = mo.procurement_group_id.mrp_production_ids - mo
         wo_4, wo_5, wo_6 = mo_2.workorder_ids
 
-        self.assertEqual(wo_4.state, 'pending')
+        self.assertEqual(wo_4.state, 'ready')
         self.assertEqual(wo_5.state, 'cancel')
         self.assertEqual(wo_6.state, 'ready')
 
@@ -183,7 +182,7 @@ class TestWorkOrderDependencies(TestMrpWorkorderCommon):
 
         bo = self.env['mrp.production.backorder'].create({
             "mrp_production_backorder_line_ids": [
-                [0, 0, {"mrp_production_id": mo_2.id, "to_backorder": True}]
+                Command.create({"mrp_production_id": mo_2.id, "to_backorder": True})
             ]
         })
         bo.action_backorder()

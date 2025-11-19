@@ -44,9 +44,10 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         self.assertEqual(len(payslip.input_line_ids), 0)
         self.assertEqual(len(payslip.worked_days_line_ids), 1)
 
-        self.assertAlmostEqual(payslip._get_worked_days_line_amount('WORK100'), 10000000, places=2)
-        self.assertAlmostEqual(payslip._get_worked_days_line_number_of_days('WORK100'), 23)
-        self.assertAlmostEqual(payslip._get_worked_days_line_number_of_hours('WORK100'), 184)
+        attendance_data = payslip._get_worked_days_line_values(['WORK100'], ['amount', 'number_of_days', 'number_of_hours'], True)['WORK100']['sum']
+        self.assertAlmostEqual(attendance_data['amount'], 10000000, places=2)
+        self.assertAlmostEqual(attendance_data['number_of_days'], 23)
+        self.assertAlmostEqual(attendance_data['number_of_hours'], 184)
         payslip_results = {'BASE': 10000000, 'BASIC': 10000000, 'BPJS_JKK': 24000, 'BPJS_JKM': 30000, 'BPJS_Kesehatan': 400000, 'GROSS': 10454000, 'JHT': -200000, 'JP': -100000, 'BPJS_KESEHATAN_DED': -100000, 'PPH21': -261350, 'NET': 9338650}
         self._validate_payslip(payslip, payslip_results)
 
@@ -64,18 +65,18 @@ class TestPayslipValidation(TestPayslipValidationCommon):
         """ Unpaid leave of 7 days (3) """
         self.contract.wage = 6e6
 
-        leaves_to_create = [
-            (datetime(2024, 6, 6), datetime(2024, 6, 6), 'hr_holidays.holiday_status_unpaid'),
-            (datetime(2024, 6, 7), datetime(2024, 6, 7), 'hr_holidays.holiday_status_unpaid'),
-            (datetime(2024, 6, 10), datetime(2024, 6, 10), 'hr_holidays.holiday_status_unpaid'),
-            (datetime(2024, 6, 11), datetime(2024, 6, 11), 'hr_holidays.holiday_status_unpaid'),
-            (datetime(2024, 6, 12), datetime(2024, 6, 12), 'hr_holidays.holiday_status_unpaid'),
-            (datetime(2024, 6, 13), datetime(2024, 6, 13), 'hr_holidays.holiday_status_unpaid'),
-            (datetime(2024, 6, 14), datetime(2024, 6, 14), 'hr_holidays.holiday_status_unpaid'),
+        unpaid_leaves_to_create = [
+            (datetime(2024, 6, 6), datetime(2024, 6, 6)),
+            (datetime(2024, 6, 7), datetime(2024, 6, 7)),
+            (datetime(2024, 6, 10), datetime(2024, 6, 10)),
+            (datetime(2024, 6, 11), datetime(2024, 6, 11)),
+            (datetime(2024, 6, 12), datetime(2024, 6, 12)),
+            (datetime(2024, 6, 13), datetime(2024, 6, 13)),
+            (datetime(2024, 6, 14), datetime(2024, 6, 14)),
         ]
 
-        for leave in leaves_to_create:
-            self._generate_leave(leave[0], leave[1], leave[2])
+        for date_from, date_to in unpaid_leaves_to_create:
+            self._generate_leave(date_from, date_to, self.env.ref('hr_holidays.leave_type_unpaid'))
 
         payslip = self._generate_payslip(date(2024, 6, 1), date(2024, 6, 30))
 
@@ -314,7 +315,7 @@ class TestPayslipValidation(TestPayslipValidationCommon):
 
     def test_end_of_contract(self):
         """ Contract lasts until end of August (17) """
-        self.contract.date_end = date(2024, 8, 31)
+        self.contract.contract_date_end = date(2024, 8, 31)
 
         for i in range(1, 9):
             drange = PERIOD[i]
@@ -332,7 +333,7 @@ class TestPayslipValidation(TestPayslipValidationCommon):
 
     def test_end_of_contract_2(self):
         """ 15 Jan - 31 Dec + get the December's payslip (19) """
-        self.contract.date_start = date(2024, 1, 15)
+        self.contract.contract_date_start = date(2024, 1, 15)
 
         for i in range(1, 13):
             drange = PERIOD[i]
@@ -350,7 +351,7 @@ class TestPayslipValidation(TestPayslipValidationCommon):
 
     def test_end_of_contract_3(self):
         """15 Jan - end of year, payroll cycle at 15th"""
-        self.contract.date_start = date(2024, 1, 15)
+        self.contract.contract_date_start = date(2024, 1, 15)
 
         for i in range(1, 12):
             slip = self._generate_payslip(
@@ -367,7 +368,7 @@ class TestPayslipValidation(TestPayslipValidationCommon):
 
     def test_end_of_year_with_allowance(self):
         """ End of year testing with transport allowance (21) """
-        self.contract.date_start = date(2024, 10, 1)
+        self.contract.contract_date_start = date(2024, 10, 1)
         self.contract.wage = 2e7
         for i in range(10, 12):
             drange = PERIOD[i]
@@ -402,7 +403,7 @@ class TestPayslipValidation(TestPayslipValidationCommon):
     def test_new_joiner(self):
         """ New joiner starting in 15 January, payslip for January (22)"""
         self.contract.wage = 2e7
-        self.contract.date_start = date(2024, 1, 15)
+        self.contract.contract_date_start = date(2024, 1, 15)
 
         payslip = self._generate_payslip(
             date(2024, 1, 1),
@@ -459,7 +460,7 @@ class TestPayslipValidation(TestPayslipValidationCommon):
     def test_pkp_above_zero(self):
         """ Test that PKP is non-negative and when PKP is 0, then return all paid PPH21 amount """
         # joins november, pph21 of december is supposed to be -(pph21 of nov)
-        self.contract.date_start = date(2024, 11, 1)
+        self.contract.contract_date_start = date(2024, 11, 1)
 
         nov_pslip = self._generate_payslip(
             date(2024, 11, 1),

@@ -7,10 +7,6 @@
     <record id="close_reason_2" model="sale.order.close.reason">
         <field name="name">Subscription does not meet my requirements</field>
     </record>
-    <record id="close_reason_3" model="sale.order.close.reason">
-        <field name="name">Subscription reached its end date</field>
-        <field name="visible_in_portal" eval="False"/>
-    </record>
     <record id="close_reason_cancel" model="sale.order.close.reason">
         <field name="name">Cancelled</field>
     </record>
@@ -62,6 +58,14 @@
             <field name="description">Subscription state has changed</field>
         </record>
 
+        <record id="subtype_resume_and_pause_subscription" model="mail.message.subtype">
+            <field name="name">Resume and Pause Subscription</field>
+            <field name="res_model">sale.order</field>
+            <field name="default" eval="True"/>
+            <field name="internal" eval="True"/>
+            <field name="hidden" eval="True"/>
+        </record>
+
         <!-- Cron jobs -->
         <record model="ir.cron" id="account_analytic_cron">
             <field name="name">Sale Subscription: subscriptions expiration</field>
@@ -108,12 +112,14 @@
             <field name="name">Monthly</field>
             <field name="billing_period_value">1</field>
             <field name="billing_period_unit">month</field>
+            <field name="sequence">4</field>
         </record>
 
         <record id="subscription_plan_year" model="sale.subscription.plan" forcecreate="0">
             <field name="name">Yearly</field>
             <field name="billing_period_value">1</field>
             <field name="billing_period_unit">year</field>
+            <field name="sequence">52</field>
         </record>
 
     </data>

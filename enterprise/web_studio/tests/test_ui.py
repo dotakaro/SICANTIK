@@ -111,7 +111,7 @@ def watch_edit_view(test, on_edit_view):
     clear_routing()
     edit_view = WebStudioController.edit_view
 
-    @http.route('/web_studio/edit_view', type='json', auth='user')
+    @http.route('/web_studio/edit_view', type='jsonrpc', auth='user')
     def edit_view_mocked(*args, **kwargs):
         on_edit_view(*args, **kwargs)
         return edit_view(*args, **kwargs)
@@ -220,8 +220,8 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
         })
 
     @mute_logger('odoo.http')
-    def test_web_studio_check_method_in_model(self):
-        self.start_tour("/odoo?debug=tests", 'web_studio_check_method_in_model', login="admin")
+    def test_web_studio_add_button_type_object(self):
+        self.start_tour("/odoo?debug=tests", 'web_studio_add_button_type_object', login="admin")
 
     def test_create_action_button_in_form_view(self):
         self.start_tour("/odoo?debug=tests", 'web_studio_test_create_action_button_in_form_view', login="admin")
@@ -237,7 +237,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
             <data>
                 <xpath expr="//form[1]/field[@name='name']" position="before">
                     <header>
-                        <button string="web_studio_new_button_action_name" name="{action1_Id}" type="action"/>
+                        <button string="web_studio_new_button_action_name" type="action" name="{action1_Id}"/>
                     </header>
                 </xpath>
             </data>""".format(action1_Id=action1.xml_id))
@@ -253,8 +253,8 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
             <data>
                 <xpath expr="//form[1]/field[@name='name']" position="before">
                     <header>
-                        <button string="web_studio_new_button_action_name" name="{action1_Id}" type="action"/>
-                        <button string="web_studio_other_button_action_name" name="{action2_Id}" type="action"/>
+                        <button string="web_studio_new_button_action_name" type="action" name="{action1_Id}"/>
+                        <button string="web_studio_other_button_action_name" type="action" name="{action2_Id}"/>
                     </header>
                 </xpath>
             </data>""".format(action1_Id=action1.xml_id, action2_Id=action2.xml_id))
@@ -283,15 +283,15 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
         action = self.env[action.type].browse(action.id)
         assertViewArchEqual(self, studioView.arch, """
             <data>
-                <xpath expr="//field[@name='complete_name']" position="before">
+                <xpath expr="//field[@name='avatar_128']" position="before">
                     <header>
-                        <button string="web_studio_new_button_action_name" name="{actionId}" type="action"/>
+                        <button string="web_studio_new_button_action_name" type="action" name="{actionId}"/>
                     </header>
                 </xpath>
             </data>""".format(actionId=action.xml_id))
         self.start_tour("/odoo?debug=tests", 'web_studio_test_remove_action_button_in_list_view', login="admin")
         arch = """<data>
-                <xpath expr="//field[@name='complete_name']" position="before">
+                <xpath expr="//field[@name='avatar_128']" position="before">
                     <header/>
                 </xpath>
             </data>"""
@@ -435,7 +435,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
                     <page>
                         <field name="user_ids" context="{'list_view_ref': '%s'}" />
                     </page>
-                </notebook> 
+                </notebook>
             </sheet>
         </form>''' % (user_view_xml_id.complete_name, user_view_xml_id.complete_name)
         studio_view = _get_studio_view(self.testView)
@@ -551,7 +551,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
 
         hasGroup = self.env["res.groups"].create({
             "name": "studio has group",
-            "users": [Command.link(2)]
+            "user_ids": [Command.link(2)]
         })
         hasGroupXmlId = self.env["ir.model.data"].create({
             "name": "studio_test_hasgroup",
@@ -588,7 +588,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
     def test_element_group_in_sidebar(self):
         group = self.env["res.groups"].create({
             "name": "Test Group",
-            "users": [Command.link(2)]
+            "user_ids": [Command.link(2)]
         })
         groupXmlId = self.env["ir.model.data"].create({
             "name": "test_group",
@@ -697,6 +697,13 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
                         timeout=200)
 
     def test_create_model_with_clickable_stages(self):
+        self.testView.arch = '''
+             <form class="check">
+                 <group>
+                     <field name="name" required="True" />
+                 </group>
+             </form>
+        '''
         self.start_tour("/odoo?debug=tests", 'web_studio_test_create_model_with_clickable_stages', login="admin", timeout=200)
 
     def test_enter_x2many_edition_with_multiple_subviews(self):
@@ -712,7 +719,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
 
         hasGroup = self.env["res.groups"].create({
             "name": "studio has group",
-            "users": [Command.link(2)]
+            "user_ids": [Command.link(2)]
         })
         hasGroupXmlId = self.env["ir.model.data"].create({
             "name": "studio_test_hasgroup",
@@ -756,7 +763,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
 
         hasGroup = self.env["res.groups"].create({
             "name": "studio has group",
-            "users": [Command.link(2)]
+            "user_ids": [Command.link(2)]
         })
         hasGroupXmlId = self.env["ir.model.data"].create({
             "name": "studio_test_hasgroup",
@@ -844,7 +851,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
         # The node has also a group in which the user is not
         hasGroup = self.env["res.groups"].create({
             "name": "studio has group",
-            "users": [Command.link(self.env.user.id)]
+            "user_ids": [Command.link(self.env.user.id)]
         })
         hasGroupXmlId = self.env["ir.model.data"].create({
             "name": "studio_test_hasgroup",
@@ -863,7 +870,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
             "res_id": doesNotHaveGroup.id,
         })
 
-        self.patch(type(self.env["res.partner"]).title, "groups", hasGroupXmlId.complete_name)
+        self.patch(self.env.registry['res.partner'].color, "groups", hasGroupXmlId.complete_name)
 
         view = self.env["ir.ui.view"].create({
             "name": "simple view",
@@ -872,7 +879,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
             "arch": '''
                 <list>
                     <field name="display_name"/>
-                    <field name="title" groups="{doesnothavegroup}" />
+                    <field name="color" groups="{doesnothavegroup}" />
                 </list>
             '''.format(doesnothavegroup=doesNotHaveGroupXmlId.complete_name)
         })
@@ -885,7 +892,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
             "forbid": False,
         }])
 
-        xml_temp = E.field(name="title", groups=doesNotHaveGroupXmlId.complete_name, column_invisible="True", studio_groups=studio_groups)
+        xml_temp = E.field(name="color", groups=doesNotHaveGroupXmlId.complete_name, column_invisible="True", studio_groups=studio_groups)
 
         expected = '''
             <list>
@@ -904,7 +911,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
             "arch": '''
                 <list>
                     <field name="display_name" />
-                    <field name="title" />
+                    <field name="color" />
                 </list>
             '''
         })
@@ -919,9 +926,38 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
         expected = '''
             <list>
                 <field name="display_name"/>
-                <field name="title" invisible="{title_modifiers}"/>
+                <field name="color" invisible="{color_modifiers}"/>
              </list>
-        '''.format(title_modifiers="display_name == &quot;Robert&quot;")
+        '''.format(color_modifiers="display_name == &quot;Robert&quot;")
+
+        assertViewArchEqual(self, arch, expected)
+
+    def test_set_view_default_group_by(self):
+        self.testViewList = self.env["ir.ui.view"].create({
+            "name": "simple partner",
+            "model": "res.partner",
+            "type": "list",
+            "arch": '''
+                <list>
+                    <field name="display_name" />
+                    <field name="color" />
+                </list>
+            '''
+        })
+        self.testAction.write({
+            "view_ids": [
+                Command.clear(),
+                Command.create({"view_id": self.testViewList.id, "view_mode": "list"}),
+            ]
+        })
+        self.start_tour("/odoo?debug=tests", 'web_studio_set_view_default_group_by', login="admin", timeout=200)
+        arch = self.env[self.testViewList.model].with_context(studio=True).get_view(self.testViewList.id, self.testViewList.type)["arch"]
+        expected = '''
+            <list default_group_by="active,city">
+                <field name="display_name"/>
+                <field name="color"/>
+             </list>
+        '''
 
         assertViewArchEqual(self, arch, expected)
 
@@ -944,7 +980,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
             "arch": '''
                 <data>
                 <xpath expr="//field[@name='name']" position="after">
-                    <field name="title" />
+                    <field name="color" />
                 </xpath>
                 </data>
             '''
@@ -957,7 +993,7 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
         self.maxDiff = None
         assertViewArchEqual(self, studioView["arch"], '''
             <data>
-                <xpath expr="//field[@name='title']" position="after">
+                <xpath expr="//field[@name='color']" position="after">
                   <field name="website"/>
                 </xpath>
             </data>
@@ -1663,15 +1699,6 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
         </form>
         """)
 
-    def test_res_users_fake_fields(self):
-        user_fields = self.env["res.users"].fields_get()
-        assertable = [field["string"] for field in user_fields.values() if field["string"] in ("Administration", "Multi Companies")]
-        self.assertEqual(len(assertable), 2)
-
-        action = self.env.ref("base.action_res_users")
-        url = f"/odoo/action-studio?mode=editor&_tab=views&_view_type=list&_action={action.id}&debug=1"
-        self.start_tour(url, 'web_studio.test_res_users_fake_fields', login="admin")
-
     def test_add_button_xml_id(self):
         base_view = self.env["ir.ui.view"].create({
             "name": "test_partner_simple",
@@ -1733,34 +1760,6 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
 
     def test_reload_after_restoring_default_view(self):
         self.start_tour("/odoo?debug=tests", 'web_studio_test_reload_after_restoring_default_view', login="admin")
-
-    def test_edit_reified_field(self):
-        # find some reified field name
-        reified_fname = next(
-            fname
-            for fname in self.env["res.users"].fields_get()
-            if fname.startswith(('in_group_', 'sel_groups_'))
-        )
-
-        self.testView.write({
-            "name": "simple user",
-            "model": "res.users",
-            "arch": '''
-                <form>
-                    <field name="%s"/>
-                </form>
-            ''' % reified_fname
-        })
-        self.testAction.res_model = "res.users"
-        self.start_tour("/odoo?debug=tests", 'web_studio_test_edit_reified_field', login="admin")
-        studioView = _get_studio_view(self.testView)
-        assertViewArchEqual(self, studioView.arch, """
-            <data>
-              <xpath expr="//field[@name='%s']" position="attributes">
-                <attribute name="string">new name</attribute>
-              </xpath>
-            </data>
-        """ % reified_fname)
 
     def test_add_all_types_fields_related(self):
         self.create_user_view()
@@ -1942,13 +1941,62 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
         assertViewArchEqual(self, studio_view.arch, """
         <data>
             <xpath expr="//form[1]/field[@name='name']" position="attributes">
-                <attribute name="groups">web_studio.studio_test_doesnothavegroup,!base.group_erp_manager</attribute>
+                <attribute name="groups">web_studio.studio_test_doesnothavegroup,!base.group_system</attribute>
             </xpath>
         </data>
         """)
 
+    def test_edit_duplicate_attribute_form(self):
+        self.testView.arch = '''
+            <form>
+                <group>
+                    <field name="name" />
+                </group>
+            </form>
+        '''
+
+        self.start_tour("/odoo?debug=tests", 'web_studio_test_edit_duplicate_attribute_form', login="admin")
+        studio_view = _get_studio_view(self.testView)
+        self.assertXMLEqual(studio_view.arch, """
+            <data>
+                <xpath expr="//form[1]" position="attributes">
+                    <attribute name="create">true</attribute>
+                    <attribute name="duplicate">false</attribute>
+                </xpath>
+            </data>
+        """)
+
+    def test_edit_duplicate_attribute_list(self):
+        self.testViewList = self.env["ir.ui.view"].create({
+            "name": "simple partner",
+            "model": "res.partner",
+            "type": "list",
+            "arch": '''
+                <list>
+                    <field name="display_name" />
+                </list>
+            '''
+        })
+        self.testAction.write({
+            "view_ids": [
+                Command.clear(),
+                Command.create({"view_id": self.testViewList.id, "view_mode": "list"}),
+            ]
+        })
+
+        self.start_tour("/odoo?debug=tests", 'web_studio_test_edit_duplicate_attribute_list', login="admin")
+        studio_view = _get_studio_view(self.testViewList)
+        self.assertXMLEqual(studio_view.arch, """
+            <data>
+                <xpath expr="//list[1]" position="attributes">
+                    <attribute name="create">true</attribute>
+                    <attribute name="duplicate">false</attribute>
+                </xpath>
+            </data>
+        """)
+
     def test_use_action_domain(self):
-        self.env["res.partner"].search([['employee', '=', True]]).action_archive()
+        self.env["res.partner"].search([]).write({'employee': False})
         self.env["res.partner"].create({
             "name": "Michel",
             "employee": True,
@@ -1998,11 +2046,39 @@ class TestStudioUIUnit(odoo.tests.HttpCase):
         with self.with_user("admin"):
             company2 = self.env["res.company"].create({"name": "company2"})
         self.testView.arch = "<form><field name='name' /></form>"
-        self.start_tour(f"/web?debug=tests#cids={company2.id}", "web_studio_test_default_value_company", login="admin")
+
+        cookies = {
+            "cids": str(company2.id)
+        }
+        self.start_tour("/web?debug=tests", "web_studio_test_default_value_company", login="admin", cookies=cookies)
 
         field_name = self.env["ir.model.fields"]._get("res.partner", "name")
         ir_default = self.env["ir.default"].search(["&", ("field_id", "=", field_name.id), ("company_id", "=", company2.id)])
         self.assertEqual(ir_default.json_value, '"from studio"')
+
+    def test_empty_default_group_by(self):
+        self.testView.write({
+            "type": "kanban",
+            "arch": '''<kanban default_group_by="active">
+                <templates>
+                    <t t-name="card">
+                        <field name="display_name"/>
+                    </t>
+                </templates>
+            </kanban>
+        '''
+        })
+        self.testAction.write({
+            "view_ids": [Command.clear(), Command.create({"view_id": self.testView.id, "view_mode": "kanban"})]
+        })
+        self.start_tour("/odoo?debug=tests", 'web_studio_empty_default_group_by', login="admin")
+        studio_view = _get_studio_view(self.testView)
+        assertViewArchEqual(self, studio_view.arch, '''
+        <data>
+            <xpath expr="//kanban[1]" position="attributes">
+                <attribute name="default_group_by"/>
+            </xpath>
+        </data>''')
 
     def test_subview_multiple_occurences(self):
         self.testView.arch = """

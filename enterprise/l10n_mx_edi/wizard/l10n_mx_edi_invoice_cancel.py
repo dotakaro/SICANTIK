@@ -7,7 +7,7 @@ from odoo.addons.l10n_mx_edi.models.l10n_mx_edi_document import (
 from odoo.exceptions import UserError
 
 
-class L10nMxEdiInvoiceCancel(models.TransientModel):
+class L10n_Mx_EdiInvoiceCancel(models.TransientModel):
     _name = 'l10n_mx_edi.invoice.cancel'
     _description = "Request CFDI Cancellation"
 

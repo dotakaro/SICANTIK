@@ -1,9 +1,9 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import models
+from odoo.http import request
 from odoo.osv import expression
 
-from odoo.addons.website.models import ir_http
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
@@ -16,9 +16,6 @@ class ProductProduct(models.Model):
         :param datetime from_date: The first date where a rental sale order line is returned.
         :param datetime to_date: The last date where a rental sale order line reservation begins.
         :param list(tuple) domain: An additional restrictive domain to search sale order line for.
-
-        :return:
-        :rtype:
         """
         self.ensure_one()
 
@@ -67,10 +64,9 @@ class ProductProduct(models.Model):
         rented_quantities, key_dates = self._get_rented_quantities(
             from_date, to_date, domain=wh_domain
         )
-        website = with_cart and ir_http.get_request_website()
-        cart = website and website.sale_get_order()
+        cart = (with_cart and request and request.cart) or self.env['sale.order']
         if cart:
-            common_lines = cart._get_common_product_lines(product=self)
+            common_lines = cart._get_common_product_lines(self.id)
             so_rented_qties, so_key_dates = common_lines._get_rented_quantities(
                 [from_date, to_date]
             )

@@ -6,7 +6,7 @@ from odoo.osv import expression
 import ast
 
 
-class ProductionLot(models.Model):
+class StockLot(models.Model):
     _inherit = 'stock.lot'
 
     quality_check_qty = fields.Integer(compute='_compute_quality_check_qty', groups='quality.group_quality_user')
@@ -18,7 +18,7 @@ class ProductionLot(models.Model):
             prod_lot.quality_check_qty = self.env['quality.check'].search_count(domain)
 
     def _get_quality_check_domain(self, prod_lot):
-        return [('lot_id', '=', prod_lot.id)]
+        return [('lot_id', 'in', prod_lot.ids)]
 
     def action_open_quality_checks(self):
         self.ensure_one()
@@ -30,7 +30,7 @@ class ProductionLot(models.Model):
     def _compute_quality_alert_qty(self):
         for prod_lot in self:
             prod_lot.quality_alert_qty = self.env['quality.alert'].search_count([
-                ('lot_id', '=', prod_lot.id),
+                ('lot_id', 'in', prod_lot.ids),
                 ('company_id', '=', self.env.company.id)
             ])
 

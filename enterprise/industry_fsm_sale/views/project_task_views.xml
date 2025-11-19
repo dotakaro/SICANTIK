@@ -39,9 +39,9 @@
         <field name="name">To Invoice</field>
         <field name="res_model">project.task</field>
         <field name="path">tasks-to-invoice</field>
-        <field name="view_mode">list,kanban,map,calendar,gantt,pivot,graph,form,activity</field>
+        <field name="view_mode">list,kanban,map,calendar,gantt,activity,pivot,graph,form</field>
         <field name="search_view_id" ref="industry_fsm.project_task_view_search_fsm"/>
-        <field name="domain">[('is_fsm', '=', True), ('project_id', '!=', False), ('display_in_project', '=', True)]</field>
+        <field name="domain">[('is_fsm', '=', True), ('project_id', '!=', False)]</field>
         <field name="context">{
             'fsm_mode': True,
             'search_default_to_invoice': True,
@@ -104,6 +104,13 @@
         <field name="act_window_id" ref="project_task_action_to_invoice_fsm"/>
     </record>
 
+    <record id="project_task_action_to_invoice_fsm_view_activity" model="ir.actions.act_window.view">
+        <field name="sequence" eval="27"/>
+        <field name="view_mode">activity</field>
+        <field name="view_id" ref="industry_fsm.project_task_view_activity"/>
+        <field name="act_window_id" ref="project_task_action_to_invoice_fsm"/>
+    </record>
+
     <record id="project_task_action_to_invoice_fsm_view_pivot" model="ir.actions.act_window.view">
         <field name="sequence" eval="30"/>
         <field name="view_mode">pivot</field>
@@ -121,9 +128,9 @@
     <record id="project_task_action_to_invoice_fsm2" model="ir.actions.act_window">
         <field name="name">To Invoice</field>
         <field name="res_model">project.task</field>
-        <field name="view_mode">list,kanban,map,calendar,gantt,pivot,graph,form,activity</field>
+        <field name="view_mode">list,kanban,map,calendar,gantt,activity,pivot,graph,form</field>
         <field name="search_view_id" ref="industry_fsm.project_task_view_search_fsm"/>
-        <field name="domain">[('is_fsm', '=', True), ('project_id', '!=', False), ('display_in_project', '=', True)]</field>
+        <field name="domain">[('is_fsm', '=', True), ('project_id', '!=', False)]</field>
         <field name="context">{
             'fsm_mode': True,
             'search_default_to_invoice': True,
@@ -168,7 +175,14 @@
     <record id="project_task_action_to_invoice_fsm2_view_gantt" model="ir.actions.act_window.view">
         <field name="sequence" eval="25"/>
         <field name="view_mode">gantt</field>
-        <field name="view_id" ref="industry_fsm.project_task_view_gantt_fsm2"/>
+        <field name="view_id" ref="project_enterprise.project_task_view_gantt"/>
+        <field name="act_window_id" ref="project_task_action_to_invoice_fsm2"/>
+    </record>
+
+    <record id="project_task_action_to_invoice_fsm2_view_activity" model="ir.actions.act_window.view">
+        <field name="sequence" eval="27"/>
+        <field name="view_mode">activity</field>
+        <field name="view_id" ref="industry_fsm.project_task_view_activity"/>
         <field name="act_window_id" ref="project_task_action_to_invoice_fsm2"/>
     </record>
 
@@ -245,14 +259,14 @@
                         class="oe_stat_button"
                         icon="fa-dollar"
                         groups="industry_fsm.group_fsm_manager"
-                        invisible="not allow_quotations or quotation_count == 0">
+                        invisible="not allow_quotations or quotation_count == 0 or has_template_ancestor">
                         <field string="Quotations" name="quotation_count" widget="statinfo"/>
                     </button>
                 </t>
             </xpath>
             <xpath expr="//button[@name='action_view_so']" position="after">
                 <t groups="sales_team.group_sale_salesman,industry_fsm.group_fsm_quotation_from_task">
-                    <button name="action_view_invoices" type="object" class="oe_stat_button" icon="fa-pencil-square-o" invisible="not allow_billable or invoice_count == 0">
+                    <button name="action_view_invoices" type="object" class="oe_stat_button" icon="fa-pencil-square-o" invisible="not allow_billable or invoice_count == 0 or has_template_ancestor">
                         <field name="invoice_count" widget="statinfo" string="Invoices"/>
                     </button>
                 </t>
@@ -265,26 +279,26 @@
             </field>
             <xpath expr="//button[@name='action_fsm_validate'][hasclass('btn-primary')]" position="before">
                 <button class="btn-primary" name="action_create_invoice" type="object" string="Create Invoice" data-hotkey="l"
-                    invisible="not display_create_invoice_primary" groups="sales_team.group_sale_salesman,account.group_account_invoice"/>
+                    invisible="not display_create_invoice_primary or has_template_ancestor" groups="sales_team.group_sale_salesman,account.group_account_invoice"/>
             </xpath>
             <xpath expr="//button[@name='action_fsm_validate'][hasclass('btn-secondary')]" position="before">
                 <button class="btn-secondary" name="action_create_invoice" type="object" string="Create Invoice" data-hotkey="l"
-                        invisible="not display_create_invoice_secondary" groups="sales_team.group_sale_salesman,account.group_account_invoice"/>
+                        invisible="not display_create_invoice_secondary or has_template_ancestor" groups="sales_team.group_sale_salesman,account.group_account_invoice"/>
             </xpath>
-            <xpath expr="//button[@name='action_timer_resume']" position='after'>
+            <xpath expr="//button[@name='action_timer_stop']" position='after'>
                 <button class="btn-secondary" name="action_fsm_create_quotation" type="object" string="New Quotation"
-                        invisible="not allow_quotations" groups="sales_team.group_sale_salesman"
+                        invisible="not allow_quotations or has_template_ancestor" groups="sales_team.group_sale_salesman"
                         data-hotkey="c"/>
             </xpath>
             <xpath expr="//span[@id='button_products']" position="replace">
-                <button class="oe_stat_button" name="action_fsm_view_material" groups="sales_team.group_sale_salesman,industry_fsm.group_fsm_quotation_from_task"
-                    type="object" icon="fa-cart-plus" invisible="not partner_id and not is_fsm or not allow_material">
+                <button class="oe_stat_button" name="action_fsm_view_material"
+                    type="object" icon="fa-cart-plus" invisible="not partner_id and not is_fsm or not allow_material or has_template_ancestor">
                     <div class="o_stat_info">
                         <span class="o_stat_text d-flex align-items-baseline gap-1">
                             <field name="material_line_product_count" widget="statinfo" string="Products" nolabel="1" class="oe_inline"/>
                             <span>Products</span>
                         </span>
-                        <span class="o_stat_value">
+                        <span class="o_stat_value" groups="sales_team.group_sale_salesman">
                             <field name="material_line_total_price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <field name="currency_id" invisible="True"/>
                         </span>
@@ -292,16 +306,16 @@
                 </button>
             </xpath>
             <field name="partner_id" position="attributes">
-                <attribute name="invisible">not allow_billable and not is_fsm</attribute>
+                <attribute name="invisible">not allow_billable and not is_fsm or has_template_ancestor</attribute>
                 <attribute name="required">is_fsm</attribute>
             </field>
             <xpath expr="//field[@name='child_ids']/list/field[@name='partner_id']" position="attributes">
-                <attribute name="column_invisible">parent.is_fsm and not parent.partner_id or not parent.allow_billable and not parent.is_fsm</attribute>
+                <attribute name="column_invisible">parent.is_fsm and not parent.partner_id or not parent.allow_billable and not parent.is_fsm or parent.has_template_ancestor</attribute>
                 <attribute name="invisible">not allow_billable and not is_fsm</attribute>
                 <attribute name="required">is_fsm and parent.partner_id</attribute>
             </xpath>
             <xpath expr="//field[@name='depend_on_ids']/list/field[@name='partner_id']" position="attributes">
-                <attribute name="column_invisible">not parent.allow_billable and not parent.is_fsm</attribute>
+                <attribute name="column_invisible">not parent.allow_billable and not parent.is_fsm or parent.has_template_ancestor</attribute>
                 <attribute name="invisible">not allow_billable and not is_fsm</attribute>
                 <attribute name="required">is_fsm</attribute>
             </xpath>

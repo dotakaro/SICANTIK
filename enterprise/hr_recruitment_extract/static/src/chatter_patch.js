@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 import { Chatter } from "@mail/chatter/web_portal/chatter";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
@@ -13,7 +11,7 @@ patch(Chatter.prototype, {
             id: this.props.threadId,
         });
         this.attachmentUploadService.onFileUploaded(thread, () => {
-            if (this.state.thread?.model === "hr.candidate") {
+            if (this.state.thread?.model === "hr.applicant") {
                 this.reloadParentView();
             }
         });

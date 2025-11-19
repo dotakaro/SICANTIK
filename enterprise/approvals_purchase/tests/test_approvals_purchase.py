@@ -1,8 +1,9 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import datetime
+import re
 
-from odoo import Command
+from odoo import Command, tools
 
 from odoo.addons.approvals_purchase.tests.common import TestApprovalsCommon
 from odoo.exceptions import UserError
@@ -77,10 +78,15 @@ class TestApprovalsPurchase(TestApprovalsCommon):
         })]
 
         # reset the product again, in order to compute seller_id
+        # but we have to draft it as the request has already been approved
+        request_purchase.action_cancel()
+        request_purchase.action_draft()
         with request_form.product_line_ids.edit(0) as line:
             line.product_id = self.product_computer
             line.product_id = self.product_mouse
         request_purchase = request_form.save()
+        request_purchase.with_user(self.user_approver).action_approve()
+        self.assertEqual(request_purchase.request_status, 'approved')
 
         # Should be ok now, check the approval request has purchase order.
         request_purchase.action_create_purchase_orders()
@@ -347,6 +353,8 @@ class TestApprovalsPurchase(TestApprovalsCommon):
             'login': 'big_cheese',
             'name': 'Clément Tall',
             'email': 'clementtall@example.com',
+            # TODO: Check why this is necessary
+            'group_ids': self.env.ref('purchase.group_purchase_manager'),
         })
         # Create new purchase approval request and create purchase order.
         request_form = self.create_request_form(
@@ -374,6 +382,7 @@ class TestApprovalsPurchase(TestApprovalsCommon):
         the approval request and the UoM on the purchase order line. """
         # Set the product UoM on 'fortnight'.
         self.product_earphone.uom_id = self.uom_fortnight
+        self.product_earphone.seller_ids.product_uom_id = self.env.ref('uom.product_uom_day')
         # Create a request for 2 fortnights of the product.
         request_form = self.create_request_form(approver=self.user_approver)
         with request_form.product_line_ids.new() as line:
@@ -390,7 +399,7 @@ class TestApprovalsPurchase(TestApprovalsCommon):
             request_product_line.product_uom_id.id, self.uom_fortnight.id
         )
         self.assertEqual(
-            purchase_order.order_line[0].product_uom.id, self.uom_unit.id
+            purchase_order.order_line[0].product_uom_id.id, self.env.ref('uom.product_uom_day').id
         )
         self.assertEqual(
             purchase_order.order_line[0].product_qty, 30,
@@ -401,8 +410,9 @@ class TestApprovalsPurchase(TestApprovalsCommon):
         """ Check the amount of product is correctly set, regarding the UoM of
         the approval request and the UoM on the purchase order line. """
         # Set the product purchase's UoM on 'fortnight'.
-        self.product_earphone.uom_po_id = self.uom_fortnight
         # Create a request for 30 units of the product.
+        uom_day = self.env.ref('uom.product_uom_day')
+        self.product_earphone.uom_id = uom_day
         request_form = self.create_request_form(approver=self.user_approver)
         with request_form.product_line_ids.new() as line:
             line.product_id = self.product_earphone
@@ -415,10 +425,10 @@ class TestApprovalsPurchase(TestApprovalsCommon):
         request_product_line = request_purchase.product_line_ids[0]
         purchase_order = self.get_purchase_order(request_purchase, 0)
         self.assertEqual(
-            request_product_line.product_uom_id.id, self.uom_unit.id
+            request_product_line.product_uom_id.id, uom_day.id
         )
         self.assertEqual(
-            purchase_order.order_line[0].product_uom.id, self.uom_fortnight.id
+            purchase_order.order_line[0].product_uom_id.id, self.uom_fortnight.id
         )
         self.assertEqual(
             purchase_order.order_line[0].product_qty, 2,
@@ -429,6 +439,8 @@ class TestApprovalsPurchase(TestApprovalsCommon):
         """ Check the approval request will use the right UoM for purchase, even
         if a compatible purchase order already exists with an order line using
         an another UoM. """
+        uom_day = self.env.ref('uom.product_uom_day')
+        self.product_earphone.uom_id = uom_day
         # Create a purchase order for partner_seller_1 with an order line.
         purchase_order = self.create_purchase_order(lines=[{
             'product': self.product_earphone,
@@ -437,7 +449,6 @@ class TestApprovalsPurchase(TestApprovalsCommon):
             'uom': self.uom_unit.id,
         }])
         # Set the product UoM on 'fortnight'.
-        self.product_earphone.uom_po_id = self.uom_fortnight
         # Create a request for 2 fortnights of the product.
         request_form = self.create_request_form(approver=self.user_approver)
         with request_form.product_line_ids.new() as line:
@@ -451,14 +462,14 @@ class TestApprovalsPurchase(TestApprovalsCommon):
         request_product_line = request_purchase.product_line_ids[0]
         purchase_order = self.get_purchase_order(request_purchase, 0)
         self.assertEqual(
-            request_product_line.product_uom_id.id, self.uom_unit.id
+            request_product_line.product_uom_id.id, uom_day.id
         )
         self.assertEqual(len(purchase_order.order_line), 2)
         self.assertEqual(
-            purchase_order.order_line[0].product_uom.id, self.uom_unit.id
+            purchase_order.order_line[0].product_uom_id.id, self.uom_unit.id
         )
         self.assertEqual(
-            purchase_order.order_line[1].product_uom.id, self.uom_fortnight.id
+            purchase_order.order_line[1].product_uom_id.id, self.uom_fortnight.id
         )
         self.assertEqual(purchase_order.order_line[0].product_qty, 7)
         self.assertEqual(
@@ -475,12 +486,13 @@ class TestApprovalsPurchase(TestApprovalsCommon):
             'automated_sequence': True,
             'sequence_code': 'APPR',
         })
+        self.product_earphone.uom_id = self.env.ref('uom.product_uom_day')
         product_with_vendor = self.product_earphone
         product_without_vendor = self.product_mouse
         approval = self.env['approval.request'].create({
             'category_id': category_test.id,
             'product_line_ids': [
-                Command.create({'product_id': product_with_vendor.id}),
+                Command.create({'product_id': product_with_vendor.id, 'quantity': 15}),
                 Command.create({'product_id': product_without_vendor.id}),
             ],
         })
@@ -488,6 +500,85 @@ class TestApprovalsPurchase(TestApprovalsCommon):
         self.assertEqual(approval.product_line_ids[0].seller_id.partner_id, self.partner_seller_1)
         self.assertTrue(approval.product_line_ids[1].has_no_seller)
         self.assertFalse(approval.product_line_ids[1].seller_id)
+
+    def test_logging_purchase_order_state_to_approval_request_chatter(self):
+        """
+        This test asserts the logging of the creartion and removal of purchase orders to the chatter
+        of the approval request.
+        """
+        approval_request = self.env['approval.request'].create({
+            'name': 'test_approval_request',
+            'category_id': self.purchase_category.id,
+            'approver_ids': [(0, 0, {'user_id': self.user_approver.id})],
+            'product_line_ids': [
+                (0, 0, {
+                    'product_id':  self.product_earphone.id,
+                    'quantity': 30.0,
+                    'seller_id': self.env['product.supplierinfo'].create({
+                        'product_id': self.product_earphone.id,
+                        'partner_id': self.partner_seller_1.id,
+                        'min_qty': 1,
+                        'price': 8,
+                        'product_uom_id': self.uom_fortnight.id,
+                    }).id
+                }),
+                (0, 0, {
+                    'product_id':  self.product_computer.id,
+                    'quantity': 10.0,
+                    'seller_id': self.env['product.supplierinfo'].create({
+                        'product_id': self.product_computer.id,
+                        'partner_id': self.partner_seller_2.id,
+                        'min_qty': 1,
+                        'price': 8,
+                        'product_uom_id': self.uom_unit.id,
+                    }).id
+                })
+            ],
+        })
+        approval_request.with_user(self.user_approver).action_approve()
+
+        approval_request.action_create_purchase_orders()
+        purchase_orders_data = approval_request._get_order_data_from_product_lines(approval_request.product_line_ids)
+        purchase_orders_creation_log_message = approval_request._generate_po_log_message("created", purchase_orders_data)
+        approval_request_chatter_message = approval_request.message_ids[0]
+        expected_message = tools.html2plaintext(purchase_orders_creation_log_message)
+        actual_logged_message = tools.html2plaintext(approval_request_chatter_message.body)
+        self.assertEqual(expected_message, actual_logged_message)
+
+        approval_request_product_lines = approval_request.product_line_ids
+        purchase_orders = approval_request_product_lines.purchase_order_line_id.order_id
+        earphone_purchase_order = purchase_orders[0]
+        earphone_product_line = approval_request_product_lines[0]
+        earphone_purchase_order.button_approve()
+        earphone_purchase_order_approval_log_message = earphone_purchase_order._create_state_change_msg('draft', 'purchase', earphone_product_line)
+        approval_request_chatter_message = approval_request.message_ids[0]
+        expected_message = tools.html2plaintext(earphone_purchase_order_approval_log_message)
+        actual_logged_message = tools.html2plaintext(approval_request_chatter_message.body)
+        self.assertEqual(expected_message, actual_logged_message)
+
+        # Two messages will be logged when the approval request is canceled. The first one logs the state of the
+        # purchase order of the computer which will be changed from draft to canceled so that purchase order can be deleted.
+        computer_purchase_order = purchase_orders[1]
+        computer_product_line = approval_request_product_lines[1]
+        computer_purchase_order_cancelation_log_msg = computer_purchase_order._create_state_change_msg('draft', 'cancel', computer_product_line)
+        approval_request.action_cancel()
+        approval_request_chatter_message = approval_request.message_ids[1]
+        expected_message = tools.html2plaintext(computer_purchase_order_cancelation_log_msg)
+        actual_logged_message = tools.html2plaintext(approval_request_chatter_message.body)
+        self.assertEqual(expected_message, actual_logged_message)
+
+        # The second one logs the purchase orders that are changed / removed and the purchase orders
+        # that require manual actions because they aren't in draft state.
+        approval_request_chatter_message = approval_request.message_ids[0]
+        earphone_purchase_order_data = [purchase_orders_data[0]]
+        computer_purchase_order_data = [purchase_orders_data[1]]
+        computer_purchase_order_removal_log_message = approval_request._generate_po_log_message("removed", computer_purchase_order_data)
+        # The earphone purchase order isn't in draft state, So it cannot be removed.
+        earphone_purchase_order_require_manual_action_log_message = approval_request._generate_po_log_message("require_manual_action", earphone_purchase_order_data)
+        purchase_orders_state_change_log_message = computer_purchase_order_removal_log_message + earphone_purchase_order_require_manual_action_log_message
+        expected_message = tools.html2plaintext(purchase_orders_state_change_log_message)
+        actual_logged_message = tools.html2plaintext(approval_request_chatter_message.body)
+        self.assertEqual(expected_message, actual_logged_message)
 
     def test_product_line_add_seller(self):
         product_without_vendor = self.product_mouse
@@ -501,10 +592,9 @@ class TestApprovalsPurchase(TestApprovalsCommon):
         with self.assertRaises(UserError):  # No vendor on the product should block the RFQ generation
             request_purchase.action_create_purchase_orders()
 
-        seller = self.env['product.supplierinfo'].create({
+        product_without_vendor.seller_ids = [Command.create({
             'partner_id': self.partner_seller_1.id,
-            'min_qty': 1,
+            'min_qty': 5,
             'price': 250,
-        })
-        product_without_vendor.seller_ids = [(6, 0, [seller.id])]
+        })]
         request_purchase.action_create_purchase_orders()  # Should not raise any error as we added a vendor

@@ -1,5 +1,5 @@
 import { Component } from "@odoo/owl";
-import { usePos } from "@point_of_sale/app/store/pos_hook";
+import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { Header, Body, Footer } from "@l10n_it_pos/app/documents/fiscal_document";
 import { PrintRecMessage } from "@l10n_it_pos/app/fiscal_printer/commands";
 
@@ -15,10 +15,10 @@ export class FiscalInvoice extends Component {
 
     setup() {
         this.pos = usePos();
-        this.order = this.pos.get_order();
+        this.order = this.pos.getOrder();
     }
 
     get client() {
-        return this.order.get_partner_name();
+        return this.order.getPartnerName();
     }
 }

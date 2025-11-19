@@ -1,13 +1,13 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError
 import logging
+
+from odoo import _, api, fields, models, modules
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
 
 class AccountJournal(models.Model):
-
     _inherit = 'account.journal'
 
     l10n_ar_afip_ws = fields.Selection(selection='_get_l10n_ar_afip_ws', compute='_compute_l10n_ar_afip_ws',
@@ -58,7 +58,7 @@ class AccountJournal(models.Model):
         # Note:
         # test mode is enabled only when self.registry.enter_test_mode(cr) is explicitely called.
         # this is the case for upgrade tests for example, but not for l10n_ar_edi tests.
-        if self.env.registry.in_test_mode():
+        if modules.module.current_test:
             return 0
 
         pos_number = self.l10n_ar_afip_pos_number

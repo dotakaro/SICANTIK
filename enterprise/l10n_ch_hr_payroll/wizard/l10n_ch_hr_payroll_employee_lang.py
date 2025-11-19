@@ -7,7 +7,7 @@ from odoo import api, fields, models
 SWISS_LANGUAGES = ["it_IT", "de_DE", "de_CH", "fr_FR", "fr_CH", "en_EN", "en_US"]
 
 
-class L10nChHrPayrollEmployeeLangWizard(models.TransientModel):
+class L10n_ChHrPayrollEmployeeLangWizard(models.TransientModel):
     _name = 'l10n_ch.hr.payroll.employee.lang.wizard'
     _description = 'Change Employee Language'
 
@@ -29,7 +29,8 @@ class L10nChHrPayrollEmployeeLangWizard(models.TransientModel):
                 employees.write({'lang': code})
         return self.slip_ids.action_payslip_done()
 
-class L10nChHrPayrollEmployeeLangWizardLine(models.TransientModel):
+
+class L10n_ChHrPayrollEmployeeLangWizardLine(models.TransientModel):
     _name = 'l10n_ch.hr.payroll.employee.lang.wizard.line'
     _description = 'Change Employee Language Line'
 

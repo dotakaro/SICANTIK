@@ -13,7 +13,7 @@ CFDIBCE_XSLT_CADENA = 'l10n_mx_reports/data/xslt/1.3/BalanzaComprobacion_1_2.xsl
 CFDICATALOGO_XSLT_CADENA = 'l10n_mx_reports/data/xslt/1.3/CatalogoCuentas_1_2.xslt'
 
 
-class TrialBalanceCustomHandler(models.AbstractModel):
+class AccountTrialBalanceReportHandler(models.AbstractModel):
     _inherit = 'account.trial.balance.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -57,14 +57,19 @@ class TrialBalanceCustomHandler(models.AbstractModel):
         if not certificate_sudo:
             return tree
 
-        cadena_transformer = etree.parse(tools.file_open(path_xslt))
-        cadena = str(etree.XSLT(cadena_transformer)(tree))
-        tree.attrib['Sello'] = certificate_sudo._sign(cadena)
-        tree.attrib['noCertificado'] = ('%x' % int(certificate_sudo.serial_number))[1::2]
-        tree.attrib['Certificado'] = certificate_sudo.pem_certificate
+        with tools.file_open(path_xslt) as f:
+            cadena_transformer = etree.parse(f)
+            cadena = str(etree.XSLT(cadena_transformer)(tree))
+            tree.attrib['Sello'] = certificate_sudo._sign(cadena)
+            tree.attrib['noCertificado'] = ('%x' % int(certificate_sudo.serial_number))[1::2]
+            tree.attrib['Certificado'] = certificate_sudo.pem_certificate
         return tree
 
     def _l10n_mx_get_sat_values(self, options):
+        def get_column(column_type, external_label):
+            col_group_key = next(group for group, group_vals in options['column_groups'].items() if group_vals['forced_options']['trial_balance_column_type'] == column_type)
+            return next(col for col in cols if col['column_group_key'] == col_group_key and col['expression_label'] == external_label)
+
         report = self.env['account.report'].browse(options['report_id'])
         sat_options = self._l10n_mx_get_sat_options(options)
         report_lines = report._get_lines(sat_options)
@@ -81,18 +86,16 @@ class TrialBalanceCustomHandler(models.AbstractModel):
         account_lines = []
         parents = defaultdict(lambda: defaultdict(int))
         for account, line in zip(accounts, report_lines):
-            if not account.exists():
+            if not account.id or account.account_type == 'equity_unaffected':
                 continue
+            
             is_credit_account = any([account.account_type.startswith(acc_type) for acc_type in ['liability', 'equity', 'income']])
             balance_sign = -1 if is_credit_account else 1
             cols = line.get('columns', [])
-            # Initial Debit - Initial Credit = Initial Balance
-            initial = balance_sign * (cols[0].get('no_format', 0.0) - cols[1].get('no_format', 0.0))
-            # Debit and Credit of the selected period
-            debit = cols[2].get('no_format', 0.0)
-            credit = cols[3].get('no_format', 0.0)
-            # End Debit - End Credit = End Balance
-            end = balance_sign * (cols[4].get('no_format', 0.0) - cols[5].get('no_format', 0.0))
+            initial = balance_sign * (get_column('initial_balance', 'balance').get('no_format', 0.0))
+            debit = get_column('period', 'debit').get('no_format', 0.0)
+            credit = get_column('period', 'credit').get('no_format', 0.0)
+            end = balance_sign * (get_column('end_balance', 'balance').get('no_format', 0.0))
             pid_match = sat_code.match(line['name'])
             if not pid_match:
                 raise UserError(_("Invalid SAT code: %s", line['name']))

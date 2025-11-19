@@ -8,12 +8,12 @@ from odoo import Command, models
 from werkzeug.urls import url_join
 
 
-class SocialStreamInstagram(models.Model):
+class SocialStream(models.Model):
     _inherit = 'social.stream'
 
     def _apply_default_name(self):
         instagram_streams = self.filtered(lambda s: s.media_id.media_type == 'instagram')
-        super(SocialStreamInstagram, (self - instagram_streams))._apply_default_name()
+        super(SocialStream, (self - instagram_streams))._apply_default_name()
 
         for stream in instagram_streams:
             stream.write({'name': '%s: %s' % (stream.stream_type_id.name, stream.account_id.name)})
@@ -27,7 +27,7 @@ class SocialStreamInstagram(models.Model):
         response = requests.get(posts_endpoint,
             params={
                 'access_token': self.account_id.instagram_access_token,
-                'fields': 'id,comments_count,like_count,username,permalink,timestamp,caption,media_type,media_url,children.fields(media_url)'
+                'fields': 'id,comments_count,is_comment_enabled,like_count,username,permalink,timestamp,caption,media_type,media_url,children.fields(media_url)'
             },
             timeout=5
         ).json()
@@ -46,6 +46,7 @@ class SocialStreamInstagram(models.Model):
         for post in response['data']:
             values = {
                 'author_name': post.get('username'),
+                'instagram_comments_disabled': not post.get('is_comment_enabled', True),
                 'instagram_comments_count': post.get('comments_count', 0),
                 'instagram_facebook_author_id': self.account_id.instagram_facebook_account_id,
                 'instagram_likes_count': post.get('like_count', 0),
@@ -75,7 +76,7 @@ class SocialStreamInstagram(models.Model):
 
     def _fetch_stream_data(self):
         if self.media_id.media_type != 'instagram':
-            return super(SocialStreamInstagram, self)._fetch_stream_data()
+            return super()._fetch_stream_data()
 
         if self.stream_type_id.stream_type == 'instagram_posts':
             return self._fetch_instagram_posts()

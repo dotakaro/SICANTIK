@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { patch } from '@web/core/utils/patch';
 import { TimesheetTimerHeader } from '@timesheet_grid/components/timesheet_timer_header/timesheet_timer_header';
 import { useService } from "@web/core/utils/hooks";
@@ -24,6 +22,6 @@ patch(TimesheetTimerHeader.prototype, {
     get hasHelpdeskProject() {
         const project = this.props.timesheet?.data?.project_id;
         const task = this.props.timesheet?.data?.task_id;
-        return !task && Boolean(project) && this.helpdeskTimerService.helpdeskProjects?.includes(project[0]);
+        return !task && Boolean(project) && this.helpdeskTimerService.helpdeskProjects?.includes(project.id);
     },
 });

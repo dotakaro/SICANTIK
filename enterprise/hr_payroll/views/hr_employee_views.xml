@@ -7,36 +7,105 @@
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="priority" eval="10"/>
         <field name="arch" type="xml">
-            <field name="company_id" position="after">
-                <field name="currency_id" invisible="1"/>
+            <button name="action_open_versions" position="before">
+                <button class="oe_stat_button" name="action_open_payslips"
+                        type="object" icon="fa-dollar" groups="hr_payroll.group_hr_payroll_user"
+                        invisible="payslip_count == 0">
+                    <field name="payslip_count" string="Payslips" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" name="%(action_hr_payslip_new)d"
+                        type="action" icon="fa-dollar" groups="hr_payroll.group_hr_payroll_user"
+                        context="{'default_employee_id': id, 'default_version_id': version_id}"
+                        invisible="not employee_id or payslip_count">
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Payslips</span>
+                            <span class="o_stat_value">New</span>
+                        </div>
+                </button>
+                <button class="oe_stat_button" string="Salary Attachments" name="action_open_salary_attachments"
+                        groups="hr_payroll.group_hr_payroll_user"
+                        type="object" icon="fa-book" invisible="salary_attachment_count == 0">
+                    <field name="salary_attachment_count" string="Salary Attachments" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" name="%(action_hr_salary_attachment_new)d"
+                        type="action" icon="fa-book" groups="hr_payroll.group_hr_payroll_user"
+                        context="{'default_employee_ids': [employee_id]}"
+                        invisible="not employee_id or salary_attachment_count">
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Salary Attachments</span>
+                            <span class="o_stat_value">New</span>
+                        </div>
+                </button>
+            </button>
+            <xpath expr="//div[@name='contract_type']" position="after">
+                <field name="registration_number" string="Reference"/>
+                <field name="lang" string="Payslip Language" placeholder="User Language"/>
+            </xpath>
+            <field name="marital" position="before">
+                <field name="disabled"/>
             </field>
-            <page name="hr_settings" position="before">
-                <page name="hr_payroll" string="Payroll" groups="hr.group_hr_user">
-                    <group>
-                        <group name="payroll_group" string="Payroll">
-                            <field name="legal_name"/>
-                            <field name="lang" string="Payslip Language"/>
-                            <field name="registration_number"/>
-                            <field name="disabled"/>
-                        </group>
-                    </group>
-                </page>
-            </page>
-            <xpath expr="//field[@name='country_of_birth']" position="after">
+
+            <xpath expr="//field[@name='country_id']" position="after">
                 <field name="is_non_resident" eval="False"/>
             </xpath>
+            <field name="structure_type_id" position="attributes">
+                <attribute name="required">1</attribute>
+            </field>
+            <xpath expr="//label[@for='wage']" position="before">
+                <field name="wage_type"/>
+                <field name="schedule_pay"/>
+                <label for="hourly_wage" invisible="wage_type != 'hourly'"/>
+                <div class="o_row" name="hourly_wage" invisible="wage_type != 'hourly'">
+                    <field name="hourly_wage" class="o_hr_narrow_field"/>
+                    <span>/ hour</span>
+                </div>
+            </xpath>
+            <xpath expr="//div[@name='wage_period_label']" position="attributes">
+                <attribute name="invisible">schedule_pay != 'monthly'</attribute>
+            </xpath>
+            <xpath expr="//div[@name='wage_period_label']" position="after">
+                <div class="mb-3" invisible="schedule_pay != 'annually'">/ year</div>
+                <div class="mb-3" invisible="schedule_pay != 'semi-annually'">/ half-year</div>
+                <div class="mb-3" invisible="schedule_pay != 'quarterly'">/ quarter</div>
+                <div class="mb-3" invisible="schedule_pay != 'bi-monthly'">/ two months</div>
+                <div class="mb-3" invisible="schedule_pay != 'semi-monthly'">/ half-month</div>
+                <div class="mb-3" invisible="schedule_pay != 'bi-weekly'">/ two weeks</div>
+                <div class="mb-3" invisible="schedule_pay != 'weekly'">/ week</div>
+                <div class="mb-3" invisible="schedule_pay != 'daily'">/ day</div>
+            </xpath>
+            
+            <field name="resource_calendar_id" position="attributes">
+                <attribute name="groups">hr.group_hr_manager</attribute>
+            </field>
+            <field name="resource_calendar_id" position="after">
+                <field name="resource_calendar_id"
+                    groups="!hr.group_hr_manager,hr_payroll.group_hr_payroll_user"
+                    options="{'no_create': True, 'no_open': True}"
+                    help="The default working hours are set in configuration."/>
+                <label for="time_credit"/>
+                <div class="o_row">
+                    <field name="time_credit"/>
+                    <field name="work_time_rate" invisible="not time_credit" widget="percentage"/>
+                </div>
+                <field name="standard_calendar_id" invisible="not time_credit" help="The Standard Calendar is the calendar used by the people working at a 100% rate. It's used here to compute your part-time percentage."/>
+                <field name="time_credit_type_id" invisible="not time_credit" required="time_credit"/>
+            </field>
+
+            <page name="payroll_information" position="attributes">
+                <attribute name="groups">hr_payroll.group_hr_payroll_user</attribute>
+            </page>
         </field>
     </record>
 
     <record id="payroll_hr_employee_view_tree_employee_trends" model="ir.ui.view">
     <field name="name">payroll.hr.employee.view.list.inherit</field>
     <field name="model">hr.employee</field>
-    <field name="inherit_id" ref="hr_contract.view_employee_tree"/>
+    <field name="inherit_id" ref="hr.view_employee_tree"/>
     <field name="priority" eval="100" />
     <field name="arch" type="xml">
-        <field name="first_contract_date" position="attributes">
-            <attribute name="optional">show</attribute>
-        </field>
+        <xpath expr="//field[@name='name']" position="after">
+                <field name="registration_number" optional="hide"/>
+        </xpath>
     </field>
     </record>
 
@@ -46,7 +115,11 @@
         <field name="inherit_id" ref="hr.view_employee_filter"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
-                <field name="registration_number" string="Employee Code"/>
+                <field name="registration_number" string="Employee Reference"/>
+            </xpath>
+            <xpath expr="//filter[@name='out_of_contract']" position="after">
+                <separator/>
+                <filter string="Part Time" name="part_time" domain="[('time_credit', '=', True)]"/>
             </xpath>
         </field>
     </record>

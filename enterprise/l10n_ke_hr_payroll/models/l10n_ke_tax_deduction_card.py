@@ -7,9 +7,9 @@ from odoo.tools import format_date
 from odoo.fields import Datetime
 
 
-class L10nKeTaxDeductionCard(models.Model):
+class L10n_KeTaxDeductionCard(models.Model):
     _name = 'l10n_ke.tax.deduction.card'
-    _inherit = 'hr.payroll.declaration.mixin'
+    _inherit = ['hr.payroll.declaration.mixin']
     _description = 'HR Tax Deduction Card Report By Employee'
 
     name = fields.Char(

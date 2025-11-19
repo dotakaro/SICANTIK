@@ -25,10 +25,6 @@ class TestAccountAvalaraInternalCommon(TestAccountAvataxCommon):
         }])
         invoice.action_post()
 
-        tax_groups = invoice.tax_totals['subtotals'][0]['tax_groups']
-        self.assertEqual(len(tax_groups), 1, "There should be one tax group on the invoice containing all taxes.")
-        self.assertEqual(tax_groups[0]['group_name'], 'Taxes')
-
         if test_exact_response:
             self.assertRecordValues(invoice, [{
                 'amount_total': 96.54,
@@ -109,7 +105,11 @@ class TestAccountAvalaraInternal(TestAccountAvalaraInternalCommon):
 
         # Amounts should be sent as negative for refunds:
         # https://developer.avalara.com/erp-integration-guide/sales-tax-badge/transactions/test-refunds/
-        for line in refund._get_avatax_invoice_lines():
+        lines = [
+            refund._prepare_avatax_document_line_service_call(line_data, True)
+            for line_data in refund._get_line_data_for_external_taxes()
+        ]
+        for line in lines:
             if 'Discount' in line['description']:
                 self.assertGreater(line['amount'], 0)
             else:
@@ -267,10 +267,15 @@ class TestAccountAvalaraInternal(TestAccountAvalaraInternalCommon):
         'Quantity of items in this line. This quantity value should always be a positive value representing the quantity
         of product that changed hands, even when handling returns or refunds.'
         """
+        base_line = defaultdict(lambda: False)
+        base_line['product_id'] = self.product_accounting
+        base_line['quantity'] = -1
+        base_line['record'] = self.env['account.move.line']
+        base_line['tax_details'] = defaultdict(lambda: False)
+
         line_data = defaultdict(lambda: False)
-        line_data["product_id"] = self.product_accounting
-        line_data["qty"] = -1
-        res = self.env['account.external.tax.mixin']._get_avatax_invoice_line(line_data)
+        line_data['base_line'] = base_line
+        res = self.env['account.external.tax.mixin']._prepare_avatax_document_line_service_call(line_data, False)
         self.assertEqual(res['quantity'], 1, 'Quantities sent to Avatax should always be positive.')
 
     def test_multi_currency_exempted_tax(self):
@@ -301,12 +306,14 @@ class TestAccountAvalaraInternal(TestAccountAvalaraInternalCommon):
                 'rate': 0.04,
                 'taxableAmount': 100.0,
                 'taxName': 'CA STATE TAX',
+                'tax': 4.0,
             }, {
                 'jurisCode': '075',
                 'nonTaxableAmount': 100.0,
                 'rate': 0.06,
                 'taxableAmount': 0.0,
                 'taxName': 'CA COUNTY TAX',
+                'tax': 0.0,
             }],
             'lineAmount': 100.0,
             'lineNumber': 'account.move.line,' + str(invoice.invoice_line_ids.id),
@@ -389,16 +396,20 @@ class TestAccountAvalaraInternal(TestAccountAvalaraInternalCommon):
         response = {
             'lines': [{'details': [{'jurisCode': '06',
                                     'rate': 0.06,
-                                    'taxName': 'CA STATE TAX'},
+                                    'taxName': 'CA STATE TAX',
+                                    'tax': 17.7},
                                    {'jurisCode': '075',
                                     'rate': 0.0025,
-                                    'taxName': 'CA COUNTY TAX'},
+                                    'taxName': 'CA COUNTY TAX',
+                                    'tax': 0.74},
                                    {'jurisCode': 'EMAK0',
                                     'rate': 0.03,
-                                    'taxName': 'CA SPECIAL TAX'},
+                                    'taxName': 'CA SPECIAL TAX',
+                                    'tax': 8.85},
                                    {'jurisCode': 'EMTV0',
                                     'rate': 0.01,
-                                    'taxName': 'CA SPECIAL TAX'}],
+                                    'taxName': 'CA SPECIAL TAX',
+                                    'tax': 2.95}],
                        'lineAmount': 295.0,
                        'lineNumber': 'account.move.line,' + str(line.id),
                        'tax': 30.24} for line in invoice.invoice_line_ids],
@@ -452,30 +463,38 @@ class TestAccountAvalaraInternal(TestAccountAvalaraInternalCommon):
         response = {
             'lines': [{'details': [{'jurisCode': '06',
                                     'rate': 0.06,
+                                    'tax': 17.7,
                                     'taxName': 'CA STATE TAX'},
                                    {'jurisCode': '075',
                                     'rate': 0.0025,
+                                    'tax': 0.74,
                                     'taxName': 'CA COUNTY TAX'},
                                    {'jurisCode': 'EMAK0',
                                     'rate': 0.03,
+                                    'tax': 8.85,
                                     'taxName': 'CA SPECIAL TAX'},
                                    {'jurisCode': 'EMTV0',
                                     'rate': 0.01,
+                                    'tax': 2.95,
                                     'taxName': 'CA SPECIAL TAX'}],
                        'lineAmount': 295.0,
                        'lineNumber': f'account.move.line,{invoice.invoice_line_ids[0].id}',
                        'tax': 30.24},
                       {'details': [{'jurisCode': '06',
                                     'rate': 0.06,
+                                    'tax': 0.00,
                                     'taxName': 'CA STATE TAX'},
                                    {'jurisCode': '075',
                                     'rate': 0.0025,
+                                    'tax': 0.00,
                                     'taxName': 'CA COUNTY TAX'},
                                    {'jurisCode': 'EMAK0',
                                     'rate': 0.03,
+                                    'tax': 0.00,
                                     'taxName': 'CA SPECIAL TAX'},
                                    {'jurisCode': 'EMTV0',
                                     'rate': 0.01,
+                                    'tax': 0.00,
                                     'taxName': 'CA SPECIAL TAX'}],
                        'lineAmount': -295.0,
                        'lineNumber': f'account.move.line,{invoice.invoice_line_ids[1].id}',
@@ -506,15 +525,15 @@ class TestAccountAvalaraInternal(TestAccountAvalaraInternalCommon):
             invoice.button_external_tax_calculation()
 
         self.assertRecordValues(
-            invoice.line_ids,
+            invoice.line_ids.sorted('balance'),
             [
                 {'name': 'Accounting', 'balance': -295.00},  # Income account
-                {'name': 'Odoo User Initial Discount', 'balance': 295.00},  # Income account
-                {'name': False, 'balance': sum(t['tax'] for t in response['summary'])},  # AR
                 {'name': 'CA STATE 6%', 'balance': -17.7},
-                {'name': 'CA COUNTY 0.25%', 'balance': -0.74},
                 {'name': 'CA SPECIAL 3%', 'balance': -8.85},
                 {'name': 'CA SPECIAL 1%', 'balance': -2.95},
+                {'name': 'CA COUNTY 0.25%', 'balance': -0.74},
+                {'name': False, 'balance': sum(t['tax'] for t in response['summary'])},  # AR
+                {'name': 'Odoo User Initial Discount', 'balance': 295.00},  # Income account
             ]
         )
 

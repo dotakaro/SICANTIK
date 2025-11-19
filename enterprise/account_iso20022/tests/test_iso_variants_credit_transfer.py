@@ -30,7 +30,7 @@ class TestGermanSEPACreditTransfer(TestISO20022CommonCreditTransfer):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.env.user.groups_id |= cls.env.ref('account.group_validate_bank_account')
+        cls.env.user.group_ids |= cls.env.ref('account.group_validate_bank_account')
         cls.payment_method = cls.env.ref('account_iso20022.account_payment_method_sepa_ct')
         cls.company_data['default_journal_bank'].available_payment_method_ids |= cls.payment_method
         cls.payment_method_line = cls.env['account.payment.method.line'].sudo().create([{
@@ -89,7 +89,7 @@ class TestAustrianSEPACreditTransfer(TestISO20022CommonCreditTransfer):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.env.user.groups_id |= cls.env.ref('account.group_validate_bank_account')
+        cls.env.user.group_ids |= cls.env.ref('account.group_validate_bank_account')
         cls.env.ref('base.EUR').active = True
         cls.payment_method = cls.env.ref('account_iso20022.account_payment_method_sepa_ct')
         cls.company_data['default_journal_bank'].available_payment_method_ids |= cls.payment_method
@@ -150,7 +150,7 @@ class TestSwedishIsoCreditTransfer(TestISO20022CommonCreditTransfer):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.env.user.groups_id |= cls.env.ref('account.group_validate_bank_account')
+        cls.env.user.group_ids |= cls.env.ref('account.group_validate_bank_account')
         cls.env.ref('base.SEK').active = True
         cls.payment_method = cls.env.ref('account_iso20022.account_payment_method_iso20022_se')
         cls.company_data['default_journal_bank'].available_payment_method_ids |= cls.payment_method
@@ -180,7 +180,7 @@ class TestSwedishIsoCreditTransfer(TestISO20022CommonCreditTransfer):
     def test_swedish_iso_xml(self):
         batch = self.generate_iso20022_batch_payment(self.swedish_partner)
         sct_doc = self.get_sct_doc_from_batch(batch)
-        xml_file_path = file_path('account_iso20022/tests/xml_files/pain.001.001.03.se.xml')
+        xml_file_path = file_path('account_iso20022/tests/xml_files/pain.001.001.09.se.xml')
         expected_tree = etree.parse(xml_file_path)
 
         self.assertXmlTreeEqual(sct_doc, expected_tree.getroot())
@@ -211,7 +211,7 @@ class TestSwissIsoCreditTransfer(TestISO20022CommonCreditTransfer):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.env.user.groups_id |= cls.env.ref('account.group_validate_bank_account')
+        cls.env.user.group_ids |= cls.env.ref('account.group_validate_bank_account')
         cls.env.ref('base.CHF').active = True
 
         cls.payment_method = cls.env.ref('account_iso20022.account_payment_method_iso20022_ch')

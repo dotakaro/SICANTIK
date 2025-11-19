@@ -17,6 +17,7 @@ class Starshipit:
         self.logger = logger
         self.session = requests.Session()
         self.session.headers = {
+            'Platform': 'Odoo',
             'Content-Type': 'application/json',
             'StarShipIT-Api-Key': api_key,
             'Ocp-Apim-Subscription-Key': subscription_key,
@@ -144,7 +145,7 @@ class Starshipit:
         details = {
             'name': partner.name,
             'email': partner.email,
-            'phone': partner.phone or partner.mobile,
+            'phone': partner.phone,
             'company': partner.commercial_company_name or partner.name,
             'street': partner.street,
             'city': partner.city,

@@ -2,7 +2,7 @@
 
 {
     'name': 'eCommerce Subscription',
-    'category': 'Hidden',
+    'category': 'Website/Website',
     'summary': 'Sell subscription products on your eCommerce',
     'version': '1.0',
     'description': """
@@ -23,7 +23,7 @@ appropriate views and selling choices.
             'sale_subscription/static/src/js/product_configurator_dialog/*',
             ('before', 'website_sale/static/src/js/website_sale.js', 'website_sale_subscription/static/src/js/variant_mixin.js'),
             'website_sale_subscription/static/src/js/website_sale_subscription.js',
-            'website_sale_subscription/static/src/js/website_sale_configurators.js',
+            'website_sale_subscription/static/src/interactions/*',
             'website_sale_subscription/static/src/xml/pricing_view.xml',
         ],
         'web.assets_tests': [
@@ -31,5 +31,6 @@ appropriate views and selling choices.
         ],
     },
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

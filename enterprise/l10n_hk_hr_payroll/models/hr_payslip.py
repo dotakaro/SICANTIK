@@ -14,7 +14,7 @@ from odoo.osv import expression
 from odoo.tools.float_utils import float_compare
 
 
-class Payslip(models.Model):
+class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
     l10n_hk_worked_days_leaves_count = fields.Integer(
@@ -132,7 +132,7 @@ class Payslip(models.Model):
         date_to = datetime.combine(self.date_to, datetime.max.time())
         remainig_work_entries_domain = expression.AND([domain, [('leave_id.date_from', '<', self.date_from)]])
         work_entries_dict = self.env['hr.work.entry']._read_group(
-            self.contract_id._get_work_hours_domain(date_from, date_to, domain=remainig_work_entries_domain, inside=True),
+            self.version_id._get_work_hours_domain(date_from, date_to, domain=remainig_work_entries_domain, inside=True),
             ['leave_id', 'work_entry_type_id'],
             ['duration:sum'],
         )
@@ -155,20 +155,20 @@ class Payslip(models.Model):
             })
         return res
 
-    def _get_worked_day_lines(self, domain=None, check_out_of_contract=True):
+    def _get_worked_day_lines(self, domain=None, check_out_of_version=True):
         self.ensure_one()
-        res = super()._get_worked_day_lines(domain, check_out_of_contract)
+        res = super()._get_worked_day_lines(domain, check_out_of_version)
         if self.struct_id.country_id.code != 'HK':
             return res
 
         if domain is None:
             domain = []
-        contract = self.contract_id
+        contract = self.version_id
         if contract.resource_calendar_id:
-            if not check_out_of_contract:
+            if not check_out_of_version:
                 return res
             out_days, out_hours = 0, 0
-            reference_calendar = self._get_out_of_contract_calendar()
+            reference_calendar = self._get_out_of_version_calendar()
             domain = expression.AND([domain, [('work_entry_type_id.is_leave', '=', True)]])
             if self.date_from < contract.date_start:
                 start = fields.Datetime.to_datetime(self.date_from)
@@ -182,7 +182,7 @@ class Payslip(models.Model):
                 out_time = reference_calendar.get_work_duration_data(start, stop, compute_leaves=False, domain=domain)
                 out_days += out_time['days']
                 out_hours += out_time['hours']
-            work_entry_type = self.env.ref('hr_payroll.hr_work_entry_type_out_of_contract', raise_if_not_found=False)
+            work_entry_type = self.env.ref('hr_work_entry.hr_work_entry_type_out_of_contract', raise_if_not_found=False)
             if work_entry_type and (out_days or out_hours):
                 existing = False
                 for worked_days in res:
@@ -222,14 +222,14 @@ class Payslip(models.Model):
         header = (
             f'PHF{header_data["payment_set_code"]}{header_data["ref"]:<12}{header_data["payment_date"]:%Y%m%d}'
             f'{acc_number + "SA" + header_data["currency"]:<35}'
-            f'{header_data["currency"]}{header_data["payslips_count"]:07}{int(header_data["amount_total"] * 100):017}'
+            f'{header_data["currency"]}{header_data["payslips_count"]:07}{round(header_data["amount_total"] * 100):017}'
             f'{"":<1}{"":<311}\n'
         )
         datas = []
         for payment in payments_data:
             datas.append(
                 f'PD{payment["bank_code"]:<3}{payment["type"].upper()}{payment["autopay_field"]:<34}'
-                f'{int(payment["amount"] * 100):017}{payment["identifier"]:<35}{payment["ref"]:<35}'
+                f'{round(payment["amount"] * 100):017}{payment["identifier"]:<35}{payment["ref"]:<35}'
                 f'{payment["bank_account_name"]:<140}{"":<130}'
             )
         data = '\n'.join(datas)

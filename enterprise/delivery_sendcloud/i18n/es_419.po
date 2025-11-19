@@ -3,16 +3,15 @@
 # 	* delivery_sendcloud
 # 
 # Translators:
-# Wil Odoo, 2024
-# Patricia Gutiérrez Capetillo <pagc@odoo.com>, 2025
+# Wil Odoo, 2025
 # Fernanda Alvarez, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-10 15:41+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Fernanda Alvarez, 2025\n"
 "Language-Team: Spanish (Latin America) (https://app.transifex.com/odoo/teams/41243/es_419/)\n"
 "MIME-Version: 1.0\n"
@@ -129,7 +128,7 @@ msgstr "Transportista"
 #. odoo-python
 #: code:addons/delivery_sendcloud/models/delivery_carrier.py:0
 msgid "Choose Sendcloud Shipping Products"
-msgstr "Elija productos de envío de SendCloud"
+msgstr "Elija los productos de envío de Sendcloud"
 
 #. module: delivery_sendcloud
 #: model:ir.model,name:delivery_sendcloud.model_sendcloud_shipping_wizard
@@ -200,8 +199,11 @@ msgstr ""
 "Las reglas pueden anular el producto de envío seleccionado en Odoo"
 
 #. module: delivery_sendcloud
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_delivery_carrier__display_name
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_product__display_name
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_wizard__display_name
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_package_type__display_name
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "Nombre en pantalla"
 
@@ -261,8 +263,11 @@ msgid "Has Multicollo"
 msgstr "Tiene Multicollo"
 
 #. module: delivery_sendcloud
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_delivery_carrier__id
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_product__id
 #: model:ir.model.fields,field_description:delivery_sendcloud.field_sendcloud_shipping_wizard__id
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_package_type__id
+#: model:ir.model.fields,field_description:delivery_sendcloud.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -573,6 +578,24 @@ msgstr "La dirección %s necesita una calle, ciudad, código postal y país"
 
 #. module: delivery_sendcloud
 #. odoo-python
+#: code:addons/delivery_sendcloud/models/delivery_carrier.py:0
+msgid ""
+"The cancellation was rejected for the parcel(s) with the following id:\n"
+"%(details)s\n"
+"Either:\n"
+"\t - The parcel is already cancelled\n"
+"\t - The parcel has been announced more than 42 days ago\n"
+"\t - The parcel has already been delivered"
+msgstr ""
+"Se rechazó la cancelación para los paquetes con el siguiente ID:\n"
+"%(details)s\n"
+"Puede ser que:\n"
+"\t - El paquete ya se canceló.\n"
+"\t - El paquete se anunció hace más de 42 días\n"
+"\t - El paquete ya se entregó"
+
+#. module: delivery_sendcloud
+#. odoo-python
 #: code:addons/delivery_sendcloud/models/sendcloud_service.py:0
 msgid ""
 "The delivery address of the customer has been removed from the pickup "
@@ -593,15 +616,14 @@ msgid ""
 "The estimated shipping price cannot be computed because the weight is missing for the following product(s): \n"
 " %s"
 msgstr ""
-"No se puede calcular el precio estimado de envío, falta el peso correspondiente a los siguientes productos:\n"
+"No se puede calcular el precio estimado de envío, falta el peso de los siguientes productos: \n"
 " %s"
 
 #. module: delivery_sendcloud
 #. odoo-python
 #: code:addons/delivery_sendcloud/models/delivery_carrier.py:0
 msgid "The shipping product actually configured can't handle this delivery"
-msgstr ""
-"El envío del producto actualmente configurado no puede manejar este envío"
+msgstr "El envío del producto configurado no puede gestionar esta entrega"
 
 #. module: delivery_sendcloud
 #. odoo-python
@@ -636,6 +658,7 @@ msgstr ""
 #. module: delivery_sendcloud
 #. odoo-python
 #: code:addons/delivery_sendcloud/models/sendcloud_service.py:0
+#: code:addons/delivery_sendcloud/tests/test_delivery_sendcloud.py:0
 msgid ""
 "There is no shipping method available for this order with the selected "
 "carrier"

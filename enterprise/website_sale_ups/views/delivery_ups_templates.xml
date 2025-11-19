@@ -46,7 +46,7 @@
 
     <template id="ups_delivery_method" inherit_id="website_sale.delivery_method">
         <xpath expr="//input[@name='o_delivery_radio']" position="attributes">
-            <attribute name="t-att-data-ups-cod">dm.ups_cod</attribute>
+            <attribute name="t-att-data-ups-cod">dm.allow_cash_on_delivery</attribute>
         </xpath>
         <xpath expr="//label[@t-field='dm.name']" position="after">
             <t t-if="dm.delivery_type == 'ups' and dm.ups_bill_my_account">
@@ -70,15 +70,6 @@
                     </t>
                 </span>
             </t>
-        </xpath>
-    </template>
-
-    <template id="property_ups_carrier_account_inherit_portal_details" inherit_id="portal.portal_my_details">
-        <xpath expr="//div[hasclass('o_portal_details')]//div[hasclass('row')]" position="inside">
-            <div t-attf-class="mb-1 #{error.get('property_ups_carrier_account') and 'o_has_error' or ''} col-xl-6">
-                <label class="col-form-label label-optional" for="property_ups_carrier_account">UPS Number Account</label>
-                <input type="text" name="property_ups_carrier_account" t-attf-class="form-control" t-att-value="property_ups_carrier_account or partner.property_ups_carrier_account"/>
-            </div>
         </xpath>
     </template>
 

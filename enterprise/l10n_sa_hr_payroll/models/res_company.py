@@ -3,7 +3,7 @@
 from odoo import fields, models
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = 'res.company'
 
     l10n_sa_mol_establishment_code = fields.Char(string="MoL Establishment ID")

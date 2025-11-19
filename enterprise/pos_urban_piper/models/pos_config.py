@@ -77,9 +77,10 @@ class PosConfig(models.Model):
         help='The delivery providers used for online delivery through UrbanPiper.',
     )
 
-    _sql_constraints = [('urbanpiper_store_identifier_uniq',
-                         'unique(urbanpiper_store_identifier)',
-                         'Store ID must be unique for every pos configuration.')]
+    _urbanpiper_store_identifier_uniq = models.Constraint(
+        'unique(urbanpiper_store_identifier)',
+        "Store ID must be unique for every pos configuration.",
+    )
 
     def _init_column(self, column_name):
         if column_name != 'urbanpiper_store_identifier':
@@ -165,6 +166,10 @@ class PosConfig(models.Model):
             fiscal_position = self.env['account.fiscal.position'].create({
                 'name': 'UrbanPiper'
             })
+            self.env['account.tax'].create({
+                'name': 'UrbanPiper',
+                'fiscal_position_ids': [Command.link(fiscal_position.id)],
+            })
         if self.module_pos_urban_piper:
             if not self.urbanpiper_fiscal_position_id:
                 self.urbanpiper_fiscal_position_id = fiscal_position
@@ -187,14 +192,9 @@ class PosConfig(models.Model):
         self._add_line_to_fiscal_position(fiscal_position)
 
     def _add_line_to_fiscal_position(self, fiscal_position):
-        source_taxes = self.env['account.tax'].search([('type_tax_use', '=', 'sale'), ('company_id', '=', self.company_id.id)])
-        if fiscal_position and fiscal_position.tax_ids.tax_src_id.ids != source_taxes.ids:
-            lines = []
-            for tax in source_taxes - fiscal_position.tax_ids.tax_src_id:
-                lines.append((0, 0, {
-                    'tax_src_id': tax.id,
-                }))
-            fiscal_position.tax_ids = lines
+        # Outside of India, prices are tax-inclusive. So if users want tax-specific behavior,
+        # they must manually add a tax line to the fiscal position.
+        pass
 
     def prepare_taxes_data(self, pos_products):
         """
@@ -206,11 +206,14 @@ class PosConfig(models.Model):
         """
         Activate and Deactivate store
         """
-        up = UrbanPiperClient(self.with_context(provider_name=self.env.context.get('providerName')))
-        up.configure_webhook()
-        up.urbanpiper_store_status_update(status)
+        user_name = self.env['ir.config_parameter'].sudo().get_param('pos_urban_piper.urbanpiper_username')
+        api_key = self.env['ir.config_parameter'].sudo().get_param('pos_urban_piper.urbanpiper_apikey')
+        if not(user_name == 'demo' or api_key == 'demo'):
+            up = UrbanPiperClient(self)
+            up.configure_webhook()
+            up.urbanpiper_store_status_update(status=status)
 
-    def order_status_update(self, order_id, new_status, code=None):
+    def order_status_update(self, order_id, new_status, code=None, urban_piper_test=False):
         """
         Update order status from urban piper webhook
         """
@@ -220,7 +223,7 @@ class PosConfig(models.Model):
             self._make_order_payment(order)
         up = UrbanPiperClient(self)
         is_success, message = False, ''
-        if order.delivery_provider_id.technical_name in ['careem'] and new_status == 'Food Ready':
+        if urban_piper_test or (order.delivery_provider_id.technical_name in ['careem'] and new_status == 'Food Ready'):
             is_success = True
         else:
             is_success, message = up.request_status_update(order.delivery_identifier, new_status, code)
@@ -228,7 +231,7 @@ class PosConfig(models.Model):
             order.write({
                 'delivery_status': const.ORDER_STATUS_MAPPING[new_status][1],
             })
-        if new_status == 'Acknowledged':
+        if not urban_piper_test and new_status == 'Acknowledged':
             up.urbanpiper_order_reference_update(order)
         self._send_delivery_order_count(order_id)
         return {'is_success': is_success, 'message': message}
@@ -336,15 +339,15 @@ class PosConfig(models.Model):
         if response_json.get('errors'):
             title = list(response_json.get('errors').keys())[0]
             message = list(response_json.get('errors').values())[0]
-        elif response_json.get('message'):
-            message = response_json.get('message')
+        elif response_json.get('message') or response_json.get('error_message'):
+            message = response_json.get('message') or response_json.get('error_message')
+        if message:
             if response_json.get('status') == 'success':
                 msg_type = 'success'
                 message = message.split('.')[0]
             elif response_json.get('status') == 'error':
                 if raise_exception:
-                    raise ValidationError(response_json['message'])
-        if message:
+                    raise ValidationError(message)
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
@@ -363,11 +366,9 @@ class PosConfig(models.Model):
 
     def _check_required_request_params(self, store_required=True):
         msg = ''
-        user_name = self.env['ir.config_parameter'].sudo().get_param('pos_urban_piper.urbanpiper_username', False)
-        api_key = self.env['ir.config_parameter'].sudo().get_param('pos_urban_piper.urbanpiper_apikey', False)
-        if not user_name:
+        if not self.env.company.pos_urbanpiper_username:
             msg += _('UrbanPiper Username is required.\n')
-        if not api_key:
+        if not self.env.company.pos_urbanpiper_apikey:
             msg += _('UrbanPiper API Key is required.\n')
         if not self.urbanpiper_store_identifier and store_required:
             msg += _('UrbanPiper Store ID is required.\n')

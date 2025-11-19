@@ -128,20 +128,30 @@ class TestSaleOrder(TestCommissionsSetup):
 
     def test_commission_plan_apply_sequence(self):
         """
-            Check that we select the first valid rule following the sequence.
+            1. Check that we select the first valid rule following the sequence.
+            2. Check that if a rule is not present for product category, then it's parent category's
+            rule is applied.
         """
-        category = self.env['product.category'].create({
-            'name': 'Category',
-        })
-        _, product_test = self.env['product.product'].create([
+        category_main = self.env['product.category'].create(
+            {
+                'name': 'All'
+            }
+        )
+        category_sub = self.env['product.category'].create(
+            {
+                'name': 'Category',
+                'parent_id': category_main.id,
+            },
+        )
+        product_other, product_test = self.env['product.product'].create([
             {
                 'name': 'product_other',
-                'categ_id': category.id,
+                'categ_id': category_sub.id,
                 'list_price': 100.0,
             },
             {
                 'name': 'product_test',
-                'categ_id': category.id,
+                'categ_id': category_main.id,
                 'list_price': 100.0,
             }
         ])
@@ -150,13 +160,13 @@ class TestSaleOrder(TestCommissionsSetup):
             'product_id': self.env.ref('partner_commission.product_commission').id,
             'commission_rule_ids': [
                 (0, 0, {
-                            'category_id': category.id,
+                            'category_id': category_main.id,
                             'product_id': None,
                             'rate': 10,
                             'sequence': 1,
                 }),
                 (0, 0, {
-                            'category_id': category.id,
+                            'category_id': category_main.id,
                             'product_id': product_test.id,
                             'rate': 20,
                             'sequence': 0, # First rule to apply
@@ -174,4 +184,91 @@ class TestSaleOrder(TestCommissionsSetup):
             line.product_uom_qty = 1
         so = form.save()
 
-        self.assertEqual(so.commission, 20)
+        self.assertEqual(so.commission, 20)  # Confirms the sequence of rule applied
+
+        old_commission = so.commission
+        with form.order_line.new() as line:
+            line.name = product_other.name
+            line.product_id = product_other
+            line.product_uom_qty = 1
+        so = form.save()
+
+        self.assertEqual(so.commission, 10 + old_commission)  # Confirms that parent rule is applied
+
+    def test_subcontracted_service_po_with_referrer(self):
+        """
+        Test PO behavior when a subcontracted service product is in SO with a referrer.
+        Steps:
+        1. Configure the service product with customer as supplier.
+        2. Create two sale orders (one with a referrer).
+        3. Create sale order lines.
+        4. Confirm both sale orders.
+        5. Validate the generated purchase order and purchase lines.
+        """
+        self.env['product.supplierinfo'].create({
+            'partner_id': self.customer.id,
+            'product_tmpl_id': self.worker.product_tmpl_id.id,
+        })
+        self.worker.write({'type': 'service', 'service_to_purchase': True, 'recurring_invoice': False})
+        sale_orders = self.env['sale.order'].create([
+            {
+                'partner_id': self.customer.id,
+                'order_line': [
+                    Command.create({
+                        'product_id': self.worker.id,
+                        'product_uom_qty': 1,
+                    })
+                ],
+            },
+            {
+                'partner_id': self.customer.id,
+                'referrer_id': self.referrer.id,
+                'order_line': [
+                    Command.create({
+                        'product_id': self.worker.id,
+                        'product_uom_qty': 2,
+                    })
+                ],
+            }
+        ])
+        sale_orders.action_confirm()
+
+        purchase_orders = self.env['purchase.order'].search([
+            ('partner_id', '=', self.customer.id), ('state', '=', 'draft')
+        ])
+
+        self.assertEqual(len(purchase_orders), 1, "Only one PO should be created.")
+        self.assertEqual(len(purchase_orders.order_line), 2, "Two Sale Order line should be linked to a PO line.")
+
+    def test_invoice_with_referrer(self):
+        product = self.worker
+        self.referrer.commission_plan_id = self.env['commission.plan'].create({
+            'name': 'Test Plan',
+            'product_id': product.id,
+            'commission_rule_ids': [
+                (0, 0, {
+                    'category_id': product.categ_id.id,
+                    'rate': 10,
+                }),
+            ],
+        })
+        invoice = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.customer.id,
+            'referrer_id': self.referrer.id,
+            'invoice_line_ids': [
+                (0, 0, {
+                    'product_id': product.id,
+                    'quantity': 1,
+                    'price_unit': 100,
+                }),
+            ],
+        })
+        invoice.action_post()
+        action_register_payment = invoice.action_force_register_payment()
+        wizard = self.env[action_register_payment['res_model']].with_context(action_register_payment['context']).create({})
+        action_create_payment = wizard.action_create_payments()
+        payment = self.env[action_create_payment['res_model']].browse(action_create_payment['res_id'])
+
+        self.assertTrue(payment)
+        self.assertEqual(payment.invoice_ids, invoice)

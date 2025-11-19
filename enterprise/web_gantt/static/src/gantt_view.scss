@@ -1,8 +1,8 @@
 .o_gantt_view {
-	--Gantt__Buttons-height: 45px;
+	--Gantt__Buttons-height: 50px;
 
 	@media (max-width: 767px) {
-		--Gantt__Buttons-height: 91px; // = 2 times the height in normal display + 1px for the <hr> element
+		--Gantt__Buttons-height: 101px; // = 2 times the height in normal display + 1px for the <hr> element
 	}
 
 	user-select: none;
@@ -20,10 +20,6 @@
 	.o_gantt_renderer_controls {
 		@include o-gantt-zindex(controls);
 		height: var(--Gantt__Buttons-height) !important;
-		input[type="range"] {
-			min-width: 80px;
-			max-width: 80px;
-		}
 	}
 
 	@include media-only(print) {
@@ -33,16 +29,19 @@
 	}
 }
 
-.o_gantt_range_menu {
-	.o_gantt_range_custom_item.dropdown-item:not(.disabled):not(:disabled) {
+.o_gantt_scale_selector_menu .o_scale_button_custom.dropdown-item {
+	&:not(.disabled):not(:disabled) {
 		background-color: inherit !important;
 		cursor: default !important;
 		label {
 			cursor: default !important;
 		}
-		&.selected {
+		&.active {
 			font-weight: 400;
 		}
+	}
+	&:before {
+		top: auto !important;
 	}
 }
 
@@ -193,6 +192,28 @@
 		@include media-breakpoint-down(md) {
 			min-width: 0;
 		}
+        .o_gantt_fold_icons {
+            display: none;
+        }
+        .o_gantt_header_cell_title {
+            display: flex;
+        }
+        &.o_gantt_foldable_hovered {
+            &:not(.o_gantt_foldable_stop) {
+                border-right-color: transparent;
+            }
+            .o_gantt_header_cell_title {
+                opacity: 0.3;
+            }
+            &:hover {
+                .o_gantt_fold_icons {
+                    display: flex;
+                }
+                .o_gantt_header_cell_title {
+                    display: none;
+                }
+            }
+        }
 	}
 
 	.o_gantt_header_title {
@@ -234,16 +255,24 @@
 			background: $gantt-highlight-cell-color !important;
 			@include o-gantt-zindex(grid-interact);
 		}
+
+        &.o_gantt_cell_folded {
+            background: $gantt-border-color !important;
+            @include o-gantt-zindex(folded);
+        }
 	}
 
 	// ================================ Pills =================================
 	// ========================================================================
 	.o_gantt_pill_wrapper {
-		padding: 2px 2px 3px 3px;
+		padding: 1px;
 		min-height: var(--Gantt__Pill-height);
 		@include o-gantt-zindex(pill);
 
-        &.highlight, &.o_connector_creator_lock {
+        @include o-gantt-hover() {
+            @include o-gantt-zindex(pill-interact);
+        }
+        &.o_connector_creator_lock {
             @include o-gantt-zindex(pill-interact);
         }
 
@@ -321,25 +350,14 @@
 					right: 0;
 				}
 			}
-
-			@include o-gantt-hover() {
-				&:not(.o_resized) .o_resize_handle {
-					background-color: rgba(230, 230, 230, 0.5);
-
-					&:hover {
-						background-color: rgba(230, 230, 230, 0.8);
-					}
-				}
-			}
 		}
 
 		&.o_draggable,
 		&.o_undraggable {
-			transition: transform 0.6s, box-shadow 0.3s;
+			transition: box-shadow 0.3s;
 
 			&.o_dragged {
 				opacity: 0.8;
-				transform: rotate(-3deg);
 				box-shadow: 0 5px 25px -10px black;
 				@include o-gantt-zindex(interact);
 
@@ -361,11 +379,6 @@
 			.o_gantt_pill {
 				cursor: inherit;
 			}
-
-			.o_resize_handle {
-				background-color: rgba(black, 0.5);
-				@include o-gantt-zindex(interact);
-			}
 		}
 
 		.o_gantt_consolidated_pill_title {
@@ -380,7 +393,7 @@
 			}
 		}
 
-		&:not(.o_connector_creator_lock):not(.o_connector_creator_highlight) .o_connector_creator_wrapper {
+		&:not(.o_connector_creator_lock) .o_connector_creator_wrapper {
 			display: none;
 		}
 
@@ -390,18 +403,16 @@
 			}
 		}
 
+		.o_gantt_pill[class*="o_gantt_color_"] .o_gantt_progress {
+			opacity: 0.2;
+		}
+
 		// used for `color` attribute on <gantt>
 		@for $index from 1 through length($o-colors-complete) {
 			$color: nth($o-colors-complete, $index);
 
 			.o_gantt_pill.o_gantt_color_#{$index - 1} .o_gantt_progress {
-				opacity: 0.2;
 				background-color: darken($color, 30%);
-			}
-
-			&.highlight .o_gantt_pill.o_gantt_color_#{$index - 1} {
-				color: color-contrast($color);
-				background-color: $color;
 			}
 		}
 	}
@@ -418,7 +429,7 @@
 		user-select: none;
 		box-sizing: content-box;
 		cursor: pointer;
-		@include o-gantt-hoverable-colors(nth($o-colors-complete, 1));
+		@include o-gantt-colors(nth($o-colors-complete, 1));
 
 		.o_gantt_pill_title {
 			// Prevent displaying pill's description when size is smaller than 50px
@@ -434,27 +445,39 @@
 			@include o-gantt-gradient-decorations(nth($o-colors-complete, 1));
 		}
 
+		&[class*="o_gantt_color_"] .o_gantt_progress {
+			opacity: 0.2;
+		}
+
 		// used for `color` attribute on <gantt>
 		@for $index from 1 through length($o-colors-complete) {
 			&.o_gantt_color_#{$index - 1} {
 				$gantt-color: nth($o-colors-complete, $index);
 
-				@include o-gantt-hoverable-colors($gantt-color);
+				@include o-gantt-colors($gantt-color);
 
 				&.decoration-info {
 					@include o-gantt-gradient-decorations($gantt-color);
 				}
 
 				.o_gantt_progress {
-					opacity: 0.2;
 					background-color: darken($gantt-color, 30%);
 				}
 			}
 		}
 
+		&[class*="decoration-"]:before {
+			content: "";
+			width: 20px;
+			height: 16px;
+			@include o-position-absolute(-11px, $left: -13px);
+			box-shadow: 1px 1px 0 white;
+			transform: rotate(45deg);
+		}
+
 		@each $color, $value in $theme-colors {
 			&.decoration-#{$color}:before {
-				@include o-gantt-ribbon-decoration($value);
+				background: $value;
 			}
 		}
 	}
@@ -636,8 +659,8 @@
 		}
 	}
 
-	.o_gantt_pill_resize_badge {
-		transition: all 0.15s ease-in-out;
+	.o_gantt_pill_time_display_badge {
+		transition: all 0.02s ease-in-out;
 		box-shadow: 0 1px 2px 0 rgba(black, 0.28);
 		@include o-gantt-zindex(badge);
 	}
@@ -660,23 +683,6 @@
 				stroke: var(--Connector__ButtonBorder-color);
 				stroke-width: 24px;
 				transition: fill 0.15s;
-			}
-
-			&.o_connector_stroke_reschedule_button {
-				line {
-					stroke: var(--Connector__ButtonReschedule-color);
-					transition: stroke 0.15s;
-				}
-
-				&:hover {
-					>rect {
-						fill: var(--Connector__ButtonReschedule-color);
-					}
-
-					line {
-						stroke: var(--Connector__ButtonAccent-color);
-					}
-				}
 			}
 
 			&.o_connector_stroke_remove_button {

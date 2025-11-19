@@ -63,7 +63,7 @@ class EstonianTaxReportTest(AccountSalesReportCommon):
         cls.vat_in_22_s.l10n_ee_kmd_inf_code = '11'  # added to test if the special comments column is filled
         cls.vat_in_24_s.l10n_ee_kmd_inf_code = '11'  # added to test if the special comments column is filled
         cls.vat_in_13_s = cls.env['account.chart.template'].ref('l10n_ee_vat_in_13_s')
-        
+
         # Sales Taxes
         cls.vat_out_24_g = cls.env['account.chart.template'].ref('l10n_ee_vat_out_24_g')
         cls.vat_out_22_g = cls.env['account.chart.template'].ref('l10n_ee_vat_out_22_g')
@@ -350,9 +350,9 @@ class EstonianTaxReportTest(AccountSalesReportCommon):
             ],
         )
 
-        options_kmd = self.kmd_report.get_options({})
-        options_kmd_inf_a = self.kmd_inf_a_report.get_options({})
-        options_kmd_inf_b = self.kmd_inf_b_report.get_options({})
+        options_kmd = self._generate_options(self.kmd_report, '2023-01-01', '2023-01-31')
+        options_kmd_inf_a = self._generate_options(self.kmd_inf_a_report, '2023-01-01', '2023-01-31')
+        options_kmd_inf_b = self._generate_options(self.kmd_inf_b_report, '2023-01-01', '2023-01-31')
 
         self.assertLinesValues(
             self.kmd_inf_a_report._get_lines(options_kmd_inf_a),
@@ -784,12 +784,14 @@ class EstonianTaxReportTest(AccountSalesReportCommon):
             ],
         )
 
-        options_kmd = self.kmd_report.get_options({})
-        options_kmd_inf_a = self.kmd_inf_a_report.get_options({})
-        options_kmd_inf_b = self.kmd_inf_b_report.get_options({})
+        options_kmd = self._generate_options(self.kmd_report, '2025-07-01', '2025-07-31')
+        options_kmd_inf_a = self._generate_options(self.kmd_inf_a_report, '2025-07-01', '2025-07-31')
+        options_kmd_inf_b = self._generate_options(self.kmd_inf_b_report, '2025-07-01', '2025-07-31')
+
+        res = self.kmd_inf_a_report._get_lines(options_kmd_inf_a)
 
         self.assertLinesValues(
-            self.kmd_inf_a_report._get_lines(options_kmd_inf_a),
+            res,
             #    Name                                     Reg code       Buyer              Invoice number       Date             Invoice total    Tax rate        Taxable supply    Special code
             [    0,                                       1,             2,                 3,                   4,               5,               6,              7,                8],
             [

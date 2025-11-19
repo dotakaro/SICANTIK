@@ -1,15 +1,13 @@
-/** @odoo-module **/
-
 import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { _t } from "@web/core/l10n/translation";
 import { FormController } from '@web/views/form/form_controller';
 import { KnowledgeSidebar } from '@knowledge/components/sidebar/sidebar';
 import { useBus, useService } from "@web/core/utils/hooks";
-import { Deferred } from "@web/core/utils/concurrency";
 
 import {
-    onMounted,
     onWillStart,
+    reactive,
     useChildSubEnv,
     useEffect,
     useExternalListener,
@@ -18,11 +16,6 @@ import {
 
 export class KnowledgeArticleFormController extends FormController {
     static template = "knowledge.ArticleFormView";
-    // Open articles in edit mode by default
-    static defaultProps = {
-        ...FormController.defaultProps,
-        mode: "edit",
-    };
     static components = {
         ...FormController.components,
         KnowledgeSidebar,
@@ -35,23 +28,17 @@ export class KnowledgeArticleFormController extends FormController {
         this.actionService = useService('action');
         this.dialogService = useService("dialog");
 
-        /*
-            Because of the way OWL is designed we are never sure when OWL finishes mounting this component.
-            Thus, we added this deferred promise in order for us to know when it is done.
-            It is necessary to have this because the comments handler needs to notify the topbar when
-            it has detected comments so that it can show the comments panel's button.
-        */
-        this.topbarMountedPromise = new Deferred();
-
         useChildSubEnv({
             createArticle: this.createArticle.bind(this),
             ensureArticleName: this.ensureArticleName.bind(this),
             openArticle: this.openArticle.bind(this),
             renameArticle: this.renameArticle.bind(this),
+            sendArticleToTrash: this.sendArticleToTrash.bind(this),
             toggleAsideMobile: this.toggleAsideMobile.bind(this),
-            topbarMountedPromise: this.topbarMountedPromise,
             save: this.save.bind(this),
             discard: this.discard.bind(this),
+            propertiesPanelState: reactive({ isDisplayed: false }),
+            chatterPanelState: reactive({ isDisplayed: false }),
         });
 
         useBus(this.env.bus, 'KNOWLEDGE:OPEN_ARTICLE', (event) => {
@@ -70,9 +57,6 @@ export class KnowledgeArticleFormController extends FormController {
                 // breadcrumbs mismatch.
                 this.knowledgeCommandsService.unregisterCommandsRecordInfo(this.env.config.breadcrumbs);
             }
-        });
-        onMounted(() => {
-            this.topbarMountedPromise.resolve();
         });
 
         useExternalListener(document.documentElement, 'mouseleave', async () => {
@@ -94,6 +78,16 @@ export class KnowledgeArticleFormController extends FormController {
             },
             () => [this.model.root.resId]
         );
+
+        useExternalListener(window, "keydown", async event => {
+            const hotkey = getActiveHotkey(event);
+            if (hotkey === "control+s") {
+                event.preventDefault();
+                if (this.model.root.dirty) {
+                    await this.save({ reload: false });
+                }
+            }
+        });
     }
 
     /**
@@ -151,7 +145,7 @@ export class KnowledgeArticleFormController extends FormController {
      * @param {integer} targetParentId - Id of the parent of the new article (optional)
      */
     async createArticle(category, targetParentId) {
-        const articleId = await this.orm.call(
+        const articleIds = await this.orm.call(
             "knowledge.article",
             "article_create",
             [],
@@ -160,7 +154,7 @@ export class KnowledgeArticleFormController extends FormController {
                 parent_id: targetParentId ? targetParentId : false
             }
         );
-        this.openArticle(articleId);
+        this.openArticle(articleIds[0]);
     }
 
     getHtmlTitle() {
@@ -211,7 +205,7 @@ export class KnowledgeArticleFormController extends FormController {
                 await this.ensureArticleName();
                 if (await this.model.root.isDirty()) {
                     await this.model.root.save({
-                        onError: this.onSaveError.bind(this),
+                        onError: (error, options) => this.onSaveError(error, options, true),
                         nextId: resId,
                     });
                 } else {
@@ -226,8 +220,10 @@ export class KnowledgeArticleFormController extends FormController {
                 ),
                 confirmLabel: _t("Close"),
             });
+            return false;
         }
         this.toggleAsideMobile(false);
+        return true;
     }
 
     /*
@@ -245,6 +241,14 @@ export class KnowledgeArticleFormController extends FormController {
             name = title;
         }
         return this.model.root.update({ name });
+    }
+
+    async sendArticleToTrash() {
+        await this.orm.call("knowledge.article", "action_send_to_trash", [this.resId]);
+        await this.actionService.doAction(
+            await this.orm.call("knowledge.article", "action_redirect_to_parent", [this.resId]),
+            { stackPosition: "replaceCurrentAction" },
+        );
     }
 
     /**

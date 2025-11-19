@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { inputFiles } from "@web/../tests/utils";
 import { queryOne } from "@odoo/hoot-dom";
@@ -15,6 +13,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
             run: function () {
                 redirect("/odoo");
             },
+            expectUnloadPage: true,
         },
         {
             content: "Log into Belgian Company",
@@ -26,6 +25,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
             trigger:
                 ".o-dropdown--menu .dropdown-item div span:contains('My Belgian Company - TEST')",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             trigger:
@@ -53,12 +53,12 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
         },
         {
             content: "Select Recruitment Tab",
-            trigger: ".o_notebook ul > li > a:contains(Recruitment)",
+            trigger: ".o_notebook ul > li > a:contains(Details)",
             run: "click",
         },
         {
             content: "Contract Template",
-            trigger: ".o_field_widget.o_field_many2one[name=default_contract_id] input",
+            trigger: ".o_field_widget.o_field_many2one[name=contract_template_id] input",
             run: `edit New Developer Template Contract`,
         },
         {
@@ -89,14 +89,9 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
         },
         // Test Applicant
         {
-            content: "Applicant Name",
-            trigger: 'div [name="candidate_id"] input',
+            content: "Applicant's Name",
+            trigger: '.oe_title [name="partner_name"] input',
             run: "edit Mitchell Admin 2",
-        },
-        {
-            content: "Applicant Name",
-            trigger: "a:contains('Mitchell Admin 2')",
-            run: "click",
         },
         {
             content: "Applicant's Email",
@@ -140,6 +135,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
                 await fetch("/web/session/logout", { method: "GET" });
                     window.location.href = window.location.origin + url;
             },
+            expectUnloadPage: true,
         },
         {
             trigger: 'input[name="Gross"][value="3000"]',
@@ -394,8 +390,8 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
             },
         },
         {
-            content: "Gender",
-            trigger: '[name="gender"] input[value="female"]:not(:visible)',
+            content: "sex",
+            trigger: '[name="sex"] input[value="female"]:not(:visible)',
             run: "check",
         },
         {
@@ -417,6 +413,11 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
             content: "Zip Code",
             trigger: 'input[name="private_zip"]',
             run: "edit 1348",
+        },
+        {
+            content: "Country",
+            trigger: "select[name=private_country_id]:not(:visible)",
+            run: "selectByLabel Belgium",
         },
         {
             content: "Email",
@@ -513,6 +514,11 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
             content: "Set Married",
             trigger: "select[name=marital]:not(:visible)",
             run: "selectByLabel Married",
+        },
+        {
+            content: "Set Spouse Witout Income",
+            trigger: "select[name=spouse_fiscal_status]:not(:visible)",
+            run: "selectByLabel Without Income",
         },
         {
             trigger: 'input[name="Net"][value="2431.1"]',
@@ -745,6 +751,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour", {
             content: "submit",
             trigger: "button#hr_cs_submit",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             content: "Next 1",
@@ -813,68 +820,34 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_hr_sign", {
             trigger:
                 ".o-dropdown--menu .dropdown-item div span:contains('My Belgian Company - TEST')",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             trigger:
                 ".o_menu_systray .o_switch_company_menu button.dropdown-toggle span:contains('My Belgian Company - TEST')",
         },
         {
-            content: "Recruitment",
-            trigger: '.o_app[data-menu-xmlid="hr_recruitment.menu_hr_recruitment_root"]',
+            content: "Open Activity Systray",
+            trigger: ".o-mail-ActivityMenu-counter",
             run: "click",
         },
         {
-            content: "Jobs list view",
-            trigger: ".o_switch_view.o_list",
+            content: "Open Sign Requests",
+            trigger: '.o-dropdown--menu .list-group-item:contains("Signature")',
             run: "click",
         },
         {
-            content: "Select Our Job",
-            trigger: 'table.o_list_table tbody td:contains("Experienced Developer")',
+            content: "Go to Signable Document",
+            trigger: "button[name='go_to_signable_document']",
             run: "click",
         },
         {
-            trigger: ".o_form_saved",
-        },
-        {
-            content: "Open Application Pipe",
-            trigger: "button.oe_stat_button:contains(Applications)",
+            content: "Next 1",
+            trigger: ":iframe .o_sign_sign_item_navigator",
             run: "click",
         },
         {
-            content: "Select Our Applicant",
-            trigger: 'div.o_kanban_view span.fw-bold:contains("Mitchell Admin 2")',
-            run: "click",
-        },
-        {
-            trigger: ".o_form_saved",
-        },
-        {
-            content: "Open Contracts",
-            trigger: "button.oe_stat_button:contains(Contracts)",
-            run: "click",
-        },
-        {
-            trigger: ".o_form_saved",
-        },
-        {
-            content: "Open Signature Request",
-            trigger: "button.oe_stat_button:contains(Sign)",
-            run: "click",
-        },
-        {
-            trigger: "iframe.o_sign_pdf_iframe",
-        },
-        {
-            content: "Sign",
-            trigger: "button:contains(Sign Now)",
-            run: "click",
-        },
-        {
-            trigger: "iframe.o_sign_pdf_iframe",
-        },
-        {
-            content: "Next 5",
+            content: "Next 2",
             trigger: ":iframe .o_sign_sign_item_navigator",
             run: "click",
         },
@@ -882,6 +855,19 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_hr_sign", {
             content: "Click Signature",
             trigger: ":iframe button.o_sign_sign_item",
             run: "click",
+        },
+        {
+            content: "Click Auto",
+            trigger: "a.o_web_sign_auto_button:contains('Auto')",
+            run: "click",
+        },
+        {
+            content: "Adopt & Sign",
+            trigger: "footer.modal-footer button.btn-primary:enabled",
+            run: "click",
+        },
+        {
+            trigger: ":iframe body:not(:has(footer.modal-footer button.btn-primary))",
         },
         {
             content: "Validate and Sign",
@@ -904,6 +890,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
             trigger:
                 ".o-dropdown--menu .dropdown-item div span:contains('My Belgian Company - TEST')",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             trigger:
@@ -942,13 +929,8 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
         },
         {
             content: "Applicant Name",
-            trigger: 'div [name="candidate_id"] input',
+            trigger: '.oe_title [name="partner_name"] input',
             run: "edit Mitchell Admin 3",
-        },
-        {
-            content: "Applicant Name",
-            trigger: "a:contains('Mitchell Admin 3')",
-            run: "click",
         },
         {
             content: "Add Email Address",
@@ -980,7 +962,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
         },
         {
             content: "Add Manager",
-            trigger: ".nav-link:contains('Work Information')",
+            trigger: ".nav-link:contains('Work')",
             run: "click",
         },
         {
@@ -996,7 +978,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
         },
         {
             content: "Add Work Email",
-            trigger: '.o_group [name="work_email"] input',
+            trigger: 'h5 [name="work_email"] input',
             run: "edit mitchel3_work@example.com",
         },
         {
@@ -1011,35 +993,30 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
             trigger: ".o_form_saved",
         },
         {
-            content: "Create Contract",
-            trigger: '.o-form-buttonbox .oe_stat_button:contains("Contracts")',
+            content: "Add Salary Structure",
+            trigger: ".nav-link:contains('Payroll')",
             run: "click",
         },
         {
             content: "Salary Structure Type",
             trigger: ".o_field_widget.o_field_many2one[name=structure_type_id] input",
-            run: `edit CP200: Belgian Employee`,
+            run: `edit CP200 BE`,
         },
         {
             isActive: ["auto"],
-            trigger: ".ui-autocomplete > li > a:contains('CP200: Belgian Employee')",
+            trigger: ".ui-autocomplete > li > a:contains('CP200 BE')",
             run: "click",
         },
         {
-            content: "Contract Reference",
-            trigger: '.o_field_widget.o_field_char[name="name"] input',
-            run: "edit Mitchell Admin PFI Contract",
-        },
-        {
-            content: "Select Contract Details Tab",
-            trigger: ".o_notebook ul > li > a:contains(Details)",
+            content: "Add HR Responsible",
+            trigger: ".nav-link:contains('Settings')",
             run: "click",
         },
         {
             content: "HR Responsible",
             trigger:
                 "div.o_field_widget.o_required_modifier.o_field_many2one_avatar_user.o_field_many2one_avatar[name=hr_responsible_id] input",
-            run: `edit Mitchell`,
+            run: `edit Mitchell Admin`,
         },
         {
             isActive: ["auto"],
@@ -1067,13 +1044,13 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
             run: `edit test_employee_contract`,
         },
         {
-            content: "Select Contract Details Tab",
-            trigger: ".o_notebook ul > li > a:contains(Details)",
+            isActive: ["auto"],
+            trigger: ".ui-autocomplete > li > a:contains('test_employee_contract')",
             run: "click",
         },
         {
-            content: "Select Salary Information Tab",
-            trigger: ".o_notebook ul > li > a:contains(Salary)",
+            content: "Select Payroll Tab",
+            trigger: ".o_notebook ul > li > a:contains(Payroll)",
             run: "click",
         },
         {
@@ -1099,17 +1076,17 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
         {
             content: "Contract Information",
             trigger: "div[name='fuel_card'] input",
-            run: "edit 250 && click h2:contains(Monthly)",
+            run: "edit 250 && click div:contains(Monthly)",
         },
         {
             content: "Contract Information",
             trigger: "div[name='commission_on_target'] input",
-            run: "edit 1000 && click h2:contains(Monthly)",
+            run: "edit 1000 && click div:contains(Monthly)",
         },
         {
             content: "Contract Information",
             trigger: "[name='ip_wage_rate'] input",
-            run: "edit 25 && click h2:contains(Monthly)",
+            run: "edit 25 && click div:contains(Monthly)",
         },
         {
             content: "Contract Information",
@@ -1127,14 +1104,6 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
             run: "click",
         },
         {
-            content: "Go on Contract",
-            trigger: '.o-form-buttonbox .oe_stat_button:contains("In Contract Since")',
-            run: "click",
-        },
-        {
-            trigger: ".o_statusbar_buttons",
-        },
-        {
             content: "Generate Offer",
             trigger: ".o_statusbar_buttons > button:contains('Generate Offer')",
             run: "click",
@@ -1146,7 +1115,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
         },
         {
             isActive: ["auto"],
-            trigger: ".ui-autocomplete > li > a:contains('Mitchell Admin PFI Contract')",
+            trigger: ".ui-autocomplete > li > a:contains('2022')",
             run: "click",
         },
         {
@@ -1183,6 +1152,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
                 var url = offer_link.match(regex)[0];
                 window.location.href = window.location.origin + url;
             },
+            expectUnloadPage: true,
         },
         {
             content: "Unchoose default car",
@@ -1210,8 +1180,8 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
             },
         },
         {
-            content: "Gender",
-            trigger: "input[name=gender]:not(:visible)",
+            content: "sex",
+            trigger: "input[name=sex]:not(:visible)",
             run: function () {
                 document.querySelector('input[value="female"]').checked = true;
             },
@@ -1373,6 +1343,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
             content: "submit",
             trigger: "button#hr_cs_submit",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             content: "Next 6",
@@ -1424,6 +1395,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
             content: "Validate and Sign",
             trigger: ".o_sign_validate_banner button",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             content: "Go on configurator",
@@ -1431,6 +1403,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_2", {
             run: function () {
                 redirect("/odoo");
             },
+            expectUnloadPage: true,
         },
         {
             content: "Check home page is loaded",
@@ -1453,6 +1426,7 @@ registry.category("web_tour.tours").add("hr_contract_salary_tour_counter_sign", 
             trigger:
                 ".o-dropdown--menu .dropdown-item div span:contains('My Belgian Company - TEST')",
             run: "click",
+            expectUnloadPage: true,
         },
         {
             trigger: `.oe_topbar_name:contains(My Belgian Company - TEST)`,

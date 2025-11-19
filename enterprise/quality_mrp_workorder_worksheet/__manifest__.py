@@ -4,23 +4,24 @@
 {
     'name': 'Quality Worksheet for Workorder',
     'version': '1.0',
-    'category': 'Manufacturing/Quality',
+    'category': 'Supply Chain/Quality',
     'summary': 'Quality Worksheet for Workorder',
     'depends': ['quality_control_worksheet', 'quality_mrp_workorder'],
     'description': """
 Create customizable quality worksheet for workorder.
 """,
-    "data": [
-        'views/quality_views.xml',
-    ],
     "demo": [
         'data/mrp_workorder_demo.xml',
     ],
     'assets': {
+        'web.assets_backend': [
+            'quality_mrp_workorder_worksheet/static/src/**/*.js',
+        ],
         'web.assets_tests': [
             'quality_mrp_workorder_worksheet/static/tests/tours/**/*',
         ],
     },
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

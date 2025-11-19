@@ -1,4 +1,3 @@
-/** @odoo-module */
 import { sortBy } from "@web/core/utils/arrays";
 import { registry } from "@web/core/registry";
 import { SIDEBAR_SAFE_FIELDS } from "@web_studio/client_action/view_editor/editors/sidebar_safe_fields";
@@ -98,7 +97,7 @@ export function useStudioRef(refName = "studioRef", onClick) {
     }
 }
 
-export function makeModelErrorResilient(ModelClass) {
+export function makeModelErrorResilient(ModelClass, activeActions = { create: true }) {
     function logError(debug) {
         if (!debug) {
             return;
@@ -115,10 +114,12 @@ export function makeModelErrorResilient(ModelClass) {
             this.orm = Object.assign(Object.create(orm), {
                 async call(model, method) {
                     if (method === "onchange") {
-                        try {
-                            return await orm.call.call(orm, ...arguments);
-                        } catch {
-                            logError(debug);
+                        if (activeActions.create) {
+                            try {
+                                return await orm.call.call(orm, ...arguments);
+                            } catch {
+                                logError(debug);
+                            }
                         }
                         return { value: {} };
                     }
@@ -225,9 +226,9 @@ export function useModelConfigFetchInvisible(model) {
 }
 
 export function getCurrencyField(fieldsGet) {
-    const field = Object.entries(fieldsGet).find(([fName, fInfo]) => {
-        return fInfo.type === "many2one" && fInfo.relation === "res.currency";
-    });
+    const field = Object.entries(fieldsGet).find(
+        ([fName, fInfo]) => fInfo.type === "many2one" && fInfo.relation === "res.currency"
+    );
     if (field) {
         return field[0];
     }

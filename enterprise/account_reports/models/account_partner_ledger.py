@@ -9,19 +9,18 @@ from datetime import timedelta
 from collections import defaultdict
 
 
-class PartnerLedgerCustomHandler(models.AbstractModel):
+class AccountPartnerLedgerReportHandler(models.AbstractModel):
     _name = 'account.partner.ledger.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.report.custom.handler']
     _description = 'Partner Ledger Custom Handler'
 
     def _get_custom_display_config(self):
         return {
             'css_custom_class': 'partner_ledger',
             'components': {
-                'AccountReportLineCell': 'account_reports.PartnerLedgerLineCell',
+                'AccountReportLineCell': 'PartnerLedgerLineCell',
             },
             'templates': {
-                'AccountReportFilters': 'account_reports.PartnerLedgerFilters',
                 'AccountReportLineName': 'account_reports.PartnerLedgerLineName',
             },
         }
@@ -124,7 +123,8 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
             domain += [
                 '|', ('matched_debit_ids.debit_move_id.partner_id.name', 'ilike', options['filter_search_bar']),
                 '|', ('matched_credit_ids.credit_move_id.partner_id.name', 'ilike', options['filter_search_bar']),
-                ('partner_id.name', 'ilike', options['filter_search_bar']),
+                '|', ('partner_id.name', 'ilike', options['filter_search_bar']),
+                ('partner_id', '=', False),
             ]
 
         options['forced_domain'] = options.get('forced_domain', []) + domain
@@ -133,24 +133,6 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
             options['multi_currency'] = True
         else:
             options['columns'] = [col for col in options['columns'] if col['expression_label'] != 'amount_currency']
-
-        if not self.env.ref('account_reports.customer_statement_report', raise_if_not_found=False):
-            # Deprecated, will be removed in master
-            columns_to_hide = []
-            options['hide_account'] = (previous_options or {}).get('hide_account', False)
-            columns_to_hide += ['journal_code', 'account_code', 'matching_number'] if options['hide_account'] else []
-
-            options['hide_debit_credit'] = (previous_options or {}).get('hide_debit_credit', False)
-            columns_to_hide += ['debit', 'credit'] if options['hide_debit_credit'] else ['amount']
-
-            options['columns'] = [col for col in options['columns'] if col['expression_label'] not in columns_to_hide]
-
-            options['buttons'].append({
-                'name': _('Send'),
-                'action': 'action_send_statements',
-                'sequence': 90,
-                'always_show': True,
-            })
 
     def _custom_unfold_all_batch_data_generator(self, report, options, lines_to_expand_by_function):
         partner_ids_to_expand = []
@@ -183,31 +165,6 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
             # load_more_limit cannot be passed to this call, otherwise it won't be applied per partner but on the whole result.
             # We gain perf from batching, but load every result, even if the limit restricts them later.
             'aml_values': self._get_aml_values(options, partner_ids_to_expand) if partner_ids_to_expand else {},
-        }
-
-    def _get_report_send_recipients(self, options):
-        # Deprecated, to be moved to customer statement handler in master
-        partners = options.get('partner_ids', [])
-        if not partners:
-            report = self.env['account.report'].browse(options['report_id'])
-            self._cr.execute(self._get_query_sums(report, options))
-            partners = [row['groupby'] for row in self._cr.dictfetchall() if row['groupby']]
-        return self.env['res.partner'].browse(partners)
-
-    def action_send_statements(self, options):
-        # Deprecated, to be moved to customer statement handler in master
-        template = self.env.ref('account_reports.email_template_customer_statement', False)
-        partners = self.env['res.partner'].browse(options.get('partner_ids', []))
-        return {
-            'name': _("Send %s Statement", partners.name) if len(partners) == 1 else _("Send Partner Ledgers"),
-            'type': 'ir.actions.act_window',
-            'views': [[False, 'form']],
-            'res_model': 'account.report.send',
-            'target': 'new',
-            'context': {
-                'default_mail_template_id': template.id if template else False,
-                'default_report_options': options,
-            },
         }
 
     @api.model
@@ -443,7 +400,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
             raise UserError(_("Wrong ID for partner ledger line to expand: %s", line_dict_id))
 
         prefix_groups_count = 0
-        for markup, dummy1, dummy2 in report._parse_line_id(line_dict_id):
+        for markup, _model, _record_id in report._parse_line_id(line_dict_id):
             if isinstance(markup, dict) and 'groupby_prefix_group' in markup:
                 prefix_groups_count += 1
         level_shift = prefix_groups_count * 2
@@ -554,6 +511,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     COALESCE(account_move_line.date_maturity, account_move_line.date) AS date_maturity,
                     account_move_line.name,
                     account_move_line.ref,
+                    account_move_line.parent_state,
                     account_move_line.company_id,
                     account_move_line.account_id,
                     account_move_line.payment_id,
@@ -608,6 +566,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     COALESCE(account_move_line.date_maturity, account_move_line.date) AS date_maturity,
                     account_move_line.name,
                     account_move_line.ref,
+                    account_move_line.parent_state,
                     account_move_line.company_id,
                     account_move_line.account_id,
                     account_move_line.payment_id,
@@ -780,6 +739,7 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
             'columns': columns,
             'caret_options': caret_type,
             'level': 3 + level_shift,
+            'is_draft': aml_query_result['parent_state'] == 'draft',
         }
 
     def _get_report_line_total(self, options, totals_by_column_group):

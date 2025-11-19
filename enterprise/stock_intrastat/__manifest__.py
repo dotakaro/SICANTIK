@@ -3,7 +3,7 @@
 
 {
     'name': 'Stock Intrastat',
-    'category': 'Inventory/Inventory',
+    'category': 'Supply Chain/Inventory',
     'description': """
 A module that add the stock management in intrastat reports.
 ============================================================
@@ -15,5 +15,6 @@ European Union.""",
         'views/stock_warehouse_view.xml',
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

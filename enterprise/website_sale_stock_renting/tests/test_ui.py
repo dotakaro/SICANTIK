@@ -1,10 +1,13 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 import freezegun
 
-from odoo import http, Command
+from odoo import http
+from odoo.fields import Command
 from odoo.tests import HttpCase, tagged
+
 from odoo.addons.website_sale_renting.tests.common import TestWebsiteSaleRentingCommon
+
 
 @tagged('-at_install', 'post_install')
 class TestUi(HttpCase, TestWebsiteSaleRentingCommon):
@@ -16,6 +19,7 @@ class TestUi(HttpCase, TestWebsiteSaleRentingCommon):
             'company_id': cls.env.company.id,
             'company_ids': [(4, cls.env.company.id)],
             'name': 'Mitchell Admin',
+            'email': 'mitchell.admin@example.com',
             'street': '215 Vine St',
             'phone': '+1 555-555-5555',
             'city': 'Scranton',

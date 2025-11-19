@@ -29,7 +29,6 @@ It gives the Administrator user access to important invoicing features such as b
         'views/account_move_views.xml',
         'views/account_payment_views.xml',
         'views/account_reconcile_views.xml',
-        'views/account_reconcile_model_views.xml',
         'views/account_accountant_menuitems.xml',
         'views/digest_views.xml',
         'views/res_config_settings_views.xml',
@@ -40,7 +39,6 @@ It gives the Administrator user access to important invoicing features such as b
         'wizard/account_change_lock_date.xml',
         'wizard/account_auto_reconcile_wizard.xml',
         'wizard/account_reconcile_wizard.xml',
-        'wizard/reconcile_model_wizard.xml',
     ],
     'demo': [
         'demo/demo_data.xml',
@@ -49,6 +47,7 @@ It gives the Administrator user access to important invoicing features such as b
     'auto_install': True,
     'post_init_hook': '_account_accountant_post_init',
     'uninstall_hook': "uninstall_hook",
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

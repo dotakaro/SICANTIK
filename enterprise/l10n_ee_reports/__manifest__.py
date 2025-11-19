@@ -14,6 +14,7 @@ Accounting Reports for Estonia
     ],
     'data': [
         'views/report_export_templates.xml',
+        'views/res_config_settings_views.xml',
         'views/res_partner_views.xml',
         'data/balance_sheet.xml',
         'data/profit_and_loss.xml',
@@ -22,6 +23,7 @@ Accounting Reports for Estonia
         'data/kmd_inf/kmd_inf_report_part_a.xml',
         'data/kmd_inf/kmd_inf_report_part_b.xml',
         'data/kmd_inf/kmd_inf_report.xml',
+        'data/account_return_data.xml',
     ],
     'installable': True,
     'auto_install': [

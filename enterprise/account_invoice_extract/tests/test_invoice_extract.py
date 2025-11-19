@@ -2,15 +2,14 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import base64
-import json
 import textwrap
-import unittest
 
 from odoo import fields
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
+from odoo.addons.account.tests.test_account_incoming_supplier_invoice import TestAccountInvoiceImportMixin
 from odoo.addons.iap_extract.tests.test_extract_mixin import TestExtractMixin
-from odoo.addons.mail.tests.common import MailCommon
+from odoo.addons.mail.tests.common import MailCase
 from odoo.tests import tagged
 from odoo.tools import file_open
 
@@ -18,13 +17,17 @@ from ..models.account_invoice import OCR_VERSION
 
 
 @tagged('post_install', '-at_install')
-class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommon):
+class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, TestAccountInvoiceImportMixin, MailCase):
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
 
-        cls.env.user.groups_id |= cls.env.ref('base.group_system')
+        # give default values for all email aliases and domain
+        cls._init_mail_gateway()
+        cls._init_mail_servers()
+
+        cls.env.user.group_ids |= cls.env.ref('base.group_system')
 
         # Required for `price_total` to be visible in the view
         config = cls.env['res.config.settings'].create({})
@@ -59,28 +62,28 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
                 'iban': {'selected_value': {'content': 'BE01234567890123'}, 'candidates': []},
                 'invoice_lines': [
                     {
-                        'description': {'selected_value': {'content': 'Test 1'}},
-                        'unit_price': {'selected_value': {'content': 100}},
-                        'quantity': {'selected_value': {'content': 1}},
-                        'taxes': {'selected_values': [{'content': 15, 'amount_type': 'percent'}]},
-                        'subtotal': {'selected_value': {'content': 100}},
-                        'total': {'selected_value': {'content': 115}},
+                        'description': 'Test 1',
+                        'unit_price': 100,
+                        'quantity': 1,
+                        'taxes': [15],
+                        'subtotal': 100,
+                        'total': 115,
                     },
                     {
-                        'description': {'selected_value': {'content': 'Test 2'}},
-                        'unit_price': {'selected_value': {'content': 50}},
-                        'quantity': {'selected_value': {'content': 2}},
-                        'taxes': {'selected_values': [{'content': 0, 'amount_type': 'percent'}]},
-                        'subtotal': {'selected_value': {'content': 100}},
-                        'total': {'selected_value': {'content': 100}},
+                        'description': 'Test 2',
+                        'unit_price': 50,
+                        'quantity': 2,
+                        'taxes': [0],
+                        'subtotal': 100,
+                        'total': 100,
                     },
                     {
-                        'description': {'selected_value': {'content': 'Test 3'}},
-                        'unit_price': {'selected_value': {'content': 20}},
-                        'quantity': {'selected_value': {'content': 5}},
-                        'taxes': {'selected_values': [{'content': 15, 'amount_type': 'percent'}]},
-                        'subtotal': {'selected_value': {'content': 100}},
-                        'total': {'selected_value': {'content': 115}},
+                        'description': 'Test 3',
+                        'unit_price': 20,
+                        'quantity': 5,
+                        'taxes': [15],
+                        'subtotal': 100,
+                        'total': 115,
                     },
                 ],
             }],
@@ -166,18 +169,18 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
 
             self.assertEqual(len(invoice.invoice_line_ids), 3)
             for i, invoice_line in enumerate(invoice.invoice_line_ids):
-                self.assertEqual(invoice_line.name, extract_response['results'][0]['invoice_lines'][i]['description']['selected_value']['content'])
-                self.assertEqual(invoice_line.price_unit, extract_response['results'][0]['invoice_lines'][i]['unit_price']['selected_value']['content'])
-                self.assertEqual(invoice_line.quantity, extract_response['results'][0]['invoice_lines'][i]['quantity']['selected_value']['content'])
-                tax = extract_response['results'][0]['invoice_lines'][i]['taxes']['selected_values'][0]
-                if tax['content'] == 0:
+                self.assertEqual(invoice_line.name, extract_response['results'][0]['invoice_lines'][i]['description'])
+                self.assertEqual(invoice_line.price_unit, extract_response['results'][0]['invoice_lines'][i]['unit_price'])
+                self.assertEqual(invoice_line.quantity, extract_response['results'][0]['invoice_lines'][i]['quantity'])
+                tax = extract_response['results'][0]['invoice_lines'][i]['taxes'][0]
+                if tax == 0:
                     self.assertEqual(len(invoice_line.tax_ids), 0)
                 else:
                     self.assertEqual(len(invoice_line.tax_ids), 1)
-                    self.assertEqual(invoice_line.tax_ids[0].amount, tax['content'])
+                    self.assertEqual(invoice_line.tax_ids[0].amount, tax)
                     self.assertEqual(invoice_line.tax_ids[0].amount_type, 'percent')
-                self.assertEqual(invoice_line.price_subtotal, extract_response['results'][0]['invoice_lines'][i]['subtotal']['selected_value']['content'])
-                self.assertEqual(invoice_line.price_total, extract_response['results'][0]['invoice_lines'][i]['total']['selected_value']['content'])
+                self.assertEqual(invoice_line.price_subtotal, extract_response['results'][0]['invoice_lines'][i]['subtotal'])
+                self.assertEqual(invoice_line.price_total, extract_response['results'][0]['invoice_lines'][i]['total'])
 
     def test_included_default_tax(self):
         # test that a tax included coming from the account is not removed from the lines even if it's not detected
@@ -196,7 +199,7 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         extract_response['results'][0]['total']['selected_value']['content'] = 300
         for line in extract_response['results'][0]['invoice_lines']:
             line['total'] = line['subtotal']
-            line['taxes']['selected_values'] = []
+            line['taxes'] = []
 
         with self._mock_iap_extract(extract_response=extract_response):
             invoice._check_ocr_status()
@@ -346,7 +349,7 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         self.env['res.currency'].search([('name', '!=', 'USD')]).with_context(force_deactivate=True).active = False
         invoice = self.env['account.move'].create({'move_type': 'in_invoice', 'extract_state': 'waiting_extraction'})
         test_user = self.env.ref('base.user_root')
-        test_user.groups_id = [(3, self.env.ref('base.group_multi_currency').id)]
+        test_user.group_ids = [(3, self.env.ref('base.group_multi_currency').id)]
 
         usd_currency = self.env['res.currency'].search([('name', '=', 'USD')])
         eur_currency = self.env['res.currency'].with_context({'active_test': False}).search([('name', '=', 'EUR')])
@@ -405,7 +408,7 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         (cad_currency | usd_currency).active = True
 
         test_user = self.env.user
-        test_user.groups_id = [(3, self.env.ref('base.group_multi_currency').id)]
+        test_user.group_ids = [(3, self.env.ref('base.group_multi_currency').id)]
         self.assertEqual(test_user.currency_id, usd_currency)
 
         extract_response = self.get_result_success_response()
@@ -454,12 +457,12 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         extract_response['results'][0]['subtotal']['selected_value']['content'] = 100
         extract_response['results'][0]['invoice_lines'] = [
             {
-                'description': {'selected_value': {'content': 'Test 1'}},
-                'unit_price': {'selected_value': {'content': 100}},
-                'quantity': {'selected_value': {'content': 1}},
-                'taxes': {'selected_values': [{'content': 12.34, 'amount_type': 'percent'}]},
-                'subtotal': {'selected_value': {'content': 100}},
-                'total': {'selected_value': {'content': 123.4}},
+                'description': 'Test 1',
+                'unit_price': 100,
+                'quantity': 1,
+                'taxes': [12.34],
+                'subtotal': 100,
+                'total': 123.4,
             },
         ]
 
@@ -631,8 +634,8 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         self.env.company.extract_in_invoice_digitalization_mode = 'auto_send'
         invoice = self.env['account.move'].create({'move_type': 'in_invoice', 'extract_state': 'no_extract_requested'})
         test_attachment = self.env['ir.attachment'].create({
-            'name': "an attachment",
-            'datas': base64.b64encode(b'My attachment'),
+            'name': "attachment.pdf",
+            'raw': b'My attachment',
         })
 
         expected_parse_params = {
@@ -658,7 +661,7 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
             extract_response=self.parse_success_response(),
             assert_params=expected_parse_params,
         ):
-            invoice.message_post(attachment_ids=[test_attachment.id])
+            invoice.message_post(message_type='comment', attachment_ids=test_attachment.ids)
 
         self.assertEqual(invoice.extract_state, 'waiting_extraction')
         self.assertEqual(invoice.extract_document_uuid, 'some_token')
@@ -702,30 +705,28 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         # test that when multiple pdf attachments are posted and the option is enabled each one is split
         # into a separate move
         self.env.company.extract_in_invoice_digitalization_mode = 'auto_send'
-        invoice = self.env['account.move'].create({'move_type': 'in_invoice', 'extract_state': 'no_extract_requested'})
         with file_open('base/tests/minimal.pdf', 'rb') as file:
             pdf_bytes = file.read()
-        test_attachments = self.env['ir.attachment'].create([{
-            'name': 'Attachment 1',
-            'datas': base64.b64encode(pdf_bytes),
-            'mimetype': 'application/pdf',
-        }, {
-            'name': 'Attachment 2',
-            'datas': base64.b64encode(pdf_bytes),
-            'mimetype': 'application/pdf',
-        }])
+        attachments_vals = [
+            {
+                'name': 'Attachment 1',
+                'raw': pdf_bytes,
+                'mimetype': 'application/pdf',
+            },
+            {
+                'name': 'Attachment 2',
+                'raw': pdf_bytes,
+                'mimetype': 'application/pdf',
+            },
+        ]
 
         with self._mock_iap_extract(
             extract_response=self.parse_success_response(),
         ):
-            invoice.with_context(from_alias=True, default_move_type='in_invoice', default_journal_id=invoice.journal_id.id).message_post(attachment_ids=test_attachments.ids)
-
-        new_invoice_id = invoice.id + 1
-        invoices = invoice
-        invoices |= self.env['account.move'].search([('id', '=', new_invoice_id)])
+            attachments, _messages, invoices = self._upload_and_import_attachments(origin='mail_alias', attachments_vals=attachments_vals)
 
         self.assertEqual(len(invoices), 2, "Two separate bills should have been created")
-        for inv, att in zip(invoices, test_attachments):
+        for inv, att in zip(invoices, attachments):
             self.assertEqual(inv.extract_state, 'waiting_extraction')
             self.assertEqual(inv.extract_document_uuid, 'some_token')
             self.assertEqual(inv.message_main_attachment_id, att)
@@ -734,7 +735,7 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         # test that a customer invoice is automatically sent to the OCR server when uploaded and the option is enabled
         self.env.company.extract_out_invoice_digitalization_mode = 'auto_send'
         test_attachment = self.env['ir.attachment'].create({
-            'name': "an attachment",
+            'name': "attachment.pdf",
             'datas': base64.b64encode(b'My attachment'),
         })
         with self._mock_iap_extract(extract_response=self.parse_success_response()):
@@ -899,12 +900,12 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         extract_response['results'][0]['subtotal']['selected_value']['content'] = 100
         extract_response['results'][0]['invoice_lines'] = [
             {
-                'description': {'selected_value': {'content': 'Test 1'}},
-                'unit_price': {'selected_value': {'content': 100}},
-                'quantity': {'selected_value': {'content': 1}},
-                'taxes': {'selected_values': [{'content': 12, 'amount_type': 'percent'}]},
-                'subtotal': {'selected_value': {'content': 100}},
-                'total': {'selected_value': {'content': 112}},
+                'description': 'Test 1',
+                'unit_price': 100,
+                'quantity': 1,
+                'taxes': [12],
+                'subtotal': 100,
+                'total': 112,
             },
         ]
 
@@ -1011,14 +1012,15 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         self.assertEqual(bill.state, "posted")
 
     def test_invoice_ocr_note_author(self):
-        invoice = self.env['account.move'].create({'move_type': 'in_invoice', 'extract_state': 'waiting_extraction'})
+        invoice = self.env['account.move'].create({'move_type': 'in_invoice', 'extract_state': 'no_extract_requested'})
+        self.env.cr.flush()
         attachment = self.env['ir.attachment'].create({
             'name': 'test_attachment.png',
             'res_model': 'account.move',
             'raw': b'My invoice',
         })
         with self._mock_iap_extract(extract_response=self.parse_success_response()):
-            invoice.message_post(attachment_ids=[attachment.id])
+            invoice.message_post(message_type='comment', attachment_ids=attachment.ids)
 
         with self._mock_iap_extract(extract_response=self.get_result_success_response()):
             invoice.check_all_status()
@@ -1031,3 +1033,32 @@ class TestInvoiceExtract(AccountTestInvoicingCommon, TestExtractMixin, MailCommo
         ]).ensure_one()
         author_name = message.author_id.complete_name
         self.assertEqual(author_name, 'OdooBot')
+
+    def test_user_selected_box_with_multiple_matches(self):
+        invoice = self.env['account.move'].create({
+            'move_type': 'in_invoice',
+            'extract_state': 'waiting_validation',
+            'extract_document_uuid': 'test_token',
+            'ref': 'FA316865',
+        })
+        self.env['iap.extracted.words'].create([
+            {
+                'res_model': 'account.move',
+                'res_id': invoice.id,
+                'field': 'invoice_id',
+                'word_text': 'FA316865',
+                'user_selected': True,
+                'ocr_selected': False,
+            },
+            {
+                'res_model': 'account.move',
+                'res_id': invoice.id,
+                'field': 'invoice_id',
+                'word_text': 'INVALID123',
+                'user_selected': True,
+                'ocr_selected': False,
+            }
+        ])
+        self.assertEqual(invoice._get_validation('invoice_id')['content'], invoice.ref)
+        self.assertIn('box', invoice._get_validation('invoice_id'))
+        self.assertEqual(invoice._get_validation('invoice_id')['box'][0], invoice.ref)

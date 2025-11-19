@@ -4,7 +4,7 @@
 {
     'name': 'FSM - SMS',
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Services/Field Service',
     'summary':  'Send text messages when fsm task stage move',
     'depends': ['industry_fsm', 'project_sms'],
     'data': [
@@ -14,5 +14,6 @@
         'data/industry_fsm_sms_demo.xml'
     ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

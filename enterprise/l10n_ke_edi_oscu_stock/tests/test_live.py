@@ -91,7 +91,7 @@ class TestKeEdiStock(TestKeEdiCommon):
             We do this sequentially (first the invoice, its stock IO and stock master,
             then the credit note, its stock IO and stock master).
         """
-        self.env.user.groups_id |= self.env.ref('sales_team.group_sale_salesman')
+        self.env.user.group_ids |= self.env.ref('sales_team.group_sale_salesman')
         # Step 1: create invoice
         invoice = self.init_invoice(
             'out_invoice',
@@ -159,7 +159,7 @@ class TestKeEdiStock(TestKeEdiCommon):
             4) Now send Invoice n.1.
             5) Stock IO and Stock Master should be sent with the quantities in Sale Order n.1.
         """
-        self.env.user.groups_id |= self.env.ref('sales_team.group_sale_salesman')
+        self.env.user.group_ids |= self.env.ref('sales_team.group_sale_salesman')
         # Step 1: create invoice 1 and sale order, and validate picking.
         invoice_1 = self.init_invoice(
             'out_invoice',
@@ -376,7 +376,6 @@ class TestKeEdiStock(TestKeEdiCommon):
             'picking_type_id': parent_delivery_type.id,
             'move_ids': [
                 Command.create({
-                    'name': self.product_a.name,
                     'location_id': self.stock_location.id,
                     'location_dest_id': self.customer_location.id,
                     'product_id': self.product_a.id,
@@ -389,7 +388,8 @@ class TestKeEdiStock(TestKeEdiCommon):
         out_picking.button_validate()
 
         # Step 3: Run picking cron as superuser
-        self.env.ref('l10n_ke_edi_oscu_stock.ir_cron_send_stock_moves').method_direct_trigger()
+        with self.enter_registry_test_mode():
+            self.env.ref('l10n_ke_edi_oscu_stock.ir_cron_send_stock_moves').method_direct_trigger()
 
         # Step 4: Create receipt in Kakamega
         branch_receipt_type = self.env['stock.picking.type'].search([('company_id', '=', branch.id), ('code', '=', 'incoming')], limit=1)
@@ -401,7 +401,6 @@ class TestKeEdiStock(TestKeEdiCommon):
             'picking_type_id': branch_receipt_type.id,
             'move_ids': [
                 Command.create({
-                    'name': self.product_a.name,
                     'location_id': self.supplier_location.id,
                     'location_dest_id': branch_stock_location.id,
                     'product_id': self.product_a.id,
@@ -414,10 +413,11 @@ class TestKeEdiStock(TestKeEdiCommon):
         in_picking.button_validate()
 
         # Step 5: Run picking cron as superuser
-        self.env.ref('l10n_ke_edi_oscu_stock.ir_cron_send_stock_moves').method_direct_trigger()
+        with self.enter_registry_test_mode():
+            self.env.ref('l10n_ke_edi_oscu_stock.ir_cron_send_stock_moves').method_direct_trigger()
 
     def _test_send_inventory_adjustment(self):
-        self.user.write({'groups_id': [Command.link(self.env.ref('stock.group_stock_user').id)]})
+        self.user.write({'group_ids': [Command.link(self.env.ref('stock.group_stock_user').id)]})
         self.product_a.action_l10n_ke_oscu_save_item()
 
         # Step 1: Create inventory adjustment

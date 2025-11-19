@@ -3,7 +3,6 @@ import math
 
 from odoo import fields, models, _
 from odoo.exceptions import ValidationError, UserError
-from odoo.tools import format_list
 
 
 class HrPayrollPaymentReportWizard(models.TransientModel):
@@ -58,7 +57,7 @@ class HrPayrollPaymentReportWizard(models.TransientModel):
         return int(aba_routing[:-1][-8:])
 
     def _calculate_aba_hash_for_payments(self, payments):
-        hashes = sum(self._calculate_aba_hash(payment.partner_bank_id.aba_routing) for payment in payments)
+        hashes = sum(self._calculate_aba_hash(payment.partner_bank_id.clearing_number) for payment in payments)
         return str(hashes)[-10:]  # take the rightmost 10 characters
 
     def _generate_nacha_batch_control_record(self, payments, offset_payment, batch_nr):
@@ -84,8 +83,8 @@ class HrPayrollPaymentReportWizard(models.TransientModel):
         return "".join((
             "6",  # Record Type Code
             "27" if is_offset else "22",  # Transaction Code
-            f"{bank.aba_routing[:-1]:8.8}",  # RDFI Routing Transit Number
-            f"{bank.aba_routing[-1]:1.1}",  # Check Digit
+            f"{bank.clearing_number[:-1]:8.8}",  # RDFI Routing Transit Number
+            f"{bank.clearing_number[-1]:1.1}",  # Check Digit
             f"{bank.acc_number:17.17}",  # DFI Account Number
             f"{self._get_total_cents(payment):010d}",  # Amount
             f"{payment.partner_id.vat or '':15.15}",  # Individual Identification Number (optional)
@@ -119,7 +118,7 @@ class HrPayrollPaymentReportWizard(models.TransientModel):
 
     def _validate_bank_for_nacha(self, payment):
         bank = payment.partner_bank_id
-        if not bank.aba_routing:
+        if not bank.clearing_number:
             raise ValidationError(
                 _(
                     "Please set an ABA routing number on the %(account)s bank account for %(partner)s.",
@@ -241,14 +240,12 @@ class HrPayrollPaymentReportWizard(models.TransientModel):
             filtered_payslips = self.payslip_ids.filtered(lambda p: p.state == "done" and p.net_wage > 0)
             employees = filtered_payslips.employee_id.filtered(lambda e: not e.work_contact_id)
             if employees:
-                raise UserError(_(
-                    "Some employees (%s) don't have a work contact.",
-                    format_list(self.env, employees.mapped('name'))))
+                raise UserError(_("Some employees (%s) don't have a work contact.", employees.mapped('name')))
             employees = filtered_payslips.employee_id.filtered(lambda e: e.work_contact_id and not e.work_contact_id.name)
             if employees:
                 raise UserError(_(
                     "Some employees (%s) don't have a valid name on the work contact.",
-                    format_list(self.env, employees.mapped('name'))))
+                    employees.mapped('name')))
             self._validate_journal_for_nacha()
 
     def generate_payment_report(self):

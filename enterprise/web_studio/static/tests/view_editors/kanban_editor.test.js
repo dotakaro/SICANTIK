@@ -1,10 +1,12 @@
-import { expect, test } from "@odoo/hoot";
+import { describe, expect, test } from "@odoo/hoot";
+import { queryAllTexts } from "@odoo/hoot-dom";
 import { animationFrame, Deferred } from "@odoo/hoot-mock";
 import { onMounted } from "@odoo/owl";
 import {
     contains,
     defineModels,
     fields,
+    findComponent,
     models,
     onRpc,
     patchWithCleanup,
@@ -12,11 +14,14 @@ import {
 } from "@web/../tests/web_test_helpers";
 import { CodeEditor } from "@web/core/code_editor/code_editor";
 
+describe.current.tags("desktop");
+
 import {
-    createMockViewResult,
     disableHookAnimation,
+    editView,
     mountViewEditor,
 } from "@web_studio/../tests/view_editor_tests_utils";
+import { KanbanEditorSidebar } from "@web_studio/client_action/view_editor/editors/kanban/kanban_editor_sidebar/kanban_editor_sidebar";
 
 class Coucou extends models.Model {
     display_name = fields.Char();
@@ -45,44 +50,37 @@ class Partner extends models.Model {
     ];
 }
 
+class Task extends models.Model {
+    _name = "task";
+
+    display_name = fields.Char({ sortable: false });
+    int_field = fields.Integer();
+    float_field = fields.Float();
+    monetary_field = fields.Monetary({ currency_field: "" });
+    _records = [
+        {
+            id: 1,
+            int_field: 5,
+            float_field: 19.99,
+            monetary_field: 1.23,
+        },
+    ];
+}
+
+class User extends models.Model {
+    _name = "res.users";
+    has_group() {
+        return true;
+    }
+}
+
 class Product extends models.Model {
     display_name = fields.Char();
 
     _records = [{ id: 1, display_name: "A very good product" }];
 }
 
-defineModels([Coucou, Product, Partner]);
-
-test("template without t-name='card' load the legacy kanban editor", async () => {
-    // avoid "kanban-box" deprecation warnings in this suite, which
-    // defines legacy kanban on purpose
-    const originalConsoleWarn = console.warn;
-    patchWithCleanup(console, {
-        warn: (msg) => {
-            if (msg !== "'kanban-box' is deprecated, define a 'card' template instead") {
-                originalConsoleWarn(msg);
-            }
-        },
-    });
-    await mountViewEditor({
-        type: "kanban",
-        resModel: "coucou",
-        arch: `<kanban>
-        <templates>
-            <t t-name="kanban-box">
-                <div>
-                    <field name="char_field"/>
-                </div>
-            </t>
-        </templates>
-    </kanban>
-    `,
-    });
-    expect(".o_web_studio_kanban_view_editor_legacy").toHaveCount(1);
-    expect(".o_kanban_record .o_web_studio_kanban_hook").toHaveCount(4, {
-        message: "hooks are present inside the card",
-    });
-});
+defineModels([Coucou, Product, Partner, Task, User]);
 
 test("empty kanban editor", async () => {
     await mountViewEditor({
@@ -125,7 +123,7 @@ test("templates without a main node are wrapped in a main node by the editor", a
 });
 
 test("kanban structures display depends if element is present in the view", async () => {
-    onRpc("/web_studio/edit_view", () => {
+    onRpc("/web_studio/edit_view", (request) => {
         // in this test, we result with a completely different template
         const newArch = `
                 <kanban>
@@ -141,7 +139,7 @@ test("kanban structures display depends if element is present in the view", asyn
                     </templates>
                 </kanban>
             `;
-        return createMockViewResult("kanban", newArch, Coucou);
+        return editView(request, "kanban", newArch);
     });
     await mountViewEditor({
         type: "kanban",
@@ -247,7 +245,7 @@ test("adding an aside element calls the right operation", async () => {
                     </templates>
                 </kanban>
             `;
-        return createMockViewResult("kanban", newArch, Coucou);
+        return editView(params, "kanban", newArch);
     });
     await mountViewEditor({
         type: "kanban",
@@ -285,7 +283,7 @@ test("adding a footer element calls the right operation", async () => {
                     </templates>
                 </kanban>
             `;
-        return createMockViewResult("kanban", newArch, Coucou);
+        return editView(params, "kanban", newArch);
     });
     await mountViewEditor({
         type: "kanban",
@@ -354,7 +352,7 @@ test("adding a colorpicker inside the menu", async () => {
                         </templates>
                     </kanban>
                 `;
-        return createMockViewResult("kanban", newArch, Coucou);
+        return editView(params, "kanban", newArch);
     });
     await mountViewEditor({
         type: "kanban",
@@ -409,7 +407,7 @@ test("adding a colorpicker when menu is not present", async () => {
                         </templates>
                     </kanban>
                 `;
-        return createMockViewResult("kanban", newArch, Coucou);
+        return editView(params, "kanban", newArch);
     });
     await mountViewEditor({
         type: "kanban",
@@ -454,7 +452,7 @@ test("can_open attribute can be edited from the sidebar", async () => {
                 </templates>
             </kanban>
         `;
-        return createMockViewResult("kanban", newArch, Coucou);
+        return editView(params, "kanban", newArch);
     });
     await mountViewEditor({
         type: "kanban",
@@ -500,17 +498,21 @@ test("buttons can be edited when being selected", async () => {
     </kanban>
     `,
     });
+    onRpc("/web_studio/get_actions_for_model", () => [
+        { name: "Action 1", xml_id: "my_first_action" },
+        { name: "Action 2", xml_id: "my_last_action" },
+    ]);
     expect("footer .o-web-studio-editor--element-clickable").toHaveCount(2);
     await contains("a.o-web-studio-editor--element-clickable").click();
     expect("input[id=class]").toHaveCount(1);
-    expect("input[id=name]").toHaveValue("my_first_action");
+    expect("[name=name] .o_select_menu_toggler").toHaveText("Action 1");
     await contains("button.o-web-studio-editor--element-clickable").click();
     expect("input[id=class]").toHaveCount(1);
-    expect("input[id=name]").toHaveValue("my_last_action");
+    expect("[name=name] .o_select_menu_toggler").toHaveText("Action 2");
 });
 
 test("grouped kanban editor", async () => {
-    onRpc("web_read_group", async ({ kwargs }) => {
+    onRpc("web_read_group", ({ kwargs }) => {
         expect.step("web_read_group");
         expect(kwargs.limit).toBe(1);
     });
@@ -599,21 +601,19 @@ test("kanban editor, grouped on date field granular, no record, progressbar", as
                     </t>
                 </templates>
             </kanban>`;
-    onRpc("/web_studio/get_xml_editor_resources", () => {
-        return {
-            main_view_key: "",
-            views: [
-                {
-                    active: true,
-                    arch,
-                    id: 99999999,
-                    inherit_id: false,
-                    name: "default view",
-                    xml_id: "default",
-                },
-            ],
-        };
-    });
+    onRpc("/web_studio/get_xml_editor_resources", () => ({
+        main_view_key: "",
+        views: [
+            {
+                active: true,
+                arch,
+                id: 99999999,
+                inherit_id: false,
+                name: "default view",
+                xml_id: "default",
+            },
+        ],
+    }));
     await mountViewEditor({
         type: "kanban",
         resModel: "coucou",
@@ -647,7 +647,128 @@ test("grouped kanban editor cannot add columns or load more", async () => {
             </kanban>`,
     });
     expect(".o_kanban_load_more").toHaveCount(0);
-    expect(".o_kanban_add_column").toHaveCount(0);
+    expect(".o_column_quick_create").toHaveCount(0);
+});
+
+test("kanban editor can group by only one field", async () => {
+    await mountViewEditor({
+        type: "kanban",
+        resModel: "coucou",
+        arch: `<kanban default_group_by='m2o,priority'>
+                <templates>
+                    <t t-name='card'>
+                        <field name='display_name'/>
+                    </t>
+                </templates>
+            </kanban>`,
+    });
+    expect(".o_web_studio_property_default_group_by .o_select_menu_toggler_slot").toHaveText("M2o");
+});
+
+test("grouped kanban fold_field can be change for custom model", async () => {
+    expect.assertions(8);
+    class CustomStage extends models.Model {
+        _name = "x_custom_stage";
+
+        boolean_field = fields.Boolean();
+    }
+
+    class Stage extends models.Model {
+        _name = "stage";
+    }
+
+    class Lead extends models.Model {
+        _name = "lead";
+
+        stage_id = fields.Many2one({ relation: "stage" });
+        custom_stage_id = fields.Many2one({ relation: "x_custom_stage" });
+    }
+
+    let nbEditView = 0;
+    onRpc("/web_studio/edit_view", (request) => {
+        nbEditView++;
+        if (nbEditView === 1) {
+            const newArch = `
+                <kanban default_group_by="stage_id">
+                    <templates>
+                        <t t-name="card">
+                            <h3>Card</h3>
+                        </t>
+                    </templates>
+                </kanban>
+            `;
+            return editView(request, "kanban", newArch);
+        } else if (nbEditView === 2) {
+            const newArch = `
+                <kanban default_group_by="custom_stage_id">
+                    <templates>
+                        <t t-name="card">
+                            <h3>Card</h3>
+                        </t>
+                    </templates>
+                </kanban>
+            `;
+            return editView(request, "kanban", newArch);
+        }
+    });
+
+    onRpc("ir.model.fields", "web_search_read", () => []);
+
+    onRpc("ir.model.fields", "write", ({ args }) => {
+        expect(args[0][0]).toBe(999);
+        expect(args[1]).toEqual({ group_expand: true });
+        return true;
+    });
+
+    defineModels([CustomStage, Stage, Lead]);
+
+    const parentComponent = await mountViewEditor({
+        type: "kanban",
+        resModel: "lead",
+        arch: `
+        <kanban>
+            <templates>
+                <t t-name="card">
+                    <h3>Card</h3>
+                </t>
+            </templates>
+        </kanban>
+    `,
+    });
+
+    await contains(".o_web_studio_property_default_group_by button").click();
+    await contains(".o-dropdown-item:contains('Stage')").click();
+
+    expect("input[name='group_expand']").not.toHaveCount();
+    expect(".o_web_studio_property_fold_name").not.toHaveCount();
+
+    await contains(".o_web_studio_property_default_group_by button").click();
+    await contains(".o-dropdown-item:contains('Custom stage')").click();
+
+    expect("input[name='group_expand']").toBeVisible();
+    expect(".o_web_studio_property_fold_name").not.toHaveCount();
+
+    const kanbanEditor = findComponent(parentComponent, (c) => c instanceof KanbanEditorSidebar);
+    kanbanEditor.state.groupByField = {
+        id: 999,
+    };
+
+    kanbanEditor.state.fieldsForFold = [
+        {
+            label: "Folded1",
+            value: 1,
+        },
+        {
+            label: "Folded2",
+            value: 2,
+        },
+    ];
+    await contains("input[name='group_expand']").check();
+
+    expect(".o_web_studio_property_fold_name").toBeVisible();
+
+    await contains(".o_web_studio_property_fold_name button").click();
+    expect(queryAllTexts(".o-dropdown-item")).toEqual(["Folded1", "Folded2"]);
 });
 
 test("sortby and orderby field in kanban sidebar", async () => {
@@ -667,7 +788,7 @@ test("sortby and orderby field in kanban sidebar", async () => {
                 </templates>
             </kanban>
         `;
-        return createMockViewResult("kanban", newArch, Coucou);
+        return editView(params, "kanban", newArch);
     });
     await mountViewEditor({
         type: "kanban",
@@ -692,4 +813,32 @@ test("sortby and orderby field in kanban sidebar", async () => {
     await contains(".o-overlay-item:nth-child(1) .o-dropdown--menu .dropdown-item:eq(0)").click();
     expect(".o_web_studio_property_sort_order .o_select_menu .text-start").toHaveText("Ascending");
     expect.verifySteps(["edit_view"]);
+});
+
+test("sortby numeric field in kanban sidebar", async () => {
+    const arch = `
+        <kanban>
+            <templates>
+                <t t-name='card'>
+                    <field name='int_field'/>
+                    <field name='float_field'/>
+                </t>
+            </templates>
+        </kanban>`;
+
+    await mountViewEditor({
+        type: "kanban",
+        resModel: "task",
+        arch,
+    });
+
+    await contains(".o_web_studio_property_sort_by button").click();
+    expect(queryAllTexts(".dropdown-item.o_select_menu_item")).toEqual([
+        "Created on",
+        "Float field",
+        "Id",
+        "Int field",
+        "Last Modified on",
+        "Monetary field",
+    ]);
 });

@@ -24,8 +24,8 @@ class PosConfig(models.Model):
                     pm.it_payment_code = '5'
         return journal, pm_ids
 
-    def get_limited_partners_loading(self):
-        partner_ids = super().get_limited_partners_loading()
+    def get_limited_partners_loading(self, offset=0):
+        partner_ids = super().get_limited_partners_loading(offset)
         if (self.env.company.partner_id.id,) not in partner_ids:
             partner_ids.append((self.env.company.partner_id.id,))
         return partner_ids

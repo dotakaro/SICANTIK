@@ -4,17 +4,16 @@ from werkzeug.urls import url_join
 
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError, ValidationError
-from odoo.models import Constraint
 
 
-class WhatsAppTemplateVariable(models.Model):
+class WhatsappTemplateVariable(models.Model):
     _name = 'whatsapp.template.variable'
     _description = 'WhatsApp Template Variable'
     _order = 'line_type desc, name, id'
 
     name = fields.Char(string="Placeholder", required=True)
-    button_id = fields.Many2one('whatsapp.template.button', ondelete='cascade')
-    wa_template_id = fields.Many2one(comodel_name='whatsapp.template', required=True, ondelete='cascade')
+    button_id = fields.Many2one('whatsapp.template.button', ondelete='cascade', index='btree_not_null')
+    wa_template_id = fields.Many2one(comodel_name='whatsapp.template', required=True, index=True, ondelete='cascade')
     model = fields.Char(string="Model Name", related='wa_template_id.model')
 
     line_type = fields.Selection([
@@ -24,20 +23,17 @@ class WhatsAppTemplateVariable(models.Model):
         ('body', 'Body')], string="Variable location", required=True)
     field_type = fields.Selection([
         ('user_name', 'User Name'),
-        ('user_mobile', 'User Mobile'),
+        ('user_phone', 'User Phone'),
         ('free_text', 'Free Text'),
         ('portal_url', 'Portal Link'),
         ('field', 'Field of Model')], string="Type", default='free_text', required=True)
     field_name = fields.Char(string="Field")
     demo_value = fields.Char(string="Sample Value", default="Sample Value", required=True)
 
-    _constraints = [
-        Constraint(
-            'name_type_template_unique',
-            'UNIQUE(name, line_type, wa_template_id, button_id)',
-            'Variable names must be unique for a given template'
-        ),
-    ]
+    _name_type_template_unique = models.Constraint(
+        'UNIQUE(name, line_type, wa_template_id, button_id)',
+        "Variable names must be unique for a given template",
+    )
 
     @api.constrains("field_type", "demo_value", "button_id")
     def _check_demo_values(self):
@@ -125,8 +121,8 @@ class WhatsAppTemplateVariable(models.Model):
         for variable in self:
             if variable.field_type == 'user_name':
                 value = user.name
-            elif variable.field_type == 'user_mobile':
-                value = user.mobile
+            elif variable.field_type == 'user_phone':
+                value = user.phone
             elif variable.field_type == 'field':
                 value = variable._find_value_from_field_chain(record)
             elif variable.field_type == 'portal_url':
@@ -156,6 +152,6 @@ class WhatsAppTemplateVariable(models.Model):
         """ Extract variable index, located between '{{}}' markers. """
         self.ensure_one()
         try:
-            return int(self.name.lstrip('{{').rstrip('}}'))
+            return int(self.name.removeprefix('{{').removesuffix('}}'))
         except ValueError:
             return None

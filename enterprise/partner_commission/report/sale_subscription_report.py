@@ -5,7 +5,6 @@ from odoo import fields, models
 
 class SaleSubscriptionReport(models.Model):
     _inherit = "sale.subscription.report"
-    _name = "sale.subscription.report"
 
     referrer_id = fields.Many2one('res.partner', 'Referrer', readonly=True)
     commission_plan_id = fields.Many2one('commission.plan', readonly=True)

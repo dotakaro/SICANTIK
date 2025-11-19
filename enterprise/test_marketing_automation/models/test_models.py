@@ -43,7 +43,7 @@ class MarketingTestPerformance(models.Model):
         return ['customer_id']
 
 
-class MarketingTestUTM(models.Model):
+class MarketingTestUtm(models.Model):
     _name = 'marketing.test.utm'
     _description = 'MarketAuto: simple thread-enabled model with UTMs'
     _inherit = ['mail.thread', 'utm.mixin']
@@ -52,7 +52,7 @@ class MarketingTestUTM(models.Model):
     partner_id = fields.Many2one('res.partner', 'Partner')
 
 
-class MarketingTestBlPhone(models.Model):
+class MarketingTestSms(models.Model):
     _name = 'marketing.test.sms'
     _description = 'MarketAuto: blacklist + phone-enabled model'
     _inherit = ['mail.thread.blacklist', 'mail.thread.phone']
@@ -74,8 +74,6 @@ class MarketingTestBlPhone(models.Model):
                 record.email_from = record.customer_id.email
             if not record.phone and record.customer_id.phone:
                 record.phone = record.customer_id.phone
-            if not record.mobile and record.customer_id.mobile:
-                record.mobile = record.customer_id.mobile
 
     def _mail_get_partner_fields(self, introspect_fields=False):
         return ['customer_id']

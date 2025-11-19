@@ -8,14 +8,17 @@ class AccountPaymentRegister(models.TransientModel):
     sdd_mandate_usable = fields.Boolean(string="Could a SDD mandate be used?",
         compute='_compute_usable_mandate')
 
-    @api.depends('payment_date', 'partner_id', 'company_id')
+    no_sdd_mandate_partner_ids = fields.Many2many(comodel_name='res.partner', compute='_compute_usable_mandate')
+
+    @api.depends('payment_date', 'partner_id', 'company_id', 'line_ids.partner_id')
     def _compute_usable_mandate(self):
         """ returns the first mandate found that can be used for this payment,
         or none if there is no such mandate.
         """
         for wizard in self:
-            partners_with_valid_mandates = self._get_partner_ids_with_valid_mandates()
-            wizard.sdd_mandate_usable = all(partner.id in partners_with_valid_mandates for partner in wizard.line_ids.partner_id)
+            partners_with_valid_mandates = wizard._get_partner_ids_with_valid_mandates()
+            wizard.no_sdd_mandate_partner_ids = wizard.line_ids.partner_id - self.env['res.partner'].browse(partners_with_valid_mandates)
+            wizard.sdd_mandate_usable = not wizard.no_sdd_mandate_partner_ids
 
     def _get_partner_ids_with_valid_mandates(self):
         """

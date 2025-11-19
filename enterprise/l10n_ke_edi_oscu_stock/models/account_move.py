@@ -106,11 +106,11 @@ class AccountMove(models.Model):
             vals.append(Command.create({
                 'product_id': line.product_id.id,
                 'product_qty': line.quantity,
-                'product_uom': line.product_uom_id.id,
+                'product_uom_id': line.product_uom_id.id,
                 'price_unit': line.price_unit,
                 'invoice_lines': line.ids,
                 'date_planned': fields.Date.context_today(self),
-                'taxes_id': line.tax_ids.ids,
+                'tax_ids': line.tax_ids.ids,
                 'display_type': line.display_type if line.display_type in ['line_section', 'line_note'] else False,
             }))
 
@@ -139,10 +139,10 @@ class AccountMove(models.Model):
             vals.append(Command.create({
                 'product_id': line.product_id.id,
                 'product_uom_qty': line.quantity,
-                'product_uom': line.product_uom_id.id,
+                'product_uom_id': line.product_uom_id.id,
                 'price_unit': line.price_unit,
                 'invoice_lines': line.ids,
-                'tax_id': line.tax_ids.ids,
+                'tax_ids': line.tax_ids.ids,
                 'display_type': line.display_type if line.display_type in ['line_section', 'line_note'] else False,
             }))
 

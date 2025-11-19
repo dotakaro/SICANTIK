@@ -4,6 +4,7 @@
 from odoo import api, models, _
 from odoo.tools import convert
 
+
 class MarketingCampaign(models.Model):
     _inherit = 'marketing.campaign'
 

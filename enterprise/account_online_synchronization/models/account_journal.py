@@ -8,6 +8,7 @@ from requests.exceptions import RequestException, Timeout
 from odoo import api, fields, models, tools, _
 from odoo.exceptions import UserError, ValidationError, RedirectWarning
 from odoo.tools import SQL
+from odoo.tools.misc import formatLang
 
 _logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class AccountJournal(models.Model):
     next_link_synchronization = fields.Datetime("Online Link Next synchronization", related='account_online_link_id.next_refresh')
     expiring_synchronization_date = fields.Date(related='account_online_link_id.expiring_synchronization_date')
     expiring_synchronization_due_day = fields.Integer(compute='_compute_expiring_synchronization_due_day')
-    account_online_account_id = fields.Many2one('account.online.account', copy=False, ondelete='set null')
+    account_online_account_id = fields.Many2one('account.online.account', copy=False, ondelete='set null', index='btree_not_null')
     account_online_link_id = fields.Many2one('account.online.link', related='account_online_account_id.account_online_link_id', readonly=True, store=True)
     account_online_link_state = fields.Selection(related="account_online_link_id.state", readonly=True)
     renewal_contact_email = fields.Char(
@@ -81,10 +82,10 @@ class AccountJournal(models.Model):
                 self.env.cr.rollback()
 
     def fetch_online_sync_favorite_institutions(self):
-        self.ensure_one()
+        company = self.sudo().company_id if len(self) == 1 else self.env.company
         timeout = int(self.env['ir.config_parameter'].sudo().get_param('account_online_synchronization.request_timeout')) or 60
         endpoint_url = self.env['account.online.link']._get_odoofin_url('/proxy/v1/get_dashboard_institutions')
-        params = {'country': self.sudo().company_id.account_fiscal_country_id.code, 'limit': 28}
+        params = {'country': company.account_fiscal_country_id.code, 'limit': 28}
         try:
             resp = requests.post(endpoint_url, json=params, timeout=timeout)
             resp_dict = resp.json()['result']
@@ -188,7 +189,9 @@ class AccountJournal(models.Model):
         self.ensure_one()
         self._portal_ensure_token()
         template = self.env.ref('account_online_synchronization.email_template_sync_reminder')
-        subtype = self.env.ref('account_online_synchronization.bank_sync_consent_renewal')
+        subtype = self.env.ref('account_online_synchronization.bank_sync_consent_renewal', raise_if_not_found=False)
+        if not subtype:
+            subtype = self.env.ref('mail.mt_comment')
         self.message_post_with_source(source_ref=template, subtype_id=subtype.id)
 
     def action_open_missing_transaction_wizard(self):
@@ -238,7 +241,7 @@ class AccountJournal(models.Model):
             We do not check on online_transaction_identifier because this is called after the fetch
             where transitions would already have been filtered on existing online_transaction_identifier.
 
-            :param from_date: date from with we must check for duplicates.
+            :param date_from: date from with we must check for duplicates.
         """
         self.env.cr.execute(SQL.join(SQL(''), [
             self._get_duplicate_amount_date_account_transactions_query(date_from),
@@ -254,7 +257,7 @@ class AccountJournal(models.Model):
                or
                - same transaction id
 
-            :param from_date: date from with we must check for duplicates.
+            :param date_from: date from with we must check for duplicates.
         """
         query = SQL.join(SQL(''), [
             self._get_duplicate_amount_date_account_transactions_query(date_from),
@@ -263,6 +266,25 @@ class AccountJournal(models.Model):
             SQL('ORDER BY ids'),
         ])
         return [res[0] for res in self.env.execute_query(query)]
+
+    def _get_provider_duplicate_transactions(self, date_from):
+        """
+            Find all transaction with that have a "duplicated: True" in the transaction details.
+        """
+        statement_lines = self.env.execute_query(
+            SQL('''
+                SELECT st_line.id
+                  FROM account_bank_statement_line st_line
+                  JOIN account_move move ON move.id = st_line.move_id
+                 WHERE st_line.journal_id = %(journal_id)s
+                   AND move.date >= %(date_from)s
+                   AND st_line.transaction_details::JSONB->>'duplicated' = 'true';
+                ''',
+                journal_id=self.id,
+                date_from=date_from,
+            )
+        )
+        return [res[0] for res in statement_lines]
 
     def _get_duplicate_amount_date_account_transactions_query(self, date_from):
         self.ensure_one()
@@ -373,8 +395,61 @@ class AccountJournal(models.Model):
         self._consume_connection_state_details()
         return super().action_open_bank_transactions()
 
+    def action_open_pending_bank_statement_lines(self):
+        ''' Show the pending transactions bank statement lines.
+        :return: An action showing pending transactions bank statement lines.
+        '''
+        self.ensure_one()
+        account = self.account_online_account_id
+        pendings = account._retrieve_transactions(
+            date=fields.Datetime.now() - relativedelta(days=7),
+            transactions_type='pending',
+        )
+        if not pendings:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('No Pending Transactions'),
+                    'type': 'warning',
+                    'message': _('There are no pending transactions for this journal.'),
+                },
+            }
+
+        values = [{**pending, 'state': 'pending'} for pending in pendings]
+        pending_transactions = self.env['account.bank.statement.line.transient'].create(values)
+        return {
+            'name': _("Pending Transactions"),
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.bank.statement.line.transient',
+            'view_mode': 'list',
+            'views': [(False, 'list')],
+            'domain': [('id', 'in', pending_transactions.ids)],
+            'context': {
+                'has_manual_entries': False,
+                'is_fetch_before_creation': False,
+                'search_default_filter_posted': False,
+                'disable_import': True,
+            },
+        }
+
     @api.model
     def _toggle_asynchronous_fetching_cron(self):
         cron = self.env.ref('account_online_synchronization.online_sync_cron_waiting_synchronization', raise_if_not_found=False)
         if cron:
             cron.sudo().toggle(model=self._name, domain=[('account_online_account_id', '!=', False)])
+
+    def get_total_journal_amount(self):
+        # EXTENDS account_accountant
+        info_data = super().get_total_journal_amount()
+
+        available_balance = ''
+        if self.exists() and any(
+                company in self.company_id._accessible_branches() for company in self.env.companies):
+            if self.account_online_account_id.available_balance:
+                available_balance = formatLang(
+                    self.env,
+                    self.account_online_account_id.available_balance,
+                    currency_obj=self.currency_id or self.company_id.sudo().currency_id,
+                )
+        return {**info_data, 'available_balance_amount': available_balance}

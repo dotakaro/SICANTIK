@@ -41,9 +41,3 @@ class SaleOrder(models.Model):
                 # copy the spreadsheet, with all the revisions history
                 new_order.spreadsheet_ids = order.spreadsheet_ids.copy({"order_id": new_order.id})
         return sale_orders
-
-    def unlink(self):
-        for order in self:
-            if order.spreadsheet_ids:
-                order.spreadsheet_ids.unlink()
-        return super().unlink()

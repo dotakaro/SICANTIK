@@ -1,17 +1,10 @@
-/** @odoo-module **/
-
 import { rpc } from "@web/core/network/rpc";
 import { _t } from "@web/core/l10n/translation";
 import { user } from "@web/core/user";
 import { PDFIframe } from "./PDF_iframe";
 import { startSignItemNavigator } from "./sign_item_navigator";
-import { AlertDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import {
     SignNameAndSignatureDialog,
-    ThankYouDialog,
-    PublicSignerDialog,
-    SMSSignerDialog,
-    NextDirectSignDialog,
 } from "@sign/dialogs/dialogs";
 
 export class SignablePDFIframe extends PDFIframe {
@@ -67,7 +60,7 @@ export class SignablePDFIframe extends PDFIframe {
 
     /**
      * Modify the selected sign item of the corresponding radio set.
-     * @param {SignItem} signItem
+     * @param {SignItem} signItem 
      */
     handleRadioItemSelected(signItem) {
         const radio_set_id = signItem.data.radio_set_id;
@@ -112,23 +105,46 @@ export class SignablePDFIframe extends PDFIframe {
                 this.handleInput();
             }
             const optionDiv = signItemElement.querySelector(".o_sign_select_options_display");
-            optionDiv.addEventListener("click", (e) => {
-                if (e.target.classList.contains("o_sign_item_option")) {
-                    const option = e.target;
-                    const selectedValue = option.dataset.id;
-                    signItemElement.value = selectedValue;
-                    option.classList.add("o_sign_selected_option");
-                    option.classList.remove("o_sign_not_selected_option");
-                    const notSelected = optionDiv.querySelectorAll(
-                        `.o_sign_item_option:not([data-id='${selectedValue}'])`
-                    );
-                    [...notSelected].forEach((el) => {
-                        el.classList.remove("o_sign_selected_option");
-                        el.classList.add("o_sign_not_selected_option");
-                    });
-                    this.handleInput();
-                }
+            const selectElement = optionDiv.querySelector("#selection");
+
+            // Add an event listener to handle the selection change.
+            selectElement.addEventListener("change", (e) => {
+                const selectedOption = selectElement.options[selectElement.selectedIndex];
+                // Extract the data-id from the selected option.
+                const selectedValue = selectedOption.dataset.id;
+                // Update the value in the signItemElement.
+                signItemElement.value = selectedValue;
+
+                // Iterate through all options to update their classes.
+                [...selectElement.options].forEach((option) => {
+                    if (option.dataset.id === selectedValue) {
+                        option.classList.add("o_sign_selected_option");
+                        option.classList.remove("o_sign_not_selected_option");
+                    } else {
+                        option.classList.add("o_sign_not_selected_option");
+                        option.classList.remove("o_sign_selected_option");
+                    }
+                });
+                // Call the input handler function.
+                this.handleInput();
             });
+        }
+
+        if (type == "strikethrough") {
+            if (signItemElement.value) {
+                this.handleInput();
+            }
+            if(!signItemData.constant) {
+                signItemElement.addEventListener("click", (event) => {
+                    if (signItemElement.firstChild.classList.contains("o_sign_strikethrough_line_striked")) {
+                        signItemElement.firstChild.classList.remove("o_sign_strikethrough_line_striked");
+                        signItemElement.value = "non-striked";
+                    } else {
+                        signItemElement.firstChild.classList.add("o_sign_strikethrough_line_striked");
+                        signItemElement.value = "striked";
+                    }
+                });
+            }
         }
 
         signItemElement.addEventListener("input", this.handleInput.bind(this));
@@ -136,7 +152,9 @@ export class SignablePDFIframe extends PDFIframe {
 
     handleInput() {
         this.checkSignItemsCompletion();
-        this.navigator.setTip(_t("next"));
+        if(this.props.isDocumentUnsigned()) {
+            this.navigator.setTip(_t("next"));
+        }
     }
 
     /**
@@ -175,83 +193,13 @@ export class SignablePDFIframe extends PDFIframe {
         }
     }
 
-    /**
-     * Adjusts signature/initial size to fill the dimensions of the sign item box
-     * @param { String } data base64 image
-     * @param { HTMLElement } signatureItem
-     * @returns { Promise }
-     */
-    adjustSignatureSize(data, signatureItem) {
-        if (!data) {
-            return Promise.resolve(false);
-        }
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                const c = document.createElement("canvas");
-                if (
-                    !signatureItem.parentElement ||
-                    !signatureItem.parentElement.classList.contains("page")
-                ) {
-                    // checks if element is detached from pdf js
-                    this.refreshSignItems();
-                }
-                const { width: boxWidth, height: boxHeight } =
-                    signatureItem.getBoundingClientRect();
-                const imgHeight = img.height;
-                const imgWidth = img.width;
-                const ratioBoxWidthHeight = boxWidth / boxHeight;
-                const ratioImageWidthHeight = imgWidth / imgHeight;
-
-                const [canvasHeight, canvasWidth] =
-                    ratioBoxWidthHeight > ratioImageWidthHeight
-                        ? [imgHeight, imgHeight * ratioBoxWidthHeight]
-                        : [imgWidth / ratioBoxWidthHeight, imgWidth];
-
-                c.height = canvasHeight;
-                c.width = canvasWidth;
-
-                const ctx = c.getContext("2d");
-                const oldShadowColor = ctx.shadowColor;
-                ctx.shadowColor = "transparent";
-                ctx.drawImage(
-                    img,
-                    c.width / 2 - img.width / 2,
-                    c.height / 2 - img.height / 2,
-                    img.width,
-                    img.height
-                );
-                ctx.shadowColor = oldShadowColor;
-                resolve(c.toDataURL());
-            };
-            img.src = data;
-        });
-    }
-
-    fillItemWithSignature(signatureItem, image, frameData = false) {
-        signatureItem.dataset.signature = image;
-        signatureItem.replaceChildren();
-        const signHelperSpan = document.createElement("span");
-        signHelperSpan.classList.add("o_sign_helper");
-        signatureItem.append(signHelperSpan);
-        if (frameData && frameData.frame) {
-            signatureItem.dataset.frameHash = frameData.hash;
-            signatureItem.dataset.frame = frameData.frame;
-            const frameImage = document.createElement("img");
-            frameImage.src = frameData.frame;
-            frameImage.classList.add("o_sign_frame");
-            signatureItem.append(frameImage);
-        } else {
-            delete signatureItem.dataset.frame;
-        }
-        const signatureImage = document.createElement("img");
-        signatureImage.src = image;
-        signatureItem.append(signatureImage);
-    }
-
     closeDialog() {
         this.closeFn && this.closeFn();
         this.closeFn = false;
+    }
+
+    updateSignerName(name) {
+        this.signerName = name;
     }
 
     /**
@@ -291,7 +239,7 @@ export class SignablePDFIframe extends PDFIframe {
                 onConfirm: async () => {
                     if (!signature.isSignatureEmpty && signature.signatureChanged) {
                         const signatureName = signature.name;
-                        this.signerName = signatureName;
+                        this.props.updateSignerName(signatureName);
                         await frame.updateFrame();
                         const frameData = frame.getFrameImageSrc();
                         const signatureSrc = signature.getSignatureImage();
@@ -324,7 +272,7 @@ export class SignablePDFIframe extends PDFIframe {
                 },
                 onConfirmAll: async () => {
                     const signatureName = signature.name;
-                    this.signerName = signatureName;
+                    this.props.updateSignerName(signatureName);
                     await frame.updateFrame();
                     const frameData = frame.getFrameImageSrc();
                     const signatureSrc = signature.getSignatureImage();
@@ -377,6 +325,7 @@ export class SignablePDFIframe extends PDFIframe {
         for (const page in this.signItems) {
             Object.values(this.signItems[page]).forEach((signItem) => {
                 if (
+                    !signItem.data.constant &&
                     signItem.data.required &&
                     signItem.data.responsible === this.currentRole &&
                     !signItem.data.value
@@ -396,31 +345,15 @@ export class SignablePDFIframe extends PDFIframe {
             });
         }
 
-        itemsToSign.length ? this.hideBanner() : this.showBanner();
-        this.navigator.toggle(itemsToSign.length > 0);
+         // Updates the set of unsigned documents if is fully signed or any item gets unsigned
+        const documentsWithUnsignedItems = this.props.getDocumentsWithUnsignedItems();
+        if(itemsToSign.length=== 0) {
+            this.props.updateDocumentsWithUnsignedItems(this.props.documentId, false);
+        } else if(!documentsWithUnsignedItems.has(this.props.documentId)) {
+            this.props.updateDocumentsWithUnsignedItems(this.props.documentId, true);
+        }
+
         return itemsToSign;
-    }
-
-    showBanner() {
-        this.props.validateBanner.style.display = "block";
-        const an = this.props.validateBanner.animate(
-            { opacity: 1 },
-            { duration: 500, fill: "forwards" }
-        );
-        an.finished.then(() => {
-            if (this.env.isSmall) {
-                this.props.validateBanner.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                    inline: "center",
-                });
-            }
-        });
-    }
-
-    hideBanner() {
-        this.props.validateBanner.style.display = "none";
-        this.props.validateBanner.style.opacity = 0;
     }
 
     /**
@@ -443,7 +376,12 @@ export class SignablePDFIframe extends PDFIframe {
      * @returns {Object}
      */
     getContext(signItem) {
-        return super.getContext(signItem);
+        const context = super.getContext(signItem);
+        const type = this.signItemTypesById[signItem.type_id];
+        if (type.name === _t("Date")) {
+            context.placeholder = this.signInfo.get('dateFormat')?.toUpperCase();
+        }
+        return context;
     }
 
     /**
@@ -462,13 +400,16 @@ export class SignablePDFIframe extends PDFIframe {
             this,
             this.root.querySelector("#viewerContainer"),
             this.signItemTypesById,
-            this.env
+            this.env,
         );
+        this.navigator.toggle(this.props.signItems.length > 0);
         this.checkSignItemsCompletion();
 
         this.root.querySelector("#viewerContainer").addEventListener("scroll", () => {
             if (!this.navigator.state.isScrolling && this.navigator.state.started) {
-                this.navigator.setTip(_t("next"));
+                if(this.props.isDocumentUnsigned()) {
+                    this.navigator.setTip(_t("next"));
+                }
             }
         });
 
@@ -478,181 +419,18 @@ export class SignablePDFIframe extends PDFIframe {
             }
             this.navigator.goToNextSignItem();
         });
-
-        this.props.validateBanner
-            .querySelector(".o_validate_button")
-            .addEventListener("click", () => {
-                this.signDocument();
-            });
-    }
-
-    getMailFromSignItems() {
-        let mail = "";
-        for (const page in this.signItems) {
-            Object.values(this.signItems[page]).forEach(({ el }) => {
-                const childInput = el.querySelector("input");
-                const value = el.value || (childInput && childInput.value);
-                if (value && value.indexOf("@") >= 0) {
-                    mail = value;
-                }
-            });
-        }
-        return mail;
     }
 
     signDocument() {
-        this.props.validateBanner.setAttribute("disabled", true);
-        this.signatureInfo = { name: this.signerName || "", mail: this.getMailFromSignItems() };
-
-        [
-            this.signatureInfo.signatureValues,
-            this.signatureInfo.frameValues,
-            this.signatureInfo.newSignItems,
-        ] = this.getSignatureValuesFromConfiguration();
-        if (!this.signatureInfo.signatureValues) {
-            this.checkSignItemsCompletion();
-            this.dialog.add(AlertDialog, {
-                title: _t("Warning"),
-                body: _t("Some fields have still to be completed"),
-            });
-            this.props.validateBanner.removeAttribute("disabled");
-            return;
-        }
-        this.signatureInfo.hasNoSignature =
-            Object.keys(this.signatureInfo.signatureValues).length == 0 &&
-            Object.keys(this.signItems).length == 0;
-        this._signDocument();
+        this.props.signDocuments();
     }
 
     async _signDocument() {
-        this.props.validateButton.setAttribute("disabled", true);
-        if (this.signatureInfo.hasNoSignature) {
-            const signature = {
-                name: this.signerName || "",
-            };
-            this.closeFn = this.dialog.add(SignNameAndSignatureDialog, {
-                signature,
-                onConfirm: () => {
-                    this.signatureInfo.name = signature.name;
-                    this.signatureInfo.signatureValues = signature
-                        .getSignatureImage()
-                        .split(",")[1];
-                    this.signatureInfo.frameValues = [];
-                    this.signatureInfo.hasNoSignature = false;
-                    this.closeDialog();
-                    this._signDocument();
-                },
-                onCancel: () => {
-                    this.closeDialog();
-                },
-            });
-        } else if (this.props.isUnknownPublicUser) {
-            this.closeFn = this.dialog.add(
-                PublicSignerDialog,
-                {
-                    name: this.signatureInfo.name,
-                    mail: this.signatureInfo.mail,
-                    postValidation: async (requestID, requestToken, accessToken) => {
-                        this.signInfo.set({
-                            documentId: requestID,
-                            signRequestToken: requestToken,
-                            signRequestItemToken: accessToken,
-                        });
-                        this.props.requestID = requestID;
-                        this.props.requestToken = requestToken;
-                        this.props.accessToken = accessToken;
-                        if (this.props.coords) {
-                            await rpc(
-                                `/sign/save_location/${requestID}/${accessToken}`,
-                                this.props.coords
-                            );
-                        }
-                        this.props.isUnknownPublicUser = false;
-                        this._signDocument();
-                    },
-                },
-                {
-                    onClose: () => {
-                        this.props.validateButton.removeAttribute("disabled");
-                    },
-                }
-            );
-        } else if (this.props.authMethod) {
-            this.openAuthDialog();
-        } else {
-            this._sign();
-        }
-    }
-
-    _getRouteAndParams() {
-        const route = this.signatureInfo.smsToken
-            ? `/sign/sign/${encodeURIComponent(this.props.requestID)}/${encodeURIComponent(
-                  this.props.accessToken
-              )}/${encodeURIComponent(this.signatureInfo.smsToken)}`
-            : `/sign/sign/${encodeURIComponent(this.props.requestID)}/${encodeURIComponent(
-                  this.props.accessToken
-              )}`;
-
-        const params = {
-            signature: this.signatureInfo.signatureValues,
-            frame: this.signatureInfo.frameValues,
-            new_sign_items: this.signatureInfo.newSignItems,
-        };
-
-        return [route, params];
-    }
-
-    async _sign() {
-        const [route, params] = this._getRouteAndParams();
-        this.ui.block();
-        const response = await rpc(route, params).finally(() => this.ui.unblock());
-        this.props.validateButton.removeAttribute("disabled");
-        if (response.success) {
-            if (response.url) {
-                document.location.pathname = response.url;
-            } else {
-                this.disableItems();
-                // only available in backend
-                const nameList = this.signInfo.get("nameList");
-                if (nameList && nameList.length > 0) {
-                    this.dialog.add(NextDirectSignDialog);
-                } else {
-                    this.openThankYouDialog();
-                }
-            }
-            this.hideBanner();
-        } else {
-            if (response.sms) {
-                this.dialog.add(AlertDialog, {
-                    title: _t("Error"),
-                    body: _t(
-                        "Your signature was not submitted. Ensure the SMS validation code is correct."
-                    ),
-                });
-            } else {
-                this.dialog.add(
-                    AlertDialog,
-                    {
-                        title: _t("Error"),
-                        body: _t(
-                            "Sorry, an error occurred, please try to fill the document again."
-                        ),
-                    },
-                    {
-                        onClose: () => {
-                            window.location.reload();
-                        },
-                    }
-                );
-            }
-            this.props.validateButton.setAttribute("disabled", true);
-        }
     }
 
     /**
      * Gets the signature values from the sign items
      * Gets the frame values
-     * Gets the sign items that were added in edit while signing
      * @returns { Array } [signature values, frame values, added sign items]
      */
     getSignatureValuesFromConfiguration() {
@@ -684,6 +462,7 @@ export class SignablePDFIframe extends PDFIframe {
                     newSignItems[item.data.id] = {
                         type_id: item.data.type_id,
                         required: item.data.required,
+                        constant: item.data.constant,
                         name: item.data.name || false,
                         option_ids: item.data.option_ids,
                         responsible_id: responsible,
@@ -697,7 +476,7 @@ export class SignablePDFIframe extends PDFIframe {
             }
         }
 
-        return [signatureValues, frameValues, newSignItems];
+        return [signatureValues, frameValues];
     }
 
     getSignatureValueFromElement(item) {
@@ -728,7 +507,10 @@ export class SignablePDFIframe extends PDFIframe {
                 } else {
                     return "off";
                 }
-            }
+            },
+            strikethrough: () => {
+                return item.el.value;
+            },
         };
         const type = item.data.type;
         return type in types ? types[type]() : types["text"]();
@@ -774,45 +556,5 @@ export class SignablePDFIframe extends PDFIframe {
         for (const item of Array.from(items)) {
             item.classList.add("o_sign_sign_item_pdfview");
         }
-    }
-
-    openThankYouDialog() {
-        this.dialog.add(ThankYouDialog, {
-            redirectURL: this.props.redirectURL,
-            redirectURLText: this.props.redirectURLText,
-        });
-    }
-
-    async openAuthDialog() {
-        const authDialog = await this.getAuthDialog();
-        if (authDialog.component) {
-            this.closeFn = this.dialog.add(authDialog.component, authDialog.props, {
-                onClose: () => {
-                    this.props.validateButton.removeAttribute("disabled");
-                },
-            });
-        } else {
-            this._sign();
-        }
-    }
-
-    async getAuthDialog() {
-        if (this.props.authMethod === "sms" && !this.signatureInfo.smsToken) {
-            const credits = await rpc("/sign/has_sms_credits");
-            if (credits) {
-                return {
-                    component: SMSSignerDialog,
-                    props: {
-                        signerPhone: this.props.signerPhone,
-                        postValidation: (code) => {
-                            this.signatureInfo.smsToken = code;
-                            return this._signDocument();
-                        },
-                    },
-                };
-            }
-            return false;
-        }
-        return false;
     }
 }

@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { registry } from "@web/core/registry";
@@ -28,8 +26,6 @@ export class HierarchyKanbanRecord extends KanbanRecord {
 
     setup() {
         super.setup();
-
-        this.dialogService = useService("dialog");
 
         if (this.props.is_readonly !== undefined) {
             this.props.readonly = this.props.is_readonly;
@@ -76,31 +72,6 @@ export class HierarchyKanbanRecord extends KanbanRecord {
         );
     }
 
-    /**
-     * Simply adds a confirmation prompt when deleting a marketing.activity record that has children
-     * activities. Since the ORM will then perform a cascade deletion of children.
-     */
-    triggerAction(params) {
-        const { group, list, record } = this.props;
-        const listOrGroup = group || list;
-        const { type } = params;
-        const directChildren = list.records.filter(
-            (listRecord) => listRecord.data.parent_id && listRecord.data.parent_id[0] == record.resId
-        );
-
-        if (type === "delete" && !listOrGroup.deleteRecords &&
-            directChildren && directChildren.length !== 0) {
-            this.dialogService.add(ConfirmationDialog, {
-                body: _t("Deleting this activity will delete ALL its children activities. Are you sure?"),
-                confirmLabel: _t("Delete"),
-                confirm: () => super.triggerAction(...arguments),
-                cancel: () => {},
-            });
-        } else {
-            super.triggerAction(...arguments);
-        }
-    }
-
     //--------------------------------------------------------------------------
     // Business
     //--------------------------------------------------------------------------
@@ -112,7 +83,7 @@ export class HierarchyKanbanRecord extends KanbanRecord {
      * @param {MouseEvent} ev
      */
     async onAddChildActivityClick(ev) {
-        await this.props.list.model.root.save();
+        await this.props.record.model.root.save();
 
         const context = {
             default_parent_id: this.props.record.resId,
@@ -229,6 +200,7 @@ export class HierarchyKanbanRenderer extends KanbanRenderer {
     setup() {
         super.setup();
 
+        this.dialogService = useService("dialog");
         const rootEl = this.props.archInfo.templateDocs["card"].firstElementChild;
         const rootTemplate = createElement("t", { "t-name": "root" });
         append(rootTemplate, rootEl);
@@ -248,6 +220,27 @@ export class HierarchyKanbanRenderer extends KanbanRenderer {
         this.props.archInfo.templateDocs["card"] = mainTemplate;
 
         this.rootRef = useRef("root");
+    }
+
+    /**
+     * Simply adds a confirmation prompt when deleting a marketing.activity record that has children
+     * activities. Since the ORM will then perform a cascade deletion of children.
+     */
+    deleteRecord(record) {
+        const directChildren = this.props.list.records.filter(
+            (listRecord) => listRecord.data.parent_id && listRecord.data.parent_id.id == record.resId
+        );
+
+        if (directChildren.length !== 0) {
+            this.dialogService.add(ConfirmationDialog, {
+                body: _t("Deleting this activity will delete ALL its children activities. Are you sure?"),
+                confirmLabel: _t("Delete"),
+                confirm: () => this.props.deleteRecord(record),
+                cancel: () => {},
+            });
+        } else {
+            return this.props.deleteRecord(record);
+        }
     }
 
     getGroupsOrRecords() {
@@ -278,7 +271,7 @@ export class HierarchyKanbanRenderer extends KanbanRenderer {
         records.forEach((activityRecord) => {
             const parentId = activityRecord.data.parent_id;
             if (parentId) {
-                parentMap[activityRecord.resId] = parentId[0];
+                parentMap[activityRecord.resId] = parentId.id;
             }
         });
 
@@ -294,7 +287,7 @@ export class HierarchyKanbanRenderer extends KanbanRenderer {
                 return []
             } else if (!record.data.parent_id && parentId) {
                 return [];
-            } else if (record.data.parent_id && record.data.parent_id[0] !== parentId) {
+            } else if (record.data.parent_id && record.data.parent_id.id !== parentId) {
                 return [];
             }
 

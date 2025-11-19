@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { registry } from "@web/core/registry";
 import { insertText } from "@web/../tests/utils";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
@@ -34,6 +32,9 @@ registry.category('web_tour.tours').add('knowledge_article_comments', {
             run: "click",
         }, {
             trigger: '.o-mail-Thread :contains("Marc, can you check this?")',
+        }, {
+            content: "Check that composer doesn't have paper plane button but has a send button",
+            trigger: ".o-mail-Composer:has(button.o-mail-Composer-send):not(:has(i.fa-paper-plane-o))",
         },
         ...addAnswerComment("Sure thing boss, all done!"),
         {
@@ -57,6 +58,9 @@ registry.category('web_tour.tours').add('knowledge_article_comments', {
                 setSelection(...boundariesIn(this.anchor));
             },
         }, { // Trigger comment creation with the editor toolbar
+            trigger: '.o-we-toolbar button[name="expand_toolbar"]',
+            run: "click",
+        }, {
             trigger: '.o-we-toolbar button[name="comments"]',
             run: "click",
         }, {

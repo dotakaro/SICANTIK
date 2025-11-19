@@ -18,8 +18,8 @@ class TestPayrollRightToLegalLeaves(TestPayrollCommon):
 
         cls.paid_time_off_type = cls.env['hr.leave.type'].create({
             'name': 'Paid Time Off',
-            'requires_allocation': 'yes',
-            'employee_requests': 'no',
+            'requires_allocation': True,
+            'employee_requests': False,
             'allocation_validation_type': 'hr',
             'leave_validation_type': 'both',
             'responsible_ids': [Command.link(cls.env.ref('base.user_admin').id)],
@@ -93,7 +93,7 @@ class TestPayrollRightToLegalLeaves(TestPayrollCommon):
 
         view = wizard.generate_allocation()
         allocation = self.env['hr.leave.allocation'].search(view['domain'])
-        allocation.action_validate()
+        allocation.action_approve()
 
         self.assertEqual(allocation.number_of_days, 20)
         self.assertEqual(allocation.max_leaves_allocated, 152)
@@ -133,7 +133,7 @@ class TestPayrollRightToLegalLeaves(TestPayrollCommon):
 
         view = wizard.generate_allocation()
         allocation = self.env['hr.leave.allocation'].search(view['domain'])
-        allocation.action_validate()
+        allocation.action_approve()
 
         self.assertEqual(allocation.number_of_days, 20)
         self.assertEqual(allocation.max_leaves_allocated, 152)
@@ -146,7 +146,7 @@ class TestPayrollRightToLegalLeaves(TestPayrollCommon):
             'request_date_from': date(2018, 2, 1),
             'request_date_to': date(2018, 2, 5),
         })
-        leave.action_validate()
+        leave.action_approve()
 
         # Credit time
         wizard = self.env['l10n_be.hr.payroll.schedule.change.wizard'].with_context(allowed_company_ids=self.belgian_company.ids, active_id=employee_test_current_contract.id).new({
@@ -178,15 +178,16 @@ class TestPayrollRightToLegalLeaves(TestPayrollCommon):
         """
         employee_test_first_contract = self.test_contracts[-1]
         employee_test_first_contract.write({
-            'date_end': date(2017, 5, 31),
-            'state': 'close'
+            'contract_date_end': date(2017, 5, 31)
         })
+        self.env.flush_all()  # Otherwise write cannot be seen by the query in _compute_alloc_employee_ids
         self.test_contracts |= employee_test_first_contract.copy({
             'name': "Employee Test's Contract",
             'employee_id': self.employee_test.id,
             'resource_calendar_id': self.resource_calendar_24_hours_per_week_5_days_per_week.id,
-            'date_start': date(2017, 6, 1),
-            'date_end': date(2017, 7, 31),
+            'date_version': date(2017, 6, 1),
+            'contract_date_start': date(2017, 6, 1),
+            'contract_date_end': date(2017, 7, 31),
             'wage': employee_test_first_contract.wage / 24 * 38
         })
 
@@ -194,21 +195,21 @@ class TestPayrollRightToLegalLeaves(TestPayrollCommon):
             'name': "Employee Test's Contract",
             'employee_id': self.employee_test.id,
             'resource_calendar_id': self.resource_calendar_20_hours_per_week.id,
-            'date_start': date(2017, 8, 1),
-            'date_end': date(2017, 12, 31),
+            'date_version': date(2017, 8, 1),
+            'contract_date_start': date(2017, 8, 1),
+            'contract_date_end': date(2017, 12, 31),
             'wage': employee_test_first_contract.wage / 20 * 38
         })
-        self.test_contracts.write({'state': 'close'})
 
         employee_test_current_contract = employee_test_first_contract.copy({
             'name': "Employee Test's Contract",
             'employee_id': self.employee_test.id,
             'resource_calendar_id': self.resource_calendar_20_hours_per_week.id,
-            'date_start': date(2018, 1, 1),
-            'date_end': False,
+            'date_version': date(2018, 1, 1),
+            'contract_date_start': date(2018, 1, 1),
+            'contract_date_end': False,
             'wage': employee_test_first_contract.wage / 20 * 38
         })
-        employee_test_current_contract.write({'state': 'open'})
         self.test_contracts |= employee_test_current_contract
 
         wizard = self.env['hr.payroll.alloc.paid.leave'].new({
@@ -221,7 +222,7 @@ class TestPayrollRightToLegalLeaves(TestPayrollCommon):
 
         view = wizard.generate_allocation()
         allocation = self.env['hr.leave.allocation'].search(view['domain'])
-        allocation.action_validate()
+        allocation.action_approve()
 
         self.assertEqual(allocation.number_of_days, 10)
         self.assertAlmostEqual(allocation.max_leaves_allocated, 15 * 7.6, places=0)
@@ -235,7 +236,7 @@ class TestPayrollRightToLegalLeaves(TestPayrollCommon):
             'date_to': date(2018, 2, 3),
             'number_of_days': 1.5
         })
-        leave.action_validate()
+        leave.action_approve()
 
         # Credit time
         wizard = self.env['l10n_be.hr.payroll.schedule.change.wizard'].with_context(allowed_company_ids=self.belgian_company.ids, active_id=employee_test_current_contract.id).new({

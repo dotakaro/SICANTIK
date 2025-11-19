@@ -1,7 +1,7 @@
 from odoo import api, fields, models, _
 
 
-class ManufacturingOrder(models.Model):
+class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
     move_raw_line_ids = fields.One2many('stock.move.line', compute='_compute_move_raw_line_ids')
@@ -74,9 +74,8 @@ class ManufacturingOrder(models.Model):
         # Fetch all implied products in `self`
         products = self.product_id | (self.move_raw_ids + self.move_byproduct_ids).product_id
         moves = self.move_raw_ids | self.move_byproduct_ids
-        packagings = products.packaging_ids
 
-        uoms = products.uom_id | move_lines.product_uom_id
+        uoms = products.uom_id | move_lines.product_uom_id | products.uom_ids
         # If UoM setting is active, fetch all UoM's data.
         if self.env.user.has_group('uom.group_uom'):
             uoms |= self.env['uom.uom'].search([])
@@ -101,7 +100,6 @@ class ManufacturingOrder(models.Model):
                 "stock.move": moves.read(moves._get_fields_stock_barcode(), load=False),
                 "stock.move.line": move_lines.read(move_lines._get_fields_stock_barcode(), load=False),
                 "product.product": products.read(products._get_fields_stock_barcode(), load=False),
-                "product.packaging": packagings.read(packagings._get_fields_stock_barcode(), load=False),
                 "res.partner": owners.read(owners._get_fields_stock_barcode(), load=False),
                 "stock.location": locations.read(locations._get_fields_stock_barcode(), load=False),
                 "stock.package.type": package_types.read(package_types._get_fields_stock_barcode(), False),

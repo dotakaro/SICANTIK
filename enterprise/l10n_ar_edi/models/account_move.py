@@ -21,7 +21,6 @@ WS_DATE_FORMAT = {'wsfe': '%Y%m%d', 'wsfex': '%Y%m%d', 'wsbfe': '%Y%m%d'}
 
 
 class AccountMove(models.Model):
-
     _inherit = "account.move"
 
     def _auto_init(self):

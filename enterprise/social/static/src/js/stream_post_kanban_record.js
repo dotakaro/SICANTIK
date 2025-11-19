@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { KanbanRecord } from '@web/views/kanban/kanban_record';
 
 export const CANCEL_GLOBAL_CLICK = ["a", ".o_social_subtle_btn", "img"].join(",");
@@ -27,9 +25,10 @@ export class StreamPostKanbanRecord extends KanbanRecord {
     /**
      * Calculate the new likes count and then update the record.
      */
-    async _updateLikesCount(userLikeField, likesCountField) {
-        const userLikes = this.props.record.data[userLikeField];
-        let likesCount = this.props.record.data[likesCountField];
+    async _updateLikesCount(userLikeField, likesCountField, record = null) {
+        record = record || this.props.record;
+        const userLikes = record.data[userLikeField];
+        let likesCount = record.data[likesCountField];
         if (userLikes) {
             if (likesCount > 0) {
                 likesCount--;
@@ -39,12 +38,12 @@ export class StreamPostKanbanRecord extends KanbanRecord {
         }
 
         // Update the record with the "user liked" and likes count values.
-        await this.props.record.update({
+        await record.update({
             [userLikeField]: !userLikes,
             [likesCountField]: likesCount,
             ...this._prepareLikeAdditionnalValues(likesCount, !userLikes),
         });
-        await this.props.record.save();
+        await record.save();
     }
 
     _prepareLikeAdditionnalValues(likesCount, userLikes) {

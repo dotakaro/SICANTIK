@@ -2,7 +2,7 @@
 {
     'name': "Spreadsheet dashboard for manufacturing",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Productivity/Dashboard',
     'summary': 'Spreadsheet',
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'mrp_account_enterprise'],
@@ -11,5 +11,6 @@
     ],
     'installable': True,
     'auto_install': ['mrp_account_enterprise'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

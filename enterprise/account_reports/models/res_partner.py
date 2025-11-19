@@ -5,26 +5,14 @@ from odoo import api, fields, models, _
 
 
 class ResPartner(models.Model):
-    _name = 'res.partner'
     _inherit = 'res.partner'
 
     account_represented_company_ids = fields.One2many('res.company', 'account_representative_id')
 
-    def _get_followup_responsible(self):
+    def _get_followup_responsible(self, multiple_responsible=False):
         return self.env.user
 
-    def open_partner_ledger(self):
-        # Deprecated, will be removed in master
-        action = self.env["ir.actions.actions"]._for_xml_id("account_reports.action_account_report_partner_ledger")
-        action['params'] = {
-            'options': {'partner_ids': self.ids, 'unfold_all': len(self.ids) == 1},
-            'ignore_session': True,
-        }
-        return action
-
     def open_customer_statement(self):
-        if not self.env.ref('account_reports.customer_statement_report', raise_if_not_found=False):
-            return self.open_partner_ledger()
         action = self.env["ir.actions.actions"]._for_xml_id("account_reports.action_account_report_customer_statement")
         action['params'] = {
             'options': {
@@ -69,9 +57,6 @@ class ResPartner(models.Model):
                 'partner_ids': self.ids,
                 'unfold_all': True,
                 'unreconciled': True,
-                # The following two options are Deprecated, will be removed in master
-                'hide_account': True,
-                'hide_debit_credit': True,
                 'all_entries': False,
             })
         attachment_file = report.export_to_pdf(options)

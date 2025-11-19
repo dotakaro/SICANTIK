@@ -8,7 +8,7 @@ from odoo.tools.zeep.helpers import serialize_object
 
 from odoo import api, models, fields, _, tools
 from odoo.exceptions import UserError
-from odoo.tools import pdf, float_repr, format_list
+from odoo.tools import pdf, float_repr
 from odoo.tools.safe_eval import const_eval
 
 from .fedex_request import FedexRequest, _convert_curr_iso_fdx, _convert_curr_fdx_iso
@@ -47,7 +47,7 @@ With the above example, the AdditionalInformation of each piece will be updated.
 More info on https://www.fedex.com/en-us/developer/web-services/process.html#documentation"""
 
 
-class ProviderFedex(models.Model):
+class DeliveryCarrier(models.Model):
     _inherit = 'delivery.carrier'
 
     delivery_type = fields.Selection(selection_add=[
@@ -115,14 +115,14 @@ class ProviderFedex(models.Model):
     fedex_extra_data_return_request = fields.Text('Extra data for return (legacy)', help=HELP_EXTRA_DATA)
 
     def _compute_can_generate_return(self):
-        super(ProviderFedex, self)._compute_can_generate_return()
+        super()._compute_can_generate_return()
         for carrier in self:
             if not carrier.can_generate_return:
                 if carrier.delivery_type == 'fedex':
                     carrier.can_generate_return = True
 
     def _compute_supports_shipping_insurance(self):
-        res = super(ProviderFedex, self)._compute_supports_shipping_insurance()
+        res = super()._compute_supports_shipping_insurance()
         for carrier in self:
             if carrier.delivery_type == 'fedex':
                 carrier.supports_shipping_insurance = True
@@ -320,11 +320,16 @@ class ProviderFedex(models.Model):
 
                     carrier_price = self._get_request_price(response['price'], order, order_currency)
 
-                    logmessage = Markup(_("Shipment created into Fedex<br/>"
-                                          "<b>Tracking Numbers:</b> %(tracking_numbers)s<br/>"
-                                          "<b>Packages:</b> %(packages)s",
-                                          tracking_numbers=format_list(self.env, carrier_tracking_refs),
-                                          packages=format_list(self.env, [pl[0] for pl in package_labels])))
+                    logmessage = _(
+                        "Shipment created into Fedex %(line_break)s"
+                        "%(bold_start)s Tracking Numbers: %(bold_end)s %(tracking_numbers)s %(line_break)s"
+                        "%(bold_start)s Packages: %(bold_end)s %(packages)s",
+                        tracking_numbers=carrier_tracking_refs,
+                        packages=[pl[0] for pl in package_labels],
+                        line_break=Markup("<br>"),
+                        bold_start=Markup("<b>"),
+                        bold_end=Markup("</b>"),
+                    )
                     if self.fedex_label_file_type != 'PDF':
                         attachments = [('%s-%s.%s' % (self._get_delivery_label_prefix(), pl[0], self.fedex_label_file_type), pl[1]) for pl in package_labels]
                     if self.fedex_label_file_type == 'PDF':

@@ -1,26 +1,10 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import * as tourUtils from '@website_sale/js/tours/tour_utils';
 
 registry.category("web_tour.tours").add('shop_buy_rental_product', {
     url: '/shop',
     steps: () => [
-        {
-            content: "Search computer write text",
-            trigger: 'form input[name="search"]',
-            run: "edit computer",
-        },
-        {
-            content: "Search computer click",
-            trigger: 'form:has(input[name="search"]) .oe_search_button',
-            run: "click",
-        },
-        {
-            content: "Select computer",
-            trigger: '.oe_product_cart:first a:contains("Computer")',
-            run: "click",
-        },
+        ...tourUtils.searchProduct("computer", { select: true }),
         {
             content: "Check if the default data is in the date picker input",
             trigger: '.o_daterange_picker[data-has-default-dates=true]',
@@ -32,33 +16,28 @@ registry.category("web_tour.tours").add('shop_buy_rental_product', {
         },
         {
             content: "Pick start time",
-            trigger: '.o_time_picker_select:eq(0)',
-            run: "select 8",
+            trigger: '.o_time_picker_input:eq(0)',
+            run: "edit 8:00",
         },
         {
             content: "Pick end time",
-            trigger: '.o_time_picker_select:eq(2)',
-            run: "select 12",
-        },
-        {
-            content: "Apply change",
-            trigger: '.o_datetime_buttons button.o_apply',
-            run: "click",
+            trigger: '.o_time_picker_input:eq(1)',
+            run: "edit 12:00 && press Enter",
         },
         {
             content: "Add one quantity",
-            trigger: '.css_quantity a.js_add_cart_json i.fa-plus',
+            trigger: '.css_quantity a.js_add_cart_json i.oi-plus',
             run: "click",
         },
         {
             content: "click on add to cart",
-            trigger: '#product_detail form[action^="/shop/cart/update"] #add_to_cart',
+            trigger: '#product_detail form #add_to_cart',
             run: "click",
         },
         tourUtils.goToCart({quantity: 2}),
         {
             content: "Verify there is a Computer",
-            trigger: '#cart_products div a h6:contains("Computer")',
+            trigger: '#cart_products div h6:contains("Computer")',
         },
         {
             content: "Verify there are 2 quantity of Computers",

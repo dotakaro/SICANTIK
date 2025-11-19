@@ -19,13 +19,16 @@ class TestHrRecruitmentSign(HttpCase):
             'name': 'test_applicant_contract.pdf',
         })
 
-        cls.applicant = cls.env['hr.applicant'].create({
-            'candidate_id': cls.env['hr.candidate'].create({'partner_name': 'Caped Baldy'}).id,
-        })
+        cls.applicant = cls.env['hr.applicant'].create({'partner_name': 'Caped Baldy'})
+
         cls.template = cls.env['sign.template'].create({
             'name': 'recruitment test template',
-            'attachment_id': cls.attachment.id,
         })
+        cls.document = cls.env['sign.document'].create({
+            'attachment_id': cls.attachment.id,
+            'template_id': cls.template.id,
+        })
+
         cls.env['sign.item'].create([
             {
                 'type_id': cls.env.ref('sign.sign_item_type_text').id,
@@ -34,7 +37,7 @@ class TestHrRecruitmentSign(HttpCase):
                 'page': 1,
                 'posX': 0.273,
                 'posY': 0.158,
-                'template_id': cls.template.id,
+                'document_id': cls.document.id,
                 'width': 0.150,
                 'height': 0.015,
             }
@@ -51,9 +54,7 @@ class TestHrRecruitmentSign(HttpCase):
             'email': self.applicant.email_from,
         })
         wizard = self.env['hr.recruitment.sign.document.wizard'].create({
-            'applicant_id': self.applicant.id,
-            'partner_id': self.applicant.partner_id.id,
-            'partner_name': self.applicant.partner_name,
+            'applicant_ids': self.applicant.ids,
             'sign_template_ids': self.template,
             'applicant_role_id': self.env.ref('sign.sign_item_role_customer').id,
             'subject': 'Signature Request Test',

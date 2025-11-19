@@ -19,20 +19,21 @@ class TestSubscriptionStockCommon(TestSubscriptionCommon, ValuationReconciliatio
         SaleOrder = cls.env['sale.order']
         Product = cls.env['product.product']
 
-        cls.uom_unit = cls.env.ref('uom.product_uom_unit')
-
-        cls.plan_3_months = cls.env['sale.subscription.plan'].create({'billing_period_value': 3, 'billing_period_unit': 'month'})
+        cls.plan_3_months = cls.env['sale.subscription.plan'].create({
+            'billing_period_value': 3,
+            'billing_period_unit': 'month',
+            'sequence': 12,
+        })
 
         # Test user dedicated to avoid sharing moves and batches
         TestUsersEnv = cls.env['res.users'].with_context({'no_reset_password': True})
-        group_portal_id = cls.env.ref('base.group_portal').id
         cls.country_belgium = cls.env.ref('base.be')
         cls.user_portal2 = TestUsersEnv.create({
             'name': 'Beatrice Portal 2',
             'login': 'Beatrice2',
             'country_id': cls.country_belgium.id,
             'email': 'beatrice.employee2@example.com',
-            'groups_id': [(6, 0, [group_portal_id])],
+            'group_ids': [Command.set(cls.group_portal.ids)],
             'property_account_payable_id': cls.account_payable.id,
             'property_account_receivable_id': cls.account_receivable.id,
             'company_id': cls.company_data['company'].id,
@@ -43,23 +44,13 @@ class TestSubscriptionStockCommon(TestSubscriptionCommon, ValuationReconciliatio
         pricing_commands = [
             Command.create({
                 'plan_id': cls.plan_month.id,
-                'price': 45,
+                'fixed_price': 45,
             }),
             Command.create({
                 'plan_id': cls.plan_3_months.id,
-                'price': 50,
+                'fixed_price': 50,
             })
         ]
-
-        cls.pricing_1month = cls.env['sale.subscription.pricing'].create({
-            'plan_id': cls.plan_month.id,
-            'price': 45,
-        })
-
-        cls.pricing_3month = cls.env['sale.subscription.pricing'].create({
-            'plan_id': cls.plan_3_months.id,
-            'price': 50,
-        })
 
         # Product
 
@@ -70,7 +61,7 @@ class TestSubscriptionStockCommon(TestSubscriptionCommon, ValuationReconciliatio
             'uom_id': cls.uom_unit.id,
             'invoice_policy': 'order',
             'recurring_invoice': True,
-            'product_subscription_pricing_ids': pricing_commands,
+            'subscription_rule_ids': pricing_commands,
         })
 
         cls.sub_product_order_2 = Product.create({
@@ -80,7 +71,7 @@ class TestSubscriptionStockCommon(TestSubscriptionCommon, ValuationReconciliatio
             'uom_id': cls.uom_unit.id,
             'invoice_policy': 'order',
             'recurring_invoice': True,
-            'product_subscription_pricing_ids': pricing_commands,
+            'subscription_rule_ids': pricing_commands,
         })
 
         cls.sub_product_delivery = Product.create({
@@ -90,7 +81,7 @@ class TestSubscriptionStockCommon(TestSubscriptionCommon, ValuationReconciliatio
             'uom_id': cls.uom_unit.id,
             'invoice_policy': 'delivery',
             'recurring_invoice': True,
-            'product_subscription_pricing_ids': pricing_commands,
+            'subscription_rule_ids': pricing_commands,
         })
 
         cls.product_non_recurring = Product.create({
@@ -108,11 +99,10 @@ class TestSubscriptionStockCommon(TestSubscriptionCommon, ValuationReconciliatio
             'is_subscription': True,
             'partner_id': cls.user_portal.partner_id.id,
             'plan_id': cls.plan_month.id,
-            'pricelist_id': cls.company_data['default_pricelist'].id,
             'order_line': [Command.create({
                 'product_id': cls.sub_product_order.id,
                 'product_uom_qty': 1,
-                'tax_id': [Command.clear()],
+                'tax_ids': [Command.clear()],
             })]
         })
 
@@ -121,11 +111,10 @@ class TestSubscriptionStockCommon(TestSubscriptionCommon, ValuationReconciliatio
             'is_subscription': True,
             'partner_id': cls.user_portal.partner_id.id,
             'plan_id': cls.plan_month.id,
-            'pricelist_id': cls.company_data['default_pricelist'].id,
             'order_line': [Command.create({
                 'product_id': cls.sub_product_delivery.id,
                 'product_uom_qty': 1,
-                'tax_id': [Command.clear()],
+                'tax_ids': [Command.clear()],
             })]
         })
         cls.context = {
@@ -139,8 +128,8 @@ class TestSubscriptionStockCommon(TestSubscriptionCommon, ValuationReconciliatio
         # cls.subscription_delivery._compute_is_deferred()
 
         with freeze_time("2022-03-02"):
-            cls.subscription_order.write({'start_date': fields.date.today(), 'next_invoice_date': False})
-            cls.subscription_delivery.write({'start_date': fields.date.today(), 'next_invoice_date': False})
+            cls.subscription_order.write({'start_date': fields.Date.today(), 'next_invoice_date': False})
+            cls.subscription_delivery.write({'start_date': fields.Date.today(), 'next_invoice_date': False})
             cls.subscription_order.action_confirm()
             cls.subscription_delivery.action_confirm()
             cls.subscription_order.picking_ids.move_ids.write({'quantity': cls.subscription_order.order_line.product_uom_qty, 'picked': True})

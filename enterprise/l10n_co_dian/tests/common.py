@@ -12,6 +12,7 @@ import uuid
 from odoo import Command
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.tools import file_open
+from odoo.addons.l10n_co_dian.models.res_partner import ResPartner
 from odoo.addons.l10n_co_edi.models.res_partner import FINAL_CONSUMER_VAT
 
 
@@ -23,7 +24,7 @@ class TestCoDianCommon(AccountTestInvoicingCommon):
         super().setUpClass()
 
         cls.frozen_today = datetime(year=2024, month=1, day=30)
-        cls.document_path = 'odoo.addons.l10n_co_dian.models.l10n_co_dian_document.L10nCoDianDocument'
+        cls.document_path = 'odoo.addons.l10n_co_dian.models.l10n_co_dian_document.L10n_Co_DianDocument'
         cls.utils_path = 'odoo.addons.l10n_co_dian.xml_utils'
 
         with freeze_time(cls.frozen_today):
@@ -163,6 +164,15 @@ class TestCoDianCommon(AccountTestInvoicingCommon):
             **kwargs,
         })
 
+    def _generate_xml(self, invoice, with_error=False):
+        with self._disable_get_acquirer_call():
+            result = self.env['account.edi.xml.ubl_dian']._export_invoice(invoice)
+
+        if with_error:
+            return result
+        else:
+            return result[0]
+
     def _assert_document_dian(self, xml, file):
         expected_dian = self._read_file(file, 'rb')
         self.assertXmlTreeEqual(
@@ -187,7 +197,7 @@ class TestCoDianCommon(AccountTestInvoicingCommon):
             'res_id': invoice.id,
             'res_model': 'account.move',
         })
-        invoice.message_post(attachment_ids=[attachment.id])
+        invoice.message_post(message_type='comment', attachment_ids=[attachment.id])
 
     def _assert_imported_invoice_from_file(self, subfolder, filename, invoice_vals):
         """ Create an empty account.move, update the xml file, and then check the invoice values. """
@@ -226,10 +236,14 @@ class TestCoDianCommon(AccountTestInvoicingCommon):
     def _mock_get_status(self):
         return patch(f'{self.document_path}._get_status', return_value=self._mocked_response('GetStatus_invoice.xml', 200))
 
+    def _disable_get_acquirer_call(self):
+        return patch.object(ResPartner, attribute='_l10n_co_dian_call_get_acquirer', return_value=dict())
+
     def _mock_send_and_print(self, move, response_file, response_code=200):
         with (
             self._mock_get_status(),
             patch(f'{self.utils_path}._build_and_send_request', return_value=self._mocked_response(response_file, response_code)),
+            self._disable_get_acquirer_call(),
         ):
             self.env['account.move.send.wizard'] \
                 .with_context(active_model=move._name, active_ids=move.ids) \

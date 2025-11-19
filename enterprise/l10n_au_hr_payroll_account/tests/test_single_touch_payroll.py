@@ -5,11 +5,12 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from contextlib import closing
 from freezegun import freeze_time
+from psycopg2.errors import UniqueViolation
 
-from odoo import fields, Command
+from odoo import fields, Command, tools
 from odoo.tests import tagged, Form
 from odoo.tools import file_path
-from odoo.exceptions import ValidationError, MissingError
+from odoo.exceptions import ValidationError, MissingError, UserError
 from .common import L10nPayrollAccountCommon
 from odoo.addons.l10n_au_hr_payroll.tests.test_unused_leaves import TestPayrollUnusedLeaves
 
@@ -20,7 +21,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.env.user.groups_id |= cls.env.ref('hr.group_hr_manager')
+        cls.env.user.group_ids |= cls.env.ref('hr.group_hr_manager') + cls.env.ref("hr_holidays.group_hr_holidays_manager")
         cls.env['l10n_au.stp'].search([]).unlink()
         cls.env['ir.sequence'].create({
             'name': 'STP Sequence',
@@ -42,14 +43,14 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
             'company_id': cls.company.id,
             'l10n_au_leave_type': 'long_service',
             'leave_validation_type': 'no_validation',
-            'work_entry_type_id': cls.env.ref('l10n_au_hr_payroll.l10n_au_work_entry_long_service_leave').id,
+            'work_entry_type_id': cls.env.ref('hr_work_entry.l10n_au_work_entry_type_long_service_leave').id,
         })
         cls.annual = cls.env['hr.leave.type'].create({
             'name': 'Annual Leave',
             'company_id': cls.company.id,
             'l10n_au_leave_type': 'annual',
             'leave_validation_type': 'no_validation',
-            'work_entry_type_id': cls.env.ref('l10n_au_hr_payroll.l10n_au_work_entry_paid_time_off').id,
+            'work_entry_type_id': cls.env.ref('hr_work_entry.l10n_au_work_entry_type_paid_time_off').id,
         })
 
     allocate_leaves = TestPayrollUnusedLeaves.create_leaves
@@ -96,17 +97,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
             }
         )
 
-        payslip_employee = (
-            self.env["hr.payslip.employees"]
-            .create(
-                {
-                    "employee_ids": [
-                        Command.set(employee_ids.ids)
-                    ]
-                }
-            )
-        )
-        payslip_employee.with_context(active_id=payslip_run.id).compute_sheet()
+        payslip_run.generate_payslips(employee_ids=employee_ids.ids)
         payslip_run.slip_ids.write({"input_line_ids": [(0, 0, {
             "input_type_id": self.env.ref(input_id).id,
             "amount": amount,
@@ -142,7 +133,9 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
             {
                 "previous_bms_id": "12321321",
                 "l10n_au_previous_payroll_transfer_employee_ids": [
-                    Command.create({"employee_id": employee.id, "previous_payroll_id": "test_123213"})
+                    Command.create({"employee_id": employee.id,
+                                    "previous_payroll_id": "test_123213",
+                                    "l10n_au_income_stream_type": employee.l10n_au_income_stream_type})
                 ]
             })
         ytd_wizard.action_transfer()
@@ -164,7 +157,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
             slip_month = start_date.month + i if (start_date.month + i) <= 12 else 1
             slip_vals.append({
                 "employee_id": employee.id,
-                "contract_id": employee.contract_id.id,
+                "version_id": employee.version_id.id,
                 "date_from": start_date.replace(month=slip_month),
                 "date_to": start_date.replace(month=slip_month) + relativedelta(day=31),
                 "name": f"January Payslip {i + 1}",
@@ -326,7 +319,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
         payslip = self.env["hr.payslip"].create({
                 "name": "payslip",
                 "employee_id": self.employee_1.id,
-                "contract_id": self.contract_1.id,
+                "version_id": self.contract_1.id,
                 "date_from": "2024-05-01",
                 "date_to": "2024-05-31",
                 "input_line_ids": [(0, 0, {
@@ -368,7 +361,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
         self.contract_1.write({
             "wage": 2000,
             "schedule_pay": "weekly",
-            "date_start": "2011-9-01",
+            "date_start": "2011-09-01",
             "date_end": "2024-11-01",
         })
         self.allocate_leaves(
@@ -383,7 +376,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
         payslip = self.env["hr.payslip"].create({
                 "name": "payslip",
                 "employee_id": self.employee_1.id,
-                "contract_id": self.contract_1.id,
+                "version_id": self.contract_1.id,
                 "date_from": "2024-10-28",
                 "date_to": "2024-11-01",
                 "input_line_ids": [(0, 0, {
@@ -409,7 +402,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
                 "IncomeTaxFreeA": 93956.0,
             },
         )
-        self.assertEqual(rendering_data[1][0]["EmploymentEndD"], fields.Date.from_string("2024-11-1"))
+        self.assertEqual(rendering_data[1][0]["EmploymentEndD"], fields.Date.from_string("2024-11-01"))
         lumpsum_tuple = rendering_data[1][0]["Remuneration"][0]["LumpSumCollection"]
         # ETP Tax free under tax free cap (Genuine) are reported as Lump Sum D
         self.assertListEqual(
@@ -508,7 +501,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
                 "name": f"Work Entry {self.env.ref(work_entry_type).name}",
                 "work_entry_type_id": self.env.ref(work_entry_type).id,
                 "employee_id": self.employee_2.id,
-                "contract_id": self.contract_2.id,
+                "version_id": self.contract_2.id,
                 "date_start": start,
                 "date_stop": start + relativedelta(hours=duration),
                 "duration": duration,
@@ -517,11 +510,11 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
             work_entry.action_validate()
 
         # Work Entries, For simplicty, Leaves handled as work entries
-        create_work_entry("hr_work_entry.overtime_work_entry_type", datetime(2024, 10, 1, 9), 3)
-        create_work_entry("l10n_au_hr_payroll.l10n_au_work_entry_type_other", datetime(2024, 10, 3, 9), 4, "validated")
-        create_work_entry("l10n_au_hr_payroll.l10n_au_work_entry_type_parental", datetime(2024, 10, 4, 9), 3, "validated")
-        create_work_entry("l10n_au_hr_payroll.l10n_au_work_entry_type_compensation", datetime(2024, 10, 5, 9), 4)
-        create_work_entry("l10n_au_hr_payroll.l10n_au_work_entry_type_defence", datetime(2024, 10, 6, 9), 3, "validated")
+        create_work_entry("hr_work_entry.work_entry_type_overtime", datetime(2024, 10, 1, 9), 3)
+        create_work_entry("hr_work_entry.l10n_au_work_entry_type_other", datetime(2024, 10, 3, 9), 4, "validated")
+        create_work_entry("hr_work_entry.l10n_au_work_entry_type_parental", datetime(2024, 10, 4, 9), 3, "validated")
+        create_work_entry("hr_work_entry.l10n_au_work_entry_type_compensation", datetime(2024, 10, 5, 9), 4)
+        create_work_entry("hr_work_entry.l10n_au_work_entry_type_defence", datetime(2024, 10, 6, 9), 3, "validated")
 
         input_lines = [
             ('l10n_au_hr_payroll.input_leaves_cashed_out_in_service', 200.2),
@@ -576,7 +569,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
         ]
         slip = self.env['hr.payslip'].create({
                 "employee_id": self.employee_2.id,
-                "contract_id": self.employee_2.contract_id.id,
+                "version_id": self.employee_2.version_id.id,
                 "date_from": datetime(2024, 10, 1),
                 "date_to":  datetime(2024, 10, 31),
                 "name": "OCT Payslip Test",
@@ -598,39 +591,40 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
         self.assertAlmostEqualRecordValues(
             slip.worked_days_line_ids,
             [
-                {'code': 'WORK100', 'amount': 4556.83, 'ytd': 25000 + 4556.83},
-                {'code': 'OVERTIME', 'amount': 78.21, 'ytd': 140 + 78.21},
-                {'code': 'AU.O', 'amount': 104.28, 'ytd': 130 + 104.28},
-                {'code': 'AU.P', 'amount': 78.21, 'ytd': 120 + 78.21},
-                {'code': 'AU.W', 'amount': 104.28, 'ytd': 110 + 104.28},
-                {'code': 'AU.A', 'amount': 78.21, 'ytd': 100 + 78.21},
+                {'code': 'WORK100', 'amount': 4629.24, 'ytd': 25000 + 4629.24},
+                {'code': 'OVERTIME', 'amount': 79.45, 'ytd': 140 + 79.45},
+                {'code': 'AU.O', 'amount': 105.93, 'ytd': 130 + 105.93},
+                {'code': 'AU.P', 'amount': 79.45, 'ytd': 120 + 79.45},
+                {'code': 'AU.W', 'amount': 105.93, 'ytd': 110 + 105.93},
+                {'code': 'AU.A', 'amount': 79.45, 'ytd': 100 + 79.45},
             ]
         )
         self.assertAlmostEqualRecordValues(
             slip.line_ids,
-            [{'code': 'BASIC', 'amount': 5000, 'ytd': 30600},
-             {'code': 'OTE', 'amount': 5839.01, 'ytd': 35885.01},
-             {'code': 'EXTRA', 'amount': 1003, 'ytd': 6018},
-             {'code': 'SALARY.SACRIFICE.TOTAL', 'amount': -320.8, 'ytd': -1924.8},
-             {'code': 'ALW', 'amount': 110.0, 'ytd': 660.0},
-             {'code': 'ALW.TAXFREE', 'amount': 64.2, 'ytd': 385.2},
-             {'code': 'RTW', 'amount': 140, 'ytd': 840},
-             {'code': 'BACKPAY', 'amount': 121.2, 'ytd': 727.2},
-             {'code': 'SALARY.SACRIFICE.OTHER', 'amount': -240.6, 'ytd': -1443.6},
-             {'code': 'WORKPLACE.GIVING', 'amount': -120.6, 'ytd': -723.6},
-             {'code': 'GROSS', 'amount': 5932.82, 'ytd': 36196.8},
-             {'code': 'WITHHOLD', 'amount': -1049.0, 'ytd': -1049.0},
-             {'code': 'BACKPAY.WITHHOLD', 'amount': -56.96, 'ytd': -56.96},
-             {'code': 'RTW.WITHHOLD', 'amount': 140.0, 'ytd': -44.8},
-             {'code': 'MEDICARE', 'amount': 0.0, 'ytd': 0.0},
-             {'code': 'WITHHOLD.TOTAL', 'amount': -1150.76, 'ytd': -1150.76 - 5753.8},
-             {'code': 'CHILD.SUPPORT.GARNISHEE', 'amount': -121.1, 'ytd': -726.1},
-             {'code': 'CHILD.SUPPORT', 'amount': -181.3, 'ytd': -1087.3},
-             {'code': 'NET', 'amount': 4664.96, 'ytd': 4664.96},
-             {'code': 'SUPER.CONTRIBUTION', 'amount': 174.21, 'ytd': 977.21},
-             {'code': 'SUPER', 'amount': 671.49, 'ytd': 4027.04},
-             {'code': 'RFBA', 'amount': 200.6, 'ytd': 1203.6}
-             ]
+            [
+                {'code': 'BASIC', 'amount': 5079.45, 'ytd': 30679.45},
+                {'code': 'OTE', 'amount': 5917.2, 'ytd': 35963.2},
+                {'code': 'EXTRA', 'amount': 1003, 'ytd': 6018},
+                {'code': 'SALARY.SACRIFICE.TOTAL', 'amount': -320.8, 'ytd': -1924.8},
+                {'code': 'ALW', 'amount': 110.0, 'ytd': 660.0},
+                {'code': 'ALW.TAXFREE', 'amount': 64.2, 'ytd': 385.2},
+                {'code': 'RTW', 'amount': 140, 'ytd': 840},
+                {'code': 'BACKPAY', 'amount': 121.2, 'ytd': 727.2},
+                {'code': 'SALARY.SACRIFICE.OTHER', 'amount': -240.6, 'ytd': -1443.6},
+                {'code': 'WORKPLACE.GIVING', 'amount': -120.6, 'ytd': -723.6},
+                {'code': 'GROSS', 'amount': 6012.25, 'ytd': 36276.25},
+                {'code': 'WITHHOLD', 'amount': -1075.0, 'ytd': -1075.0},
+                {'code': 'BACKPAY.WITHHOLD', 'amount': -56.96, 'ytd': -56.96},
+                {'code': 'RTW.WITHHOLD', 'amount': 140.0, 'ytd': -44.8},
+                {'code': 'MEDICARE', 'amount': 0.0, 'ytd': 0.0},
+                {'code': 'WITHHOLD.TOTAL', 'amount': -1176.76, 'ytd': -6930.56},
+                {'code': 'CHILD.SUPPORT.GARNISHEE', 'amount': -121.1, 'ytd': -726.1},
+                {'code': 'CHILD.SUPPORT', 'amount': -181.3, 'ytd': -1087.3},
+                {'code': 'NET', 'amount': 4718.39, 'ytd': 4718.39},
+                {'code': 'SUPER.CONTRIBUTION', 'amount': 175.47, 'ytd': 978.47},
+                {'code': 'SUPER', 'amount': 680.48, 'ytd': 4036.03},
+                {'code': 'RFBA', 'amount': 200.6, 'ytd': 1203.6},
+            ]
         )
 
     def test_ytd_orm_cache(self):
@@ -639,7 +633,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
             # payslips = self.create_payslips(self.employee_2, 2, date(2024, 7, 1))
             slip = self.env["hr.payslip"].create({
                 "employee_id": self.employee_2.id,
-                "contract_id": self.employee_2.contract_id.id,
+                "version_id": self.employee_2.version_id.id,
                 "date_from": date(2024, 7, 1),
                 # "date_to": start_date.replace(day=31, month=slip_month),
                 "name": "Test Payslip",
@@ -702,16 +696,17 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
         )
 
         # Submit a zeoring event
-        stp = self.env["l10n_au.stp"].create(
-            {
-                "company_id": self.company.id,
-                "payevent_type": "update",
-                "is_zeroing": True,
-                "l10n_au_stp_emp": [(0, 0, {"employee_id": self.employee_2.id})],
-            }
-        )
+        with freeze_time("2024-10-31"):
+            stp = self.env["l10n_au.stp"].create(
+                {
+                    "company_id": self.company.id,
+                    "payevent_type": "update",
+                    "is_zeroing": True,
+                    "l10n_au_stp_emp": [(0, 0, {"employee_id": self.employee_2.id})],
+                }
+            )
 
-        stp.action_generate_xml()
+            stp.action_generate_xml()
 
         # Expected XML
         parsed_expected = etree.parse(file_path("l10n_au_hr_payroll_account/tests/stp_test_zeroing.xml")).getroot()
@@ -761,7 +756,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
         batch.slip_ids.compute_sheet()
         batch.action_validate()
         self.assertEqual(batch.slip_ids.mapped("state"), ["done", "done"], "The payslips should have been done!")
-        self.assertEqual(batch.state, "close", "The payslip batch should be done!")
+        self.assertEqual(batch.state, "03_close", "The payslip batch should be done!")
         # Submit the new STP record
         ffr = self.env["l10n_au.stp"].search([("payslip_batch_id", "=", batch.id), ("ffr", "=", True)])
         self.assertEqual(ffr.previous_report_id, stp, "The previous report should be the original STP record")
@@ -853,7 +848,7 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
                 line.employee_id = self.employee_1
             action.save().submit_to_ato()
         # Create data to finalise
-        self.contract_1.date_end = "2024-11-30"
+        self.contract_1.contract_date_end = "2024-11-30"
         with freeze_time("2024-11-30"):
             batch = self._prepare_payslip_run(self.employee_1 + self.employee_2, start_date="2024-11-01", end_date="2024-11-30")
             batch.action_validate()
@@ -937,3 +932,48 @@ class TestSingleTouchPayroll(L10nPayrollAccountCommon):
                 "ytd_rfbae": 502
             }])
             self._submit_stp(stp)
+
+    def test_transfer_opening_balances_wizard(self):
+        ytd_wizard = self.env["l10n_au.previous.payroll.transfer"].create(
+            {
+                "previous_bms_id": "12321321",
+                "fiscal_year_start_date": "2023-07-01",
+                "l10n_au_previous_payroll_transfer_employee_ids": [
+                    (0, 0, {
+                        "employee_id": self.employee_1.id,
+                        "previous_payroll_id": "123",
+                        "l10n_au_income_stream_type": "SAW",
+                        "import_ytd": True
+                    }),
+                ]
+            })
+        # Create a second transfer for the same employee and income stream type
+        # on the same wizard
+        with tools.mute_logger('odoo.sql_db'), self.assertRaises(UniqueViolation):
+            self.env["l10n_au.previous.payroll.transfer.employee"].create({
+                "employee_id": self.employee_1.id,
+                "previous_payroll_id": "123",
+                "l10n_au_income_stream_type": "SAW",
+                "import_ytd": True,
+                "l10n_au_previous_payroll_transfer_id": ytd_wizard.id
+            })
+
+        with self.assertRaises(UserError):
+            payslip = self.env["hr.payslip"].create({
+                "name": "payslip",
+                "employee_id": self.employee_1.id,
+                "version_id": self.contract_1.id,
+                "date_from": "2024-05-01",
+                "date_to": "2024-05-31",
+            })
+            payslip.compute_sheet()
+            payslip.action_payslip_done()
+            ytd_wizard.action_transfer()
+
+        ytd_wizard.action_transfer()
+
+        # Check creating a second transfer for the same employee after
+        # first as been created
+        self.company.l10n_au_previous_bms_id = False
+        with tools.mute_logger('odoo.sql_db'), self.assertRaises(UniqueViolation):
+            ytd_wizard.action_transfer()

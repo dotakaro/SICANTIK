@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.addons.hr_work_entry_contract_attendance.tests.common import HrWorkEntryAttendanceCommon
+from odoo.addons.hr_work_entry_attendance.tests.common import HrWorkEntryAttendanceCommon
 
 from datetime import datetime, date
 
@@ -25,11 +25,12 @@ class TestPayslipOvertime(HrWorkEntryAttendanceCommon):
             'name': 'Test Payslip',
             'employee_id': cls.employee.id,
             'struct_id': cls.struct.id,
-            'date_from': '2022-1-1',
-            'date_to': '2022-1-31',
+            'date_from': '2022-01-01',
+            'date_to': '2022-01-31',
         })
         cls.contract.structure_type_id = cls.struct_type
         cls.contract.hourly_wage = 100
+        cls.contract.overtime_from_attendance = True
         cls.company = cls.payslip.company_id
         
     def test_overtime_outside_period(self):

@@ -10,7 +10,7 @@ from odoo.osv import expression
 from odoo.tools.misc import unquote
 
 
-class Task(models.Model):
+class ProjectTask(models.Model):
     _inherit = "project.task"
 
     def _domain_sale_line_id(self):
@@ -59,7 +59,7 @@ class Task(models.Model):
             sign_p, sign_s = True, True
             if (
                 not task.allow_material
-                or task.timer_start
+                or task.sudo().timer_start
                 or task.worksheet_signature
                 or not task.display_satisfied_conditions_count
             ):
@@ -83,7 +83,7 @@ class Task(models.Model):
             send_p, send_s = True, True
             if (
                 not task.allow_material
-                or task.timer_start
+                or task.sudo().timer_start
                 or not task.display_satisfied_conditions_count
                 or task.fsm_is_sent
             ):
@@ -103,8 +103,8 @@ class Task(models.Model):
         return super()._is_fsm_report_available() or self.material_line_product_count
 
     @property
-    def SELF_READABLE_FIELDS(self):
-        return super().SELF_READABLE_FIELDS | {'allow_material',
+    def TASK_PORTAL_READABLE_FIELDS(self):
+        return super().TASK_PORTAL_READABLE_FIELDS | {'allow_material',
                                               'allow_quotations',
                                               'portal_quotation_count',
                                               'material_line_product_count',
@@ -127,7 +127,7 @@ class Task(models.Model):
 
     @api.depends('allow_material', 'material_line_product_count')
     def _compute_display_conditions_count(self):
-        super(Task, self)._compute_display_conditions_count()
+        super()._compute_display_conditions_count()
         for task in self:
             enabled = task.display_enabled_conditions_count
             satisfied = task.display_satisfied_conditions_count
@@ -160,7 +160,7 @@ class Task(models.Model):
     def _compute_material_line_totals(self):
 
         def if_fsm_material_line(sale_line_id, task, employee_mapping_product_ids=None):
-            is_not_timesheet_line = sale_line_id.product_id != task.timesheet_product_id
+            is_not_timesheet_line = sale_line_id.product_id != task.sudo().timesheet_product_id
             if employee_mapping_product_ids:  # Then we need to search the product in the employee mappings
                 is_not_timesheet_line = is_not_timesheet_line and sale_line_id.product_id.id not in employee_mapping_product_ids
             is_not_empty = sale_line_id.product_uom_qty != 0
@@ -189,7 +189,7 @@ class Task(models.Model):
     def _compute_display_create_invoice_buttons(self):
         for task in self:
             primary, secondary = True, True
-            if not task.is_fsm or not task.fsm_done or not task.allow_billable or task.timer_start or \
+            if not task.is_fsm or not task.fsm_done or not task.allow_billable or task.sudo().timer_start or \
                     not task.sale_order_id or task.invoice_status == 'invoiced' or \
                     task.sale_order_id.state in ['cancel']:
                 primary, secondary = False, False
@@ -210,7 +210,7 @@ class Task(models.Model):
 
     @api.depends('sale_line_id')
     def _compute_warning_message(self):
-        employee_rate_fsm_tasks = self.filtered(lambda task:
+        employee_rate_fsm_tasks = self.sudo().filtered(lambda task:
             task.pricing_type == 'employee_rate'
             and task.sale_line_id
             and task.timesheet_ids
@@ -239,7 +239,7 @@ class Task(models.Model):
     def _compute_sale_order_id(self):
         fsm_tasks = self.filtered('is_fsm')
         fsm_task_to_sale_order = {task.id: task.sale_order_id for task in fsm_tasks}
-        super(Task, self)._compute_sale_order_id()
+        super()._compute_sale_order_id()
         for task in fsm_tasks:
             if task.sale_order_id:
                 continue
@@ -296,12 +296,12 @@ class Task(models.Model):
         action['context'] = context
         return action
 
-    def _get_last_sol_of_customer(self):
+    def _get_last_sol_of_customer_domain(self):
         self.ensure_one()
         # For FSM task, we don't want to search the last SOL of the customer.
         if self.is_fsm:
-            return False
-        return super(Task, self)._get_last_sol_of_customer()
+            return []
+        return super()._get_last_sol_of_customer_domain()
 
     def _show_time_and_material(self):
         # check time and material section should visible or not in portal
@@ -415,14 +415,7 @@ class Task(models.Model):
         kanban_view = self.env.ref('industry_fsm_sale.industry_fsm_sale_product_catalog_kanban_view')
         search_view = self.env.ref('industry_fsm_sale.industry_fsm_sale_product_catalog_inherit_search_view')
 
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Add Products'),
-            'res_model': 'product.product',
-            'views': [(kanban_view.id, 'kanban'), (False, 'form')],
-            'search_view_id': [search_view.id, 'search'],
-            'domain': domain,
-            'context': {
+        context = {
                 'fsm_mode': True,
                 'create': self.env['product.template'].has_access('create'),
                 'fsm_task_id': self.id,  # avoid 'default_' context key as we are going to create SOL with this context
@@ -432,7 +425,18 @@ class Task(models.Model):
                 'hide_qty_buttons': self.sale_order_id.sudo().locked,
                 'default_invoice_policy': 'delivery',
                 'search_default_fsm_quantity': self.state == '1_done',
-            },
+            }
+        if not context['product_catalog_currency_id']:
+            # fallback currency in case no SO yet
+            context['product_catalog_currency_id'] = self.currency_id.id
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Add Products'),
+            'res_model': 'product.product',
+            'views': [(kanban_view.id, 'kanban'), (False, 'form')],
+            'search_view_id': [search_view.id, 'search'],
+            'domain': domain,
+            'context': context,
             'help': _("""<p class="o_view_nocontent_smiling_face">
                             No products found. Let's create one!
                         </p><p>
@@ -516,7 +520,6 @@ class Task(models.Model):
             # The project and the task are given to prevent the SOL to create a new project or task based on the config of the product.
             'project_id': self.project_id.id,
             'task_id': self.id,
-            'product_uom': self.project_id.timesheet_product_id.uom_id.id,
         }
 
     def _fsm_create_sale_order_line(self):
@@ -611,7 +614,7 @@ class Task(models.Model):
                 mapping_uom = self.env['uom.uom'].browse(uom_id)
                 total_amount = 0
                 for timesheet in timesheets:
-                    if timesheet.product_uom_category_id == mapping_uom.category_id and timesheet.product_uom_id != mapping_uom:
+                    if timesheet.product_uom_id != mapping_uom:
                         total_amount += timesheet.product_uom_id._compute_quantity(timesheet.unit_amount, mapping_uom, rounding_method='HALF-UP')
                     else:
                         total_amount += timesheet.unit_amount
@@ -662,9 +665,9 @@ class Task(models.Model):
             })
 
     def copy_data(self, default=None):
-        vals_list = super(Task, self).copy_data(default)
+        vals_list = super().copy_data(default)
         for task, vals in zip(self, vals_list):
-            if task.is_fsm:
+            if task.is_fsm and not task.recurring_task:
                 vals.update({
                     'sale_order_id': False,
                     'sale_line_id': False,
@@ -686,10 +689,7 @@ class Task(models.Model):
             if sol.product_id.service_policy != 'delivered_milestones':
                 sol.qty_delivered = sol.product_uom_qty
 
-class ProjectTaskRecurrence(models.Model):
-    _inherit = 'project.task.recurrence'
-
-    def _get_sale_line_id(self, task):
-        if not task.is_fsm:
-            return super()._get_sale_line_id(task)
-        return False
+    def _server_action_project_task_fsm(self, xml_id_multiple_fsm_projects, xml_id_one_fsm_project, default_user_ids=False):
+        action = super()._server_action_project_task_fsm(xml_id_multiple_fsm_projects, xml_id_one_fsm_project, default_user_ids)
+        action['context']['allow_billable'] = bool(self.env['project.project'].search_count([('is_fsm', '=', True), ('allow_billable', '=', True)], limit=1))
+        return action

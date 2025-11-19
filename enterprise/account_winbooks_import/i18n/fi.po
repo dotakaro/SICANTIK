@@ -3,21 +3,15 @@
 # 	* account_winbooks_import
 # 
 # Translators:
-# Tommi Rintala <tommi.rintala@gmail.com>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Martin Trigaux, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
-# Jessica Jakara, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.2+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-26 20:46+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Jessica Jakara, 2025\n"
+"POT-Creation-Date: 2025-02-20 10:32+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -41,7 +35,7 @@ msgstr ""
 #. module: account_winbooks_import
 #: model:ir.model,name:account_winbooks_import.model_account_winbooks_import_wizard
 msgid "Account Winbooks import wizard"
-msgstr "Windobooks-kirjanpidon ohjattu toiminto"
+msgstr "Ohjattu Windobooks-tilin tuontitoiminto"
 
 #. module: account_winbooks_import
 #: model:ir.model,name:account_winbooks_import.model_account_import_summary
@@ -62,9 +56,9 @@ msgid ""
 "probably an error. Please check entry lines with reference: Counterpart "
 "(generated at import from Winbooks)"
 msgstr ""
-"Ainakin yksi automaattinen vastine on luotu tuonnin yhteydessä. Tämä on "
-"todennäköisesti virhe. Tarkista tulorivit viitteellä: Vastine (luotu "
-"tuotaessa Winbooksista)"
+"Ainakin yksi automaattinen vastinpari on luotu tuonnin yhteydessä. Tämä on "
+"todennäköisesti virhe. Tarkista vientirivit, joiden viite on: vastinpari "
+"(luotu tuotaessa Winbooks:ista)"
 
 #. module: account_winbooks_import
 #: model_terms:ir.ui.view,arch_db:account_winbooks_import.winbooks_import_form
@@ -86,7 +80,7 @@ msgstr "Yrityksen asetukset"
 #. odoo-python
 #: code:addons/account_winbooks_import/wizard/import_wizard.py:0
 msgid "Counterpart (generated at import from Winbooks)"
-msgstr "Vastapuoli (luotu Winbooks-tuonnissa)"
+msgstr "Vastinpari (luotu luotaessa Winbooks:ista)"
 
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_winbooks_import_wizard__create_uid
@@ -99,7 +93,10 @@ msgid "Created on"
 msgstr "Luotu"
 
 #. module: account_winbooks_import
+#: model:ir.model.fields,field_description:account_winbooks_import.field_account_import_summary__display_name
+#: model:ir.model.fields,field_description:account_winbooks_import.field_account_move_line__display_name
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_winbooks_import_wizard__display_name
+#: model:ir.model.fields,field_description:account_winbooks_import.field_res_company__display_name
 msgid "Display Name"
 msgstr "Näyttönimi"
 
@@ -109,7 +106,10 @@ msgid "File"
 msgstr "Tiedosto"
 
 #. module: account_winbooks_import
+#: model:ir.model.fields,field_description:account_winbooks_import.field_account_import_summary__id
+#: model:ir.model.fields,field_description:account_winbooks_import.field_account_move_line__id
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_winbooks_import_wizard__id
+#: model:ir.model.fields,field_description:account_winbooks_import.field_res_company__id
 msgid "ID"
 msgstr "ID"
 
@@ -121,22 +121,22 @@ msgstr "Tuo"
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_import_summary__import_summary_analytic_ids
 msgid "Import Summary Analytic"
-msgstr "Tuo Analyyttinen yhteenveto"
+msgstr "Tuo yhteenvedon analyyttinen"
 
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_import_summary__import_summary_analytic_line_ids
 msgid "Import Summary Analytic Line"
-msgstr "Tuo yhteenvedon Analyyttinen rivi"
+msgstr "Tuo yhteenvedon analyyttinen rivi"
 
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_import_summary__import_summary_len_analytic
 msgid "Import Summary Len Analytic"
-msgstr "Tuo yhteenvedon pituusanalyysi"
+msgstr "Tuo yhteenvedon len-analyyttinen"
 
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_import_summary__import_summary_len_analytic_line
 msgid "Import Summary Len Analytic Line"
-msgstr "Tuo yhteenvedon pituusanalyysin rivi"
+msgstr "Tuo yhteenvedon len-analyyttinen rivi"
 
 #. module: account_winbooks_import
 #. odoo-javascript
@@ -147,12 +147,12 @@ msgstr "Tuo WBK"
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_winbooks_import_wizard__only_open
 msgid "Import only open years"
-msgstr "Tuo vain sulkemattomat vuodet"
+msgstr "Tuo vain avoimet vuodet"
 
 #. module: account_winbooks_import
 #: model:ir.model,name:account_winbooks_import.model_account_move_line
 msgid "Journal Item"
-msgstr "Päiväkirjatapahtuma"
+msgstr "Päiväkirjamerkintä"
 
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_winbooks_import_wizard__write_uid
@@ -167,7 +167,7 @@ msgstr "Viimeksi päivitetty"
 #. module: account_winbooks_import
 #: model:ir.model.fields,help:account_winbooks_import.field_account_move_line__winbooks_line_id
 msgid "Line ID that was used in Winbooks"
-msgstr "Winbooksissa käytetty rivin tunnus"
+msgstr "Winbooks:issa käytetty rivin tunnus"
 
 #. module: account_winbooks_import
 #. odoo-python
@@ -175,7 +175,7 @@ msgstr "Winbooksissa käytetty rivin tunnus"
 msgid ""
 "No data zip in the main archive. Please use the complete Winbooks export."
 msgstr ""
-"Päätiedostossa ei ole zip-pakettia. Käytä täydellistä Winbooks-vientiä."
+"Päätiedostossa on tiedoton zip-kansio. Käytä täydellistä Winbooks-vientiä."
 
 #. module: account_winbooks_import
 #. odoo-python
@@ -191,14 +191,14 @@ msgstr "Hae vaiheita"
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_winbooks_import_wizard__suspense_code
 msgid "Suspense Account Code"
-msgstr "Välitilin koodi"
+msgstr "Väliaikaistilin koodi"
 
 #. module: account_winbooks_import
 #. odoo-python
 #: code:addons/account_winbooks_import/wizard/import_wizard.py:0
 msgid ""
 "The code for the Suspense Account you entered doesn't match any account"
-msgstr "Koodi, jota käytit välitiliin ei vastaa yhtäkään tiliä"
+msgstr "Väliaikaistilin koodi, jonka syötit, ei vastaa yhtäkään tiliä"
 
 #. module: account_winbooks_import
 #: model:ir.model.fields,help:account_winbooks_import.field_account_winbooks_import_wizard__suspense_code
@@ -207,8 +207,8 @@ msgid ""
 "unbalanced moves. This might be an account from your Winbooks data, or an "
 "account that you created in Odoo before the import."
 msgstr ""
-"Tämä on tilin koodi, johon haluat sijoittaa tasapainottamien kirjausten "
-"vastineen. Tämä voi olla tili Winbooks-tiedoistasi tai tili, jonka loit "
+"Tämä on tilin koodi, johon haluat sijoittaa tasapainottamattomien kirjausten"
+" vastinparin. Tämä voi olla tili Winbooks-tiedoistasi tai tili, jonka loit "
 "Odoossa ennen tuontia."
 
 #. module: account_winbooks_import
@@ -219,7 +219,7 @@ msgstr "Winbooks-tuonti"
 #. module: account_winbooks_import
 #: model:ir.model.fields,field_description:account_winbooks_import.field_account_move_line__winbooks_line_id
 msgid "Winbooks Line"
-msgstr "Winbooksin rivi"
+msgstr "Winbooks-rivi"
 
 #. module: account_winbooks_import
 #: model:ir.model.fields,help:account_winbooks_import.field_account_winbooks_import_wizard__only_open
@@ -227,14 +227,14 @@ msgid ""
 "Years closed in Winbooks are likely to have incomplete data. The counter "
 "part of incomplete entries will be set in a suspense account"
 msgstr ""
-"Winbookeissa suljetuilla vuosilla on todennäköisesti epätäydellisiä tietoja."
-" Epätäydellisten merkintöjen vastaosa asetetaan väliaikaistilille"
+"Winbooksissa suljetuilla vuosilla on todennäköisesti puuttuvia tietoja. "
+"Puutteellisten kirjausten vastinpari asetetaan väliaikaistilille"
 
 #. module: account_winbooks_import
 #. odoo-python
 #: code:addons/account_winbooks_import/wizard/import_wizard.py:0
 msgid "You should install a Fiscal Localization first."
-msgstr "Verotietojen asema on asennettava ensin."
+msgstr "Verokanta on asennettava ensin."
 
 #. module: account_winbooks_import
 #: model_terms:ir.ui.view,arch_db:account_winbooks_import.account_import_summary_form

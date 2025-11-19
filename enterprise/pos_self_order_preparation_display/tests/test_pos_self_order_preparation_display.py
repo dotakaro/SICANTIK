@@ -1,26 +1,34 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import odoo.tests
 from odoo.addons.pos_self_order.tests.self_order_common_test import SelfOrderCommonTest
 
+
 @odoo.tests.tagged('post_install', '-at_install')
 class TestPosSelfOrderPreparationDisplay(SelfOrderCommonTest):
 
-    def test_self_order_preparation_disabling_preparation_display(self):
+    def test_ensure_kiosk_order_preparation_display(self):
         """
-        This test ensures that the preparation display option can be disabled when the self_ordering_mode is set to 'nothing'.
-        It also tests that the preparation display option is enabled automatically when the self_ordering_mode is set to 'kiosk'.
+        This test ensures that the kiosk order is sent to the preparation display, even if unpaid
         """
-        self.env['account.tax'].search([('tax_exigibility', '=', 'on_payment')]).active = False
-        self.pos_self_ordering_pay_after = 'each'
+        self.pos_config.write({
+            'self_ordering_mode': 'kiosk',
+            'self_ordering_pay_after': 'each',
+            'self_ordering_service_mode': 'table',
+        })
 
-        with odoo.tests.Form(self.env['res.config.settings']) as form:
-            with self.assertLogs(level="WARNING"):
-                form.module_pos_preparation_display = False
+        self.env['pos.prep.display'].create({
+            'name': 'Preparation Display',
+            'pos_config_ids': [(4, self.pos_config.id)],
+            'category_ids': [(4, self.cola.pos_categ_ids[0].id)],
+        })
 
-            form.pos_self_ordering_mode = "nothing"
-            self.assertEqual(form.module_pos_preparation_display, False)
+        self.pos_config.with_user(self.pos_user).open_ui()
+        self.pos_config.current_session_id.set_opening_control(0, "")
 
-            form.pos_self_ordering_mode = "kiosk"
-            self.assertEqual(form.module_pos_preparation_display, True)
+        self_route = self.pos_config._get_self_order_route()
+        self.start_tour(self_route, 'self_kiosk_order_preparation_display')
+
+        order = self.env['pos.order'].search([('amount_paid', '=', 0)], limit=1)
+        preparation_order = self.env['pos.prep.order'].search([('pos_order_id', '=', order.id)], limit=1)
+        self.assertEqual(preparation_order.prep_line_ids.product_id, self.cola.product_variant_id)

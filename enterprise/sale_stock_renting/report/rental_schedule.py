@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import fields, models
 from odoo.tools import SQL
 
-class RentalSchedule(models.Model):
+
+class SaleRentalSchedule(models.Model):
     _inherit = "sale.rental.schedule"
 
     is_available = fields.Boolean(compute='_compute_is_available', readonly=True, compute_sudo=True)
@@ -43,22 +43,25 @@ class RentalSchedule(models.Model):
 
     def _late(self) -> SQL:
         return SQL("""
-            CASE when lot_info.lot_id is NULL then
-                CASE WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN TRUE
-                    WHEN s.rental_return_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_returned < sol.qty_delivered THEN TRUE
-                    ELSE FALSE
-                END
-            ELSE
-                CASE WHEN lot_info.report_line_status = 'returned' THEN FALSE
-                    WHEN lot_info.report_line_status = 'pickedup' THEN
-                        CASE WHEN s.rental_return_date < NOW() AT TIME ZONE 'UTC' THEN TRUE
+            CASE WHEN s.state = 'sale' THEN
+                CASE when lot_info.lot_id is NULL then
+                    CASE WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN TRUE
+                        WHEN s.rental_return_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_returned < sol.qty_delivered THEN TRUE
                         ELSE FALSE
-                        END
-                    ELSE
-                        CASE WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' THEN TRUE
-                        ELSE FALSe
-                        END
+                    END
+                ELSE
+                    CASE WHEN lot_info.report_line_status = 'returned' THEN FALSE
+                        WHEN lot_info.report_line_status = 'pickedup' THEN
+                            CASE WHEN s.rental_return_date < NOW() AT TIME ZONE 'UTC' THEN TRUE
+                            ELSE FALSE
+                            END
+                        ELSE
+                            CASE WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' THEN TRUE
+                            ELSE FALSe
+                            END
+                    END
                 END
+            ELSE FALSE
             END as late
         """)
 
@@ -74,10 +77,12 @@ class RentalSchedule(models.Model):
         """)
 
     def _color(self) -> SQL:
-        """2 = orange, 4 = blue, 6 = red, 7 = green"""
+        """2 = orange, 3 = yellow, 4 = blue, 5 = purple, 6 = red, 7 = green"""
         return SQL("""
             CASE when lot_info.lot_id is NULL then
-                CASE WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN 4
+                CASE WHEN s.state IN ('draft', 'sent') THEN 5
+                    WHEN s.rental_start_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN 3
+                    WHEN s.rental_start_date > NOW() AT TIME ZONE 'UTC' AND sol.qty_delivered < sol.product_uom_qty THEN 4
                     WHEN s.rental_return_date < NOW() AT TIME ZONE 'UTC' AND sol.qty_returned < sol.qty_delivered THEN 6
                     when sol.qty_returned = sol.qty_delivered AND sol.qty_delivered = sol.product_uom_qty THEN 7
                     WHEN sol.qty_delivered = sol.product_uom_qty THEN 2
@@ -142,12 +147,12 @@ class RentalSchedule(models.Model):
         return SQL("""%s,
             lot_info.lot_id as lot_id,
             s.warehouse_id as warehouse_id
-        """, super(RentalSchedule, self)._select())
+        """, super()._select())
 
     def _from(self) -> SQL:
         return SQL("""%s
             LEFT OUTER JOIN ordered_lots lot_info ON sol.id=lot_info.sol_id
-        """, super(RentalSchedule, self)._from())
+        """, super()._from())
 
     def _groupby(self) -> SQL:
         return SQL("""%s,

@@ -185,7 +185,7 @@ class MrpBomLine(models.Model):
         return tuple([self.product_id] + self.bom_product_template_attribute_value_ids.ids) + self.operation_id._get_sync_values()
 
 
-class MrpByProduct(models.Model):
+class MrpBomByproduct(models.Model):
     _inherit = 'mrp.bom.byproduct'
 
     def _get_sync_values(self):

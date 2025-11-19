@@ -11,9 +11,9 @@ from dateutil.relativedelta import relativedelta
 from itertools import chain
 
 
-class AgedPartnerBalanceCustomHandler(models.AbstractModel):
+class AccountAgedPartnerBalanceReportHandler(models.AbstractModel):
     _name = 'account.aged.partner.balance.report.handler'
-    _inherit = 'account.report.custom.handler'
+    _inherit = ['account.report.custom.handler']
     _description = 'Aged Partner Balance Custom Handler'
 
     def _get_custom_display_config(self):
@@ -23,7 +23,7 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
                 'AccountReportLineName': 'account_reports.AgedPartnerBalanceLineName',
             },
             'components': {
-                'AccountReportFilters': 'account_reports.AgedPartnerBalanceFilters',
+                'AccountReportFilters': 'AgedPartnerBalanceFilters',
             },
         }
 
@@ -125,7 +125,7 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
                     'currency': currency.display_name if currency else None,
                     'account_name': query_res['account_name'][0] if len(query_res['account_name']) == 1 else None,
                     'total': None,
-                    'has_sublines': query_res['aml_count'] > 0,
+                    'has_sublines': True,
 
                     # Needed by the custom_unfold_all_batch_data_generator, to speed-up unfold_all
                     'partner_id': query_res['partner_id'][0] if query_res['partner_id'] else None,
@@ -139,7 +139,7 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
                     'currency': None,
                     'account_name': None,
                     'total': sum(rslt[f'period{i}'] for i in range(len(periods))),
-                    'has_sublines': False,
+                    'has_sublines': True,
                 })
 
             return rslt
@@ -196,7 +196,7 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
                 ) AS amount_currency,
                 ARRAY_AGG(DISTINCT account_move_line.partner_id) AS partner_id,
                 ARRAY_AGG(account_move_line.payment_id) AS payment_id,
-                ARRAY_AGG(DISTINCT move.invoice_date) AS invoice_date,
+                ARRAY_AGG(DISTINCT account_move_line.invoice_date) AS invoice_date,
                 ARRAY_AGG(DISTINCT COALESCE(account_move_line.%(aging_date_field)s, account_move_line.date)) AS report_date,
                 ARRAY_AGG(DISTINCT %(account_code)s) AS account_name,
                 ARRAY_AGG(DISTINCT COALESCE(account_move_line.%(aging_date_field)s, account_move_line.date)) AS due_date,
@@ -208,7 +208,6 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
             FROM %(table_references)s
 
             JOIN account_journal journal ON journal.id = account_move_line.journal_id
-            JOIN account_move move ON move.id = account_move_line.move_id
             %(currency_table_join)s
 
             LEFT JOIN LATERAL (
@@ -300,9 +299,7 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
     def open_customer_statement(self, options, params):
         report = self.env['account.report'].browse(options['report_id'])
         record_model, record_id = report._get_model_info_from_id(params.get('line_id'))
-        if self.env.ref('account_reports.customer_statement_report', raise_if_not_found=False):
-            return self.env[record_model].browse(record_id).open_customer_statement()
-        return self.env[record_model].browse(record_id).open_partner_ledger()
+        return self.env[record_model].browse(record_id).open_customer_statement()
 
     def _common_custom_unfold_all_batch_data_generator(self, internal_type, report, options, lines_to_expand_by_function):
         rslt = {} # In the form {full_sub_groupby_key: all_column_group_expression_totals for this groupby computation}
@@ -326,7 +323,7 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
 
                         # Iterate on results by partner to generate the content of the column group
                         partner_expression_totals = rslt.setdefault(f"[{report_line_id}]=>partner_id", {})\
-                                                        .setdefault(column_group_key, {expression: {'value': []} for expression in expressions_to_evaluate})
+                                                        .setdefault(column_group_key, {expression: {'value': [], 'sublines_info': set()} for expression in expressions_to_evaluate})
                         for partner_id, aml_data_list in aml_data_by_partner.items():
                             partner_values = self._prepare_partner_values()
                             for i in range(report_periods):
@@ -334,7 +331,7 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
 
                             # Build expression totals under the right key
                             partner_aml_expression_totals = rslt.setdefault(f"[{report_line_id}]partner_id:{partner_id}=>id", {})\
-                                                                .setdefault(column_group_key, {expression: {'value': []} for expression in expressions_to_evaluate})
+                                                                .setdefault(column_group_key, {expression: {'value': [], 'sublines_info': set()} for expression in expressions_to_evaluate})
                             for aml_data in aml_data_list:
                                 for i in range(report_periods):
                                     period_value = aml_data[f'period{i}']
@@ -350,6 +347,7 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
                                 partner_expression_totals[expression]['value'].append(
                                     (partner_id, partner_values[expression.subformula])
                                 )
+                                partner_expression_totals[expression]['sublines_info'].add(partner_id)
 
         return rslt
 
@@ -401,9 +399,10 @@ class AgedPartnerBalanceCustomHandler(models.AbstractModel):
             domain = []
         return domain
 
-class AgedPayableCustomHandler(models.AbstractModel):
+
+class AccountAgedPayableReportHandler(models.AbstractModel):
     _name = 'account.aged.payable.report.handler'
-    _inherit = 'account.aged.partner.balance.report.handler'
+    _inherit = ['account.aged.partner.balance.report.handler']
     _description = 'Aged Payable Custom Handler'
 
     def open_journal_items(self, options, params):
@@ -425,9 +424,10 @@ class AgedPayableCustomHandler(models.AbstractModel):
     def action_audit_cell(self, options, params):
         return super().aged_partner_balance_audit(options, params, 'purchase')
 
-class AgedReceivableCustomHandler(models.AbstractModel):
+
+class AccountAgedReceivableReportHandler(models.AbstractModel):
     _name = 'account.aged.receivable.report.handler'
-    _inherit = 'account.aged.partner.balance.report.handler'
+    _inherit = ['account.aged.partner.balance.report.handler']
     _description = 'Aged Receivable Custom Handler'
 
     def open_journal_items(self, options, params):

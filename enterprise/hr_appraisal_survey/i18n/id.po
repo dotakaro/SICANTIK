@@ -3,16 +3,16 @@
 # 	* hr_appraisal_survey
 # 
 # Translators:
-# Wil Odoo, 2024
 # Abe Manyo, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:52+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Abe Manyo, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:21+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Indonesian (https://app.transifex.com/odoo/teams/41243/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -66,7 +66,7 @@ msgid ""
 "                        Thank you!\n"
 "                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                Give your feedback\n"
 "                            </a>\n"
 "                        </div>\n"
@@ -81,14 +81,14 @@ msgstr ""
 "                    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
 "                        </p><p style=\"margin-left:5px\">Kepada <t t-out=\"object.partner_id.name or 'participant'\">[peserta]</t></p>\n"
 "                        <span>\n"
-"                            <t t-out=\"logged_user\">[User saat ini]</t> mengundang Anda untuk berpartisipasi di survei dan menyediakan feedback untuk <t t-out=\"employee\">[karyawan]</t>.\n"
-"                            Silakan selesaikan survei sebelum <t t-out=\"deadline\">[deadline]</t>.\n"
+"                            <t t-out=\"logged_user\">[User saat ini]</t> mengundang Anda untuk berpartisipasi ke survei dan menyediakan feedback Anda untuk <t t-out=\"employee\">[karyawan]</t>.\n"
+"                            Silakan selesaikan survei sebelum <t t-out=\"deadline\">[deadline yang ditentukan]</t>.\n"
 "                        </span>\n"
 "                        <br/>\n"
 "                        Terima kasih!\n"
 "                        <br/><br/>\n"
 "                        <div style=\"margin: 16px 0px 16px 0px; text-align: center;\">\n"
-"                            <a t-att-href=\"object.get_start_url()\" style=\"background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;\">\n"
+"                            <a t-att-href=\"object.get_start_url()\" t-attf-style=\"background-color: {{user.company_id.email_secondary_color or '#875A7B'}}; padding: 8px 16px 8px 16px; text-decoration: none; color: {{user.company_id.email_primary_color or '#FFFFFF'}}; border-radius: 5px; font-size:13px;\">\n"
 "                                Berikan feedback Anda\n"
 "                            </a>\n"
 "                        </div>\n"
@@ -251,7 +251,9 @@ msgstr "Penilai"
 #. module: hr_appraisal_survey
 #. odoo-python
 #: code:addons/hr_appraisal_survey/models/hr_appraisal.py:0
+#: model:ir.actions.act_window,name:hr_appraisal_survey.appraisal_ask_feedback_action
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.appraisal_ask_feedback_view_form
+#: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_user_input_view_tree
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_view_form
 msgid "Ask Feedback"
 msgstr "Minta Feedback"
@@ -414,6 +416,13 @@ msgstr "Tidak memenuhi standar dan ekspektasi"
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__display_name
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__display_name
 msgid "Display Name"
 msgstr "Nama Tampilan"
 
@@ -502,6 +511,13 @@ msgstr "Saya merujuk pada Anda."
 
 #. module: hr_appraisal_survey
 #: model:ir.model.fields,field_description:hr_appraisal_survey.field_appraisal_ask_feedback__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_appraisal__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_hr_department__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_company__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_res_config_settings__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_question_answer__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_survey__id
+#: model:ir.model.fields,field_description:hr_appraisal_survey.field_survey_user_input__id
 msgid "ID"
 msgstr "ID"
 
@@ -661,6 +677,12 @@ msgstr "Data rekanan terkait dari pengguna"
 #: model:survey.question,title:hr_appraisal_survey.appraisal_4_2
 msgid "Personal Performance Objectives"
 msgstr "Tujuan kinerja pribadi"
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/wizard/appraisal_ask_feedback.py:0
+msgid "Please set an Answer Deadline in the future"
+msgstr "Silakan tetapkan Deadline Jawaban di masa depan"
 
 #. module: hr_appraisal_survey
 #: model:survey.question,title:hr_appraisal_survey.appraisal_1_2
@@ -850,9 +872,12 @@ msgstr "Pengguna"
 
 #. module: hr_appraisal_survey
 #: model:mail.template,subject:hr_appraisal_survey.mail_template_appraisal_ask_feedback
-msgid "Take part in {{ object.employee_id.name or 'this' }} appraisal"
+msgid ""
+"Take part in {{ ctx.get('employee_id') and ctx['employee_id'].name or 'this'"
+" }} appraisal"
 msgstr ""
-"Mengambil bagian dalam appraisal  {{ object.employee_id.name or 'this' }}"
+"Mengambil bagian dalam appraisal {{ ctx.get('employee_id') and "
+"ctx['employee_id'].name or 'this' }}"
 
 #. module: hr_appraisal_survey
 #: model:survey.question.answer,value:hr_appraisal_survey.arow_3_1_4
@@ -1048,6 +1073,20 @@ msgid ""
 msgstr ""
 "Anda dapat membuat survei yang digunakan untuk appraisal. Dengan mudah rancang appraisal Anda,\n"
 "                kirim undangan dan analisa jawabannya."
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected feedback linked to multiples appraisals."
+msgstr ""
+"Anda tidak dapat memilih feedback yang terhubung ke lebih dari satu "
+"appraisal."
+
+#. module: hr_appraisal_survey
+#. odoo-python
+#: code:addons/hr_appraisal_survey/models/survey_survey.py:0
+msgid "You can't selected multiple feedback template."
+msgstr "Anda tidak dapat memilih lebih dari satu templat feedback."
 
 #. module: hr_appraisal_survey
 #: model_terms:ir.ui.view,arch_db:hr_appraisal_survey.hr_appraisal_survey_button_form_view

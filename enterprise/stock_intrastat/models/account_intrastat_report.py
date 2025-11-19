@@ -3,9 +3,9 @@
 from odoo import api, models
 
 
-class StockIntrastatReportCustomHandler(models.AbstractModel):
+class StockIntrastatReportHandler(models.AbstractModel):
     _name = 'stock.intrastat.report.handler'
-    _inherit = 'account.intrastat.report.handler'
+    _inherit = ['account.intrastat.report.handler']
     _description = 'Intrastat Report Custom Handler (Stock)'
 
     @api.model

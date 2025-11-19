@@ -10,6 +10,7 @@
     ],
     'data': [
         'data/mail_template_data.xml',
+        'data/product_product.xml',
         'security/ir.model.access.csv',
         'views/account_journal_views.xml',
         'views/account_move_views.xml',
@@ -17,12 +18,14 @@
         'views/report_invoice.xml',
         'views/res_config_settings_views.xml',
         'views/templates.xml',
+        'views/res_partner_views.xml',
     ],
     'demo': [
         'demo/demo.xml',
     ],
     'installable': True,
     'auto_install': ['l10n_co_edi'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.report_assets_common': [

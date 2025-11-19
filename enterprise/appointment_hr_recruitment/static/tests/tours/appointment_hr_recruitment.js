@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
@@ -25,12 +23,30 @@ registry.category("web_tour.tours").add('appointment_hr_recruitment_tour', {
     }, {
         trigger: '.o_appointment_button_link:contains("Test AppointmentHrRecruitment")',
         async run(helpers) {
-            // Patch and ignore write on clipboard in tour as we don't have permissions
-            navigator.clipboard.writeText = () => { console.info('Copy in clipboard ignored!') };
+            // Patch write on clipboard -- go to the url (to then book an appointment from there
+            navigator.clipboard.writeText = (text) => {window.location.href = text};
             await helpers.click();
         },
+        expectUnloadPage: true,
     }, {
-        trigger: '.o_appointment_discard_slots',
+        trigger: '.o_slot_hours:contains("4")',
+        run: 'click',
+        expectUnloadPage: true,
+    }, {
+        trigger: 'input[name="name"]',
+        run: 'edit Ana Tourelle',
+    }, {
+        trigger: 'input[name="email"]',
+        run: 'edit ana@example.com',
+    }, {
+        trigger: 'input[name="phone"]',
+        run: 'edit 3141592',
+    }, {
+        trigger: '.o_appointment_form_confirm_btn',
+        run: 'click',
+        expectUnloadPage: true,
+    }, {
+        trigger: '.fa-check-circle',
         async run(helpers) {
             await helpers.click();
             // Re-patch the function with the previous writeText

@@ -3,7 +3,7 @@
 {
     'name': "Spreadsheet",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Productivity/Dashboard',
     'summary': 'Spreadsheet',
     'description': 'Spreadsheet',
     'depends': ['spreadsheet', 'mail', 'web_enterprise'],
@@ -14,6 +14,7 @@
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'spreadsheet.o_spreadsheet': [
@@ -42,9 +43,6 @@
         ],
         'web.qunit_suite_tests': [
             'spreadsheet_edition/static/tests/legacy/**/*',
-        ],
-        'web.qunit_mobile_suite_tests': [
-            'spreadsheet_edition/static/tests/legacy/disable_patch.js',
         ],
         'web.assets_unit_tests': [
             'spreadsheet_edition/static/tests/**/*',

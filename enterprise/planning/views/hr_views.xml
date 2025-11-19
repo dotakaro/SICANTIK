@@ -6,20 +6,20 @@
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@id='o_work_employee_main']" position="inside">
+            <group name="managers" position="after">
                 <group name="planning" string="Planning">
-                    <field name="planning_role_ids" placeholder="e.g. Bartender" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                    <field name="planning_role_ids" placeholder="e.g. Bartender" widget="many2many_tags" options="{'color_field': 'color', 'edit_tags': True}"/>
                     <field name="default_planning_role_id" />
                 </group>
-            </xpath>
-            <xpath expr="//div[@name='button_box']" position="inside">
+            </group>
+            <button name="action_open_versions" position="before">
                 <field name="has_slots" invisible="1"/>
                 <button invisible="not has_slots" class="oe_stat_button" icon="fa-tasks" name="action_view_planning" type="object">
                     <div class="o_stat_info">
                         <span class="o_stat_text">Planning</span>
                     </div>
                 </button>
-            </xpath>
+            </button>
         </field>
     </record>
 
@@ -54,7 +54,7 @@
                             <a title="Chat" icon="fa-comments" href="#" class="ml8 o_employee_chat_btn" invisible="not context.get('chat_icon') or not user_id" role="button"><i class="fa fa-comments"/></a>
                         </h1>
                         <h2>
-                            <field name="job_title" placeholder="Job Title" />
+                            <field name="job_id" placeholder="Job Position" options="{'no_open': True}"/>
                         </h2>
                     </div>
                     <group>

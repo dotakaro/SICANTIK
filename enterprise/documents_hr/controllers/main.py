@@ -1,54 +1,67 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from werkzeug.exceptions import Forbidden
+from odoo import http
 
-from odoo import http, tools
+from odoo.addons.sign.controllers.main import Sign
+from odoo.http import request
 
 
-class DocumentsHrController(http.Controller):
+class SignContract(Sign):
 
-    @http.route(
-        "/documents_hr/my_files/<int:employee_id>/<token>",
-        type="http", auth="public")
-    def my_files(self, employee_id, token):
-        """Allow the user to download its file if its user is archived.
+    @http.route()
+    def sign(self, sign_request_id, token, sms_token=False, signature=None, **kwargs):
+        result = super().sign(sign_request_id, token, sms_token=sms_token, signature=signature, **kwargs)
+        request_item = request.env['sign.request.item'].sudo().search([('access_token', '=', token)])
+        is_completed = all(state == 'completed' for state in request_item.sign_request_id.request_item_ids.mapped('state'))
+        signature_request_tag = request.env.ref('documents_hr.document_tag_signature_request', raise_if_not_found=False)
+        if not is_completed:
+            return result
 
-        The user will be able to download all files for which he's the partner, under
-        the HR companies folders.
-        """
-        employee = self._check_token(employee_id, token)
-        if not employee.user_partner_id:
-            raise Forbidden()
+        employee = request.env['hr.employee'].sudo().with_context(active_test=False).search([
+            ('sign_request_ids', 'in', request_item.sign_request_id.ids)])
+        if employee and employee.company_id.documents_hr_settings and employee.hr_employee_folder_id:
+            sign_request_sudo = request_item.sign_request_id.sudo()
+            sign_request_sudo._generate_completed_documents()
 
-        documents = http.request.env["documents.document"].sudo().search([
-            ("partner_id", "=", employee.user_partner_id.id),
-            ("id", "child_of", employee.company_id.documents_hr_folder.id),
-        ])
+            employee_partner = employee.work_contact_id or employee.user_id.partner_id
+            owner = (
+                employee.user_id or
+                employee.search([('work_contact_id', '=', employee_partner.id)]).user_id or
+                employee.version_id.hr_responsible_id or
+                request_item.create_uid
+            )
 
-        return http.request.render("documents_hr.documents_hr_portal_view", {
-            "documents": documents,
-            "base_url_download": f"/documents_hr/my_files/{employee_id}/{token}",
-        })
+            request.env['documents.document'].sudo().create([{
+                'partner_id': employee_partner.id,
+                'owner_id': owner.id,
+                'datas': doc.file,
+                'name': f'{sign_request_sudo.display_name}/{doc.document_id.name}',
+                'folder_id': employee.hr_employee_folder_id.id,
+                'tag_ids': [(4, signature_request_tag.id)] if signature_request_tag else [],
+                'res_id': employee.id,
+                'res_model': 'hr.employee',  # Security Restriction to contract managers
+            } for doc in sign_request_sudo.completed_document_ids])
 
-    @http.route(
-        "/documents_hr/my_files/<int:employee_id>/<token>/<int:document_id>",
-        type="http", auth="public")
-    def my_files_download(self, employee_id, token, document_id):
-        employee = self._check_token(employee_id, token)
+        versions = request.env['hr.version'].sudo().with_context(active_test=False).search([
+            ('sign_request_ids', 'in', request_item.sign_request_id.ids)]).sorted('date_start', reverse=True)
+        version = versions[0] if versions else False
+        if version and version.company_id.documents_hr_settings and version.employee_id.hr_employee_folder_id:
+            sign_request_sudo = request_item.sign_request_id.sudo()
+            sign_request_sudo._generate_completed_documents()
 
-        document = http.request.env["documents.document"].browse(document_id).sudo().exists()
-        if (
-            not document
-            or not document.parent_path.startswith(employee.company_id.documents_hr_folder.parent_path)
-            or document.partner_id != employee.user_partner_id
-        ):
-            raise Forbidden()
-
-        return http.request.env['ir.binary']._get_stream_from(document).get_response(as_attachment=True)
-
-    @classmethod
-    def _check_token(cls, employee_id, token):
-        employee = http.request.env['hr.employee'].browse(employee_id).exists().sudo()
-        if not employee or not tools.consteq(token, employee._get_employee_documents_token()):
-            raise Forbidden()
-        return employee
+            employee = version.employee_id
+            employee_partner = employee.work_contact_id or employee.user_id.partner_id
+            owner = (employee.user_id
+                     or employee.search([('work_contact_id', '=', employee_partner.id)]).user_id
+                     or version.hr_responsible_id)
+            request.env['documents.document'].sudo().create([{
+                'partner_id': employee_partner.id,
+                'owner_id': owner.id,
+                'datas': doc.file,
+                'name': f'{sign_request_sudo.display_name}/{doc.document_id.name}',
+                'folder_id': version.employee_id.hr_employee_folder_id.id,
+                'tag_ids': [(4, signature_request_tag.id)] if signature_request_tag else [],
+                'res_id': version.id,
+                'res_model': 'hr.version',  # Security Restriction to contract managers
+            } for doc in sign_request_sudo.completed_document_ids])
+        return result

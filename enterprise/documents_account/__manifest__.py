@@ -16,17 +16,18 @@ Documents app in the desired format(s).
     'data': [
         'security/ir.model.access.csv',
         'security/security.xml',
-        'data/mail_activity_type_data.xml',
         'data/documents_account_tour.xml',
         'data/ir_actions_server_data.xml',
         'views/account_move_views.xml',
         'views/documents_account_folder_setting_views.xml',
         'views/documents_document_views.xml',
+        'views/ir_actions_server_views.xml',
         'views/res_config_settings_views.xml',
         'wizard/account_reports_export_wizard_views.xml',
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

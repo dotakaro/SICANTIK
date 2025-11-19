@@ -3,16 +3,16 @@
 # 	* sale_shopee
 # 
 # Translators:
-# Murat Kaplan <muratk@projetgrup.com>, 2025
 # Wil Odoo, 2025
+# Deniz Guvener_Odoo <degu@odoo.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-17 15:23+0000\n"
-"PO-Revision-Date: 2025-01-19 01:20+0000\n"
-"Last-Translator: Wil Odoo, 2025\n"
+"POT-Creation-Date: 2025-07-01 12:09+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Deniz Guvener_Odoo <degu@odoo.com>, 2025\n"
 "Language-Team: Turkish (https://app.transifex.com/odoo/teams/41243/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -172,6 +172,61 @@ msgid ""
 "            </div>\n"
 "        </body>"
 msgstr ""
+"<style>\n"
+"                .shopee_table {\n"
+"                    width: 100%;\n"
+"                    max-width: 900px;\n"
+"                    border-collapse: collapse;\n"
+"                }\n"
+"\n"
+"                .shopee_table th,\n"
+"                .shopee_table td {\n"
+"                    border: 1px solid #888;\n"
+"                }\n"
+"\n"
+"                .shopee_table th {\n"
+"                    white-space: nowrap;\n"
+"                }\n"
+"\n"
+"                .shopee_table thead th {\n"
+"                    padding: 0.5em 0.5em;\n"
+"                    text-align: center;\n"
+"                    border-bottom: 1px solid #888;\n"
+"                }\n"
+"\n"
+"                .shopee_table tbody th,\n"
+"                .shopee_table tbody td {\n"
+"                    padding: 0.5em 0.5em 1em;\n"
+"                    vertical-align: top;\n"
+"                }\n"
+"            </style>\n"
+"            <body><div>\n"
+"                <p>Shopee Shop envanterinin senkronizasyonu sırasında bazı\n"
+"                    <b><t t-out=\"ctx.get('shopee_shop') or ''\">REF</t></b>\n"
+"                    hatalar meydana geldi ve işlem tamamlanamadı.</p>\n"
+"                <p>Shopee tarafından gönderilen hatalar şunlar: </p>\n"
+"                <table class=\"shopee_table\">\n"
+"                    <thead>\n"
+"                        <tr>\n"
+"                            <th>Shopee Ürün Kimliği</th>\n"
+"                            <th>Mesaj</th>\n"
+"                        </tr>\n"
+"                    </thead>\n"
+"                    <tbody>\n"
+"                        <tr t-foreach=\"ctx.get('error_messages')\" t-as=\"error\">\n"
+"                            <th><t t-out=\"error['item_identifier']\"/></th>\n"
+"                            <td>\n"
+"                                <t t-if=\"error['message']\" t-out=\"error['message']\"/>\n"
+"                                <t t-else=\"\">Shopee ile senkronizasyon sırasında bilinmeyen bir hata oluştu.\n"
+"                                    Maalesef, ürünün mevcut miktarının doğru olup olmadığını manuel olarak kontrol etmeniz gerekiyor.\n"
+"                                    Sorun devam ederse lütfen <a href=\"https://www.odoo.com/help/\">Odoo destek </a> ile iletişime geçin.\n"
+"                                </t>\n"
+"                            </td>\n"
+"                        </tr>\n"
+"                    </tbody>\n"
+"                </table>\n"
+"            </div>\n"
+"        </body>"
 
 #. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__api_endpoint
@@ -336,6 +391,11 @@ msgid "Create Shopee Accounts"
 msgstr ""
 
 #. module: sale_shopee
+#: model:ir.model,website_form_label:sale_shopee.model_res_partner
+msgid "Create a Customer"
+msgstr ""
+
+#. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__create_uid
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__create_uid
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__create_uid
@@ -370,9 +430,14 @@ msgid "Default Salesperson"
 msgstr "Varsayılan Satış Personeli"
 
 #. module: sale_shopee
+#: model:ir.model.fields,field_description:sale_shopee.field_product_product__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_res_partner__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_sale_order__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__display_name
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_move__display_name
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_picking__display_name
 msgid "Display Name"
 msgstr "İsim Göster"
 
@@ -461,9 +526,14 @@ msgid "Fulfillment by Shopee"
 msgstr ""
 
 #. module: sale_shopee
+#: model:ir.model.fields,field_description:sale_shopee.field_product_product__id
+#: model:ir.model.fields,field_description:sale_shopee.field_res_partner__id
+#: model:ir.model.fields,field_description:sale_shopee.field_sale_order__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__id
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__id
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_move__id
+#: model:ir.model.fields,field_description:sale_shopee.field_stock_picking__id
 msgid "ID"
 msgstr "ID"
 
@@ -521,7 +591,7 @@ msgstr ""
 #. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__last_inventory_sync_date
 msgid "Last Sync Date"
-msgstr ""
+msgstr "Son Senkronizasyon Tarihi"
 
 #. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_account__write_uid
@@ -656,6 +726,8 @@ msgid ""
 "Remaining days of the shop authorization. Show a warning in the Shopee Shop "
 "view that the authorization will expire soon."
 msgstr ""
+"Mağaza yetkilendirmesinin kalan gün sayısı. Shopee Mağaza görünümünde "
+"yetkilendirmenin yakında sona ereceği konusunda bir uyarı gösterin."
 
 #. module: sale_shopee
 #. odoo-python
@@ -935,14 +1007,14 @@ msgstr ""
 
 #. module: sale_shopee
 #. odoo-python
-#: code:addons/sale_shopee/models/shopee_shop.py:0
-msgid "Shopee move: %(name)s"
+#: code:addons/sale_shopee/models/stock_move.py:0
+msgid "Shopee move: %s"
 msgstr ""
 
 #. module: sale_shopee
 #: model:mail.template,name:sale_shopee.inventory_sync_failure
 msgid "Shopee: Inventory Synchronization Failure"
-msgstr ""
+msgstr "Shopee: Envanter Senkronizasyonu Hatası"
 
 #. module: sale_shopee
 #: model:mail.template,name:sale_shopee.order_sync_failure
@@ -962,7 +1034,7 @@ msgstr ""
 #. module: sale_shopee
 #: model:ir.actions.server,name:sale_shopee.ir_cron_sync_shopee_inventory_ir_actions_server
 msgid "Shopee: sync inventory"
-msgstr ""
+msgstr "Shopee: envanter senkronizasyonu"
 
 #. module: sale_shopee
 #: model:ir.actions.server,name:sale_shopee.ir_cron_sync_shopee_orders_ir_actions_server
@@ -988,6 +1060,11 @@ msgid "Status"
 msgstr "Durumu"
 
 #. module: sale_shopee
+#: model:ir.model,name:sale_shopee.model_stock_move
+msgid "Stock Move"
+msgstr "Stok Hareketi"
+
+#. module: sale_shopee
 #: model:ir.model.fields.selection,name:sale_shopee.selection__stock_picking__shopee_label_status__stored
 msgid "Stored"
 msgstr "Saklanmış"
@@ -1010,7 +1087,7 @@ msgstr ""
 #. module: sale_shopee
 #: model:mail.template,subject:sale_shopee.inventory_sync_failure
 msgid "Synchronization of Shopee inventory has failed"
-msgstr ""
+msgstr "Shopee envanterinin senkronizasyonu başarısız oldu"
 
 #. module: sale_shopee
 #: model:mail.template,subject:sale_shopee.order_sync_failure
@@ -1026,7 +1103,7 @@ msgstr ""
 #. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_shop__synchronize_inventory
 msgid "Synchronize Inventory"
-msgstr ""
+msgstr "Stokları Senkronize Et"
 
 #. module: sale_shopee
 #: model:ir.model.fields,field_description:sale_shopee.field_shopee_item__sync_to_shopee
@@ -1169,6 +1246,9 @@ msgid ""
 "synchronized with Shopee. Only products available in FBM or hybrid will be "
 "synchronized."
 msgstr ""
+"Bu mağazayla bağlantılı ürünlerin mevcut miktarları Shopee ile senkronize "
+"ediliyor mu? Yalnızca FBM veya hibrit olarak mevcut ürünler senkronize "
+"edilecektir."
 
 #. module: sale_shopee
 #. odoo-python
@@ -1198,4 +1278,22 @@ msgstr "örneğin Amerikan Pazarı"
 #. module: sale_shopee
 #: model_terms:ir.ui.view,arch_db:sale_shopee.shopee_shop_view_form
 msgid "e.g. Indonesian Shop"
+msgstr ""
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_account.py:0
+msgid "id"
+msgstr ""
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_shop.py:0
+msgid "shop_id"
+msgstr ""
+
+#. module: sale_shopee
+#. odoo-python
+#: code:addons/sale_shopee/models/shopee_shop.py:0
+msgid "shopee_shop_id"
 msgstr ""

@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { registry } from "@web/core/registry";
 import { user as originalUser } from "@web/core/user";
 import { useBus, useService } from "@web/core/utils/hooks";
@@ -51,27 +49,13 @@ export class StudioClientAction extends Component {
             this.render();
         });
 
-        onWillStart(this.onWillStart);
-        onMounted(this.onMounted);
-        onPatched(this.onPatched);
-        onWillUnmount(this.onWillUnmount);
-    }
-
-    onWillStart() {
-        return this.studio.ready;
-    }
-
-    onMounted() {
-        this.studio.pushState();
-        document.body.classList.add("o_in_studio"); // FIXME ?
-    }
-
-    onPatched() {
-        this.studio.pushState();
-    }
-
-    onWillUnmount() {
-        document.body.classList.remove("o_in_studio");
+        onWillStart(() => this.studio.ready);
+        onMounted(() => {
+            document.body.classList.add("o_in_studio");
+            this.studio.pushState();
+        });
+        onPatched(() => this.studio.pushState());
+        onWillUnmount(() => document.body.classList.remove("o_in_studio"));
     }
 
     async onNewAppCreated({ action_id, menu_id }) {
@@ -83,7 +67,6 @@ export class StudioClientAction extends Component {
         if (!action.views.some((vTuple) => vTuple[1] === initViewType)) {
             initViewType = action.views[0][1];
         }
-
         this.studio.setParams({
             mode: this.studio.MODES.EDITOR,
             editorTab: "views",

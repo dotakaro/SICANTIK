@@ -3,7 +3,7 @@
 
 {
     'name': 'Leads statistics and generation on social',
-    'category': 'Hidden',
+    'category': 'Marketing/Social Marketing',
     'version': '1.0',
     'summary': 'Add crm UTM info on social',
     'description': """UTM and posts on crm""",
@@ -23,5 +23,6 @@
             'social_crm/static/src/xml/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

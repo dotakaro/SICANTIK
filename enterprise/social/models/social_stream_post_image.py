@@ -4,7 +4,7 @@
 from odoo import models, fields
 
 
-class SocialStreamAttachment(models.Model):
+class SocialStreamPostImage(models.Model):
     """ A social.stream.post.image represents an image that was shared with a social.stream.post.
     It only contains the URL of the image on the related social.media. """
 
@@ -12,4 +12,4 @@ class SocialStreamAttachment(models.Model):
     _description = 'Social Stream Post Image Attachment'
 
     image_url = fields.Char("Image URL", readonly=True, required=True)
-    stream_post_id = fields.Many2one('social.stream.post', string="Stream Post", ondelete="cascade")
+    stream_post_id = fields.Many2one('social.stream.post', string="Stream Post", index='btree_not_null', ondelete="cascade")

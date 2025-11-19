@@ -1,3 +1,4 @@
+import { after } from "@odoo/hoot";
 import {
     click,
     hover,
@@ -6,7 +7,6 @@ import {
     queryFirst,
     queryOne,
     queryText,
-    setInputRange,
 } from "@odoo/hoot-dom";
 import { advanceTime, animationFrame, runAllTimers } from "@odoo/hoot-mock";
 import { getPickerCell, zoomOut } from "@web/../tests/core/datetime/datetime_test_helpers";
@@ -32,7 +32,7 @@ import { contains, mountView } from "@web/../tests/web_test_helpers";
 
 /**
  * @template T
- * @typedef {(columnHeader: string, rowHeader: string, options: CellHelperOptions) => T} CellHelper
+ * @typedef {(columnHeader: string, groupHeader: string, rowHeader: string, options: CellHelperOptions) => T} CellHelper
  */
 
 /**
@@ -40,7 +40,7 @@ import { contains, mountView } from "@web/../tests/web_test_helpers";
  * @typedef {(text: string, options: PillHelperOptions) => T} PillHelper
  */
 
-/** @typedef {CellHelperOptions & { row: number, column: number }} DragGridParams */
+/** @typedef {CellHelperOptions & { row: number, columnHeader: string, groupHeader: string }} DragGridParams */
 
 /** @typedef {PillHelperOptions & { pill: string }} DragPillParams */
 
@@ -58,12 +58,10 @@ function makeClassSelector(key) {
 export const CLASSES = {
     draggable: "o_draggable",
     group: "o_gantt_group",
-    highlightedPill: "highlight",
     resizable: "o_resizable",
 
     // Connectors
     highlightedConnector: "o_connector_highlighted",
-    highlightedConnectorCreator: "o_connector_creator_highlight",
     lockedConnectorCreator: "o_connector_creator_lock", // Connector creators highlight for initial pill
 };
 
@@ -80,7 +78,6 @@ export const SELECTORS = {
     group: makeClassSelector(CLASSES.group),
     groupHeader: ".o_gantt_header_title",
     columnHeader: ".o_gantt_header_cell",
-    highlightedPill: makeClassSelector(CLASSES.highlightedPill),
     hoverable: ".o_gantt_hoverable",
     noContentHelper: ".o_view_nocontent",
     pill: ".o_gantt_pill",
@@ -93,7 +90,8 @@ export const SELECTORS = {
         ".o_gantt_row_header .o_gantt_progress_bar > .o_gantt_group_hours > .fa-exclamation-triangle",
     renderer: ".o_gantt_renderer",
     resizable: makeClassSelector(CLASSES.resizable),
-    resizeBadge: ".o_gantt_pill_resize_badge",
+    startBadge: ".o_gantt_pill_time_display_badge:eq(0)",
+    stopBadge: ".o_gantt_pill_time_display_badge:eq(1)",
     resizeEndHandle: ".o_handle_end",
     resizeHandle: ".o_resize_handle",
     resizeStartHandle: ".o_handle_start",
@@ -103,17 +101,15 @@ export const SELECTORS = {
     startDatePicker: ".o_gantt_picker:nth-child(2)",
     stopDatePicker: ".o_gantt_picker:nth-child(4)",
     thumbnail: ".o_gantt_row_thumbnail",
-    rangeMenu: ".o_gantt_range_menu",
-    rangeMenuToggler: ".o_gantt_renderer_controls div.dropdown:nth-child(2)",
+    scaleSelectorMenu: ".o_gantt_scale_selector_menu",
+    scaleSelectorToggler: ".o_gantt_scale_selector .dropdown-toggle",
     todayButton: ".o_gantt_button_today",
     toolbar: ".o_gantt_renderer_controls div[name='ganttToolbar']",
     undraggable: ".o_undraggable",
     view: ".o_gantt_view",
     viewContent: ".o_gantt_view .o_content",
-    previousButton: ".o_gantt_renderer_controls button:has(> .fa-arrow-left)",
-    nextButton: ".o_gantt_renderer_controls button:has(> .fa-arrow-right)",
-    minusButton: ".o_gantt_renderer_controls button:has(> .fa-search-minus)",
-    plusButton: ".o_gantt_renderer_controls button:has(> .fa-search-plus)",
+    previousButton: ".o_gantt_renderer_controls button:has(> .oi-arrow-left)",
+    nextButton: ".o_gantt_renderer_controls button:has(> .oi-arrow-right)",
 
     // Connectors
     connector: ".o_gantt_connector",
@@ -121,7 +117,6 @@ export const SELECTORS = {
     connectorCreatorRight: ".o_connector_creator_right",
     connectorCreatorWrapper: ".o_connector_creator_wrapper",
     connectorRemoveButton: ".o_connector_stroke_remove_button",
-    connectorRescheduleButton: ".o_connector_stroke_reschedule_button",
     connectorStroke: ".o_connector_stroke",
     connectorStrokeButton: ".o_connector_stroke_button",
     highlightedConnector: makeClassSelector(CLASSES.highlightedConnector),
@@ -159,13 +154,13 @@ async function selectDateInDatePicker(selector, datetime) {
  * @param {string} [param0.startDate]
  * @param {string} [param0.stopDate]
  */
-export async function selectGanttRange({ startDate, stopDate }) {
+export async function selectCustomRange({ startDate, stopDate }) {
     const {
         startDatePicker: START_SELECTOR,
         stopDatePicker: STOP_SELECTOR,
-        rangeMenuToggler,
+        scaleSelectorToggler,
     } = SELECTORS;
-    await click(rangeMenuToggler);
+    await click(scaleSelectorToggler);
     await animationFrame();
     if (startDate) {
         await selectDateInDatePicker(START_SELECTOR, luxon.DateTime.fromISO(startDate));
@@ -178,21 +173,10 @@ export async function selectGanttRange({ startDate, stopDate }) {
 }
 
 export async function selectRange(label) {
-    await click(SELECTORS.rangeMenuToggler);
+    await click(SELECTORS.scaleSelectorToggler);
     await animationFrame();
-    await click(`${SELECTORS.rangeMenu} .dropdown-item:contains(/^${label}$/i)`);
+    await click(`${SELECTORS.scaleSelectorMenu} .dropdown-item:contains(/^${label}$/i)`);
     await ganttControlsChanges();
-}
-
-export function getActiveScale() {
-    return Number(queryFirst(".o_gantt_renderer_controls input").value);
-}
-
-/**
- * @param {Number} scale
- */
-export async function setScale(scale) {
-    await setInputRange(".o_gantt_renderer_controls input", scale);
 }
 
 export async function focusToday() {
@@ -216,13 +200,13 @@ export async function dragPill(text, options) {
      */
     const moveTo = async (params) => {
         let cell;
-        if (params?.column) {
-            cell = await hoverGridCell(params.column, params.row, params);
+        if (params?.columnHeader && params?.groupHeader) {
+            cell = await hoverGridCell(params.columnHeader, params.groupHeader, params.row, params);
         } else if (params?.pill) {
             ({ cell } = await hoverPillCell(getPillWrapper(params.pill, params)));
         }
         return dragActions.moveTo(cell, {
-            position: getCellPositionOffset(cell, params.part),
+            position: getCellPositionOffset(cell, params?.part),
             relative: true,
         });
     };
@@ -249,11 +233,9 @@ export async function editPill(text, options) {
 /**
  * @param {string} header
  */
-function findColumnFromHeader(header) {
+function findColumnFromHeader(columnHeader, groupHeader) {
     const columnHeaders = getHeaders(SELECTORS.columnHeader);
     const groupHeaders = getHeaders(SELECTORS.groupHeader);
-    const columnHeader = header.substring(0, header.indexOf(" "));
-    const groupHeader = header.substring(header.indexOf(" ") + 1);
     const groupRange = groupHeaders.find((header) => header.title === groupHeader).range;
     return columnHeaders.find(
         (header) =>
@@ -263,9 +245,15 @@ function findColumnFromHeader(header) {
     ).range[0];
 }
 
+export async function unfoldAllColumns() {
+    for (const foldedHeader of queryAll(".o_gantt_header_folded")) {
+        await contains(foldedHeader).click();
+    }
+}
+
 /** @type {CellHelper<HTMLElement>} */
-export function getCell(columnHeader, rowHeader = null, options) {
-    const columnIndex = findColumnFromHeader(columnHeader);
+export function getCell(columnHeader, groupHeader, rowHeader = null, options) {
+    const columnIndex = findColumnFromHeader(columnHeader, groupHeader);
     const cells = queryAll(`${SELECTORS.cell}[data-col='${columnIndex}']`);
     if (!cells.length) {
         throw new Error(`Could not find cell at column ${columnHeader}`);
@@ -282,8 +270,8 @@ export function getCell(columnHeader, rowHeader = null, options) {
 }
 
 /** @type {CellHelper<string[]>} */
-export function getCellColorProperties(columnHeader, rowHeader = null, options) {
-    const cell = getCell(columnHeader, rowHeader, options);
+export function getCellColorProperties(columnHeader, groupHeader, rowHeader = null, options) {
+    const cell = getCell(columnHeader, groupHeader, rowHeader, options);
     const cssVarRegex = /(--[\w-]+)/g;
 
     if (cell.style.background) {
@@ -301,7 +289,7 @@ export function getCellColorProperties(columnHeader, rowHeader = null, options) 
  * @param {HTMLElement} pill
  * @returns {HTMLElement}
  */
-export function getCellFromPill(pill) {
+function getCellFromPill(pill) {
     if (!pill.matches(SELECTORS.pillWrapper)) {
         pill = pill.closest(SELECTORS.pillWrapper);
     }
@@ -325,27 +313,44 @@ function parseNumber(str) {
 /**
  * @param {string} selector
  */
-function getHeaders(selector) {
+function getHeaders(selector, setTitleAttrOnHeaders = false) {
     const groupHeaders = [];
     for (const el of queryAll(selector)) {
         const { column: range } = getGridStyle(el);
-        groupHeaders.push({
+        const header = {
             range,
             title: el.textContent,
-        });
+        };
+        if (setTitleAttrOnHeaders) {
+            header.titleAttr = el.title;
+        }
+        groupHeaders.push(header);
     }
     return groupHeaders;
 }
 
-export function getGridContent() {
-    const columnHeaders = getHeaders(SELECTORS.columnHeader);
-    const groupHeaders = getHeaders(SELECTORS.groupHeader);
-    const range = queryAllTexts(SELECTORS.rangeMenuToggler)[0] || null;
+let CELL_PART = null;
+export function setCellParts(cellPart) {
+    CELL_PART = cellPart;
+    after(() => {
+        CELL_PART = null;
+    });
+}
+
+/**
+ * @param {Object} [params={}]
+ * @param {boolean} [params.setTitleAttrOnHeaders]
+ * @returns {Object}
+ */
+export function getGridContent(params = {}) {
+    const columnHeaders = getHeaders(SELECTORS.columnHeader, params.setTitleAttrOnHeaders);
+    const groupHeaders = getHeaders(SELECTORS.groupHeader, params.setTitleAttrOnHeaders);
+    const range = queryAllTexts(SELECTORS.scaleSelectorToggler)[0] || null;
     const viewTitle = queryAllTexts(".o_gantt_title")[0] || null;
     const colsRange = queryFirst(SELECTORS.columnHeader)
         .style.getPropertyValue("grid-column")
         .split("/");
-    const cellParts = parseNumber(colsRange[1]) - parseNumber(colsRange[0]);
+    const cellParts = CELL_PART || parseNumber(colsRange[1]) - parseNumber(colsRange[0]);
     const pillEls = new Set(queryAll(`${SELECTORS.cellContainer} ${SELECTORS.pillWrapper}`));
     const rowEls = queryAll(`.o_gantt_row_headers > ${SELECTORS.rowHeader}`);
     const singleRowMode = rowEls.length === 0;
@@ -428,17 +433,15 @@ export function getGridContent() {
 /**
  * @param {HTMLElement} el
  */
-export function getGridStyle(el) {
+function getGridStyle(el) {
     /**
      * @param {"row" | "column"} prop
      * @returns {[number, number]}
      */
-    const getGridProp = (prop) => {
-        return [
-            parseNumber(style.getPropertyValue(`grid-${prop}-start`)),
-            parseNumber(style.getPropertyValue(`grid-${prop}-end`)),
-        ];
-    };
+    const getGridProp = (prop) => [
+        parseNumber(style.getPropertyValue(`grid-${prop}-start`)),
+        parseNumber(style.getPropertyValue(`grid-${prop}-end`)),
+    ];
 
     const style = getComputedStyle(el);
 
@@ -456,7 +459,7 @@ function getCellPositionOffset(cell, part) {
         const colsRange = queryFirst(SELECTORS.columnHeader)
             .style.getPropertyValue("grid-column")
             .split("/");
-        const cellParts = parseNumber(colsRange[1]) - parseNumber(colsRange[0]);
+        const cellParts = CELL_PART || parseNumber(colsRange[1]) - parseNumber(colsRange[0]);
         const partWidth = rect.width / cellParts;
         position.x += Math.ceil(partWidth * (part - 1));
     }
@@ -478,8 +481,8 @@ async function hoverCell(cell, options) {
  * Hovers a cell found from given grid coordinates.
  * @type {CellHelper<Promise<HTMLElement>>}
  */
-export async function hoverGridCell(columnHeader, rowHeader = null, options) {
-    const cell = getCell(columnHeader, rowHeader, options);
+export async function hoverGridCell(columnHeader, groupHeader, rowHeader = null, options) {
+    const cell = getCell(columnHeader, groupHeader, rowHeader, options);
     await hoverCell(cell, options);
     return cell;
 }
@@ -488,8 +491,8 @@ export async function hoverGridCell(columnHeader, rowHeader = null, options) {
  * Click on a cell found from given grid coordinates.
  * @type {CellHelper<Promise<HTMLElement>>}
  */
-export async function clickCell(columnHeader, rowHeader = null, options) {
-    const cell = getCell(columnHeader, rowHeader, options);
+export async function clickCell(columnHeader, groupHeader, rowHeader = null, options) {
+    const cell = getCell(columnHeader, groupHeader, rowHeader, options);
     await contains(cell).click();
 }
 
@@ -521,7 +524,7 @@ export async function resizePill(pill, side, deltaOrPosition, shouldDrop = true)
     const colsRange = queryFirst(SELECTORS.columnHeader)
         .style.getPropertyValue("grid-column")
         .split("/");
-    const cellParts = parseNumber(colsRange[1]) - parseNumber(colsRange[0]);
+    const cellParts = CELL_PART || parseNumber(colsRange[1]) - parseNumber(colsRange[0]);
 
     // Calculate delta or position
     const delta = typeof deltaOrPosition === "object" ? 0 : deltaOrPosition;

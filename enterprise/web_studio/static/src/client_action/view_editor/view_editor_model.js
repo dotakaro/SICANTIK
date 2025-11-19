@@ -1,8 +1,7 @@
-/** @odoo-module */
-
-import { rpc } from "@web/core/network/rpc";
+import { rpc, rpcBus } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
 import { SearchModel } from "@web/search/search_model";
+import { GROUPABLE_TYPES } from "@web/search/utils/misc";
 import {
     computeXpath,
     getNodesFromXpath,
@@ -119,28 +118,24 @@ export class ViewEditorModel extends Reactive {
                 this._services.ui.unblock();
             }
         };
-        this._decorateFunction = (callback) => {
-            return async (...args) => {
-                return this._decorateCall(callback, ...args);
-            };
-        };
+        this._decorateFunction =
+            (callback) =>
+            async (...args) =>
+                this._decorateCall(callback, ...args);
 
         this._decoratedRpc = this._decorateFunction(rpc);
 
         this._editionFlow = editionFlow;
 
-        this.GROUPABLE_TYPES = ["many2one", "char", "boolean", "selection", "date", "datetime"];
+        this.GROUPABLE_TYPES = [...GROUPABLE_TYPES];
+        this.MEASURABLE_TYPES = ["integer", "float", "monetary"];
 
         this._activeNodeXpath = undefined;
         this.lastActiveNodeXpath = undefined;
 
         this._getEditor = memoizeOnce(() => {
-            let viewType = this.viewType;
+            const viewType = this.viewType;
             const view = viewRegistry.contains(viewType) ? viewRegistry.get(viewType) : null;
-            //FIXME remove as soon as the legacy api is removed (post v18)
-            if (viewType === "kanban" && !this.mainArch.includes('t-name="card"')) {
-                viewType = "kanban_legacy";
-            }
             const editor = editorsRegistry.contains(viewType)
                 ? editorsRegistry.get(viewType)
                 : null;
@@ -216,6 +211,12 @@ export class ViewEditorModel extends Reactive {
 
             const context = this._subviewInfo ? this._subviewInfo.context : editedAction.context;
             const searchModel = this.editorInfo.editor.SearchModel || SearchModel;
+            let defaultGroupBy = [];
+            if (!this.isEditingSubview) {
+                defaultGroupBy = this.xmlDoc.firstElementChild.hasAttribute("default_group_by")
+                    ? this.xmlDoc.firstElementChild.getAttribute("default_group_by").split(",")
+                    : [];
+            }
             return {
                 context: { ...context, studio: 1 },
                 domain: editedAction.domain,
@@ -226,6 +227,7 @@ export class ViewEditorModel extends Reactive {
                     this.mode !== "interactive",
                 display: { controlPanel: false, searchPanel: false },
                 globalState,
+                defaultGroupBy,
             };
         });
 
@@ -284,9 +286,7 @@ export class ViewEditorModel extends Reactive {
         // to the interactive editor.
         this._currentSidebarTab = undefined;
 
-        this._getFieldsAllowedRename = memoizeOnce(() => {
-            return new Set();
-        });
+        this._getFieldsAllowedRename = memoizeOnce(() => new Set());
     }
 
     //-----------------------------------------------------------------
@@ -308,7 +308,13 @@ export class ViewEditorModel extends Reactive {
     }
 
     get studioViewProps() {
-        const key = buildKey(this.viewType, this.resModel, this.mode, this.isEditingSubview);
+        const key = buildKey(
+            this.viewType,
+            this.resModel,
+            this.mode,
+            this.isEditingSubview,
+            this.isEditingSubview ? false : this.arch
+        );
         return this.__getDefaultStudioViewProps(key);
     }
 
@@ -417,7 +423,7 @@ export class ViewEditorModel extends Reactive {
 
     async editX2ManyView({ viewType, fieldName, record, xpath, fieldContext }) {
         const staticList = record.data[fieldName];
-        const resIds = staticList.records.map((r) => r.resId).filter(id => !!id);
+        const resIds = staticList.records.map((r) => r.resId).filter((id) => !!id);
         const resModel = staticList.resModel;
         const archTag = viewType;
 
@@ -453,9 +459,9 @@ export class ViewEditorModel extends Reactive {
         await this._decorateCall(() => this.fieldsGet(resModel));
 
         const context = Object.fromEntries(
-            Object.entries(fieldContext).filter(([key, val]) => {
-                return !key.startsWith("default_") && !key.endsWith("_view_ref");
-            })
+            Object.entries(fieldContext).filter(
+                ([key, val]) => !key.startsWith("default_") && !key.endsWith("_view_ref")
+            )
         );
 
         const x2ManyEditionInfo = {
@@ -468,9 +474,9 @@ export class ViewEditorModel extends Reactive {
             parentRecord: record,
             xpath: `${xpath}/${archTag}[${position}]`, // /form[x]/field[y]/list[z]
             fieldName,
-            getArch: memoizeOnce((mainArch) => {
-                return getSubArch(mainArch, xpathToField, archTag, position);
-            }),
+            getArch: memoizeOnce((mainArch) =>
+                getSubArch(mainArch, xpathToField, archTag, position)
+            ),
         };
         this._editionFlow.pushBreadcrumb(x2ManyEditionInfo);
     }
@@ -488,11 +494,11 @@ export class ViewEditorModel extends Reactive {
         const proms = [this._editionFlow.loadViews({ forceSearch: true })];
 
         if (this.viewType === "form") {
-            proms.push(this._studio.isAllowed("chatter", this.mainResModel));
+            proms.push(this._studio.IrModelInfo.read(this.mainResModel));
         }
 
-        const [viewDescriptions, isChatterAllowed] = await Promise.all(proms);
-        this._isChatterAllowed = isChatterAllowed;
+        const [viewDescriptions, modelInfo] = await Promise.all(proms);
+        this._isChatterAllowed = modelInfo?.is_mail_thread || modelInfo?.state === "manual";
         this.viewDescriptions = viewDescriptions || {
             relatedModels: {},
             fields: [],
@@ -504,7 +510,7 @@ export class ViewEditorModel extends Reactive {
         if (!this.mainView.id) {
             // the call to getStudioViewArch has created the view in DB (before that, it was the default_view)
             // Clear the caches, in particular the one of the viewService to aknowledge that.
-            this.env.bus.trigger("CLEAR-CACHES");
+            rpcBus.trigger("CLEAR-CACHES");
             this.mainView.id = mainViewId;
         }
     }
@@ -683,7 +689,7 @@ export class ViewEditorModel extends Reactive {
             subview_xpath: fullXpath,
             context,
         });
-        this.env.bus.trigger("CLEAR-CACHES");
+        rpcBus.trigger("CLEAR-CACHES");
         return studioViewArch;
     }
 
@@ -748,7 +754,7 @@ export class ViewEditorModel extends Reactive {
     }
 
     _handleDone({ mode, pending, pendingUndone, result }) {
-        this.env.bus.trigger("CLEAR-CACHES");
+        rpcBus.trigger("CLEAR-CACHES");
         if (this.mainViewType === "kanban") {
             // the cache is on a by-template basis
             // kanban may have multiple t-name templates

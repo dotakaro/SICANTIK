@@ -3,7 +3,7 @@
 from odoo import fields, models
 
 
-class PaymentTerm(models.Model):
+class AccountPaymentTerm(models.Model):
     _inherit = 'account.payment.term'
 
     l10n_cl_sii_code = fields.Selection([

@@ -3,7 +3,6 @@
 
 from odoo import http
 from odoo.http import request
-from odoo.modules.module import get_resource_path
 from odoo.tools.misc import file_open
 from odoo.addons.stock_barcode.controllers.stock_barcode import StockBarcodeController
 
@@ -17,7 +16,7 @@ class MRPStockBarcode(StockBarcodeController):
             action = self._try_create_production(barcode)
         return action or super().main_menu(barcode)
 
-    @http.route('/stock_barcode_mrp/save_barcode_data', type='json', auth='user')
+    @http.route('/stock_barcode_mrp/save_barcode_data', type='jsonrpc', auth='user')
     def save_barcode_mrp_data(self, model_vals):
         """ Saves data from the barcode app, allows multiple model saves in the same http call
 
@@ -97,7 +96,6 @@ class MRPStockBarcode(StockBarcodeController):
         barcode_pdfs = super()._get_barcode_pdfs(barcode_type, domain)
         if barcode_type != 'barcode_mrp_commands_and_operation_types':
             return barcode_pdfs
-        file_path = get_resource_path('stock_barcode_mrp', 'static/img', 'barcodes_mrp_actions.pdf')
-        with file_open(file_path, "rb") as commands_file:
+        with file_open('stock_barcode_mrp/static/img/barcodes_mrp_actions.pdf', "rb") as commands_file:
             barcode_pdfs.insert(0, commands_file.read())
         return barcode_pdfs

@@ -20,7 +20,7 @@
         'hr_payroll_account_iso20022',
         'documents_hr_payroll',
         'documents_hr_recruitment',
-        'documents_hr_contract',
+        'documents_hr',
         'hr_skills',
     ],
     'demo': ['data/test_l10n_be_hr_payroll_account_demo.xml'],
@@ -30,5 +30,6 @@
             'test_l10n_be_hr_payroll_account/static/tests/**/*',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -8,7 +8,7 @@ from odoo.exceptions import UserError
 from werkzeug.urls import url_encode, url_join
 
 
-class SocialMediaFacebook(models.Model):
+class SocialMedia(models.Model):
     _inherit = 'social.media'
 
     _FACEBOOK_ENDPOINT = 'https://graph.facebook.com'
@@ -27,7 +27,7 @@ class SocialMediaFacebook(models.Model):
         self.ensure_one()
 
         if self.media_type != 'facebook':
-            return super(SocialMediaFacebook, self)._action_add_account()
+            return super()._action_add_account()
 
         facebook_app_id = self.env['ir.config_parameter'].sudo().get_param('social.facebook_app_id')
         facebook_client_secret = self.env['ir.config_parameter'].sudo().get_param('social.facebook_client_secret')
@@ -79,7 +79,10 @@ class SocialMediaFacebook(models.Model):
         ).text
 
         if iap_add_accounts_url == 'unauthorized':
-            raise UserError(_("Please activate developer mode, add the credentials to the configurations, then go to social media to link your account"))
+            raise UserError(_(
+                "Oops! You currently don't have an active subscription. No worries, though! "
+                "You can easily get one here: %s.\n"
+                "Grab a subscription and unlock a world of amazing features!", 'https://www.odoo.com/buy'))
 
         return {
             'type': 'ir.actions.act_url',

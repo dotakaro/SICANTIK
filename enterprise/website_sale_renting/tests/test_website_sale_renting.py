@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from dateutil.relativedelta import relativedelta, FR, SA, SU
-
+from dateutil.relativedelta import FR, SA, SU, relativedelta
 from freezegun import freeze_time
 
 from odoo import fields
 from odoo.tests import tagged
-from .common import TestWebsiteSaleRentingCommon
+
+from odoo.addons.website_sale_renting.tests.common import TestWebsiteSaleRentingCommon
+
 
 @tagged('post_install', '-at_install')
 class TestWebsiteSaleRenting(TestWebsiteSaleRentingCommon):
@@ -15,7 +15,6 @@ class TestWebsiteSaleRenting(TestWebsiteSaleRentingCommon):
     def test_is_add_to_cart_possible(self):
         self.product_id = self.env['product.product'].create({
             'name': 'Projector',
-            'categ_id': self.env.ref('product.product_category_all').id,
             'type': 'consu',
             'rent_ok': True,
             'extra_hourly': 7.0,
@@ -141,8 +140,8 @@ class TestWebsiteSaleRenting(TestWebsiteSaleRentingCommon):
 
         # pytz.exceptions.AmbiguousTimeError:
         with freeze_time('2024-10-27 02:01:00 UTC'):
-            self.assertTrue(self.website._is_customer_in_the_same_timezone())
+            self.assertFalse(self.website._is_customer_in_the_same_timezone())
 
         # pytz.exceptions.NonExistentTimeError
         with freeze_time('2025-03-30 02:01:00 UTC'):
-            self.assertTrue(self.website._is_customer_in_the_same_timezone())
+            self.assertFalse(self.website._is_customer_in_the_same_timezone())

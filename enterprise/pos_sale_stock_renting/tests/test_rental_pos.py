@@ -1,10 +1,14 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo.addons.point_of_sale.tests.test_frontend import TestPointOfSaleHttpCommon
-from odoo import fields, Command
 from datetime import timedelta
-from odoo.tests import tagged, Form
+
+from odoo import fields
+from odoo.fields import Command
+from odoo.tests.common import tagged
+from odoo.tests import Form
+
+from odoo.addons.point_of_sale.tests.test_frontend import TestPointOfSaleHttpCommon
+
 
 @tagged('post_install', '-at_install')
 class TestPoSRental(TestPointOfSaleHttpCommon):
@@ -12,9 +16,7 @@ class TestPoSRental(TestPointOfSaleHttpCommon):
         """ Test rental product with lots """
         self.tracked_product_id = self.env['product.product'].create({
             'name': 'Test2',
-            'categ_id': self.env.ref('product.product_category_all').id,  # remove category if possible?
             'uom_id': self.env.ref('uom.product_uom_unit').id,
-            'uom_po_id': self.env.ref('uom.product_uom_unit').id,
             'available_in_pos': True,
             'rent_ok': True,
             'is_storable': True,
@@ -42,28 +44,27 @@ class TestPoSRental(TestPointOfSaleHttpCommon):
             'city': 'city',
             'country_id': self.env.ref('base.be').id, })
 
-        self.sale_order_id = self.env['sale.order'].create({
+        self.sale_order_id = self.env['sale.order'].with_context(in_rental_app=True).sudo().create({
             'partner_id': self.cust1.id,
             'partner_invoice_id': self.cust1.id,
             'partner_shipping_id': self.cust1.id,
             'rental_start_date': fields.Datetime.today(),
             'rental_return_date': fields.Datetime.today() + timedelta(days=3),
+            'order_line': [
+                Command.create({
+                    'product_id': self.tracked_product_id.id,
+                    'product_uom_qty': 0.0,
+                    'price_unit': 250,
+                })
+            ]
         })
 
-        self.order_line_id2 = self.env['sale.order.line'].create({
-            'order_id': self.sale_order_id.id,
-            'product_id': self.tracked_product_id.id,
-            'product_uom_qty': 0.0,
-            'product_uom': self.tracked_product_id.uom_id.id,
-            'price_unit': 250,
-        })
-        self.order_line_id2.write({'is_rental': True})
         self.pos_user.write({
-            'groups_id': [
+            'group_ids': [
                 (4, self.env.ref('stock.group_stock_manager').id),
                 (4, self.env.ref('sales_team.group_sale_manager').id),
                 (4, self.env.ref('account.group_account_user').id),
-                (4, self.env.ref('base.group_system').id), # You are not allowed to access 'Test Inherit Daughter' (test.inherit.daughter) records.
+                (4, self.env.ref('base.group_system').id),  # You are not allowed to access 'Test Inherit Daughter' (test_inherit_daughter) records.
             ]
         })
         self.main_pos_config.with_user(self.pos_user).open_ui()
@@ -74,7 +75,7 @@ class TestPoSRental(TestPointOfSaleHttpCommon):
     def test_rental_qty_delivered(self):
         """ Test rental product qty delivered when processed in PoS """
         self.env.user.write({
-            'groups_id': [
+            'group_ids': [
                 Command.link(self.ref('sale_stock_renting.group_rental_stock_picking')),
             ]
         })
@@ -96,7 +97,11 @@ class TestPoSRental(TestPointOfSaleHttpCommon):
         warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
         self.env['stock.quant']._update_available_quantity(self.test_product, warehouse.lot_stock_id, 10.0)
 
-        self.sale_order = self.env['sale.order'].create({
+        self.pricelist = self.env['product.pricelist'].create({
+            'name': 'Test Pricelist',
+        })
+
+        self.sale_order = self.env['sale.order'].sudo().create({
             'partner_id': self.partner_full.id,
             'partner_invoice_id': self.partner_full.id,
             'partner_shipping_id': self.partner_full.id,
@@ -104,13 +109,13 @@ class TestPoSRental(TestPointOfSaleHttpCommon):
             'rental_return_date': fields.Datetime.today() + timedelta(days=3),
         })
 
-        self.order_line = self.env['sale.order.line'].create({
+        self.order_line = self.env['sale.order.line'].sudo().create({
             'order_id': self.sale_order.id,
             'product_id': self.test_product.id,
             'product_uom_qty': 1.0
         })
 
-        self.order_line_non_rental = self.env['sale.order.line'].create({
+        self.order_line_non_rental = self.env['sale.order.line'].sudo().create({
             'order_id': self.sale_order.id,
             'product_id': self.test_product_non_rental.id,
             'product_uom_qty': 1.0,
@@ -126,7 +131,7 @@ class TestPoSRental(TestPointOfSaleHttpCommon):
            'fiscal_position_id': False,
            'to_invoice': True,
            'partner_id': self.partner_full.id,
-           'pricelist_id': self.main_pos_config.pricelist_id.id,
+           'pricelist_id': self.pricelist.id,
            'lines': [[0,
              0,
              {'discount': 0,
@@ -166,7 +171,7 @@ class TestPoSRental(TestPointOfSaleHttpCommon):
         self.assertEqual(self.order_line.qty_delivered, 1.0)
         self.assertEqual(self.order_line_non_rental.qty_delivered, 1.0)
         return_action = self.sale_order.action_open_return()
-        wizard = Form(self.env['rental.order.wizard'].with_context(return_action['context'])).save()
+        wizard = Form(self.env['rental.order.wizard'].sudo().with_context(return_action['context'])).save()
         wizard.apply()
 
         self.assertEqual(self.order_line.qty_delivered, 1.0)

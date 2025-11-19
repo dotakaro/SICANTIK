@@ -4,9 +4,7 @@
     'category': 'Sales/Sales',
     'version': '1.0',
     'depends': ['product_barcodelookup', 'website_sale'],
-    'data': [
-        'data/product_data.xml',
-    ],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

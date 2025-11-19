@@ -3,7 +3,8 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-class Pricelist(models.Model):
+
+class ProductPricelist(models.Model):
     _inherit = "product.pricelist"
 
     product_pricing_ids = fields.One2many(
@@ -23,7 +24,7 @@ class Pricelist(models.Model):
                 ))
 
     def _compute_price_rule(
-        self, products, quantity, currency=None, date=False, start_date=None, end_date=None,
+        self, products, quantity, *, currency=None, date=False, start_date=None, end_date=None,
         **kwargs
     ):
         """ Override to handle the rental product price

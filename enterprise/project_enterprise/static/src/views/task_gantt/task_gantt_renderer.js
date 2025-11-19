@@ -1,7 +1,7 @@
 import { SelectCreateAutoPlanDialog } from "@project_enterprise/views/view_dialogs/select_auto_plan_create_dialog";
 import { _t } from "@web/core/l10n/translation";
 import { Avatar } from "@mail/views/web/fields/avatar/avatar";
-import { markup, onWillUnmount, useEffect } from "@odoo/owl";
+import { markup, useEffect } from "@odoo/owl";
 import { localization } from "@web/core/l10n/localization";
 import { usePopover } from "@web/core/popover/popover_hook";
 import { useService } from "@web/core/utils/hooks";
@@ -9,11 +9,12 @@ import { GanttRenderer } from "@web_gantt/gantt_renderer";
 import { escape } from "@web/core/utils/strings";
 import { MilestonesPopover } from "./milestones_popover";
 import { FormViewDialog } from "@web/views/view_dialogs/form_view_dialog";
-import { formatFloatTime } from "@web/views/fields/formatters";
+import { TaskGanttRendererControls } from "./task_gantt_renderer_controls";
 
 export class TaskGanttRenderer extends GanttRenderer {
     static components = {
         ...GanttRenderer.components,
+        GanttRendererControls: TaskGanttRendererControls,
         Avatar,
     };
     static headerTemplate = "project_enterprise.TaskGanttRenderer.Header";
@@ -31,9 +32,6 @@ export class TaskGanttRenderer extends GanttRenderer {
         );
         const position = localization.direction === "rtl" ? "bottom" : "right";
         this.milestonePopover = usePopover(MilestonesPopover, { position });
-        onWillUnmount(() => {
-            this.notificationFn?.();
-        });
     }
 
     /**
@@ -44,9 +42,12 @@ export class TaskGanttRenderer extends GanttRenderer {
         if (enrichedPill?.record) {
             if (
                 this.props.model.highlightIds &&
-                !this.props.model.highlightIds.includes(enrichedPill.record.id)
+                    !this.props.model.highlightIds.includes(enrichedPill.record.id)
             ) {
                 pill.className += " opacity-25";
+            }
+            if (enrichedPill.record.is_closed) {
+                pill.className += " opacity-50";
             }
         }
         return enrichedPill;
@@ -56,7 +57,7 @@ export class TaskGanttRenderer extends GanttRenderer {
         super.computeVisibleColumns();
         this.columnMilestones = {}; // deadlines and milestones by project
         for (const column of this.columns) {
-            this.columnMilestones[column.id] = {
+            this.columnMilestones[column.index] = {
                 hasDeadLineExceeded: false,
                 allReached: true,
                 projects: {},
@@ -66,7 +67,7 @@ export class TaskGanttRenderer extends GanttRenderer {
             };
         }
         // Handle start date at the beginning of the current period
-        this.columnMilestones[this.columns[0].id].edge = {
+        this.columnMilestones[this.columns[0].index].edge = {
             projects: {},
             hasStartDate: false,
         };
@@ -81,7 +82,7 @@ export class TaskGanttRenderer extends GanttRenderer {
         while (i < this.columns.length && (project || projectDeadline || milestone)) {
             const column = this.columns[i];
             const nextColumn = this.columns[i + 1];
-            const info = this.columnMilestones[column.id];
+            const info = this.columnMilestones[column.index];
 
             if (i == 0 && project && column && column.stop > project.date) {
                 // For the first column, start dates have to be displayed at the start of the period
@@ -165,13 +166,9 @@ export class TaskGanttRenderer extends GanttRenderer {
         }
     }
 
-    getPopoverProps(pill) {
-        const props = super.getPopoverProps(...arguments);
-        const { record } = pill;
-        if (record.planning_overlap) {
-            props.context.planningOverlapHtml = markup(record.planning_overlap);
-        }
-        props.context.allocated_hours = formatFloatTime(props.context.allocated_hours);
+    async getPopoverProps(pill) {
+        const props = await super.getPopoverProps(...arguments);
+        props.actionContext.is_form_gantt = true;
         return props;
     }
 
@@ -212,8 +209,8 @@ export class TaskGanttRenderer extends GanttRenderer {
     }
 
     getNotificationOnSmartSchedule(warningString, old_vals_per_task_id) {
-        this.notificationFn?.();
-        this.notificationFn = this.notificationService.add(
+        this.closeNotificationFn?.();
+        this.closeNotificationFn = this.notificationService.add(
             markup(
                 `<i class="fa btn-link fa-check"></i><span class="ms-1">${escape(
                     warningString
@@ -233,7 +230,7 @@ export class TaskGanttRenderer extends GanttRenderer {
                                 old_vals_per_task_id,
                             ]);
                             this.model.toggleHighlightPlannedFilter(false);
-                            this.notificationFn();
+                            this.closeNotificationFn();
                             await this.model.fetchData();
                         },
                     },
@@ -279,27 +276,28 @@ export class TaskGanttRenderer extends GanttRenderer {
         return false;
     }
 
-    highlightPill(pillId, highlighted) {
-        if (!this.connectorDragState.dragging) {
-            return super.highlightPill(pillId, highlighted);
-        }
-        const pill = this.pills[pillId];
-        if (!pill) {
-            return;
-        }
-        const { record } = pill;
-        if (!this.shouldRenderRecordConnectors(record)) {
-            return super.highlightPill(pillId, false);
-        }
-        return super.highlightPill(pillId, highlighted);
-    }
-
     onPlan(rowId, columnStart, columnStop) {
-        const { start, stop } = this.getColumnStartStop(columnStart, columnStop);
+        let { start, stop } = this.getColumnStartStop(columnStart, columnStop);
+        ({ start, stop } = this.normalizeTimeRange(start, stop));
         this.dialogService.add(
             SelectCreateAutoPlanDialog,
             this.getSelectCreateDialogProps({ rowId, start, stop, withDefault: true })
         );
+    }
+
+    getUndoAfterDragMessages(dragAction) {
+        if (dragAction === "copy") {
+            return {
+                success: _t("Task duplicated"),
+                undo: _t("Task removed"),
+                failure: _t("Task could not be removed"),
+            };
+        }
+        return {
+            success: _t("Task rescheduled"),
+            undo: _t("Task reschedule undone"),
+            failure: _t("Failed to undo reschedule"),
+        };
     }
 
     //--------------------------------------------------------------------------
@@ -317,4 +315,16 @@ export class TaskGanttRenderer extends GanttRenderer {
     onMilestoneMouseLeave() {
         this.milestonePopover.close();
     }
+
+    //--------------------------------------------------------------------------
+    //Task Connectors
+    //--------------------------------------------------------------------------
+
+    shouldConnectorBeDashed(sourcePill) {
+        if (sourcePill.record.is_closed) {
+            return true;
+        }
+        return super.shouldConnectorBeDashed(sourcePill);
+    }
+
 }

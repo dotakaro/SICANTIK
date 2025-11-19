@@ -1,29 +1,24 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import logging
 import json
-import werkzeug.exceptions
 
 from ast import literal_eval
 from copy import deepcopy
 from lxml import etree
 
-import odoo
 from odoo import http, _
-from odoo.http import content_disposition, request
-from odoo.exceptions import UserError, ValidationError
-from odoo.addons.web_studio.controllers import export
+from odoo.http import request
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.osv import expression
+from odoo.service.model import get_public_method
 from odoo.tools import sql, clean_context
-from odoo.tools.misc import html_escape
-from odoo.models import check_method_name
 
 _logger = logging.getLogger(__name__)
 
 # contains all valid operations
 OPERATIONS_WHITELIST = [
     'add',
-    'add_button_action',
+    'add_header_button',
     'attributes',
     'avatar_image',
     'buttonbox',
@@ -31,10 +26,6 @@ OPERATIONS_WHITELIST = [
     'kanban_colorpicker',
     'kanban_menu',
     'kanban_wrap_main',
-    'kanban_dropdown',  # deprecated
-    'kanban_image',  # deprecated
-    'kanban_priority',  # deprecated
-    'kanban_set_cover',  # deprecated
     'map_popup_fields',
     'pivot_measures_fields',
     'graph_pivot_groupbys_fields',
@@ -46,25 +37,7 @@ OPERATIONS_WHITELIST = [
 
 class WebStudioController(http.Controller):
 
-    @http.route('/web_studio/chatter_allowed', type='json', auth='user')
-    def is_chatter_allowed(self, model):
-        """ Returns True iff a chatter can be activated on the model's form views, i.e. if
-            - it is a custom model (since we can make it inherit from mail.thread), or
-            - it already inherits from mail.thread.
-        """
-        Model = request.env[model]
-        return Model._custom or isinstance(Model, request.env.registry['mail.thread'])
-
-    @http.route('/web_studio/activity_allowed', type='json', auth='user')
-    def is_activity_allowed(self, model):
-        """ Returns True iff an activity view can be activated on the model's action, i.e. if
-            - it is a custom model (since we can make it inherit from mail.thread), or
-            - it already inherits from mail.thread.
-        """
-        Model = request.env[model]
-        return Model._custom or isinstance(Model, request.env.registry['mail.activity.mixin'])
-
-    @http.route('/web_studio/get_studio_action', type='json', auth='user')
+    @http.route('/web_studio/get_studio_action', type='jsonrpc', auth='user')
     def get_studio_action(self, action_name, model, view_id=None, view_type=None):
         model = request.env['ir.model']._get(model)
 
@@ -96,10 +69,13 @@ class WebStudioController(http.Controller):
         }
 
     def _get_studio_action_automation_webhooks(self, model, **kwargs):
-        action = self._get_studio_action_automations(model, **kwargs)
-        action["display_name"] = _("Webhook Automations")
-        action["domain"] = "[('trigger', '=', 'on_webhook')]"
-        action["context"]["default_trigger"] = "on_webhook"
+        action = request.env['ir.actions.act_window']._for_xml_id('web_studio.webhook_automation_act')
+        action['context'] = {
+            'default_model_id': model.id,
+            'search_default_model_id': model.id,
+            'active_test': False,
+            'default_trigger': "on_webhook",
+        }
         return action
 
     def _get_studio_action_automations(self, model, **kwargs):
@@ -151,9 +127,10 @@ class WebStudioController(http.Controller):
             [("model_id.abstract", "=", False)],
             [("report_type", "not in", ['qweb-text'])],
             [("report_name", "not in", report_name_blacklist)],
+            [("model", "=", model.model)]
         ])
         return {
-            'name': _('Reports'),
+            'name': _('Reports for %(model_name)s (%(model)s)', model_name=model.name, model=model.model),
             'type': 'ir.actions.act_window',
             'res_model': 'ir.actions.report',
             'views': [[False, 'kanban'], [False, 'form']],
@@ -161,7 +138,6 @@ class WebStudioController(http.Controller):
             'domain': report_domain,
             'context': {
                 'default_model': model.model,
-                'search_default_model': model.model,
             },
             'help': _(""" <p class="o_view_nocontent_empty_report">
                 Add a new report
@@ -169,7 +145,26 @@ class WebStudioController(http.Controller):
             """),
         }
 
-    @http.route('/web_studio/create_new_app', type='json', auth='user')
+    def _get_studio_action_actions_server(self, model, **kwargs):
+        return {
+            'name': _('Actions Server'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'ir.actions.server',
+            'views': [[False, 'list'], [False, "form"]],
+            'target': 'current',
+            'context': {
+                'web_studio.auto_add_to_context': True,
+                'default_model_id': model.id,
+                'search_default_model_id': model.id,
+                'search_default_action_type': True,  # auto groupby action.state
+            },
+            'help': _("""<p>
+                Create a new Server Action to enhance the power of the model.
+            </p>
+            """),
+        }
+
+    @http.route('/web_studio/create_new_app', type='jsonrpc', auth='user')
     def create_new_app(self, app_name=False, menu_name=False, model_choice=False, model_id=False, model_options=False, icon=None, context=None):
         """Create a new app @app_name, linked to a new action associated to the model_id or the newlyy created model.
             @param menu_name: name of the first menu (and model if model_choice is 'new') of the app
@@ -218,14 +213,14 @@ class WebStudioController(http.Controller):
         menu_values.update(self._get_icon_fields(icon))
         menu_values['child_id'] = child_menu_vals
 
-        new_menu = request.env['ir.ui.menu'].with_context(**{'ir.ui.menu.full_list': True, 'studio': True}).create(menu_values)
+        new_menu = request.env['ir.ui.menu'].with_context(studio=True).create(menu_values)
 
         return {
             'menu_id': new_menu.id,
             'action_id': action.id,
         }
 
-    @http.route('/web_studio/create_new_menu', type='json', auth='user')
+    @http.route('/web_studio/create_new_menu', type='jsonrpc', auth='user')
     def create_new_menu(self, menu_name=False, model_choice=False, model_id=False, model_options=False, parent_menu_id=None, context=None):
         """ Create a new menu @menu_name, linked to a new action associated to the model_id
             @param model_choice: 'new' for a new model, 'existing' for an existing model selected in the wizard
@@ -288,7 +283,7 @@ class WebStudioController(http.Controller):
             'action_id': action.id,
         }
 
-    @http.route('/web_studio/edit_menu_icon', type='json', auth='user')
+    @http.route('/web_studio/edit_menu_icon', type='jsonrpc', auth='user')
     def edit_menu_icon(self, menu_id, icon, context=None):
         if context:
             request.update_context(**context)
@@ -307,7 +302,7 @@ class WebStudioController(http.Controller):
         else:
             raise UserError(_('The icon has not a correct format'))
 
-    @http.route('/web_studio/set_background_image', type='json', auth='user')
+    @http.route('/web_studio/set_background_image', type='jsonrpc', auth='user')
     def set_background_image(self, attachment_id, context=None):
         if context:
             request.update_context(**context)
@@ -315,7 +310,7 @@ class WebStudioController(http.Controller):
         if attachment:
             request.env.company.background_image = attachment.datas
 
-    @http.route('/web_studio/reset_background_image', type='json', auth='user')
+    @http.route('/web_studio/reset_background_image', type='jsonrpc', auth='user')
     def reset_background_image(self, context=None):
         if context:
             request.update_context(**context)
@@ -394,7 +389,7 @@ class WebStudioController(http.Controller):
 
         return new_field
 
-    @http.route('/web_studio/add_view_type', type='json', auth='user')
+    @http.route('/web_studio/add_view_type', type='jsonrpc', auth='user')
     def add_view_type(self, action_type, action_id, res_model, view_type, args, context=None):
         if context:
             request.update_context(**context)
@@ -412,7 +407,7 @@ class WebStudioController(http.Controller):
         self.edit_action(action_type, action_id, args)
         return True
 
-    @http.route('/web_studio/edit_action', type='json', auth='user')
+    @http.route('/web_studio/edit_action', type='jsonrpc', auth='user')
     def edit_action(self, action_type, action_id, args):
 
         action_id = request.env[action_type].browse(action_id)
@@ -463,7 +458,7 @@ class WebStudioController(http.Controller):
     def _generate_studio_view_name(self, view):
         return "Odoo Studio: %s customization" % (view.name)
 
-    @http.route('/web_studio/get_studio_view_arch', type='json', auth='user')
+    @http.route('/web_studio/get_studio_view_arch', type='jsonrpc', auth='user')
     def get_studio_view_arch(self, model, view_type, view_id=False, context=None):
         if context:
             request.update_context(**context)
@@ -498,7 +493,7 @@ class WebStudioController(http.Controller):
             'models': {model: {"fields": request.env[model].fields_get()} for model in models}
         }
 
-    @http.route('/web_studio/restore_default_view', type='json', auth='user')
+    @http.route('/web_studio/restore_default_view', type='jsonrpc', auth='user')
     def restore_default_view(self, view_id):
         view = request.env['ir.ui.view'].browse(view_id)
         self._set_studio_view(view, "")
@@ -507,7 +502,7 @@ class WebStudioController(http.Controller):
 
         return self._return_view(view, studio_view)
 
-    @http.route('/web_studio/edit_approval', type='json', auth='user')
+    @http.route('/web_studio/edit_approval', type='jsonrpc', auth='user')
     def edit_approval(self, model, method, action, operations=None):
         for operation in operations:
             rule_id = operation[1]
@@ -518,7 +513,7 @@ class WebStudioController(http.Controller):
                 rule.exclusive_user = operation[2]
         return True
 
-    @http.route('/web_studio/edit_view', type='json', auth='user')
+    @http.route('/web_studio/edit_view', type='jsonrpc', auth='user')
     def edit_view(self, view_id, studio_view_arch, operations=None, model=None, context=None):
         if context:
             context_cleaned = clean_context(context)
@@ -709,7 +704,7 @@ class WebStudioController(http.Controller):
 
         return self._return_view(view, studio_view, context)
 
-    @http.route('/web_studio/rename_field', type='json', auth='user')
+    @http.route('/web_studio/rename_field', type='jsonrpc', auth='user')
     def rename_field(self, studio_view_id, studio_view_arch, model, old_name, new_name, new_label=None):
         studio_view = request.env['ir.ui.view'].browse(studio_view_id)
 
@@ -731,6 +726,37 @@ class WebStudioController(http.Controller):
             if filename_field_id:
                 filename_field_id.write({'name': new_name + '_filename'})
 
+    @http.route('/web_studio/get_actions_for_model', type='jsonrpc', auth='user')
+    def get_actions_for_model(self, model):
+        actions_list = {}
+        # first get all actions that are available in the Cog menu
+        actions_for_model = request.env["ir.actions.actions"].search([
+            ('binding_model_id', '=', model)
+        ])
+        # the following code groups action_ids by type to avoid having a browse call for each action
+        actions_types = {}
+        for action in actions_for_model:
+            actions_types.setdefault(action.type, []).append(action.id)
+        for action_type, action_ids in actions_types.items():
+            actions = request.env[action_type].browse(action_ids)
+            for action in actions:
+                actions_list[action.id] = {
+                    'name': action.display_name,
+                    'xml_id': action.xml_id or action.id
+                }
+
+        # also list server actions that are not available in the Cog menu
+        server_actions_for_model = request.env["ir.actions.server"].search([
+            ('model_id', '=', model),
+            ('binding_model_id', '=', False)
+        ])
+        for action in server_actions_for_model:
+            actions_list[action.id] = {
+                'name': action.display_name,
+                'xml_id': action.xml_id
+            }
+        return actions_list
+
     def _create_studio_view(self, view, arch):
         # We have to play with priorities in order for our customization to be the last
         # to be applied.
@@ -751,7 +777,7 @@ class WebStudioController(http.Controller):
             'name': self._generate_studio_view_name(view),
         })
 
-    @http.route('/web_studio/edit_field', type='json', auth='user')
+    @http.route('/web_studio/edit_field', type='jsonrpc', auth='user')
     def edit_field(self, model_name, field_name, values, force_edit=False):
         field = request.env['ir.model.fields'].search([('model', '=', model_name), ('name', '=', field_name)])
 
@@ -774,7 +800,7 @@ Are you sure you want to remove the selection values of those records?""", len(r
                 if current_default not in [x[0] for x in selection_values]:
                     request.env['ir.default'].discard_values(model_name, field_name, [current_default])
 
-    @http.route('/web_studio/edit_view_arch', type='json', auth='user')
+    @http.route('/web_studio/edit_view_arch', type='jsonrpc', auth='user')
     def edit_view_arch(self, view_id, view_arch, context=None):
         if context:
             context_cleaned = clean_context(context)
@@ -790,39 +816,7 @@ Are you sure you want to remove the selection values of those records?""", len(r
             studio_view = self._get_studio_view(view)
             return self._return_view(view, studio_view, context)
 
-    @http.route('/web_studio/export', type='http', auth='user')
-    def export(self, **kw):
-        """ Exports a zip file containing the 'studio_customization' module
-            gathering all customizations done with Studio (customizations of
-            existing apps and freshly created apps) along with the
-            StudioExportModel's related data.
-        """
-        if not request.env.is_admin():
-            return
-
-        studio_module = request.env['ir.module.module'].get_studio_module()
-        try:
-            wizard_id = int(kw.get('active_id'))
-            wizard = request.env['studio.export.wizard'].browse(wizard_id)
-            export_info = wizard._get_export_info()
-            content = export.generate_archive(studio_module, export_info)
-            return request.make_response(content, headers=[
-                ('Content-Disposition', content_disposition('customizations.zip')),
-                ('Content-Type', 'application/zip'),
-                ('Content-Length', len(content)),
-            ])
-        except Exception as e:
-            _logger.warning("Error while generating studio export %s", studio_module.name, exc_info=True)
-            se = http.serialize_exception(e)
-            error = {
-                'code': 200,
-                'message': "Odoo Server Error",
-                'data': se
-            }
-            res = request.make_response(html_escape(json.dumps(error)))
-            raise werkzeug.exceptions.InternalServerError(response=res) from e
-
-    @http.route('/web_studio/create_default_view', type='json', auth='user')
+    @http.route('/web_studio/create_default_view', type='jsonrpc', auth='user')
     def create_default_view(self, model, view_type, attrs):
         attrs['string'] = "Default %s view for %s" % (view_type, model)
         arch = self._get_default_view(view_type, attrs)
@@ -853,7 +847,10 @@ Are you sure you want to remove the selection values of those records?""", len(r
             for k, v in node.get('attrs', {}).items():
                 if k == 'class':
                     # Special case for classes which usually contain multiple values
-                    expr += '[contains(@%s,\'%s\')]' % (k, v)
+                    clx = v.strip().split(" ")
+                    if clx:
+                        str_classes = ",".join(f"'{cls}'" for cls in clx)
+                        expr += f"[hasclass({str_classes})]"
                 else:
                     expr += '[@%s=\'%s\']' % (k, v)
 
@@ -1097,7 +1094,9 @@ Are you sure you want to remove the selection values of those records?""", len(r
                     options['color_field'] = 'x_color'
                 new_attrs['options'] = json.dumps(options)
 
-
+        if new_attrs.get('type') and operation['target']['tag'] == 'button':
+            # Set an empty name value for the button
+            new_attrs['name'] = ''
         xpath_node = self._get_xpath_node(arch, operation)
 
         for key, new_attr in new_attrs.items():
@@ -1137,28 +1136,11 @@ Are you sure you want to remove the selection values of those records?""", len(r
             buttonbox_node = etree.Element('div', {'name': 'button_box', 'class': 'oe_button_box'})
             xpath_node.append(buttonbox_node)
 
-    def _operation_add_button_action(self, arch, operation, model=None):
-        """Add action button for form or list view"""
-
-        label = operation.get("label")
-        button_type = operation.get("button_type")
-        if not label:
-            raise UserError('The label string is mandatory.')
-
-        params = {'string': label}
-        if button_type is not None and button_type == 'action':
-            actionId = operation["actionId"]
-            abstract_action = request.env["ir.actions.actions"].browse(actionId)
-            action = request.env[abstract_action.type].browse(actionId)
-            params['name'] = action.xml_id or str(actionId)
-            params['type'] = button_type
-        elif button_type is not None and button_type == 'object':
-            methodId = operation["methodId"]
-            params['name'] = str(methodId)
-            params['type'] = button_type
-        else:
-            raise UserError('The type of statusBarButton must be "action" or "method".')
-
+    def _operation_add_header_button(self, arch, operation, model):
+        """Add action button for form, list or kanban view"""
+        actions_for_model = self.get_actions_for_model(model)
+        type = 'action' if len(actions_for_model) > 0 else 'object'
+        params = {'string': 'New Button', 'type': type}
         expression = "//header[1]"
         position = "inside"
         xpath_node = arch.find('xpath[@expr="{expr}"][@position="{position}"]'.format(expr=expression, position=position))
@@ -1183,7 +1165,8 @@ Are you sure you want to remove the selection values of those records?""", len(r
                 }
             }
 
-        if not self.is_chatter_allowed(operation['model']):
+        Model = request.env[operation['model']]
+        if not (Model._custom or isinstance(Model, request.env.registry['mail.thread'])):
             # Chatter can only be activated form models that (can) inherit from mail.thread
             return
 
@@ -1289,240 +1272,6 @@ Are you sure you want to remove the selection values of those records?""", len(r
             'position': 'before',
         }).append(menu_node)
 
-    # deprecated kanban legacy code, will be deleted > 18.0
-    def _operation_kanban_dropdown(self, arch, operation, model):
-        """ Insert a dropdown and its corresponding needs in an kanban view arch.
-            Implied modifications:
-                - create an integer field x_color in the model if it doesn't exist
-                - add the field x_color in the view
-                - add a dropdown section in the view
-                - modify the kanban class to use `oe_kanban_color_`
-        """
-        model_id = request.env['ir.model']._get_id(model)
-        if not model_id:
-            return
-
-        color_field_name = 'x_color'
-        if not request.env['ir.model.fields'].search_count([('model_id', '=', model_id), ('name', '=', color_field_name), ('ttype', '=', 'integer')], limit=1):
-            # create a field if it doesn't exist in the model
-            request.env['ir.model.fields'].with_context(studio=True).create({
-                'model': model,
-                'model_id': model_id,
-                'name': color_field_name,
-                'field_description': 'Color',
-                'ttype': 'integer',
-            })
-
-        # add the field at the beginning
-        etree.SubElement(arch, 'xpath', {
-            'expr': 'templates',
-            'position': 'before',
-        }).append(etree.Element('field', {'name': color_field_name}))
-
-        # add the dropdown before the rest
-        dropdown_node = etree.fromstring("""
-            <t t-name="menu">
-                <t t-if="widget.editable"><a type="edit" class="dropdown-item">Edit</a></t>
-                <t t-if="widget.deletable"><a type="delete" class="dropdown-item">Delete</a></t>
-                <ul class="oe_kanban_colorpicker" data-field="%(field)s"/>
-            </t>
-        """ % {'field': color_field_name})
-        etree.SubElement(arch, 'xpath', {
-            'expr': '//t[@t-name="kanban-box"]',
-            'position': 'before',
-        }).append(dropdown_node)
-
-        # set the corresponding color attribute on the kanban record
-        xpath_node = etree.SubElement(arch, 'xpath', {
-            'expr': '//div',
-            'position': 'attributes',
-        })
-        xml_node = xpath_node.find('attribute[@name="%s"]' % ('color'))
-        if xml_node is None:
-            xml_node = etree.Element('attribute', {'name': 'color'})
-            xml_node.text = color_field_name
-            xpath_node.insert(0, xml_node)
-        else:
-            xml_node.text = color_field_name
-
-    # deprecated kanban legacy code, will be deleted > 18.0
-    def _operation_kanban_image(self, arch, operation, model):
-        """ Insert a image and its corresponding needs in an kanban view arch
-            Implied modifications (if not already done):
-                - add the field in the view
-                - add a section (kanban_right) in the view
-                - add the field with `kanban_image` in this section
-        """
-        model_id = request.env['ir.model']._get_id(model)
-        if not model_id:
-            raise UserError(_('The model %s does not exist.', model))
-
-        if not operation.get('field'):
-            raise UserError(_('Please specify a field.'))
-
-        field_id = request.env['ir.model.fields'].search([
-            ('model', '=', model),
-            ('name', '=', operation['field'])
-        ])
-        if not field_id:
-            raise UserError(_('The field %s does not exist.', operation['field']))
-
-        # add field at the beginning
-        etree.SubElement(arch, 'xpath', {
-            'expr': 'templates',
-            'position': 'before',
-        }).append(etree.Element('field', {'name': field_id.name}))
-
-        # check if there's already a bottom right section
-        # boy o boy i sure hope there's only one kanban!
-        base_arch = request.env[model].with_context(studio=True, no_address_format=True).get_view(view_type='kanban')['arch']
-        base_tree = etree.fromstring(base_arch)
-        has_br_container = base_tree.xpath('//div[hasclass("oe_kanban_bottom_right")]')
-
-        img_elem = """<img
-                t-if="record.{field}.raw_value"
-                t-att-src="kanban_image('{model}', 'image_128', record.{field}.raw_value)"
-                t-att-title="record.{field}.value" t-att-alt="record.{field}.value"
-                class="oe_kanban_avatar o_image_24_cover float-right"
-            />""".format(model=field_id.relation, field=field_id.name)
-        # add the image inside the view
-        if has_br_container:
-            etree.SubElement(arch, 'xpath', {
-                'expr': '//div[hasclass("oe_kanban_bottom_right")]',
-                'position': 'inside',
-            }).append(
-                etree.fromstring(img_elem)
-            )
-        else:
-            etree.SubElement(arch, 'xpath', {
-                'expr': '//div',
-                'position': 'inside',
-            }).append(
-                etree.fromstring("""
-                    <div class="oe_kanban_bottom_right">
-                        %s
-                    </div>
-                """ % img_elem)
-            )
-
-    # deprecated kanban legacy code, will be deleted > 18.0
-    def _operation_kanban_set_cover(self, arch, operation, model):
-        """ Insert a menu in dropdown to set cover image in a kanban view.
-            Implied modifications:
-                - adds the given m2o field in the view (may create new field
-                  'x_studio_cover_image_id' if there's no compatible field)
-                - adds an option inside dropdown section in the view
-                - adds an field having widget `attachment_image` in the view
-        """
-        ir_model = request.env['ir.model']._get(model)
-        if not ir_model:
-            raise UserError(_('The model %s does not exist.', model))
-        if operation.get('field'):
-            field_id = request.env['ir.model.fields'].search([
-                ('model', '=', model),
-                ('name', '=', operation['field'])
-            ])
-            if not field_id:
-                raise UserError(_('The field %s does not exist.', operation['field']))
-        else:
-            field_id = request.env['ir.model.fields'].search([
-                ('model', '=', ir_model.model),
-                ('name', '=', 'x_studio_cover_image_id'),
-                ('ttype', '=', 'many2one')
-            ])
-            # create a field many2one x_studio_cover_image_id if it doesn't exist in the model
-            if not field_id:
-                field_id = request.env['ir.model.fields'].with_context(studio=True).create({
-                    'model': ir_model.model,
-                    'model_id': ir_model.id,
-                    'relation': 'ir.attachment',
-                    'name': 'x_studio_cover_image_id',
-                    'field_description': 'Cover Image',
-                    'ttype': 'many2one',
-                    'domain': '[("res_model", "=", "%s"), ("res_id", "=", "%s"), ("mimetype", "ilike", "image")]' % (ir_model.model, ir_model.id)
-                })
-
-        # add link inside the dropdown
-        etree.SubElement(arch, 'xpath', {
-            'expr': '//t[@t-name="menu"]',
-            'position': 'inside',
-        }).append(
-            etree.fromstring("""
-                <a data-type="set_cover" href="#" data-field="%s" class="dropdown-item oe_kanban_action" >
-                    Set Cover Image
-                </a>
-            """ % (field_id.name))
-        )
-        studio_view_arch = arch
-        arch = request.env[model].with_context(studio=True, no_address_format=True).get_view(view_type='kanban')['arch']
-        parser = etree.XMLParser(remove_blank_text=True)
-        arch = etree.fromstring(arch, parser=parser)
-
-        # try to find the best place to put the cover
-        possible_hooks = [
-            {'expr': '//div[hasclass("o_kanban_record_body")]', 'position' : 'inside'},
-            {'expr': '//div[hasclass("o_kanban_record_bottom")]', 'position' : 'before'},
-            {'expr': '//div[hasclass("oe_kanban_details")]', 'position' : 'inside'},
-            {'expr': '//div', 'position': 'inside'},
-        ]
-        for hook in possible_hooks:
-            if len(arch.xpath(hook['expr'])):
-                break
-
-        xpath_node = etree.SubElement(studio_view_arch, 'xpath', hook)
-        xpath_node.append(etree.fromstring("""
-                <field t-if="record.%s.value" name="%s" widget="attachment_image"/>
-            """ % (field_id.name, field_id.name)))
-
-    # deprecated kanban legacy code, will be deleted > 18.0
-    def _operation_kanban_priority(self, arch, operation, model):
-        """ Insert a priority and its corresponding needs in an kanban view arch
-            Implied modifications:
-                - create a selection field x_priority in the model if it doesn't exist
-                - add a section (kanban_left) in the view
-                - add the field x_priority with the widget priority in this section
-        """
-        model_id = request.env['ir.model']._get_id(model)
-        if not model_id:
-            raise UserError(_('The model %s does not exist.', model))
-
-        if operation.get('field'):
-            field_id = request.env['ir.model.fields'].search([
-                ('model', '=', model),
-                ('name', '=', operation['field'])
-            ])
-            if not field_id:
-                raise UserError(_('The field %s does not exist.', operation['field']))
-
-        else:
-            field_id = request.env['ir.model.fields'].search([
-                ('model_id', '=', model_id),
-                ('name', '=', 'x_priority'),
-                ('ttype', '=', 'selection')
-            ])
-            # create a field selection x_priority if it doesn't exist in the model
-            if not field_id:
-                field_id = request.env['ir.model.fields'].with_context(studio=True).create({
-                    'model': model,
-                    'model_id': model_id,
-                    'name': 'x_priority',
-                    'field_description': 'Priority',
-                    'ttype': 'selection',
-                    'selection': "[('0', 'Low'), ('1', 'Normal'), ('2', 'High')]",
-                })
-
-        # add priority inside the view
-        etree.SubElement(arch, 'xpath', {
-            'expr': '//div',
-            'position': 'inside',
-        }).append(
-            etree.fromstring("""
-                <div class="oe_kanban_bottom_left">
-                    <field name="%s" widget="priority"/>
-                </div>
-            """ % (field_id.name))
-        )
-
     def _operation_avatar_image(self, arch, operation, model):
         studio_view_arch = arch  # The actual arch is the studio view arch
         arch = request.env[model].with_context(studio=True, no_address_format=True).get_view(view_type='form')['arch']
@@ -1574,9 +1323,9 @@ Are you sure you want to remove the selection values of those records?""", len(r
         )
 
     def _operation_statusbar(self, arch, operation, model=None):
-        """ Create and insert a header as the first child of the form. """
+        """ Create and insert a header as the first child of the element. """
         xpath_node = etree.SubElement(arch, 'xpath', {
-            'expr': '//form[1]/*[1] | //list[1]/*[1]',
+            'expr': '//form[1]/*[1] | //list[1]/*[1] | //kanban[1]/*[1]',
             'position': 'before'
         })
         xpath_node.append(etree.Element('header'))
@@ -1690,7 +1439,7 @@ Are you sure you want to remove the selection values of those records?""", len(r
                 }
                 self._operation_remove(arch, op)
 
-    @http.route('/web_studio/get_email_alias', type='json', auth='user')
+    @http.route('/web_studio/get_email_alias', type='jsonrpc', auth='user')
     def get_email_alias(self, model_name):
         """ Returns the email alias associated to the model @model_name. Only
         free aliases (not owned by a document using 'parent_*' fields')
@@ -1713,7 +1462,7 @@ Are you sure you want to remove the selection values of those records?""", len(r
         result['email_alias'] = email_alias.alias_name
         return result
 
-    @http.route('/web_studio/set_email_alias', type='json', auth='user')
+    @http.route('/web_studio/set_email_alias', type='jsonrpc', auth='user')
     def set_email_alias(self, model_name, value):
         """ Set the email alias associated to the model @model_name. Only
         free aliases (not owned by a document using 'parent_*' fields')
@@ -1744,7 +1493,7 @@ Are you sure you want to remove the selection values of those records?""", len(r
                 'alias_name': alias_name,
             })
 
-    @http.route('/web_studio/get_default_value', type='json', auth='user')
+    @http.route('/web_studio/get_default_value', type='jsonrpc', auth='user')
     def get_default_value(self, model_name, field_name, company_id=False):
         """ Return the default value associated to the given field. """
         context = {}
@@ -1754,7 +1503,7 @@ Are you sure you want to remove the selection values of those records?""", len(r
             'default_value': request.env['ir.default'].with_context(context)._get(model_name, field_name, company_id=True)
         }
 
-    @http.route('/web_studio/set_default_value', type='json', auth='user')
+    @http.route('/web_studio/set_default_value', type='jsonrpc', auth='user')
     def set_default_value(self, model_name, field_name, value, company_id=False):
         """ Set the default value associated to the given field. """
         context = { "studio": True }
@@ -1762,12 +1511,12 @@ Are you sure you want to remove the selection values of those records?""", len(r
             context["allowed_company_ids"] = [company_id]
         request.env['ir.default'].with_context(context).set(model_name, field_name, value, company_id=True)
 
-    @http.route('/web_studio/set_currency', type='json', auth='user')
+    @http.route('/web_studio/set_currency', type='jsonrpc', auth='user')
     def set_currency(self, model_name, field_name, value):
         """ Set the currency value associated to the given monetary field. """
         return request.env['ir.model.fields'].with_context(studio=True).search([["model", "=", model_name], ["name", "=", field_name]]).write({'currency_field': value})
 
-    @http.route('/web_studio/create_inline_view', type='json', auth='user')
+    @http.route('/web_studio/create_inline_view', type='jsonrpc', auth='user')
     def create_inline_view(self, model, view_id, field_name, subview_type, subview_xpath, context=None):
         # Forward context to forward `_view_ref` keys
         # e.g. `test_enter_x2many_edition_and_add_field`
@@ -1809,18 +1558,3 @@ Are you sure you want to remove the selection values of those records?""", len(r
                 inline_view_etree.remove(node)
 
         return inline_view_etree
-
-    @http.route('/web_studio/check_method', type='json', auth='user')
-    def check_method(self, model_name, method_name):
-        """check if a method exists and is callable for a model"""
-        model = request.env[model_name]
-        if model is None:
-            raise ValidationError(_('The model %s doesn\'t exist.', model_name))
-        elif not method_name:
-            raise ValidationError(_('It lacks a method to check.'))
-        else:
-            check_method_name(method_name)
-            if not callable(getattr(model, method_name, None)):
-                raise ValidationError(_('The method %(method)s does not exist on the model %(model)s.', method=method_name, model=model))
-            else:
-                return True

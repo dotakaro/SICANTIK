@@ -13,7 +13,7 @@ except ImportError:
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
-from odoo import Command, fields
+from odoo import Command, fields, _
 from odoo.exceptions import UserError
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 from odoo.tools.misc import formatLang, file_open
@@ -111,19 +111,14 @@ class TestAccountReportsCommon(AccountTestInvoicingCommon):
 
         # Check number of lines.
         self.assertEqual(len(filtered_lines), len(expected_values))
-        for line_dict_list, expected_values in zip(filtered_lines, expected_values):
+        for line_dict_list, (_title, *expected_columns) in zip(filtered_lines, expected_values):
             column_values = [column['no_format'] for column in line_dict_list['columns']]
             # Compare the Total column, Total column is there only under certain condition
             if line_dict_list.get('horizontal_group_total_data'):
-                self.assertEqual(len(line_dict_list['columns']) + 1, len(expected_values[1:]))
-                # Compare the numbers column except the total
-                self.assertEqual(column_values, list(expected_values[1:-1]))
-                # Compare the total column
-                self.assertEqual(line_dict_list['horizontal_group_total_data']['no_format'], expected_values[-1])
-            else:
-                # No total column
-                self.assertEqual(len(line_dict_list['columns']), len(expected_values[1:]))
-                self.assertEqual(column_values, list(expected_values[1:]))
+                *expected_columns, total = expected_columns
+                self.assertEqual(line_dict_list['horizontal_group_total_data']['no_format'], total)
+
+            self.assertEqual(column_values, expected_columns)
 
     def assertHeadersValues(self, headers, expected_headers):
         ''' Helper to compare the headers returned by the _get_table method
@@ -166,7 +161,7 @@ class TestAccountReportsCommon(AccountTestInvoicingCommon):
             )
 
         if not reports:
-            raise UserError('There are no reports to compare.')
+            raise UserError(self.env._('There are no reports to compare.'))
         visited_line_codes = set()
         for line in reports.line_ids:
             if not line.code or line.code in visited_line_codes:
@@ -305,7 +300,7 @@ class TestAccountReportsCommon(AccountTestInvoicingCommon):
             'expression_ids': [],
         }
         if tag_name and formula:
-            raise UserError("Can't use this helper to create a line with both tags and formula")
+            raise UserError(_("Can't use this helper to create a line with both tags and formula"))
         if tag_name:
             create_vals['expression_ids'].append(Command.create({
                 "label": "balance",

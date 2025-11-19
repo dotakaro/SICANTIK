@@ -68,10 +68,9 @@ function useParentedStaticList(model, parentRecord, resIds) {
 
     model._createRoot = (config, data) => {
         const options = { parent: parentRecord };
-        const list = new model.constructor.StaticList(model, { ...config }, data, options);
-        list.selection = [];
-        return list;
+        return new model.constructor.StaticList(model, { ...config }, data, options);
     };
+    model._createEmptyRoot = () => null;
 }
 
 class ListEditorController extends listView.Controller {
@@ -110,7 +109,7 @@ const listEditor = {
     props() {
         const props = listView.props(...arguments);
         props.allowSelectors = false;
-        props.editable = false;
+        props.readonly = true;
         props.showButtons = false;
         return props;
     },

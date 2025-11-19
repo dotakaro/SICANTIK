@@ -6,9 +6,9 @@ from collections import defaultdict
 from datetime import datetime
 
 
-class L10nInSalaryStatement(models.Model):
+class L10n_In_Hr_PayrollSalaryStatement(models.Model):
     _name = 'l10n_in_hr_payroll.salary.statement'
-    _inherit = 'hr.payroll.declaration.mixin'
+    _inherit = ['hr.payroll.declaration.mixin']
     _description = 'Salary Statement Report'
 
     name = fields.Char(string="Description", required=True, compute='_compute_name', readonly=False, store=True)
@@ -26,6 +26,11 @@ class L10nInSalaryStatement(models.Model):
         ('11', 'November'),
         ('12', 'December'),
     ], required=True, default=lambda self: str((fields.Date.today() + relativedelta(months=-1)).month))
+
+    _unique_salary_statement_report_per_month_year = models.Constraint(
+        'UNIQUE(company_id, month, year)',
+        "A Salary Statement Report for this month and year already exists.",
+    )
 
     def default_get(self, fields_list):
         res = super().default_get(fields_list)

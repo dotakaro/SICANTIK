@@ -12,16 +12,15 @@ import psycopg2.errors
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError, UserError
+from odoo.fields import Domain
 from odoo.models import MAGIC_COLUMNS
-from odoo.osv.expression import FALSE_DOMAIN, OR, expression
 from odoo.tools import _, get_lang, SQL
 from odoo.tools.misc import format_datetime, format_date, partition as tools_partition, unique
 
 _logger = logging.getLogger(__name__)
-ALLOWED_COMPANY_OPERATORS = ['not in', 'in', '=', '!=', 'ilike', 'not ilike', 'like', 'not like']
 
 
-class DataMergeRecord(models.Model):
+class Data_MergeRecord(models.Model):
     _name = 'data_merge.record'
     _description = 'Deduplication Record'
     _order = 'res_id desc'
@@ -64,7 +63,7 @@ class DataMergeRecord(models.Model):
             In the second case we either return all the records or no records, depending
             on the (operator, value) pair.
         """
-        if operator not in ALLOWED_COMPANY_OPERATORS:
+        if operator not in ('in', 'ilike', 'like', 'any'):
             raise NotImplementedError()
 
         cr = self._cr
@@ -98,7 +97,7 @@ class DataMergeRecord(models.Model):
             # Initial select id query to apply ir.rules and build Query object.
             query = self.env['data_merge.record'].with_context(active_test=False)._search([])
             # no models => return all records
-            return [('id', 'in', query)]
+            return Domain('id', 'in', query)
 
         models_with_company, models_no_company = tools_partition(
             lambda r: self.env[r[0]]._fields.get('company_id'),
@@ -107,15 +106,10 @@ class DataMergeRecord(models.Model):
 
         # Whether a domain leaf (False, operator, value) should be considered as True
         false_company_domain_is_true = (
-            (operator in ('not ilike', 'not like')) or
-            (operator in ('=', 'ilike', 'like') and not value) or
-            (operator == '!=' and value) or
+            (operator in ('ilike', 'like') and not value) or
             (
                 isinstance(value, Iterable) and
-                (
-                    (operator == 'in' and False in value) or
-                    (operator == 'not in' and False not in value)
-                )
+                (operator == 'in' and False in value)
             )
         )
 
@@ -130,9 +124,8 @@ class DataMergeRecord(models.Model):
         for model_name, model_id in models_with_company:
             Model = self.env[model_name]
             # Adapt operator and value for direct SQL query
-            exp = expression([('company_id', operator, value)], Model)
-            self._apply_ir_rules(exp.query)
-            from_clause, where_clause = exp.query.from_clause, exp.query.where_clause
+            query = Model.with_context(active_test=False)._search([('company_id', operator, value)])
+            from_clause, where_clause = query.from_clause, query.where_clause
             model_table = Model._table
             from_sql_code = from_clause.code
             assert from_sql_code.startswith(f'"{model_table}"') and not from_clause.params
@@ -155,7 +148,7 @@ class DataMergeRecord(models.Model):
         if not where_queries:
             # there was a nonempty models_info but no subqueries
             # it means that nothing satisfies the domain
-            return FALSE_DOMAIN
+            return Domain.FALSE
         sql = SQL(
             """(
             SELECT data_merge_record.id
@@ -166,7 +159,7 @@ class DataMergeRecord(models.Model):
             SQL(" ").join(join_queries),
             SQL(" OR ").join(where_queries),
         )
-        return [('id', 'in', sql)]
+        return Domain('id', 'in', sql)
 
 
     #############
@@ -267,12 +260,10 @@ class DataMergeRecord(models.Model):
             for field in reference_fields:
                 group_model_fields[field.model].append(field.name)
 
-
-            for model in group_model_fields:
-                ref_fields = group_model_fields[model]  # fields for the model
-                domain = OR([[(f, 'in', records.mapped('res_id'))] for f in ref_fields])
+            for model, ref_fields in group_model_fields.items():
+                domain = Domain.OR([[(f, 'in', records.mapped('res_id'))] for f in ref_fields])
                 groupby_field = ref_fields[0]
-                count_grouped = self.env[model]._read_group([(groupby_field, '!=', False)] + domain, [groupby_field], ['__count'])
+                count_grouped = self.env[model]._read_group(domain & Domain(groupby_field, '!=', False), [groupby_field], ['__count'])
                 for group_value, count in count_grouped:
                     record_id = records_mapped.get(group_value.id)
                     if not record_id:
@@ -292,14 +283,21 @@ class DataMergeRecord(models.Model):
 
     @api.depends('res_model_name', 'res_id')
     def _compute_fields(self):
-        groups = itertools.groupby(self, key=lambda r: r.res_model_name)
-        for _, group_records in groups:
-            group_records_ids = [r.id for r in group_records]
-            records = self.browse(group_records_ids)
-            existing_records = {r.id:r for r in records._original_records()}
+        groups = self.grouped('res_model_name')
+        for res_model_name, records in groups.items():
+            if not res_model_name:
+                records.is_deleted = False
+                records.name = False
+                records.company_id = False
+                records.record_create_date = False
+                records.record_create_uid = False
+                records.record_write_date = False
+                records.record_write_uid = False
+                continue
 
+            existing_records = {r.id:r for r in records._original_records()}
             for record in records:
-                original_record = existing_records.get(record.res_id) or self.env[record.res_model_name]
+                original_record = existing_records.get(record.res_id) or self.env[res_model_name]
                 name = original_record.display_name
                 record.is_deleted = record.res_id not in existing_records.keys()
                 record.name = name if name else '*Record Deleted*'
@@ -569,7 +567,7 @@ class DataMergeRecord(models.Model):
             master = self.with_context(active_test=False).group_id.record_ids.filtered('is_master')
             master.write({'is_master': False})
 
-        return super(DataMergeRecord, self).write(vals)
+        return super().write(vals)
 
     ############
     ### Actions

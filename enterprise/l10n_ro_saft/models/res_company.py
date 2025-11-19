@@ -4,7 +4,7 @@
 from odoo import fields, models
 
 
-class Company(models.Model):
+class ResCompany(models.Model):
     _inherit = 'res.company'
 
     l10n_ro_saft_tax_accounting_basis = fields.Selection(

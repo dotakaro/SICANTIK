@@ -3,7 +3,7 @@
     'name': 'Brazil - Sale Subscription',
     'version': '1.0',
     'description': 'Sale subscription modifications for Brazil',
-    'category': 'Localization',
+    'category': 'Sales/Subscriptions',
     'depends': [
         'l10n_br',
         'sale_subscription',
@@ -13,5 +13,6 @@
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

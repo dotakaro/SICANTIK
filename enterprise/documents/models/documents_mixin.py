@@ -4,7 +4,7 @@
 from odoo import Command, models
 
 
-class DocumentMixin(models.AbstractModel):
+class DocumentsMixin(models.AbstractModel):
     """
     Inherit this mixin to automatically create a `documents.document` when
     an `ir.attachment` is linked to a record and add the default values when
@@ -29,13 +29,15 @@ class DocumentMixin(models.AbstractModel):
             access_rights_vals = self._get_document_vals_access_rights()
             if set(access_rights_vals) - {'access_via_link', 'access_internal', 'is_access_via_link_hidden'}:
                 raise ValueError("Invalid access right values")
+
+            owner = self._get_document_owner()
             folder = self._get_document_folder()
             document_vals = {
                 'attachment_id': attachment.id,
                 'name': attachment.name or self.display_name,
                 'folder_id': folder.id,
                 'company_id': folder.company_id.id,
-                'owner_id': self._get_document_owner().id,
+                'owner_id': owner.id if owner.active else False,
                 'partner_id': self._get_document_partner().id,
                 'tag_ids': [(6, 0, self._get_document_tags().ids)],
             } | access_rights_vals
@@ -60,11 +62,11 @@ class DocumentMixin(models.AbstractModel):
     def _get_document_owner(self):
         """ Return the owner value to create a `documents.document`
 
-        In the default implementation, we return OdooBot as owner to avoid giving full access to a user and to rely
+        In the default implementation, we return False as owner to avoid giving full access to a user and to rely
         instead on explicit access managed via `document.access` or via parent folder access inheritance but this
         method can be overridden to for example give the ownership to the current user.
         """
-        return self.env.ref('base.user_root')
+        return self.env['res.users']
 
     def _get_document_tags(self):
         return self.env['documents.tag']
@@ -78,8 +80,9 @@ class DocumentMixin(models.AbstractModel):
     def _get_document_access_ids(self):
         """ Add or remove members
 
-        :return boolean|list: list of tuple (partner, (role, expiration_date)) or False to avoid
-        inheriting members from parent folder.
+        :returns: list of tuple (partner, (role, expiration_date)) or False to avoid
+            inheriting members from parent folder.
+        :rtype: bool | list
         """
         return []
 
@@ -97,7 +100,7 @@ class DocumentMixin(models.AbstractModel):
 
         Note:
         - This method doesn't override existing values (permission, owner, ...).
-        - The related record res_model must inherit from DocumentMixin
+        - The related record res_model must inherit from DocumentsMixin
         """
         if self._name != res_model:
             raise ValueError(f'Invalid model {res_model} (expected {self._name})')

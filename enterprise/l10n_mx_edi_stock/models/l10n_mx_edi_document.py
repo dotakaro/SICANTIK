@@ -2,7 +2,7 @@
 from odoo import api, models, fields
 
 
-class L10nMxEdiDocument(models.Model):
+class L10n_Mx_EdiDocument(models.Model):
     _inherit = 'l10n_mx_edi.document'
 
     picking_id = fields.Many2one(comodel_name='stock.picking', auto_join=True)

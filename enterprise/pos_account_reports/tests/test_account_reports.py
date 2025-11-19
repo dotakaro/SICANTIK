@@ -13,6 +13,7 @@ class POSTestTaxReport(TestAccountReportsCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.env.user.group_ids |= cls.env.ref('point_of_sale.group_pos_manager')
 
         company = cls.company_data['company']
         test_country = cls.env['res.country'].create({
@@ -152,6 +153,7 @@ class POSTestTaxReport(TestAccountReportsCommon):
             'name': 'POS caba transition tax account',
             'code': 'POSCaba',
             'account_type': 'asset_current',
+            'reconcile': True,
         })
         self.pos_tax.write({
             'tax_exigibility': 'on_payment',

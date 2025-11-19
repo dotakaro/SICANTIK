@@ -6,22 +6,34 @@ from odoo import models
 class IrAttachment(models.Model):
     _inherit = 'ir.attachment'
 
-    def _to_store(self, store, /, *, fields=None, extra_fields=None):
-        if not self.env.user._is_portal():
-            super()._to_store(store, fields=fields, extra_fields=extra_fields)
+    def _to_store(self, store, fields, **kwargs):
+        def super_to_store(records, fields):
+            super_records = super(IrAttachment, records)
+            if hasattr(super_records, '_to_store'):
+                super_records._to_store(store, fields, **kwargs)
+            else:
+                assert not kwargs
+                store.add_records_fields(records, fields)
+
+        if not self.env.user._is_portal() or 'access_token' in fields:
+            super_to_store(self, fields)
             return
 
-        def knowledge_attachment_requires_token(attachment):
-            return (
-                attachment.res_model == 'knowledge.article.thread' and
-                self.env['knowledge.article.thread'].sudo(False).with_user(self.env.user)
-                    .browse(attachment.res_id).has_access('read')
+        article_thread_ids = set(
+            self.env['knowledge.article.thread'].sudo(False).with_user(self.env.user)
+            .browse(
+                self.filtered(lambda attachment: attachment.res_model == 'knowledge.article.thread')
+                .mapped('res_id')
             )
-
+            .filtered(lambda thread: thread.has_access('read'))
+            .ids
+        )
+        attachments_with_token  = self.filtered(
+            lambda attachment:
+                attachment.res_model == 'knowledge.article.thread'
+                and attachment.res_id in article_thread_ids
+        )
+        super_to_store(self - attachments_with_token, fields)
         # Add access_token to the knowledge article's attachments for portal users
-        knowledge_attachments = self.filtered(knowledge_attachment_requires_token)
-        super(IrAttachment, self - knowledge_attachments)._to_store(store, fields=fields, extra_fields=extra_fields)
-        extra_fields = extra_fields or []
-        if "access_token" not in extra_fields:
-            extra_fields.append("access_token")
-        super(IrAttachment, knowledge_attachments)._to_store(store, fields=fields, extra_fields=extra_fields)
+        fields = fields + store._format_fields(attachments_with_token, ['access_token'])
+        super_to_store(attachments_with_token, fields)

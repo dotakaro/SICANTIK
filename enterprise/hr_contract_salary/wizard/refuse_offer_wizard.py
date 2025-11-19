@@ -5,7 +5,7 @@ from odoo import fields, models, _
 from odoo.exceptions import UserError
 
 
-class GenerateSimulationLink(models.TransientModel):
+class RefuseOfferWizard(models.TransientModel):
     _name = 'refuse.offer.wizard'
     _description = 'Refuse an Offer'
 

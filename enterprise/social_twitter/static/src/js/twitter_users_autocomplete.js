@@ -1,23 +1,13 @@
-/** @odoo-module */
-
 import { AutoComplete } from "@web/core/autocomplete/autocomplete";
 import { CharField, charField } from "@web/views/fields/char/char_field";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
-class TwitterUsersAutocomplete extends AutoComplete {
-    static timeout = 500;
-
-    get autoCompleteRootClass() {
-        return `${super.autoCompleteRootClass} o_social_twitter_users_autocomplete`;
-    }
-}
-
 export class TwitterUsersAutocompleteField extends CharField {
     static template = "social_twitter.TwitterUsersAutocompleteField";
     static components = {
-        ...CharField.components,
-        AutoComplete: TwitterUsersAutocomplete
+        ...super.components,
+        AutoComplete,
     }
 
     setup() {
@@ -27,8 +17,7 @@ export class TwitterUsersAutocompleteField extends CharField {
         this.value = "";
     }
 
-    async selectTwitterUser(selectedSubjection) {
-        const twitterUser = Object.getPrototypeOf(selectedSubjection);
+    async selectTwitterUser(twitterUser) {
         this.value = twitterUser.name;
         const twitterAccountId = await this.orm.call(
             'social.twitter.account',
@@ -40,24 +29,32 @@ export class TwitterUsersAutocompleteField extends CharField {
         );
 
         await this.props.record.update({
-            twitter_followed_account_id: [twitterAccountId, twitterUser.name]
+            twitter_followed_account_id: { id: twitterAccountId, display_name: twitterUser.name },
         });
     }
 
     get sources() {
         return [{
-            optionTemplate: "social_twitter.users_autocomplete_element",
+            optionSlot: "option",
             options: async (request) => {
                 if(request.length < 2) {
                     return [];
                 }
-                const accountId = this.props.record.data.account_id[0];
+                const accountId = this.props.record.data.account_id.id;
                 const userInfo = await this.orm.call(
                     'social.account',
                     'twitter_get_user_by_username',
                     [[accountId], request]
                 );
-                return userInfo ? [userInfo] : [];
+                const options = [];
+                if (userInfo) {
+                    options.push({
+                        data: userInfo,
+                        label: `${userInfo.name} - @${userInfo.username}`,
+                        onSelect: () => this.selectTwitterUser(userInfo),
+                    });
+                }
+                return options;
             }
         }];
     }

@@ -43,7 +43,7 @@
                 <attribute name="column_invisible">True</attribute>
             </xpath>
             <xpath expr="//field[@name='workcenter_id']" position="after">
-                <field name="employee_assigned_ids" widget="many2many_avatar_employee"/>
+                <field name="employee_assigned_ids" widget="many2many_avatar_employee" readonly="state == 'done'"/>
             </xpath>
             <xpath expr="//header" position="inside">
                 <button name="action_open_mes" type="object" icon="oi-view-kanban" string="Open Shop Floor" groups="mrp_workorder.group_mrp_wo_shop_floor" invisible="state in ['done', 'cancel']"/>
@@ -60,13 +60,10 @@
             <xpath expr="//field[@name='state']" position="after">
                 <field name="production_state" column_invisible="True"/>
             </xpath>
-            <xpath expr="//button[@name='button_start']" position="before">
-                <field name="employee_ids" widget="many2many_avatar_employee" readonly="1" nolabel="1"/>
-            </xpath>
             <xpath expr="//field[@name='name']" position="after">
                     <field name="allowed_employees" column_invisible="True"/>
                     <field name="all_employees_allowed" column_invisible="True"/>
-                    <field name="employee_assigned_ids" widget="many2many_avatar_user" domain="not all_employees_allowed and [('id','in',allowed_employees)] or []" optional="hidden"/>
+                    <field name="employee_assigned_ids" widget="many2many_avatar_employee" domain="not all_employees_allowed and [('id','in',allowed_employees)] or []" optional="hidden"/>
             </xpath>
         </field>
     </record>
@@ -124,7 +121,7 @@
                                 <ul class="ps-1 mb-0 list-unstyled">
                                     <li><strong>Start Date: </strong> <t t-esc="date_start.toFormat('F')"/></li>
                                     <li><strong>Stop Date: </strong> <t t-esc="date_finished.toFormat('F')"/></li>
-                                    <li><strong>Workcenter: </strong> <t t-esc="workcenter_id[1]"/></li>
+                                    <li><strong>Workcenter: </strong> <t t-esc="workcenter_id.display_name"/></li>
                                 </ul>
                             </div>
                         </div>
@@ -165,7 +162,7 @@
                                 <ul class="ps-1 mb-0 list-unstyled">
                                     <li><strong>Start Date: </strong><t t-esc="date_start.toFormat('F')"/></li>
                                     <li><strong>Stop Date: </strong><t t-esc="date_finished.toFormat('F')"/></li>
-                                    <li><strong>Workcenter: </strong> <t t-esc="workcenter_id[1]"/></li>
+                                    <li><strong>Workcenter: </strong> <t t-esc="workcenter_id.display_name"/></li>
                                 </ul>
                             </div>
                         </div>
@@ -249,7 +246,7 @@
                             <field name="qty_producing" class="oe_inline text-start" required="1" readonly="not allow_producing_quantity_change or product_tracking == 'serial' or state in ('done', 'cancel')"/>
                             / <field name="qty_remaining" class="oe_inline text-start" invisible="state == 'done'"/> <field name="qty_production" class="oe_inline text-start" invisible="state != 'done'"/>
                             <label for="product_uom_id" string="" class="oe_inline"/>
-                            <field name="product_uom_id" options="{'no_open': True}" class="oe_inline" readonly="1"/>
+                            <field name="product_uom_id" options="{'no_open': True}" widget="many2one_uom" class="oe_inline" readonly="1"/>
                         </div>
                     </div>
                     <div class="o_workorder_bar_right o_workorder_bar_content">
@@ -278,7 +275,9 @@
                                 <label for="finished_lot_id" string="Lot" invisible="product_tracking != 'lot'"/>
                                 <label for="finished_lot_id" string="Serial" invisible="product_tracking != 'serial'"/>
                                 <field name="finished_lot_id" context="{'default_product_id': product_id, 'default_company_id': company_id}" domain="[('product_id', '=', product_id)]"/>
-                                <button name="action_generate_serial" type="object" class="btn btn-secondary fa fa-plus" aria-label="Creates a new serial/lot number" title="Creates a new serial/lot number" role="img" invisible="finished_lot_id"/>
+                                <button name="action_generate_serial" type="object" class="o_btn_icon btn btn-secondary" aria-label="Creates a new serial/lot number" title="Creates a new serial/lot number" invisible="finished_lot_id">
+                                    <i class="fa fa-plus" role="img"/>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -300,7 +299,7 @@
             (0, 0, {'view_mode': 'kanban', 'view_id': ref('mrp.workcenter_line_kanban')}),
             (0, 0, {'view_mode': 'list', 'view_id': ref('mrp.mrp_production_workorder_tree_editable_view')}) ]"/>
         <field name="target">fullscreen</field>
-        <field name="context">{'search_default_workcenter_id': active_id}</field>
+        <field name="context">{'search_default_workcenter_id': active_id, 'search_default_progress': True, 'search_default_ready': True}</field>
         <field name="help" type="html">
           <p class="o_view_nocontent_workorder">
             No work orders to do!
@@ -329,7 +328,7 @@
             launch a maintenance request, perform quality tests, etc.
           </p>
         </field>
-        <field name="context">{'search_default_my_work_order': 0, 'search_default_ready': 1, 'search_default_waiting': True, 'search_default_progress': True, 'search_default_pending': True}</field>
+        <field name="context">{'search_default_my_work_order': False, 'search_default_ready': True, 'search_default_waiting': True, 'search_default_progress': True, 'search_default_blocked': True}</field>
     </record>
 
 
@@ -387,20 +386,17 @@
         </field>
     </record>
 
-
     <record id="mrp_workorder_view_kanban_inherit_quality" model="ir.ui.view">
         <field name="name">mrp.workorder.view.kanban.inherit.quality</field>
         <field name="model">mrp.workorder</field>
         <field name="inherit_id" ref="mrp.workcenter_line_kanban"/>
         <field name="arch" type="xml">
-            <xpath expr="//t[@name='user_avatar']" position="after">
-                <field t-if="record.employee_ids.raw_value" name="employee_ids" widget="list.many2many_avatar_user" class="ms-1 mt-1"/>
-            </xpath>
-            <xpath expr="//t[@name='user_avatar']" position='attributes'>
-                <attribute name="t-if">false</attribute>
+            <xpath expr="//div[hasclass('o_kanban_workorder_status')]//field[@name='last_working_user_id']" position="replace">
+                <field t-if="record.employee_ids.raw_value" name="employee_ids" widget="list.many2many_avatar_user" class="ms-1"/>
             </xpath>
         </field>
     </record>
+
     <record id="view_routing_steps_search" model="ir.ui.view">
         <field name="name">view.routing.steps.search</field>
         <field name="model">quality.point</field>

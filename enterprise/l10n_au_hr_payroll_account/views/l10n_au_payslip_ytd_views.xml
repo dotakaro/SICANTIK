@@ -47,6 +47,7 @@
                             string="Import YTD Balances" type="action" display="always"/>
                 </header>
                 <field name="employee_id" readonly="1"/>
+                <field name="l10n_au_income_stream_type" />
                 <field name="start_date" readonly="1"/>
                 <field name="currency_id" column_invisible="1"/>
                 <field name="struct_id" readonly="1"/>
@@ -72,6 +73,7 @@
                 <group expand="0" string="Group By">
                     <filter name="filter_group_fiscal_year" string="Fiscal Year" context="{'group_by': 'start_date'}"/>
                     <filter name="filter_group_employee_id" string="Employee" context="{'group_by': 'employee_id'}"/>
+                    <filter name="filter_group_income_stream" string="Income Stream Type" context="{'group_by': 'l10n_au_income_stream_type'}"/>
                 </group>
             </search>
         </field>
@@ -82,9 +84,12 @@
         <field name="res_model">l10n_au.payslip.ytd</field>
         <field name="view_mode">list,form</field>
         <field name="target">current</field>
-        <field name="context">{'search_default_filter_group_fiscal_year': 1,
-                               'search_default_filter_group_employee_id': 1,
-                               'search_default_not_finalised': 1}</field>
+        <field name="context">{
+            'search_default_filter_group_fiscal_year': 1,
+            'search_default_filter_group_employee_id': 1,
+            'search_default_filter_group_income_stream': 1,
+            'search_default_not_finalised': 1
+        }</field>
         <field name="path">payroll-ytd</field>
     </record>
 

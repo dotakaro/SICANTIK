@@ -2,13 +2,14 @@ import logging
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+from odoo.fields import Domain
 from odoo.tools.translate import _
 
 _logger = logging.getLogger(__name__)
 
 
 class VoipQueueMixin(models.AbstractModel):
-    _name = "voip.queue.mixin"
+    _name = 'voip.queue.mixin'
     _description = "VOIP Queue support"
 
     has_call_in_queue = fields.Boolean("Is in the Call Queue", compute="_compute_has_call_in_queue")
@@ -22,9 +23,7 @@ class VoipQueueMixin(models.AbstractModel):
                     ("user_id", "=", self.env.uid),
                     ("activity_type_id.category", "=", "phonecall"),
                     ("date_deadline", "<=", fields.Date.today()),
-                    "|",
                     ("phone", "!=", False),
-                    ("mobile", "!=", False),
                 ],
                 ["res_id"],
                 ["__count"],
@@ -43,54 +42,36 @@ class VoipQueueMixin(models.AbstractModel):
             "mail.mail_activity_data_call", raise_if_not_found=False
         )
         if not phonecall_activity_type_id:
-            phonecall_activity_type_id = (
-                self.env["mail.activity.type"]
-                .search(
-                    [
-                        "|",
-                        ("res_model", "=", False),
-                        ("res_model", "=", self._name),
-                        ("category", "=", "phonecall"),
-                    ],
-                    limit=1,
-                )
-                .id
-            )
+            phonecall_activity_type_id = self.env["mail.activity.type"].search([
+                Domain.OR([[("res_model", "=", False)], [("res_model", "=", self._name)]]), ("category", "=", "phonecall"),
+            ], limit=1).id
         if not phonecall_activity_type_id:
-            phonecall_activity_type_id = (
-                self.env["mail.activity.type"]
-                .sudo()
-                .create(
-                    {
-                        "category": "phonecall",
-                        "delay_count": 2,
-                        "icon": "fa-phone",
-                        "name": _("Call"),
-                        "sequence": 999,
-                    }
-                )
-                .id
-            )
+            phonecall_activity_type_id = self.env["mail.activity.type"].sudo().create({
+                "category": "phonecall",
+                "delay_count": 2,
+                "icon": "fa-phone",
+                "name": _("Call"),
+                "sequence": 999,
+            }).id
         date_deadline = fields.Date.today(self)
         res_model_id = self.env["ir.model"]._get_id(self._name)
-        activities = self.env["mail.activity"].create(
-            [
-                {
-                    "activity_type_id": phonecall_activity_type_id,
-                    "date_deadline": date_deadline,
-                    "res_id": record.id,
-                    "res_model_id": res_model_id,
-                    "user_id": self.env.uid,
-                }
-                for record in self
-            ]
+        activities = self.env["mail.activity"].create([
+            {
+                "activity_type_id": phonecall_activity_type_id,
+                "date_deadline": date_deadline,
+                "res_id": record.id,
+                "res_model_id": res_model_id,
+                "user_id": self.env.uid,
+            } for record in self]
         )
-        failed_activities = activities.filtered(lambda activity: not activity.mobile and not activity.phone)
+        failed_activities = activities.filtered(lambda activity: not activity.phone)
         if failed_activities:
             failed_records = self.browse(failed_activities.mapped("res_id"))
             raise UserError(
                 _(
-                    "Some documents cannot be added to the call queue as they do not have a phone number set: %(record_names)s",
+                    "Some leads can’t be added to the call queue since they do not have a phone number set. "
+                    "The fixer-uppers: %(record_names)s.\n"
+                    "Let’s add the missing numbers and start the dialing party!",
                     record_names=_(", ").join(failed_records.mapped("display_name")),
                 )
             )
@@ -105,9 +86,7 @@ class VoipQueueMixin(models.AbstractModel):
                 ("user_id", "=", self.env.uid),
                 ("activity_type_id.category", "=", "phonecall"),
                 ("date_deadline", "<=", fields.Date.today()),
-                "|",
                 ("phone", "!=", False),
-                ("mobile", "!=", False),
             ]
         )
         for activity in related_activities:

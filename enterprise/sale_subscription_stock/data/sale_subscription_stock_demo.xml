@@ -4,34 +4,36 @@
 
         <!-- Recurring storable products -->
 
-        <record id="detergent_order_pricing_1" model="sale.subscription.pricing">
+        <record id="detergent_order_pricing_1" model="product.pricelist.item">
+            <field name="pricelist_id" eval="False"/>
             <field name="plan_id" ref="sale_subscription.subscription_plan_month"/>
-            <field name="price" eval="10"/>
+            <field name="fixed_price" eval="10"/>
             <field name="currency_id" ref="base.USD"/>
         </record>
 
-        <record id="detergent_order_pricing_2" model="sale.subscription.pricing">
+        <record id="detergent_order_pricing_2" model="product.pricelist.item">
+            <field name="pricelist_id" eval="False"/>
             <field name="plan_id" ref="sale_subscription.subscription_plan_6_month"/>
-            <field name="price" eval="10"/>
+            <field name="fixed_price" eval="10"/>
             <field name="currency_id" ref="base.USD"/>
         </record>
 
-        <record id="detergent_order_pricing_3" model="sale.subscription.pricing">
+        <record id="detergent_order_pricing_3" model="product.pricelist.item">
+            <field name="pricelist_id" eval="False"/>
             <field name="plan_id" ref="sale_subscription.subscription_plan_year"/>
-            <field name="price" eval="10"/>
+            <field name="fixed_price" eval="10"/>
             <field name="currency_id" ref="base.USD"/>
         </record>
 
         <record id="product_recurring_detergent" model="product.product">
             <field name="name">Detergent (SUB)</field>
             <field name="recurring_invoice">True</field>
-            <field name="categ_id" ref="product.product_category_1"/>
+            <field name="categ_id" ref="product.product_category_services"/>
             <field name="is_storable" eval="True"/>
             <field name="list_price">0.0</field>
             <field name="invoice_policy">order</field>
             <field name="uom_id" ref="uom.product_uom_unit"/>
-            <field name="uom_po_id" ref="uom.product_uom_unit"/>
-            <field name="product_subscription_pricing_ids"
+            <field name="subscription_rule_ids"
                    eval="[(6,0,[ref('detergent_order_pricing_1'), ref('detergent_order_pricing_2'), ref('detergent_order_pricing_3')])]"/>
         </record>
 

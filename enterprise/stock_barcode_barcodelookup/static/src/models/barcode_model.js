@@ -5,10 +5,8 @@ import { rpc } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
 import { _t } from "@web/core/l10n/translation";
 
-
 patch(BarcodeModel.prototype, {
-
-     /**
+    /**
      * The purpose of this extension is to allow the user to create the product for the barcode data
      * if no product found based on barcode lookup!
      *
@@ -20,20 +18,20 @@ patch(BarcodeModel.prototype, {
         // Applicable for the picking operation ["receipts"]
         const canManageBarcodelookup = await this.groups.group_user_admin;
         if (
-          canManageBarcodelookup && this.isValidForBarcodeLookup &&
-          ["ean8", "ean13", "upca"].some((encoding) =>
-            this.parser.check_encoding(barcodeData.barcode, encoding)
-          )
+            canManageBarcodelookup &&
+            this.isValidForBarcodeLookup &&
+            ["ean8", "ean13", "upca"].some((encoding) =>
+                this.parser.check_encoding(barcodeData.barcode, encoding)
+            )
         ) {
             this.trigger("playSound", "error");
             if (!barcodeData.error) {
                 if (this.groups.group_tracking_lot) {
                     barcodeData.error = _t(
-                        `This product doesn't exists either scan a package
-                                available at the picking location or create new product`
+                        "This product doesn't exist. Either scan a package available at the picking location or create a new product."
                     );
                 } else {
-                    barcodeData.error = _t("This product doesn't exists");
+                    barcodeData.error = _t("This product doesn't exist.");
                 }
             }
             return this.notification(barcodeData.error, {
@@ -62,15 +60,15 @@ patch(BarcodeModel.prototype, {
         return super.noProductToast(barcodeData);
     },
 
-    async openProductForm(barcodeData=false) {
+    async openProductForm(barcodeData = false) {
         return await this.action.doAction(
             "stock_barcode_barcodelookup.stock_barcodelookup_product_product_action",
             {
                 additionalContext: {
-                    "default_barcode": barcodeData?.barcode,
-                    "default_is_storable": true,
-                    "dialog_size": "medium",
-                    "skip_barcode_check": true,
+                    default_barcode: barcodeData?.barcode,
+                    default_is_storable: true,
+                    dialog_size: "medium",
+                    skip_barcode_check: true,
                 },
                 props: {
                     onSave: async (record) => {
@@ -106,7 +104,7 @@ patch(BarcodeModel.prototype, {
             if (barcodeData.uom) {
                 fieldsParams.uom = barcodeData.uom;
             }
-            const currentLine = await this.createNewLine({fieldsParams});
+            const currentLine = await this.createNewLine({ fieldsParams });
             if (currentLine) {
                 this._selectLine(currentLine);
             }
@@ -118,5 +116,9 @@ patch(BarcodeModel.prototype, {
                 type: "danger",
             });
         }
-    }
+    },
+
+    get isValidForBarcodeLookup() {
+        return true;
+    },
 });

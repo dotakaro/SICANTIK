@@ -8,6 +8,12 @@
         'views/res_config_settings_views.xml',
         'views/account_bank_statement_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'account_bank_statement_extract/static/src/js/*.js',
+        ],
+    },
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

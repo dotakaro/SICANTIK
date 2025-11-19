@@ -18,6 +18,7 @@
             <field name="billing_period_value">1</field>
             <field name="billing_period_unit">month</field>
             <field name="user_closable">False</field>
+            <field name="sequence">4</field>
         </record>
 
         <record id="subscription_plan_6_month" model="sale.subscription.plan">
@@ -27,6 +28,7 @@
             <field name="user_closable">True</field>
             <field name="user_quantity">True</field>
             <field name="user_extend">True</field>
+            <field name="sequence">26</field>
         </record>
 
         <record id="subscription_plan_year" model="sale.subscription.plan">
@@ -34,80 +36,83 @@
             <field name="billing_period_value">1</field>
             <field name="billing_period_unit">year</field>
             <field name="user_closable">False</field>
-        </record>
-
-        <!-- Subscription Pricing -->
-        <record id="subscription_pricing_1" model="sale.subscription.pricing">
-            <field name="plan_id" ref="sale_subscription.subscription_plan_month"/>
-            <field name="price" eval="10"/>
-            <field name="currency_id" ref="base.USD"/>
-        </record>
-
-        <record id="subscription_pricing_2" model="sale.subscription.pricing">
-            <field name="plan_id" ref="sale_subscription.subscription_plan_6_month"/>
-            <field name="price" eval="50"/>
-            <field name="currency_id" ref="base.USD"/>
-        </record>
-
-        <record id="subscription_pricing_3" model="sale.subscription.pricing">
-            <field name="plan_id" ref="sale_subscription.subscription_plan_year"/>
-            <field name="price" eval="90"/>
-            <field name="currency_id" ref="base.USD"/>
-        </record>
-
-        <record id="subscription_pricing_4" model="sale.subscription.pricing">
-            <field name="plan_id" ref="sale_subscription.subscription_plan_month"/>
-            <field name="price" eval="20"/>
-            <field name="currency_id" ref="base.USD"/>
-        </record>
-
-        <record id="subscription_pricing_5" model="sale.subscription.pricing">
-            <field name="plan_id" ref="sale_subscription.subscription_plan_6_month"/>
-            <field name="price" eval="100"/>
-            <field name="currency_id" ref="base.USD"/>
-        </record>
-
-        <record id="subscription_pricing_6" model="sale.subscription.pricing">
-            <field name="plan_id" ref="sale_subscription.subscription_plan_year"/>
-            <field name="price" eval="200"/>
-            <field name="currency_id" ref="base.USD"/>
+            <field name="sequence">52</field>
         </record>
 
         <!-- non Recurring products -->
         <record id="product_fee" model="product.product">
             <field name="name">Registration fee</field>
             <field name="recurring_invoice">False</field>
-            <field name="categ_id" ref="product.product_category_3"/>
+            <field name="categ_id" ref="product.product_category_services"/>
             <field name="type">service</field>
             <field name="list_price">25.0</field>
             <field name="invoice_policy">order</field>
             <field name="uom_id" ref="uom.product_uom_unit"/>
-            <field name="uom_po_id" ref="uom.product_uom_unit"/>
         </record>
 
         <!-- Recurring products -->
         <record id="product_office_cleaning" model="product.product">
             <field name="name">Office Cleaning Service (SUB)</field>
             <field name="recurring_invoice">True</field>
-            <field name="categ_id" ref="product.product_category_3"/>
+            <field name="categ_id" ref="product.product_category_services"/>
             <field name="type">service</field>
             <field name="list_price">200.0</field>
             <field name="invoice_policy">order</field>
             <field name="uom_id" ref="uom.product_uom_unit"/>
-            <field name="uom_po_id" ref="uom.product_uom_unit"/>
-            <field name="product_subscription_pricing_ids" eval="[(6,0,[ref('subscription_pricing_1'), ref('subscription_pricing_2'), ref('subscription_pricing_3')])]"/>
+            <field name="image_1920" type="base64" file="sale_subscription/static/img/product_office_cleaning.jpg"/>
+        </record>
+
+        <record id="subscription_pricing_1" model="product.pricelist.item">
+            <field name="plan_id" ref="sale_subscription.subscription_plan_month"/>
+            <field name="fixed_price" eval="10"/>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="product_id" ref="product_office_cleaning"/>
+        </record>
+
+        <record id="subscription_pricing_2" model="product.pricelist.item">
+            <field name="plan_id" ref="sale_subscription.subscription_plan_6_month"/>
+            <field name="fixed_price" eval="50"/>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="product_id" ref="product_office_cleaning"/>
+        </record>
+
+        <record id="subscription_pricing_3" model="product.pricelist.item">
+            <field name="plan_id" ref="sale_subscription.subscription_plan_year"/>
+            <field name="fixed_price" eval="90"/>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="product_id" ref="product_office_cleaning"/>
         </record>
 
         <record id="product_car_leasing" model="product.product">
             <field name="name">Car Leasing (SUB)</field>
             <field name="recurring_invoice">True</field>
-            <field name="categ_id" ref="product.product_category_3"/>
+            <field name="categ_id" ref="product.product_category_services"/>
             <field name="type">service</field>
             <field name="list_price">200.0</field>
             <field name="invoice_policy">delivery</field>
             <field name="uom_id" ref="uom.product_uom_unit"/>
-            <field name="uom_po_id" ref="uom.product_uom_unit"/>
-            <field name="product_subscription_pricing_ids" eval="[(6,0,[ref('subscription_pricing_4'), ref('subscription_pricing_5'), ref('subscription_pricing_6')])]"/>
+            <field name="image_1920" type="base64" file="sale_subscription/static/img/product_car_leasing.jpg"/>
+        </record>
+
+        <record id="subscription_pricing_4" model="product.pricelist.item">
+            <field name="plan_id" ref="sale_subscription.subscription_plan_month"/>
+            <field name="fixed_price" eval="20"/>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="product_id" ref="product_car_leasing"/>
+        </record>
+
+        <record id="subscription_pricing_5" model="product.pricelist.item">
+            <field name="plan_id" ref="sale_subscription.subscription_plan_6_month"/>
+            <field name="fixed_price" eval="100"/>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="product_id" ref="product_car_leasing"/>
+        </record>
+
+        <record id="subscription_pricing_6" model="product.pricelist.item">
+            <field name="plan_id" ref="sale_subscription.subscription_plan_year"/>
+            <field name="fixed_price" eval="200"/>
+            <field name="currency_id" ref="base.USD"/>
+            <field name="product_id" ref="product_car_leasing"/>
         </record>
 
         <!-- Default Subscription Templates
@@ -159,6 +164,7 @@
             <field name="user_id" ref="base.user_admin"/>
             <field name="state">draft</field>
             <field name="client_order_ref">subscription_portal_1</field>
+            <field name="require_payment" eval="False"/>
         </record>
 
         <function model="sale.order"
@@ -172,7 +178,6 @@
             <field name="product_uom_qty">3</field>
             <field name="price_unit">20.0</field>
             <field name="sequence">-1</field>
-            <field name="product_uom" ref="uom.product_uom_unit"/>
         </record>
 
         <function model="sale.order" name="action_confirm" eval="[[ref('subscription_portal_1')]]" context="{'action_no_send_mail': True}"/>
@@ -183,6 +188,7 @@
             <field name="user_id" ref="base.user_admin"/>
             <field name="state">draft</field>
             <field name="client_order_ref">subscription_portal_2</field>
+            <field name="require_payment" eval="False"/>
         </record>
 
         <function model="sale.order"
@@ -197,6 +203,7 @@
             <field name="user_id" ref="base.user_admin"/>
             <field name="state">draft</field>
             <field name="client_order_ref">subscription_portal_3</field>
+            <field name="require_payment" eval="False"/>
         </record>
 
         <record id="rec_line_3" model="sale.order.line">
@@ -205,7 +212,6 @@
             <field name="product_id" ref="sale_subscription.product_office_cleaning"/>
             <field name="product_uom_qty">3</field>
             <field name="price_unit">20.0</field>
-            <field name="product_uom" ref="uom.product_uom_unit"/>
         </record>
 
         <!-- Confirm some Sales Orders-->
@@ -293,37 +299,5 @@
             <field name="amount_signed">40</field>
             <field name="recurring_monthly">90</field>
         </record>
-        <!-- Demo Alerts-->
-
-        <record id="subscription_alert_percent_revenue" model="sale.order.alert">
-            <field name="name">Take action on less satisfied clients</field>
-            <field name="model_id" ref="sale.model_sale_order"/>
-            <field name="rating_operator">&lt;</field>
-            <field name="rating_percentage">30</field>
-            <field name="trigger_condition">on_time</field>
-            <field name="trg_date_id" search="[('model', '=', 'sale.order'), ('name', '=', 'start_date')]"
-                   model="ir.model.fields"/>
-            <field name="trg_date_range">1</field>
-            <field name="trg_date_range_type">month</field>
-            <field name="action">next_activity</field>
-            <field name="activity_type_id" ref="mail.mail_activity_data_todo"/>
-            <field name="activity_date_deadline_range">5</field>
-            <field name="activity_user">contract</field>
-            <field name="activity_note">Please call the client to get some feedback about its subscription.</field>
-        </record>
-
-        <record id="subscription_alert_bad_health" model="sale.order.alert">
-            <field name="name">Update health value according to MRR</field>
-            <field name="model_id" ref="sale.model_sale_order"/>
-            <field name="mrr_min">0</field>
-            <field name="mrr_max">20</field>
-            <field name="subscription_state">3_progress</field>
-            <field name="trigger_condition">on_create_or_write</field>
-            <field name="action">set_health_value</field>
-            <field name="health">bad</field>
-        </record>
-
-       <function model="sale.order.alert" name="run_cron_manually" eval="[[ref('subscription_alert_bad_health')]]"/>
-
     </data>
 </odoo>

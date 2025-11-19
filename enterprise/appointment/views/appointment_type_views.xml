@@ -51,7 +51,7 @@
                         </a>
                     </t>
                     <div t-name="card" class="o_appointment_kanban_card">
-                        <div class="o_appointment_kanban_card_ungrouped row px-2">
+                        <div class="row px-2">
                             <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                             <div class="col-lg-3 col-sm-5 col-11 py-0 my-auto text-large text-truncate">
                                 <span class="fw-bold o_appointment_kanban_ungrouped_name" t-att-title="record.name.value"><field name="name"/></span><br/>
@@ -91,35 +91,6 @@
                                     <t t-else=""> Bookings</t>
                                 </span><br/>
                                 <span>Total</span>
-                            </div>
-                        </div>
-                        <div class="o_appointment_kanban_card_grouped">
-                            <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
-                            <div class="col-12 p-0 w-75 text-truncate" t-att-title="record.name.value">
-                                <field name="name" class="fw-bold ms-2 fs-4"/>
-                            </div>
-                            <div class="mt-3">
-                                <div class="row">
-                                    <div class="col-5">
-                                        <button class="btn btn-primary ms-2 me-2" name="action_calendar_meetings" type="object">
-                                            <field name="appointment_count"/> SCHEDULED
-                                        </button>
-                                    </div>
-                                    <div class="col-7">
-                                        <span t-if="record.appointment_tz.value" title="Timezone">
-                                            <i class="fa fa-clock-o small me-2"/><field name="appointment_tz" class="align-middle"/>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="row d-flex o_appointment_kanban_boxes mt-2 o_dashboard_bottom_grey mx-n2 mb-n2 py-2">
-                                    <div class="o_appointment_kanban_box d-flex position-relative justify-content-center px-0">
-                                        <div class="col-6 ps-3"/>
-                                        <div class="col-6">
-                                            <button class="btn btn-link btn-sm py-0 fa fa-lg fa-link" name="action_share_invite" type="object" title="Share"
-                                                    invisible="not active"/>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -188,14 +159,22 @@
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                     <field name="image_1920" widget="image" class="oe_avatar"/>
                     <div class="oe_button_box" name="button_box" groups="base.group_user">
-                        <button class="oe_stat_button" type="object"
-                            name="action_appointment_shared_links"
+                        <button class="oe_stat_button" type="action"
+                            name="appointment.appointment_invite_action_stat"
                             icon="fa-link"
-                            invisible="appointment_invite_count == 0">
+                            context="{ 'schedule_based_on': 'users' }"
+                            invisible="appointment_invite_count == 0 or schedule_based_on == 'resources'">
                             <field string="Shared Links" name="appointment_invite_count" widget="statinfo"/>
                         </button>
-                        <button class="oe_stat_button" type="object"
-                            name="action_appointment_resources"
+                        <button class="oe_stat_button" type="action"
+                            name="appointment.appointment_invite_action_stat"
+                            icon="fa-link"
+                            context="{ 'schedule_based_on': 'resources' }"
+                            invisible="appointment_invite_count == 0 or schedule_based_on == 'users'">
+                            <field string="Shared Links" name="appointment_invite_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" type="action"
+                            name="appointment.appointment_resource_action_stat"
                             icon="fa-cubes"
                             invisible="schedule_based_on == 'users'">
                             <field string="Resources" name="resource_count" widget="statinfo"/>
@@ -212,10 +191,16 @@
                     </div>
                     <group>
                         <group name="left_details">
-                            <label for="appointment_duration" invisible="category == 'custom'"/>
+                            <label for="appointment_duration"/>
                             <div invisible="category == 'custom'">
                                 <field name="appointment_duration" class="oe_inline me-1 o_input_5ch" widget="float_time"/><span> hours</span>
                             </div>
+                            <span class="text-muted" invisible="category != 'custom'">Depending on the Slots</span>
+                            <label for="slot_creation_interval"/>
+                            <div invisible="category == 'custom'">
+                                <field name="slot_creation_interval" class="oe_inline me-1 o_input_5ch" widget="float_time"/><span> hours</span>
+                            </div>
+                            <span class="text-muted" invisible="category != 'custom'">Schedule Line</span>
                             <label for="min_schedule_hours" string="Pre-Booking Time"/>
                             <div>
                                 <field name="min_schedule_hours" class="oe_inline me-1 o_input_5ch" widget="float_time"/><span> hours before the meeting</span>
@@ -228,9 +213,9 @@
                                 </span>
                                 <span class="d-flex flex-nowrap" invisible="category_time_display != 'punctual_fields'">
                                     From
-                                    <field name="start_datetime" placeholder="Date" class="oe_inline px-2" widget="date" required="category_time_display == 'punctual_fields'"/>
+                                    <field name="start_datetime" placeholder="Date" class="oe_inline px-2" required="category_time_display == 'punctual_fields'"/>
                                     to
-                                    <field name="end_datetime" placeholder="Date" class="oe_inline px-2" widget="date" required="category_time_display == 'punctual_fields'"/>
+                                    <field name="end_datetime" placeholder="Date" class="oe_inline px-2" required="category_time_display == 'punctual_fields'"/>
                                 </span>
                             </div>
                             <label for="min_cancellation_hours" string="Allow Cancelling"/>
@@ -250,16 +235,30 @@
                                 options="{'no_open': False}"
                                 placeholder="Select Users..."/>
                             <!-- Resources Details-->
-                            <field name="resource_ids" string="Resources" widget="many2many_tags_avatar"
-                                options="{'no_quick_create': True}"
+                            <field name="resource_ids" string="Resources" widget="many2many_tags"
+                                options="{'no_quick_create': True, 'edit_tags': True}"
                                 invisible="schedule_based_on == 'users'"
                                 placeholder="Select Resources..."/>
-                            <label for="resource_manage_capacity" invisible="schedule_based_on == 'users'"/>
-                            <div invisible="schedule_based_on == 'users'">
-                                <field name="resource_manage_capacity" class="oe_inline"/>
-                                <span invisible="not resource_manage_capacity">
-                                    (Total: <field name="resource_total_capacity" class="oe_inline o_input_5ch"/> persons)
+                            <label for="manage_capacity"/>
+                            <div>
+                                <field name="manage_capacity" class="oe_inline"/>
+                                <div invisible="not manage_capacity or schedule_based_on == 'users'">
+                                    Total: <field name="resource_total_capacity" class="oe_inline o_input_5ch me-1"/>
+                                    <span invisible="not manage_capacity">seats max</span>
+                                    <a type="action" invisible="resource_total_capacity > 0"
+                                       name="appointment.appointment_resource_action_stat" class="btn btn-link ps-0 pb-2 ms-1 oe_inline" role="button">
+                                        <i class="oi oi-fw o_button_icon oi-arrow-right"/> Manage Resources
+                                    </a>
+                                </div>
+                                <span invisible="not manage_capacity or schedule_based_on == 'resources'">
+                                    <field name="user_capacity" class="oe_inline o_appointment_capacity o_input_3ch mx-1"/>
+                                    <span invisible="not manage_capacity">seats max</span>
                                 </span>
+                            </div>
+                            <div invisible="manage_capacity" colspan="2">
+                                Allow <field name="max_bookings" class="oe_inline o_appointment_capacity o_input_3ch mx-1"/> simultaneous appointment(s) 
+                                per <span invisible="schedule_based_on != 'users'">user</span>
+                                <span invisible="schedule_based_on != 'resources'">resource</span>
                             </div>
                             <field name="assign_method" widget="radio" required="1"/>
                         </group>
@@ -273,7 +272,7 @@
                                         column_invisible="parent.category == 'custom'"/>
                                     <field name="start_hour" string="From" widget="float_time"
                                         column_invisible="parent.category == 'custom'"/>
-                                    <button name="durationArrow" class="fa fa-long-arrow-right text-center" title="Until (max)"
+                                    <button name="durationArrow" class="fa fa-long-arrow-right text-center text-secondary" title="Until (max)"
                                         column_invisible="parent.category == 'custom'"/>
                                     <field name="end_hour" string="To" widget="float_time"
                                         column_invisible="parent.category == 'custom'"/>
@@ -300,10 +299,10 @@
                                     <label for="appointment_manual_confirmation"/>
                                     <div class="d-flex">
                                         <field name="appointment_manual_confirmation" class="oe_inline"/>
-                                        <div invisible="not appointment_manual_confirmation or schedule_based_on == 'users' or not resource_manage_capacity">
+                                        <div invisible="not appointment_manual_confirmation or not manage_capacity">
                                             <span>
                                                 when over
-                                                <field name="resource_manual_confirmation_percentage" class="oe_inline o_input_5ch mx-1" widget="percentage"/>
+                                                <field name="manual_confirmation_percentage" class="oe_inline o_input_5ch mx-1" widget="percentage"/>
                                                 total capacity
                                             </span>
                                         </div>
@@ -317,7 +316,6 @@
                                     <field name="canceled_mail_template_id"
                                         placeholder="If empty, Odoo will not send emails"
                                         context="{'default_model': 'calendar.event', 'default_subject': name}"/>
-                                    <field name="message_partner_ids" widget="many2many_tags_email"/>
                                     <field name="country_ids" widget="many2many_tags" groups="base.group_no_one"/>
                                     <field name="allow_guests"/>
                                 </group>
@@ -329,8 +327,8 @@
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="question_type"/>
-                                    <field name="answer_ids" widget="many2many_tags"/>
-                                    <field name="question_required"/>
+                                    <field name="answer_ids" widget="many2many_tags" string="Answers"/>
+                                    <field name="question_required" string="Mandatory"/>
                                     <button name="action_view_question_answer_inputs" type="object" class="fa fa-bar-chart p-0" title="Answer Breakdown" />
                                 </list>
                                 <form string="Questions" name="question_form">
@@ -386,7 +384,6 @@
         <field name="arch" type="xml">
             <xpath expr="//header" position="replace"/>
             <xpath expr="//div[hasclass('oe_button_box')]" position="replace"/>
-            <xpath expr="//field[@name='message_partner_ids']" position="replace"/>
         </field>
     </record>
 

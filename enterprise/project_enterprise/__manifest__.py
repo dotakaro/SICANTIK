@@ -21,22 +21,19 @@ Bridge module for project and enterprise
     ],
     'demo': ['data/project_demo.xml'],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [
             'project_enterprise/static/src/views/project_highlight_tasks.js',
             'project_enterprise/static/src/views/project_task_search_model.js',
             'project_enterprise/static/src/views/highlight_project_task_search_model.js',
-            'project_enterprise/static/src/scss/**/*',
             'project_enterprise/static/src/components/**/*',
             'project_enterprise/static/src/views/project_task_calendar/**',
             'project_enterprise/static/src/views/project_task_tree/**',
             'project_enterprise/static/src/views/project_task_kanban/**',
             'project_enterprise/static/src/views/view_dialogs/**',
             'project_enterprise/static/src/xml/**',
-
-            # Don't include dark mode files in light mode
-            ('remove', 'project_enterprise/static/src/components/**/*.dark.scss'),
         ],
         'web.assets_backend_lazy': [
             'project_enterprise/static/src/views/project_task_map/**',
@@ -46,14 +43,8 @@ Bridge module for project and enterprise
             'project_enterprise/static/src/views/task_gantt/**',
             'project_enterprise/static/src/views/project_gantt/**',
         ],
-        "web.assets_web_dark": [
-            'project_enterprise/static/src/components/**/*.dark.scss',
-        ],
         'web.assets_unit_tests': [
             'project_enterprise/static/tests/*',
-        ],
-        'web.qunit_suite_tests': [
-            'project_enterprise/static/tests/legacy/**/*',
         ],
         'project.webclient': [
             'web_enterprise/static/src/webclient/**/*.scss',
@@ -63,7 +54,7 @@ Bridge module for project and enterprise
             'web_enterprise/static/src/views/list/*',
             'web_enterprise/static/src/webclient/settings_form_view/*',
             'web_enterprise/static/src/webclient/navbar/*',
-            'web_enterprise/static/src/webclient/promote_studio_dialog/*',
+            'web_enterprise/static/src/webclient/promote_studio/*',
             'web_enterprise/static/src/webclient/webclient.js',
 
             ('remove', 'project/static/src/project_sharing/main.js'),

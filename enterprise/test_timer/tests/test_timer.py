@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo.exceptions import AccessError
@@ -21,14 +20,14 @@ class TestTimer(TransactionCase):
             'name': 'Usr1',
             'login': 'Usr1',
             'email': 'usr1@test.com',
-            'groups_id': [(6, 0, [cls.env.ref('base.group_user').id])],
+            'group_ids': [(6, 0, [cls.env.ref('base.group_user').id])],
         })
 
         cls.usr2 = cls.env['res.users'].create({
             'name': 'Usr2',
             'login': 'Usr2',
             'email': 'usr2@test.com',
-            'groups_id': [(6, 0, [cls.env.ref('base.group_user').id])],
+            'group_ids': [(6, 0, [cls.env.ref('base.group_user').id])],
         })
 
 
@@ -86,16 +85,6 @@ class TestTimer(TransactionCase):
         self.assertEqual(len(self.env['timer.timer'].search([])), 1, 'It should have deleted one timer')
         self.assertEqual(len(self.test_timer.with_user(self.usr1).user_timer_id), 1, 'It should exist only one timer for this user, model and record')
         self.assertEqual(len(self.test_timer.with_user(self.usr2).user_timer_id), 0, 'It shouldn\'t exit one timer for this user, model and record')
-
-    def test_timer_rounding(self):
-
-        minutes_spent, minimum, rounding = 4.5,10,5
-        result = self.test_timer._timer_rounding(minutes_spent, minimum, rounding)
-        self.assertEqual(result, 10, 'It should have been round to the minimum amount')
-
-        minutes_spent = 12.4
-        result = self.test_timer._timer_rounding(minutes_spent, minimum, rounding)
-        self.assertEqual(result, 15, 'It should have been round to the next multiple of 15')
 
     def test_timer_access_security(self):
 

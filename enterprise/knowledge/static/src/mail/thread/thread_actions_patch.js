@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 import { threadActionsRegistry } from "@mail/core/common/thread_actions";
 import { patch } from "@web/core/utils/patch";
 
@@ -18,9 +16,9 @@ patch(threadActionsRegistry.get("expand-form"), {
                     res_id: articleThreadData["article_id"],
                 },
             });
-            await component.props.chatWindow.close();
+            component.props.chatWindow.close();
         } else {
-            super.open(component);
+            await super.open(component);
         }
     },
 });

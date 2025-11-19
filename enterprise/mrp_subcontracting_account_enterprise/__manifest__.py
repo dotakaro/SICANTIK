@@ -4,7 +4,7 @@
 {
     'name': 'Accounting - MRP Subcontracting',
     'version': '1.0',
-    'category': 'Manufacturing/Manufacturing',
+    'category': 'Supply Chain/Manufacturing',
     'summary': 'Add Subcontracting information in Cost Analysis Reports and Production Analysis',
     'description': """
 Add Subcontracting information in Cost Analysis Report and The Production Analysis
@@ -17,5 +17,6 @@ Add Subcontracting information in Cost Analysis Report and The Production Analys
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

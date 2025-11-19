@@ -3,7 +3,7 @@ from odoo import fields, models, _
 
 
 class ResPartner(models.Model):
-    _inherit = ['res.partner']
+    _inherit = 'res.partner'
 
     def _default_category(self):
         if self._context.get('unset_res_partner_category_id'):

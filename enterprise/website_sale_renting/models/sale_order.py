@@ -1,10 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import pytz
 from datetime import timedelta
 
-from odoo import _, fields, models
-from odoo.exceptions import ValidationError
+import pytz
+
+from odoo import fields, models
+from odoo.exceptions import UserError, ValidationError
 
 
 class SaleOrder(models.Model):
@@ -21,17 +22,20 @@ class SaleOrder(models.Model):
     def _check_cart_is_ready_to_be_paid(self):
         self.ensure_one()
         if not self._available_dates_for_renting():
-            raise ValidationError(_(
+            raise ValidationError(self.env._(
                 "Some of your rental products cannot be rented during the selected period and your"
                 " cart must be updated. We're sorry for the inconvenience."
             ))
         return super()._check_cart_is_ready_to_be_paid()
 
-    def _verify_updated_quantity(self, order_line, product_id, new_qty, **kwargs):
+    def _verify_updated_quantity(self, order_line, product_id, new_qty, uom_id, **kwargs):
         new_qty, warning = super()._verify_updated_quantity(
-            order_line, product_id, new_qty, **kwargs
+            order_line, product_id, new_qty, uom_id, **kwargs
         )
         product = self.env['product.product'].browse(product_id)
+        # FIXME doesn't make sense to check the cart config here
+        # If you add a rental product to a (now) invalid cart, the product won't be added/will be
+        # removed, but existing products will stay, strange behavior
         if new_qty > 0 and product.rent_ok and not self._is_valid_renting_dates():
             self.shop_warning = self._build_warning_renting(product)
             return 0, self.shop_warning
@@ -72,26 +76,41 @@ class SaleOrder(models.Model):
             and self._get_renting_duration() >= self.company_id.renting_minimal_time_duration
         )
 
-    def _cart_update_order_line(self, *args, start_date=None, end_date=None, **kwargs):
-        """Override to update rental order fields on the cart after line update."""
-        has_rental_dates = self.rental_start_date and self.rental_return_date
-        if not has_rental_dates and (start_date and end_date):
-            self.write({
-                'rental_start_date': start_date,
-                'rental_return_date': end_date,
-            })
-            has_rental_dates = True
-        # `in_rental_app` context makes sure rentable products added in cart becomes `is_rental`
-        # cart lines
-        self_ctx = self.with_context(in_rental_app=True)
-        res = super(SaleOrder, self_ctx)._cart_update_order_line(*args, **kwargs)
+    def _cart_add(self, product_id, *args, start_date=None, end_date=None, **kwargs):
+        product = self.env['product.product'].browse(product_id)
+        if product.rent_ok:
+            if start_date and end_date:
+                if self.rental_start_date and self.rental_return_date:
+                    if self.rental_start_date != start_date or self.rental_return_date != end_date:
+                        raise UserError(self.env._(
+                            "You cannot mix different rental periods in the same order."
+                        ))
+                else:
+                    self.update({
+                        'rental_start_date': start_date,
+                        'rental_return_date': end_date,
+                    })
+            if not self.has_rented_products:
+                self._rental_set_dates()
+
+        return super()._cart_add(
+            product_id, *args, start_date=start_date, end_date=end_date, **kwargs
+        )
+
+    def _create_new_cart_line(self, *args, **kwargs):
+        # Make sure that if the product is rentable, the line created is a rental line.
+        return super(SaleOrder, self.with_context(in_rental_app=True))._create_new_cart_line(
+            *args, **kwargs
+        )
+
+    def _verify_cart_after_update(self, *args, **kwargs):
+        super()._verify_cart_after_update(*args, **kwargs)
         if self.is_rental_order and not self.has_rented_products:
             self.write({
                 'is_rental_order': False,
                 'rental_start_date': False,
                 'rental_return_date': False,
             })
-        return res
 
     def _build_warning_renting(self, product):
         """ Build the renting warning on SO to warn user a product cannot be rented on that period.
@@ -105,32 +124,32 @@ class SaleOrder(models.Model):
         days_forbidden = company._get_renting_forbidden_days()
         pickup_forbidden = self.rental_start_date.isoweekday() in days_forbidden
         return_forbidden = self.rental_return_date.isoweekday() in days_forbidden
-        message = _("""
+        message = self.env._("""
             Some of your rental products (%(product)s) cannot be rented during the
             selected period and your cart must be updated. We're sorry for the
             inconvenience.
         """, product=product.name)
         if self.rental_start_date < fields.Datetime.now():
-            message += _("""Your rental product cannot be pickedup in the past.""")
+            message += self.env._("""Your rental product cannot be pickedup in the past.""")
         elif pickup_forbidden and return_forbidden:
-            message += _("""
+            message += self.env._("""
                 Your rental product had invalid dates of pickup (%(start_date)s) and
                 return (%(end_date)s). Unfortunately, we do not process pickups nor
                 returns on those weekdays.
             """, start_date=self.rental_start_date, end_date=self.rental_return_date)
         elif pickup_forbidden:
-            message += _("""
+            message += self.env._("""
                 Your rental product had invalid date of pickup (%(start_date)s).
                 Unfortunately, we do not process pickups on that weekday.
             """, start_date=self.rental_start_date)
         elif return_forbidden:
-            message += _("""
+            message += self.env._("""
                 Your rental product had invalid date of return (%(end_date)s).
                 Unfortunately, we do not process returns on that weekday.
             """, end_date=self.rental_return_date)
         minimal_duration = company.renting_minimal_time_duration
         if self._get_renting_duration() < minimal_duration:
-            message += _("""
+            message += self.env._("""
                 Your rental duration was too short. Unfortunately, we do not process
                 rentals that last less than %(duration)s %(unit)s.
             """, duration=minimal_duration, unit=company.renting_minimal_time_unit)
@@ -159,10 +178,10 @@ class SaleOrder(models.Model):
         })
         if not self._available_dates_for_renting():
             # shop_warning can be set by stock if invalid dates
-            self.shop_warning = self.shop_warning or _("""
-                The new period is not valid for some products of your cart.
-                Your changes on the rental period are not taken into account.
-            """)
+            self.shop_warning = self.shop_warning or self.env._(
+                "The new period is not valid for some products of your cart."
+                " Your changes on the rental period are not taken into account."
+            )
             self.write({
                 'rental_start_date': current_start_date,
                 'rental_return_date': current_end_date,

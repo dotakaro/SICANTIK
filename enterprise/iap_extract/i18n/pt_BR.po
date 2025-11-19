@@ -3,16 +3,15 @@
 # 	* iap_extract
 # 
 # Translators:
-# Wil Odoo, 2024
-# Maitê Dietze, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-19 09:53+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
-"Last-Translator: Maitê Dietze, 2025\n"
+"POT-Creation-Date: 2025-07-16 18:43+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Portuguese (Brazil) (https://app.transifex.com/odoo/teams/41243/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -41,6 +40,7 @@ msgstr ""
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_needaction
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_needaction
 msgid "Action Needed"
 msgstr "Requer ação"
 
@@ -60,7 +60,8 @@ msgstr ""
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__error_status
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__error_status
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__error_status
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__error_status
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__error_status
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__error_status
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__error_status
 msgid "An error occurred"
 msgstr "Houve um erro"
@@ -73,6 +74,7 @@ msgstr "Ocorreu um erro durante o carregamento"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_attachment_count
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_attachment_count
 msgid "Attachment Count"
 msgstr "Contagem de anexos"
 
@@ -82,6 +84,12 @@ msgid "Base class to extract data from documents"
 msgstr "Classe de base para extrair dados de documentos"
 
 #. module: iap_extract
+#: model:ir.model,name:iap_extract.model_extract_mixin_with_words
+msgid "Base class to extract data from documents with OCRed words saved"
+msgstr ""
+"Classe base para extrair dados de documentos com palavras salvas por OCR"
+
+#. module: iap_extract
 #. odoo-javascript
 #: code:addons/iap_extract/static/src/components/status_header/status.xml:0
 msgid "Buy credits"
@@ -89,6 +97,7 @@ msgstr "Comprar créditos"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_can_show_send_button
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_can_show_send_button
 msgid "Can show the ocr send button"
 msgstr "Pode mostrar o botão de envio de OCR "
 
@@ -96,10 +105,21 @@ msgstr "Pode mostrar o botão de envio de OCR "
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__done
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__done
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__done
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__done
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__done
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__done
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__done
 msgid "Completed flow"
 msgstr "Fluxo concluído"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__create_uid
+msgid "Created by"
+msgstr "Criado por"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__create_date
+msgid "Created on"
+msgstr "Criado em"
 
 #. module: iap_extract
 #: model:iap.service,description:iap_extract.iap_service_ocr
@@ -109,6 +129,13 @@ msgid ""
 msgstr ""
 "Digitalize suas faturas, despesas e currículos de fornecedores digitalizados"
 " ou em PDF com OCR e Inteligência Artificial."
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__display_name
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__display_name
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__display_name
+msgid "Display Name"
+msgstr "Nome exibido"
 
 #. module: iap_extract
 #. odoo-python
@@ -141,36 +168,63 @@ msgstr "Documentos enviados para digitalização"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_error_message
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_error_message
 msgid "Error message"
 msgstr "Mensagem de erro"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_attachment_id
+msgid "Extract Attachment"
+msgstr "Extrair anexo"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_state_processed
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_state_processed
 msgid "Extract State Processed"
 msgstr "Situação da extração processada"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_state
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_state
 msgid "Extract state"
 msgstr "Extrair estado"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_status
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_status
 msgid "Extract status"
 msgstr "Status da extração"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extracted_word_ids
+msgid "Extracted Words"
+msgstr "Palavras extraídas"
+
+#. module: iap_extract
+#: model:ir.model,name:iap_extract.model_iap_extracted_words
+msgid "Extracted words from an OCRed document"
+msgstr "Palavras extraídas de um documento com OCR"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__field
+msgid "Field"
+msgstr "Campo"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_follower_ids
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_follower_ids
 msgid "Followers"
 msgstr "Seguidores"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_partner_ids
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_partner_ids
 msgid "Followers (Partners)"
 msgstr "Seguidores (usuários)"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__has_message
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__has_message
 msgid "Has Message"
 msgstr "Tem uma mensagem"
 
@@ -181,17 +235,27 @@ msgid "IAP Extract Notification"
 msgstr "Notificação de extração IAP"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__id
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__id
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__id
+msgid "ID"
+msgstr "ID"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__extract_document_uuid
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__extract_document_uuid
 msgid "ID of the request to IAP-OCR"
 msgstr "ID da solicitação para IAP-OCR"
 
 #. module: iap_extract
 #: model:ir.model.fields,help:iap_extract.field_extract_mixin__message_needaction
+#: model:ir.model.fields,help:iap_extract.field_extract_mixin_with_words__message_needaction
 msgid "If checked, new messages require your attention."
 msgstr "Se marcado, novas mensagens solicitarão sua atenção."
 
 #. module: iap_extract
 #: model:ir.model.fields,help:iap_extract.field_extract_mixin__message_has_error
+#: model:ir.model.fields,help:iap_extract.field_extract_mixin_with_words__message_has_error
 msgid "If checked, some messages have a delivery error."
 msgstr "Se marcado, algumas mensagens têm um erro de entrega."
 
@@ -209,26 +273,41 @@ msgstr "PDF inválido (não foi possível obter contagem de páginas)"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_is_follower
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_is_follower
 msgid "Is Follower"
 msgstr "É um seguidor"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__is_in_extractable_state
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__is_in_extractable_state
 msgid "Is In Extractable State"
 msgstr "Está em situação extraível"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__write_uid
+msgid "Last Updated by"
+msgstr "Última atualização por"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__write_date
+msgid "Last Updated on"
+msgstr "Última atualização em"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_main_attachment_id
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_main_attachment_id
 msgid "Main Attachment"
 msgstr "Anexo principal"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_has_error
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_has_error
 msgid "Message Delivery error"
 msgstr "Erro na entrega da mensagem"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_ids
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_ids
 msgid "Messages"
 msgstr "Mensagens"
 
@@ -236,7 +315,8 @@ msgstr "Mensagens"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__no_extract_requested
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__no_extract_requested
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__no_extract_requested
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__no_extract_requested
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__no_extract_requested
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__no_extract_requested
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__no_extract_requested
 msgid "No extract requested"
 msgstr "Nenhuma extração solicitada"
@@ -245,7 +325,8 @@ msgstr "Nenhuma extração solicitada"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__not_enough_credit
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__not_enough_credit
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__not_enough_credit
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__not_enough_credit
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__not_enough_credit
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__not_enough_credit
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__not_enough_credit
 msgid "Not enough credits"
 msgstr "Créditos insuficientes"
@@ -258,26 +339,36 @@ msgstr "Não há créditos suficientes para extração de dados"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_needaction_counter
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_needaction_counter
 msgid "Number of Actions"
 msgstr "Número de ações"
 
 #. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__message_has_error_counter
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__message_has_error_counter
 msgid "Number of errors"
 msgstr "Número de erros"
 
 #. module: iap_extract
 #: model:ir.model.fields,help:iap_extract.field_extract_mixin__message_needaction_counter
+#: model:ir.model.fields,help:iap_extract.field_extract_mixin_with_words__message_needaction_counter
 msgid "Number of messages requiring action"
 msgstr "Número de mensagens que requerem uma ação"
 
 #. module: iap_extract
 #: model:ir.model.fields,help:iap_extract.field_extract_mixin__message_has_error_counter
+#: model:ir.model.fields,help:iap_extract.field_extract_mixin_with_words__message_has_error_counter
 msgid "Number of messages with delivery error"
 msgstr "Número de mensagens com erro de entrega"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__ocr_selected
+msgid "Ocr Selected"
+msgstr "OCR selecionado"
+
+#. module: iap_extract
 #: model:ir.model.fields,field_description:iap_extract.field_extract_mixin__rating_ids
+#: model:ir.model.fields,field_description:iap_extract.field_extract_mixin_with_words__rating_ids
 msgid "Ratings"
 msgstr "Avaliações"
 
@@ -286,6 +377,16 @@ msgstr "Avaliações"
 #: code:addons/iap_extract/static/src/components/status_header/status.xml:0
 msgid "Refresh"
 msgstr "Atualizar"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__res_id
+msgid "Resource ID"
+msgstr "ID do recurso"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__res_model
+msgid "Resource Model"
+msgstr "Modelo do recurso"
 
 #. module: iap_extract
 #. odoo-javascript
@@ -343,7 +444,8 @@ msgstr "Os documentos selecionados já foram digitalizados"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__to_validate
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__to_validate
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__to_validate
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__to_validate
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__to_validate
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__to_validate
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__to_validate
 msgid "To validate"
 msgstr "A validar"
@@ -355,10 +457,22 @@ msgid "Unsupported image format"
 msgstr "Formato de imagem não suportado"
 
 #. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__user_selected
+msgid "User Selected"
+msgstr "Usuário selecionado"
+
+#. module: iap_extract
+#. odoo-python
+#: code:addons/iap_extract/models/extract_mixin.py:0
+msgid "Version is unsupported"
+msgstr "Versão não suportada"
+
+#. module: iap_extract
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__waiting_extraction
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__waiting_extraction
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__waiting_extraction
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__waiting_extraction
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__waiting_extraction
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__waiting_extraction
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__waiting_extraction
 msgid "Waiting extraction"
 msgstr "Aguardando extração"
@@ -367,10 +481,46 @@ msgstr "Aguardando extração"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__waiting_validation
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__waiting_validation
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__waiting_validation
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__waiting_validation
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__waiting_validation
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__waiting_validation
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__waiting_validation
 msgid "Waiting validation"
 msgstr "Aguardando validação"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_angle
+msgid "Word Box Angle"
+msgstr "Ângulo da caixa do word"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_height
+msgid "Word Box Height"
+msgstr "Altura da caixa do word"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_midX
+msgid "Word Box Midx"
+msgstr "Meio x da caixa do word"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_midY
+msgid "Word Box Midy"
+msgstr "Meio y da caixa do word"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_box_width
+msgid "Word Box Width"
+msgstr "Largura da caixa do word"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_page
+msgid "Word Page"
+msgstr "Página do word"
+
+#. module: iap_extract
+#: model:ir.model.fields,field_description:iap_extract.field_iap_extracted_words__word_text
+msgid "Word Text"
+msgstr "Texto do word"
 
 #. module: iap_extract
 #. odoo-javascript
@@ -395,7 +545,8 @@ msgstr "O documento contém páginas demais"
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_bank_statement__extract_state__extract_not_ready
 #: model:ir.model.fields.selection,name:iap_extract.selection__account_move__extract_state__extract_not_ready
 #: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin__extract_state__extract_not_ready
-#: model:ir.model.fields.selection,name:iap_extract.selection__hr_candidate__extract_state__extract_not_ready
+#: model:ir.model.fields.selection,name:iap_extract.selection__extract_mixin_with_words__extract_state__extract_not_ready
+#: model:ir.model.fields.selection,name:iap_extract.selection__hr_applicant__extract_state__extract_not_ready
 #: model:ir.model.fields.selection,name:iap_extract.selection__hr_expense__extract_state__extract_not_ready
 msgid "waiting extraction, but it is not ready"
 msgstr "aguardando extração, mas ainda não está pronto"

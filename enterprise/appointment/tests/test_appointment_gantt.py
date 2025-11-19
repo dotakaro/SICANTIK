@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import pytz
 
 from odoo.addons.mail.tests.common import mail_new_test_user
-from odoo.addons.resource.models.utils import Intervals
 from odoo.tests import users
+from odoo.tools.intervals import Intervals
 from .common import AppointmentCommon
 
 
@@ -81,7 +81,7 @@ class AppointmentGanttTestCommon(AppointmentCommon):
             'name': 'resource apt type',
             'resource_ids': [(4, cls.apt_resource_1.id), (4, cls.apt_resource_2.id)],
             'schedule_based_on': 'resources',
-            'resource_manage_capacity': True,
+            'manage_capacity': True,
         }])
         cls.resource_apt_types = cls.apt_types[2]
 
@@ -217,6 +217,44 @@ class AppointmentGanttTest(AppointmentGanttTestCommon):
         self.assertNotIn(self.user_john.partner_id.id, group_partner_ids)
         self.assertEqual(gantt_data['records'], [{'id': meeting.id}])
 
+    def test_gantt_resource_unavailabilities(self):
+        """Check whether the Gantt view includes already booked resource and exclude sharable resource for calculating unavailability."""
+        self.apt_resource_2.shareable = True
+        self.env['calendar.event'].sudo().create({
+            'appointment_type_id': self.resource_apt_types.id,
+            'booking_line_ids': [(0, 0, {'appointment_resource_id': self.apt_resource_2.id}), (0, 0, {'appointment_resource_id': self.apt_resource_1.id})],
+            'name': 'Booking 1',
+            'start': self.reference_monday.replace(hour=8),
+            'stop': self.reference_monday.replace(hour=9),
+        })
+        resource_1_calendar_unavailabilities = Intervals([
+            (datetime(2022, 2, 14, 8, 00, tzinfo=pytz.UTC),
+             datetime(2022, 2, 14, 9, 0, tzinfo=pytz.UTC), set()),
+            (datetime(2022, 2, 14, 22, 59, 59, 999999, tzinfo=pytz.UTC),
+             datetime(2022, 2, 14, 23, 0, tzinfo=pytz.UTC), set()),
+        ])
+        resource_2_calendar_unavailabilities = Intervals([
+            (datetime(2022, 2, 14, 22, 59, 59, 999999, tzinfo=pytz.UTC),
+             datetime(2022, 2, 14, 23, 0, tzinfo=pytz.UTC), set()),
+        ])
+        unavailabilities = self.env['calendar.event'].with_context(self.gantt_context)._gantt_unavailability(
+            'resource_ids',
+            [self.apt_resource_1.id, self.apt_resource_2.id],
+            self.reference_monday.replace(hour=0),
+            self.reference_monday.replace(hour=23),
+            'day',
+        )
+        self.assertListEqual(
+            list(Intervals([(unavailability['start'], unavailability['stop'], set())
+                            for unavailability in unavailabilities.get(self.apt_resource_1.id, [])])),
+            list(resource_1_calendar_unavailabilities)
+        )
+        self.assertListEqual(
+            list(Intervals([(unavailability['start'], unavailability['stop'], set())
+                            for unavailability in unavailabilities.get(self.apt_resource_2.id, [])])),
+            list(resource_2_calendar_unavailabilities)
+        )
+
     @users('staff_user_bxls')
     def test_gantt_resource_unavailabilities_multi_company(self):
         """Check that resources outside of allowed companies don't get calendar unavailabilities."""
@@ -286,11 +324,11 @@ class AppointmentGanttTest(AppointmentGanttTestCommon):
     def test_gantt_read_group_resource_events_privacy(self):
         """ Check that every resource events are correctly displayed in the gantt view.
 
-        Due to the events read_group privacy domain, resource events booked from the front-end
+        Due to the events formatted_read_group privacy domain, resource events booked from the front-end
         (meaning having OdooBot as user_id) weren't displayed in the gantt view.
         Making sure every resource events are now visible and accessible no matter their privacy and user_id.
 
-        Using apt_manager to be sure the privacy part of the read_group domain is correctly added
+        Using apt_manager to be sure the privacy part of the formatted_read_group domain is correctly added
         as it is only included when we're not in super user.
         """
         meeting = self._create_meetings(

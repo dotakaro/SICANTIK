@@ -1,17 +1,16 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 {
     'name': 'Sign',
     'version': '1.0',
     'category': 'Sales/Sign',
     'sequence': 105,
-    'summary': "Send documents to sign online and handle filled copies",
+    'summary': "Send and request electronic signatures.",
     'description': """
 Sign and complete your documents easily. Customize your documents with text and signature fields and send them to your recipients.\n
 Let your customers follow the signature process easily.
     """,
     'website': 'https://www.odoo.com/app/sign',
-    'depends': ['mail', 'attachment_indexation', 'portal', 'sms'],
+    'depends': ['mail', 'attachment_indexation', 'portal', 'sms', 'certificate'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -20,7 +19,8 @@ Let your customers follow the signature process easily.
         'data/sign_data.xml',
         'data/sign_tour.xml',
         'views/sign_template_views_mobile.xml',
-        'wizard/sign_duplicate_template_with_pdf_views.xml',
+        'wizard/sign_template_preview_views.xml',
+        'wizard/sign_request_share.xml',
         'wizard/sign_send_request_views.xml',
         'views/sign_request_templates.xml',
         'views/sign_template_templates.xml',
@@ -30,6 +30,7 @@ Let your customers follow the signature process easily.
         'views/sign_portal_templates.xml',
         'views/mail_activity_views.xml',
         'views/res_config_settings_views.xml',
+        'views/res_company_views.xml',
         'views/res_users_views.xml',
         'views/res_partner_views.xml',
         'views/sign_pdf_iframe_templates.xml',
@@ -44,6 +45,7 @@ Let your customers follow the signature process easily.
     'post_init_hook': '_sign_post_init',
     'uninstall_hook': 'uninstall_hook',
     'installable': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'sign.assets_pdf_iframe': [
@@ -85,6 +87,11 @@ Let your customers follow the signature process easily.
             'sign/static/src/dialogs/**/*',
             'sign/static/src/services/**/*',
             'sign/static/src/fields/**/*',
+            'sign/static/src/file_viewer/**/*',
+            ('remove', 'sign/static/src/views/sign_request_activity/**'),
+        ],
+        'web.assets_backend_lazy': [
+            'sign/static/src/views/sign_request_activity/**',
         ],
         'web.assets_frontend': [
             'sign/static/src/components/**/*',
@@ -92,19 +99,14 @@ Let your customers follow the signature process easily.
             'sign/static/src/scss/sign_frontend.scss',
             'sign/static/src/dialogs/**/*',
             'sign/static/src/services/**/*',
+            'sign/static/src/file_viewer/**/*',
         ],
         'web.assets_tests': [
             'sign/static/tests/tours/**/*',
         ],
-        'web.qunit_suite_tests': [
-            'sign/static/tests/**/*',
-            ('remove', 'sign/static/tests/tours/**/*'),
-            ('remove', 'sign/static/tests/mock_server/**/*'),
-            ('remove', 'sign/static/tests/document_signable.test.js'),
-        ],
         'web.assets_unit_tests': [
-            'sign/static/tests/mock_server/**/*',
-            'sign/static/tests/document_signable.test.js',
+            'sign/static/tests/**/*.js',
+            ('remove', 'sign/static/tests/tours/**/*'),
         ],
         'sign.assets_public_sign': [
             ('include', 'web._assets_helpers'),
@@ -162,6 +164,9 @@ Let your customers follow the signature process easily.
             'web_tour/static/src/tour_pointer/**/*',
             'web_tour/static/src/tour_service/**/*',
             'web/static/lib/hoot-dom/**/*',
-        ]
+        ],
+        'web.assets_web_dark': [
+            'sign/static/src/scss/sign.dark.scss',
+        ],
     }
 }

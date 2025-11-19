@@ -1,13 +1,15 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 from collections import defaultdict
 
 from odoo import api, Command, fields, models, _
 
+
 class HelpdeskTeam(models.Model):
     _inherit = 'helpdesk.team'
 
-    project_id = fields.Many2one("project.project", string="Project", ondelete="restrict", domain="[('allow_timesheets', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+    project_id = fields.Many2one("project.project", string="Project", ondelete="restrict", domain="[('allow_timesheets', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_template', '=', False)]",
+        index='btree_not_null',
         help="Project to which the timesheets of this helpdesk team's tickets will be linked.")
     timesheet_encode_uom_id = fields.Many2one('uom.uom', related='company_id.timesheet_encode_uom_id', export_string_translation=False)
     total_timesheet_time = fields.Integer(compute="_compute_total_timesheet_time", compute_sudo=True, groups="hr_timesheet.group_hr_timesheet_user", export_string_translation=False)
@@ -32,13 +34,13 @@ class HelpdeskTeam(models.Model):
             team = helpdesk_ticket.team_id
             uom_team = team.timesheet_encode_uom_id
             product_uom = product_uom if product_uom else uom_team
-            total_by_team[team.id] += (unit_amount_sum * product_uom.factor_inv) * uom_team.factor
+            total_by_team[team.id] += (unit_amount_sum / product_uom.factor) * uom_team.factor
 
         for team in self:
             team.total_timesheet_time = round(total_by_team[team.id])
 
     def _create_project(self, name, allow_billable, other):
-        return self.env['project.project'].create({
+        return self.env['project.project'].with_context(default_use_documents=False).create({
             'name': name,
             'type_ids': [
                 (0, 0, {'name': _('New')}),
@@ -65,7 +67,7 @@ class HelpdeskTeam(models.Model):
                 ('res_model', '=', 'helpdesk.ticket'),
                 ('res_id', 'in', self.with_context(active_test=False).ticket_ids.ids)
             ]).unlink()
-        result = super(HelpdeskTeam, self).write(vals)
+        result = super().write(vals)
         if 'use_helpdesk_timesheet' in vals:
             self.sudo()._check_timesheet_group()
         for team in self.filtered(lambda team: team.use_helpdesk_timesheet and not team.project_id):
@@ -86,7 +88,7 @@ class HelpdeskTeam(models.Model):
         elif self - timesheet_teams and use_helpdesk_timesheet_group and not enabled_timesheet_team():
             (self._get_helpdesk_user_group() + self._get_timesheet_user_group())\
                 .write({'implied_ids': [Command.unlink(helpdesk_timesheet_group.id)]})
-            helpdesk_timesheet_group.write({'users': [Command.clear()]})
+            helpdesk_timesheet_group.write({'user_ids': [Command.clear()]})
 
     def action_view_timesheets(self):
         self.ensure_one()

@@ -2,7 +2,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
-class L10nLatamDocumentType(models.Model):
+class L10n_LatamDocumentType(models.Model):
     _inherit = 'l10n_latam.document.type'
 
     l10n_cl_dte_caf_ids = fields.One2many('l10n_cl.dte.caf', 'l10n_latam_document_type_id', string='DTE Caf')

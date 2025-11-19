@@ -3,17 +3,15 @@
 # 	* account_budget
 # 
 # Translators:
-# Wil Odoo, 2024
-# Ryoko Tsuda <ryoko@quartile.co>, 2024
-# Junko Augias, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-25 09:13+0000\n"
-"PO-Revision-Date: 2024-09-25 09:43+0000\n"
-"Last-Translator: Junko Augias, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:22+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Japanese (https://app.transifex.com/odoo/teams/41243/ja/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -31,6 +29,11 @@ msgstr "<i class=\"fa fa-clock-o me-1\" role=\"img\" aria-label=\"Period\" title
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "<i class=\"fa fa-long-arrow-right mx-2\" aria-label=\"to\" title=\"to\"/>"
 msgstr "<i class=\"fa fa-long-arrow-right mx-2\" aria-label=\"to\" title=\"to\"/>"
+
+#. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
+msgid "<span class=\"o_stat_text\">Budget Report</span>"
+msgstr "<span class=\"o_stat_text\">予算レポート</span>"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.budget_report_view_search
@@ -122,6 +125,11 @@ msgid "Attachment Count"
 msgstr "添付数"
 
 #. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
+msgid "Audit"
+msgstr "監査"
+
+#. module: account_budget
 #: model:ir.model.fields.selection,name:account_budget.selection__budget_analytic__budget_type__both
 msgid "Both"
 msgstr "両方"
@@ -181,6 +189,8 @@ msgid "Budget Name"
 msgstr "予算名"
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
 #: model:ir.actions.act_window,name:account_budget.budget_report_action
 #: model:ir.model,name:account_budget.model_budget_report
 #: model:ir.ui.menu,name:account_budget.budget_report_menu
@@ -207,9 +217,16 @@ msgid "Budget Type"
 msgstr "予算タイプ"
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
+msgid "Budget end date may not be before the starting date."
+msgstr "予算の終了日は開始日より前にはできません。"
+
+#. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__budget_amount
+#: model_terms:ir.ui.view,arch_db:account_budget.budget_report_view_search
 msgid "Budgeted"
-msgstr "予算化済"
+msgstr "予算額"
 
 #. module: account_budget
 #. odoo-python
@@ -228,17 +245,17 @@ msgstr "予算分析"
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.budget_split_wizard_form_view
 msgid "Cancel"
-msgstr "取消"
+msgstr "キャンセル"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "Cancel Budget"
-msgstr "予算取消"
+msgstr "予算キャンセル"
 
 #. module: account_budget
 #: model:ir.model.fields.selection,name:account_budget.selection__budget_analytic__state__canceled
 msgid "Canceled"
-msgstr "取消済"
+msgstr "キャンセル済"
 
 #. module: account_budget
 #: model_terms:ir.actions.act_window,help:account_budget.act_budget_analytic_view
@@ -296,7 +313,7 @@ msgstr "日付"
 #. odoo-python
 #: code:addons/account_budget/models/budget_analytic.py:0
 msgid "Deletion is only allowed in the Draft and Canceled stages."
-msgstr "削除はドラフトおよび取消済ステージでのみ可能です。"
+msgstr "削除はドラフトおよびキャンセル済ステージでのみ可能です。"
 
 #. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_report__description
@@ -304,15 +321,13 @@ msgid "Description"
 msgstr "説明"
 
 #. module: account_budget
-#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
-msgid "Details..."
-msgstr "詳細..."
-
-#. module: account_budget
+#: model:ir.model.fields,field_description:account_budget.field_account_analytic_account__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_report__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_split_wizard__display_name
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order__display_name
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order_line__display_name
 msgid "Display Name"
 msgstr "表示名"
 
@@ -398,10 +413,13 @@ msgid "Has Message"
 msgstr "メッセージあり"
 
 #. module: account_budget
+#: model:ir.model.fields,field_description:account_budget.field_account_analytic_account__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_report__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_split_wizard__id
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order__id
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order_line__id
 msgid "ID"
 msgstr "ID"
 
@@ -488,6 +506,11 @@ msgid "Month"
 msgstr "月"
 
 #. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_search
+msgid "My Activities"
+msgstr "自分の活動"
+
+#. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__my_activity_date_deadline
 msgid "My Activity Deadline"
 msgstr "活動期限"
@@ -521,7 +544,7 @@ msgstr "次の活動タイプ"
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_line_search
 msgid "Not Cancelled"
-msgstr "未取消"
+msgstr "キャンセルされていない"
 
 #. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__message_needaction_counter
@@ -649,8 +672,8 @@ msgstr "シーケンス"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_search
-msgid "Show all records which has next action date is before today"
-msgstr "次のアクションの日付が今日より前のすべてのレコードを表示"
+msgid "Show all records whose next activity date is past"
+msgstr "次回活動日が過去のすべてのレコードを表示"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.budget_split_wizard_form_view
@@ -690,6 +713,7 @@ msgstr "'終了日' は '開始日' 以降にして下さい。"
 
 #. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__theoritical_amount
+#: model:ir.model.fields,field_description:account_budget.field_budget_report__theoretical
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "Theoretical"
 msgstr "理論上"
@@ -763,6 +787,18 @@ msgid "You cannot create recursive revision of budget."
 msgstr "再帰的な予算の更新を作成することはできません。"
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
+msgid "budget_analytic_id"
+msgstr "budget_analytic_id"
+
+#. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "e.g. Budget 2023"
 msgstr "例:予算2023"
+
+#. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/wizards/budget_split_wizard.py:0
+msgid "id"
+msgstr "ID"

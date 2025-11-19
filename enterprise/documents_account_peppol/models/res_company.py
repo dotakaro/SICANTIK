@@ -1,10 +1,16 @@
 from odoo import fields, models
-from odoo.osv import expression
 
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
+    peppol_reception_mode = fields.Selection(
+        selection=[
+            ('journal', 'Receive in Journal'),
+            ('documents', 'Receive in Documents'),
+        ],
+        default='journal',
+    )
     documents_account_peppol_folder_id = fields.Many2one(
         comodel_name='documents.document',
         string="Document Workspace",
@@ -15,12 +21,3 @@ class ResCompany(models.Model):
         comodel_name='documents.tag',
         string="Document Tags",
     )
-
-    def _get_used_folder_ids_domain(self, folder_ids):
-        return expression.OR([
-            super()._get_used_folder_ids_domain(folder_ids),
-            [
-                ('documents_account_peppol_folder_id', 'in', folder_ids),
-                ('account_peppol_proxy_state', '=', 'not_registered')
-            ],
-        ])

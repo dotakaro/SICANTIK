@@ -51,7 +51,7 @@
                     t-if="modelParams.routing === true"
                     name="'default_order'"
                     type="'selection'"
-                    value="modelParams.defaultOrder?.name"
+                    value="modelParams.defaultOrder?.[0]?.name"
                     childProps="{ choices: this.defaultOrderChoices, required: false }"
                     onChange.bind="onViewAttributeChanged"
                 >
@@ -60,14 +60,24 @@
 
                 <Property
                     t-if="modelParams.defaultOrder
-                        and modelParams.fields[modelParams.defaultOrder.name].type === 'integer'
-                        and !modelParams.fields[modelParams.defaultOrder.name].readonly"
+                        and modelParams.fields[modelParams.defaultOrder[0].name].type === 'integer'
+                        and !modelParams.fields[modelParams.defaultOrder[0].name].readonly"
                     name="'allow_resequence'"
                     type="'boolean'"
                     value="modelParams.allowResequence"
                     onChange.bind="onViewAttributeChanged"
                 >
                     Allow Resequencing
+                </Property>
+
+                <Property
+                    name="'default_group_by'"
+                    type="'selection'"
+                    value="viewEditorModel.studioViewProps.defaultGroupBy"
+                    onChange.bind="editDefaultGroupBy"
+                    childProps="{ choices: defaultGroupbyChoices, required: false, multiSelect: true }"
+                >
+                    Default Group By
                 </Property>
 
                 <SidebarViewToolbox onMore="props.openViewInForm"

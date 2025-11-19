@@ -4,18 +4,18 @@
 
 {
     'name': 'Internet of Things',
-    'category': 'Internet of Things (IoT)',
+    'category': 'Administration/IoT',
     'sequence': 250,
     'summary': 'Basic models and helpers to support Internet of Things.',
     'description': """
 This module provides management of your IoT Boxes inside Odoo.
 """,
-    'depends': ['mail','web'],
+    'depends': ['mail', 'iot_base'],
     'data': [
         'wizard/add_iot_box_views.xml',
         'wizard/select_printers_views.xml',
-        'security/ir.model.access.csv',
         'security/iot_security.xml',
+        'security/ir.model.access.csv',
         'views/iot_views.xml',
     ],
     'demo': [
@@ -23,6 +23,7 @@ This module provides management of your IoT Boxes inside Odoo.
     ],
     'installable': True,
     'application': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [

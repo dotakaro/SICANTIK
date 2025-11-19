@@ -10,24 +10,24 @@ Generic Payroll system Integrated with Accounting.
     * Payment Encoding
     * Company Contribution Management
     """,
-    'depends': ['hr_payroll', 'account_accountant', 'base_iban'],
+    'depends': ['hr_payroll', 'accountant', 'base_iban'],
     'data': [
         'data/hr_payroll_account_data.xml',
         'views/hr_payslip_run_views.xml',
         'views/hr_payslip_views.xml',
-        'views/hr_contract_views.xml',
+        'views/hr_employee_views.xml',
         'views/hr_salary_rule_views.xml',
         'views/hr_payroll_structure_views.xml',
         'views/res_config_settings_views.xml',
         'views/account_move_views.xml',
         'views/res_partner_bank_views.xml',
-        'report/hr_contract_history_report_views.xml',
     ],
     'demo': [
         'data/hr_payroll_account_demo.xml',
     ],
     'pre_init_hook': '_salaries_account_journal_pre_init',
-    'auto_install':  ['hr_payroll', 'account_accountant'],
+    'auto_install':  ['hr_payroll', 'accountant'],
     'post_init_hook': '_hr_payroll_account_post_init',
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

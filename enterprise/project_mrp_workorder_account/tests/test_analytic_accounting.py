@@ -12,7 +12,7 @@ class TestMrpAnalyticAccountHr(TestMrpAnalyticAccount):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.env.ref('base.user_admin').groups_id += (
+        cls.env.ref('base.user_admin').group_ids += (
             cls.env.ref('analytic.group_analytic_accounting')
             + cls.env.ref('mrp.group_mrp_routings')
         )
@@ -168,7 +168,6 @@ class TestMrpAnalyticAccountHr(TestMrpAnalyticAccount):
         })
         workcenter = self.env['mrp.workcenter'].create({
             'name': 'Workcenter',
-            'default_capacity': 1,
             'time_efficiency': 100,
             'costs_hour': 10,
         })

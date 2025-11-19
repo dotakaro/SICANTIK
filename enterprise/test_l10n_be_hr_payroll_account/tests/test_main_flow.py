@@ -22,12 +22,12 @@ def additional_groups(user, groups):
         group = user.env.ref(xml_id.strip(), raise_if_not_found=False)
         if group:
             group_ids |= group
-    group_ids -= user.groups_id
+    group_ids -= user.group_ids
     try:
-        user.write({'groups_id': [(4, group.id, False) for group in group_ids]})
+        user.write({'group_ids': [(4, group.id, False) for group in group_ids]})
         yield user
     finally:
-        user.write({'groups_id': [(3, group.id, False) for group in group_ids]})
+        user.write({'group_ids': [(3, group.id, False) for group in group_ids]})
 
 
 @tagged('post_install', '-at_install')
@@ -45,7 +45,7 @@ class TestHR(AccountTestInvoicingCommon):
 
         cls.hr_fleet_manager = cls.create_user_employee(login='leh', groups='fleet.fleet_group_manager')
 
-        cls.hr_contract_manager = cls.create_user_employee(login='nfz', groups='hr_contract.group_hr_contract_manager,sign.group_sign_manager')
+        cls.hr_contract_manager = cls.create_user_employee(login='nfz', groups='hr.group_hr_manager,sign.group_sign_manager')
         cls.hr_payroll_user = cls.create_user_employee(login='ldj', groups='hr_payroll.group_hr_payroll_user,hr_holidays.group_hr_holidays_user')
         cls.hr_payroll_manager = cls.create_user_employee(login='lxt', groups='hr_payroll.group_hr_payroll_manager')
 
@@ -57,9 +57,10 @@ class TestHR(AccountTestInvoicingCommon):
             'datas': pdf_content,
             'name': 'test_employee_contract.pdf',
         })
-        cls.template = cls.env['sign.template'].create({
+        cls.template = cls.env['sign.template'].create({})
+        cls.document = cls.env['sign.document'].create({
             'attachment_id': attachment.id,
-            'sign_item_ids': [(6, 0, [])],
+            'template_id': cls.template.id,
         })
 
     @classmethod
@@ -74,15 +75,15 @@ class TestHR(AccountTestInvoicingCommon):
         return user
 
     @classmethod
-    def create_leave_type(cls, user, name='Leave Type', requires_allocation='no', employee_requests='yes', request_unit='day', validation='no_validation', allocation_validation='hr'):
+    def create_leave_type(cls, user, name='Leave Type', requires_allocation=False, employee_requests=True, request_unit='day', validation='no_validation', allocation_validation='hr'):
         leave_type_form = Form(cls.env['hr.leave.type'].with_user(user))
         leave_type_form.name = name
         leave_type_form.requires_allocation = requires_allocation
         # invisible="requires_allocation == 'no'"
-        if requires_allocation == 'yes':
+        if requires_allocation:
             leave_type_form.employee_requests = employee_requests
             # invisible="requires_allocation == 'no' or employee_requests == 'no'"
-            if employee_requests == 'yes':
+            if employee_requests:
                 leave_type_form.allocation_validation_type = allocation_validation
         leave_type_form.leave_validation_type = validation
         leave_type_form.request_unit = request_unit
@@ -91,7 +92,7 @@ class TestHR(AccountTestInvoicingCommon):
 
     @classmethod
     def create_allocation(cls, user, employee, leave_type, number_of_days=10):
-        user.groups_id += cls.env.ref('hr_holidays.group_hr_holidays_manager')
+        user.group_ids += cls.env.ref('hr_holidays.group_hr_holidays_manager')
         allocation_form = Form(cls.env['hr.leave.allocation'].with_user(user))
         # <field name="number_of_days" invisible="1"/>
         # @api.depends(...'number_of_days_display'...)
@@ -108,8 +109,8 @@ class TestHR(AccountTestInvoicingCommon):
         #         if len(allocation.employee_ids) == 1:
         #             allocation.employee_id = allocation.employee_ids[0]._origin
         allocation_form.employee_id = employee
-        allocation_form.date_from = time.strftime('2015-1-1')
-        allocation_form.date_to = time.strftime('%Y-12-31')
+        allocation_form.date_from = Date.today().replace(day=1, month=1, year=2015)
+        allocation_form.date_to = Date.today().replace(day=31, month=12)
         allocation_form.holiday_status_id = leave_type
         if leave_type.request_unit == 'hour':
             allocation_form.number_of_hours_display = \
@@ -142,8 +143,8 @@ class TestHR(AccountTestInvoicingCommon):
         self.leave_type_2 = self.create_leave_type(
             user=self.hr_holidays_manager,
             name='Leave Type (allocation by HR, no validation, half day)',
-            requires_allocation='yes',
-            employee_requests='no',
+            requires_allocation=True,
+            employee_requests=False,
             allocation_validation='hr',
             request_unit='half_day',
             validation='no_validation',
@@ -151,8 +152,8 @@ class TestHR(AccountTestInvoicingCommon):
         self.leave_type_3 = self.create_leave_type(
             user=self.hr_holidays_manager,
             name='Leave Type (allocation request, validation both, hour)',
-            requires_allocation='yes',
-            employee_requests='yes',
+            requires_allocation=True,
+            employee_requests=True,
             request_unit='hour',
             validation='both',
             allocation_validation='hr',
@@ -173,7 +174,7 @@ class TestHR(AccountTestInvoicingCommon):
 
         # Holiday user approve allocation
         allocation_no_validation.action_set_to_confirm()
-        allocation_no_validation.action_validate()
+        allocation_no_validation.action_approve()
         self.assertEqual(allocation_no_validation.state, 'validate')
         self.assertEqual(allocation_no_validation.approver_id, self.hr_holidays_user.employee_id)
 
@@ -191,7 +192,7 @@ class TestHR(AccountTestInvoicingCommon):
         self.assertEqual(allocation.state, 'confirm')
 
         # Holiday Manager validates
-        allocation.with_user(self.hr_holidays_manager).action_validate()
+        allocation.with_user(self.hr_holidays_manager).action_approve()
         self.assertEqual(allocation.state, 'validate')
         self.assertEqual(allocation.approver_id, self.hr_holidays_manager.employee_id)
 
@@ -205,8 +206,8 @@ class TestHR(AccountTestInvoicingCommon):
         leave_form.request_unit_half = True
         leave_form.request_date_from = Date.today() + relativedelta(days=1)
         leave_form.request_date_from_period = 'am'
-        self.assertEqual(leave_form.number_of_days, 0.5, "Onchange should have computed 0.5 days")
-        leave = leave_form.save()
+        leave = leave_form.save()  # need to be saved to have access to record
+        self.assertEqual(leave.number_of_days, 0.5, "Onchange should have computed 0.5 days")
         self.assertEqual(leave.state, 'validate', "Should be automatically validated")
 
         # User request a leave that doesn't require allocation
@@ -234,7 +235,7 @@ class TestHR(AccountTestInvoicingCommon):
         # Holiday manager applies second approval
         # the "hr_holidays_manager" user need this group to access timesheets of other users
         with additional_groups(self.hr_holidays_manager, 'hr_timesheet.group_hr_timesheet_approver'):
-            leave.with_user(self.hr_holidays_manager).action_validate()
+            leave.with_user(self.hr_holidays_manager).action_approve()
 
         self.assertEqual(leave.state, 'validate')
         self.assertEqual(leave.second_approver_id, self.hr_holidays_manager.employee_id)
@@ -252,25 +253,22 @@ class TestHR(AccountTestInvoicingCommon):
         struct_form.type_id = structure_type
         return struct_form.save()
 
-    def create_contract(self, user, name, structure, wage, employee, state, start, end=None, car=None):
-        contract_form = Form(self.env['hr.contract'].with_user(user))
-        contract_form.name = name
-        contract_form.employee_id = employee
-        contract_form.structure_type_id = structure.type_id
-        contract_form.date_start = start
-        contract_form.date_end = end
+    def create_version(self, structure, wage, start, end=None, car=None):
+        version_vals = {
+            'employee_id': self.user.employee_id.id,
+            'date_version': start,
+            'contract_date_start': start,
+            'contract_date_end': end,
+            'structure_type_id': structure.type_id.id,
+            'wage': wage,
+            'hr_responsible_id': self.user.id,
+            'sign_template_id': self.template.id,
+            'contract_update_template_id': self.template.id
+        }
         if car:  # only for fleet manager
-            # invisible="not transport_mode_car"
-            contract_form.transport_mode_car = True
-            contract_form.car_id = car
-        contract_form.wage = wage
-        sign_template = self.template
-        contract_form.hr_responsible_id = self.user
-        contract_form.sign_template_id = sign_template
-        contract_form.contract_update_template_id = sign_template
-        contract = contract_form.save()
-        contract.state = state
-        return contract
+            version_vals['transport_mode_car'] = True
+            version_vals['car_id'] = car.id
+        return self.user.employee_id.create_version(version_vals)
 
     def create_work_entry_type(self, user, name, code, is_leave=False, leave_type=None):
         work_entry_type_form = Form(self.env['hr.work.entry.type'].with_user(user))
@@ -303,41 +301,31 @@ class TestHR(AccountTestInvoicingCommon):
     def create_structure(self, user, name, code):
         struct_form = Form(self.env['hr.payroll.structure'].with_user(user))
         struct_form.name = name
-        struct_form.type_id = self.env.ref('hr_contract.structure_type_employee_cp200')
+        struct_form.type_id = self.env.ref('hr.structure_type_employee_cp200')
         return struct_form.save()
 
     def _test_contract(self):
         struct = self.create_salary_structure(self.hr_payroll_user, 'Salary Structure', 'SOO1')
 
-
-        # Contract without car and without fleet access rights
-        contract_cdd = self.create_contract(
-            user=self.hr_contract_manager,
-            name="%s's CDD" % self.user.employee_id,
-            employee=self.user.employee_id,
+        # Contract version without car and without fleet access rights
+        self.create_version(
             structure=struct,
             start=Date.today() + relativedelta(day=1, months=-1),
             end=Date.today().replace(day=15),
             wage=1500,
-            state='close',
         )
 
-        # Contract with a car and with access rights
+        # Contract version with a car and with access rights
         with additional_groups(self.hr_contract_manager, 'fleet.fleet_group_manager'):
-            contract_cdi = self.create_contract(
-                user=self.hr_contract_manager,
-                name="%s's CDD" % self.user.employee_id,
+            self.create_version(
                 structure=struct,
-                employee=self.user.employee_id,
                 start=Date.today().replace(day=16),
                 car=self.env['fleet.vehicle'].search([
                     ('driver_id', '=', self.user.employee_id.work_contact_id.id),
                     ('company_id', '=', self.user.employee_id.company_id.id),
                 ], limit=1),
                 wage=2500,
-                state='draft',
             )
-            contract_cdi.state = 'open'
 
     def _test_work_entries(self):
         work_entry_type = self.create_work_entry_type(
@@ -376,20 +364,6 @@ class TestHR(AccountTestInvoicingCommon):
         undefined_type = work_entries_with_error.filtered(lambda b: not b.work_entry_type_id)
         self.assertTrue(undefined_type)  # some leave types we created earlier are not linked to any work entry type
         undefined_type.write({'work_entry_type_id': work_entry_type_leave.id})
-
-        # Check work_entries conflicting with a leave, approve them as payroll manager
-        conflicting_leave = work_entries_with_error.filtered(lambda b: b.leave_id and b.leave_id.state != 'validate')
-
-        # this user need "group_hr_timesheet_approver" to access timesheets of other user
-        # with additional_groups(self.hr_payroll_user, 'hr_timesheet.group_hr_timesheet_approver'):
-        #     conflicting_leave.mapped('leave_id').with_user(self.hr_payroll_user).action_approve()
-
-        # Reload work_entries (some might have been deleted/created when approving leaves)
-        work_entries = self.env['hr.work.entry'].with_user(self.hr_payroll_user).search([('employee_id', '=', self.user.employee_id.id)])
-
-        # Some work entries are still conflicting (if not completely included in a leave)
-        self.assertFalse(work_entries.with_user(self.hr_payroll_user).action_validate())
-        work_entries.filtered(lambda w: w.state == 'conflict').write({'state': 'cancelled'})
         self.assertTrue(work_entries.with_user(self.hr_payroll_user).action_validate())
 
     def _test_fleet(self):

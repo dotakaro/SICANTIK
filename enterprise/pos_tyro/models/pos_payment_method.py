@@ -4,7 +4,7 @@ from odoo import fields, models, api, release
 
 
 class PosPaymentMethod(models.Model):
-    _inherit = ["pos.payment.method"]
+    _inherit = "pos.payment.method"
 
     def _get_payment_terminal_selection(self):
         return super()._get_payment_terminal_selection() + [("tyro", "Tyro")]

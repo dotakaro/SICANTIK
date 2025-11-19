@@ -3,12 +3,12 @@ import { getFirstListFunction } from "@spreadsheet/list/list_helpers";
 
 const { positionToZone } = helpers;
 
-const { SpreadsheetStore, HighlightStore, HoveredCellStore } = stores;
+const { SpreadsheetStore, HighlightStore, DelayedHoveredCellStore } = stores;
 
 export class FieldSyncHighlightStore extends SpreadsheetStore {
     constructor(get) {
         super(get);
-        this.hoveredCell = get(HoveredCellStore);
+        this.hoveredCell = get(DelayedHoveredCellStore);
         const highlightStore = get(HighlightStore);
         highlightStore.register(this);
         this.onDispose(() => {
@@ -34,7 +34,7 @@ export class FieldSyncHighlightStore extends SpreadsheetStore {
         for (const cellId in cells) {
             const cell = cells[cellId];
             const cellPosition = this.getters.getCellPosition(cellId);
-            if (cell.isFormula && this.getters.isPositionVisible(cellPosition)) {
+            if (cell.isFormula && this.getters.isPixelPositionVisible(cellPosition)) {
                 const listFunction = getFirstListFunction(cell.compiledFormula.tokens);
                 if (!listFunction) {
                     continue;
@@ -54,7 +54,7 @@ export class FieldSyncHighlightStore extends SpreadsheetStore {
                     fieldName === fieldSync.fieldName
                 ) {
                     highlights.push({
-                        zone: positionToZone(cellPosition),
+                        range: this.getters.getRangeFromZone(sheetId, positionToZone(cellPosition)),
                         sheetId,
                         color: "#875A7B",
                     });

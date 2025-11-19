@@ -9,6 +9,7 @@ from odoo import Command
 
 @odoo.tests.tagged('post_install', '-at_install')
 class TestPointOfSaleFlow(TestPointOfSaleHttpCommon):
+
     def test_settle_account_due_update_instantly(self):
         self.partner_test_a = self.env["res.partner"].create({"name": "A Partner"})
         self.customer_account_payment_method = self.env['pos.payment.method'].create({
@@ -16,19 +17,42 @@ class TestPointOfSaleFlow(TestPointOfSaleHttpCommon):
             'split_transactions': True,
         })
 
-        self.main_pos_config.write({'payment_method_ids': [(6, 0, self.customer_account_payment_method.ids)]})
+        self.main_pos_config.write({'payment_method_ids': [(4, self.customer_account_payment_method.id)]})
         self.main_pos_config.open_ui()
-        self.assertEqual(self.partner_test_a.has_moves, False)
-        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'pos_settle_account_due_update_instantly', login="accountman")
-        self.main_pos_config.current_session_id.action_pos_session_closing_control()
-        self.assertEqual(self.partner_test_a.has_moves, True)
+        self.start_tour("/pos/ui/%d" % self.main_pos_config.id, 'pos_settle_account_due_update_instantly', login="accountman")
 
-    def test_settle_due_account_ui_coherency(self):
+    def test_settle_order_partially_backend(self):
         """
-        Test that an invoice can be created after the session is closed
-        Also that the button changes text depending on the current due amount.
-        And that the receipt does not have a misleading empty state.
+        - Create an invoice when paying an order with customer account from POS, pay partially the invoice from PoS and go to backend to check that the amount residual is decreased.
+        - Then pay partially from the backend, and check that the amount due is updated in the POS.
         """
+        self.partner_test_a = self.env["res.partner"].create({"name": "A Partner"})
+        self.customer_account_payment_method = self.env['pos.payment.method'].create({
+            'name': 'Customer Account',
+            'split_transactions': True,
+        })
+
+        self.main_pos_config.write({'payment_method_ids': [(4, self.customer_account_payment_method.id)]})
+        self.main_pos_config.open_ui()
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'test_settle_order_partially_backend_01', login="accountman")
+        self.main_pos_config.current_session_id.close_session_from_ui()
+
+        pos_invoice = self.partner_test_a.invoice_ids[0]
+        self.assertEqual(pos_invoice.amount_residual, 9.8)
+        self.env['account.payment.register'].with_context(active_ids=pos_invoice.ids, active_model='account.move').create({
+            'payment_date': pos_invoice.date,
+            'amount': 5,
+        })._create_payments()
+        self.assertEqual(pos_invoice.amount_residual, 4.8)
+
+        self.main_pos_config.open_ui()
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'test_settle_order_partially_backend_02', login="accountman")
+        self.main_pos_config.current_session_id.close_session_from_ui()
+        self.assertEqual(pos_invoice.amount_residual, 0)
+        self.assertEqual(self.partner_test_a.total_due, 0)
+
+    def test_settle_due_account_button(self):
+        """ Test that an invoice can be created after the session is closed """
         self.customer_account_payment_method = self.env['pos.payment.method'].create({
             'name': 'Customer Account',
             'split_transactions': True,
@@ -70,7 +94,7 @@ class TestPointOfSaleFlow(TestPointOfSaleHttpCommon):
         order_payment.with_context(**payment_context).check()
         current_session.close_session_from_ui()
         self.main_pos_config.open_ui()
-        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'SettleDueUICoherency', login="accountman")
+        self.start_tour("/pos/ui/%d" % self.main_pos_config.id, 'SettleDueButtonPresent', login="accountman")
 
         self.main_pos_config.current_session_id.close_session_from_ui()
         self.main_pos_config.write({'payment_method_ids': [(3, self.customer_account_payment_method.id)]})
@@ -85,13 +109,14 @@ class TestPointOfSaleFlow(TestPointOfSaleHttpCommon):
         partner_test_a = self.env["res.partner"].create({"name": "APartner"})
         partner_test_b = self.env["res.partner"].create({"name": "BPartner"})
 
-        def mocked_get_limited_partners_loading(self):
+        def mocked_get_limited_partners_loading(self, offset=0):
             return [(partner_test_a.id,)]
 
         payment_methods = self.main_pos_config.payment_method_ids | self.customer_account_payment_method
         self.main_pos_config.write({'payment_method_ids': [Command.set(payment_methods.ids)]})
 
         self.assertEqual(partner_test_b.total_due, 0)
+        self.assertEqual(partner_test_b.has_moves, False)
 
         self.main_pos_config.with_user(self.pos_admin).open_ui()
         current_session = self.main_pos_config.current_session_id
@@ -125,22 +150,9 @@ class TestPointOfSaleFlow(TestPointOfSaleHttpCommon):
 
         self.assertEqual(partner_test_b.total_due, 10)
         current_session.action_pos_session_closing_control()
+        self.assertEqual(partner_test_b.has_moves, True)
 
         self.main_pos_config.with_user(self.user).open_ui()
         with patch.object(PosConfig, 'get_limited_partners_loading', mocked_get_limited_partners_loading):
             self.main_pos_config.open_ui()
-            self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'SettleDueAmountMoreCustomers', login="pos_user")
-
-    def test_settle_account_due_aml_reconcile(self):
-        self.partner_test_a = self.env["res.partner"].create({"name": "A Partner"})
-        self.customer_account_payment_method = self.env['pos.payment.method'].create({
-            'name': 'Customer Account',
-            'split_transactions': True,
-        })
-        payment_methods = self.main_pos_config.payment_method_ids | self.customer_account_payment_method
-        self.main_pos_config.write({'payment_method_ids': [Command.set(payment_methods.ids)]})
-        self.main_pos_config.open_ui()
-        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'test_settle_account_due_aml_reconcile', login="accountman")
-        self.main_pos_config.current_session_id.close_session_from_ui()
-        self.assertEqual(self.partner_test_a.total_due, 0)
-        self.assertEqual(len(self.partner_test_a.unreconciled_aml_ids), 0)
+            self.start_tour("/pos/ui/%d" % self.main_pos_config.id, 'SettleDueAmountMoreCustomers', login="pos_user")

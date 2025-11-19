@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { markup, useEnv, onWillUnmount, useEffect } from "@odoo/owl";
 import { serializeDateTime } from "@web/core/l10n/dates";
@@ -23,6 +21,7 @@ export class PlanningControllerActions {
         getRecords,
         getResModel,
         getStartDate,
+        getStopDate,
         toggleHighlightPlannedFilter,
         reload,
     }) {
@@ -31,6 +30,7 @@ export class PlanningControllerActions {
         this.getRecords = getRecords;
         this.getResModel = getResModel;
         this.getStartDate = getStartDate;
+        this.getStopDate = getStopDate;
         this.toggleHighlightPlannedFilter = toggleHighlightPlannedFilter;
         this.reload = reload;
         this.actionService = useService("action");
@@ -105,8 +105,13 @@ export class PlanningControllerActions {
                 { type: "danger" }
             );
         }
+        const additionalContext = this.getAdditionalContext();
+        const adjustedEndDate = this.getStopDate();
+        if (adjustedEndDate) {
+            additionalContext.default_end_datetime = serializeDateTime(adjustedEndDate.endOf('day'));
+        }
         return this.actionService.doAction("planning.planning_send_action", {
-            additionalContext: this.getAdditionalContext(),
+            additionalContext,
             onClose: this.reload,
         });
     }

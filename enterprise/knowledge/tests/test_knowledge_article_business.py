@@ -592,12 +592,11 @@ class TestKnowledgeArticleBusiness(KnowledgeCommonBusinessCase):
         """
         # add employee on playground and desynchronize its child
         self.article_workspace._add_members(self.partner_employee, 'write')
-        self.workspace_children[0]._set_member_permission(
+        self.workspace_children[0].set_member_permission(
             self.article_workspace.article_member_ids.filtered(
                 lambda member: member.partner_id == self.partner_employee
-            ),
+            ).id,
             'read',
-            is_based_on=True,
         )
         # check updated data
         self.assertTrue(self.workspace_children[0].is_desynchronized)
@@ -950,7 +949,7 @@ class TestKnowledgeArticleCopy(KnowledgeCommonBusinessCase):
                                msg="ACLs: copy should not allow to access hidden articles"):
             _new_article = article_hidden.action_make_private_copy()
 
-        # Copying an article should create a private article without parent nor children
+        # Copying an article should create a private article without parent
         article_readonly = self.article_shared.with_env(self.env)
         new_article = article_readonly.action_make_private_copy()
         self.assertEqual(new_article.name, f'{article_readonly.name} (copy)')
@@ -1695,7 +1694,7 @@ class TestKnowledgeArticleVisibility(KnowledgeCommon):
         # status of the article.
 
         for member in workspace_article.article_member_ids:
-            workspace_article._remove_member(member)
+            workspace_article.remove_member(member.id)
 
         self.assertTrue(workspace_article.is_article_visible)
         self.assertTrue(workspace_article.is_article_visible_by_everyone)

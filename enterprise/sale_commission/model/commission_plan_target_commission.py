@@ -3,12 +3,12 @@
 from odoo import models, fields, api
 
 
-class CommissionPlanTargetCommission(models.Model):
+class SaleCommissionPlanTargetCommission(models.Model):
     _name = 'sale.commission.plan.target.commission'
     _description = 'Commission Plan Target Commission'
     _order = 'amount, id'
 
-    plan_id = fields.Many2one('sale.commission.plan', ondelete='cascade')
+    plan_id = fields.Many2one('sale.commission.plan', ondelete='cascade', index='btree_not_null')
 
     target_rate = fields.Float("Target completion (%)", default=1, required=True)
     amount_rate = fields.Float("OTC %", help='On Target Commission rate')

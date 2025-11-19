@@ -11,7 +11,7 @@ from odoo.tools import groupby, SQL
 from odoo.exceptions import UserError
 
 
-class StockMovePleReport(models.TransientModel):
+class L10n_PeStockPleWizard(models.TransientModel):
     _name = 'l10n_pe.stock.ple.wizard'
     _description = 'Wizard to generate Stock Move PLE reports for PE'
 
@@ -19,7 +19,7 @@ class StockMovePleReport(models.TransientModel):
     def default_get(self, fields_list):
         results = super().default_get(fields_list)
         if self.env.company.country_code != 'PE':
-            raise UserError('This option is only available for Peruvian companies.')
+            raise UserError(self.env._('This option is only available for Peruvian companies.'))
         date_from = fields.Date.today().replace(day=1)
         results['date_from'] = date_from
         results['date_to'] = date_from + relativedelta(months=1, days=-1)
@@ -303,7 +303,7 @@ class StockMovePleReport(models.TransientModel):
                 continue
             unit_cost = line['latest_unit_cost'] if line['latest_unit_cost'] > 0 else '0.00'
             values.update({
-                'valuation': _get_stock_valuation(line['category']),
+                'valuation': _get_stock_valuation(line['category_id']),
                 'qty_in': quantity if quantity > 0 else '0.00',
                 'cost_in': unit_cost,
                 'value_in': (quantity * float(unit_cost)) or '0.00',

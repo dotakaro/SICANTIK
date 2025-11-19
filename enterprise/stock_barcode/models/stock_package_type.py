@@ -4,7 +4,7 @@
 from odoo import api, models
 
 
-class PackageType(models.Model):
+class StockPackageType(models.Model):
     _inherit = 'stock.package.type'
 
     @api.model

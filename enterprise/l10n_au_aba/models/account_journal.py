@@ -7,6 +7,7 @@ from odoo.exceptions import ValidationError
 
 import re
 
+
 class AccountJournal(models.Model):
     _inherit = "account.journal"
 

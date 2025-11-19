@@ -4,7 +4,7 @@
 {
     'name': "Stock Accounting",
     'version': "1.0",
-    'category': 'Inventory/Inventory',
+    'category': 'Supply Chain/Inventory',
     'summary': "Bridge between Stock and Accounting",
     'description': """
 Filters the stock lines out of the reconciliation widget
@@ -15,5 +15,6 @@ Filters the stock lines out of the reconciliation widget
     ],
     'installable': True,
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

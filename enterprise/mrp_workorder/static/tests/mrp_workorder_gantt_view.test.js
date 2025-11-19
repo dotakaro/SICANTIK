@@ -63,8 +63,8 @@ test("progress bar has the correct unit", async () => {
     expect.assertions(11);
 
     mockDate("2023-03-05 07:00:00");
-    onRpc("get_gantt_data", async ({ kwargs, parent }) => {
-        const result = await parent();
+    onRpc("get_gantt_data", ({ kwargs, parent }) => {
+        const result = parent();
         expect(kwargs.progress_bar_fields).toEqual(["workcenter_id"]);
         result.progress_bars.workcenter_id = {
             1: { value: 465, max_value: 744 },
@@ -86,19 +86,19 @@ test("progress bar has the correct unit", async () => {
     });
     expect(SELECTORS.progressBar).toHaveCount(2);
     expect(SELECTORS.progressBarBackground).toHaveCount(2);
-    expect([...queryAll(SELECTORS.progressBarBackground)].map((el) => el.style.width)).toEqual([
+    expect(queryAll(SELECTORS.progressBarBackground).map((el) => el.style.width)).toEqual([
         "62.5%",
         "87.5%",
     ]);
 
     expect(SELECTORS.progressBarForeground).toHaveCount(0);
 
-    await hoverGridCell("01 March 2023", "Assembly Line 1");
+    await hoverGridCell("01", "March 2023", "Assembly Line 1");
     expect(SELECTORS.progressBarForeground).toHaveCount(1);
     expect(SELECTORS.progressBarForeground).toHaveText("465h / 744h");
     expect(`${SELECTORS.progressBar} > span > .o_gantt_group_hours_ratio`).toHaveText("(62.5%)");
 
-    await hoverGridCell("01 March 2023", "Assembly Line 2");
+    await hoverGridCell("01", "March 2023", "Assembly Line 2");
     expect(SELECTORS.progressBarForeground).toHaveCount(1);
     expect(SELECTORS.progressBarForeground).toHaveText("651h / 744h");
     expect(`${SELECTORS.progressBar} > span > .o_gantt_group_hours_ratio`).toHaveText("(87.5%)");
@@ -106,11 +106,13 @@ test("progress bar has the correct unit", async () => {
 
 test("unavailabilities fetched for workcenter_id (in groupBy)", async () => {
     mockDate("2023-03-05 07:00:00");
-    onRpc("get_gantt_data", async ({ parent, kwargs }) => {
-        const result = await parent();
+    onRpc("get_gantt_data", ({ parent, kwargs }) => {
+        const result = parent();
         expect.step("get_gantt_data");
-        expect(kwargs.unavailability_fields).toEqual(['workcenter_id']);
-        result.unavailabilities.workcenter_id = { 1: [{ start: "2023-03-05 07:00:00", stop: "2023-03-06 07:00:00" }] };
+        expect(kwargs.unavailability_fields).toEqual(["workcenter_id"]);
+        result.unavailabilities.workcenter_id = {
+            1: [{ start: "2023-03-05 07:00:00", stop: "2023-03-06 07:00:00" }],
+        };
         return result;
     });
     await mountGanttView({
@@ -123,24 +125,29 @@ test("unavailabilities fetched for workcenter_id (in groupBy)", async () => {
         groupBy: ["workcenter_id"],
     });
     expect.verifySteps(["get_gantt_data"]);
-    expect(getCell("05 March 2023")).toHaveClass("o_gantt_today");
-    expect(getCellColorProperties("05 March 2023")).toEqual([
+    expect(getCell("05", "March 2023")).toHaveClass("o_gantt_today");
+    expect(getCellColorProperties("05", "March 2023")).toEqual([
         "--Gantt__DayOffToday-background-color",
         "--Gantt__DayOff-background-color",
     ]);
-    expect(getCell("05 March 2023", "Assembly line 2")).toHaveClass("o_gantt_today");
-    expect(getCellColorProperties("05 March 2023", "Assembly line 2")).toEqual([]);
+    expect(getCell("05", "March 2023", "Assembly line 2")).toHaveClass("o_gantt_today");
+    expect(getCellColorProperties("05", "March 2023", "Assembly line 2")).toEqual([]);
 });
 
 test("unavailabilities fetched for workcenter_id  (not in groupBy)", async () => {
     mockDate("2023-03-05 07:00:00");
-    Workorder._fields.other_workcenter_id = fields.Many2one({ string: "Other Work Center", relation: "workcenter" });
+    Workorder._fields.other_workcenter_id = fields.Many2one({
+        string: "Other Work Center",
+        relation: "workcenter",
+    });
     Workorder._records[0].other_workcenter_id = 1;
-    onRpc("get_gantt_data", async ({ parent, kwargs }) => {
-        const result = await parent();
+    onRpc("get_gantt_data", ({ parent, kwargs }) => {
+        const result = parent();
         expect.step("get_gantt_data");
         expect(kwargs.unavailability_fields).toEqual([]);
-        result.unavailabilities.workcenter_id = { 1: [{ start: "2023-03-05 07:00:00", stop: "2023-03-06 07:00:00" }] };
+        result.unavailabilities.workcenter_id = {
+            1: [{ start: "2023-03-05 07:00:00", stop: "2023-03-06 07:00:00" }],
+        };
         return result;
     });
     await mountGanttView({
@@ -153,6 +160,6 @@ test("unavailabilities fetched for workcenter_id  (not in groupBy)", async () =>
         groupBy: ["other_workcenter_id"],
     });
     expect.verifySteps(["get_gantt_data"]);
-    expect(getCell("05 March 2023")).toHaveClass("o_gantt_today");
-    expect(getCellColorProperties("05 March 2023")).toEqual([]);
+    expect(getCell("05", "March 2023")).toHaveClass("o_gantt_today");
+    expect(getCellColorProperties("05", "March 2023")).toEqual([]);
 });

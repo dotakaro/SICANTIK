@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 
+
 class AvataxValidateAddress(models.TransientModel):
     _name = 'avatax.validate.address'
     _description = 'Suggests validated addresses from Avatax'

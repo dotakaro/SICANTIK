@@ -8,7 +8,7 @@ from odoo.exceptions import UserError
 _logger = logging.getLogger(__name__)
 
 
-class EventMailScheduler(models.Model):
+class EventMail(models.Model):
     _inherit = 'event.mail'
 
     notification_type = fields.Selection(selection_add=[('social_post', 'Social Post')])
@@ -26,7 +26,9 @@ class EventMailScheduler(models.Model):
         social_schedulers = self.filtered(lambda scheduler: scheduler.template_ref and scheduler.template_ref._name == 'social.post.template')
         social_schedulers.notification_type = 'social_post'
 
-    def _execute_event_based(self):
+    def _execute_event_based(self, mail_slot=False):
+        # event-based social post: slot or not, just post once, based on first
+        # slot, ignore other slots
         social_schedulers = self.filtered(lambda scheduler: scheduler.notification_type == 'social_post')
 
         if social_schedulers:
@@ -40,11 +42,16 @@ class EventMailScheduler(models.Model):
                     'mail_done': True,
                     'mail_count_done': len(scheduler.template_ref.account_ids),
                 })
+                if scheduler.mail_slot_ids:
+                    scheduler.mail_slot_ids.update({
+                        'mail_done': True,
+                        'mail_count_done': len(scheduler.template_ref.account_ids),
+                    })
         # do not call super for social schedulers as they have their own
         # computation for mail_done / mail_count_done; also avoid singleton errors
         remaining = self - social_schedulers
         if remaining:
-            return super(EventMailScheduler, remaining)._execute_event_based()
+            return super(EventMail, remaining)._execute_event_based(mail_slot=mail_slot)
 
     def _filter_template_ref(self):
         """ Check for valid template reference: existing, working template """

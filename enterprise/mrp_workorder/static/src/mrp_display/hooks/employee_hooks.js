@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { browser } from "@web/core/browser/browser";
@@ -7,7 +5,7 @@ import { PinPopup } from "@mrp_workorder/components/pin_popup";
 import { DialogWrapper } from "@mrp_workorder/components/dialog_wrapper";
 import { useState } from "@odoo/owl";
 
-export function useConnectedEmployee(controllerType, context, actionService, dialogService ) {
+export function useConnectedEmployee(controllerType, context, actionService, dialogService) {
     const orm = useService("orm");
     const notification = useService("notification");
     const dialog = useService("dialog");
@@ -77,31 +75,56 @@ export function useConnectedEmployee(controllerType, context, actionService, dia
         await getConnectedEmployees();
     };
 
-    const getConnectedEmployees = async (login=false) => {
+    const getConnectedEmployees = async (login = false) => {
         const res = await orm.call("hr.employee", "get_all_employees", [null, login]);
         if (login) {
             employees.all = res.all;
         }
+        const oldEmployees = employees.connected;
         res.connected.sort(function (emp1, emp2) {
-            if (emp1.workorder.length == 0) {
-                return 1;
+            /*
+            "MGMSort"
+            Show active employees at the top of the list, inactive at the bottom.
+            Never change the previous order of the employees, unless:
+            - they become active (start timer when inactive), then put them at the top;
+            - they become inactive (stop last running timer), then put them at the top of the inactive employees.
+             */
+            const oldEmp1 = oldEmployees.find((e) => e.id === emp1.id);
+            const oldEmp2 = oldEmployees.find((e) => e.id === emp2.id);
+            if (!oldEmp1 || !oldEmp2) {
+                // No previous sorting: sort active first, inactive last.
+                return emp1.workcenters.length >= emp2.workcenters.length ? -1 : 1;
             }
-            if (emp2.workorder.length == 0) {
+            if (emp1.workcenters.length !== 0 && oldEmp1.workcenters.length === 0) {
+                // Emp1 became active, sort at top.
                 return -1;
             }
-            return 0;
+            if (emp2.workcenters.length !== 0 && oldEmp2.workcenters.length === 0) {
+                // Emp2 became active, sort at top.
+                return 1;
+            }
+            if (emp1.workcenters.length === 0 && oldEmp1.workcenters.length !== 0) {
+                // Emp1 became inactive, sort below active and above inactive.
+                return emp2.workcenters.length === 0 ? -1 : 1;
+            }
+            if (emp2.workcenters.length === 0 && oldEmp2.workcenters.length !== 0) {
+                // Emp2 became inactive, sort below active and above inactive.
+                return emp1.workcenters.length === 0 ? 1 : -1;
+            }
+            // Sort with previous order.
+            return oldEmployees.indexOf(oldEmp1) - oldEmployees.indexOf(oldEmp2);
         });
         employees.connected = res.connected.map((obj) => {
-            const emp = employees.all.find(e => e.id === obj.id);
+            const emp = employees.all.find((e) => e.id === obj.id);
             return { ...obj, name: emp.name };
-        })
-        const admin = employees.all.find(e => e.id === res.admin);
+        });
+        const admin = employees.all.find((e) => e.id === res.admin);
         if (admin) {
             employees.admin = {
                 name: admin.name,
                 id: admin.id,
                 path: imageBaseURL + `${admin.id}`,
-            }
+            };
         } else {
             employees.admin = {};
         }
@@ -119,11 +142,11 @@ export function useConnectedEmployee(controllerType, context, actionService, dia
 
     const askPin = (employee) => {
         const dialogPromise = new Promise((resolve) => {
-            const onClosePopup = async(args) => {
+            const onClosePopup = async (args) => {
                 closePopup(args);
                 resolve();
             };
-            const onPinValidate = async(employeeId, pin) => {
+            const onPinValidate = async (employeeId, pin) => {
                 const res = await checkPin(employeeId, pin);
                 resolve();
                 return res;
@@ -138,7 +161,7 @@ export function useConnectedEmployee(controllerType, context, actionService, dia
     };
 
     const toggleSessionOwner = async (employee_id, pin) => {
-        if (employees.admin.id == employee_id) {
+        if (employees.admin.id === employee_id) {
             await orm.call("hr.employee", "remove_session_owner", [employee_id]);
             await getConnectedEmployees();
         } else {
@@ -148,7 +171,7 @@ export function useConnectedEmployee(controllerType, context, actionService, dia
 
     const setSessionOwner = async (employee_id, pin) => {
         dialogService.closeAll();
-        if (employees.admin.id == employee_id && employee_id == employees.connected[0].id) {
+        if (employees.admin.id === employee_id && employee_id === employees.connected[0].id) {
             return;
         }
         const pinValid = await orm.call("hr.employee", "login", [employee_id, pin]);
@@ -169,29 +192,28 @@ export function useConnectedEmployee(controllerType, context, actionService, dia
         await orm.call("hr.employee", "stop_all_workorder_from_employee", [employeeId]);
     };
 
-    const popupAddEmployee = () => {
-        actionService.doAction("mrp_workorder.action_open_employee_list", {
-            props: {
-                selectEmployee: (id) => selectEmployee(id),
-            },
-        });
+    const setConnectedEmployees = async (ids) => {
+        if (!ids.includes(employees.admin.id)) {
+            await stopAllWorkorderFromEmployee(employees.admin.id);
+            await orm.call("hr.employee", "logout", [employees.admin.id, false, true]);
+        }
+        await orm.call("hr.employee", "set_employees_connected", [null, ids]);
+        await getConnectedEmployees();
     };
 
-    const pinValidation = async (employeeId, pin) => {
-        return await orm.call("hr.employee", "pin_validation", [employeeId, pin]);
-    };
+    const pinValidation = async (employeeId, pin) =>
+        await orm.call("hr.employee", "pin_validation", [employeeId, pin]);
 
     const checkPin = async (employeeId, pin) => {
         if (
             employees.connected.find((e) => e.id === employeeId) &&
-            employees.admin?.id != employeeId
+            employees.admin?.id !== employeeId
         ) {
-            setSessionOwner(employeeId, pin);
+            await setSessionOwner(employeeId, pin);
         } else {
-            selectEmployee(employeeId, pin);
+            await selectEmployee(employeeId, pin);
         }
-        const pinValid = await pinValidation(employeeId, pin);
-        return pinValid;
+        return pinValidation(employeeId, pin);
     };
 
     const closePopup = (popupId) => {
@@ -211,7 +233,7 @@ export function useConnectedEmployee(controllerType, context, actionService, dia
         setSessionOwner,
         stopAllWorkorderFromEmployee,
         toggleSessionOwner,
-        popupAddEmployee,
+        setConnectedEmployees,
         checkPin,
         closePopup,
         pinValidation,

@@ -9,7 +9,7 @@ registry.category("web_tour.tours").add("test_final_product_quality_check_mrp_ba
             run: "click",
         },
         {
-            trigger: ".o_kanban_record_title:contains(Manufacturing)",
+            trigger: ".o_kanban_record:contains(Manufacturing)",
             run: "click",
         },
         {

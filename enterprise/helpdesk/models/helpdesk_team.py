@@ -2,20 +2,23 @@
 
 import ast
 import datetime
+import heapq
+import itertools
+import pytz
 
 from dateutil import relativedelta
 from collections import defaultdict
-from pytz import timezone
 from odoo import api, Command, fields, models, _
 from odoo.exceptions import ValidationError
 from odoo.osv import expression
 from odoo.tools import float_round
+from odoo.tools.misc import unquote
 from odoo.addons.rating.models.rating_data import RATING_LIMIT_MIN
 from odoo.addons.web.controllers.utils import clean_action
 
 
 class HelpdeskTeam(models.Model):
-    _name = "helpdesk.team"
+    _name = 'helpdesk.team'
     _inherit = ['mail.alias.mixin', 'mail.thread', 'rating.parent.mixin']
     _description = "Helpdesk Team"
     _order = 'sequence,name'
@@ -49,11 +52,14 @@ class HelpdeskTeam(models.Model):
         help="Stages the team will use. This team's tickets will only be able to be in these stages.")
     auto_assignment = fields.Boolean("Automatic Assignment")
     assign_method = fields.Selection([
-        ('randomly', 'Each user is assigned an equal number of tickets'),
-        ('balanced', 'Each user has an equal number of open tickets')],
+            ('randomly', 'Each user is assigned an equal number of tickets'),
+            ('balanced', 'Each user has an equal number of open tickets'),
+            ('tags', 'Dispatch tickets based on tags'),
+        ],
         string='Assignment Method', default='randomly', required=True,
         help="New tickets will automatically be assigned to the team members that are available, according to their working hours and their time off.")
-    member_ids = fields.Many2many('res.users', string='Team Members', domain=lambda self: [('groups_id', 'in', self.env.ref('helpdesk.group_helpdesk_user').id)],
+    member_ids = fields.Many2many('res.users', string='Team Members',
+        domain=lambda self: f"[('all_group_ids', 'in', {self.env.ref('helpdesk.group_helpdesk_user').id}), ('company_ids', 'in', [company_id])]",
         default=lambda self: self.env.user, required=True)
     privacy_visibility = fields.Selection([
         ('invited_internal', 'Invited internal users (private)'),
@@ -123,7 +129,7 @@ class HelpdeskTeam(models.Model):
     @api.constrains('use_website_helpdesk_form', 'privacy_visibility')
     def _check_website_privacy(self):
         if any(t.use_website_helpdesk_form and t.privacy_visibility != 'portal' for t in self):
-            raise ValidationError(_('The visibility of the team needs to be set as "Invited portal users and all internal users" in order to use the website form.'))
+            raise ValidationError(_('Want to use the website form? Just adjust your team\'s visibility to "Invited portal users and all internal users" and watch the magic happen!'))
 
     @api.depends('auto_close_ticket', 'stage_ids')
     def _compute_assign_stage_id(self):
@@ -138,6 +144,7 @@ class HelpdeskTeam(models.Model):
             team.to_stage_id = stage_ids[0][1] if stage_ids else team.stage_ids and team.stage_ids.ids[-1]
 
     def _compute_alias_email_from(self):
+        # TDE FIXME: probably to remove to become standard
         res = self._notify_get_reply_to()
         for team in self:
             team.alias_email_from = res.get(team.id, False)
@@ -335,7 +342,7 @@ class HelpdeskTeam(models.Model):
             default_alias = self.name.replace(' ', '-') if self.name else ''
             vals['alias_name'] = self.alias_name or default_alias
 
-        result = super(HelpdeskTeam, self).write(vals)
+        result = super().write(vals)
         if 'active' in vals:
             self.with_context(active_test=False).mapped('ticket_ids').write({'active': vals['active']})
         if 'use_sla' in vals:
@@ -353,7 +360,7 @@ class HelpdeskTeam(models.Model):
     def unlink(self):
         stages = self.mapped('stage_ids').filtered(lambda stage: stage.team_ids <= self)  # remove stages that only belong to team in self
         stages.unlink()
-        return super(HelpdeskTeam, self).unlink()
+        return super().unlink()
 
     def copy_data(self, default=None):
         vals_list = super().copy_data(default=default)
@@ -438,7 +445,7 @@ class HelpdeskTeam(models.Model):
                 use_sla_group = use_sla_group or self._get_helpdesk_use_sla_group()
                 helpdesk_user_group = helpdesk_user_group or self._get_helpdesk_user_group()
                 helpdesk_user_group.write({'implied_ids': [Command.unlink(use_sla_group.id)]})
-                use_sla_group.write({'users': [Command.clear()]})
+                use_sla_group.write({'user_ids': [Command.clear()]})
 
     def _check_rating_group(self):
         rating_teams = self.filtered('use_rating')
@@ -454,7 +461,7 @@ class HelpdeskTeam(models.Model):
             use_rating_group = self._get_helpdesk_use_rating_group()
             self._get_helpdesk_user_group()\
                 .write({'implied_ids': [Command.unlink(use_rating_group.id)]})
-            use_rating_group.write({'users': [Command.clear()]})
+            use_rating_group.write({'user_ids': [Command.clear()]})
             if rating_helpdesk_email_template.active:
                 rating_helpdesk_email_template.active = False
             self.env['helpdesk.stage'].search([('template_id', '=', self.env.ref('helpdesk.rating_ticket_request_email_template').id)]).template_id = False
@@ -467,7 +474,7 @@ class HelpdeskTeam(models.Model):
             self._get_helpdesk_user_group().write({'implied_ids': [Command.link(group_auto_assignment.id)]})
         elif not has_auto_assignment and has_auto_assignment_group:
             self._get_helpdesk_user_group().write({'implied_ids': [Command.unlink(group_auto_assignment.id)]})
-            group_auto_assignment.write({'users': [Command.clear()]})
+            group_auto_assignment.write({'user_ids': [Command.clear()]})
 
     def _get_field_check_method(self):
         # mapping of field names to the function that checks if their feature is enabled
@@ -552,7 +559,7 @@ class HelpdeskTeam(models.Model):
     # ------------------------------------------------------------
 
     def _alias_get_creation_values(self):
-        values = super(HelpdeskTeam, self)._alias_get_creation_values()
+        values = super()._alias_get_creation_values()
         values['alias_model_id'] = self.env['ir.model']._get('helpdesk.ticket').id
         if self._origin.id:
             values['alias_defaults'] = defaults = ast.literal_eval(self.alias_defaults or "{}")
@@ -721,9 +728,9 @@ class HelpdeskTeam(models.Model):
             domain += [('close_date', '>=', fields.Datetime.to_string((self._local_midnight_as_utc() - relativedelta.relativedelta(days=6))))]
             update_views[self.env.ref("helpdesk.rating_rating_view_seven_days_pivot_inherit_helpdesk").id] = 'pivot'
             update_views[self.env.ref('helpdesk.rating_rating_view_seven_days_graph_inherit_helpdesk').id] = 'graph'
-            context['search_default_filter_create_date'] = 'custom_create_date_last_7_days'
+            context['search_default_filter_rated_on'] = 'custom_rated_on_last_7_days'
         elif period == 'today':
-            context['search_default_filter_create_date'] = 'custom_create_date_today'
+            context['search_default_filter_rated_on'] = 'custom_rated_on_today'
             if '__count__' in context.get('pivot_measures', {}):
                 context.get('pivot_measures').remove('__count__')
             domain += [('close_date', '>=', fields.Datetime.to_string(self._local_midnight_as_utc()))]
@@ -881,72 +888,57 @@ class HelpdeskTeam(models.Model):
         })
         return action
 
-    @api.model
-    def _get_working_user_interval(self, start_dt, end_dt, calendar, users, compute_leaves=True):
-        # This method is intended to be overridden in hr_holidays in order to take non-validated leaves into account
-        return calendar._work_intervals_batch(
-            start_dt,
-            end_dt,
-            resources=users.resource_ids,
-            compute_leaves=compute_leaves
-        )
-
-    def _get_working_users_per_first_working_day(self):
-        tz = timezone(self._context.get('tz') or 'UTC')
-        start_dt = fields.Datetime.now().astimezone(tz)
-        end_dt = start_dt + relativedelta.relativedelta(days=7, hour=23, minute=59, second=59)
-        workers_per_first_working_date = defaultdict(list)
-        members_per_calendar = defaultdict(lambda: self.env['res.users'])
-        company_calendar = self.env.company.resource_calendar_id
-        for member in self.member_ids:
-            calendar = member.resource_calendar_id or company_calendar
-            members_per_calendar[calendar] |= member
-        for calendar, users in members_per_calendar.items():
-            work_intervals_per_resource = self._get_working_user_interval(start_dt, end_dt, calendar, users)
-            for user in users:
-                for resource_id in user.resource_ids.ids:
-                    intervals = work_intervals_per_resource[resource_id]
-                    if intervals:
-                        # select the start_date of the first interval to get the first working day for this user
-                        workers_per_first_working_date[(intervals._items)[0][0].date()].append(user.id)
-                        break
-                # if the user doesn't linked to any employee then add according to company calendar
-                if user.id and not user.resource_ids:
-                    intervals = work_intervals_per_resource[False]
-                    if intervals:
-                        workers_per_first_working_date[(intervals._items)[0][0].date()].append(user.id)
-        return [value for key, value in sorted(workers_per_first_working_date.items())]
-
-    def _determine_user_to_assign(self):
-        """ Get a dict with the user (per team) that should be assign to the nearly created ticket according to the team policy
-            :returns a mapping of team identifier with the "to assign" user (maybe an empty record).
-            :rtype : dict (key=team_id, value=record of res.users)
+    def _determine_user_to_assign(self, count_per_team):
         """
-        team_without_manually = self.filtered(lambda x: x.assign_method in ['randomly', 'balanced'] and x.auto_assignment)
-        users_per_working_days = team_without_manually._get_working_users_per_first_working_day()
-        result = dict.fromkeys(self.ids, self.env['res.users'])
+        Get a dict with the next n user ids (per team) that should be assigned to the newly created tickets according to the team policy
+
+        :param count_per_team: a dict (key=helpdesk.team, value=count) of teams, with the count of users to get to assign to new tickets
+        :returns a mapping of team identifier with the "to assign" users ids.
+        :rtype: dict(int, List[int]) 
+        """
+        team_without_manually = self.env['helpdesk.team'].browse({
+            team.id
+            for team in count_per_team
+            if team.auto_assignment and team.assign_method in ['randomly', 'balanced']
+        })
+        result = {team.id: [False] * count for team, count in count_per_team.items()}
+        users_per_working_days = team_without_manually.member_ids._get_working_users_per_first_working_day()
         for team in team_without_manually:
             if not team.member_ids:
                 continue
+            count = count_per_team[team]
             member_ids = team.member_ids.ids  # By default, all members of the team
             for user_ids in users_per_working_days:
-                if any(user_id in team.member_ids.ids for user_id in user_ids):
+                if any(user_id in member_ids for user_id in user_ids):
                     # filter members in team to get the ones working in the nearest date of today.
-                    member_ids = [user_id for user_id in user_ids if user_id in self.member_ids.ids]
+                    member_ids = [user_id for user_id in user_ids if user_id in member_ids]
                     break
 
             if team.assign_method == 'randomly':  # randomly means new tickets get uniformly distributed
                 last_assigned_user = self.env['helpdesk.ticket'].search([('team_id', '=', team.id), ('user_id', '!=', False)], order='create_date desc, id desc', limit=1).user_id
-                index = 0
-                if last_assigned_user and last_assigned_user.id in member_ids:
-                    previous_index = member_ids.index(last_assigned_user.id)
-                    index = (previous_index + 1) % len(member_ids)
-                result[team.id] = self.env['res.users'].browse(member_ids[index])
-            elif team.assign_method == 'balanced':  # find the member with the least open ticket
+                offset = 0
+                if last_assigned_user:
+                    for member in team.member_ids:
+                        if member.id in member_ids:
+                            offset = (offset + 1) % len(member_ids)
+                        if member == last_assigned_user:
+                            break
+                # Return the list of the next <count> ids in order, looping around the list of members if necessary
+                result[team.id] = list(itertools.islice(itertools.cycle(member_ids), offset, offset + count))
+            elif team.assign_method == 'balanced':  # find the member with the fewest open tickets
                 ticket_count_data = self.env['helpdesk.ticket']._read_group([('stage_id.fold', '=', False), ('user_id', 'in', member_ids), ('team_id', '=', team.id)], ['user_id'], ['__count'])
                 open_ticket_per_user_map = dict.fromkeys(member_ids, 0)  # dict: user_id -> open ticket count
                 open_ticket_per_user_map.update((user.id, count) for user, count in ticket_count_data)
-                result[team.id] = self.env['res.users'].browse(min(open_ticket_per_user_map, key=open_ticket_per_user_map.get))
+                selected_user_ids = []
+                # Put all members in a priority queue so that we can always get the one with the lowest amount of open
+                # tickets (= the lowest priority)
+                heap = [(open_tickets, user_id) for user_id, open_tickets in open_ticket_per_user_map.items()]
+                heapq.heapify(heap)
+                for _dummy in range(count):
+                    open_tickets, user_id = heapq.heappop(heap)
+                    selected_user_ids.append(user_id)
+                    heapq.heappush(heap, (open_tickets + 1, user_id))
+                result[team.id] = selected_user_ids
         return result
 
     def _determine_stage(self):
@@ -981,7 +973,7 @@ class HelpdeskTeam(models.Model):
                 'to_stage_id']
         )
         teams_dict = defaultdict(dict)  # key: team_id, values: the remaining result of the search_group
-        today = fields.datetime.today()
+        today = fields.Datetime.today()
         for team in teams:
             # Compute the threshold_date
             team['threshold_date'] = today - relativedelta.relativedelta(days=team['auto_close_day'])
@@ -1017,4 +1009,4 @@ class HelpdeskTeam(models.Model):
     def _local_midnight_as_utc(self):
         """ local 12am expressed in UTC (naive datetime) """ 
         now = fields.Datetime.context_timestamp(self, fields.Datetime.now())
-        return datetime.datetime.combine(now.date(), datetime.time.min, now.tzinfo).astimezone(timezone('UTC')).replace(tzinfo=None)
+        return datetime.datetime.combine(now.date(), datetime.time.min, now.tzinfo).astimezone(pytz.utc).replace(tzinfo=None)

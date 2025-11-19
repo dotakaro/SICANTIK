@@ -8,7 +8,7 @@ from odoo.exceptions import ValidationError
 
 class BudgetLine(models.Model):
     _name = 'budget.line'
-    _inherit = 'analytic.plan.fields.mixin'
+    _inherit = ['analytic.plan.fields.mixin']
     _description = "Budget Line"
     _order = 'sequence, id'
 
@@ -114,5 +114,8 @@ class BudgetLine(models.Model):
             if self[fname]:
                 domain += [(fname, 'in', self[fname].ids)]
         action = self.env['ir.actions.act_window']._for_xml_id('account_budget.budget_report_action')
-        action['domain'] = domain
+        action.update({
+            'domain': domain,
+            'views': [(False, 'list'), (False, 'pivot'), (False, 'graph')]
+        })
         return action

@@ -1,4 +1,3 @@
-/** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { stepUtils } from "@web_tour/tour_service/tour_utils";
 
@@ -20,7 +19,7 @@ const StepToFSMProductsKanbanWithFavoritesFilterSteps = [
     },
     {
         content: 'Open Task Form',
-        trigger: ".o_data_row span:contains(Fsm task)",
+        trigger: ".o_data_row:has(span:contains(Fsm task)) .o_data_cell",
         run: "click",
     },
     {

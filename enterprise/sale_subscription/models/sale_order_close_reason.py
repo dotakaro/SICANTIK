@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import _, api, fields, models
@@ -7,7 +6,7 @@ from odoo.tools import is_html_empty
 
 
 class SaleOrderCloseReason(models.Model):
-    _name = "sale.order.close.reason"
+    _name = 'sale.order.close.reason'
     _order = "sequence, id"
     _description = "Subscription Close Reason"
 
@@ -35,4 +34,4 @@ class SaleOrderCloseReason(models.Model):
     def _unlink_close_reasons(self):
         for reason in self:
             if reason.is_protected:
-                raise AccessError(_("The reason %s is required by the Subscription application and cannot be deleted.", reason.name))
+                raise AccessError(_('The reason: "%s" is here for good. It\'s essential for our subscription application like coffee is for a Monday morning!', reason.name))

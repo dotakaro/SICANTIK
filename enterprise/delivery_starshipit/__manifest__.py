@@ -10,14 +10,16 @@ Seamlessly integrating with a large range of couriers and platforms,
 you can streamline every step of your fulfilment process,
 reduce handling time and improve customer experience.
     """,
-    'category': 'Inventory/Delivery',
+    'category': 'Shipping Connectors',
     'version': '1.0',
     'application': True,
     'depends': ['stock_delivery'],
     'data': [
+        'data/ir_cron_data.xml',
         'security/ir.model.access.csv',
         'views/delivery_carrier_views.xml',
         'views/res_config_settings_views.xml',
+        'views/stock_picking_views.xml',
         'wizard/starshipit_shipping_wizard.xml',
     ],
     'assets': {
@@ -26,5 +28,6 @@ reduce handling time and improve customer experience.
             'delivery_starshipit/static/src/components/**/*.xml',
         ],
     },
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

@@ -35,8 +35,6 @@
             <field name="name">plan.jpg</field>
             <field name="datas" type="base64" file="documents_project_sale/data/files/plan.jpg"/>
             <field name="folder_id" model="documents.document" eval="obj().search([('name', '=', 'Plans')], order='id desc', limit=1)"/>
-            <field name="res_model">project.project</field>
-            <field name="res_id" ref="project_project_renovation_architect"/>
             <field name="owner_id" ref="base.user_admin"/>
             <field name="partner_id" ref="base.res_partner_2"/>
             <field name="tag_ids" eval="[Command.link(ref('documents_folder_tag_in_use'))]"/>
@@ -46,9 +44,6 @@
             <field name="name">welcome.jpg</field>
             <field name="datas" type="base64" file="documents_project_sale/data/files/welcome.jpg"/>
             <field name="folder_id" ref="documents_renovations_projects"/>
-            <field name="res_model">project.task</field>
-            <field name="res_id" ref="project_task_visit_customer"/>
-            <field name="owner_id" ref="base.public_user"/>
             <field name="partner_id" ref="base.res_partner_2"/>
             <field name="tag_ids" eval="[Command.link(ref('documents_folder_tag_unsorted'))]"/>
         </record>
@@ -65,7 +60,7 @@
             <field name="list_price">45</field>
             <field name="type">service</field>
             <field name="uom_id" ref="uom.product_uom_hour"/>
-            <field name="uom_po_id" ref="uom.product_uom_hour"/>
+            <field name="categ_id" ref="product.product_category_services"/>
             <field name="service_tracking">project_only</field>
             <field name="project_template_id" ref="project_project_renovation_architect"/>
         </record>

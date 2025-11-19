@@ -26,7 +26,7 @@ class WebsiteHelpdesk(http.Controller):
     def website_helpdesk_teams(self, team=None, **kwargs):
         search = kwargs.get('search')
 
-        teams_domain = [('use_website_helpdesk_form', '=', True)]
+        teams_domain = [('use_website_helpdesk_form', '=', True), ('website_id', '=', request.website.id)]
         if not request.env.user.has_group('helpdesk.group_helpdesk_manager'):
             if team and not team.is_published:
                 raise NotFound()
@@ -99,7 +99,7 @@ class WebsiteHelpdesk(http.Controller):
 
         return request.render("website_helpdesk.knowledge_base", self._get_knowledge_base_values(team))
 
-    @http.route(['/helpdesk/<model("helpdesk.team"):team>/knowledgebase/autocomplete'], type='json', auth="public", website=True, sitemap=True)
+    @http.route(['/helpdesk/<model("helpdesk.team"):team>/knowledgebase/autocomplete'], type='jsonrpc', auth="public", website=True, sitemap=True)
     def website_helpdesk_autocomplete(self, team, **kwargs):
         if not team.show_knowledge_base:
             raise NotFound()
@@ -136,6 +136,7 @@ class WebsiteHelpdesk(http.Controller):
     def _format_search_results(self, search_type, records, options):
         return []
 
+
 class WebsiteForm(form.WebsiteForm):
 
     def _handle_website_form(self, model_name, **kwargs):
@@ -155,18 +156,22 @@ class WebsiteForm(form.WebsiteForm):
                 })
             request.params['partner_id'] = partner.id
 
-        return super(WebsiteForm, self)._handle_website_form(model_name, **kwargs)
+        return super()._handle_website_form(model_name, **kwargs)
 
-    def insert_attachment(self, model, id_record, files):
-        super().insert_attachment(model, id_record, files)
+    def insert_attachment(self, model_sudo, id_record, files):
+        super().insert_attachment(model_sudo, id_record, files)
         # If the helpdesk ticket form is submit with attachments,
         # Give access token to these attachments and make the message
         # accessible to the portal user
         # (which will be able to view and download its own documents).
-        model_name = model.sudo().model
+        model_name = model_sudo.model
         if model_name == "helpdesk.ticket":
-            ticket = model.env[model_name].browse(id_record)
-            attachments = request.env['ir.attachment'].sudo().search([('res_model', '=', model_name), ('res_id', '=', ticket.id), ('access_token', '=', False)])
+            ticket = model_sudo.env[model_name].browse(id_record)
+            attachments = request.env['ir.attachment'].sudo().search([
+                ('res_model', '=', model_name),
+                ('res_id', '=', ticket.id),
+                ('access_token', '=', False),
+            ])
             if not attachments:
                 return
             attachments.generate_access_token()
@@ -174,15 +179,18 @@ class WebsiteForm(form.WebsiteForm):
             message.is_internal = False
             message.subtype_id = request.env.ref('mail.mt_comment')
 
-    def insert_record(self, request, model, values, custom, meta=None):
-        res = super().insert_record(request, model, values, custom, meta=meta)
-        if model.sudo().model != 'helpdesk.ticket':
+    def insert_record(self, request, model_sudo, values, custom, meta=None):
+        res = super().insert_record(request, model_sudo, values, custom, meta=meta)
+        if model_sudo.model != 'helpdesk.ticket':
             return res
         ticket = request.env['helpdesk.ticket'].sudo().browse(res)
         custom_label = nl2br_enclose(_("Other Information"), 'h4')  # Title for custom fields
-        default_field = model.website_form_default_field_id
+        default_field = model_sudo.website_form_default_field_id
         default_field_data = values.get(default_field.name, '')
-        default_field_content = nl2br_enclose(default_field.name.capitalize(), 'h4') + nl2br_enclose(html2plaintext(default_field_data), 'p')
+        if not custom:
+            default_field_content = nl2br_enclose(html2plaintext(default_field_data), 'p')
+        else:
+            default_field_content = nl2br_enclose(default_field.field_description, 'h4') + nl2br_enclose(html2plaintext(default_field_data), 'p')
         custom_content = (default_field_content if default_field_data else '') \
                         + (custom_label + custom if custom else '') \
                         + (self._meta_label + meta if meta else '')

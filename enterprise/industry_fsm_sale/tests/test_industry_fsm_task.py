@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details
 
-from odoo.tests import tagged
+from odoo import Command
+from odoo.tests import tagged, Form
 from .common import TestFsmFlowSaleCommon
 
 
@@ -12,7 +13,7 @@ class TestIndustryFsmTask(TestFsmFlowSaleCommon):
         """ For fsm tasks linked to a sale order, the partner_id should be the same as
             the partner_shipping_id set on the sale sale order.
         """
-        self.env.user.groups_id += self.env.ref('account.group_delivery_invoice_address')
+        self.env.user.group_ids += self.env.ref('account.group_delivery_invoice_address')
         so = self.env['sale.order'].create([{
             'name': 'Test SO linked to fsm task',
             'partner_id': self.partner_1.id,
@@ -85,3 +86,17 @@ class TestIndustryFsmTask(TestFsmFlowSaleCommon):
         self.task.action_fsm_validate()
         self.assertFalse(self.task.sale_order_id, 'Sale order should not be generated on the task.')
         self.assertFalse(self.task.timesheet_ids.so_line, 'The timesheet should not be linked to a SOL.')
+
+    def test_read_timesheet_product_id_portal_user(self):
+        portal_user = self._create_new_portal_user()
+        self.task.project_id.write({
+            'collaborator_ids': [
+                Command.create({'partner_id': portal_user.partner_id.id}),
+            ],
+        })
+        self.assertTrue(
+            Form(
+                self.task.with_user(portal_user),
+                view="industry_fsm_sale.project_sharing_project_task_inherit_view_form",
+            )
+        )

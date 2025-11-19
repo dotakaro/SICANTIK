@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models, _
-from odoo.exceptions import UserError
-from odoo.tools import float_compare
-
-from odoo.addons.pos_iot.controllers.checksum import calculate_scale_checksum, EXPECTED_CHECKSUM
+from odoo import api, fields, models
 
 
 class PosConfig(models.Model):
@@ -23,15 +19,8 @@ class PosConfig(models.Model):
     # TODO: Remove this field, it's not being used.
     payment_terminal_device_ids = fields.Many2many('iot.device', compute="_compute_payment_terminal_device_ids")
 
-    def _load_pos_data(self, data):
-        response = super()._load_pos_data(data)
-
-        is_eu_country = self.env.company.country_id in self.env.ref('base.europe').country_ids
-        response['data'][0]["_is_eu_country"] = is_eu_country
-        if is_eu_country:
-            response['data'][0]["_scale_checksum"] = calculate_scale_checksum()[0]
-            response['data'][0]["_scale_checksum_expected"] = EXPECTED_CHECKSUM
-        return response
+    def _get_url_to_cache(self, debug):
+        return super()._get_url_to_cache(debug) + self.env["ir.qweb"]._get_asset_links("web._assets_jquery", debug=debug)
 
     @api.depends('iface_printer_id')
     def _compute_print_via_proxy(self):
@@ -66,19 +55,3 @@ class PosConfig(models.Model):
             return self.iface_display_id.iot_ip
         else:
             return super()._get_display_device_ip()
-
-    @api.model
-    def fix_rounding_for_scale_certification(self, uom_ids):
-        units_of_measure = self.env['uom.uom'].browse(uom_ids)
-        for uom in units_of_measure:
-            if float_compare(uom.rounding, 0.001, precision_digits=3) == 1:
-                uom.rounding = 0.001
-        decimal_precision = self.env['decimal.precision'].search([('name', '=', 'Product Unit of Measure')])
-        if decimal_precision.digits < 3:
-            decimal_precision.digits = 3
-
-    @api.constrains('iface_display_id', 'customer_display_type', 'is_posbox')
-    def _check_customer_display_type(self):
-        for config in self:
-            if config.customer_display_type == 'proxy' and (not config.is_posbox or not config.iface_display_id):
-                raise UserError(_("You must set a display device for an IOT-connected screen. You'll find the field under the 'IoT Box' option."))

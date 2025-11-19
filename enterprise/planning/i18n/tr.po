@@ -3,29 +3,15 @@
 # 	* planning
 # 
 # Translators:
-# emre oktem, 2024
-# Ayhan Kızıltan, 2024
-# ANIL TAN SAĞIR <anils@projetgrup.com>, 2024
-# Umur Akın <umura@projetgrup.com>, 2024
-# Nadir Gazioglu <nadirgazioglu@gmail.com>, 2024
-# Özlem Atalay <ozlema@eskayazilim.com.tr>, 2024
-# Levent Karakaş <levent@mektup.at>, 2024
-# Ertuğrul Güreş <ertugrulg@projetgrup.com>, 2024
-# Murat Durmuş <muratd@projetgrup.com>, 2024
-# Cengiz Cokay Global Nonwoven, 2024
-# Murat Kaplan <muratk@projetgrup.com>, 2024
-# Martin Trigaux, 2024
-# Ediz Duman <neps1192@gmail.com>, 2024
 # Wil Odoo, 2025
-# Tugay Hatıl <tugayh@projetgrup.com>, 2025
 # Deniz Guvener_Odoo <degu@odoo.com>, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-16 20:43+0000\n"
-"PO-Revision-Date: 2024-09-25 09:44+0000\n"
+"POT-Creation-Date: 2025-07-16 18:41+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
 "Last-Translator: Deniz Guvener_Odoo <degu@odoo.com>, 2025\n"
 "Language-Team: Turkish (https://app.transifex.com/odoo/teams/41243/tr/)\n"
 "MIME-Version: 1.0\n"
@@ -301,18 +287,13 @@ msgid "<i class=\"fa fa-long-arrow-right\" aria-label=\"Arrow icon\" title=\"Arr
 msgstr "<i class=\"fa fa-long-arrow-right\" aria-label=\"Arrow icon\" title=\"Arrow\"/>"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
-msgid "<i class=\"fa fa-long-arrow-right\" title=\"Arrow\"/>"
-msgstr "<i class=\"fa fa-long-arrow-right\" title=\"Arrow\"/>"
-
-#. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_assignee_contact_popover
 msgid "<i class=\"fa fa-phone\" title=\"Phone\" role=\"img\" style=\"padding-right: 2px\"/>"
 msgstr ""
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
-msgid "<i class=\"mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
+msgid "<i class=\"me-1 mt-1 fa fa-clock-o\" role=\"img\" aria-label=\"Date\" title=\"Date\"/>"
 msgstr ""
 
 #. module: planning
@@ -327,11 +308,6 @@ msgstr ""
 msgid ""
 "<i class=\"o_group_caret fa fa-fw me-1 fa-caret-down\"></i> <span "
 "class=\"text-truncate w-0 flex-grow-1 text-start\">Waiter</span>"
-msgstr ""
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_form
-msgid "<span class=\"ms-0 me-4\">Edit</span>"
 msgstr ""
 
 #. module: planning
@@ -401,7 +377,7 @@ msgstr ""
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_inherit
 msgid "<span class=\"o_stat_text\">Planning</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text\">Planlama</span>"
 
 #. module: planning
 #: model_terms:hr.job,job_details:planning.job_maintenance_technician
@@ -462,7 +438,7 @@ msgstr ""
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_form
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid ""
 "<span>The employee assigned would like to switch shifts with someone "
 "else.</span>"
@@ -472,11 +448,6 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:planning.res_config_settings_view_form
 msgid "<span>months ahead</span>"
 msgstr "<span>aylar sonra</span>"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
-msgid "<strong>Allocated Time — </strong>"
-msgstr "<strong>Ayrılan Zaman —</strong>"
 
 #. module: planning
 #: model:mail.template,body_html:planning.email_template_slot_single
@@ -581,7 +552,7 @@ msgid ""
 "                    </p>\n"
 "                    <div style=\"display: flex; margin: 15px;\">\n"
 "                        <div t-if=\"ctx.get('planning_url')\" style=\"margin-right: 15px;\">\n"
-"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #FFFFFF; background-color: #875A7B; border: solid #875A7B;\">View Your Planning</a>\n"
+"                            <a t-att-href=\"ctx['planning_url']\" target=\"_blank\" class=\"planning_mail_template_button\" t-attf-style=\"color: {{object.company_id.email_primary_color or '#FFFFFF'}}; background-color: {{object.company_id.email_secondary_color or '#875A7B'}};\">View Your Planning</a>\n"
 "                        </div>\n"
 "                        <div t-if=\"ctx.get('planning_url_ics')\">\n"
 "                            <a t-att-href=\"ctx['planning_url_ics']\" target=\"_blank\" class=\"planning_mail_template_button\" style=\"color: #374151; background-color: #E7E9ED; border: solid #E7E9ED;\">Add to Calendar</a>\n"
@@ -669,11 +640,6 @@ msgid ""
 "All subsequent shifts will be deleted. Are you sure you want to continue?"
 msgstr ""
 "Sonraki tüm vardiyalar silinecektir. Devam etmek istediğine emin misin?"
-
-#. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
-msgid "Allocated Hours"
-msgstr "Tahsis Edilen Saatler"
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
@@ -804,7 +770,7 @@ msgstr ""
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_filter_panel/planning_calendar_filter_panel.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_filter_section/planning_calendar_filter_section.xml:0
 msgid "Avatar"
 msgstr "Avatar"
 
@@ -812,11 +778,6 @@ msgstr "Avatar"
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 msgid "Bartender"
 msgstr "Barmen"
-
-#. module: planning
-#: model:ir.model,name:planning.model_hr_employee_base
-msgid "Basic Employee"
-msgstr "Temel Personel"
 
 #. module: planning
 #: model:ir.ui.menu,name:planning.planning_menu_schedule_by_resource
@@ -845,6 +806,22 @@ msgstr "Takası İptal et"
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Chat"
 msgstr "Sohbet"
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid ""
+"Click on a day or select a range of days to create shifts for the selected "
+"resources using the shift template"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid ""
+"Clicking on a day or selecting a range of days will permanently delete its "
+"contents"
+msgstr ""
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_role__color
@@ -915,6 +892,14 @@ msgid "Crane"
 msgstr ""
 
 #. module: planning
+#: model_terms:ir.actions.act_window,help:planning.planning_action_open_shifts
+msgid ""
+"Create open shifts for the roles you will be needing to complete a mission.<br>\n"
+"                Allocate open shifts to resources based on their roles."
+msgstr ""
+
+#. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_planning__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__create_uid
 #: model:ir.model.fields,field_description:planning.field_planning_role__create_uid
@@ -925,6 +910,7 @@ msgid "Created by"
 msgstr "Tarafından oluşturuldu"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_planning__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__create_date
 #: model:ir.model.fields,field_description:planning.field_planning_role__create_date
@@ -1026,7 +1012,6 @@ msgstr ""
 #: code:addons/planning/static/src/views/planning_form/planning_form_view.js:0
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
 #: model_terms:ir.ui.view,arch_db:planning.planning_role_view_kanban
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban
 msgid "Delete"
 msgstr "Sil"
@@ -1062,13 +1047,20 @@ msgid "Discard"
 msgstr "Sil"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_hr_departure_wizard__display_name
+#: model:ir.model.fields,field_description:planning.field_hr_employee__display_name
+#: model:ir.model.fields,field_description:planning.field_hr_employee_public__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__display_name
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_planning__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_role__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_send__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_slot__display_name
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__display_name
+#: model:ir.model.fields,field_description:planning.field_res_company__display_name
+#: model:ir.model.fields,field_description:planning.field_res_config_settings__display_name
+#: model:ir.model.fields,field_description:planning.field_resource_resource__display_name
 msgid "Display Name"
 msgstr "İsim Göster"
 
@@ -1085,7 +1077,7 @@ msgstr "Doris Cole (Barmen)"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__state__draft
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__state__draft
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
@@ -1106,6 +1098,7 @@ msgid "Duration"
 msgstr "Süre"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_slot__template_duration_days
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__duration_days
 msgid "Duration Days"
 msgstr "Süre Gün"
@@ -1213,6 +1206,18 @@ msgid "Extra Message"
 msgstr "Ekstra Mesaj"
 
 #. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Failed to undo reschedule"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
+msgid "Filter by specific resources to show only their shifts"
+msgstr ""
+
+#. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_my_calendar
 msgid ""
 "Find here your planning. Assign yourself open shifts that match your roles, "
@@ -1283,10 +1288,9 @@ msgstr "Grupla"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_hr_employee__has_slots
-#: model:ir.model.fields,field_description:planning.field_hr_employee_base__has_slots
 #: model:ir.model.fields,field_description:planning.field_hr_employee_public__has_slots
 msgid "Has Slots"
-msgstr ""
+msgstr "Zaman Aralığı Var"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__request_to_switch
@@ -1299,8 +1303,6 @@ msgid "Hours"
 msgstr "Saat"
 
 #. module: planning
-#. odoo-javascript
-#: code:addons/planning/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__resource_type__user
 msgid "Human"
 msgstr "İnsan"
@@ -1326,13 +1328,20 @@ msgid "I am unavailable"
 msgstr "Müsait değilim"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_hr_departure_wizard__id
+#: model:ir.model.fields,field_description:planning.field_hr_employee__id
+#: model:ir.model.fields,field_description:planning.field_hr_employee_public__id
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__id
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__id
 #: model:ir.model.fields,field_description:planning.field_planning_planning__id
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__id
 #: model:ir.model.fields,field_description:planning.field_planning_role__id
 #: model:ir.model.fields,field_description:planning.field_planning_send__id
 #: model:ir.model.fields,field_description:planning.field_planning_slot__id
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__id
+#: model:ir.model.fields,field_description:planning.field_res_company__id
+#: model:ir.model.fields,field_description:planning.field_res_config_settings__id
+#: model:ir.model.fields,field_description:planning.field_resource_resource__id
 msgid "ID"
 msgstr "ID"
 
@@ -1357,6 +1366,7 @@ msgstr ""
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_send__include_unassigned
+#: model_terms:ir.ui.view,arch_db:planning.planning_send_view_form
 msgid "Include Open Shifts"
 msgstr "Açık Vardiyaları Dahil Et"
 
@@ -1371,13 +1381,18 @@ msgid "Jeffrey Kelly (Bartender)"
 msgstr "Jeffrey Kelly (Barmen)"
 
 #. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
+msgid "Job Position"
+msgstr "İş Pozisyonu"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_analysis_report__job_title
 #: model:ir.model.fields,field_description:planning.field_planning_slot__job_title
-#: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_simplified
 msgid "Job Title"
 msgstr "İş Ünvanı"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_planning__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__write_uid
 #: model:ir.model.fields,field_description:planning.field_planning_role__write_uid
@@ -1388,6 +1403,7 @@ msgid "Last Updated by"
 msgstr "Son Güncelleyen"
 
 #. module: planning
+#: model:ir.model.fields,field_description:planning.field_planning_calendar_resource__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_planning__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_recurrency__write_date
 #: model:ir.model.fields,field_description:planning.field_planning_role__write_date
@@ -1399,7 +1415,7 @@ msgstr "Son Güncelleme"
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 msgid "Legend"
 msgstr "Gösterge"
 
@@ -1457,7 +1473,7 @@ msgstr "Liste"
 #: model:hr.job,name:planning.job_maintenance_technician
 #: model:planning.role,name:planning.planning_maintenance_technician
 msgid "Maintenance Technician"
-msgstr ""
+msgstr "Bakım Teknisyeni"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_shift_template
@@ -1483,8 +1499,6 @@ msgid "Marc Demo"
 msgstr "Marc Demo"
 
 #. module: planning
-#. odoo-javascript
-#: code:addons/planning/static/src/views/fields/many2many_avatar_resource/many2many_avatar_resource_field.js:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__resource_type__material
 msgid "Material"
 msgstr "Malzeme"
@@ -1614,6 +1628,7 @@ msgstr "Vardiya şablonu bulunamadı. Hadi bir tane oluşturalım!"
 
 #. module: planning
 #: model_terms:ir.actions.act_window,help:planning.planning_action_my_calendar
+#: model_terms:ir.actions.act_window,help:planning.planning_action_open_shifts
 #: model_terms:ir.actions.act_window,help:planning.planning_action_schedule_by_resource
 #: model_terms:ir.actions.act_window,help:planning.planning_action_schedule_by_role
 msgid "No shifts found. Let's create one!"
@@ -1663,6 +1678,8 @@ msgstr "Boş Vardiya"
 #. odoo-javascript
 #: code:addons/planning/static/src/views/planning_calendar/planning_calendar_model.js:0
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_model.js:0
+#: model:ir.actions.act_window,name:planning.planning_action_open_shifts
+#: model:ir.ui.menu,name:planning.planning_menu_open_shifts
 #: model_terms:ir.actions.act_window,help:planning.planning_action_roles
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
 #: model_terms:ir.ui.view,arch_db:planning.slot_report
@@ -1734,6 +1751,11 @@ msgid ""
 msgstr ""
 
 #. module: planning
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_tree
+msgid "Planned Date"
+msgstr "Planlanan Tarih"
+
+#. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_slot_template__start_time
 msgid "Planned Hours"
 msgstr "Planlanan Süre"
@@ -1744,7 +1766,9 @@ msgstr "Planlanan Süre"
 #: model:ir.actions.report,name:planning.report_planning_slot
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__allocation_type__planning
 #: model:ir.ui.menu,name:planning.planning_menu_root
+#: model:res.groups.privilege,name:planning.res_groups_privilege_planning
 #: model_terms:ir.ui.view,arch_db:planning.hr_employee_view_form_inherit
+#: model_terms:ir.ui.view,arch_db:planning.open_shifts_pivot_view
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_calendar
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_graph
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_my_calendar
@@ -1780,6 +1804,7 @@ msgstr "Tekrarlama Planlaması"
 #. module: planning
 #: model:ir.model,name:planning.model_planning_role
 #: model_terms:ir.ui.view,arch_db:planning.planning_role_view_form
+#: model_terms:ir.ui.view,arch_db:planning.shifts_template_for_multi_create_in_calendar_view
 msgid "Planning Role"
 msgstr "Planlama Rolü"
 
@@ -1851,6 +1876,8 @@ msgid ""
 "Please add a work email for the following employee so that they can receive "
 "their planning:"
 msgstr ""
+"Aşağıdaki çalışanın planlamasına erişebilmesi için lütfen ona ait iş e-posta"
+" adresini ekleyin:"
 
 #. module: planning
 #. odoo-javascript
@@ -1862,6 +1889,18 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer_controls.xml:0
 msgid "Press Ctrl to duplicate the shift"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_hooks.js:0
+msgid "Previous week's copied shifts removed"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_hooks.js:0
+msgid "Previous week's shifts copied"
 msgstr ""
 
 #. module: planning
@@ -1879,6 +1918,11 @@ msgstr "Projektör"
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search
 msgid "Properties"
 msgstr "Özellikler"
+
+#. module: planning
+#: model:ir.model,name:planning.model_hr_employee_public
+msgid "Public Employee"
+msgstr "Herkese Açık Personel"
 
 #. module: planning
 #. odoo-javascript
@@ -1903,7 +1947,7 @@ msgstr ""
 
 #. module: planning
 #. odoo-javascript
-#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_controller.xml:0
+#: code:addons/planning/static/src/views/planning_calendar/planning_calendar_side_panel/planning_calendar_side_panel.xml:0
 #: model:ir.model.fields.selection,name:planning.selection__planning_analysis_report__state__published
 #: model:ir.model.fields.selection,name:planning.selection__planning_slot__state__published
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_search_base
@@ -1914,7 +1958,7 @@ msgstr "Yayınlandı"
 #: model:hr.job,name:planning.job_quality_control
 #: model:planning.role,name:planning.planning_quality_control
 msgid "Quality Control Inspector"
-msgstr ""
+msgstr "Kalite Kontrol Görevlisi"
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_res_company__planning_generation_interval
@@ -2050,8 +2094,8 @@ msgid ""
 "Role that will be selected by default when creating a shift for this employee.\n"
 "This role will also have precedence over the other roles of the employee when planning orders."
 msgstr ""
-"Bu çalışan için vardiya oluşturulurken varsayılan olarak seçilecek roldür.\n"
-"Bu rol ayrıca, sipariş planlamasında çalışanın diğer rollerine göre öncelikli olacaktır."
+"Bu çalışan için bir vardiya oluşturulurken varsayılan olarak seçilecek rol.\n"
+"Bu rol, siparişleri planlarken çalışanın diğer rollerine göre de öncelikli olacaktır."
 
 #. module: planning
 #: model:ir.model.fields,help:planning.field_resource_resource__default_role_id
@@ -2086,10 +2130,10 @@ msgid ""
 "Additionally, the employee will only be assigned orders for these roles (with the default planning role having precedence over the other ones).\n"
 "Leave empty for the employee to be assigned shifts regardless of the role."
 msgstr ""
-"Çalışanın ikame edebileceği roller. Bu çalışan için bir vardiya oluşturulurken yalnızca bu roller için vardiya şablonları görüntülenecektir.\n"
+"Çalışanın doldurabileceği roller. Bu çalışan için bir vardiya oluştururken, yalnızca bu roller için vardiya şablonları görüntülenecektir.\n"
 "Benzer şekilde, program yayınlandığında çalışana yalnızca bu roller için mevcut olan açık vardiyalar gönderilecektir.\n"
-"Ayrıca, çalışana yalnızca bu roller için emirler atanacaktır (varsayılan planlama rolünün diğerlerine göre önceliği vardır).\n"
-"Rolü ne olursa olsun vardiya atanacak çalışanlar için bu alanı boş bırakın."
+"Ek olarak, çalışana yalnızca bu roller için siparişler atanacaktır (varsayılan planlama rolü diğerlerine göre önceliklidir).\n"
+"Rolden bağımsız olarak vardiya atanacak çalışan için boş bırakın."
 
 #. module: planning
 #: model_terms:ir.ui.view,arch_db:planning.planning_view_form_in_gantt
@@ -2154,12 +2198,6 @@ msgid ""
 msgstr ""
 "İnsan ve malzeme kaynaklarınızı roller, projeler ve satış siparişleri "
 "arasında planlayın."
-
-#. module: planning
-#. odoo-python
-#: code:addons/planning/models/planning.py:0
-msgid "Search operation not supported"
-msgstr ""
 
 #. module: planning
 #: model:ir.model.fields,field_description:planning.field_planning_planning__access_token
@@ -2240,6 +2278,36 @@ msgstr "Vardiya Şablonları"
 
 #. module: planning
 #. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift could not be removed"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift duplicated"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift removed"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift reschedule undone"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
+#: code:addons/planning/static/src/views/planning_gantt/planning_gantt_renderer.js:0
+msgid "Shift rescheduled"
+msgstr ""
+
+#. module: planning
+#. odoo-javascript
 #: code:addons/planning/static/src/views/planning_form/planning_form_view.js:0
 msgid "Shift saved as template"
 msgstr ""
@@ -2289,7 +2357,7 @@ msgid "Shipping Associate"
 msgstr ""
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid "Some changes were made since this shift was published."
 msgstr "Bu vardiya yayınlandıktan sonra bazı değişiklikler yapıldı."
 
@@ -2368,13 +2436,6 @@ msgstr "Tekrar sayısı negatif olamaz."
 #: model:ir.model.constraint,message:planning.constraint_planning_recurrency_check_repeat_interval_positive
 msgid "The recurrence should be greater than 0."
 msgstr "Yineleme 0'dan büyük olmalıdır."
-
-#. module: planning
-#. odoo-python
-#: code:addons/planning/models/planning.py:0
-msgid "The recurrence's end date should fall after the shift's start date."
-msgstr ""
-"Yinelemenin bitiş tarihi, vardiyanın başlangıç tarihinden sonra olmalıdır."
 
 #. module: planning
 #. odoo-javascript
@@ -2548,6 +2609,15 @@ msgstr "Toplam"
 #: model:ir.model.fields,field_description:planning.field_planning_slot__resource_type
 msgid "Type"
 msgstr "Tip"
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/planning.py:0
+msgid ""
+"Uh-oh! Let's keep things in the right order: the recurrence end date should "
+"always come after the shift start date. It's like trying to eat your "
+"breakfast before waking up – not possible!"
+msgstr ""
 
 #. module: planning
 #: model:ir.model.fields.selection,name:planning.selection__res_company__planning_employee_unavailabilities__unassign
@@ -2789,9 +2859,20 @@ msgid "e.g. John Doe"
 msgstr "Ad Soyad"
 
 #. module: planning
-#: model_terms:ir.ui.view,arch_db:planning.planning_view_gantt
+#: model_terms:ir.ui.view,arch_db:planning.planning_view_kanban_inherit
 msgid "other shift(s) in conflict."
 msgstr "diğer vardiya(lar) çakışıyor."
+
+#. module: planning
+#: model:ir.model,name:planning.model_planning_calendar_resource
+msgid "planning calendar resource"
+msgstr ""
+
+#. module: planning
+#. odoo-python
+#: code:addons/planning/models/hr.py:0
+msgid "resource_id"
+msgstr ""
 
 #. module: planning
 #. odoo-javascript

@@ -15,6 +15,7 @@
                 <field name="is_lot_tested_fractionally" invisible="1"/>
                 <field name="show_lot_text" invisible="1"/>
                 <field name="product_tracking" invisible="1"/>
+                <field name="product_id" invisible="1"/>
 
                 <div class="o_row d-flex justify-content-between">
                     <span>
@@ -30,12 +31,12 @@
                         <label for="qty_to_test" invisible="not is_lot_tested_fractionally"/>
                         <div class="o_row" invisible="not is_lot_tested_fractionally">
                             <field name="qty_to_test"/>
-                            <field name="uom_id"/>
+                            <field name="uom_id" widget="many2one_uom"/>
                         </div>
                         <label for="qty_tested" invisible="not is_lot_tested_fractionally"/>
                         <div class="o_row" invisible="not is_lot_tested_fractionally">
                             <field name="qty_tested" readonly="quality_state != 'none'"/>
-                            <field name="uom_id"/>
+                            <field name="uom_id" widget="many2one_uom"/>
                         </div>
                     </group>
                 </group>
@@ -83,15 +84,16 @@
                 <field name="show_lot_text" invisible="1"/>
                 <field name="product_tracking" invisible="1"/>
                 <field name="potential_failure_location_ids" invisible="1"/>
+                <field name="product_id" invisible="1"/>
                 <group>
-                    <group invisible="measure_on != 'move_line'">
-                        <label for="qty_failed" string="Quantity Failed"/>
-                        <div>
+                    <group invisible="measure_on != 'move_line' and not potential_failure_location_ids">
+                        <label for="qty_failed" string="Quantity Failed" invisible="measure_on != 'move_line'"/>
+                        <div invisible="measure_on != 'move_line'">
                             <field name="qty_failed" required="True" class="oe_inline"/>
-                            <field name="uom_id" class="oe_inline"/>
+                            <field name="uom_id" widget="many2one_uom" class="oe_inline"/>
                         </div>
-                        <field name="lot_name" string="Lot/SN" invisible="not show_lot_text or product_tracking == 'none'"/>
-                        <field name="lot_line_id" string="Lot/SN" invisible="show_lot_text or product_tracking == 'none'"/>
+                        <field name="lot_name" string="Lot/SN" invisible="measure_on != 'move_line' or not show_lot_text or product_tracking == 'none'"/>
+                        <field name="lot_line_id" string="Lot/SN" invisible="measure_on != 'move_line' or show_lot_text or product_tracking == 'none'"/>
                         <field name="failure_location_id" invisible="not potential_failure_location_ids" widget="selection_badge" domain="[('id', 'in', potential_failure_location_ids)]"/>
                     </group>
                     <group >
@@ -108,13 +110,11 @@
                     <button name="confirm_measure" type="object" class="btn-primary" string="Confirm Measure"
                         invisible="test_type != 'measure'" data-hotkey="w"/>
                     <button name="confirm_fail" type="object" class="btn-primary" string="Confirm"
-                            invisible="measure_on != 'move_line' or test_type == 'measure'" data-hotkey="w"/>
-                    <button name="action_generate_next_window" type="object" class="btn-primary" string="OK"
-                        invisible="measure_on == 'move_line' or test_type == 'measure'" data-hotkey="w"/>
+                            invisible="test_type == 'measure'" data-hotkey="w"/>
                     <button name="correct_measure" type="object" class="btn-secondary" string="Correct Measure"
                         invisible="test_type != 'measure'" data-hotkey="q"/>
                     <button name="action_generate_previous_window" type="object" class="btn-secondary" string="Back"
-                        invisible="measure_on != 'move_line' or test_type == 'measure'" data-hotkey="q"/>
+                        invisible="test_type == 'measure'" data-hotkey="q"/>
                 </footer>
             </form>
         </field>

@@ -1,5 +1,3 @@
-/** @odoo-module */
-
 import { _t } from "@web/core/l10n/translation";
 import { WarningDialog } from "@web/core/errors/error_dialogs";
 import { AccountReport } from "@account_reports/components/account_report/account_report";
@@ -24,6 +22,18 @@ export class AgedPartnerBalanceFilters extends AccountReportFilters {
         await this.filterClicked({ optionKey:"aging_interval", optionValue: agingInterval, reload: true });
     }
 
+    get filterExtraOptionsData() {
+        return { 
+            ...super.filterExtraOptionsData,
+            'show_currency': {
+                'name': _t("Show Currency"),
+                'show': this.controller.options.multi_currency,
+            },
+            'show_account': {
+                'name': _t("Show Account"),
+            },
+        };
+    }
 }
 
 AccountReport.registerCustomComponent(AgedPartnerBalanceFilters);

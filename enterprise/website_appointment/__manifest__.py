@@ -13,7 +13,7 @@ Allow clients to Schedule Appointments through your Website
 -------------------------------------------------------------
 
 """,
-    'depends': ['appointment', 'website_enterprise', 'website_partner'],
+    'depends': ['appointment', 'website_enterprise', 'website_partner', 'html_builder'],
     'data': [
         'data/website_data.xml',
         'data/website_snippet_data.xml',
@@ -27,7 +27,6 @@ Allow clients to Schedule Appointments through your Website
         'views/snippets/s_appointments.xml',
         'views/snippets/s_appointments_preview_data.xml',
         'views/snippets/s_online_appointment.xml',
-        'views/snippets/s_searchbar.xml',
         'views/snippets/snippets.xml',
         'security/calendar_security.xml',
         'security/ir.model.access.csv',
@@ -37,20 +36,33 @@ Allow clients to Schedule Appointments through your Website
     ],
     'installable': True,
     'auto_install': ['appointment', 'website_enterprise'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
     'assets': {
         'web.assets_tests': [
             'website_appointment/static/tests/tours/*',
+        ],
+        'web.assets_unit_tests': [
+            'website_appointment/static/tests/interactions/**/*',
+        ],
+        'web.assets_unit_tests_setup': [
+            'website_appointment/static/src/snippets/**/*.js',
+            ('remove', 'website_appointment/static/src/snippets/**/options.js'),
         ],
         'web.assets_frontend': [
             'website_appointment/static/src/scss/website_appointment.scss',
             'website_appointment/static/src/scss/website_appointment_editor.scss',
             'website_appointment/static/src/xml/website_appointment_templates.xml',
             'website_appointment/static/src/xml/appointment_no_slot.xml',
-            'website_appointment/static/src/js/appointment_frontend/*.js'
+            'website_appointment/static/src/interactions/*.js',
+            'website_appointment/static/src/snippets/**/*.js',
+            ('remove', 'website_appointment/static/src/snippets/**/options.js'),
         ],
         'website.assets_editor': [
             'website_appointment/static/src/js/systray_items/*.js',
+        ],
+        'website.website_builder_assets': [
+            'website_appointment/static/src/plugins/**/*',
         ],
         'website.assets_wysiwyg': [
             'website_appointment/static/src/snippets/s_online_appointment/options.js',

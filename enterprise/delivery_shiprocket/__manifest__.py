@@ -2,7 +2,7 @@
 {
     'name': "Shiprocket Shipping",
     'description': "Send your parcels through shiprocket and track them online",
-    'category': 'Inventory/Delivery',
+    'category': 'Shipping Connectors',
     'sequence': 317,
     'version': '1.0',
     'application': True,
@@ -14,5 +14,6 @@
         'views/delivery_carrier_views.xml',
         'views/stock_picking.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

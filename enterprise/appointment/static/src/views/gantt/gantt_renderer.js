@@ -8,6 +8,7 @@ import { onWillStart } from "@odoo/owl";
 import { AppointmentBookingGanttRendererControls } from "./gantt_renderer_controls";
 
 export class AppointmentBookingGanttRenderer extends GanttRenderer {
+    static pillTemplate = "appointment.AppointmentBookingGanttRendererPill";
     static components = {
         ...GanttRenderer.components,
         GanttRendererControls: AppointmentBookingGanttRendererControls,
@@ -31,9 +32,11 @@ export class AppointmentBookingGanttRenderer extends GanttRenderer {
      * the stop matches the end of the selection instead of being redefined to match the appointment duration.
      */
     onCreate(rowId, columnStart, columnStop) {
-        const { start, stop } = this.getColumnStartStop(columnStart, columnStop);
+        let { start } = this.getSubColumnFromColNumber(columnStart);
+        let { stop } = this.getSubColumnFromColNumber(columnStop);
+        ({ start, stop } = this.normalizeTimeRange(start, stop));
         const context = this.model.getDialogContext({rowId, start, stop, withDefault: true});
-        if (columnStart != columnStop){
+        if (columnStop != columnStart + this.model.metaData.scale.cellPart - 1){
             delete context['default_duration'];
         }
         this.props.create(context);
@@ -79,7 +82,7 @@ export class AppointmentBookingGanttRenderer extends GanttRenderer {
         if (!isGroup && this.model.metaData.groupedBy.includes("partner_ids")) {
             const { partner_ids } = Object.assign({}, ...JSON.parse(rowId));
             for (const pill of this.rowPills[rowId]) {
-                if (partner_ids[0] !== pill.record.partner_id[0]) {
+                if (partner_ids[0] !== pill.record.partner_id.id) {
                     pill.className += " o_appointment_booking_gantt_color_grey";
                 }
             }
@@ -145,20 +148,9 @@ export class AppointmentBookingGanttRenderer extends GanttRenderer {
 
     /**
      * @override
-     * Async copy of the overriden method
-     */
-    async onPillClicked(ev, pill) {
-        if (this.popover.isOpen) {
-            return;
-        }
-        const popoverTarget = ev.target.closest(".o_gantt_pill_wrapper");
-        this.popover.open(popoverTarget, await this.getPopoverProps(pill));
-    }
-    /**
-     * @override
      */
     async getPopoverProps(pill) {
-        const popoverProps = super.getPopoverProps(pill);
+        const popoverProps = await super.getPopoverProps(...arguments);
         const { record } = pill;
         const partner_ids = record.partner_ids || [];
         let contact_partner_id = false;

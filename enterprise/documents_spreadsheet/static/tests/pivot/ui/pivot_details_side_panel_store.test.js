@@ -285,7 +285,7 @@ test("update preserves sorting", async function () {
     const { store } = makeStoreWithModel(model, PivotSidePanelStore, pivotId);
     const sortedColumn = {
         domain: [],
-        measure: "probability",
+        measure: "probability:avg",
         order: "asc",
     };
     store.update({ sortedColumn });

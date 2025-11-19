@@ -1,16 +1,18 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from collections import Counter, OrderedDict, defaultdict
+from collections import OrderedDict, defaultdict
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
-from odoo.tools import topological_sort
+from odoo.tools import groupby, topological_sort
 from odoo.tools.misc import OrderedSet
 
 
 # List of models to export (the order ensures that dependencies are satisfied)
 DEFAULT_MODELS_TO_EXPORT = [
     "res.groups",
+    "res.groups.privilege",
+    "ir.module.category",
     "report.paperformat",
     "ir.model",
     "ir.model.fields",
@@ -58,7 +60,7 @@ FIELDS_TO_EXPORT = {
         "context",
         "domain",
         "filter",
-        "groups_id",
+        "group_ids",
         "help",
         "limit",
         "name",
@@ -83,7 +85,7 @@ FIELDS_TO_EXPORT = {
         "binding_model_id",
         "binding_type",
         "binding_view_types",
-        "groups_id",
+        "group_ids",
         "model",
         "multi",
         "name",
@@ -99,7 +101,7 @@ FIELDS_TO_EXPORT = {
         "code",
         "crud_model_id",
         "evaluation_type",
-        "groups_id",
+        "group_ids",
         "help",
         "link_field_id",
         "model_id",
@@ -191,7 +193,7 @@ FIELDS_TO_EXPORT = {
     "ir.ui.menu": [
         "action",
         "active",
-        "groups_id",
+        "group_ids",
         "name",
         "parent_id",
         "sequence",
@@ -201,7 +203,7 @@ FIELDS_TO_EXPORT = {
     "ir.ui.view": [
         "active",
         "arch",
-        "groups_id",
+        "group_ids",
         "inherit_id",
         "key",
         "mode",
@@ -228,7 +230,9 @@ FIELDS_TO_EXPORT = {
         "subject",
         "use_default_to",
     ],
-    "res.groups": ["color", "comment", "implied_ids", "name", "share"],
+    "res.groups": ["sequence", "privilege_id", "comment", "implied_ids", "name", "share"],
+    "res.groups.privilege": ["sequence", "category_id", "name", "placeholder"],
+    "ir.module.category": ["sequence", "name"],
     "ir.default": ["field_id", "condition", "json_value"],
     "studio.approval.rule": [
         "approver_ids",
@@ -277,10 +281,10 @@ MODELS_WITH_NOUPDATE = [
 RELATIONS_NOT_TO_EXPORT = {
     "base.automation": ["trg_date_calendar_id"],
     "ir.actions.server": ["partner_ids"],
-    "ir.filters": ["user_id"],
+    "ir.filters": ["user_ids"],
     "mail.template": ["attachment_ids", "mail_server_id"],
     "report.paperformat": ["report_ids"],
-    "res.groups": ["category_id", "users"],
+    "res.groups": ["user_ids"],
 }
 
 
@@ -333,7 +337,7 @@ class StudioExportWizardData(models.TransientModel):
     It is used to store the export data for the wizard,
     even for data that do not have an xmlid (an ir.model.data record).
     """
-    _name = "studio.export.wizard.data"
+    _name = 'studio.export.wizard.data'
     _description = "Studio Export Data"
     _order = "model_name, res_id"
 
@@ -408,7 +412,7 @@ class StudioExportWizardData(models.TransientModel):
 
 
 class StudioExportWizard(models.TransientModel):
-    _name = "studio.export.wizard"
+    _name = 'studio.export.wizard'
     _description = "Studio Export Wizard"
 
     def _default_studio_export_data(self):
@@ -416,8 +420,19 @@ class StudioExportWizard(models.TransientModel):
             ("studio", "=", True),
             ("model", "in", DEFAULT_MODELS_TO_EXPORT),
         ])
+
+        # filter active data
+        active_ids = {}
+        for model_name, model_data_list in groupby(data, lambda d: d.model):
+            records = self.env[model_name].browse(d.res_id for d in model_data_list)
+            if records._active_name:
+                records = records.filtered(records._active_name)
+            active_ids[model_name] = set(records.ids)
+
+        active_data = [d for d in data if d.res_id in active_ids[d.model]]
+
         return self.env["studio.export.wizard.data"].create(
-            [{"model": d.model, "res_id": d.res_id, "studio": d.studio} for d in data]
+            [{"model": d.model, "res_id": d.res_id, "studio": d.studio} for d in active_data]
         )
 
     default_export_data = fields.Many2many(
@@ -592,7 +607,7 @@ class StudioExportWizard(models.TransientModel):
                 export_data_vals
             )
 
-    def _get_export_info(self):
+    def get_export_info(self):
         """
         Gather all the data to export from the wizard and return it in the correct order.
 
@@ -607,9 +622,8 @@ class StudioExportWizard(models.TransientModel):
         export = []
         post_export = []
 
-        path_counter = Counter()
         models_to_export, circular_dependencies = self._get_models_to_export()
-        for model, is_demo, fields_by_group, data, real_records in models_to_export:
+        for model, _is_demo, fields_by_group, data, real_records in models_to_export:
 
             def add(info, records_data, suffix="", force_exclude=[]):
                 if not records_data:
@@ -618,26 +632,18 @@ class StudioExportWizard(models.TransientModel):
                 res_ids = records_data.mapped("res_id")
                 records = real_records.filtered(lambda r: r.id in res_ids)
 
-                for group in ["data", "demo"]:
-                    if group not in fields_by_group:
-                        continue
-
-                    group_fields = fields_by_group[group]
+                for group, group_fields in fields_by_group.items():
                     for field_to_exclude in force_exclude:
                         if field_to_exclude in group_fields:
                             group_fields.remove(field_to_exclude)
 
-                    path_info = (group, model.replace(".", "_"), suffix)
-                    path_count = path_counter[path_info]
-                    path_counter[path_info] += 1
-                    path = "%s/%s%s%s.xml" % (
-                        group,
-                        model.replace(".", "_"),
-                        "" if not path_count else f"_{path_count}",
-                        suffix,
-                    )
+                    if not group_fields:
+                        # no fields to export
+                        continue
+
+                    path_info = (group, suffix)
                     no_update = model in no_update_models
-                    info.append((model, path, records, group_fields, no_update))
+                    info.append((model, records, group_fields, no_update, path_info))
 
             pre_records = data.filtered("pre")
             post_records = data.filtered("post")

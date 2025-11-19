@@ -3,7 +3,7 @@
 from odoo import fields, models
 
 
-class HolidaysType(models.Model):
+class HrLeaveType(models.Model):
     _inherit = "hr.leave.type"
 
     l10n_us_show_on_payslip = fields.Boolean(string="Show On Payslip", default=True)

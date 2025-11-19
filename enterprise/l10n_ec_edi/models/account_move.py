@@ -2,10 +2,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from functools import partial
+from typing import Callable
 
 from odoo import _, api, fields, models, Command
 from odoo.tools import frozendict, float_round, groupby
 from odoo.tools.misc import formatLang, format_date
+from odoo.tools.xml_utils import find_xml_value
 from odoo.exceptions import ValidationError
 from datetime import datetime
 
@@ -67,6 +69,9 @@ L10N_EC_WTH_FOREIGN_NOT_SUBJECT_WITHHOLD_CODES = ['412', '423', '433']
 L10N_EC_WTH_FOREIGN_SUBJECT_WITHHOLD_CODES = list(set(L10N_EC_WTH_FOREIGN_GENERAL_REGIME_CODES) - set(L10N_EC_WTH_FOREIGN_NOT_SUBJECT_WITHHOLD_CODES))
 L10N_EC_WTH_FOREIGN_DOUBLE_TAXATION_CODES = ['402', '403', '404', '405', '406', '407', '408', '409', '410', '411', '412']
 L10N_EC_WITHHOLD_FOREIGN_REGIME = [('01', '(01) General Regime'), ('02', '(02) Fiscal Paradise'), ('03', '(03) Preferential Tax Regime')]
+_L10N_EC_DIVIDEND_YEAR_MAX = datetime.today().year
+_L10N_EC_DIVIDEND_YEAR_MIN = datetime.today().year - 5
+
 
 
 class AccountMove(models.Model):
@@ -161,6 +166,32 @@ class AccountMove(models.Model):
         help='Functional fields to calculate amount totals.'
     )
 
+    # ==== DIVIDENDS WITHHOLDING ====
+
+    l10n_ec_dividend_fiscal_year = fields.Char(
+        'Dividend fiscal year',
+        help='Enter the fiscal year in which earnings on the reported dividend are generated. The company could pay previous periods',
+        tracking=True,
+    )
+
+    l10n_ec_dividend_payment_date = fields.Date(
+        'Dividend payment date',
+        help='Enter the date the dividend payment was made.',
+        tracking=True,
+    )
+    l10n_ec_dividend_income_tax = fields.Monetary(
+        'Dividend income tax',
+        help='Enter the value of the Income Tax paid by the company that corresponds to the reported dividend.',
+        tracking=True,
+        currency_field='currency_id',
+    )
+
+    l10n_ec_is_dividend_withhold = fields.Boolean(
+        compute='_compute_l10n_ec_is_dividend_withhold',
+        string='Is a dividend withholding',
+        help='Technical field, true if this journal entry is a withholding for a dividend payment in Ecuador.'
+    )
+
     # ===== COMPUTE / ONCHANGE / CONSTRAINTS METHODS =====
 
     @api.depends('l10n_latam_document_type_id', 'l10n_ec_authorization_number', 'journal_id')
@@ -181,6 +212,7 @@ class AccountMove(models.Model):
                 l10n_show_ec_authorization = bool(move.l10n_ec_authorization_number)
                 l10n_edit_ec_authorization = False
             elif move.journal_id.l10n_ec_withhold_type == 'out_withhold' or\
+                move.state == 'posted' or\
                 (move.journal_id.type == 'purchase' and move._is_manual_document_number()):
                 # Edit and show the autorization number when:
                 # - The document it's an out withhold
@@ -204,6 +236,7 @@ class AccountMove(models.Model):
                 '09',  # Tiquetes
                 '11',  # Pasajes
                 '12',  # Inst FInancieras
+                '19',  # Comprobante de pagos de cuotas o aportes (for dividends)
                 '20',  # Estado
                 '21',  # Carta porte aereo
                 '47',  # Nota de crédito de reembolso
@@ -265,6 +298,13 @@ class AccountMove(models.Model):
             invoice.l10n_ec_withhold_ids = withhold_ids
             invoice.l10n_ec_withhold_count = withhold_count
 
+    # EXTENDS portal portal.mixin
+    def _compute_access_url(self):
+        super()._compute_access_url()
+        for move in self:
+            if move._l10n_ec_is_withholding():
+                move.access_url = '/my/invoices/%s' % move.id
+
     @api.onchange('l10n_latam_document_type_id', 'l10n_latam_document_number', 'partner_id')
     def _inverse_l10n_latam_document_number(self):
         super()._inverse_l10n_latam_document_number()
@@ -300,7 +340,22 @@ class AccountMove(models.Model):
             else:
                 move.reimbursement_totals = None
 
+    @api.depends('line_ids', 'line_ids.l10n_ec_code_taxsupport')
+    def _compute_l10n_ec_is_dividend_withhold(self):
+        # Check if the withholding is a dividend withhold
+        self.l10n_ec_is_dividend_withhold = False
+        for withhold in self.filtered(lambda withhold: withhold.journal_id.l10n_ec_withhold_type == 'in_withhold'):
+            withhold.l10n_ec_is_dividend_withhold = '10' in withhold.l10n_ec_withhold_line_ids.mapped(
+                'l10n_ec_code_taxsupport')
+
     # ===== BUTTONS =====
+
+    def action_print_pdf(self):
+        # Override to print the withhold PDF when we have a withholding rather than outright blocking the button
+        self.ensure_one()
+        if not self._l10n_ec_is_withholding():
+            return super().action_print_pdf()
+        return self.env.ref('l10n_ec_edi.l10n_ec_edi_withhold').report_action(self.id)
 
     def l10n_ec_add_withhold(self):
         # Launches the withholds wizard linked to selected invoices
@@ -357,26 +412,23 @@ class AccountMove(models.Model):
             return action
 
     def l10n_ec_action_send_withhold(self):
+        # Pass custom report and template to account.move.send to take advantage of the
+        # additional data it populates.
         self.ensure_one()
         template = self.env.ref('l10n_ec_edi.email_template_edi_withhold')
-        compose_form = self.env.ref('mail.email_compose_message_wizard_form')
-        ctx = {
-            **self.env.context,
-            'default_model': 'account.move',
-            'default_res_ids': self.ids,
-            'default_template_id': template.id,
-            'default_composition_mode': 'comment',
-            'default_email_layout_xmlid': 'mail.mail_notification_layout_with_responsible_signature',
-            'force_email': True,
-        }
-
+        report = self.env.ref('l10n_ec_edi.l10n_ec_edi_withhold')
         return {
-            'name': _('Compose Email'),
+            'name': _("Compose Email"),
             'type': 'ir.actions.act_window',
-            'res_model': 'mail.compose.message',
-            'views': [(compose_form.id, 'form')],
+            'res_model': 'account.move.send.wizard',
+            'view_mode': 'form',
             'target': 'new',
-            'context': ctx,
+            'context': {
+                'active_model': 'account.move',
+                'active_ids': self.ids,
+                'default_template_id': template.id,
+                'default_pdf_report_id': report.id,
+            },
         }
 
     def l10n_ec_action_compute_lines_from_reimbursements(self):
@@ -449,6 +501,23 @@ class AccountMove(models.Model):
                 or (self.move_type in ('in_invoice') and doc_type_code in ['03', '41']):
                 return 'l10n_ec_edi.report_invoice_document'
         return super(AccountMove, self)._get_name_invoice_report()
+
+    def _get_invoice_pdf_proforma(self):
+        """ Extends account_move to allow us to download a proforma version of the withhold PDF since
+           by default it will only use account.account_invoice report which does not work with entry
+           move types. """
+        self.ensure_one()
+        if not self._l10n_ec_is_withholding():
+            return super()._get_invoice_pdf_proforma()
+
+        filename = self._get_invoice_proforma_pdf_report_filename()
+        content, report_type = self.env['ir.actions.report']._pre_render_qweb_pdf('l10n_ec_edi.l10n_ec_edi_withhold', self.ids, data={'proforma': True})
+        content_by_id = self.env['ir.actions.report']._get_splitted_report('l10n_ec_edi.l10n_ec_edi_withhold', content, report_type)
+        return {
+            'filename': filename,
+            'filetype': 'pdf',
+            'content': content_by_id[self.id],
+        }
 
     def _is_manual_document_number(self):
         # EXTEND l10n_latam_invoice_document to exclude purchase liquidations and include sales withhold
@@ -528,11 +597,11 @@ class AccountMove(models.Model):
 
         def group_by(base_line, tax_data):
             tax = tax_data['tax']
-            code_percentage = L10N_EC_VAT_SUBTAXES[tax.tax_group_id.l10n_ec_type]
+            code_percentage = L10N_EC_VAT_SUBTAXES.get(tax.tax_group_id.l10n_ec_type, tax.l10n_ec_code_ats)
             values = {
                 'code': self._l10n_ec_map_tax_groups(tax),
                 'code_percentage': code_percentage,
-                'rate': L10N_EC_VAT_RATES[code_percentage],
+                'rate': L10N_EC_VAT_RATES.get(code_percentage, tax.amount),
             }
             if extra_group == 'tax_group':
                 values['tax_group_id'] = tax.tax_group_id.id
@@ -912,6 +981,133 @@ class AccountMove(models.Model):
                 _("Please ensure all the taxes in reimbursement lines use the same tax support. Creating reimbursement lines with multiple tax supports is not allowed.\n"
                     "Tax supports in reimbursements: %s", ', '.join(taxsupports_used)))
 
+    def _get_import_file_type(self, file_data):
+        """ Identify EC Factura Electrónica files. """
+        # EXTENDS 'account'
+        xml_tree = file_data['xml_tree']
+        if xml_tree is not None and (
+            xml_tree.tag == 'factura' and xml_tree.attrib.get('id') == 'comprobante'
+            or (factura_node := xml_tree.find('.//factura')) is not None and factura_node.attrib.get('id') == 'comprobante'
+        ):
+            return 'l10n_ec.factura'
+        return super()._get_import_file_type(file_data)
+
+    def _get_edi_decoder(self, file_data: dict, new=False):
+        # EXTENDS 'account'
+        self.ensure_one()
+        if file_data['import_file_type'] == 'l10n_ec.factura':
+            return {
+                'priority': 20,
+                'decoder': self._l10n_ec_edi_import_bill,
+            }
+        return super()._get_edi_decoder(file_data, new=new)
+
+    def _l10n_ec_edi_import_bill(self, bill, file_data: dict, new: bool = False) -> bool | None:
+        if bill.invoice_line_ids:
+            return bill._reason_cannot_decode_has_invoice_lines()
+
+        with bill._get_edi_creation() as bill:
+            tree = file_data.get('xml_tree')
+            if tree is None:
+                return
+            vendor_node = './/infoTributaria'
+            move_node = './/infoFactura'
+            latam_document_number = (
+                f"{find_xml_value(f'{vendor_node}//estab', tree)}-"
+                f"{find_xml_value(f'{vendor_node}//ptoEmi', tree)}-"
+                f"{find_xml_value(f'{vendor_node}//secuencial', tree)}"
+            )
+
+            vendor_name = find_xml_value(f'{vendor_node}//razonSocial', tree)
+            vendor_vat = find_xml_value(f'{vendor_node}//ruc', tree)
+            vendor = self.env['res.partner'].search([('vat', '=', vendor_vat)], limit=1)
+            if not vendor:
+                vendor = self.env['res.partner'].create([{
+                    'name': vendor_name,
+                    'street': find_xml_value(f'{vendor_node}//dirMatriz', tree),
+                    'vat': vendor_vat,
+                }])
+
+            bill_vals = {
+                'move_type': 'in_invoice',
+                'invoice_date': datetime.strptime(find_xml_value(f'{move_node}//fechaEmision', tree), '%d/%m/%Y').strftime('%Y-%m-%d'),
+                'l10n_ec_authorization_number': find_xml_value(f'{vendor_node}//claveAcceso', tree),
+                'l10n_latam_document_type_id': self.env['l10n_latam.document.type'].search([
+                    ('code', '=', f"{int(find_xml_value(f'{vendor_node}//tipoEmision', tree)):02}")
+                ], limit=1),
+                'l10n_latam_document_number': latam_document_number,
+                'partner_id': vendor.id,
+            }
+
+            payment_method = self.env['l10n_ec.sri.payment'].search([
+                ('code', '=', find_xml_value(f'{move_node}//pagos//pago//formaPago', tree))
+            ], limit=1)
+            if payment_method:
+                bill['l10n_ec_sri_payment_id'] = payment_method
+
+            self._l10n_ec_edi_import_bill_fill_move_line(tree.findall('.//detalles//detalle'), bill)
+            bill.write(bill_vals)
+
+    def _l10n_ec_edi_import_bill_fill_move_line(self, line_nodes, bill) -> None:
+        def _get_tax_group_ec_type_from_code(code, code_percentage, amount) -> str:
+            if code == '3':
+                return 'ice'
+            return {
+                '0': 'zero_vat',
+                '2': 'vat12',
+                '3': 'vat14',
+                '4': 'vat15',
+                '5': 'vat05',
+                '6': 'not_charged_vat',
+                '7': 'exempt_vat',
+                '10': 'vat13',
+            }.get(code_percentage) or f'vat{amount:02}' if int(amount) != 0 else 'zero_vat'
+
+        new_line_vals = []
+        product_vals = []
+        tax_group_codes = set()
+        for node in line_nodes:
+            product_vals.append((node.find('codigoPrincipal').text, node.find('descripcion').text))
+            tax_group_codes.update([_get_tax_group_ec_type_from_code(
+                code=tax_node.find('codigo').text,
+                code_percentage=tax_node.find('codigoPorcentaje').text,
+                amount=tax_node.find('tarifa').text.split('.')[0],
+            ) for tax_node in node.findall('.//impuestos//impuesto')])
+
+        product_codes, product_descriptions = zip(*product_vals)
+        existing_products = self.env['product.product'].search([
+            '|',
+            ('default_code', 'in', product_codes),
+            ('description', 'in', product_descriptions),
+        ]).grouped('default_code')
+        tax_groups = self.env['account.tax.group'].search([('l10n_ec_type', 'in', tax_group_codes)])
+        taxes = self.env['account.tax'].search([('tax_group_id', 'in', tax_groups.ids)]).grouped(lambda tax: tax.tax_group_id.l10n_ec_type)
+
+        for node in line_nodes:
+            new_line_val = {
+                'move_id': bill.id,
+                'quantity': node.find('cantidad').text,
+                'price_unit': node.find('precioUnitario').text,
+            }
+            if existing_products.get(node.find('codigoPrincipal').text):
+                new_line_val['product_id'] = existing_products[node.find('codigoPrincipal').text].id
+            else:
+                new_line_val['name'] = node.find('descripcion').text
+
+            for tax_node in node.findall('.//impuestos//impuesto'):
+                tax_group_code = _get_tax_group_ec_type_from_code(
+                    code=tax_node.find('codigo').text,
+                    code_percentage=tax_node.find('codigoPorcentaje').text,
+                    amount=tax_node.find('tarifa').text.split('.')[0],
+                )
+
+                if tax := taxes.get(tax_group_code) and next(iter(taxes[tax_group_code])):
+                    new_line_val['tax_ids'] = tax.ids
+
+            new_line_vals.append(new_line_val)
+
+        self.env['account.move.line'].create(new_line_vals)
+
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
@@ -1016,6 +1212,15 @@ class AccountMoveLine(models.Model):
             'price_discount': float_round(results['price_discount'] * currency_rate, precision_digits=6),
             'price_unit': float_round(price_unit * currency_rate, precision_digits=6),
         }
+
+    def _compute_totals(self):
+        # `price_total` and `price_subtotal` are `readonly=True` which means they will get recomputed
+        # even when their values are provided when creating an account.move.line.
+        # For dividends withholdings, we do not want to recompute those fields, in order to keep the
+        # amount set in the withhold wizard.
+        super(AccountMoveLine, self.filtered(
+            lambda l: not l.tax_ids or not l.move_id.l10n_ec_is_dividend_withhold
+        ))._compute_totals()
 
     # ============================================
     # Compute overrides when exists purchase reimbursements lines

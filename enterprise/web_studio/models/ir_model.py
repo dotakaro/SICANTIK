@@ -87,17 +87,18 @@ class IrModel(models.Model):
 
     def _compute_abstract(self):
         for record in self:
-            record.abstract = self.env[record.model]._abstract
+            model = self.env.get(record.model)
+            record.abstract = model is not None and model._abstract
 
     def _search_abstract(self, operator, value):
+        if operator != 'in':
+            return NotImplemented
         abstract_models = [
             model._name
             for model in self.env.values()
             if model._abstract
         ]
-        dom_operator = 'in' if (operator, value) in [('=', True), ('!=', False)] else 'not in'
-
-        return [('model', dom_operator, abstract_models)]
+        return [('model', 'in', abstract_models)]
 
     @api.model
     def studio_model_create(self, name, options=()):
@@ -593,7 +594,19 @@ class IrModel(models.Model):
         })
         return action
 
-class IrModelField(models.Model):
+    @api.model
+    def studio_model_infos(self, model_name):
+        irModel = self._get(model_name)
+        res = irModel.read(["id", "name", "state", "is_mail_thread", "is_mail_activity", "model"])[0]
+        domain = []
+        if model_name == "account.move":
+            domain = [["move_type", "!=", "entry"]]
+        res["record_ids"] = self.env[model_name].search(domain, limit=10).ids
+        res["domain"] = domain
+        return res
+
+
+class IrModelFields(models.Model):
     _name = 'ir.model.fields'
     _inherit = ['studio.mixin', 'ir.model.fields']
 

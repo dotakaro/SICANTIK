@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 /**
  * Adapt the step that is specific to the work details when the `worksheet` module is not installed.
  */
@@ -49,7 +47,7 @@ patch(registry.category("web_tour.tours").get("industry_fsm_tour"), {
             {
             trigger: ".breadcrumb-item.o_back_button:nth-of-type(2)",
             content: markup(_t("Use the breadcrumbs to return to your <b>task</b>.")),
-                tooltipPosition: "bottom",
+                tooltipPosition: "right",
                 run: "click",
             }
         );
@@ -90,7 +88,7 @@ patch(registry.category("web_tour.tours").get("industry_fsm_tour"), {
             {
                 trigger: ".modal .o_web_sign_auto_button:contains(auto)",
             content: markup(_t('Save time by automatically generating a <b>signature</b>.')),
-            tooltipPosition: 'right',
+            tooltipPosition: 'left',
                 run: "click",
             },
             {
@@ -99,6 +97,7 @@ patch(registry.category("web_tour.tours").get("industry_fsm_tour"), {
             content: markup(_t('Validate the <b>signature</b>.')),
             tooltipPosition: 'left',
                 run: "click",
+                expectUnloadPage: true,
             },
             {
                 trigger: "body:not(:has(a[data-bs-target='#modalaccept']:contains(sign report))",

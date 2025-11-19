@@ -1,22 +1,21 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details
 
 from odoo import models, fields, api, _
 
 
-class CreateTask(models.TransientModel):
+class HelpdeskCreateFsmTask(models.TransientModel):
     _name = 'helpdesk.create.fsm.task'
     _description = 'Create a Field Service task'
 
     helpdesk_ticket_id = fields.Many2one('helpdesk.ticket', string='Related ticket', required=True)
     company_id = fields.Many2one(related='helpdesk_ticket_id.company_id', export_string_translation=False)
     name = fields.Char('Title', required=True)
-    project_id = fields.Many2one('project.project', string='Project', help='Project in which to create the task', required=True, domain="[('company_id', '=', company_id), ('is_fsm', '=', True)]")
+    project_id = fields.Many2one('project.project', string='Project', help='Project in which to create the task', required=True, domain="[('company_id', '=', company_id), ('is_fsm', '=', True), ('is_template', '=', False)]")
     partner_id = fields.Many2one('res.partner', string='Customer', help="Ticket's customer, will be linked to the task", required=True, domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
 
     @api.model
     def default_get(self, fields_list):
-        defaults = super(CreateTask, self).default_get(fields_list)
+        defaults = super().default_get(fields_list)
         if 'project_id' in fields_list and not defaults.get('project_id'):
             task_default = self.env['project.task'].with_context(fsm_mode=True).default_get(['project_id'])
             defaults.update({'project_id': task_default.get('project_id', False)})
@@ -39,8 +38,11 @@ class CreateTask(models.TransientModel):
 
     def action_generate_task(self):
         self.ensure_one()
+        ticket = self.helpdesk_ticket_id
+        if not ticket.partner_id:
+            ticket.partner_id = self.partner_id
         new_task = self.env['project.task'].create(self._generate_task_values())
-        self.helpdesk_ticket_id.message_post_with_source(
+        ticket.message_post_with_source(
             'helpdesk.ticket_conversion_link',
             render_values={'created_record': new_task, 'message': _('Task created')},
             subtype_xmlid='mail.mt_note',

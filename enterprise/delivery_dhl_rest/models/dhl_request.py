@@ -91,7 +91,7 @@ class DHLProvider:
 
     def _get_package_vals(self, carrier, packages):
         return [{
-            'weight': carrier._dhl_convert_weight(p['weight']),
+            'weight': carrier._dhl_rest_convert_weight(p['weight']),
             'dimensions': {
                 'length': p['dimension']['length'],
                 'width': p['dimension']['width'],
@@ -176,7 +176,7 @@ class DHLProvider:
         move_lines = picking.move_line_ids.filtered(lambda line: line.product_id.type in ['product', 'consu'])
         for sequence, line in enumerate(move_lines, start=1):
             if line.move_id.sale_line_id:
-                unit_quantity = line.product_uom_id._compute_quantity(line.quantity, line.move_id.sale_line_id.product_uom)
+                unit_quantity = line.product_uom_id._compute_quantity(line.quantity, line.move_id.sale_line_id.product_uom_id)
             else:
                 unit_quantity = line.product_uom_id._compute_quantity(line.quantity, line.product_id.uom_id)
             rounded_qty = max(1, float_round(unit_quantity, precision_digits=0, rounding_method='HALF-UP'))
@@ -189,8 +189,8 @@ class DHLProvider:
                     'unitOfMeasurement': 'PCS'
                 },
                 'weight': {
-                    'netValue': carrier._dhl_convert_weight(line.product_id.weight),
-                    'grossValue': carrier._dhl_convert_weight(line.product_id.weight),
+                    'netValue': carrier._dhl_rest_convert_weight(line.product_id.weight),
+                    'grossValue': carrier._dhl_rest_convert_weight(line.product_id.weight),
                 },
                 'manufacturerCountry': line.picking_id.picking_type_id.warehouse_id.partner_id.country_id.code
             }
@@ -211,14 +211,14 @@ class DHLProvider:
     def _get_shipment_vals(self, picking):
         packages = picking.carrier_id._get_picking_packages(picking)
         return [{
-            'weight': picking.carrier_id._dhl_convert_weight(package['weight']),
+            'weight': picking.carrier_id._dhl_rest_convert_weight(package['weight']),
             'dimensions': {
-                'length': package['dimension']['length'],
-                'width': package['dimension']['width'],
-                'height': package['dimension']['height'],
+                'length': package.get('dimension', {}).get('length', 0),
+                'width': package.get('dimension', {}).get('width', 0),
+                'height': package.get('dimension', {}).get('height', 0),
             },
-            'description': package['name'] or ''
-        } for sequence, package in enumerate(packages)]
+            'description': package.get('name', '')
+        } for package in packages]
 
     def _send_shipment(self, shipment_request):
         url = 'shipments'

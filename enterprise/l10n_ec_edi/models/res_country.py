@@ -5,7 +5,7 @@
 from odoo import fields, models
 
 
-class Country(models.Model):
+class ResCountry(models.Model):
     _inherit = 'res.country'
 
     # Columns

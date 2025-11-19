@@ -5,7 +5,7 @@ from odoo import models, fields, api
 
 
 class PosBlackboxBeLog(models.Model):
-    _name = "pos_blackbox_be.log"
+    _name = 'pos_blackbox_be.log'
     _description = "Track every changes made while using the Blackbox"
     _order = "id desc"
 

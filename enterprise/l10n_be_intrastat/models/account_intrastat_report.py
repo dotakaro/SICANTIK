@@ -9,31 +9,8 @@ from odoo.tools.float_utils import float_round
 from lxml import etree
 
 
-class IntrastatReportCustomHandler(models.AbstractModel):
+class AccountIntrastatReportHandler(models.AbstractModel):
     _inherit = 'account.intrastat.report.handler'
-
-    def _custom_options_initializer(self, report, options, previous_options):
-        super()._custom_options_initializer(report, options, previous_options)
-
-        if self.env.company.account_fiscal_country_id.code != 'BE':
-            return
-
-        options['buttons'].extend([
-            {
-                'name': _('XML'),
-                'sequence': 30,
-                'action': 'export_file',
-                'action_param': 'be_intrastat_export_to_xml',
-                'file_export_type': _('XML'),
-            },
-            {
-                'name': _('CSV'),
-                'sequence': 40,
-                'action': 'export_file',
-                'action_param': 'be_intrastat_export_to_csv',
-                'file_export_type': _('CSV'),
-            },
-        ])
 
     def _show_region_code(self):
         if self.env.company.account_fiscal_country_id.code == 'BE' and not self.env.company.intrastat_region_id:
@@ -46,8 +23,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
         options = report.get_options(previous_options={**options, 'export_mode': 'file'})
         self._check_date_range(options)
         report._init_currency_table(options)
-        query_params = {'product_type_condition': SQL("AND (account_move_line.product_id IS NOT NULL AND prodt.type != 'service')")}
-        query = self._get_intrastat_report_query(report, options, 'intrastat_grouping', query_params=query_params)
+        query = self._get_intrastat_report_query(report, options, 'intrastat_grouping')
         self._cr.flush()
         self._cr.execute(query)
         return self._cr.dictfetchall()
@@ -124,6 +100,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
             '_get_reception_form': self._get_reception_form,
             '_get_expedition_code': self._get_expedition_code,
             '_get_expedition_form': self._get_expedition_form,
+            'hide_0_lines': options.get('hide_0_lines'),
         })
 
     def _get_reception_code(self, extended):

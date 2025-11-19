@@ -1,4 +1,3 @@
-/** @odoo-module */
 import { Reactive } from "@web_studio/client_action/utils";
 import {
     EventBus,
@@ -30,6 +29,7 @@ export class ReportEditorModel extends Reactive {
         super();
         this.debug = debug;
         this.bus = markRaw(new EventBus());
+        this._inPreview = false;
         this.mode = "wysiwyg";
         this.warningMessage = "";
         this._isDirty = false;
@@ -48,8 +48,8 @@ export class ReportEditorModel extends Reactive {
             name: { name: "name", type: "char" },
             model: { name: "model", type: "char" },
             report_name: { name: "report_name", type: "char" },
-            groups_id: {
-                name: "groups_id",
+            group_ids: {
+                name: "group_ids",
                 type: "many2many",
                 relation: "res.groups",
                 relatedFields: {
@@ -72,7 +72,7 @@ export class ReportEditorModel extends Reactive {
             name: makeActiveField(),
             model: makeActiveField(),
             report_name: makeActiveField(),
-            groups_id: {
+            group_ids: {
                 ...makeActiveField(),
                 related: {
                     fields: { display_name: { name: "display_name", type: "char" } },
@@ -103,6 +103,9 @@ export class ReportEditorModel extends Reactive {
         const data = { ..._data };
         for (const [fName, value] of Object.entries(data)) {
             const field = fields[fName];
+            if (field.type === "many2one") {
+                data[fName] = value && [value.id, value.display_name];
+            }
             if (field.type === "many2many") {
                 data[fName] = [...value.currentIds];
             }
@@ -140,6 +143,14 @@ export class ReportEditorModel extends Reactive {
 
     get isInEdition() {
         return this._isInEdition;
+    }
+
+    get inPreview() {
+        return this._inPreview || this.mode === "xml";
+    }
+
+    set inPreview(bool) {
+        this._inPreview = bool;
     }
 
     get fullErrorDisplay() {
@@ -256,7 +267,7 @@ export class ReportEditorModel extends Reactive {
             );
         }
         if (!hasVerbatimToSave && !hasPartsToSave && !hasDataToSave) {
-            return;
+            return false;
         }
         if (!urgent) {
             this.setInEdition(true);
@@ -337,26 +348,17 @@ export class ReportEditorModel extends Reactive {
             return;
         }
         const modelName = this.reportResModel;
-        const result = await this._services.orm.search(modelName, this.getModelDomain(), {
-            context: user.context,
-        });
+        const result = await this._services.studio.IrModelInfo.read(modelName);
 
         this.reportEnv = {
-            ids: result,
-            currentId: result[0] || false,
+            domain: result.domain,
+            ids: result.record_ids,
+            currentId: result.record_ids[0] || false,
         };
     }
 
     getModelDomain() {
-        // TODO: Since 13.0, journal entries are also considered as 'account.move',
-        // therefore must filter result to remove them; otherwise not possible
-        // to print invoices and hard to lookup for them if lot of journal entries.
-        const modelName = this.reportResModel;
-        let domain = [];
-        if (modelName === "account.move") {
-            domain = [["move_type", "!=", "entry"]];
-        }
-        return domain;
+        return this.reportEnv.domain;
     }
 
     async resetReport(includeHeaderFooter = true) {
@@ -377,11 +379,7 @@ export class ReportEditorModel extends Reactive {
 }
 
 export function useReportEditorModel() {
-    const services = Object.fromEntries(
-        ["orm", "ui"].map((name) => {
-            return [name, useService(name)];
-        })
-    );
+    const services = Object.fromEntries(["orm", "ui"].map((name) => [name, useService(name)]));
     const env = useEnv();
     services.studio = { ...env.services.studio };
     services.unProtectedNotification = env.services.notification;
@@ -399,7 +397,7 @@ export function useReportEditorModel() {
     useEditorBreadcrumbs(crumb);
 
     onWillStart(() => reportEditorModel.loadReportEditor());
-    onWillDestroy(() => reportEditorModel.isDestroyed = true);
+    onWillDestroy(() => (reportEditorModel.isDestroyed = true));
 
     return useState(reportEditorModel);
 }

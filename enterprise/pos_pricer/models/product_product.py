@@ -19,13 +19,14 @@ PRICER_RELATED_FIELDS = [
 ]
 
 
-class PricerProductProduct(models.Model):
+class ProductProduct(models.Model):
     """ Adding the necessary fields to products to use with Pricer electronic tags """
     _inherit = 'product.product'
 
     pricer_store_id = fields.Many2one(
         comodel_name='pricer.store',
         string='Pricer Store',
+        index='btree_not_null',
         help='This product will be linked to and displayed on the Pricer tags of the store selected here'
     )
     pricer_tag_ids = fields.One2many(
@@ -40,12 +41,7 @@ class PricerProductProduct(models.Model):
 
     # String representing price including taxes
     # Used in requests sent to the Pricer API and displayed on tags
-    pricer_display_price = fields.Char(compute='_compute_pricer_display_price')
-
-    def _compute_pricer_display_price(self):
-        # Empty compute method to prevent errors.
-        # To be cleaned up in master once the field is properly implemented.
-        pass
+    pricer_display_price = fields.Char()
 
     pricer_sale_pricelist_id = fields.Many2one(
         'product.pricelist',

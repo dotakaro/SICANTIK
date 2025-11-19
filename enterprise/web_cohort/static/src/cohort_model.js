@@ -1,5 +1,3 @@
-/* @odoo-module */
-
 import { _t } from "@web/core/l10n/translation";
 import { KeepLast, Race } from "@web/core/utils/concurrency";
 import { Model } from "@web/model/model";
@@ -12,6 +10,7 @@ export const INTERVALS = {
     day: _t("Day"),
     week: _t("Week"),
     month: _t("Month"),
+    quarter: _t("Quarter"),
     year: _t("Year"),
 };
 
@@ -47,13 +46,9 @@ export class CohortModel extends Model {
      * @param {SearchParams} searchParams
      */
     load(searchParams) {
-        const { comparison, context, domain } = searchParams;
+        const { context, domain } = searchParams;
         this.searchParams = { context };
-        if (comparison) {
-            this.searchParams.domains = comparison.domains;
-        } else {
-            this.searchParams.domains = [{ arrayRepr: domain, description: null }];
-        }
+        this.searchParams.domains = [{ arrayRepr: domain, description: null }];
         const { cohort_interval, cohort_measure } = searchParams.context;
         this.metaData.interval = cohort_interval || this.metaData.interval;
 

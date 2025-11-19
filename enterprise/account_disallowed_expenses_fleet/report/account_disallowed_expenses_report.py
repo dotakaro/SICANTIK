@@ -5,16 +5,17 @@ from odoo import models, _
 from odoo.tools import SQL
 
 
-class DisallowedExpensesFleetCustomHandler(models.AbstractModel):
+class AccountDisallowedExpensesFleetReportHandler(models.AbstractModel):
     _name = 'account.disallowed.expenses.fleet.report.handler'
-    _inherit = 'account.disallowed.expenses.report.handler'
+    _inherit = ['account.disallowed.expenses.report.handler']
     _description = 'Disallowed Expenses Fleet Custom Handler'
 
     def _get_custom_display_config(self):
         return {
-            'templates': {
-                'AccountReportFilters': 'account_disallowed_expenses_fleet.DisallowedExpensesFleetReportFilters',
-            }
+            **super()._get_custom_display_config(),
+            'components': {
+                'AccountReportFilters': 'DisallowedExpenseFleetFilters',
+            },
         }
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -75,7 +76,7 @@ class DisallowedExpensesFleetCustomHandler(models.AbstractModel):
                         ELSE fleet_rate.rate
                         END
                     ELSE rate.rate
-                    END)) / 100 AS fleet_disallowed_amount
+                    END)) / 100 AS fleet_deductible_amount
             """,
             select=select,
         )
@@ -145,7 +146,7 @@ class DisallowedExpensesFleetCustomHandler(models.AbstractModel):
         if not line_id:
             return current
 
-        for dummy, model, record_id in self.env['account.report']._parse_line_id(line_id):
+        for _markup, model, record_id in self.env['account.report']._parse_line_id(line_id):
             if model == 'account.disallowed.expenses.category':
                 current.update({'category_id': record_id})
             if model == 'fleet.vehicle':
@@ -172,7 +173,7 @@ class DisallowedExpensesFleetCustomHandler(models.AbstractModel):
         if current.get('account_id'):
             parent_line_id = line_id
             line_id = report._get_generic_line_id('account.account', current['account_id'], parent_line_id=line_id)
-            # This handles the case of child account lines without any rate.
+            # This handles the case of child account lines without any rate or having 0% rate.
             # We replicate the account_id in the line id in order to differentiate the child's line id from its parent.
             if len(current) != level and not (current.get('account_rate') or current.get('fleet_rate')):
                 parent_line_id = line_id
@@ -294,10 +295,10 @@ class DisallowedExpensesFleetCustomHandler(models.AbstractModel):
 
         return current_rate
 
-    def _get_current_disallowed_amount(self, values):
+    def _get_current_deductible_amount(self, values):
         # EXTENDS account_disallowed_expenses.
-        res = super()._get_current_disallowed_amount(values)
-        return values['fleet_disallowed_amount'] if any(values['vehicle_id']) else res
+        res = super()._get_current_deductible_amount(values)
+        return values['fleet_deductible_amount'] if any(values['vehicle_id']) else res
 
     def _filter_current(self, current, fields):
         return {key: val for key, val in current.items() if key in fields}

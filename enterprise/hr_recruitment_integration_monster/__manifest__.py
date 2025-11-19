@@ -1,9 +1,10 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 {
-    'name': 'Recruitment Integration Monster',
+    'name': 'Job Board - Monster.com',
     'version': '1.0',
     'category': 'Human Resources/Recruitment/Integration',
+    'summary': 'Allow user to share job positions on Monster Job board',
     'description': """
 Module for monster integration
 ==============================
@@ -24,5 +25,6 @@ api from Monster.
         'views/hr_contract_type_views.xml',
         'views/res_config_settings.xml',
     ],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

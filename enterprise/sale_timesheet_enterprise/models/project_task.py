@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import _, api, fields, models
-
-from odoo.addons.sale_timesheet_enterprise.models.sale import DEFAULT_INVOICED_TIMESHEET
+from odoo.addons.sale_timesheet_enterprise.models.sale_order_line import DEFAULT_INVOICED_TIMESHEET
 
 
 PROJECT_TASK_READABLE_FIELDS_TO_MAP = {
@@ -13,6 +11,7 @@ PROJECT_TASK_READABLE_FIELDS_TO_MAP = {
     'subtask_effective_hours': 'portal_subtask_effective_hours',
     'progress': 'portal_progress',
 }
+
 
 class ProjectTask(models.Model):
     _inherit = 'project.task'
@@ -25,8 +24,8 @@ class ProjectTask(models.Model):
     portal_progress = fields.Float(compute='_compute_project_sharing_timesheets', aggregator="avg", help="Display progress of current task.", export_string_translation=False)
 
     @property
-    def SELF_READABLE_FIELDS(self):
-        return super().SELF_READABLE_FIELDS | set(PROJECT_TASK_READABLE_FIELDS_TO_MAP.values()) - set(PROJECT_TASK_READABLE_FIELDS_TO_MAP.keys())
+    def TASK_PORTAL_READABLE_FIELDS(self):
+        return super().TASK_PORTAL_READABLE_FIELDS | set(PROJECT_TASK_READABLE_FIELDS_TO_MAP.values()) - set(PROJECT_TASK_READABLE_FIELDS_TO_MAP.keys())
 
     @api.depends('allocated_hours')
     def _compute_project_sharing_timesheets(self):
@@ -104,7 +103,7 @@ class ProjectTask(models.Model):
         return {
             sol.id: {
                 'value': planned_hours_per_sol_mapped.get(sol.id, 0.0),
-                'max_value': sol.product_uom._compute_quantity(sol.product_uom_qty, uom_hour),
+                'max_value': sol.product_uom_id._compute_quantity(sol.product_uom_qty, uom_hour),
             }
             for sol in self.env['sale.order.line'].search([('id', 'in', res_ids)])
         }
@@ -116,3 +115,18 @@ class ProjectTask(models.Model):
                 warning=_("This Sale Order Item doesn't have a target value of planned hours.")
             )
         return super()._gantt_progress_bar(field, res_ids, start, stop)
+
+    def _get_portal_total_hours_dict(self):
+        total_hours_dict = super()._get_portal_total_hours_dict()
+        if not (total_hours_dict and self.env['ir.config_parameter'].sudo().get_param('sale.invoiced_timesheet', DEFAULT_INVOICED_TIMESHEET) == 'approved'):
+            return total_hours_dict
+        timesheetable_tasks = self.filtered('allow_timesheets')
+        total_hours_dict['effective_hours'] = self.env['account.analytic.line']._read_group(
+            [
+                ('task_id', 'in', timesheetable_tasks.ids), 
+                ('validated', '=', True),
+            ],
+            [],
+            ['unit_amount:sum']
+        )[0][0] or 0.0
+        return total_hours_dict

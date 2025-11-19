@@ -1,8 +1,6 @@
-/** @odoo-module **/
-
 import { PdfGroupName } from "@documents/owl/components/pdf_group_name/pdf_group_name";
 import { PdfPage } from "@documents/owl/components/pdf_page/pdf_page";
-import { loadPDFJSAssets } from "@web/libs/pdfjs";
+import { loadPDFJSAssets } from "@web/core/utils/pdfjs";
 import { useCommand } from "@web/core/commands/command_hook";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { Dialog } from "@web/core/dialog/dialog";
@@ -802,10 +800,10 @@ export class PdfManager extends Component {
         data.append(
             "vals",
             JSON.stringify({
-                folder_id: document.folder_id[0],
+                folder_id: document.folder_id.id,
                 tag_ids: document.tag_ids.currentIds,
-                owner_id: document.owner_id[0],
-                partner_id: document.partner_id[0],
+                owner_id: document.owner_id.id,
+                partner_id: document.partner_id.id,
                 active: this.state.keepDocument,
             })
         );

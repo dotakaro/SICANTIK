@@ -109,7 +109,6 @@ export async function insertPivot(model, sheetId = model.getters.getActiveSheetI
         context: {},
         name: "Partner",
         type: "ODOO",
-        sortedColumn: null,
     };
     model.dispatch("ADD_PIVOT", {
         pivotId: pivotId,
@@ -120,7 +119,7 @@ export async function insertPivot(model, sheetId = model.getters.getActiveSheetI
         throw new Error("The pivot data source is not an OdooPivot");
     }
     await ds.load();
-    const table = ds.getTableStructure().export();
+    const table = ds.getCollapsedTableStructure().export();
     model.dispatch("INSERT_PIVOT", {
         sheetId,
         col: 0,

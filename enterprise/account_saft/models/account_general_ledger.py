@@ -7,7 +7,7 @@ from odoo.tools import float_repr, SQL
 from odoo import api, fields, models, release, _
 
 
-class GeneralLedgerCustomHandler(models.AbstractModel):
+class AccountGeneralLedgerReportHandler(models.AbstractModel):
     _inherit = 'account.general.ledger.report.handler'
 
     def _customize_warnings(self, report, options, all_column_groups_expression_totals, warnings):
@@ -15,8 +15,8 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         args = []
         if not company.company_registry:
             args.append(_('the Company ID'))
-        if not (company.phone or company.mobile):
-            args.append(_('the phone or mobile number'))
+        if not (company.phone):
+            args.append(_('the phone number'))
         if not (company.zip or company.city):
             args.append(_('the city or zip code'))
 
@@ -46,31 +46,52 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         :return: False if no account type needed, otherwise a string with the account type"""
         return False
 
+    def _get_report_values(self, report, options):
+        """
+        Get the report values based on lines
+        :return dict:    Keys are account_ids pointing to a dict of values
+            - account_id:
+                - sum                               {'debit': float, 'credit': float, 'balance': float}
+                - (optional) initial_balance:       float
+        """
+        options = report.get_options(previous_options={**options, 'export_mode': 'file', 'ignore_totals_below_sections': True, 'unfold_all': True})
+        lines = report._get_lines(options)
+
+        colname_to_idx = {col['expression_label']: idx for idx, col in enumerate(options.get('columns', []))}
+        current_account_id = 0
+        report_values = defaultdict(dict)
+
+        for line in lines:
+            model, res_id = report._get_model_info_from_id(line['id'])
+            if model == 'account.account':
+                current_account_id = res_id
+                report_values[current_account_id]['sum'] = {
+                    'debit': line['columns'][colname_to_idx['debit']]['no_format'],
+                    'credit': line['columns'][colname_to_idx['credit']]['no_format'],
+                    'balance': line['columns'][colname_to_idx['balance']]['no_format'],
+                }
+            if (isinstance(res_id, str) and 'balance_line' in res_id) or (model == 'account.account' and not line['unfoldable']):  # balance_line or unaffected earnings account line
+                report_values[current_account_id]['initial_balance'] = line['columns'][colname_to_idx['balance']]['no_format']
+
+        return report_values
+
     @api.model
     def _saft_fill_report_general_ledger_accounts(self, report, options, values):
         res = {
             'account_vals_list': [],
         }
+        report = self.env['account.report'].browse(options['report_id'])
+        report_values = self._get_report_values(report, options)
+        accounts = self.env['account.account'].browse(report_values.keys())
 
-        accounts_results = self._query_values(report, options)
-        rslts_array = tuple((account, res_col_gr[options['single_column_group']]) for account, res_col_gr in accounts_results)
-        init_bal_res = self._get_initial_balance_values(report, tuple(account.id for account, results in rslts_array), options)
-        initial_balances_map = {}
-        initial_balance_gen = ((account, init_bal_dict.get(options['single_column_group'])) for account, init_bal_dict in init_bal_res.values())
-        for account, initial_balance in initial_balance_gen:
-            initial_balances_map[account.id] = initial_balance
-        for account, results in rslts_array:
-            account_init_bal = initial_balances_map[account.id]
-            account_un_earn = results.get('unaffected_earnings', {})
-            account_balance = results.get('sum', {})
-            opening_balance = account_init_bal.get('balance', 0.0) + account_un_earn.get('balance', 0.0)
-            closing_balance = account_balance.get('balance', 0.0)
+        for account in accounts:
+            account_group_value = report_values[account.id]
             res['account_vals_list'].append({
                 'account': account,
                 'account_type': dict(self.env['account.account']._fields['account_type']._description_selection(self.env))[account.account_type],
                 'saft_account_type': self._saft_get_account_type(account.account_type),
-                'opening_balance': opening_balance,
-                'closing_balance': closing_balance,
+                'opening_balance': account_group_value.get('initial_balance', 0.0),
+                'closing_balance': account_group_value.get('sum', {}).get('balance', 0.0),
             })
 
         values.update(res)
@@ -215,7 +236,6 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         query = report._get_report_query(options, 'strict_range')
         tax_details_query = self.env['account.move.line']._get_query_tax_details(query.from_clause, query.where_clause)
         tax_name = self.env['account.tax']._field_to_sql('tax', 'name')
-        tax_description = self.env['account.tax']._field_to_sql('tax', 'description')
         self._cr.execute(SQL('''
             SELECT
                 tax_detail.base_line_id,
@@ -224,7 +244,6 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 tax.type_tax_use AS tax_type,
                 tax.amount_type AS tax_amount_type,
                 %(tax_name)s AS tax_name,
-                %(tax_description)s AS tax_description,
                 tax.amount AS tax_amount,
                 tax.create_date AS tax_create_date,
                 SUM(tax_detail.tax_amount) AS amount,
@@ -233,7 +252,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             JOIN account_move_line tax_line ON tax_line.id = tax_detail.tax_line_id
             JOIN account_tax tax ON tax.id = tax_detail.tax_id
             GROUP BY tax_detail.base_line_id, tax_line.currency_id, tax.id
-        ''', tax_name=tax_name, tax_description=tax_description, tax_details_query=tax_details_query))
+        ''', tax_name=tax_name, tax_details_query=tax_details_query))
         for tax_vals in self._cr.dictfetchall():
             line_vals = values['tax_detail_per_line_map'][tax_vals['base_line_id']]
             line_vals['tax_detail_vals_list'].append({
@@ -244,7 +263,6 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             tax_vals_map.setdefault(tax_vals['tax_id'], {
                 'id': tax_vals['tax_id'],
                 'name': tax_vals['tax_name'],
-                'description': tax_vals['tax_description'],
                 'amount': tax_vals['tax_amount'],
                 'amount_type': tax_vals['tax_amount_type'],
                 'type': tax_vals['tax_type'],

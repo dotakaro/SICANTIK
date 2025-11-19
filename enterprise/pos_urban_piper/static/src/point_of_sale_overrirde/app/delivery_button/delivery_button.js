@@ -1,7 +1,7 @@
 import { Dropdown } from "@web/core/dropdown/dropdown";
 import { DropdownItem } from "@web/core/dropdown/dropdown_item";
 import { Component } from "@odoo/owl";
-import { usePos } from "@point_of_sale/app/store/pos_hook";
+import { usePos } from "@point_of_sale/app/hooks/pos_hook";
 import { useService } from "@web/core/utils/hooks";
 
 export class DeliveryButton extends Component {
@@ -10,6 +10,7 @@ export class DeliveryButton extends Component {
         Dropdown,
         DropdownItem,
     };
+    static props = {};
 
     setup() {
         this.pos = usePos();
@@ -34,16 +35,15 @@ export class DeliveryButton extends Component {
             },
             filter: filter,
         };
-        if (this.pos.mainScreen.component?.name == "TicketScreen") {
+        if (this.pos.router.state.current == "TicketScreen") {
             this.env.services.ui.block();
             this.pos.ticket_screen_mobile_pane = "left";
-            this.pos.closeScreen();
             setTimeout(() => {
-                this.pos.showScreen("TicketScreen", { stateOverride: stateOverride, upState });
+                this.pos.navigate("TicketScreen", { stateOverride: stateOverride, upState });
                 this.env.services.ui.unblock();
             }, 300);
             return;
         }
-        this.pos.showScreen("TicketScreen", { stateOverride: stateOverride, upState });
+        this.pos.navigate("TicketScreen", { stateOverride: stateOverride, upState });
     }
 }

@@ -1,10 +1,11 @@
-import * as Chrome from "@point_of_sale/../tests/tours/utils/chrome_util";
-import * as Dialog from "@point_of_sale/../tests/tours/utils/dialog_util";
-import * as PartnerList from "@point_of_sale/../tests/tours/utils/partner_list_util";
-import * as PaymentScreen from "@point_of_sale/../tests/tours/utils/payment_screen_util";
-import * as ProductScreen from "@point_of_sale/../tests/tours/utils/product_screen_util";
-import * as ReceiptScreen from "@point_of_sale/../tests/tours/utils/receipt_screen_util";
-import * as Utils from "@point_of_sale/../tests/tours/utils/common";
+import * as Chrome from "@point_of_sale/../tests/pos/tours/utils/chrome_util";
+import * as Dialog from "@point_of_sale/../tests/generic_helpers/dialog_util";
+import * as PartnerList from "@point_of_sale/../tests/pos/tours/utils/partner_list_util";
+import * as PaymentScreen from "@point_of_sale/../tests/pos/tours/utils/payment_screen_util";
+import * as ProductScreen from "@point_of_sale/../tests/pos/tours/utils/product_screen_util";
+import * as ReceiptScreen from "@point_of_sale/../tests/pos/tours/utils/receipt_screen_util";
+import * as Utils from "@point_of_sale/../tests/pos/tours/utils/common";
+import { negateStep } from "@point_of_sale/../tests/generic_helpers/utils";
 import { registry } from "@web/core/registry";
 
 registry.category("web_tour.tours").add("pos_settle_account_due", {
@@ -14,25 +15,27 @@ registry.category("web_tour.tours").add("pos_settle_account_due", {
             Dialog.confirm("Open Register"),
             ProductScreen.clickPartnerButton(),
             PartnerList.clickPartnerOptions("Partner Test 1"),
-            {
-                isActive: ["auto"],
-                trigger: "div.o_popover :contains('Settle Due Accounts')",
-                content: "Check the popover opened",
-                run: "click",
-            },
-            Utils.selectButton("Bank"),
+            PartnerList.clickDropDownItemText("Settle invoices"),
+            PartnerList.clickSettleOrderName("TSJ/2025/00001"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentMethod("Bank"),
             PaymentScreen.clickValidate(),
-            Utils.selectButton("Yes"),
-            ProductScreen.closePos(),
-            Dialog.confirm("Close Register"),
+            Chrome.confirmPopup(),
             {
-                trigger: "body:not(:has(.modal))",
+                content: "Receipt doesn't include Empty State",
+                trigger: ".pos-receipt:not(:has(i.fa-shopping-cart))",
             },
+            ReceiptScreen.isShown(),
+            ReceiptScreen.receiptIsThere(),
+            ReceiptScreen.containsOrderLine("TSJ/2025/00001", 0, "10.00", "0.00"),
+            ReceiptScreen.receiptAmountTotalIs("0.00"),
+            ReceiptScreen.paymentLineContains("Bank", "10.00"),
+            ReceiptScreen.paymentLineContains("Customer Account", "-10.00"),
             Chrome.endTour(),
         ].flat(),
 });
 
-registry.category("web_tour.tours").add("SettleDueUICoherency", {
+registry.category("web_tour.tours").add("SettleDueButtonPresent", {
     steps: () =>
         [
             Chrome.startPoS(),
@@ -41,20 +44,7 @@ registry.category("web_tour.tours").add("SettleDueUICoherency", {
             PartnerList.clickPartnerOptions("A Partner"),
             PartnerList.checkDropDownItemText("Deposit money"),
             PartnerList.clickPartnerOptions("B Partner"),
-            PartnerList.checkDropDownItemText("Settle due accounts"),
-            {
-                isActive: ["auto"],
-                trigger: "div.o_popover :contains('Settle Due Accounts')",
-                content: "Check the popover opened",
-                run: "click",
-            },
-            Utils.selectButton("Bank"),
-            PaymentScreen.clickValidate(),
-            Utils.selectButton("Yes"),
-            {
-                content: "Receipt doesn't include Empty State",
-                trigger: ".pos-receipt:not(:has(i.fa-shopping-cart))",
-            },
+            PartnerList.checkDropDownItemText("Settle orders"),
         ].flat(),
 });
 
@@ -69,15 +59,55 @@ registry.category("web_tour.tours").add("pos_settle_account_due_update_instantly
             ProductScreen.clickPayButton(),
             PaymentScreen.clickPaymentMethod("Customer Account"),
             PaymentScreen.clickValidate(),
+            ReceiptScreen.receiptIsThere(),
+            ReceiptScreen.paymentLineContains("Customer Account", "19.80"),
             ReceiptScreen.clickNextOrder(),
             ProductScreen.clickPartnerButton(),
             {
                 trigger: "tr:contains('A Partner') .partner-due:contains('19.80')",
             },
+            // Settle partially
+            PartnerList.clickPartnerOptions("A Partner"),
+            PartnerList.clickDropDownItemText("Settle orders"),
+            PartnerList.clickSettleOrderName("Shop/0001"),
+            ProductScreen.modeIsActive("Price"),
+            ProductScreen.clickNumpad("1", "0"),
+            ProductScreen.totalAmountIs("10.00"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickValidate(),
+            Dialog.confirm("Yes"),
+            ReceiptScreen.clickNextOrder(),
+            ProductScreen.clickPartnerButton(),
+            {
+                trigger: "tr:contains('A Partner') .partner-due:contains('9.80')",
+            },
+            // Settle the rest and invoice it
+            PartnerList.clickPartnerOptions("A Partner"),
+            PartnerList.clickDropDownItemText("Settle orders"),
+            PartnerList.clickSettleOrderName("Shop/0001"),
+            ProductScreen.totalAmountIs("9.80"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickInvoiceButton(),
+            PaymentScreen.clickValidate(),
+            Dialog.confirm("Yes"),
+            ReceiptScreen.clickNextOrder(),
+            ProductScreen.clickPartnerButton(),
+            PartnerList.clickPartnerOptions("A Partner"),
+            // Deposit money should be shown (since we have no more due to settle)
+            PartnerList.checkDropDownItemText("Deposit money"),
+            PartnerList.clickDropDownItemText("Deposit money"),
+            Dialog.is("Select the payment method to deposit money"),
+            Utils.selectButton("Bank"),
+            PaymentScreen.clickValidate(),
+            Dialog.bodyIs("You can not deposit zero amount."),
+            Dialog.confirm(),
+            Chrome.endTour(),
         ].flat(),
 });
 
-registry.category("web_tour.tours").add("test_settle_account_due_aml_reconcile", {
+registry.category("web_tour.tours").add("test_settle_order_partially_backend_01", {
     steps: () =>
         [
             Chrome.startPoS(),
@@ -87,22 +117,44 @@ registry.category("web_tour.tours").add("test_settle_account_due_aml_reconcile",
             ProductScreen.addOrderline("Desk Pad", "10"),
             ProductScreen.clickPayButton(),
             PaymentScreen.clickPaymentMethod("Customer Account"),
+            PaymentScreen.clickInvoiceButton(),
             PaymentScreen.clickValidate(),
             ReceiptScreen.clickNextOrder(),
             ProductScreen.clickPartnerButton(),
-            PartnerList.clickPartnerOptions("A Partner"),
-            PartnerList.checkDropDownItemText("Settle due accounts"),
             {
-                isActive: ["auto"],
-                trigger: "div.o_popover :contains('Settle Due Accounts')",
-                content: "Check the popover opened",
-                run: "click",
+                trigger: "tr:contains('A Partner') .partner-due:contains('19.80')",
             },
-            Utils.selectButton("Bank"),
-            PaymentScreen.changeIs("19.80"),
+            PartnerList.clickPartnerOptions("A Partner"),
+            PartnerList.clickDropDownItemText("Settle invoices"),
+            PartnerList.clickSettleOrderName("TSJ/2025/00001"),
+            ProductScreen.modeIsActive("Price"),
+            ProductScreen.clickNumpad("1", "0"),
+            ProductScreen.totalAmountIs("10.00"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentMethod("Bank"),
             PaymentScreen.clickValidate(),
-            Utils.selectButton("Yes"),
+            Dialog.confirm("Yes"),
             ReceiptScreen.clickNextOrder(),
+            Chrome.endTour(),
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("test_settle_order_partially_backend_02", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            ProductScreen.clickPartnerButton(),
+            PartnerList.clickPartnerOptions("A Partner"),
+            PartnerList.clickDropDownItemText("Settle invoices"),
+            PartnerList.clickSettleOrderName("TSJ/2025/00001"),
+            ProductScreen.totalAmountIs("4.80"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickValidate(),
+            Dialog.confirm("Yes"),
+            ReceiptScreen.clickNextOrder(),
+            Chrome.endTour(),
         ].flat(),
 });
 
@@ -113,7 +165,7 @@ registry.category("web_tour.tours").add("test_settle_due_account_ui_coherency_2"
             Dialog.confirm("Open Register"),
             ProductScreen.clickPartnerButton(),
             PartnerList.clickPartnerOptions("B Partner"),
-            Utils.negateStep(PartnerList.checkDropDownItemText("Deposit money")),
+            negateStep(PartnerList.checkDropDownItemText("Deposit money")),
         ].flat(),
 });
 
@@ -123,26 +175,43 @@ registry.category("web_tour.tours").add("SettleDueAmountMoreCustomers", {
             Chrome.startPoS(),
             Dialog.confirm("Open Register"),
             ProductScreen.clickPartnerButton(),
-            {
-                trigger: ".modal-header .input-container input",
-                run: `fill BPartner`,
-            },
-            {
-                /**
-                 * Manually trigger keyup event to show the search field list
-                 * because the previous step do not trigger keyup event.
-                 */
-                trigger: ".modal-header .input-container input",
-                run: function () {
-                    document
-                        .querySelector(".modal-header .input-container input")
-                        .dispatchEvent(new KeyboardEvent("keyup", { key: "" }));
-                },
-            },
-            Utils.selectButton("Search more"),
+            PartnerList.searchCustomerValue("BPartner", true),
             {
                 trigger: ".partner-line-balance:contains('10.00')",
                 run: () => {},
             },
+        ].flat(),
+});
+
+registry.category("web_tour.tours").add("pos_settle_open_invoice", {
+    steps: () =>
+        [
+            Chrome.startPoS(),
+            Dialog.confirm("Open Register"),
+            ProductScreen.clickPartnerButton(),
+            PartnerList.clickPartnerOptions("C partner"),
+            {
+                isActive: ["auto"],
+                trigger: "div.o_popover :contains('Settle invoices')",
+                content: "Check the popover opened",
+                run: "click",
+            },
+            {
+                trigger: "tr.o_data_row td[name='name']:contains('INV/2025/00001')",
+                content: "Check the invoice is present",
+                run: "click",
+            },
+            ProductScreen.clickNumpad("5"),
+            ProductScreen.selectedOrderlineHas("INV", 1, "5"),
+            ProductScreen.clickPayButton(),
+            PaymentScreen.clickPaymentMethod("Bank"),
+            PaymentScreen.clickValidate(),
+            Utils.selectButton("Yes"),
+            ReceiptScreen.receiptIsThere(),
+            ReceiptScreen.containsOrderLine("INV/2025/00001", 0, "5.00", "0.00"),
+            ReceiptScreen.receiptAmountTotalIs("0.00"),
+            ReceiptScreen.paymentLineContains("Bank", "5.00"),
+            ReceiptScreen.paymentLineContains("Customer Account", "-5.00"),
+            Chrome.endTour(),
         ].flat(),
 });

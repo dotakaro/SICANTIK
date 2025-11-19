@@ -1,14 +1,14 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import io
 import datetime
+from collections import defaultdict
 
-from PIL import ImageFont
 from markupsafe import Markup
+from PIL import ImageFont
 
 from odoo import models, _
 from odoo.tools import SQL
-from odoo.tools.misc import xlsxwriter, file_path
-from collections import defaultdict
+from odoo.tools.misc import file_path
 
 XLSX_GRAY_200 = '#EEEEEE'
 XLSX_BORDER_COLOR = '#B4B4B4'
@@ -16,9 +16,9 @@ XLSX_FONT_SIZE_DEFAULT = 8
 XLSX_FONT_SIZE_HEADING = 11
 
 
-class JournalReportCustomHandler(models.AbstractModel):
-    _name = "account.journal.report.handler"
-    _inherit = "account.report.custom.handler"
+class AccountJournalReportHandler(models.AbstractModel):
+    _name = 'account.journal.report.handler'
+    _inherit = ["account.report.custom.handler"]
     _description = "Journal Report Custom Handler"
 
     def _custom_options_initializer(self, report, options, previous_options):
@@ -33,10 +33,10 @@ class JournalReportCustomHandler(models.AbstractModel):
             'css_custom_class': 'journal_report',
             'pdf_css_custom_class': 'journal_report_pdf',
             'components': {
-                'AccountReportLine': 'account_reports.JournalReportLine',
+                'AccountReportLine': 'JournalReportLine',
+                'AccountReportFilters': 'JournalReportFilters',
             },
             'templates': {
-                'AccountReportFilters': 'account_reports.JournalReportFilters',
                 'AccountReportLineName': 'account_reports.JournalReportLineName',
             }
         }
@@ -62,7 +62,8 @@ class JournalReportCustomHandler(models.AbstractModel):
                 'code': code,
                 'credit': query_line['credit'],
                 'debit': query_line['debit'],
-                'balance': query_line['balance'] if current_groupby == 'account_id' else None
+                'balance': query_line['balance'] if current_groupby == 'account_id' else None,
+                'has_sublines': True,
             }
             return query_line['grouping_key'], result_line_dict
 
@@ -253,6 +254,7 @@ class JournalReportCustomHandler(models.AbstractModel):
         """
         Overrides the default XLSX Generation from account.repor to use a custom one.
         """
+        import xlsxwriter  # noqa: PLC0415
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {
             'in_memory': True,
@@ -936,7 +938,20 @@ class JournalReportCustomHandler(models.AbstractModel):
             'line_class': 'o_even ' if even else 'o_odd ',
             'document': {'data': document, 'class': 'o_bold ' if line_index == 0 else ''},
             'account_code': {'data': line_entry['account_code']},
-            'account_label': {'data': account_label if export_type != 'pdf' else line_entry["account_code"]},
+            'account_label': {
+                'data': (
+                    account_label
+                    if export_type != 'pdf'
+                    else (
+                        f"{line_entry['account_code']} "
+                        + (
+                            line_entry['account_name'][:35] + '...'
+                            if len(line_entry['account_name']) > 35
+                            else line_entry['account_name']
+                        )
+                    )
+                )
+            },
             'name': {'data': name},
             'debit': {
                 'data': report._format_value(options, line_entry['debit'], 'monetary'),

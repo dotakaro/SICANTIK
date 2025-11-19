@@ -1,10 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import base64
-import io
 import calendar
-from odoo import api, fields, models
-from odoo.tools.misc import xlsxwriter
+import io
+
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 MONTH_SELECTION = [
     ('1', 'January'),
@@ -22,14 +23,30 @@ MONTH_SELECTION = [
 ]
 
 
-class HrEPFReport(models.Model):
+class L10nInHrPayrollEpfReport(models.Model):
     _name = 'l10n.in.hr.payroll.epf.report'
     _description = 'Indian Payroll: Employee Provident Fund Report'
 
-    month = fields.Selection(MONTH_SELECTION, default='1', required=True)
+    company_id = fields.Many2one('res.company', default=lambda self: self.env.company)
+    month = fields.Selection(
+        MONTH_SELECTION,
+        required=True,
+        default=lambda self: str(fields.Date.context_today(self).month)
+    )
     year = fields.Integer(required=True, default=lambda self: fields.Date.context_today(self).year)
     xls_file = fields.Binary(string="XLS file")
     xls_filename = fields.Char()
+
+    _unique_epf_report_per_month_year = models.Constraint(
+        'UNIQUE(company_id, month, year)',
+        "An EPF Report for this month and year already exists.",
+    )
+
+    @api.model
+    def default_get(self, field_list=None):
+        if self.env.company.country_id.code != "IN":
+            raise UserError(_('You must be logged in a Indian company to use this feature'))
+        return super().default_get(field_list)
 
     @api.depends('month', 'year')
     def _compute_display_name(self):
@@ -37,18 +54,21 @@ class HrEPFReport(models.Model):
         for report in self:
             report.display_name = f"{month_description.get(report.month)}-{report.year}"
 
-    @api.model
-    def _get_employee_pf_data(self, year, month):
+    def _get_employee_pf_data(self):
+        self.ensure_one()
         # Get the relevant records based on the year and month
-        indian_employees = self.env['hr.employee'].search([('contract_id.l10n_in_provident_fund', '=', True)]).filtered(lambda e: e.company_country_code == 'IN')
+        indian_employees = self.env['hr.employee'].search([
+            ('version_id.l10n_in_provident_fund', '=', True),
+            ('company_id', '=', self.company_id.id)
+        ]).filtered(lambda e: e.company_country_code == 'IN')
 
         result = []
-        end_date = calendar.monthrange(year, int(month))[1]
+        end_date = calendar.monthrange(self.year, int(self.month))[1]
 
         payslips = self.env['hr.payslip'].search([
             ('employee_id', 'in', indian_employees.ids),
-            ('date_from', '>=', f'{year}-{month}-1'),
-            ('date_to', '<=', f'{year}-{month}-{end_date}'),
+            ('date_from', '>=', f'{self.year}-{self.month}-1'),
+            ('date_to', '<=', f'{self.year}-{self.month}-{end_date}'),
             ('state', 'in', ('done', 'paid'))
         ])
 
@@ -88,7 +108,7 @@ class HrEPFReport(models.Model):
             diff = round(epf_contri - eps_contri, 2)
 
             result.append((
-                employee.l10n_in_uan,
+                employee.l10n_in_uan or '',
                 employee.name,
                 wage,
                 epf,
@@ -106,10 +126,11 @@ class HrEPFReport(models.Model):
         self.ensure_one()
 
         output = io.BytesIO()
+        import xlsxwriter  # noqa: PLC0415
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         worksheet = workbook.add_worksheet('Employee_provident_fund_report')
         style_highlight = workbook.add_format({'bold': True, 'pattern': 1, 'bg_color': '#E0E0E0', 'align': 'center'})
-        style_normal = workbook.add_format({'align': 'center', 'font_size': 12})
+        style_normal = workbook.add_format({'font_size': 12})
         row = 0
         worksheet.set_row(row, 20)
 
@@ -127,7 +148,7 @@ class HrEPFReport(models.Model):
             "REFUNDED OF ADVANCES"
         ]
 
-        rows = self._get_employee_pf_data(self.year, self.month)
+        rows = self._get_employee_pf_data()
 
         for col, header in enumerate(headers):
             worksheet.write(row, col, header, style_highlight)

@@ -1,6 +1,6 @@
 import { expect, test } from "@odoo/hoot";
 
-import { datasetFromElements} from "@sign/components/sign_request/document_signable";
+import { datasetFromElements } from "@sign/components/sign_request/document_signable";
 
 test("check datasetFromElements parsing", async () => {
     const backend_element = document.createElement("input");

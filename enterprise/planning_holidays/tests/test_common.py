@@ -21,7 +21,7 @@ class TestCommon(TestCommonPlanning):
         # Leave type
         cls.leave_type = cls.env['hr.leave.type'].create({
             'name': 'time off',
-            'requires_allocation': 'no',
+            'requires_allocation': False,
             'request_unit': 'hour',
         })
 
@@ -33,4 +33,4 @@ class TestCommon(TestCommonPlanning):
             'date_from': time.strftime('%Y-01-01'),
             'date_to': time.strftime('%Y-12-31'),
         })
-        cls.allocation_bert.action_validate()
+        cls.allocation_bert.action_approve()

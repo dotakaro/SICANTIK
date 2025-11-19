@@ -1,6 +1,6 @@
 import { expect, getFixture, test } from "@odoo/hoot";
 import { queryAll, queryAllTexts } from "@odoo/hoot-dom";
-import { animationFrame, Deferred, mockDate } from "@odoo/hoot-mock";
+import { animationFrame, Deferred } from "@odoo/hoot-mock";
 import { markup } from "@odoo/owl";
 import { changeScale } from "@web/../tests/views/calendar/calendar_test_helpers";
 import {
@@ -17,7 +17,6 @@ import {
     removeFacet,
     toggleMenu,
     toggleMenuItem,
-    toggleMenuItemOption,
     toggleSearchBarMenu,
 } from "@web/../tests/web_test_helpers";
 import { browser } from "@web/core/browser/browser";
@@ -126,7 +125,43 @@ test("simple cohort rendering", async () => {
     });
 
     await contains(".o_view_scale_selector .scale_button_selection").click();
-    expect(".o-dropdown--menu span").toHaveCount(4, {
+    expect(".o-dropdown--menu span").toHaveCount(5, {
+        message: "should have buttons of intervals",
+    });
+});
+
+test("quarter cohort rendering", async () => {
+    await mountView({
+        type: "cohort",
+        resModel: "subscription",
+        arch: '<cohort string="Subscription" date_start="start" date_stop="stop" />',
+    });
+    await changeScale("quarter");
+    expect(".o_cohort_view").toHaveClass("o_view_controller");
+    expect(".table").toHaveCount(1, { message: "should have a table" });
+    expect(".table thead tr:first th:first:contains(Start)").toHaveCount(1, {
+        message: 'should contain "Start" in header of first column',
+    });
+    expect(".table thead tr:first th:nth-child(3):contains(Stop - By Quarter)").toHaveCount(1, {
+        message: 'should contain "Stop - By Quarter" in title',
+    });
+    expect(".table tbody tr td:first:contains(Q3 2017)").toHaveCount(1, {
+        message: 'should contain "Q3 2017" as start',
+    });
+    expect(".table thead tr:nth-child(2) th:first:contains(+0)").toHaveCount(1, {
+        message: "interval should start with 0",
+    });
+    expect(".table thead tr:nth-child(2) th:nth-child(7):contains(+6)").toHaveCount(1, {
+        message: "interval should end with 6",
+    });
+
+    await toggleMenu("Measures");
+    expect(".dropdown-menu:not(.d-none)").toHaveCount(1, {
+        message: "should have list of measures",
+    });
+
+    await contains(".o_view_scale_selector .scale_button_selection").click();
+    expect(".o-dropdown--menu span").toHaveCount(5, {
         message: "should have buttons of intervals",
     });
 });
@@ -540,107 +575,6 @@ test("when clicked on cell redirects to the action list/form view passed in cont
     });
 });
 
-test("rendering of a cohort view with comparison", async () => {
-    expect.assertions(31);
-
-    mockDate("2017-08-25 01:00:00");
-
-    Subscription._views = {
-        cohort: '<cohort string="Subscriptions" date_start="start" date_stop="stop" measure="__count" interval="week" />',
-        search: `
-            <search>
-                <filter date="start" name="date_filter" string="Date"/>
-            </search>
-        `,
-    };
-    await mountWithCleanup(WebClient);
-
-    await getService("action").doAction({
-        name: "Subscriptions",
-        res_model: "subscription",
-        type: "ir.actions.act_window",
-        views: [[false, "cohort"]],
-    });
-
-    function verifyContents(results, label) {
-        const tables = queryAll("table");
-        expect(tables.length).toBe(results.length, {
-            message: `${label}: There should be ${results.length} tables`,
-        });
-        tables.forEach((table) => {
-            const result = results.shift();
-            const rowCount = queryAll(".o_cohort_row_clickable", { root: table }).length;
-
-            if (rowCount) {
-                expect(rowCount).toBe(result, {
-                    message: `the table should contain ${result} rows`,
-                });
-            } else {
-                expect(table.querySelector("th")).toHaveText(result, {
-                    message: `the table should contain the time range description ${result}`,
-                });
-            }
-        });
-    }
-
-    // with no comparison, with data (no filter)
-    verifyContents([3], "with no comparison, with data (no filter)");
-    expect(".o_cohort_no_data").toHaveCount(0);
-    expect("div.o_view_nocontent").toHaveCount(0);
-
-    // with no comparison with no data (filter on 'last_year')
-    await toggleSearchBarMenu();
-    await toggleMenuItem("Date");
-    await toggleMenuItemOption("Date", "2016");
-
-    verifyContents([], "with no comparison with no data (filter on 'last_year'");
-    expect(".o_cohort_no_data").toHaveCount(0);
-    expect("div.o_view_nocontent").toHaveCount(1);
-
-    // with comparison active, data and comparisonData (filter on 'this_month' + 'previous_period')
-    await toggleMenuItemOption("Date", "2016");
-    await toggleMenuItemOption("Date", "August");
-    await toggleMenuItem("Date: Previous period");
-
-    verifyContents(
-        ["August 2017", 2, "July 2017", 1],
-        "with comparison active, data and comparisonData (filter on 'this_month' + 'previous_period')"
-    );
-    expect(".o_cohort_no_data").toHaveCount(0);
-    expect("div.o_view_nocontent").toHaveCount(0);
-
-    // with comparison active, data, no comparisonData (filter on 'this_year' + 'previous_period')
-    await toggleMenuItemOption("Date", "August");
-
-    verifyContents(
-        ["2017", 3, "2016"],
-        "with comparison active, data, no comparisonData (filter on 'this_year' + 'previous_period')"
-    );
-    expect(".o_cohort_no_data").toHaveCount(1);
-    expect("div.o_view_nocontent").toHaveCount(0);
-
-    // with comparison active, no data, comparisonData (filter on 'Q4' + 'previous_period')
-    await toggleMenuItemOption("Date", "Q4");
-
-    verifyContents(
-        ["Q4 2017", "Q3 2017", 3],
-        "with comparison active, no data, comparisonData (filter on 'Q4' + 'previous_period')"
-    );
-    expect(".o_cohort_no_data").toHaveCount(1);
-    expect("div.o_view_nocontent").toHaveCount(0);
-
-    // with comparison active, no data, no comparisonData (filter on 'last_year' + 'previous_period')
-    await toggleMenuItemOption("Date", "2016");
-    await toggleMenuItemOption("Date", "2017");
-
-    verifyContents(
-        ["Q4 2016", "Q3 2016"],
-        "with comparison active, no data, no comparisonData (filter on 'last_year' + 'previous_period')"
-    );
-    expect(".o_cohort_no_data").toHaveCount(2);
-    expect("div.o_view_nocontent").toHaveCount(1);
-});
-
 test("verify context", async () => {
     expect.assertions(1);
 
@@ -821,7 +755,8 @@ test("field with widget attribute", async () => {
     });
 });
 
-test("Scale: scale default is fetched from localStorage", async (assert) => {
+test("Scale: scale default is fetched from localStorage", async () => {
+    let view;
     patchWithCleanup(browser.localStorage, {
         getItem(key) {
             if (String(key).startsWith("scaleOf-viewId")) {
@@ -829,13 +764,13 @@ test("Scale: scale default is fetched from localStorage", async (assert) => {
             }
         },
         setItem(key, value) {
-            if (key === `scaleOf-viewId-${view.env.config.viewId}`) {
+            if (key === `scaleOf-viewId-${view?.env.config.viewId}`) {
                 expect.step(`scale_${value}`);
             }
         },
     });
 
-    const view = await mountView({
+    view = await mountView({
         type: "cohort",
         resModel: "subscription",
         arch: `<cohort date_start="start" date_stop="stop"/>`,
@@ -845,4 +780,61 @@ test("Scale: scale default is fetched from localStorage", async (assert) => {
     await changeScale("year");
     expect(".scale_button_selection").toHaveText("Year");
     expect.verifySteps(["scale_year"]);
+});
+
+test("when middle clicked on cell open records in new window ", async () => {
+    patchWithCleanup(browser, {
+        open: (url) => {
+            expect.step(`opened in new window: ${url}`);
+        },
+    });
+    patchWithCleanup(browser.sessionStorage, {
+        setItem(key, value) {
+            expect.step(`set ${key}-${value}`);
+            super.setItem(key, value);
+        },
+        getItem(key) {
+            const res = super.getItem(key);
+            expect.step(`get ${key}-${res}`);
+            return res;
+        },
+    });
+    Subscription._views = {
+        cohort: `
+                <cohort string="Subscriptions" date_start="start" date_stop="stop" measure="__count" interval="week" />`,
+        "list,my_list_view": `
+                <list>
+                    <field name="start"/>
+                    <field name="stop"/>
+                </list>`,
+        "form,my_form_view": `
+                <form>
+                    <field name="start"/>
+                    <field name="stop"/>
+                </form>`,
+    };
+
+    await mountWithCleanup(WebClient);
+
+    await getService("action").doAction({
+        id: 22,
+        name: "Subscriptions",
+        res_model: "subscription",
+        type: "ir.actions.act_window",
+        views: [
+            [false, "cohort"],
+            ["my_list_view", "list"],
+            ["my_form_view", "form"],
+        ],
+    });
+
+    await contains("td.o_cohort_value").click({ ctrlKey: true });
+    expect.verifySteps([
+        "get current_action-null",
+        'set current_action-{"id":22,"name":"Subscriptions","res_model":"subscription","type":"ir.actions.act_window","views":[[false,"cohort"],["my_list_view","list"],["my_form_view","form"]]}',
+        'get current_action-{"id":22,"name":"Subscriptions","res_model":"subscription","type":"ir.actions.act_window","views":[[false,"cohort"],["my_list_view","list"],["my_form_view","form"]]}',
+        'set current_action-{"type":"ir.actions.act_window","name":"Subscriptions","res_model":"subscription","views":[["my_list_view","list"],["my_form_view","form"]],"view_mode":"list","target":"current","context":{"lang":"en","tz":"taht","uid":7,"allowed_company_ids":[1]},"domain":["&",["start",">=","2017-07-10"],["start","<","2017-07-17"]]}',
+        "opened in new window: /odoo/action-22/m-subscription",
+        'set current_action-{"id":22,"name":"Subscriptions","res_model":"subscription","type":"ir.actions.act_window","views":[[false,"cohort"],["my_list_view","list"],["my_form_view","form"]]}',
+    ]);
 });

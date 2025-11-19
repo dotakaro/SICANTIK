@@ -1,9 +1,7 @@
-/** @odoo-module **/
-
 import { _t } from "@web/core/l10n/translation";
-import { ArticleSelectionDialog } from "../../components/article_selection_dialog/article_selection_dialog";
+import { ArticleSearchDialog } from "@knowledge/components/article_search_dialog/article_search_dialog";
 import { ArticleTemplatePickerDialog } from "@knowledge/components/article_template_picker_dialog/article_template_picker_dialog";
-import { browser } from '@web/core/browser/browser'
+import { browser } from "@web/core/browser/browser";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import {
     KnowledgeSidebarFavoriteSection,
@@ -18,7 +16,15 @@ import { useNestedSortable } from "@web/core/utils/nested_sortable";
 import { useService } from "@web/core/utils/hooks";
 import { useRecordObserver } from "@web/model/relational_model/utils";
 
-import { Component, onWillStart, reactive, useRef, useState, useChildSubEnv } from "@odoo/owl";
+import {
+    Component,
+    onWillStart,
+    reactive,
+    useRef,
+    useState,
+    useChildSubEnv,
+    useExternalListener,
+} from "@odoo/owl";
 
 export const SORTABLE_TOLERANCE = 10;
 
@@ -49,12 +55,15 @@ export class KnowledgeSidebar extends Component {
         KnowledgeSidebarSharedSection,
         KnowledgeSidebarWorkspaceSection,
     };
-    
+
     setup() {
         super.setup();
+        // In case a portal user loads a hidden website_published article,
+        // subsequent searches should include articles in that hidden tree.
 
         this.actionService = useService("action");
         this.dialog = useService("dialog");
+        this.hotkey = useService("hotkey");
         this.orm = useService("orm");
 
         this.favoriteTree = useRef("favoriteTree");
@@ -89,9 +98,25 @@ export class KnowledgeSidebar extends Component {
         this.state = useState({
             dragging: false,
             sidebarSize: localStorage.getItem(this.storageKeys.size) || 300,
+            resizing: false,
         });
 
         this.loadArticles();
+
+        // Reassign the Control+k hotkey for portal users from the CommandPalette
+        // to the article search feature.
+        useExternalListener(
+            browser,
+            "keydown",
+            (ev) => {
+                if (this.isPortalUser && ev.key === "k" && (ev.ctrlKey || ev.metaKey)) {
+                    ev.preventDefault();
+                    ev.stopImmediatePropagation();
+                    this.onSearchBarClick();
+                }
+            },
+            { capture: true }
+        );
 
         // Resequencing of the favorite articles
         useNestedSortable({
@@ -138,6 +163,7 @@ export class KnowledgeSidebar extends Component {
         // Resequencing and rehierarchisation of articles
         useNestedSortable({
             ref: this.mainTree,
+            elements: "li.o_article",
             groups: () => this.isInternalUser ? ".o_section" : ".o_section[data-section='private']",
             connectGroups: () => this.isInternalUser,
             nest: true,
@@ -181,22 +207,10 @@ export class KnowledgeSidebar extends Component {
             /**
              * @param {DOMElement} element - moved element
              * @param {DOMElement} parent - parent element of where the element was moved
-             * @param {DOMElement} group - initial (=current) group of the moved element
              * @param {DOMElement} newGroup - group in which the element was moved
-             * @param {DOMElement} prevPos.parent - element's parent before the move
              * @param {DOMElement} placeholder - hint element showing the current position
              */
-            onMove: ({element, parent, group, newGroup, prevPos, placeholder}) => {
-                if (prevPos.parent) {
-                    const prevParent = this.getArticle(parseInt(prevPos.parent.dataset.articleId));
-                    // Remove caret if article has no child
-                    if (!prevParent.has_article_children ||
-                        prevParent.child_ids.length === 1 &&
-                        prevParent.child_ids[0] === parseInt(element.dataset.articleId)
-                    ) {
-                        prevPos.parent.classList.remove('o_article_has_children');
-                    }
-                }
+            onMove: ({element, parent, newGroup, placeholder}) => {
                 if (parent) {
                     // Cannot add child to readonly articles, unless it is the
                     // current parent.
@@ -206,8 +220,6 @@ export class KnowledgeSidebar extends Component {
                         placeholder.classList.add('bg-danger');
                         return;
                     }
-                    // Add caret
-                    parent.classList.add('o_article_has_children');
                 } else if (newGroup.dataset.section === "shared") {
                     // Private articles cannot be dropped in the shared section
                     const article = this.getArticle(parseInt(element.dataset.articleId));
@@ -222,10 +234,11 @@ export class KnowledgeSidebar extends Component {
 
         onWillStart(async () => {
             this.isInternalUser = await user.hasGroup('base.group_user');
+            this.isPortalUser = await user.hasGroup('base.group_portal');
         });
 
         useRecordObserver(async (record) => {
-            const nextDataParentId = record.data.parent_id ? record.data.parent_id[0] : false;
+            const nextDataParentId = record.data.parent_id ? record.data.parent_id.id : false;
             // During the first load, `loadArticles` is still pending and the component is in its
             // loading state. However, because of OWL reactive implementation (uses a Proxy),
             // record data still has to be read in order to subscribe to later changes, even if
@@ -346,15 +359,35 @@ export class KnowledgeSidebar extends Component {
     /**
      * Open the templates dialog
      */
-    browseTemplates() {
+    async browseTemplates() {
+        if (await this.props.record.isDirty()) {
+            await this.props.record.save();
+        }
         this.dialog.add(ArticleTemplatePickerDialog, {
-            onLoadTemplate: async articleTemplateId => {
+            record: this.props.record,
+            /** @param {integer} articleId */
+            onLoadArticle: async articleId => {
+                const newArticleIds = await this.orm.call(
+                    "knowledge.article",
+                    "action_make_private_copy", [articleId], { preserve_name: true }
+                );
                 await this.actionService.doAction("knowledge.ir_actions_server_knowledge_home_page", {
                     stackPosition: "replaceCurrentAction",
                     additionalContext: {
-                        res_id: await this.orm.call("knowledge.article", "create_article_from_template", [
-                            articleTemplateId
-                        ])
+                        res_id: newArticleIds[0],
+                    }
+                });
+            },
+            /** @param {integer} templateId */
+            onLoadTemplate: async templateId => {
+                const newArticleId = await this.orm.call(
+                    "knowledge.article",
+                    "create_article_from_template", [templateId]
+                );
+                await this.actionService.doAction("knowledge.ir_actions_server_knowledge_home_page", {
+                    stackPosition: "replaceCurrentAction",
+                    additionalContext: {
+                        res_id: newArticleId,
                     }
                 });
             }
@@ -410,7 +443,7 @@ export class KnowledgeSidebar extends Component {
 
     /**
      * Get the article stored in the state given its id.
-     * @param {integer} articleId - Id of the article 
+     * @param {integer} articleId - Id of the article
      * @returns {Object} article
      */
     getArticle(articleId) {
@@ -434,7 +467,7 @@ export class KnowledgeSidebar extends Component {
      * @param {integer} position.beforeArticleId
      * @param {String} position.category
      * @param {integer} position.parentId
-     *  
+     *
      */
     async insertArticle(article, position) {
         if (position.parentId) {
@@ -491,7 +524,7 @@ export class KnowledgeSidebar extends Component {
      * Load the articles to show in the sidebar and store them in the state.
      * One loops through the articles fetched to create a mapping id:article
      * that allows easy access of the articles, add the articles in their correct categories
-     * and add their children. One uses the parent_id field to fill the 
+     * and add their children. One uses the parent_id field to fill the
      * child_ids arrays because a simple read of the child_ids field would
      * return items (which should not be included in the sidebar), and the
      * articles would not be sorted correctly.
@@ -589,11 +622,11 @@ export class KnowledgeSidebar extends Component {
      * confirmation dialog.
      * @param {Object} article
      * @param {Object} currentPosition
-     * @param {integer} position.beforeArticleId 
+     * @param {integer} position.beforeArticleId
      * @param {String} position.category
      * @param {integer} position.parentId
      * @param {Object} newPosition
-     * @param {integer} newPosition.beforeArticleId 
+     * @param {integer} newPosition.beforeArticleId
      * @param {String} newPosition.category
      * @param {integer} newPosition.parentId
      */
@@ -630,7 +663,7 @@ export class KnowledgeSidebar extends Component {
             confirmMove(article, newPosition);
         } else {
             // Show confirmation dialog, and move article back to its original
-            // position if the user cancels the move 
+            // position if the user cancels the move
             const emoji = article.icon || '';
             const name = article.name;
             let message;
@@ -676,7 +709,7 @@ export class KnowledgeSidebar extends Component {
                     this.repositionArticle(article, currentPosition);
                 },
             });
-        } 
+        }
     }
 
     /**
@@ -712,18 +745,29 @@ export class KnowledgeSidebar extends Component {
      * article selection dialog if the user is a portal user
      */
     onSearchBarClick() {
+        // Ensure that if the command palette is already open, it is forcibly
+        // closed to be open again with the search configuration.
+        this.dialog.closeAll();
         if (this.isInternalUser) {
-            this.env.services.command.openMainPalette({searchValue: '?'});
+            this.env.services.command.openMainPalette({ searchValue: "?" });
         } else {
-            this.dialog.add(
-                ArticleSelectionDialog,
-                {
-                    title: _t('Search an Article...'),
-                    confirmLabel: _t('Open'),
-                    articleSelected: (article) => this.env.openArticle(article.articleId),
-                }
-            );
+            this.dialog.add(ArticleSearchDialog, {
+                search: (searchValue) => {
+                    const params = { search_query: searchValue };
+                    let searchFunction = "get_user_sorted_articles";
+                    if (searchValue) {
+                        searchFunction = "get_sorted_articles";
+                        params.domain = this.searchDomain;
+                    }
+                    return this.orm.call("knowledge.article", searchFunction, [[]], params);
+                },
+                select: (article) => this.env.openArticle(article.id),
+            });
         }
+    }
+
+    get searchDomain() {
+        return ["|", ["is_article_visible", "=", true], ["is_user_favorite", "=", true]];
     }
 
     /**
@@ -800,7 +844,7 @@ export class KnowledgeSidebar extends Component {
      * Change the position of an article in the sidebar.
      * @param {Object} article
      * @param {Object} position
-     * @param {integer} position.beforeArticleId 
+     * @param {integer} position.beforeArticleId
      * @param {String} position.category
      * @param {integer} position.parentId
      */
@@ -842,7 +886,7 @@ export class KnowledgeSidebar extends Component {
      * not shown in its sidebar anymore (trashed, converted to items, hidden,
      * permission change). This method will reset the list of ids in the local
      * storage using only the articles that are shown to the user, so that we
-     * do not load the articles using a list containing a lot of useless ids. 
+     * do not load the articles using a list containing a lot of useless ids.
      */
     resetUnfoldedArticles() {
         this.unfoldedArticlesIds.forEach(id => {
@@ -869,6 +913,7 @@ export class KnowledgeSidebar extends Component {
         });
         const onPointerUp = () => {
             document.removeEventListener('pointermove', onPointerMove);
+            this.state.resizing = false;
             document.body.style.cursor = "auto";
             document.body.style.userSelect = "auto";
             localStorage.setItem(this.storageKeys.size, this.state.sidebarSize);
@@ -878,6 +923,7 @@ export class KnowledgeSidebar extends Component {
         // meaning that the cursor is not always on top of the resizer.
         document.body.style.cursor = "col-resize";
         document.body.style.userSelect = "none";
+        this.state.resizing = true;
         document.addEventListener('pointermove', onPointerMove);
         document.addEventListener('pointerup', onPointerUp, {once: true});
     }
@@ -898,7 +944,7 @@ export class KnowledgeSidebar extends Component {
     /** Unfold an article.
      * @param {integer} articleId: id of article
      * @param {boolean} isFavorite: whether to unfold in favorite tree
-     */        
+     */
     async unfold(articleId, isFavorite) {
         const article = this.getArticle(articleId);
         // Load the children of the article if it has not been unfolded yet

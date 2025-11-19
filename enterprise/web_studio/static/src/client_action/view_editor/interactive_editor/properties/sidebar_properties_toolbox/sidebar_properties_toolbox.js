@@ -1,6 +1,6 @@
 import { Component } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { AlertDialog, ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
+import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { _t } from "@web/core/l10n/translation";
 
 export class SidebarPropertiesToolbox extends Component {
@@ -35,11 +35,6 @@ export class SidebarPropertiesToolbox extends Component {
     }
 
     async openFormAction() {
-        if (/^(in_group_|sel_groups_)/.test(this.node.attrs.name)) {
-            return this.dialog.add(AlertDialog, {
-                body: _t("You cannot perform this action on this field."),
-            });
-        }
         const resId = await this.orm.searchRead(
             "ir.model.fields",
             [

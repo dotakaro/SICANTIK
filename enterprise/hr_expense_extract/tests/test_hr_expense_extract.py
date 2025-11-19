@@ -1,4 +1,5 @@
 from freezegun import freeze_time
+import datetime
 
 from odoo import fields
 from odoo.addons.hr_expense.tests.common import TestExpenseCommon
@@ -37,7 +38,7 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
         return {
             'status': 'success',
             'results': [{
-                'description': {'selected_value': {'content': 'food', 'candidates': []}},
+                'description': {'selected_value': {'content': 'Pizzeria', 'candidates': []}},
                 'total': {'selected_value': {'content': 99.99, 'candidates': []}},
                 'date': {'selected_value': {'content': '2022-02-22', 'candidates': []}},
                 'currency': {'selected_value': {'content': 'euro', 'candidates': []}},
@@ -64,6 +65,7 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
         eur_currency.rate_ids.unlink()
         eur_currency.active = True
 
+        self.expense.name = '.'.join(self.attachment.name.split('.')[:-1])
         with self._mock_iap_extract(
             extract_response=self.parse_success_response(),
             assert_params=expected_parse_params,
@@ -94,7 +96,6 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
         self.assertEqual(float_compare(self.expense.total_amount, ext_result['total']['selected_value']['content'], 2), 0)
         self.assertEqual(self.expense.currency_id, eur_currency)
         self.assertEqual(str(self.expense.date), ext_result['date']['selected_value']['content'])
-        self.assertEqual(self.expense.name, self.expense.predicted_category, ext_result['description']['selected_value']['content'])
         self.assertEqual(self.expense.product_id, self.product_c)
 
     def test_manual_send_for_digitization(self):
@@ -120,6 +121,7 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
         # upon success, no button shall be provided
         self.assertFalse(self.expense.extract_can_show_send_button)
 
+        self.expense.name = '.'.join(self.attachment.name.split('.')[:-1])
         with self._mock_iap_extract(extract_response=extract_response):
             self.expense.check_all_status()
 
@@ -128,7 +130,6 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
         self.assertEqual(float_compare(self.expense.total_amount, ext_result['total']['selected_value']['content'], 2), 0)
         self.assertEqual(self.expense.currency_id, eur_currency)
         self.assertEqual(str(self.expense.date), ext_result['date']['selected_value']['content'])
-        self.assertEqual(self.expense.name, self.expense.predicted_category, ext_result['description']['selected_value']['content'])
         self.assertEqual(self.expense.product_id, self.product_c)
 
     def test_no_send_for_digitization(self):
@@ -188,26 +189,23 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
             extract_response=self.validate_success_response(),
             assert_params=expected_validation_params,
         ):
-            self.expense.action_submit_expenses()
+            self.expense.action_submit()
 
         self.assertEqual(self.expense.extract_state, 'done')
 
     def test_no_digitisation_for_posted_entries(self):
         # Tests that if a move is created from an expense, it is not digitised again.
         self.env.company.expense_extract_show_ocr_option_selection = 'auto_send'
-
         self.expense.message_post(attachment_ids=[self.attachment.id])
 
-        expense_sheet = self.env['hr.expense.sheet'].create({
-            'name': self.expense.name,
-            'employee_id': self.expense.employee_id.id,
-            'expense_line_ids': self.expense.ids,
-        })
-        expense_sheet.action_submit_sheet()
-        expense_sheet.action_approve_expense_sheets()
-        expense_sheet.action_sheet_move_post()
+        # We need to set a value, because if it is zero it would trigger non-zero constraints
+        self.expense.total_amount_currency = 1
 
-        move = expense_sheet.account_move_ids
+        self.expense.action_submit()
+        self.expense.action_approve()
+        self.post_expenses_with_wizard(self.expense)
+
+        move = self.expense.account_move_id
         self.assertFalse(move._needs_auto_extract())
 
     def test_no_change_in_price_unit_with_expense_no_extract(self):
@@ -245,7 +243,7 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
                 'company_id': self.env.company.id,
             })
         ocr_results = self.get_result_success_response()['results'][0]
-        self.expense.name = ""
+        self.expense.message_post(attachment_ids=[self.attachment.id])
         self.expense._fill_document_with_results(ocr_results=ocr_results)
 
         self.assertEqual(self.expense.total_amount, 33.33)
@@ -253,12 +251,12 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
     def test_extract_multi_currencies_with_several_possible_currencies(self):
         """Test that the extraction does not crash"""
         ocr_results = {
-                'description': {'selected_value': {'content': 'food', 'candidates': []}},
+                'description': {'selected_value': {'content': 'Pizzeria', 'candidates': []}},
                 'total': {'selected_value': {'content': 99.99, 'candidates': []}},
                 'date': {'selected_value': {'content': '2022-02-22', 'candidates': []}},
                 'currency': {'selected_value': {'content': '$', 'candidates': []}},
             }
-        self.expense.name = ""
+        self.expense.message_post(attachment_ids=[self.attachment.id])
         self.expense._fill_document_with_results(ocr_results=ocr_results)
 
         self.assertTrue(self.expense.currency_id)
@@ -266,12 +264,12 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
     def test_extract_without_possible_currencies(self):
         """Test that the extraction does not crash"""
         ocr_results = {
-                'description': {'selected_value': {'content': 'food', 'candidates': []}},
+                'description': {'selected_value': {'content': 'Pizzeria', 'candidates': []}},
                 'total': {'selected_value': {'content': 99.99, 'candidates': []}},
                 'date': {'selected_value': {'content': '2022-02-22', 'candidates': []}},
                 'currency': {'selected_value': {'content': 'undefined', 'candidates': []}},
             }
-        self.expense.name = ""
+        self.expense.message_post(attachment_ids=[self.attachment.id])
         self.expense._fill_document_with_results(ocr_results=ocr_results)
 
         self.assertTrue(self.expense.currency_id)
@@ -279,7 +277,7 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
     def test_extract_no_total(self):
         ocr_results = self.get_result_success_response()['results'][0]
         del ocr_results['total']
-        self.expense.name = ""
+        self.expense.message_post(attachment_ids=[self.attachment.id])
         self.expense._fill_document_with_results(ocr_results=ocr_results)
 
         self.assertAlmostEqual(self.expense.total_amount_currency, 0, 2)
@@ -297,7 +295,7 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
 
         ocr_results = self.get_result_success_response()['results'][0]
         del ocr_results['currency']
-        self.expense.name = ""
+        self.expense.message_post(attachment_ids=[self.attachment.id])
         self.expense._fill_document_with_results(ocr_results=ocr_results)
 
         self.assertAlmostEqual(self.expense.total_amount_currency, 99.99, 2)
@@ -316,7 +314,7 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
 
         ocr_results = self.get_result_success_response()['results'][0]
         del ocr_results['date']
-        self.expense.name = ""
+        self.expense.message_post(attachment_ids=[self.attachment.id])
         self.expense.date = None
         self.expense._fill_document_with_results(ocr_results=ocr_results)
 
@@ -335,11 +333,12 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
         with self._mock_iap_extract(extract_response=self.parse_success_response()):
             self.env['hr.expense'].create_expense_from_attachments(attachment.ids)
 
+        self.env.cr.precommit.clear()  # Clear the tracking values
         expense = self.env['hr.expense'].search([('attachment_ids', '=', attachment.id)]).ensure_one()
         with self._mock_iap_extract(extract_response=self.get_result_success_response()):
             expense.check_all_status()
 
-        self.env.cr.flush()
+        self.env.cr.flush()  # Runs the precommit hooks to create the tracking message
         message = self.env['mail.message'].search([
             ('model', '=', 'hr.expense'),
             ('res_id', '=', expense.id),
@@ -347,3 +346,15 @@ class TestExpenseExtractProcess(TestExpenseCommon, TestExtractMixin):
         ]).ensure_one()
         author_name = message.author_id.complete_name
         self.assertEqual(author_name, 'OdooBot')
+
+    def test_action_create_sample_expense(self):
+        receipt_values = {
+            'name': 'Test Receipt',
+            'amount': 2000,
+            'date': datetime.date(2025, 3, 10)
+        }
+
+        self.env['expense.sample.receipt']._action_create_expense(receipt_values)
+        expense = self.env['hr.expense'].search([('name', '=', f"Sample Receipt: {receipt_values['name']}")], limit=1)
+        self.assertTrue(expense)
+        self.assertEqual(expense.total_amount, receipt_values['amount'])

@@ -1,49 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates>
     <t t-name="documents.PermissionPanel">
-        <Dialog size="'md'" title="panelTitle">
+        <Dialog size="'md'" title="panelTitle" contentClass="state.hidden ? 'd-none': ''">
             <t t-set-slot="footer">
-                <button t-if="state.mainPage" type="button" class="btn btn-primary"
-                    t-on-click="onShare" t-att-disabled="state.loading">
-                        <span t-if="pendingSave">Save</span>
-                        <t t-elif="state.loading"><span class="spinner-border spinner-border-sm"/> Saving...</t>
-                        <span t-elif="state.access.user_permission === 'edit'">Done</span>
-                        <span t-else="">Close</span>
-                </button>
-                <div t-if="!state.mainPage" id="o_document_member_invite_share_btn"/>
-                <CopyButton
-                    className="'btn-secondary text-truncate'"
-                    copyText="copyText"
-                    content="state.access.access_url"
-                    disabled="pendingSave || !state.access.active"
-                    icon="'d-none'"
-                    successText.translate="Link copied to the clipboard."/>
-                <button t-if="state.mainPage" type="button" t-attf-class="btn {{pendingSave ? '' : 'invisible'}}"
-                    t-on-click="onDiscard" t-att-disabled="state.loading" title="Revert changes">
-                    <i class="fa fa-undo"/>
-                </button>
-                <div t-if="!state.mainPage" id="o_document_member_invite_discard_btn"/>
+                <div class="d-flex justify-content-between w-100">
+                    <div class="d-flex gap-1">
+                        <button t-if="state.mainPage" type="button" class="btn btn-primary"
+                            t-on-click="onShare" t-att-disabled="state.loading">
+                                <span t-if="pendingSave">Save</span>
+                                <t t-elif="state.loading"><span class="spinner-border spinner-border-sm"/> Saving...</t>
+                                <span t-elif="state.access.user_permission === 'edit'">Done</span>
+                                <span t-else="">Close</span>
+                        </button>
+                        <div t-if="!state.mainPage" id="o_document_member_invite_share_btn"/>
+                        <CopyButton
+                            className="'btn-secondary text-truncate'"
+                            copyText="copyText"
+                            content="state.access.access_url"
+                            disabled="pendingSave || !state.access.active"
+                            icon="'d-none'"
+                            successText.translate="Link copied to the clipboard."/>
+                        <button t-if="state.mainPage" type="button" t-attf-class="btn {{pendingSave ? '' : 'invisible'}}"
+                            t-on-click="onDiscard" t-att-disabled="state.loading" title="Revert changes">
+                            <i class="fa fa-undo"/>
+                        </button>
+                        <div t-if="!state.mainPage" id="o_document_member_invite_discard_btn"/>
+                    </div>
+                </div>
             </t>
-            <div t-if="state.mainPage and warningMessage"
+            <div t-if="anyMembersWithoutAccess or membersAccessExtended"
                 class="alert alert-warning py-1 mb-1"
-                role="alert"
-                t-out="warningMessage"/>
-            <section t-if="state.access.user_permission ==='edit' and state.access.active" t-att-class="{ 'mb-3' : state.mainPage }" class="o_documents_permission_panel_member_invite">
-                <DocumentsMemberInvite
-                    access="state.access"
-                    accessPartners="state.access.access_ids"
-                    autoSave.bind="save"
-                    close.bind="close"
-                    disabled="state.loading"
-                    invitePage="!state.mainPage"
-                    pendingSave="pendingSave"
-                    roles="state.selections.doc_access_roles"
-                    selectedPartnersRole="selectedPartnersRole"
-                    showMainPage.bind="showMainPage"
-                    updateAccessRights.bind="updateAccessRights"/>
-            </section>
+                role="alert">
+                <t t-if="membersAccessExtended">
+                    All users with access to this <t t-out="state.access.type === 'folder' and 'folder' or 'document'"/> or its parent will have edit permissions.
+                </t>
+                <t t-else="">
+                    You've added external users, but external sharing is disabled.
+                    <a class="btn-link cursor-pointer" t-on-click="allowAccessViaLink">Enable access</a>
+                </t>
+            </div>
             <t t-if="state.mainPage">
-                <section class="o_documents_permission_panel_access_partners mb-3">
+                <div t-if="state.access.user_permission === 'edit' and state.access.active"
+                    class="d-flex align-items-center px-3 py-1 position-relative mb-3">
+                    <i class="fa fa-w fa-user-plus col-form-label ps-1 pe-4 fs-4"/>
+                    <div class="w-auto rounded-2 overflow-hidden flex-grow-1">
+                        <Many2XAutocomplete
+                            activeActions="{ create: true, createEdit: true, link: true, quickCreate: true }"
+                            context="{ force_email: true, form_view_ref: 'base.view_partner_simple_form', show_email: true }"
+                            fieldString.translate="Invite People"
+                            getDomain.bind="getInviteMembersDomain"
+                            placeholder.translate="Add people or email addresses..."
+                            quickCreate.bind="onInviteMemberQuickCreate"
+                            resModel="'res.partner'"
+                            update.bind="onInviteMembersSelected"/>
+                    </div>
+                </div>
+                <section class="o_documents_permission_panel_access_partners">
                     <DocumentsPartnerAccess
                         access="state.access"
                         accessPartners="state.access.access_ids"

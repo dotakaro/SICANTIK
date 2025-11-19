@@ -45,8 +45,7 @@ class SaleOrder(models.Model):
         default='draft',
     )
 
-    _sql_constraints = [(
-        'unique_shopee_order_ref_shopee_shop_id',
+    _unique_shopee_order_ref_shopee_shop_id = models.Constraint(
         'UNIQUE(shopee_order_ref, shopee_shop_id)',
         "There can only exist one sale order for a given Shopee Order Reference per Shop.",
-    )]
+    )

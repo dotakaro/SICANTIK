@@ -1,35 +1,31 @@
-/** @odoo-module **/
-
-import { _t } from "@web/core/l10n/translation";
-import { ListRenderer } from "@web/views/list/list_renderer";
-
-import { useService } from "@web/core/utils/hooks";
+import { useCommand } from "@web/core/commands/command_hook";
+import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
 import { FileUploadProgressContainer } from "@web/core/file_upload/file_upload_progress_container";
 import { FileUploadProgressDataRow } from "@web/core/file_upload/file_upload_progress_record";
-import { DocumentsDropZone } from "../helper/documents_drop_zone";
-import { DocumentsActionHelper } from "../helper/documents_action_helper";
-import { DocumentsFileViewer } from "../helper/documents_file_viewer";
+import { _t } from "@web/core/l10n/translation";
+import { useService } from "@web/core/utils/hooks";
+import { ListRenderer } from "@web/views/list/list_renderer";
+
+import { DocumentsRightPanel } from "@documents/components/documents_right_panel/documents_right_panel";
+import { DocumentsActionHelper } from "@documents/views/helper/documents_action_helper";
+import { useDraggableDocuments } from "@documents/views/helper/documents_draggable";
+import { DocumentsDropZone } from "@documents/views/helper/documents_drop_zone";
+import { DocumentsFileViewer } from "@documents/views/helper/documents_file_viewer";
 import { DocumentsRendererMixin } from "@documents/views/documents_renderer_mixin";
-import { DocumentsListRendererCheckBox } from "./documents_list_renderer_checkbox";
-import { DocumentsDetailsPanel } from "@documents/components/documents_details_panel/documents_details_panel";
-import { useCommand } from "@web/core/commands/command_hook";
-import { useRef } from "@odoo/owl";
-import { getActiveHotkey } from "@web/core/hotkeys/hotkey_service";
-import { Chatter } from "@mail/chatter/web_portal/chatter";
+
+import { useExternalListener, useRef } from "@odoo/owl";
 
 export class DocumentsListRenderer extends DocumentsRendererMixin(ListRenderer) {
     static props = [...ListRenderer.props, "previewStore"];
     static template = "documents.DocumentsListRenderer";
     static recordRowTemplate = "documents.DocumentsListRenderer.RecordRow";
     static components = Object.assign({}, ListRenderer.components, {
-        DocumentsListRendererCheckBox,
         FileUploadProgressContainer,
         FileUploadProgressDataRow,
         DocumentsDropZone,
         DocumentsActionHelper,
         DocumentsFileViewer,
-        DocumentsDetailsPanel,
-        Chatter,
+        DocumentsRightPanel,
     });
 
     setup() {
@@ -46,12 +42,39 @@ export class DocumentsListRenderer extends DocumentsRendererMixin(ListRenderer) 
                 this.props.list.records.forEach((record) => {
                     record.toggleSelection(!allSelected);
                 });
+                const focusedRecord = this.setDefaultFocus();
+                document.querySelector(`.o_data_row[data-value-id="${focusedRecord.resId}"] .o_data_cell`).focus();
             },
             {
                 category: "smart_action",
                 hotkey: "control+a",
             }
         );
+
+        useDraggableDocuments({
+            ref: this.root,
+            model: this.env.model,
+            targetSelector: ".o_data_row.o_folder_record",
+            elements: ".o_data_row",
+            preventDrag: () => this.env.searchModel.getSelectedFolderId() === "TRASH",
+            onTargetPointerEnter: ({ addClass, target, isInvalid }) => {
+                addClass(target, isInvalid ? "table-danger" : "table-success");
+            },
+            onTargetPointerLeave: ({ removeClass, target }) => {
+                removeClass(target, "table-danger", "table-success");
+            },
+        });
+
+        useExternalListener(window, "keydown", (ev) => this.onKeyDown(ev));
+        useExternalListener(window, "keyup", (ev) => this.onKeyUp(ev));
+    }
+
+    getRowClass(record) {
+        let classes = super.getRowClass(record);
+        if (record.data.type === "folder") {
+            classes += " o_folder_record";
+        }
+        return classes;
     }
 
     getDocumentsAttachmentViewerProps() {
@@ -62,7 +85,7 @@ export class DocumentsListRenderer extends DocumentsRendererMixin(ListRenderer) 
      * Called when a keydown event is triggered.
      */
     onGlobalKeydown(ev) {
-        if (ev.key !== "Enter" && ev.key !== " " || this.editedRecord) {
+        if ((ev.key !== "Enter" && ev.key !== " ") || this.editedRecord) {
             return;
         }
         const row = ev.target.closest(".o_data_row");
@@ -78,6 +101,18 @@ export class DocumentsListRenderer extends DocumentsRendererMixin(ListRenderer) 
         this.toggleRecordSelection(record);
     }
 
+    onKeyDown(ev) {
+        if (ev.key === "Control") {
+            this.root.el.classList.add("o_documents_dnd_shortcut");
+        }
+    }
+
+    onKeyUp(ev) {
+        if (ev.key === "Control") {
+            this.root.el.classList.remove("o_documents_dnd_shortcut");
+        }
+    }
+
     /**
      * Upon clicking on a record, opens the folder/preview the file.
      * If ctrl or shift key pressed, selects/unselects the record.
@@ -86,15 +121,22 @@ export class DocumentsListRenderer extends DocumentsRendererMixin(ListRenderer) 
      */
     onCellClicked(record, column, ev) {
         ev.stopPropagation();
-        const isSelectionKeyPressed = ev.ctrlKey || ev.metaKey || ev.shiftKey;
-        if (isSelectionKeyPressed) {
-            this.toggleRecordSelection(record);
-        } else if (record.selected && this.editableColumns.includes(column.name)) {
-            return super.onCellClicked(...arguments);
-        } else if (record.data.type !== "folder") {
-            return record.onClickPreview(ev);
-        } else {
-            record.openFolder();
+        const isIcon = ev.target.closest(".o_field_documents_type_icon");
+        if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) {
+            this.toggleRecordSelection(record, ev);
+            return;
+        }
+        if (isIcon) {
+            if (record.data.type === "folder") {
+                record.openFolder();
+            } else {
+                record.onClickPreview(ev);
+            }
+            return;
+        }
+        this.documentService.focusRecord(record);
+        if (record.selected && this.editableColumns.includes(column.name)) {
+            super.onCellClicked(...arguments);
         }
     }
 
@@ -114,6 +156,7 @@ export class DocumentsListRenderer extends DocumentsRendererMixin(ListRenderer) 
         if (ev.target.closest(".o_documents_view thead")) {
             return; // We then have to check that we are not clicking on the header
         }
+        this.documentService.focusRecord(this.getContainerRecord());
         this.props.list.selection.forEach((el) => el.toggleSelection(false));
     }
 
@@ -122,6 +165,21 @@ export class DocumentsListRenderer extends DocumentsRendererMixin(ListRenderer) 
             count: this.props.list.model.useSampleModel ? 0 : this.props.list.count,
             fileSize: this.props.list.model.fileSize,
         };
+    }
+
+    /**
+     * @override to update focusedRecord when navigating with arrow keys
+     */
+    findFocusFutureCell(cell, cellIsInGroupRow, direction) {
+        const futureCell = super.findFocusFutureCell(cell, cellIsInGroupRow, direction);
+        if (futureCell) {
+            const dataPointId = futureCell.closest("tr").dataset.id;
+            const record = this.props.list.records.filter((x) => x.id === dataPointId)[0];
+            if (record) {
+                this.documentService.focusRecord(record);
+            }
+        }
+        return futureCell;
     }
 
     onCellKeydown(ev, group = null, record = null) {
@@ -140,60 +198,18 @@ export class DocumentsListRenderer extends DocumentsRendererMixin(ListRenderer) 
         return this.env.isSmall;
     }
 
-    onDragEnter(ev) {
-        const row = ev.target.closest(".o_data_row");
-        const record = row && this.props.list.records.find((rec) => rec.id === row.dataset.id);
-        if (record.data.type !== "folder") {
-            return;
+    toggleRecordSelection(record) {
+        const isSelection = record && !record.selected;
+        super.toggleRecordSelection(record);
+        if (isSelection) {
+            this.documentService.focusRecord(record, true);
         }
-        if (record.selected) {
-            row.classList.remove("table-info");
-        }
-        const isInvalidFolder = this.props.list.selection
-            .map((r) => r.data.id)
-            .includes(record.data.id);
-        row.classList.add(isInvalidFolder ? "table-danger" : "table-success");
     }
 
-    onDragLeave(ev) {
-        const row = ev.target.closest(".o_data_row");
-        // we do this since the dragleave event is fired when hovering a child
-        const elemBounding = row.getBoundingClientRect();
-        const isOutside =
-            ev.clientX < elemBounding.left ||
-            ev.clientX > elemBounding.right ||
-            ev.clientY < elemBounding.top ||
-            ev.clientY > elemBounding.bottom;
-        if (!isOutside) {
-            return;
+    toggleSelection() {
+        super.toggleSelection();
+        if (this.canSelectRecord) {
+            this.setDefaultFocus();
         }
-        const record = row && this.props.list.records.find((rec) => rec.id === row.dataset.id);
-        if (record.data.type !== "folder") {
-            return;
-        }
-        if (record.selected) {
-            row.classList.add("table-info");
-        }
-        row.classList.remove("table-success", "table-danger");
-    }
-
-    onDragOver(ev) {
-        const row = ev.target.closest(".o_data_row");
-        const record = row && this.props.list.records.find((rec) => rec.id === row.dataset.id);
-        const isInvalidTarget =
-            record.data.type !== "folder" ||
-            this.props.list.selection.map((r) => r.data.id).includes(record.data.id);
-        const dropEffect = isInvalidTarget ? "none" : ev.ctrlKey ? "link" : "move";
-        ev.dataTransfer.dropEffect = dropEffect;
-    }
-
-    onDrop(ev) {
-        const row = ev.target.closest(".o_data_row");
-        const record = row && this.props.list.records.find((rec) => rec.id === row.dataset.id);
-        if (record.data.type !== "folder") {
-            return;
-        }
-        row.classList.remove("table-success", "table-danger");
-        record.onDrop(ev);
     }
 }

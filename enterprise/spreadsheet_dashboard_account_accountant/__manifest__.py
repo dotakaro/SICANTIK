@@ -3,14 +3,15 @@
 {
     'name': "Spreadsheet dashboard for accounting",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Productivity/Dashboard',
     'summary': 'Spreadsheet',
     'description': 'Spreadsheet',
-    'depends': ['spreadsheet_dashboard', 'account_reports'],
+    'depends': ['spreadsheet_dashboard', 'accountant'],
     'data': [
         "data/dashboards.xml",
     ],
     'installable': True,
-    'auto_install': ['account_reports'],
+    'auto_install': ['accountant'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

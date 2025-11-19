@@ -1,6 +1,7 @@
 from odoo import api, models
 
-class GreenSavingsReport(models.AbstractModel):
+
+class ReportSignGreen_Savings_Report(models.AbstractModel):
     _name = 'report.sign.green_savings_report'
     _description = 'Green Savings Report model'
 
@@ -49,6 +50,6 @@ class GreenSavingsReport(models.AbstractModel):
         signers = sign_request.request_item_ids.partner_id
         if sign_request.state == 'sent':
             # if sign request is sent, followers didn't receive the request yet. So we only account for signers
-            return sign_request.template_id.num_pages * len(signers)
+            return sum(doc.num_pages for doc in sign_request.template_id.document_ids) * len(signers)
         # else we count cc_partners and signers
-        return sign_request.template_id.num_pages * (len(sign_request.cc_partner_ids) + len(signers))
+        return sum(doc.num_pages for doc in sign_request.template_id.document_ids) * (len(sign_request.cc_partner_ids) + len(signers))

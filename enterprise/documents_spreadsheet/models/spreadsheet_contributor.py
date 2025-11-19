@@ -4,7 +4,7 @@ from odoo import fields, models, api
 
 
 class SpreadsheetContributor(models.Model):
-    _name = "spreadsheet.contributor"
+    _name = 'spreadsheet.contributor'
     _description = "Spreadsheet Contributor"
     _rec_name = 'user_id'
 
@@ -12,13 +12,10 @@ class SpreadsheetContributor(models.Model):
     user_id = fields.Many2one("res.users")
     last_update_date = fields.Datetime("Last update date", default=fields.Datetime.now)
 
-    _sql_constraints = [
-        (
-            "spreadsheet_user_unique",
-            "unique (document_id, user_id)",
-            "A combination of the spreadsheet and the user already exist",
-        ),
-    ]
+    _spreadsheet_user_unique = models.Constraint(
+        'unique (document_id, user_id)',
+        "A combination of the spreadsheet and the user already exist",
+    )
 
     @api.model
     def _update(self, user, document):

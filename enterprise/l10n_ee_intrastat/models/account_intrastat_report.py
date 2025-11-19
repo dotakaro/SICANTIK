@@ -1,18 +1,17 @@
 import copy
 import io
 import zipfile
-
 from datetime import datetime
+
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, models, fields, api
 from odoo.exceptions import UserError
 from odoo.tools import SQL
-from odoo.tools.misc import xlsxwriter
 
 
-class IntrastatReportCustomHandler(models.AbstractModel):
-    _inherit = 'account.intrastat.report.handler'
+class IntrastatReportGoodsCustomHandler(models.AbstractModel):
+    _inherit = 'account.intrastat.goods.report.handler'
 
     def _custom_options_initializer(self, report, options, previous_options):
         super()._custom_options_initializer(report, options, previous_options)
@@ -174,6 +173,7 @@ class IntrastatReportCustomHandler(models.AbstractModel):
 
     @api.model
     def _ee_generate_xlsx_report(self, options):
+        import xlsxwriter  # noqa: PLC0415
         with io.BytesIO() as output:
             with xlsxwriter.Workbook(output, {
                 'in_memory': True,

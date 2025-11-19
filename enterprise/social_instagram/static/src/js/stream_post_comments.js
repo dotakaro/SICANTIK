@@ -1,5 +1,3 @@
-/** @odoo-module **/
-
 import { rpc } from "@web/core/network/rpc";
 import { StreamPostComments } from '@social/js/stream_post_comments';
 import { StreamPostCommentListInstagram } from './stream_post_comment_list';
@@ -48,4 +46,7 @@ export class StreamPostCommentsInstagram extends StreamPostComments {
         return StreamPostCommentsReplyInstagram;
     }
 
+    get commentsDisabled() {
+        return this.props.commentsDisabled;
+    }
 }

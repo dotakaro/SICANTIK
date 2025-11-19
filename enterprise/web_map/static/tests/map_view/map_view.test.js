@@ -529,10 +529,7 @@ describe("map_view_desktop", () => {
         Task._records = TEST_RECORDS.task.oneRecord;
         Partner._records = TEST_RECORDS.partner.noCoordinatesGoodAddress;
 
-        onRpc("/web/dataset/call_kw/res.partner/update_latitude_longitude", async (request) => {
-            const {
-                params: { args },
-            } = await request.json();
+        onRpc("res.partner", "update_latitude_longitude", ({ args }) => {
             expect(args[0]).toHaveLength(1, {
                 message: "There should be one record needing caching",
             });
@@ -567,10 +564,7 @@ describe("map_view_desktop", () => {
 
         Task._records = TEST_RECORDS.task.oneRecord;
         Partner._records = TEST_RECORDS.partner.noCoordinatesGoodAddress;
-        onRpc("/web/dataset/call_kw/res.partner/update_latitude_longitude", async (request) => {
-            const {
-                params: { args },
-            } = await request.json();
+        onRpc("res.partner", "update_latitude_longitude", ({ args }) => {
             expect(args[0]).toHaveLength(1, {
                 message: "There should be one record needing caching",
             });
@@ -738,10 +732,7 @@ describe("map_view_desktop", () => {
 
         Task._records = TEST_RECORDS.task.twoRecords;
         Partner._records = TEST_RECORDS.partner.twoRecordsAddressNoCoordinates;
-        onRpc("/web/dataset/call_kw/res.partner/update_latitude_longitude", async (request) => {
-            const {
-                params: { args },
-            } = await request.json();
+        onRpc("res.partner", "update_latitude_longitude", ({ args }) => {
             expect(args[0]).toHaveLength(2, {
                 message: "Should have 2 record needing caching",
             });
@@ -910,8 +901,8 @@ describe("map_view_desktop", () => {
 
         expect("a.btn.btn-primary").toHaveAttribute(
             "href",
-            "https://www.google.com/maps/dir/?api=1&waypoints=10,10.5",
-            { message: "The link's URL should contain the right sets of coordinates" }
+            "https://www.google.com/maps/dir/?api=1&waypoints=Chauss%C3%A9e%20de%20Louvain%2094%2C%205310%20%C3%89ghez%C3%A9e|Chauss%C3%A9e%20de%20Namur%2040%2C%201367%2C%20Ramillies",
+            { message: "The link's URL should contain the address" }
         );
 
         await contains(".leaflet-marker-icon").click();
@@ -934,8 +925,8 @@ describe("map_view_desktop", () => {
 
         expect("a.btn.btn-primary").toHaveAttribute(
             "href",
-            "https://www.google.com/maps/dir/?api=1&destination=10,10.5",
-            { message: "The link's URL should contain the right sets of coordinates" }
+            "https://www.google.com/maps/dir/?api=1&destination=Chauss%C3%A9e%20de%20Namur%2040%2C%201367%2C%20Ramillies&waypoints=Chauss%C3%A9e%20de%20Louvain%2094%2C%205310%20%C3%89ghez%C3%A9e",
+            { message: "The link's URL should contain the address" }
         );
 
         await contains(".leaflet-marker-icon").click();
@@ -959,8 +950,8 @@ describe("map_view_desktop", () => {
         });
         expect("a.btn.btn-primary").toHaveAttribute(
             "href",
-            "https://www.google.com/maps/dir/?api=1&waypoints=10.5,10",
-            { message: "The link's URL should contain unqiue sets of coordinates" }
+            "https://www.google.com/maps/dir/?api=1&waypoints=Chauss%C3%A9e%20de%20Louvain%2094%2C%205310%20%C3%89ghez%C3%A9e",
+            { message: "The link's URL should contain the address" }
         );
         await contains(".leaflet-marker-icon").click();
         expect("div.leaflet-popup a.btn.btn-primary").toHaveAttribute(
@@ -1221,9 +1212,10 @@ describe("map_view_desktop", () => {
             },
         });
 
-        onRpc("/web/dataset/resequence", async (request) => {
-            const { params: args } = await request.json();
-            expect.step(`resequence ${args.model} ${args.field} ${args.offset} ${args.ids}`);
+        onRpc("web_resequence", ({ model, args, kwargs }) => {
+            const [ids] = args;
+            const { field_name: fieldName, offset } = kwargs;
+            expect.step(`resequence ${model} ${fieldName} ${offset} ${ids}`);
             resequenceCalled = true;
         });
         const view = await mountView({
@@ -1239,7 +1231,7 @@ describe("map_view_desktop", () => {
         expect(controller.model.metaData.allowResequence).toBe(true, {
             message: "The resequence option should be activated",
         });
-        expect(controller.model.metaData.defaultOrder.name).toBe("sequence");
+        expect(controller.model.metaData.defaultOrder[0].name).toBe("sequence");
 
         expect(".o_row_handle").toHaveCount(5, {
             message: "Should have one row handle per record",
@@ -1269,6 +1261,61 @@ describe("map_view_desktop", () => {
         expect.verifySteps(["resequence project.task sequence 4 3,4,2", "API called 1,3,4,2,5"]);
     });
 
+    test("Resequence records, multiple default order fields", async () => {
+        const taskRecords = [
+            {
+                id: 1,
+                name: "Project 1",
+                sequence: 3,
+                partner_id: 1,
+            },
+            {
+                id: 2,
+                name: "Project 2",
+                sequence: 3,
+                partner_id: 1,
+            },
+        ];
+        Task._records = taskRecords;
+        const defer = new Deferred();
+        onRpc("web_resequence", async ({ model, args, kwargs }) => {
+            const [ids] = args;
+            const { field_name: fieldName, offset } = kwargs;
+            await defer;
+            expect.step(`resequence ${model} ${fieldName} ${offset} ${ids}`);
+        });
+        await mountView({
+            type: "map",
+            resModel: "project.task",
+            arch: `
+                <map res_partner="partner_id" routing="1" default_order="sequence, id" allow_resequence="true">
+                    <field name="sequence"/>
+                    <field name="id"/>
+                </map>
+            `,
+        });
+
+        expect(queryAllTexts(".o-map-renderer--pin-list-details li")).toEqual([
+            "1. Project 1",
+            "2. Project 2",
+        ]);
+
+        await contains(".o-map-renderer--pin-located:nth-child(1) .o_row_handle").dragAndDrop(
+            ".o-map-renderer--pin-located:nth-child(2) .o_row_handle"
+        );
+        await animationFrame();
+
+        // Model got notified before the backend resequence call
+        expect(queryAllTexts(".o-map-renderer--pin-list-details li")).toEqual([
+            "1. Project 2",
+            "2. Project 1",
+        ]);
+
+        defer.resolve();
+        await animationFrame();
+        expect.verifySteps(["resequence project.task sequence 3 2,1"]);
+    });
+
     test("When resequencing, model get notified before the backend call", async () => {
         const taskRecords = [
             {
@@ -1286,10 +1333,11 @@ describe("map_view_desktop", () => {
         ];
         Task._records = taskRecords;
         const defer = new Deferred();
-        onRpc("/web/dataset/resequence", async (request) => {
-            const { params: args } = await request.json();
+        onRpc("web_resequence", async ({ model, args, kwargs }) => {
+            const [ids] = args;
+            const { field_name: fieldName, offset } = kwargs;
             await defer;
-            expect.step(`resequence ${args.model} ${args.field} ${args.offset} ${args.ids}`);
+            expect.step(`resequence ${model} ${fieldName} ${offset} ${ids}`);
         });
         await mountView({
             type: "map",
@@ -1718,12 +1766,17 @@ describe("map_view_desktop", () => {
     test("Pager", async () => {
         patchWithCleanup(session, { map_box_token: MAP_BOX_TOKEN });
 
-        Task._records = Array.from({ length: 101 }, (_, index) => {
-            return { id: index + 1, name: "project", partner_id: index + 1 };
-        });
-        Partner._records = Array.from({ length: 101 }, (_, index) => {
-            return { id: index + 1, name: "Foo", partner_latitude: 10.0, partner_longitude: 10.5 };
-        });
+        Task._records = Array.from({ length: 101 }, (_, index) => ({
+            id: index + 1,
+            name: "project",
+            partner_id: index + 1,
+        }));
+        Partner._records = Array.from({ length: 101 }, (_, index) => ({
+            id: index + 1,
+            name: "Foo",
+            partner_latitude: 10.0,
+            partner_longitude: 10.5,
+        }));
 
         await mountView({
             type: "map",
@@ -2101,6 +2154,37 @@ describe("map_view_desktop", () => {
         expect.verifySteps(["switchView"]);
     });
 
+    test("Middle click on open button open record in tab", async () => {
+        mockService("action", {
+            switchView(name, props, options) {
+                expect.step("switchView");
+                expect(name).toBe("form", { message: "The view switched to should be form" });
+                expect(props).toEqual({ resId: 1 }, { message: "Props should be correct" });
+                expect(options).toEqual({ newWindow: true });
+            },
+        });
+        Task._views.form = "<form/>";
+
+        Task._records = TEST_RECORDS.task.oneRecord;
+        Partner._records = TEST_RECORDS.partner.oneLocatedRecord;
+
+        await mountView({
+            config: { views: [[false, "form"]] },
+            type: "map",
+            resModel: "project.task",
+            arch: `<map res_partner="partner_id" routing="1" />`,
+        });
+
+        await contains("div.leaflet-marker-icon").click();
+        expect(
+            "div.leaflet-popup-pane button.btn.btn-primary.o-map-renderer--popup-buttons-open"
+        ).toHaveCount(1, { message: "The button should be present in the dom" });
+        await contains(
+            "div.leaflet-popup-pane button.btn.btn-primary.o-map-renderer--popup-buttons-open"
+        ).click({ ctrlKey: true });
+        expect.verifySteps(["switchView"]);
+    });
+
     test("Test the lack of open button", async () => {
         Task._records = TEST_RECORDS.task.oneRecord;
         Partner._records = TEST_RECORDS.partner.oneLocatedRecord;
@@ -2168,8 +2252,8 @@ describe("map_view_desktop", () => {
 
         expect("a.btn.btn-primary").toHaveAttribute(
             "href",
-            "https://www.google.com/maps/dir/?api=1&waypoints=10,10.5|11,11.5",
-            { message: "The link's URL initially should contain the coordinates for all records" }
+            "https://www.google.com/maps/dir/?api=1&waypoints=Chauss%C3%A9e%20de%20Namur%2040%2C%201367%2C%20Ramillies|Chauss%C3%A9e%20de%20Wavre%2050%2C%201367%2C%20Ramillies",
+            { message: "The link's URL initially should contain the addresses for all records" }
         );
 
         //apply domain and check that the Google Maps URL on the button reflects the changes
@@ -2177,10 +2261,10 @@ describe("map_view_desktop", () => {
         await toggleMenuItem("FooProject only");
         expect("a.btn.btn-primary").toHaveAttribute(
             "href",
-            "https://www.google.com/maps/dir/?api=1&waypoints=10,10.5",
+            "https://www.google.com/maps/dir/?api=1&waypoints=Chauss%C3%A9e%20de%20Namur%2040%2C%201367%2C%20Ramillies",
             {
                 message:
-                    "The link's URL after domain is applied should only contain coordinates for filtered records",
+                    "The link's URL after domain is applied should only contain addresses for filtered records",
             }
         );
     });
@@ -2199,8 +2283,8 @@ describe("map_view_desktop", () => {
 
         expect("a.btn.btn-primary").toHaveAttribute(
             "href",
-            "https://www.google.com/maps/dir/?api=1&destination=11,11.5&waypoints=10,10.5",
-            { message: "The link's URL initially should contain the coordinates for all records" }
+            "https://www.google.com/maps/dir/?api=1&destination=Chauss%C3%A9e%20de%20Wavre%2050%2C%201367%2C%20Ramillies&waypoints=Chauss%C3%A9e%20de%20Namur%2040%2C%201367%2C%20Ramillies",
+            { message: "The link's URL initially should contain the addresses for all records" }
         );
     });
 
@@ -2264,9 +2348,11 @@ describe("map_view_desktop", () => {
         Task._records = [
             { id: 1, name: "Project", sequence: 1, partner_id: 1, task_status: "abc" },
         ];
-        onRpc("res.partner", "search_read", () => {
-            return TEST_RECORDS.partner.twoRecordsAddressCoordinates;
-        });
+        onRpc(
+            "res.partner",
+            "search_read",
+            () => TEST_RECORDS.partner.twoRecordsAddressCoordinates
+        );
 
         await mountView({
             type: "map",
@@ -2275,6 +2361,70 @@ describe("map_view_desktop", () => {
             groupBy: ["task_status"],
         });
         expect(".o-map-renderer--pin-list-group-header").toHaveCount(1, { message: "ABC" });
+    });
+
+    test("display '0' for false group, when grouped by int field", async () => {
+        await mountView({
+            type: "map",
+            resModel: "project.task",
+            arch: `<map res_partner="partner_id" routing="1" />`,
+            searchViewId: false,
+            groupBy: ["sequence"],
+        });
+
+        expect(".o-map-renderer--pin-list-group-header").toHaveText("0");
+    });
+
+    test("Map view with default_group_by", async () => {
+        Task._records = TEST_RECORDS.task.threeRecords;
+        Partner._records = TEST_RECORDS.partner.twoRecordsAddressCoordinates;
+        await mountView({
+            type: "map",
+            resModel: "project.task",
+            arch: `<map default_group_by="partner_id" res_partner="partner_id" />`,
+        });
+        expect(".o-map-renderer--pin-list-group-header").toHaveCount(2, {
+            message: "Should have 2 groups",
+        });
+        expect(queryAllTexts(".o-map-renderer--pin-list-group-header")).toEqual(["Bar", "Foo"]);
+        expect(".o-map-renderer--pin-list-details").toHaveCount(2);
+        expect(".o-map-renderer--pin-list-details li").toHaveCount(3);
+        expect(queryAllTexts(".o-map-renderer--pin-list-details")).toEqual([
+            "FooProject\nFooBarProject",
+            "BarProject",
+        ]);
+    });
+
+    test("GroupBy on datetime field with no subgroup specified", async () => {
+        patchWithCleanup(session, { map_box_token: MAP_BOX_TOKEN });
+        Task._records = TEST_RECORDS.task.twoRecordsFieldDateTime;
+        Partner._records = TEST_RECORDS.partner.twoRecordsAddressCoordinates;
+
+        await mountView({
+            type: "map",
+            resModel: "project.task",
+            arch: `<map default_group_by="scheduled_date" res_partner="partner_id" />`,
+        });
+
+        expect(".o-map-renderer--pin-list-group-header").toHaveCount(2);
+        expect(".o-map-renderer--pin-list-group-header:eq(1)").toHaveText("February 2022", {
+            message: "Should default to month scale when not specified",
+        });
+    });
+
+    test("display the field's falsy_value_label for false group, if defined", async () => {
+        Task._fields.partner_id.falsy_value_label = "I'm the false group";
+        Task._records[0].partner_id = false;
+
+        await mountView({
+            type: "map",
+            resModel: "project.task",
+            arch: `<map res_partner="partner_id" routing="1" />`,
+            searchViewId: false,
+            groupBy: ["partner_id"],
+        });
+
+        expect(".o-map-renderer--pin-list-group-header").toHaveText("I'm the false group");
     });
 });
 

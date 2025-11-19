@@ -12,11 +12,13 @@ Accounting reports for Kenya
     'category': 'Accounting/Localizations/Reporting',
     'depends': ['l10n_ke', 'account_reports'],
     'data': [
+        'data/account_return_data.xml',
         'data/balance_sheet.xml',
         'data/profit_loss.xml',
     ],
     'auto_install': True,
     'installable': True,
     'post_init_hook': '_l10n_ke_reports_post_init',
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

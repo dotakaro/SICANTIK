@@ -1,23 +1,22 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import timedelta
 from unittest.mock import patch
+import datetime
 
 from odoo.exceptions import AccessError
-from odoo.tests import tagged, JsonRpcException
+from odoo.tests import tagged, JsonRpcException, freeze_time
 from odoo.tools import mute_logger
 
+from odoo.addons.mail.tests.common import MockEmail
 from odoo import fields
 from odoo.addons.payment.tests.http_common import PaymentHttpCommon
-from odoo.addons.sale_subscription.controllers.portal import CustomerPortal
-from odoo.addons.website.tools import MockRequest
+from odoo.addons.http_routing.tests.common import MockRequest
 from odoo.addons.sale_subscription.tests.test_sale_subscription import TestSubscriptionCommon
-from odoo.addons.website.tools import MockRequest
 
 
 @tagged('post_install', '-at_install')
-class TestSubscriptionPaymentFlows(TestSubscriptionCommon, PaymentHttpCommon):
+class TestSubscriptionPaymentFlows(TestSubscriptionCommon, PaymentHttpCommon, MockEmail):
 
     @classmethod
     def setUpClass(cls):
@@ -26,19 +25,19 @@ class TestSubscriptionPaymentFlows(TestSubscriptionCommon, PaymentHttpCommon):
             'partner_id': cls.partner.id,
         })
         cls.user_with_so_access = cls.env['res.users'].create({
-            'groups_id': [(6, 0, [cls.env.ref('base.group_portal').id])],
+            'group_ids': [(6, 0, [cls.env.ref('base.group_portal').id])],
             'login': 'user_a_pouet',
             'password': 'user_a_pouet',  # may the min password length burn in hell
             'name': 'User A',
         })
         cls.user_without_so_access = cls.env['res.users'].create({
-            'groups_id': [(6, 0, [cls.env.ref('base.group_portal').id])],
+            'group_ids': [(6, 0, [cls.env.ref('base.group_portal').id])],
             'login': 'user_b_pouet',
             'password': 'user_b_pouet',
             'name': 'User B',
         })
-        # Portal access rule currently relies on mail follower(s) of the order
-        cls.order._message_subscribe(partner_ids=[cls.user_with_so_access.partner_id.id])
+        # Portal access rule currently relies on customer of the order -> put in same company
+        cls.user_with_so_access.partner_id.parent_id = cls.partner.id
 
     def _my_sub_assign_token(self, **values):
         url = self._build_url(f"/my/subscriptions/assign_token/{self.order.id}")
@@ -195,6 +194,56 @@ class TestSubscriptionPaymentFlows(TestSubscriptionCommon, PaymentHttpCommon):
         ):
             self.make_jsonrpc_request(url, route_kwargs)
 
+    def test_subscription_online_payment_with_token(self):
+        with freeze_time("2024-05-01"):
+            self.subscription.require_payment = True
+            self.subscription.payment_token_id = self.payment_token.id
+            self.subscription.end_date = datetime.date(2024, 8, 1)
+            self.subscription.action_confirm()
+            with patch('odoo.addons.sale_subscription.models.sale_order.SaleOrder._do_payment', wraps=self._mock_subscription_do_payment):
+                self.env['sale.order']._cron_recurring_create_invoice()
+                self.subscription.transaction_ids._get_last()._post_process()
+            # it should create an invoice
+            self.assertEqual(self.subscription.invoice_count, 1)
+        with freeze_time("2024-06-01"):
+            with patch('odoo.addons.sale_subscription.models.sale_order.SaleOrder._do_payment', wraps=self._mock_subscription_do_payment):
+                self.env['sale.order']._cron_recurring_create_invoice()
+                self.subscription.transaction_ids._get_last()._post_process()
+            # it should create an invoice
+            self.assertEqual(self.subscription.invoice_count, 2)
+        with freeze_time("2024-07-01"):
+            with patch('odoo.addons.sale_subscription.models.sale_order.SaleOrder._do_payment', wraps=self._mock_subscription_do_payment):
+                self.env['sale.order']._cron_recurring_create_invoice()
+                self.subscription.transaction_ids._get_last()._post_process()
+            # it should create an invoice
+            self.assertEqual(self.subscription.invoice_count, 3)
+        with freeze_time("2024-08-01"):
+            with patch('odoo.addons.sale_subscription.models.sale_order.SaleOrder._do_payment', wraps=self._mock_subscription_do_payment):
+                self.env['sale.order']._cron_recurring_create_invoice()
+            # subscription should be closed on end date
+            self.assertEqual(self.subscription.subscription_state, '6_churn')
+
+    def test_portal_pay_subscription(self):
+        # When portal pays a subscription, a success mail is sent.
+        # This calls AccountMove.amount_by_group, which triggers _compute_invoice_taxes_by_group().
+        # As this method writes on this field and also reads tax_ids, which portal has no rights to,
+        # it might cause some access rights issues. This test checks that no error is raised.
+        portal_partner = self.user_portal.partner_id
+        portal_partner.country_id = self.env['res.country'].search([('code', '=', 'US')])
+        self.env['account.move'].create({
+            'move_type': 'out_invoice',
+        })
+        provider = self.env['payment.provider'].create({
+            'name': 'Test',
+        })
+        self.env['payment.transaction'].create({
+            'amount': 100,
+            'provider_id': provider.id,
+            'payment_method_id': self.payment_method_id,
+            'currency_id': self.env.company.currency_id.id,
+            'partner_id': portal_partner.id,
+        })
+
     def test_check_mandate_start_date(self):
         now = fields.Datetime.now()
         self.subscription.write({'start_date': now - timedelta(days=10)})
@@ -237,7 +286,7 @@ class TestSubscriptionPaymentFlows(TestSubscriptionCommon, PaymentHttpCommon):
         res = self.url_open(pay_url)
         self.assertEqual(res.status_code, 200, "Response should = OK")
         content = res.content.decode("utf-8")
-        self.assertTrue("There is nothing to pay." in content, "There is nothing to pay for payment link of renewed order")
+        self.assertFalse("o_sale_portal_paynow" in content, "There is nothing to pay for payment link of renewed order")
 
     def test_check_mandate_no_start_date(self):
         now = fields.Datetime.now()

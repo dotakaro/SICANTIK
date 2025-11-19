@@ -1,7 +1,8 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from odoo import models
 
-class WebsiteHelpdeskShareCouponGenerate(models.TransientModel):
+
+class HelpdeskSaleCouponGenerate(models.TransientModel):
     _inherit = "helpdesk.sale.coupon.generate"
 
     def action_coupon_generate_share(self):

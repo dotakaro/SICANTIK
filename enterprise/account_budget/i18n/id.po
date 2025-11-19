@@ -3,16 +3,15 @@
 # 	* account_budget
 # 
 # Translators:
-# Wil Odoo, 2024
-# Abe Manyo, 2025
+# Wil Odoo, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0+e\n"
+"Project-Id-Version: Odoo Server saas~18.4+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-25 09:13+0000\n"
-"PO-Revision-Date: 2024-09-25 09:43+0000\n"
-"Last-Translator: Abe Manyo, 2025\n"
+"POT-Creation-Date: 2025-07-03 12:22+0000\n"
+"PO-Revision-Date: 2025-07-01 13:06+0000\n"
+"Last-Translator: Wil Odoo, 2025\n"
 "Language-Team: Indonesian (https://app.transifex.com/odoo/teams/41243/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -32,6 +31,11 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "<i class=\"fa fa-long-arrow-right mx-2\" aria-label=\"to\" title=\"to\"/>"
 msgstr "<i class=\"fa fa-long-arrow-right mx-2\" aria-label=\"to\" title=\"to\"/>"
+
+#. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
+msgid "<span class=\"o_stat_text\">Budget Report</span>"
+msgstr "<span class=\"o_stat_text\">Laporan Budget</span>"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.budget_report_view_search
@@ -125,6 +129,11 @@ msgid "Attachment Count"
 msgstr "Hitungan Lampiran"
 
 #. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
+msgid "Audit"
+msgstr "Audit"
+
+#. module: account_budget
 #: model:ir.model.fields.selection,name:account_budget.selection__budget_analytic__budget_type__both
 msgid "Both"
 msgstr "Dua-Duanya"
@@ -184,6 +193,8 @@ msgid "Budget Name"
 msgstr "Nama Anggaran"
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
 #: model:ir.actions.act_window,name:account_budget.budget_report_action
 #: model:ir.model,name:account_budget.model_budget_report
 #: model:ir.ui.menu,name:account_budget.budget_report_menu
@@ -210,7 +221,14 @@ msgid "Budget Type"
 msgstr "Tipe Budget"
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
+msgid "Budget end date may not be before the starting date."
+msgstr "Tanggal akhir budget mungkin sebelum tanggal mulai."
+
+#. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__budget_amount
+#: model_terms:ir.ui.view,arch_db:account_budget.budget_report_view_search
 msgid "Budgeted"
 msgstr "Dianggaran"
 
@@ -307,15 +325,13 @@ msgid "Description"
 msgstr "Keterangan"
 
 #. module: account_budget
-#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
-msgid "Details..."
-msgstr "Detail..."
-
-#. module: account_budget
+#: model:ir.model.fields,field_description:account_budget.field_account_analytic_account__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_report__display_name
 #: model:ir.model.fields,field_description:account_budget.field_budget_split_wizard__display_name
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order__display_name
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order_line__display_name
 msgid "Display Name"
 msgstr "Nama Tampilan"
 
@@ -401,10 +417,13 @@ msgid "Has Message"
 msgstr "Memiliki Pesan"
 
 #. module: account_budget
+#: model:ir.model.fields,field_description:account_budget.field_account_analytic_account__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_report__id
 #: model:ir.model.fields,field_description:account_budget.field_budget_split_wizard__id
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order__id
+#: model:ir.model.fields,field_description:account_budget.field_purchase_order_line__id
 msgid "ID"
 msgstr "ID"
 
@@ -489,6 +508,11 @@ msgstr "Model"
 #: model:ir.model.fields.selection,name:account_budget.selection__budget_split_wizard__period__month
 msgid "Month"
 msgstr "Bulan"
+
+#. module: account_budget
+#: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_search
+msgid "My Activities"
+msgstr "Aktivitas Saya"
 
 #. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_analytic__my_activity_date_deadline
@@ -652,8 +676,9 @@ msgstr "Urutan"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_search
-msgid "Show all records which has next action date is before today"
-msgstr "Tampilkan semua dokumen dengan aksi berikut sebelum hari ini"
+msgid "Show all records whose next activity date is past"
+msgstr ""
+"Tunjukkan semua rekaman yang tanggal kegiatan berikutnya berada di masa lalu"
 
 #. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.budget_split_wizard_form_view
@@ -694,6 +719,7 @@ msgstr ""
 
 #. module: account_budget
 #: model:ir.model.fields,field_description:account_budget.field_budget_line__theoritical_amount
+#: model:ir.model.fields,field_description:account_budget.field_budget_report__theoretical
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "Theoretical"
 msgstr "Teoretis"
@@ -767,6 +793,18 @@ msgid "You cannot create recursive revision of budget."
 msgstr "Anda tidak dapat membuat revisi rekursif dari budget."
 
 #. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/models/budget_analytic.py:0
+msgid "budget_analytic_id"
+msgstr "budget_analytic_id"
+
+#. module: account_budget
 #: model_terms:ir.ui.view,arch_db:account_budget.view_budget_analytic_form
 msgid "e.g. Budget 2023"
 msgstr "contoh Budget 2023"
+
+#. module: account_budget
+#. odoo-python
+#: code:addons/account_budget/wizards/budget_split_wizard.py:0
+msgid "id"
+msgstr "id"

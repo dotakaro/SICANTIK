@@ -7,7 +7,6 @@
     'version': '1.0',
     "depends": [
         "hr_payroll",
-        "hr_contract_reports",
         "hr_work_entry_holidays",
         "hr_payroll_holidays",
     ],
@@ -19,7 +18,7 @@ Australian Payroll Rules.
     "data": [
         "security/ir.model.access.csv",
         "security/ir_rule.xml",
-        "views/hr_contract_views.xml",
+        # "views/hr_contract_views.xml",
         "views/hr_employee_views.xml",
         "views/res_config_settings_views.xml",
         "views/hr_payroll_report.xml",
@@ -51,5 +50,6 @@ Australian Payroll Rules.
     "demo": [
         "data/l10n_au_hr_payroll_demo.xml",
     ],
+    "author": "Odoo S.A.",
     "license": "OEEL-1",
 }

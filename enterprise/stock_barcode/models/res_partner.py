@@ -4,7 +4,7 @@
 from odoo import models, api
 
 
-class Partner(models.Model):
+class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     @api.model

@@ -18,7 +18,7 @@ MAPBOX_GEOCODE_URL = 'https://api.mapbox.com/geocoding/v5/mapbox.places/'
 MAPBOX_MATRIX_URL = 'https://api.mapbox.com/directions-matrix/v1/mapbox/driving/'
 
 
-class Picking(models.Model):
+class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
     l10n_mx_edi_is_delivery_guide_needed = fields.Boolean(
@@ -221,7 +221,7 @@ class Picking(models.Model):
                                        f"IdCCP={cfdi_values['idccp']}&"
                                        f"FechaOrig={cfdi_values['cfdi_date']}&"
                                        f"FechaTimb={cfdi_values['scheduled_date']}")
-        barcode_src = f'/report/barcode/?barcode_type=QR&value={barcode_value}&width=180&height=180'
+        barcode_src = f'/report/barcode/?barcode_type=QR&value={barcode_value}&width=180&height=180&quiet=0'
 
         return {
             **external_trade_vals,
@@ -276,7 +276,7 @@ class Picking(models.Model):
         )
         barcode_sello = url_quote_plus(cfdi_infos['sello'][-8:], safe='=/').replace('%2B', '+')
         barcode_value = url_quote_plus(f'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?{barcode_value_params}&fe={barcode_sello}')
-        barcode_src = f'/report/barcode/?barcode_type=QR&value={barcode_value}&width=180&height=180'
+        barcode_src = f'/report/barcode/?barcode_type=QR&value={barcode_value}&width=180&height=180&quiet=0'
 
         return {
             **cfdi_infos,

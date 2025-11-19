@@ -10,7 +10,7 @@ class PosMakePayment(models.TransientModel):
         res = super().check()
 
         order = self.env["pos.order"].browse(self.env.context.get("active_id", False))
-        if order.state == "paid" and order.l10n_br_is_avatax and order.l10n_br_last_avatax_status != "accepted":
+        if order.state == "paid" and order.l10n_br_is_avatax:
             order._l10n_br_do_edi(save_avalara_pdf=True)
 
         return res

@@ -10,7 +10,7 @@
         <field name="column_ids">
             <record id="kmd_inf_a_report_buyer_reg_code" model="account.report.column">
                 <field name="name">Buyer Register Code</field>
-                <field name="expression_label">partner_reg_code</field>
+                <field name="expression_label">buyer_reg_code</field>
                 <field name="figure_type">string</field>
             </record>
             <record id="kmd_inf_a_report_buyer_name" model="account.report.column">
@@ -31,7 +31,7 @@
             </record>
             <record id="kmd_inf_a_report_invoice_sum" model="account.report.column">
                 <field name="name">Invoice Total without VAT</field>
-                <field name="expression_label">invoice_total</field>
+                <field name="expression_label">invoice_sum</field>
                 <field name="blank_if_zero" eval="True"/>
             </record>
             <record id="kmd_inf_a_report_tax_rate" model="account.report.column">
@@ -58,16 +58,16 @@
                 <field name="groupby">move_id, id</field>
                 <field name="expression_ids">
                     <record id="kmd_inf_report_a_buyer_reg_code" model="account.report.expression">
-                        <field name="label">partner_reg_code</field>
+                        <field name="label">buyer_reg_code</field>
                         <field name="engine">custom</field>
                         <field name="formula">_report_custom_engine_kmd_inf_a</field>
-                        <field name="subformula">partner_reg_code</field>
+                        <field name="subformula">buyer_reg_code</field>
                     </record>
                     <record id="kmd_inf_report_a_buyer_name" model="account.report.expression">
                         <field name="label">buyer_name</field>
                         <field name="engine">custom</field>
                         <field name="formula">_report_custom_engine_kmd_inf_a</field>
-                        <field name="subformula">partner_name</field>
+                        <field name="subformula">buyer_name</field>
                     </record>
                     <record id="kmd_inf_report_a_invoice_number" model="account.report.expression">
                         <field name="label">invoice_number</field>
@@ -82,10 +82,10 @@
                         <field name="subformula">invoice_date</field>
                     </record>
                     <record id="kmd_inf_report_a_invoice_sum" model="account.report.expression">
-                        <field name="label">invoice_total</field>
+                        <field name="label">invoice_sum</field>
                         <field name="engine">custom</field>
                         <field name="formula">_report_custom_engine_kmd_inf_a</field>
-                        <field name="subformula">invoice_total</field>
+                        <field name="subformula">invoice_sum</field>
                     </record>
                     <record id="kmd_inf_report_a_tax_rate" model="account.report.expression">
                         <field name="label">tax_rate</field>

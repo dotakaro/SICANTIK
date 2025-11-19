@@ -2,7 +2,7 @@
 {
     'name': "Spreadsheet dashboard for helpdesk",
     'version': '1.0',
-    'category': 'Hidden',
+    'category': 'Productivity/Dashboard',
     'summary': 'Spreadsheet',
     'description': 'Spreadsheet',
     'depends': ['spreadsheet_dashboard', 'helpdesk'],
@@ -11,5 +11,6 @@
     ],
     'installable': True,
     'auto_install': ['helpdesk'],
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
 }

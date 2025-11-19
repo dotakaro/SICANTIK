@@ -6,8 +6,5 @@ from . import controllers
 from . import wizard
 
 
-def set_periodicity_journal_on_companies(env):
-    for company in env['res.company'].search([]):
-        company.account_tax_periodicity_journal_id = company._get_default_misc_journal()
-        company.account_tax_periodicity_journal_id.show_on_dashboard = True
-        company._initiate_account_onboardings()
+def _account_reports_post_init(env):
+    env.ref('account_reports.ir_cron_generate_account_return')._trigger()

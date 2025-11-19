@@ -1,10 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, Command, fields, models, _
+from odoo.addons.l10n_au_hr_payroll.models.hr_version import INCOME_STREAM_TYPES
 
 
-class L10nPreviousPayrollTransfer(models.TransientModel):
-    _name = "l10n_au.previous.payroll.transfer"
+class L10n_AuPreviousPayrollTransfer(models.TransientModel):
+    _name = 'l10n_au.previous.payroll.transfer'
     _description = "Transfer From Previous Payroll System"
 
     def _default_fiscal_year_start_date(self):
@@ -33,7 +34,7 @@ class L10nPreviousPayrollTransfer(models.TransientModel):
                     [
                         ("id", "not in", rec.l10n_au_previous_payroll_transfer_employee_ids.employee_id.ids),
                         ("company_id", "=", rec.company_id.id),
-                        ("contract_id", "!=", False)
+                        ("version_id", "!=", False)
                     ]
                 )
             )
@@ -50,22 +51,20 @@ class L10nPreviousPayrollTransfer(models.TransientModel):
     def action_transfer(self):
         self.ensure_one()
         self.company_id.write({"l10n_au_previous_bms_id": self.previous_bms_id})
-        employees = self.env["hr.employee"]
         for rec in self.l10n_au_previous_payroll_transfer_employee_ids:
             rec.employee_id.l10n_au_previous_payroll_id = rec.previous_payroll_id
-            if rec.import_ytd:
-                employees |= rec.employee_id
+        prev_pay_transfer_employees = self.l10n_au_previous_payroll_transfer_employee_ids.filtered(lambda x: x.import_ytd)
 
-        created_ytd = self.company_id._create_ytd_values(employees, self.fiscal_year_start_date)
+        created_ytd = self.company_id._create_ytd_values(prev_pay_transfer_employees, self.fiscal_year_start_date)
 
         if created_ytd:
-            return created_ytd.with_context(search_default_filter_group_employee_id=1)\
+            return created_ytd.with_context(search_default_filter_group_employee_id=1, search_default_filter_group_income_stream=1)\
                 ._get_records_action(name=_("Opening Balances"))
         return {"type": "ir.actions.act_window_close"}
 
 
-class L10nPreviousPayrollTransferEmployee(models.TransientModel):
-    _name = "l10n_au.previous.payroll.transfer.employee"
+class L10n_AuPreviousPayrollTransferEmployee(models.TransientModel):
+    _name = 'l10n_au.previous.payroll.transfer.employee'
     _description = "Employee Transfer From Previous Payroll System"
 
     l10n_au_previous_payroll_transfer_id = fields.Many2one("l10n_au.previous.payroll.transfer", required=True, ondelete="cascade")
@@ -73,16 +72,28 @@ class L10nPreviousPayrollTransferEmployee(models.TransientModel):
     employee_id = fields.Many2one("hr.employee", required=True, ondelete="cascade")
     previous_payroll_id = fields.Char(
         "Previous Payroll ID",
-        compute="_compute_payroll_id", size=20,
-        required=False, store=True, readonly=False,
+        compute="_compute_payroll_id",
+        required=True, store=True, readonly=False,
+    )
+    l10n_au_income_stream_type = fields.Selection(
+        selection=INCOME_STREAM_TYPES,
+        string="Income Stream Type",
+        compute="_compute_income_stream_type",
+        required=True, store=True, readonly=False
     )
     import_ytd = fields.Boolean("Import YTD Balances", default=True)
 
-    _sql_constraints = [
-        ("unique_employee_transfer", "unique(employee_id, l10n_au_previous_payroll_transfer_id)", "An employee can only be transferred once.")
-    ]
+    _unique_employee_transfer = models.Constraint(
+        'unique(employee_id, l10n_au_previous_payroll_transfer_id, l10n_au_income_stream_type)',
+        "An employee can only be transferred once per Income Stream Type.",
+    )
 
     @api.depends("employee_id")
     def _compute_payroll_id(self):
         for rec in self:
             rec.previous_payroll_id = rec.employee_id.l10n_au_previous_payroll_id
+
+    @api.depends("employee_id")
+    def _compute_income_stream_type(self):
+        for rec in self:
+            rec.l10n_au_income_stream_type = rec.employee_id.l10n_au_income_stream_type

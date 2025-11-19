@@ -11,5 +11,9 @@ Bridge module for project_enterprise and hr
     'version': '1.0',
     'depends': ['project_enterprise', 'hr'],
     'auto_install': True,
+    'author': 'Odoo S.A.',
     'license': 'OEEL-1',
+    'data': [
+        'data/todo_mail_alias.xml',
+    ],
 }

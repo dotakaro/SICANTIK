@@ -5,7 +5,7 @@
 from odoo import models
 
 
-class DemoSocialAccount(models.Model):
+class SocialAccount(models.Model):
     _inherit = 'social.account'
 
     def _compute_statistics(self):

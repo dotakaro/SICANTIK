@@ -2,18 +2,18 @@
 
 from markupsafe import Markup
 
-from odoo import fields, models, _
+from odoo import api, fields, models, _
 from odoo.exceptions import RedirectWarning
 
 
-class JobPost(models.Model):
-    _name = "hr.job.post"
+class HrJobPost(models.Model):
+    _name = 'hr.job.post'
     _description = "Job Post"
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = "write_date desc"
 
     job_id = fields.Many2one(
-        'hr.job', string="Job", required=True, readonly=True)
+        'hr.job', string="Job", required=True, readonly=True, index=True)
     recruiter_id = fields.Many2one(
         'res.users', string="Recruiter", related='job_id.user_id', readonly=True)
     platform_id = fields.Many2one(
@@ -25,8 +25,10 @@ class JobPost(models.Model):
     ], string='Contact Method', required=True, default="email")
     apply_vector = fields.Char(
         string="Contact Point",
-        help="The email address, phone number, url to send applications to.")
-    post_html = fields.Html(string="Post", prefetch=False, required=True)
+        help="The email address, phone number, url to send applications to.",
+        compute="_compute_apply_vector",
+        store=True, readonly=False)
+    post_html = fields.Html(string="Description", prefetch=False, required=True)
     status = fields.Selection([
         ('success', 'Success'),
         ('warning', 'Warning'),
@@ -54,6 +56,18 @@ class JobPost(models.Model):
                 job=record.job_id.name,
                 platform=record.platform_id.name
             )
+
+    @api.depends('apply_method', 'job_id.alias_id.alias_full_name', 'job_id.user_id.employee_id', 'job_id.user_id.work_email')
+    def _compute_apply_vector(self):
+        if self.apply_method != 'email':
+            return
+        job = self.job_id
+        if job and job.alias_id.alias_full_name:
+            self.apply_vector = job.alias_id.alias_full_name
+        elif job and job.user_id and job.user_id.employee_id:
+            self.apply_vector = job.user_id.work_email
+        else:
+            self.apply_vector = False
 
     def unlink(self):
         for job_post in self:
@@ -141,20 +155,25 @@ class JobPost(models.Model):
             'tag': 'reload',
         }
 
-    def action_post_job(self):
-        post_wizard = self.env['hr.recruitment.post.job.wizard'].create({
-            'job_id': self.job_id.id,
-            'apply_method': self.apply_method,
-            'post_html': self.post_html,
-        })
 
+    def action_post_job(self):
+        view_name = 'hr_recruitment_post_job_wizard_view_form'
+        if not self.job_id:
+            view_name = 'hr_recruitment_post_job_wizard_view_job_selectable_form'
+        view_id = self.env.ref('hr_recruitment_integration_base.'+ view_name).id
         return {
-            'name': _('Reuse Job Post'),
+            'name': _('Publish on a Job Board'),
             'type': 'ir.actions.act_window',
             'res_model': 'hr.recruitment.post.job.wizard',
-            'res_id': post_wizard.id,
             'view_mode': 'form',
-            'views': [(False, 'form')],
+            'view_id': view_id,
+            'context': {
+                'default_job_id': self.job_id.id if self.job_id else False,
+                'from_global_view': not self.job_id,
+                'default_apply_method': self.apply_method if self.apply_method else 'email',
+                'post_html': self.post_html,
+            },
+            'views': [(view_id, 'form')],
             'target': 'new',
         }
 
@@ -172,8 +191,9 @@ class JobPost(models.Model):
         })
         self._stop_finished_campaign()
 
-    def create(self, values):
-        posts = super().create(values)
+    @api.model_create_multi
+    def create(self, vals_list):
+        posts = super().create(vals_list)
         posts._log_post_modifications()
         return posts
 

@@ -8,9 +8,9 @@ from odoo import _, api, models
 from odoo.tools.float_utils import float_round
 
 
-class GermanECSalesReportCustomHandler(models.AbstractModel):
+class L10n_DeEcSalesReportHandler(models.AbstractModel):
     _name = 'l10n_de.ec.sales.report.handler'
-    _inherit = 'account.ec.sales.report.handler'
+    _inherit = ['account.ec.sales.report.handler']
     _description = 'German EC Sales Report Custom Handler'
 
     def _custom_options_initializer(self, report, options, previous_options):

@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from odoo import models, _
 
 
-class HrEmployee(models.Model):
+class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
     def _get_data_files_to_update(self):
@@ -59,9 +59,3 @@ class HrEmployee(models.Model):
                 'balance': balance,
             })
         return leave_lines
-
-    # FIXME: this should be removed in master (see https://www.odoo.com/odoo/1251/tasks/3844686)
-    def _get_rule_name(self, localdict, rule, employee_lang):
-        if self.country_code == 'US' and rule.code == 'GROSS':
-            return _('Gross Pay')
-        return super()._get_rule_name(localdict, rule, employee_lang)

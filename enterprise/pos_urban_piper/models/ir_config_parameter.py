@@ -2,7 +2,7 @@ from odoo import models, _
 from odoo.exceptions import ValidationError
 
 
-class IrConfigParameter(models.Model):
+class IrConfig_Parameter(models.Model):
     _inherit = 'ir.config_parameter'
 
     def write(self, vals):

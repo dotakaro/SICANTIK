@@ -8,12 +8,13 @@ import random
 import werkzeug
 
 from contextlib import contextmanager, nullcontext
+from requests import Response
 from unittest.mock import patch
 
-from odoo.addons.base.models.res_partner import Partner
+from odoo.addons.base.models.res_partner import ResPartner
 from odoo.addons.mail.tests.common import MailCommon, mail_new_test_user
 from odoo.addons.whatsapp.tools.whatsapp_api import WhatsAppApi
-from odoo.addons.whatsapp.models.whatsapp_message import WhatsAppMessage
+from odoo.addons.whatsapp.models.whatsapp_message import WhatsappMessage
 from odoo.addons.whatsapp.tests.template_data import template_data
 from odoo.addons.whatsapp.tools.whatsapp_exception import WhatsAppError
 from odoo.tests import common, Form
@@ -26,8 +27,8 @@ class MockOutgoingWhatsApp(common.BaseCase):
     @contextmanager
     def mockWhatsappGateway(self, exp_json_data=None):
         self._init_wa_mock()
-        wa_msg_origin = WhatsAppMessage.create
-        partner_create_origin = Partner.create
+        wa_msg_origin = WhatsappMessage.create
+        partner_create_origin = ResPartner.create
 
         # ------------------------------------------------------------
         # Whatsapp API
@@ -89,6 +90,9 @@ class MockOutgoingWhatsApp(common.BaseCase):
                 return b'R0lGODlhAQABAIAAANvf7wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==', 'image/jpeg'
             raise WhatsAppError("Please ensure you are using the correct file type and try again.")
 
+        def _get_phone_number(phone_uid):
+            return "+91 12345 67890"
+
         # ------------------------------------------------------------
         # Whatsapp Models
         # ------------------------------------------------------------
@@ -103,21 +107,19 @@ class MockOutgoingWhatsApp(common.BaseCase):
             self._new_wa_msg += res.sudo()
             return res
 
-        try:
-            with patch.object(Partner, 'create', autospec=True, wraps=Partner, side_effect=_res_partner_create), \
-                 patch.object(WhatsAppApi, '_get_all_template', side_effect=_get_all_template), \
-                 patch.object(WhatsAppApi, '_get_template_data', side_effect=_get_template_data), \
-                 patch.object(WhatsAppApi, '_get_whatsapp_document', side_effect=_get_whatsapp_document), \
-                 patch.object(WhatsAppApi, '_upload_demo_document', side_effect=_upload_demo_document), \
-                 patch.object(WhatsAppApi, '_upload_whatsapp_document', side_effect=_upload_whatsapp_document), \
-                 patch.object(WhatsAppApi, '_send_whatsapp', side_effect=_send_whatsapp), \
-                 patch.object(WhatsAppApi, '_submit_template_new', side_effect=_submit_template_new), \
-                 patch.object(WhatsAppApi, '_get_header_data_from_handle', side_effect=_get_header_data_from_handle), \
-                 patch.object(WhatsAppMessage, 'create', autospec=True, wraps=WhatsAppMessage, side_effect=_wa_message_create) as mock_wa_msg_create:
-                self._mock_wa_msg_create = mock_wa_msg_create
-                yield
-        finally:
-            pass
+        with patch.object(ResPartner, 'create', autospec=True, wraps=ResPartner, side_effect=_res_partner_create), \
+             patch.object(WhatsAppApi, '_get_all_template', side_effect=_get_all_template), \
+             patch.object(WhatsAppApi, '_get_template_data', side_effect=_get_template_data), \
+             patch.object(WhatsAppApi, '_get_whatsapp_document', side_effect=_get_whatsapp_document), \
+             patch.object(WhatsAppApi, '_upload_demo_document', side_effect=_upload_demo_document), \
+             patch.object(WhatsAppApi, '_upload_whatsapp_document', side_effect=_upload_whatsapp_document), \
+             patch.object(WhatsAppApi, '_send_whatsapp', side_effect=_send_whatsapp), \
+             patch.object(WhatsAppApi, '_submit_template_new', side_effect=_submit_template_new), \
+             patch.object(WhatsAppApi, '_get_header_data_from_handle', side_effect=_get_header_data_from_handle), \
+             patch.object(WhatsAppApi, '_get_phone_number', side_effect=_get_phone_number), \
+             patch.object(WhatsappMessage, 'create', autospec=True, wraps=WhatsappMessage, side_effect=_wa_message_create) as mock_wa_msg_create:
+            self._mock_wa_msg_create = mock_wa_msg_create
+            yield
 
     def _init_wa_mock(self):
         self._new_partners = self.env['res.partner'].sudo()
@@ -127,6 +129,35 @@ class MockOutgoingWhatsApp(common.BaseCase):
         self._wa_document_store = {}
         self._wa_uploaded_document_count = 0
         self._wa_msg_sent_vals = []
+
+    @contextmanager
+    def mockWhatsappHTTPResponse(self, response_map):
+        """Mock request response when testing response handling."""
+        self._init_wa_http_mock()
+
+        def _make_request(request_type, call_url, params=None, headers=None, data=None, files=None, timeout=None):
+            response = Response()
+            response_vals = response_map.get(call_url)
+            content = response_vals['content']
+
+            response.status_code = response_vals.get('status_code', 200)
+            response._content = json.dumps(content).encode() if isinstance(content, dict) else content
+            response.headers['Content-Type'] = response_vals.get(
+                'content_type',
+                'application/json' if isinstance(content, dict) else 'application/octet-stream'
+            )
+
+            self._wa_http_requests.append({'call_url': call_url, 'response': response})
+            return response
+
+        with (
+            patch('requests.request', side_effect=_make_request),
+            patch('odoo.addons.whatsapp.tools.whatsapp_api.WhatsAppApi._check_allow_requests'),
+        ):
+            yield
+
+    def _init_wa_http_mock(self):
+        self._wa_http_requests = []
 
     @contextmanager
     def patchWhatsappCronTrigger(self):
@@ -796,7 +827,7 @@ class WhatsAppCommon(MailCommon, WhatsAppCase):
 
         # phone-specific test data
         cls.user_employee_mobile = '+91(132)-553-7272'
-        cls.user_employee.mobile = cls.user_employee_mobile
+        cls.user_employee.phone = cls.user_employee_mobile
 
         # Notified user for WhatsApp Business Account
         cls.user_wa_admin = mail_new_test_user(
@@ -806,7 +837,6 @@ class WhatsAppCommon(MailCommon, WhatsAppCase):
             email='wa_admin@test.example.com',
             groups='base.group_user,base.group_partner_manager,whatsapp.group_whatsapp_admin',
             login='user_wa_admin',
-            mobile='+91(132)-553-7242',
             name='WhatsApp Wasin',
             notification_type='email',
             phone='+1 650-555-0111',
@@ -820,7 +850,7 @@ class WhatsAppCommon(MailCommon, WhatsAppCase):
                 'app_uid': 'contact',
                 'name': 'odoo account',
                 'notify_user_ids': cls.user_wa_admin.ids,
-                'phone_uid': '1234567890',
+                'phone_uid': '12345678910',
                 'token': 'team leader',
             },
             {
@@ -833,7 +863,7 @@ class WhatsAppCommon(MailCommon, WhatsAppCase):
                 'token': 'token_2',
             }
         ])
-        cls.simple_whatsapp_template = cls.env['whatsapp.template'].create({
+        cls.simple_whatsapp_template = cls.env['whatsapp.template'].sudo().create({
             'body': 'Howdy Partner',
             'model_id': cls.env['ir.model']._get_id('res.partner'),
             'name': '{{1}}',
@@ -845,7 +875,7 @@ class WhatsAppCommon(MailCommon, WhatsAppCase):
             ],
             'wa_account_id': cls.whatsapp_account.id,
             'wa_template_uid': 'simple_whatsapp_template',
-        })
+        }).sudo(False)
         # Test customer (In)
         cls.whatsapp_customer = cls.env['res.partner'].create({
             'country_id': cls.env.ref('base.in').id,
@@ -888,7 +918,6 @@ class WhatsAppCommon(MailCommon, WhatsAppCase):
         cls.test_portal_user = mail_new_test_user(
             cls.env,
             login='test_portal_user',
-            mobile='+32 494 12 34 56',
             phone='+32 494 12 34 89',
             name='Portal User',
             email='portal@test.example.com',
@@ -897,7 +926,6 @@ class WhatsAppCommon(MailCommon, WhatsAppCase):
         cls.test_public_user = mail_new_test_user(
             cls.env,
             login='test_public_user',
-            mobile='+32 494 65 43 21',
             phone='+32 494 98 43 21',
             name='Public User',
             email='public@test.example.com',

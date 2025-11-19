@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from collections import defaultdict, namedtuple
@@ -6,16 +5,15 @@ from dateutil.relativedelta import relativedelta
 from math import log10
 
 from odoo import api, fields, models, _
-from odoo.exceptions import ValidationError
+from odoo.fields import Domain
 from odoo.tools.date_utils import add, subtract
-from odoo.tools.float_utils import float_round, float_compare
-from odoo.osv.expression import OR, AND, FALSE_DOMAIN
+from odoo.tools.float_utils import float_compare, float_round
 from collections import OrderedDict
 
 
 class MrpProductionSchedule(models.Model):
     _name = 'mrp.production.schedule'
-    _inherit = 'stock.replenish.mixin'
+    _inherit = ['stock.replenish.mixin']
     _order = 'warehouse_id, mps_sequence, product_id'
     _description = 'Schedule the production of Product in a warehouse'
 
@@ -54,10 +52,6 @@ class MrpProductionSchedule(models.Model):
     min_to_replenish_qty = fields.Float(
         'Minimum to Replenish',
         help="Unless the demand is 0, Odoo will always at least replenish this quantity.")
-    max_to_replenish_qty = fields.Float(
-        'Maximum to Replenish',
-        help="The maximum replenishment you would like to launch for each period in the MPS. This is only applied for the period defined in the settings. Note that if the demand is higher than that amount, the remaining quantity will be transferred to the next period automatically.")
-    enable_max_replenish = fields.Boolean(default=False)
     replenish_trigger = fields.Selection([
         ('manual', "Manual"),
         ('automated', "Automatic"),
@@ -74,9 +68,10 @@ class MrpProductionSchedule(models.Model):
     is_indirect = fields.Boolean('Indirect demand product', default=False,
                                  help="When checked, this product will not appear in the 'To Forecast' filter.")
 
-    _sql_constraints = [
-        ('warehouse_product_ref_uniq', 'unique (warehouse_id, product_id)', 'The combination of warehouse and product must be unique!'),
-    ]
+    _warehouse_product_ref_uniq = models.Constraint(
+        'unique (warehouse_id, product_id)',
+        "The combination of warehouse and product must be unique!",
+    )
 
     # TODO: move logic to stock.replenish.mixin
     @api.depends('product_id', 'product_id.route_ids')
@@ -93,40 +88,49 @@ class MrpProductionSchedule(models.Model):
             mps.is_manufacture_route = mps.route_id and mps.route_id.rule_ids and 'manufacture' in mps.route_id.rule_ids.mapped('action')
 
     def _search_replenish_state(self, operator, value):
+        if operator != 'in':
+            return NotImplemented
+        states = set(self._fields['replenish_state'].get_values(self.env))
+        states.add(False)
+        states.intersection_update(value)
+        if not states:
+            return Domain.FALSE
+
         productions_schedules = self.search([])
-        productions_schedules_states = productions_schedules.get_production_schedule_view_state()
+        productions_schedules_states = productions_schedules.with_context(
+            compute_only_parent_schedules=True
+        ).get_production_schedule_view_state()
 
-        def filter_function(f):
-            if not value:
-                return not (f['state'] == 'to_launch' and f['to_replenish'] or \
-                    f['state'] == 'to_relaunch' or f['state'] == 'to_correct')
-            return value == "to_replenish" and f['state'] == 'to_launch' and f['to_replenish'] or \
-                value == "under_replenishment" and f['state'] == 'to_relaunch' or \
-                value == "excessive_replenishment" and f['state'] == 'to_correct'
+        def filter_forecasts(forecasts):
+            forecast_state = set()
+            for f in forecasts:
+                if f['state'] == 'to_launch':
+                    if f['to_replenish']:
+                        forecast_state.add('to_replenish')
+                elif f['state'] == 'to_relaunch':
+                    forecast_state.add('under_replenishment')
+                    forecast_state.add('to_replenish')
+                elif f['state'] == 'to_correct':
+                    forecast_state.add('excessive_replenishment')
 
-        ids = []
-        for state in productions_schedules_states:
-            if value:
-                if any(map(filter_function, state['forecast_ids'])):
-                    ids.append(state['id'])
-            else:
-                if all(map(filter_function, state['forecast_ids'])):
-                    ids.append(state['id'])
+            if not forecast_state:
+                return False in states
+            return states.intersection(forecast_state)
 
-        if operator == '=':
-            operator = 'in'
-        else:
-            operator = 'not in'
-
-        return [('id', operator, ids)]
+        ids = [
+            state['id']
+            for state in productions_schedules_states
+            if filter_forecasts(state['forecast_ids'])
+        ]
+        return Domain('id', 'in', ids)
 
     def action_open_actual_demand_details(self, date_str, date_start_str, date_stop_str):
         """ Open the picking list view for the actual demand for the current
         schedule.
 
         :param date_str: period name for the forecast sellected
-        :param date_start: select incoming moves after this date
-        :param date_stop: select incoming moves before this date
+        :param date_start_str: select incoming moves after this date
+        :param date_stop_str: select incoming moves before this date
         :return: action values that open the picking list
         :rtype: dict
         """
@@ -150,8 +154,8 @@ class MrpProductionSchedule(models.Model):
         """ Open the actual replenishment details.
 
         :param date_str: period name for the forecast sellected
-        :param date_start: select incoming moves and RFQ after this date
-        :param date_stop: select incoming moves and RFQ before this date
+        :param date_start_str: select incoming moves and RFQ after this date
+        :param date_stop_str: select incoming moves and RFQ before this date
         :return: action values that open the forecast details wizard
         :rtype: dict
         """
@@ -303,7 +307,9 @@ class MrpProductionSchedule(models.Model):
         """
         productions_schedules = self.env['mrp.production.schedule'].search(domain or [], offset=offset, limit=limit)
         count = self.env['mrp.production.schedule'].search_count(domain or [])
-        productions_schedules_states = productions_schedules.get_production_schedule_view_state(period_scale)
+        productions_schedules_states = productions_schedules.with_context(
+            compute_only_parent_schedules=True
+        ).get_production_schedule_view_state(period_scale)
         company_groups = self.env.company.read([
             'mrp_mps_show_starting_inventory',
             'mrp_mps_show_demand_forecast',
@@ -450,7 +456,10 @@ class MrpProductionSchedule(models.Model):
         # the state is not saved, it needs to recompute the quantity to
         # replenish of finished products. It will modify the indirect
         # demand and replenish_qty of schedules in self.
-        schedules_to_compute = self.env['mrp.production.schedule'].browse(self.get_impacted_schedule()) | self
+        if self.env.context.get('compute_only_parent_schedules', False):
+            schedules_to_compute = self._get_impacted_parent_schedules() | self
+        else:
+            schedules_to_compute = self.env['mrp.production.schedule'].browse(self.get_impacted_schedule()) | self
 
         # Dependencies between schedules
         indirect_demand_trees = schedules_to_compute._get_indirect_demand_tree()
@@ -468,7 +477,6 @@ class MrpProductionSchedule(models.Model):
         read_fields = [
             'forecast_target_qty',
             'min_to_replenish_qty',
-            'max_to_replenish_qty',
             'product_id',
             'replenish_trigger',
         ]
@@ -486,7 +494,6 @@ class MrpProductionSchedule(models.Model):
             # Ignore "Days to Supply Components" when set demand for components since it's normally taken care by the
             # components themselves
             lead_time_ignore_components = lead_time - production_schedule.bom_id.days_to_prepare_mo
-            use_max_replenish = production_schedule.enable_max_replenish and (not period_scale or period_scale == self.env.company.manufacturing_period)
             production_schedule_state = production_schedule_states_by_id[production_schedule['id']]
             if production_schedule in self:
                 procurement_date = add(fields.Date.today(), days=lead_time)
@@ -523,7 +530,7 @@ class MrpProductionSchedule(models.Model):
                     forecast_values['replenish_qty'] = float_round(sum(existing_forecasts.mapped('replenish_qty')), precision_rounding=rounding)
                 else:
                     after_forecast_qty = starting_inventory_qty - forecast_values['forecast_qty'] - forecast_values['indirect_demand_qty']
-                    replenish_qty = production_schedule._get_replenish_qty(after_forecast_qty=after_forecast_qty, use_max_replenish=use_max_replenish)
+                    replenish_qty = production_schedule._get_replenish_qty(after_forecast_qty=after_forecast_qty)
                     forecast_values['replenish_qty'] = float_round(replenish_qty, precision_rounding=rounding)
                     for forecast in existing_forecasts:
                         demand_qty_dict[key][forecast.date] += forecast.forecast_qty
@@ -546,7 +553,7 @@ class MrpProductionSchedule(models.Model):
                             related_key = (date_range[index], product, production_schedule.warehouse_id)
                             demand_qty_dict[related_key][related_date] += ratio * (parent_quantity - forecast_values['starting_inventory_qty'])
                             subproduct_indirect_demand += ratio * (parent_quantity - forecast_values['starting_inventory_qty'])
-                    if float_compare((ratio * forecast_values['replenish_qty']), subproduct_indirect_demand, precision_rounding=min(rounding, product.uom_id.rounding)) != 0:
+                    if float_compare((ratio * forecast_values['replenish_qty']), subproduct_indirect_demand, precision_rounding=rounding) != 0:
                         related_date = max(subtract(date_start, days=lead_time_ignore_components), fields.Date.today())
                         index = next(i for i, (dstart, dstop) in enumerate(date_range) if related_date <= dstop)
                         related_key = (date_range[index], product, production_schedule.warehouse_id)
@@ -566,18 +573,12 @@ class MrpProductionSchedule(models.Model):
                 production_schedule_state['has_indirect_demand'] = has_indirect_demand
         return [production_schedule_states_by_id[_id] for _id in self.ids if _id in production_schedule_states_by_id]
 
-    def get_impacted_schedule(self, domain=False):
-        """ When the user modify the demand forecast on a schedule. The new
-        replenish quantity is computed from schedules that use the product in
-        self as component (no matter at which BoM level). It will also modify
-        the replenish quantity on self that will impact the schedule that use
-        the product in self as a finished product.
-
-        :param domain: filter supplied and supplying schedules with the domain
-        :return ids of supplied and supplying schedules
-        :rtype list
+    def _get_impacted_parent_schedules(self, domain=None):
         """
-        if not domain:
+        Return all the parent (supplying) schedules of self, i.e.,
+        all the schedules where the product needs a product of self as (sub-)component.
+        """
+        if domain is None:
             domain = []
 
         def _used_in_bom(products, related_products):
@@ -593,10 +594,20 @@ class MrpProductionSchedule(models.Model):
             return _used_in_bom(products, related_products)
 
         supplying_mps = self.env['mrp.production.schedule'].search(
-            AND([domain, [
+            Domain.AND([domain, [
                 ('warehouse_id', 'in', self.mapped('warehouse_id').ids),
                 ('product_id', 'in', _used_in_bom(self.mapped('product_id'), self.env['product.product']).ids)
             ]]))
+
+        return supplying_mps
+
+    def _get_impacted_child_schedules(self, domain=None):
+        """
+        Return all the children (supplied) schedules of self, i.e.,
+        all the schedules where the product is (sub-)component of a product of self.
+        """
+        if domain is None:
+            domain = []
 
         def _use_boms(products, related_products):
             """ Explore bom line from products's BoMs in order to get components
@@ -611,10 +622,29 @@ class MrpProductionSchedule(models.Model):
             return _use_boms(components, related_products)
 
         supplied_mps = self.env['mrp.production.schedule'].search(
-            AND([domain, [
+            Domain.AND([domain, [
                 ('warehouse_id', 'in', self.mapped('warehouse_id').ids),
                 ('product_id', 'in', _use_boms(self.mapped('product_id'), self.env['product.product']).ids)
             ]]))
+
+        return supplied_mps
+
+    def get_impacted_schedule(self, domain=False):
+        """ When the user modify the demand forecast on a schedule. The new
+        replenish quantity is computed from schedules that use the product in
+        self as component (no matter at which BoM level). It will also modify
+        the replenish quantity on self that will impact the schedule that use
+        the product in self as a finished product.
+
+        :param domain: filter supplied and supplying schedules with the domain
+        :return ids of supplied and supplying schedules
+        :rtype list
+        """
+        if not domain:
+            domain = []
+
+        supplying_mps = self._get_impacted_parent_schedules(domain)
+        supplied_mps = self._get_impacted_child_schedules(domain)
         return (supplying_mps | supplied_mps).ids
 
     def remove_replenish_qty(self, date_index, period_scale=False):
@@ -802,8 +832,8 @@ class MrpProductionSchedule(models.Model):
         rules = self.product_id._get_rules_from_location(self.warehouse_id.lot_stock_id, route_ids=self.route_id)
         return rules._get_lead_days(self.product_id, bom=self.bom_id)[0]['total_delay']
 
-    def _get_replenish_qty(self, after_forecast_qty, use_max_replenish=False):
-        """ Modify the quantity to replenish depending the min/max and targeted
+    def _get_replenish_qty(self, after_forecast_qty):
+        """ Modify the quantity to replenish depending the minimum and targeted
         quantity for safety stock.
 
         param after_forecast_qty: The quantity to replenish in order to reach a
@@ -813,9 +843,7 @@ class MrpProductionSchedule(models.Model):
         """
         optimal_qty = self.forecast_target_qty - after_forecast_qty
 
-        if use_max_replenish and optimal_qty > self.max_to_replenish_qty:
-            replenish_qty = self.max_to_replenish_qty
-        elif optimal_qty <= 0:
+        if optimal_qty <= 0:
             replenish_qty = 0
         elif optimal_qty < self.min_to_replenish_qty:
             replenish_qty = self.min_to_replenish_qty
@@ -852,7 +880,7 @@ class MrpProductionSchedule(models.Model):
             while not (date_range[index][0] <= date_planned and
                        date_range[index][1] >= date_planned):
                 index += 1
-            quantity = line.product_uom._compute_quantity(line.product_qty, line.product_id.uom_id)
+            quantity = line.product_uom_id._compute_quantity(line.product_qty, line.product_id.uom_id)
             incoming_qty[date_range[index], line.product_id, line.order_id.picking_type_id.warehouse_id] += quantity
 
         # Get quantity on incoming moves
@@ -996,7 +1024,6 @@ class MrpProductionSchedule(models.Model):
             return [('id', '=', False)]
         location = type == 'incoming' and 'location_dest_id' or 'location_id'
         location_dest = type == 'incoming' and 'location_id' or 'location_dest_id'
-        domain = []
 
         # In case of delivery in multi-steps, the real outgoing move does not exist
         # before confirming the previous moves (pick and/or pack), so we must use
@@ -1032,17 +1059,21 @@ class MrpProductionSchedule(models.Model):
             lead_days, dummy = rules.filtered(lambda r: r.action not in ['buy', 'manufacture'])._get_lead_days(schedule.product_id)
             delay = lead_days['total_delay']
             groupby_delay[delay].append((schedule.product_id, schedule.warehouse_id))
+
+        specific_domains = []
         for delay in groupby_delay:
             products, warehouses = zip(*groupby_delay[delay])
             warehouses = self.env['stock.warehouse'].concat(*warehouses)
             products = self.env['product.product'].concat(*products)
-            specific_domain = [
+            specific_domains.append([
                 (location, 'child_of', warehouses.mapped('view_location_id').ids),
                 ('product_id', 'in', products.ids),
                 ('date', '>=', date_start - relativedelta(days=delay)),
-            ]
-            domain = OR([domain, AND([common_domain, specific_domain])]) if domain else AND([common_domain, specific_domain])
-        return domain
+            ])
+
+        if specific_domains:
+            return Domain(common_domain) & Domain.OR(specific_domains)
+        return Domain.TRUE
 
     @api.model
     def _get_dest_moves_delay(self, move, delay=0):
@@ -1108,30 +1139,32 @@ class MrpProductionSchedule(models.Model):
         :param date_stop: end date of the forecast domain
         """
         if not self:
-            return [('id', '=', False)]
-        domain = FALSE_DOMAIN
-        common_domain = [
-            ('state', 'in', ('draft', 'sent', 'to approve')),
-            ('date_planned', '<=', date_stop)
-        ]
+            return Domain.FALSE
         groupby_delay = defaultdict(list)
         for schedule in self:
             rules = schedule.product_id._get_rules_from_location(schedule.warehouse_id.lot_stock_id)
-            lead_days, dummy = rules._get_lead_days(schedule.product_id)
+            lead_days, _dummy = rules._get_lead_days(schedule.product_id)
             delay = lead_days['total_delay']
             groupby_delay[delay].append((schedule.product_id, schedule.warehouse_id))
+
+        if not groupby_delay:
+            return Domain.FALSE
+        domain = Domain.FALSE
+        common_domain = Domain([
+            ('state', 'in', ('draft', 'sent', 'to approve')),
+            ('date_planned', '<=', date_stop)
+        ])
 
         for delay in groupby_delay:
             products, warehouses = zip(*groupby_delay[delay])
             warehouses = self.env['stock.warehouse'].concat(*warehouses)
             products = self.env['product.product'].concat(*products)
-            specific_domain = [
+            domain |= Domain([
                 ('order_id.picking_type_id.default_location_dest_id', 'child_of', warehouses.mapped('view_location_id').ids),
                 ('product_id', 'in', products.ids),
                 ('date_planned', '>=', date_start - relativedelta(days=delay)),
-            ]
-            domain = OR([domain, AND([common_domain, specific_domain])]) if domain else AND([common_domain, specific_domain])
-        return domain
+            ])
+        return common_domain & domain
 
     def _get_rfq_and_planned_date(self, rfq_domain, order=False):
         purchase_lines = self.env['purchase.order.line'].search(rfq_domain, order=order)
@@ -1146,13 +1179,14 @@ class MrpProductionSchedule(models.Model):
 
         return res_purchase_lines
 
+
 class MrpProductForecast(models.Model):
     _name = 'mrp.product.forecast'
     _order = 'date'
     _description = 'Product Forecast at Date'
 
     production_schedule_id = fields.Many2one('mrp.production.schedule',
-        required=True, ondelete='cascade')
+        required=True, index=True, ondelete='cascade')
     date = fields.Date('Date', required=True)
 
     forecast_qty = fields.Float('Demand Forecast')

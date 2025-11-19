@@ -8,7 +8,7 @@ from odoo.exceptions import UserError
 from odoo.addons.l10n_ke_edi_oscu.models.account_move import format_etims_datetime, parse_etims_datetime
 
 
-class L10nKeEdiCustomsImport(models.Model):
+class L10n_Ke_EdiCustomsImport(models.Model):
     _name = 'l10n_ke_edi.customs.import'
     _description = "Kenya Customs Import"
     _inherit = ['mail.thread']
@@ -31,7 +31,7 @@ class L10nKeEdiCustomsImport(models.Model):
     package_unit_code_id = fields.Many2one('l10n_ke_edi_oscu.code', domain="[('code_type', '=', '17')]", readonly=True)
     quantity = fields.Float("Quantity", readonly=True)
     uom_code_id = fields.Many2one('l10n_ke_edi_oscu.code', domain="[('code_type', '=', '10')]", readonly=True)
-    uom_id = fields.Many2one('uom.uom', string="UoM", compute='_compute_uom_id')
+    uom_id = fields.Many2one('uom.uom', string="Unit", compute='_compute_uom_id')
 
     supplier_name = fields.Char("Vendor", readonly=True)
 
@@ -69,7 +69,7 @@ class L10nKeEdiCustomsImport(models.Model):
                 warnings['packaging_code_mismatch'] = {'message': _("Packaging unit code does not match")}
             if item.origin_country_id != item.product_id.l10n_ke_origin_country_id:
                 warnings['origin_country_mismatch'] = {'message': _("Origin Country is not the same as on the product")}
-            if item.uom_id and item.uom_id.category_id != item.product_id.uom_id.category_id:
+            if not item.uom_id._has_common_reference(item.product_id.uom_id):
                 warnings['uom_mismatch'] = {'message': _("UoMs do not match")}
 
             if warnings:
@@ -117,7 +117,8 @@ class L10nKeEdiCustomsImport(models.Model):
         }
         error, _data, _date = self.company_id._l10n_ke_call_etims('updateImportItem', content)
         if error:
-            raise UserError(f"[{error['code']}] {error['message']}")
+            error_msg = f"[{error['code']}] {error['message']}"
+            raise UserError(error_msg)
         else:
             self.state = status
 
@@ -216,7 +217,7 @@ class L10nKeEdiCustomsImport(models.Model):
                 'name': custimp.item_name,
                 'product_id': custimp.product_id.id,
                 'product_qty': custimp.quantity,
-                'product_uom': custimp.uom_id.id or self.env.ref('uom.product_uom_unit').id,
+                'product_uom_id': custimp.uom_id.id or self.env.ref('uom.product_uom_unit').id,
             }))
         po1 = self.env['purchase.order'].create({
             'partner_id': partners[0].id,
