@@ -39,9 +39,13 @@ Kepatuhan WhatsApp Business:
     ],
     "data": [
         "security/ir.model.access.csv",
+        "views/sicantik_whatsapp_provider_views.xml",
+        "views/whatsapp_template_master_views.xml",  # Master templates
+        "views/res_config_settings_views.xml",
         "views/sicantik_whatsapp_menus.xml",  # Menu untuk WhatsApp
         "wizard/sicantik_whatsapp_cleanup_wizard_views.xml",
         "wizard/export_phone_numbers_wizard_views.xml",
+        "data/master_templates_data.xml",  # Default master templates
         "data/whatsapp_templates.xml",
         "data/cron_data.xml",
     ],
