@@ -45,6 +45,7 @@ Kepatuhan WhatsApp Business:
         "views/sicantik_whatsapp_menus.xml",  # Menu untuk WhatsApp
         "wizard/sicantik_whatsapp_cleanup_wizard_views.xml",
         "wizard/export_phone_numbers_wizard_views.xml",
+        "wizard/test_multi_provider_wizard_views.xml",
         "data/master_templates_data.xml",  # Default master templates
         "data/whatsapp_templates.xml",
         "data/cron_data.xml",
