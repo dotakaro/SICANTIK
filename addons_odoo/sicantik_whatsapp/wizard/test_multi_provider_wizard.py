@@ -19,7 +19,7 @@ class TestMultiProviderWizard(models.TransientModel):
         'res.partner',
         string='Partner Penerima',
         required=True,
-        domain=[('mobile', '!=', False)],
+        domain=[('phone', '!=', False)],
         help='Partner yang akan menerima test message'
     )
     
