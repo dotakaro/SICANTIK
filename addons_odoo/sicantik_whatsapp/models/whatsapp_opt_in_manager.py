@@ -131,7 +131,7 @@ class WhatsAppOptInManager(models.Model):
             
             hours_diff = time_diff.total_seconds() / 3600
             
-                if time_diff.total_seconds() < 86400:  # 24 jam = 86400 detik
+            if time_diff.total_seconds() < 86400:  # 24 jam = 86400 detik
                 use_24h_window = True
                 _logger.info(f'✅ 24-hour window AKTIF untuk {mobile}')
                 _logger.info(f'   Terakhir pesan: {last_message_time}')
