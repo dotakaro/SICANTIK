@@ -6,6 +6,28 @@
     yang digunakan untuk notifikasi perizinan.
     -->
 
+    <!-- Action untuk Partner dengan Opt-In - Didefinisikan terlebih dahulu -->
+    <record id="action_res_partner_whatsapp_opt_in" model="ir.actions.act_window">
+        <field name="name">Kontak WhatsApp</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('mobile', '!=', False)]</field>
+        <field name="context">{
+            'default_is_company': False,
+            'search_default_whatsapp_opt_in': 1,
+            'default_whatsapp_opt_in': True
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Belum ada kontak WhatsApp
+            </p>
+            <p>
+                Gunakan menu ini untuk mengelola kontak yang telah memberikan izin (opt-in)
+                untuk menerima notifikasi WhatsApp.
+            </p>
+        </field>
+    </record>
+
     <!-- Menu Utama WhatsApp -->
     <menuitem id="menu_sicantik_whatsapp_root"
               name="WhatsApp"
@@ -71,28 +93,6 @@
               parent="menu_sicantik_whatsapp_monitoring"
               action="action_res_partner_whatsapp_opt_in"
               sequence="20"/>
-
-    <!-- Action untuk Partner dengan Opt-In -->
-    <record id="action_res_partner_whatsapp_opt_in" model="ir.actions.act_window">
-        <field name="name">Kontak WhatsApp</field>
-        <field name="res_model">res.partner</field>
-        <field name="view_mode">tree,form</field>
-        <field name="domain">[('mobile', '!=', False)]</field>
-        <field name="context">{
-            'default_is_company': False,
-            'search_default_whatsapp_opt_in': 1,
-            'default_whatsapp_opt_in': True
-        }</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Belum ada kontak WhatsApp
-            </p>
-            <p>
-                Gunakan menu ini untuk mengelola kontak yang telah memberikan izin (opt-in)
-                untuk menerima notifikasi WhatsApp.
-            </p>
-        </field>
-    </record>
 
     <!-- Filter untuk Partner dengan Opt-In -->
     <record id="filter_res_partner_whatsapp_opt_in" model="ir.filters">
