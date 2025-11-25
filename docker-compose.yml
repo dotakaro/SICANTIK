@@ -40,63 +40,6 @@ services:
       - sicantik_network
     restart: unless-stopped
 
-  # Odoo 18 Enterprise - Companion App
-  odoo_companion:
-    build:
-      context: .
-      dockerfile: Dockerfile.odoo
-    image: sicantik-odoo:18.4
-    container_name: odoo_companion
-    ports:
-      - "8060:8069" # Odoo companion interface
-    environment:
-      - HOST=postgres_companion
-      - USER=odoo
-      - PASSWORD=odoo_password_secure
-      #- POSTGRES_DB=postgres
-    volumes:
-      - odoo_data:/var/lib/odoo
-      - ./addons_odoo:/mnt/extra-addons:ro
-      - ./enterprise:/mnt/enterprise-addons:ro # Enterprise addons
-      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
-      - ./uploads:/mnt/sicantik_uploads:ro # Read-only access to SICANTIK uploads
-    depends_on:
-      - postgres_companion
-      - redis_cache
-      - sicantik_mysql
-    networks:
-      - sicantik_network
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 1G
-
-  # PostgreSQL for Odoo Companion
-  postgres_companion:
-    image: postgres:15
-    container_name: postgres_companion
-    # Port tidak di-expose untuk menghindari konflik dengan container lain
-    # Akses via network: postgres_companion:5432
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=odoo
-      - POSTGRES_PASSWORD=odoo_password_secure
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/pgdata
-    networks:
-      - sicantik_network
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
-
   # MinIO for Document Storage
   minio_storage:
     image: minio/minio:latest
@@ -148,29 +91,30 @@ services:
     networks:
       - sicantik_network
     restart: unless-stopped
-  # Odoo 18 Enterprise - Standalone Companion App
-  odoo_companion_standalone:
+  # Odoo 18.4 Enterprise - Standalone Companion App
+  odoo_sicantik:
     build:
       context: .
       dockerfile: Dockerfile.odoo
     image: sicantik-odoo:18.4
-    container_name: odoo_companion_standalone
+    container_name: odoo_sicantik
     ports:
       - "8065:8069" # Different port to avoid conflicts
     environment:
-      - PGHOST=postgres_companion_standalone
+      - PGHOST=postgres
       - PGPORT=5432
       - PGUSER=odoo
       - PGPASSWORD=odoo_password_secure
       #- PGDATABASE=sicantik_companion_standalone
     volumes:
-      - odoo_companion_data:/var/lib/odoo
+      - odoo_data:/var/lib/odoo
       - ./addons_odoo:/mnt/extra-addons
       - ./enterprise:/mnt/enterprise-addons
       - ./config_odoo/odoo.conf:/etc/odoo/odoo.conf:ro
       - ./uploads:/mnt/sicantik_uploads:ro
+      #- ./enterprise-lic.tar.gz:/tmp/enterprise-lic.tar.gz:ro
     depends_on:
-      - postgres_companion_standalone
+      - postgres
       - redis_cache
     networks:
       - sicantik_network
@@ -184,9 +128,9 @@ services:
           memory: 1G
 
   # PostgreSQL for Odoo Companion (Standalone)
-  postgres_companion_standalone:
+  postgres:
     image: postgres:15
-    container_name: postgres_companion_standalone
+    container_name: postgres
     # Port tidak di-expose untuk menghindari konflik dengan container lain
     # Akses via network: postgres_companion_standalone:5432
     environment:
@@ -195,7 +139,7 @@ services:
       - POSTGRES_PASSWORD=odoo_password_secure
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - postgres_companion_data:/var/lib/postgresql/data/pgdata
+      - postgres_data:/var/lib/postgresql/data/pgdata
     networks:
       - sicantik_network
     restart: unless-stopped
@@ -217,7 +161,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
     depends_on:
       - sicantik_web
-      - odoo_companion
+      # - odoo_companion
     networks:
       - sicantik_network
     restart: unless-stopped
@@ -251,10 +195,6 @@ volumes:
   postgres_data:
     driver: local
   odoo_data:
-    driver: local
-  odoo_companion_data:
-    driver: local
-  postgres_companion_data:
     driver: local
   minio_data:
     driver: local

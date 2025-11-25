@@ -1,4 +1,4 @@
-# Build Odoo saas-18.4 from GitHub source
+# Build Odoo 18.4 Enterprise from source
 FROM python:3.12-slim
 
 USER root
@@ -20,7 +20,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev \
     libevent-dev \
     curl \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
+
+# Install less compiler via npm
+RUN npm install -g less less-plugin-clean-css
 
 # Create odoo user
 RUN useradd -ms /bin/bash -u 1000 odoo
@@ -50,8 +55,11 @@ RUN pip3 install --no-cache-dir --break-system-packages --ignore-installed \
 # Create directory for custom addons
 RUN mkdir -p /mnt/extra-addons /mnt/enterprise-addons
 
+# Create directory for license
+RUN mkdir -p /var/lib/odoo/.local/share/Odoo
+
 # Set permissions
-RUN chown -R odoo:odoo /opt/odoo /mnt/extra-addons /mnt/enterprise-addons
+RUN chown -R odoo:odoo /opt/odoo /mnt/extra-addons /mnt/enterprise-addons /var/lib/odoo
 
 # Switch to odoo user
 USER odoo
@@ -60,4 +68,4 @@ USER odoo
 EXPOSE 8069
 
 # Default command
-CMD ["python3", "odoo-bin"]
+CMD ["python3", "odoo-bin", "--config=/etc/odoo/odoo.conf"]
