@@ -543,7 +543,7 @@ class BsreConfig(models.Model):
                     'height': float(sig_height),
                     'location': '',  # Optional
                     'reason': '',    # Optional
-            }
+                }
             
                 # Add signature image jika ada
                 if self.signature_image:
@@ -562,14 +562,47 @@ class BsreConfig(models.Model):
                     _logger.info(f'✅ Image physically resized to: {int(sig_width)}x{int(sig_height)} px')
                     _logger.info(f'✅ imageBase64 length: {len(image_base64)} chars')
                 else:
-                    # V2 API requires imageBase64 even for invisible
-                    # Use a small transparent placeholder
-                    _logger.info('⚠️ No signature image uploaded - using placeholder')
+                    # V2 API requires imageBase64 even for VISIBLE signature without image
+                    # Create a small transparent PNG placeholder
+                    _logger.info('⚠️ No signature image uploaded - creating transparent placeholder')
+                    try:
+                        from PIL import Image
+                        import io
+                        # Create transparent image dengan ukuran signature
+                        placeholder = Image.new('RGBA', (int(sig_width), int(sig_height)), (255, 255, 255, 0))
+                        placeholder_buffer = io.BytesIO()
+                        placeholder.save(placeholder_buffer, format='PNG')
+                        placeholder_buffer.seek(0)
+                        placeholder_base64 = base64.b64encode(placeholder_buffer.read()).decode('utf-8')
+                        signature_props['imageBase64'] = placeholder_base64
+                        _logger.info(f'✅ Created transparent placeholder: {int(sig_width)}x{int(sig_height)} px, {len(placeholder_base64)} chars base64')
+                    except Exception as e:
+                        _logger.error(f'❌ Error creating placeholder: {str(e)}')
+                        # Fallback: use empty string (may cause API error, but better than nothing)
+                        signature_props['imageBase64'] = ''
+                        _logger.warning('⚠️ Using empty imageBase64 as fallback')
                 
                 # Add signatureProperties array to payload
                 json_payload['signatureProperties'] = [signature_props]
             else:
                 # INVISIBLE signature
+                # V2 API requires imageBase64 even for INVISIBLE signature
+                # Create a small transparent placeholder (1x1 pixel)
+                try:
+                    from PIL import Image
+                    import io
+                    # Create minimal transparent image (1x1 pixel)
+                    placeholder = Image.new('RGBA', (1, 1), (255, 255, 255, 0))
+                    placeholder_buffer = io.BytesIO()
+                    placeholder.save(placeholder_buffer, format='PNG')
+                    placeholder_buffer.seek(0)
+                    placeholder_base64 = base64.b64encode(placeholder_buffer.read()).decode('utf-8')
+                    _logger.info(f'✅ Created transparent placeholder for INVISIBLE signature: {len(placeholder_base64)} chars base64')
+                except Exception as e:
+                    _logger.error(f'❌ Error creating INVISIBLE placeholder: {str(e)}')
+                    placeholder_base64 = ''
+                    _logger.warning('⚠️ Using empty imageBase64 for INVISIBLE signature as fallback')
+                
                 json_payload['signatureProperties'] = [{
                     'tampilan': 'INVISIBLE',
                     'page': 1,
@@ -577,10 +610,18 @@ class BsreConfig(models.Model):
                     'originY': 0.0,
                     'width': 0.0,
                     'height': 0.0,
+                    'imageBase64': placeholder_base64,  # Required by V2 API
                 }]
             
             _logger.info(f'V2 API JSON payload prepared (file size: {len(document_base64)} chars base64)')
             _logger.info(f'Signature properties: {len(json_payload["signatureProperties"])} items')
+            
+            # Log signature properties details untuk debugging
+            for idx, sig_prop in enumerate(json_payload["signatureProperties"]):
+                _logger.info(f'  Signature[{idx}]: tampilan={sig_prop.get("tampilan")}, page={sig_prop.get("page")}, '
+                           f'originX={sig_prop.get("originX")}, originY={sig_prop.get("originY")}, '
+                           f'width={sig_prop.get("width")}, height={sig_prop.get("height")}, '
+                           f'imageBase64={"present" if sig_prop.get("imageBase64") else "missing"}')
             
             # Make API request to BSRE dengan JSON (V2)
             # Endpoint: /api/v2/sign/pdf

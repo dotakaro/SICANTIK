@@ -259,12 +259,15 @@ class SicantikDocument(models.Model):
                 record.state in ['uploaded', 'pending_signature', 'signed', 'verified']
             )
     
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """Override create untuk generate document number"""
-        if vals.get('document_number', 'New') == 'New':
-            vals['document_number'] = self.env['ir.sequence'].next_by_code('sicantik.document') or 'New'
-        return super().create(vals)
+        # @api.model_create_multi always receives a list of dicts
+        for vals in vals_list:
+            if vals.get('document_number', 'New') == 'New':
+                vals['document_number'] = self.env['ir.sequence'].next_by_code('sicantik.document') or 'New'
+        
+        return super().create(vals_list)
     
     def action_upload_to_minio(self, file_data, filename):
         """
