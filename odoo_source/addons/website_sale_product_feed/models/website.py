@@ -1,0 +1,32 @@
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from odoo import fields, models
+
+from odoo.addons.website_sale_product_feed import const
+
+
+class Website(models.Model):
+    _inherit = 'website'
+
+    enabled_gmc_src = fields.Boolean(
+        default=lambda self: self.env['res.groups']._is_feature_enabled(
+            'website_sale_product_feed.group_product_feed',
+        ),
+    )
+
+    # The second version of GMC no longer mandates public access to the eCommerce.
+    _check_gmc_ecommerce_access = models.Constraint('CHECK (TRUE)', "Constraint disabled")
+
+    def _populate_product_feeds(self):
+        """Populate product feeds for the website with default values."""
+        for website in self:
+            website_product_domain = self.env['product.feed']._get_website_product_domain(website)
+            if (
+                self.env['product.product'].search_count(website_product_domain)
+                > const.PRODUCT_FEED_SOFT_LIMIT
+            ):
+                continue
+            website.env['product.feed'].create({
+                'name': website.env._("GMC 1"),
+                'website_id': website.id,
+            })

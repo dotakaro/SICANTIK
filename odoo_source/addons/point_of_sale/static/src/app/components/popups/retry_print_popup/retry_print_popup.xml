@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="point_of_sale.RetryPrintPopup">
+        <Dialog size="'md'" title="props.title">
+            <p t-if="props.message" t-out="props.message" class="text-prewrap"/>
+            <t t-set-slot="footer">
+                <button t-if="props.canRetry" class="btn btn-primary btn-lg" t-on-click="onClickRetry">Retry</button>
+                <button class="btn btn-lg" t-att-class="{ 'btn-secondary': props.canRetry, 'btn-primary': !props.canRetry }" t-on-click="onClickDownload">Download</button>
+                <button class="btn btn-secondary btn-lg" t-on-click="props.close">Discard</button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

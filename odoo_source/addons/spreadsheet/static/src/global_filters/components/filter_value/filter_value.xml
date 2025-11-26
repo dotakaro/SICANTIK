@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="spreadsheet.FilterValue">
+        <div class="o-filter-value d-flex align-items-start w-100" t-att-title="props.showTitle and filter.label">
+            <div t-if="filter.type === 'boolean'" class="w-100">
+                <BooleanMultiSelector
+                    selectedValues="filterValue || []"
+                    update="(value) => this.onBooleanInput(filter.id, value)"
+                />
+            </div>
+            <div t-if="filter.type === 'text'" class="w-100">
+                <TextFilterValue
+                    value="filterValue"
+                    options="textAllowedValues"
+                    onValueChanged="(value) => this.onTextInput(filter.id, value)"
+                />
+            </div>
+            <span t-if="filter.type === 'relation'" class="w-100">
+                <MultiRecordSelector
+                    t-if="isValid"
+                    resModel="filter.modelName"
+                    resIds="filterValue || []"
+                    domain="relationalAllowedDomain"
+                    update="(resIds) => this.onTagSelected(filter.id, resIds)" />
+                <ValidationMessages t-else="1"
+                                    messages="[invalidModel]"
+                                    msgType="'error'"/>
+
+            </span>
+            <div t-if="filter.type === 'date'" class="w-100">
+                <DateFilterValue value="filterValue"
+                                 update.bind="(value) => this.onDateInput(filter.id, value)"/>
+            </div>
+            <i t-if="props.showClear and getters.isGlobalFilterActive(filter.id)"
+                class="fa fa-times btn btn-link text-muted o_side_panel_filter_icon ms-1 mt-1"
+                title="Clear"
+                t-on-click="() => this.clear(filter.id)"/>
+        </div>
+    </t>
+</templates>
