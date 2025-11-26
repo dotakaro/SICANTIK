@@ -46,7 +46,7 @@ class MockSmsTwilioApi(SMSCase):
             'To': '+32486321321',
         }
         cls.request_send_ok_json = {
-            "account_sid": "AC12345678987654321234567898765432",
+            "account_sid": "TEST_ACCOUNT_SID_123456789012345678901234567890",
             "api_version": "2010-04-01",
             "date_created": "Mon, 14 Apr 2025 09:27:41 +0000",
             "date_sent": None,
@@ -126,7 +126,7 @@ class MockSmsTwilioApi(SMSCase):
     def _setup_sms_twilio(cls, company):
         company.sudo().write({
             "sms_provider": "twilio",
-            "sms_twilio_account_sid": "AC12345678987654321234567898765432",
+            "sms_twilio_account_sid": "TEST_ACCOUNT_SID_123456789012345678901234567890",
             "sms_twilio_auth_token": "grimgorironhide",
             "sms_twilio_number_ids": [
                 (5, 0),

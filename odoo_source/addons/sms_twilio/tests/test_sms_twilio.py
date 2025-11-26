@@ -95,7 +95,7 @@ class TestSmsTwilio(MockSmsTwilio):
         company_twilio_2 = self.env['res.company'].sudo().create({
             "name": "Company 2 (Twilio)",
             "sms_provider": "twilio",
-            "sms_twilio_account_sid": "AC11111222223333344444555556666677",
+            "sms_twilio_account_sid": "TEST_ACCOUNT_SID_11111222223333344444555556666677",
             "sms_twilio_auth_token": "skarsnik",
         })
         company_iap = self.env['res.company'].sudo().create({
