@@ -51,6 +51,45 @@ if [ -f "${SSH_KEY_PATH}" ]; then
     fi
 fi
 
+# Check if user already has SSH key in GitHub Secrets
+echo ""
+read -p "Apakah Anda sudah punya SSH key di GitHub Secrets? (y/N): " HAS_GITHUB_SECRET
+if [[ "$HAS_GITHUB_SECRET" =~ ^[Yy]$ ]]; then
+    echo ""
+    print_info "Jika Anda sudah punya SSH_PRIVATE_KEY di GitHub Secrets, Anda perlu:"
+    echo ""
+    print_step "1. Gunakan Private Key yang SAMA dengan yang ada di GitHub Secrets"
+    echo ""
+    print_info "Pilihan:"
+    echo "  a) Gunakan SSH key yang sudah ada di laptop (jika ada)"
+    echo "  b) Generate key baru (jika key lama hilang)"
+    echo ""
+    read -p "Pilih opsi (a/b): " KEY_OPTION
+    
+    if [[ "$KEY_OPTION" == "a" ]]; then
+        echo ""
+        print_step "SSH keys yang tersedia di laptop Anda:"
+        echo "─────────────────────────────────────────────────────────"
+        ls -1 ~/.ssh/*.pub 2>/dev/null | while read pubkey; do
+            echo "  - $pubkey"
+        done || echo "  (tidak ada public key ditemukan)"
+        echo "─────────────────────────────────────────────────────────"
+        echo ""
+        read -p "Masukkan path lengkap ke SSH private key yang ingin digunakan (tanpa .pub): " CUSTOM_KEY_PATH
+        
+        if [ -f "$CUSTOM_KEY_PATH" ] && [ -f "${CUSTOM_KEY_PATH}.pub" ]; then
+            SSH_KEY_PATH="$CUSTOM_KEY_PATH"
+            print_success "Menggunakan SSH key: $SSH_KEY_PATH"
+        else
+            print_error "SSH key tidak ditemukan: $CUSTOM_KEY_PATH"
+            print_info "Menggunakan default key: ${SSH_KEY_PATH}"
+        fi
+    else
+        print_info "Akan generate key baru..."
+        # Continue to generate new key below
+    fi
+fi
+
 # Generate SSH key if it doesn't exist
 if [ ! -f "${SSH_KEY_PATH}" ]; then
     print_step "Generating new SSH key..."
