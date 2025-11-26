@@ -84,8 +84,14 @@ fi
 print_info "Deploying changes:"
 git log --oneline HEAD..origin/master | head -5
 
-# Note: odoo_source/ di-ignore karena pull langsung dari GitHub Odoo
-# Tidak perlu handle konflik karena folder ini tidak di-track Git
+# Handle odoo_source folder - hapus jika ada karena akan di-clone dari GitHub Odoo
+print_step "Handling odoo_source folder..."
+if [ -d "odoo_source" ]; then
+    print_warn "Folder odoo_source ditemukan, akan dihapus karena di-ignore Git"
+    print_info "Folder ini akan di-clone langsung dari GitHub Odoo jika diperlukan"
+    rm -rf odoo_source/
+    print_info "Folder odoo_source dihapus"
+fi
 
 # Pull latest changes
 print_step "Updating code..."
