@@ -84,6 +84,21 @@ fi
 print_info "Deploying changes:"
 git log --oneline HEAD..origin/master | head -5
 
+# Fix odoo_source conflicts if any
+print_step "Checking for odoo_source conflicts..."
+if [ -d "odoo_source" ] && git status odoo_source/ 2>/dev/null | grep -q "untracked"; then
+    print_warn "Found untracked files in odoo_source/, cleaning up..."
+    # Backup untracked files (optional)
+    BACKUP_DIR="odoo_source_backup_$(date +%Y%m%d_%H%M%S)"
+    if [ -d "odoo_source" ]; then
+        print_info "Creating backup: $BACKUP_DIR"
+        cp -r odoo_source "$BACKUP_DIR" 2>/dev/null || true
+    fi
+    # Clean untracked files
+    git clean -fd odoo_source/ 2>/dev/null || true
+    print_info "Cleaned untracked files in odoo_source/"
+fi
+
 # Pull latest changes
 print_step "Updating code..."
 git reset --hard origin/master || {
