@@ -1283,39 +1283,93 @@ class BsreConfig(models.Model):
             # Log response untuk debugging
             _logger.info(f'[BSRE VERIFY] Response dari BSRE API: {json.dumps(result, indent=2) if isinstance(result, dict) else str(result)}')
             
-            # Handle response - BSRE API mungkin mengembalikan berbagai format
+            # Handle response - BSRE API mengembalikan informasi verifikasi detail
             if result and isinstance(result, dict):
-                # Check jika response langsung mengandung informasi verifikasi
-                if 'valid' in result or 'signer' in result or 'certificate' in result:
-                    return {
-                        'success': True,
-                        'valid': result.get('valid', True),  # Default True jika tidak ada field valid
-                        'signer': result.get('signer') or result.get('signerInfo') or result.get('signer_info'),
-                        'signature_date': result.get('signature_date') or result.get('signatureDate') or result.get('signingTime'),
-                        'certificate': result.get('certificate') or result.get('certificateInfo') or result.get('certificate_info'),
-                        'message': result.get('message', 'Verifikasi berhasil')
-                    }
-                # Jika response mengandung 'success' key
-                elif result.get('success'):
-                    return {
-                        'success': True,
-                        'valid': result.get('valid', True),
-                        'signer': result.get('signer'),
-                        'signature_date': result.get('signature_date'),
-                        'certificate': result.get('certificate'),
-                        'message': result.get('message', 'Verifikasi berhasil')
-                    }
+                # Extract informasi verifikasi dari response
+                # Format response BSRE verify biasanya mengandung:
+                # - valid: boolean
+                # - signer: nama penandatangan atau object dengan detail
+                # - signatureDate atau signingTime: waktu penandatanganan
+                # - location: lokasi penandatanganan
+                # - reason: alasan penandatanganan
+                # - timestampAuthority: informasi TSA
+                # - certificate: informasi sertifikat
+                # - verificationInfo: informasi verifikasi detail
+                
+                verification_info = {
+                    'success': True,
+                    'valid': result.get('valid', True),
+                    'message': result.get('message', 'Verifikasi berhasil'),
+                }
+                
+                # Extract signer information
+                signer = result.get('signer') or result.get('signerInfo') or result.get('signer_info') or result.get('penandatangan')
+                if signer:
+                    if isinstance(signer, dict):
+                        verification_info['signer'] = signer.get('name') or signer.get('nama') or signer.get('penandatangan') or str(signer)
+                        verification_info['signer_identifier'] = signer.get('nik') or signer.get('email') or signer.get('identifier')
+                    else:
+                        verification_info['signer'] = str(signer)
                 else:
-                    # Response mungkin dalam format lain, coba extract informasi
-                    _logger.warning(f'[BSRE VERIFY] Response format tidak dikenali, mencoba extract informasi...')
-                    return {
-                        'success': True,
-                        'valid': True,  # Assume valid jika tidak ada informasi
-                        'signer': result.get('signer') or result.get('signerInfo') or result.get('signer_info') or result,
-                        'signature_date': result.get('signature_date') or result.get('signatureDate'),
-                        'certificate': result.get('certificate') or result.get('certificateInfo'),
-                        'message': 'Verifikasi berhasil (format response tidak standar)'
-                    }
+                    verification_info['signer'] = None
+                
+                # Extract signature date/time
+                verification_info['signature_date'] = (
+                    result.get('signatureDate') or 
+                    result.get('signingTime') or 
+                    result.get('signature_date') or
+                    result.get('waktuPenandatanganan') or
+                    result.get('waktu_penandatanganan')
+                )
+                
+                # Extract location
+                verification_info['location'] = (
+                    result.get('location') or 
+                    result.get('lokasi') or
+                    result.get('signatureLocation')
+                )
+                
+                # Extract reason
+                verification_info['reason'] = (
+                    result.get('reason') or 
+                    result.get('alasan') or
+                    result.get('signatureReason')
+                )
+                
+                # Extract timestamp authority
+                verification_info['timestamp_authority'] = (
+                    result.get('timestampAuthority') or 
+                    result.get('timestamp_authority') or
+                    result.get('penandaWaktu') or
+                    result.get('penanda_waktu') or
+                    result.get('tsa')
+                )
+                
+                # Extract certificate information
+                certificate = result.get('certificate') or result.get('certificateInfo') or result.get('certificate_info')
+                if certificate:
+                    verification_info['certificate'] = certificate
+                    if isinstance(certificate, dict):
+                        verification_info['certificate_valid'] = certificate.get('valid', True)
+                        verification_info['certificate_owner'] = certificate.get('owner') or certificate.get('name') or certificate.get('subject')
+                
+                # Extract verification details (untuk 4 poin checkmark)
+                verification_info['document_not_modified'] = result.get('documentNotModified', True)
+                verification_info['timestamp_from_tsa'] = result.get('timestampFromTSA', True)
+                verification_info['certificate_valid'] = result.get('certificateValid', verification_info.get('certificate_valid', True))
+                verification_info['long_term_validation'] = result.get('longTermValidation', True)
+                
+                # Jika ada verificationInfo object, extract dari sana juga
+                verification_details = result.get('verificationInfo') or result.get('verification_info')
+                if verification_details and isinstance(verification_details, dict):
+                    verification_info['document_not_modified'] = verification_details.get('documentNotModified', verification_info.get('document_not_modified', True))
+                    verification_info['timestamp_from_tsa'] = verification_details.get('timestampFromTSA', verification_info.get('timestamp_from_tsa', True))
+                    verification_info['certificate_valid'] = verification_details.get('certificateValid', verification_info.get('certificate_valid', True))
+                    verification_info['long_term_validation'] = verification_details.get('longTermValidation', verification_info.get('long_term_validation', True))
+                
+                _logger.info(f'[BSRE VERIFY] Parsed verification info: {json.dumps(verification_info, indent=2, default=str)}')
+                
+                return verification_info
             else:
                 return {
                     'success': False,
