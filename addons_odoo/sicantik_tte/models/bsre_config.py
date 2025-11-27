@@ -1130,6 +1130,17 @@ class BsreConfig(models.Model):
             'center': (PAGE_HEIGHT / 2) - (sig_height / 2),             # Center: middle - half height
         }
         
+        # CRITICAL: Ensure position is within bounds
+        # V2 API: originY is from TOP, so bottom positions should be: PAGE_HEIGHT - height - margin
+        # But we need to ensure it doesn't go negative or exceed bounds
+        position = POSITIONS_Y.get(self.signature_position, MARGIN)
+        if position < 0:
+            position = MARGIN
+        if position + sig_height > PAGE_HEIGHT:
+            position = PAGE_HEIGHT - sig_height - MARGIN
+            if position < 0:
+                position = 0
+        
         position = POSITIONS_Y.get(self.signature_position, 10)
         _logger.info(f'🎯 Y Position: preset={self.signature_position}, sig_height={sig_height}, calculated={position}')
         return position
