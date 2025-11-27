@@ -302,9 +302,28 @@ class SicantikDocument(models.Model):
         # @api.model_create_multi always receives a list of dicts
         for vals in vals_list:
             if vals.get('document_number', 'New') == 'New':
-                vals['document_number'] = self.env['ir.sequence'].next_by_code('sicantik.document') or 'New'
+                # Generate nomor dokumen dari sequence
+                # Sequence akan otomatis increment dan tidak akan reset ke 00001
+                document_number = self.env['ir.sequence'].next_by_code('sicantik.document') or 'New'
+                vals['document_number'] = document_number
+                _logger.info(f'[CREATE] Generated document_number: {document_number}')
         
         return super().create(vals_list)
+    
+    def write(self, vals):
+        """Override write untuk mencegah perubahan document_number setelah create"""
+        # Mencegah perubahan document_number setelah create
+        if 'document_number' in vals:
+            for record in self:
+                # Jika document_number sudah ada dan bukan 'New', jangan izinkan perubahan
+                if record.document_number and record.document_number != 'New' and vals['document_number'] != record.document_number:
+                    _logger.warning(f'[WRITE] Attempt to change document_number from {record.document_number} to {vals["document_number"]} - BLOCKED')
+                    raise ValidationError(
+                        f'Tidak dapat mengubah nomor dokumen yang sudah ada. '
+                        f'Nomor dokumen "{record.document_number}" tidak dapat diubah menjadi "{vals["document_number"]}".'
+                    )
+        
+        return super().write(vals)
     
     def action_upload_to_minio(self, file_data, filename):
         """
