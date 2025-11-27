@@ -5,4 +5,5 @@ from . import sicantik_permit_inherit
 from . import bsre_config
 from . import signature_workflow
 from . import minio_connector
+from . import res_config_settings
 
