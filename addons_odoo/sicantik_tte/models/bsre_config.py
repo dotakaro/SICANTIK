@@ -662,11 +662,11 @@ class BsreConfig(models.Model):
                 _logger.info('═' * 60)
                 
                 # Prepare signatureProperties object
-                # CRITICAL: Ensure all numeric values are valid floats (not NaN or Inf)
-                # NOTE: Format harus sesuai dengan dokumentasi BSRE API v2 (dari Postman collection)
-                # Field yang diperlukan: tampilan, page, originX, originY, width, height, imageBase64, location, reason, contactInfo
+                # CRITICAL: Urutan field HARUS sesuai dengan dokumentasi Postman:
+                # imageBase64, tampilan, page, originX, originY, width, height, location, reason, contactInfo
                 import math
                 signature_props = {
+                    'imageBase64': '',  # Will be filled later
                     'tampilan': 'VISIBLE',
                     'page': 1,  # Always page 1 for now
                     'originX': float(origin_x) if not (math.isnan(origin_x) or math.isinf(origin_x)) else 10.0,
@@ -689,6 +689,7 @@ class BsreConfig(models.Model):
                 _logger.info(f'✅ Signature properties validated: originX={signature_props["originX"]}, originY={signature_props["originY"]}, width={signature_props["width"]}, height={signature_props["height"]}')
             
                 # Add signature image jika ada
+                # CRITICAL: imageBase64 harus diisi pertama (sesuai urutan Postman)
                 if self.signature_image:
                     # CRITICAL: BSRE API uses PHYSICAL IMAGE SIZE!
                     # We MUST resize image to EXACT dimensions before encoding to base64!
