@@ -681,9 +681,9 @@ class BsreConfig(models.Model):
                 # Set default location dan reason
                 default_location = 'Kabanjahe'
                 if permit_type_name:
-                    default_reason = f'Penerbitan Izin {permit_type_name}'
+                    default_reason = f'Penerbitan {permit_type_name}'
                 else:
-                    default_reason = 'Penerbitan Izin'
+                    default_reason = 'Penerbitan'
                 
                 signature_props = {
                     'imageBase64': '',  # Will be filled later
@@ -867,9 +867,9 @@ class BsreConfig(models.Model):
                 # Set default location dan reason untuk INVISIBLE signature juga
                 default_location = 'Kabanjahe'
                 if permit_type_name:
-                    default_reason = f'Penerbitan Izin {permit_type_name}'
+                    default_reason = f'Penerbitan {permit_type_name}'
                 else:
-                    default_reason = 'Penerbitan Izin'
+                    default_reason = 'Penerbitan'
                 
                 # CRITICAL: Urutan field HARUS sesuai Postman: imageBase64, tampilan, page, originX, originY, width, height, location, reason, contactInfo
                 json_payload['signatureProperties'] = [{
