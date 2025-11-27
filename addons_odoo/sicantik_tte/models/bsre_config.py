@@ -634,12 +634,23 @@ class BsreConfig(models.Model):
             _logger.info(f'V2 API JSON payload prepared (file size: {len(document_base64)} chars base64)')
             _logger.info(f'Signature properties: {len(json_payload["signatureProperties"])} items')
             
-            # Log signature properties details untuk debugging
+            # Log signature properties details dan validasi imageBase64
             for idx, sig_prop in enumerate(json_payload["signatureProperties"]):
+                image_b64 = sig_prop.get("imageBase64", "")
+                image_status = "present" if image_b64 else "missing"
+                image_length = len(image_b64) if image_b64 else 0
                 _logger.info(f'  Signature[{idx}]: tampilan={sig_prop.get("tampilan")}, page={sig_prop.get("page")}, '
                            f'originX={sig_prop.get("originX")}, originY={sig_prop.get("originY")}, '
                            f'width={sig_prop.get("width")}, height={sig_prop.get("height")}, '
-                           f'imageBase64={"present" if sig_prop.get("imageBase64") else "missing"}')
+                           f'imageBase64={image_status} ({image_length} chars)')
+                
+                # CRITICAL: Validate imageBase64 is not empty (BSRE API requires it)
+                if not image_b64 or len(image_b64) == 0:
+                    _logger.error(f'❌ CRITICAL: Signature[{idx}] has EMPTY imageBase64! This will cause BSRE API 500 error!')
+                    # Set fallback minimal PNG
+                    fallback_png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+                    json_payload["signatureProperties"][idx]['imageBase64'] = fallback_png
+                    _logger.warning(f'⚠️ Fixed Signature[{idx}] with hardcoded fallback PNG ({len(fallback_png)} chars)')
             
             # Make API request to BSRE dengan JSON (V2)
             # Endpoint: /api/v2/sign/pdf
