@@ -517,6 +517,18 @@ class SicantikDocument(models.Model):
                 # File ini sudah ditandatangani secara digital dan TIDAK BOLEH dimodifikasi
                 signed_file_data = sign_result['signed_data']
                 
+                # Validasi bahwa file adalah PDF yang valid
+                if not signed_file_data or len(signed_file_data) < 100:
+                    raise UserError('File signed dari BSRE API tidak valid atau kosong')
+                
+                # Validasi bahwa file dimulai dengan PDF header
+                if not signed_file_data.startswith(b'%PDF'):
+                    _logger.error(f'[SIGN] ❌ File signed tidak dimulai dengan PDF header! File mungkin tidak valid.')
+                    _logger.error(f'[SIGN] First 50 bytes: {signed_file_data[:50]}')
+                    raise UserError('File signed dari BSRE API bukan PDF yang valid')
+                
+                _logger.info(f'[SIGN] ✅ File signed dari BSRE API valid: {len(signed_file_data)} bytes, dimulai dengan PDF header')
+                
                 # Jika ada request_id atau signature_id, coba download ulang dari BSRE untuk memastikan
                 # file yang di-upload adalah file signed asli dari BSRE
                 request_id = sign_result.get('request_id')
@@ -531,8 +543,14 @@ class SicantikDocument(models.Model):
                         )
                         
                         if download_result.get('success'):
-                            signed_file_data = download_result['signed_data']
-                            _logger.info(f'[SIGN] ✅ File signed berhasil di-download dari BSRE API: {len(signed_file_data)} bytes')
+                            downloaded_data = download_result['signed_data']
+                            
+                            # Validasi file yang di-download
+                            if downloaded_data and len(downloaded_data) > 100 and downloaded_data.startswith(b'%PDF'):
+                                signed_file_data = downloaded_data
+                                _logger.info(f'[SIGN] ✅ File signed berhasil di-download dari BSRE API: {len(signed_file_data)} bytes')
+                            else:
+                                _logger.warning(f'[SIGN] ⚠️ File yang di-download tidak valid, menggunakan file dari response signing')
                         else:
                             _logger.warning(f'[SIGN] ⚠️ Gagal download dari BSRE API, menggunakan file dari response signing: {download_result.get("message")}')
                     except Exception as download_error:
