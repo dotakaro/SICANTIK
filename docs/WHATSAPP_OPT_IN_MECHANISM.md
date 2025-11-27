@@ -262,12 +262,53 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 
 ## ✅ Checklist Implementasi
 
-- [ ] Perbaiki pesan opt-in di `action_send_opt_in_message()`
-- [ ] Tambahkan method untuk generate link WhatsApp Business Account
-- [ ] Tambahkan method untuk generate QR code
+- [x] Perbaiki pesan opt-in di `action_send_opt_in_message()` - Flow sederhana tanpa response YA/TIDAK
+- [x] Tambahkan method untuk generate link WhatsApp Business Account
+- [ ] Tambahkan method untuk generate QR code (opsional)
 - [ ] Buat webhook handler untuk Fonnte (opsional, untuk tracking)
-- [ ] Update dokumentasi
+- [x] Update dokumentasi dengan penjelasan 24-hour window
 - [ ] Test flow opt-in end-to-end
+
+---
+
+## 📋 FAQ: 24-Hour Window
+
+### Q: Setelah 24 jam, apakah masih bisa kirim template message?
+
+**A: TIDAK**, setelah 24 jam berlalu sejak pesan inbound terakhir, kita **TIDAK bisa kirim template message lagi** kecuali:
+
+1. **User sudah opt-in formal** (ada consent yang tercatat di database dengan `whatsapp_opt_in = True`)
+2. **User mengirim pesan inbound lagi** (reset 24-hour window)
+3. **Template message yang sudah pre-approved** untuk nomor tersebut di Meta Business Manager
+
+### Q: Bagaimana cara memastikan user opt-in sebelum 24 jam habis?
+
+**A:**
+- Kirim pesan opt-in via Fonnte dengan link WhatsApp Business Account
+- User klik link → kirim pesan ke Meta → auto opt-in
+- Setelah opt-in, sistem bisa kirim template messages kapan saja (tidak terbatas 24 jam)
+
+### Q: Apakah 24-hour window berlaku untuk semua jenis pesan?
+
+**A:**
+- **24-hour window**: Hanya untuk template messages
+- **Setelah 24 jam**: Hanya bisa kirim template messages yang sudah pre-approved
+- **Session messages** (pesan bebas): Hanya bisa dikirim dalam 24-hour window
+
+### Q: Bagaimana jika user tidak klik link opt-in?
+
+**A:**
+- User tetap bisa menerima notifikasi via Fonnte/Watzap (fallback provider)
+- Tapi tidak bisa menerima template messages via Meta
+- Sistem akan otomatis route ke provider yang sesuai berdasarkan opt-in status
+
+### Q: Apakah Fonnte mendukung button messages seperti Meta?
+
+**A:**
+- Fonnte adalah gateway WhatsApp Indonesia yang lebih sederhana
+- Tidak memiliki fitur button/list messages seperti Meta
+- Tapi kita bisa kirim text message dengan link yang jelas
+- Link WhatsApp (`https://wa.me/...`) akan otomatis menjadi clickable di WhatsApp
 
 ---
 
