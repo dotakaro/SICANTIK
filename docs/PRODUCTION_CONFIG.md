@@ -2,65 +2,33 @@
 
 ## 📋 Informasi Penting
 
-File `config_odoo/odoo.conf` **tidak di-track Git** untuk memungkinkan konfigurasi berbeda antara environment.
+File `config_odoo/odoo.conf` **di-track Git** untuk memastikan versi local selalu sama dengan production.
 
-## 🔧 Setup di Server Produksi
+## 🔧 Cara Mengubah Config
 
-### 1. Setup Config Pertama Kali
+### Edit di Local (Development)
 
-```bash
-cd /path/to/project
+1. Edit file `config_odoo/odoo.conf` di local
+2. Commit perubahan:
+   ```bash
+   git add config_odoo/odoo.conf
+   git commit -m "chore(config): update odoo.conf untuk production"
+   git push origin master
+   ```
+3. Perubahan akan otomatis ter-deploy ke production via GitHub Actions
 
-# Buat config dari template
-bash scripts/deploy/setup-production-config.sh
+### Workflow
 
-# Edit config sesuai kebutuhan produksi
-nano config_odoo/odoo.conf
 ```
-
-### 2. Edit Config di Production
-
-File `config_odoo/odoo.conf` di server produksi **tidak akan di-overwrite** saat pull dari Git.
-
-Anda bisa edit langsung:
-
-```bash
-cd /path/to/project
-nano config_odoo/odoo.conf
-# atau
-vi config_odoo/odoo.conf
-```
-
-### 3. Update Template (Jika Ada Perubahan)
-
-Jika ada perubahan di template `config_odoo/odoo.conf.example`:
-
-1. **Di development/local**: Update `config_odoo/odoo.conf.example`
-2. **Di production**: Manual merge perubahan yang diperlukan ke `config_odoo/odoo.conf`
-
-Atau gunakan diff untuk melihat perbedaan:
-
-```bash
-cd /path/to/project
-diff config_odoo/odoo.conf.example config_odoo/odoo.conf
+Local Edit → Commit → Push → GitHub Actions → Production Deploy
 ```
 
 ## ⚠️ Catatan Penting
 
-- File `config_odoo/odoo.conf` ada di `.gitignore` sehingga tidak ter-push ke repository
-- Script deployment (`deploy-production.sh`) otomatis backup dan restore config sebelum/setelah pull
-- Template `config_odoo/odoo.conf.example` di-track Git sebagai referensi
-- Setiap pull akan membuat backup otomatis dengan timestamp
-
-## 🔄 Backup Otomatis
-
-Script deployment otomatis membuat backup sebelum pull:
-
-```
-config_odoo/odoo.conf.backup.20251126_215500
-```
-
-Backup terbaru akan di-restore setelah pull selesai.
+- File `config_odoo/odoo.conf` di-track Git, jadi semua perubahan harus di-commit
+- Edit di local, commit dan push, maka akan ter-sync ke production
+- Template `config_odoo/odoo.conf.example` tetap ada sebagai referensi
+- Tidak ada backup otomatis - semua perubahan langsung ter-apply
 
 ## 📝 Contoh Konfigurasi Production
 

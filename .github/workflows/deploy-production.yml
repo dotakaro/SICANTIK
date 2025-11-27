@@ -64,14 +64,6 @@ jobs:
               bash scripts/backup.sh || echo -e "${YELLOW}[WARN]${NC} Backup failed, continuing..."
             fi
             
-            # Backup config files sebelum pull
-            echo -e "${YELLOW}[BACKUP]${NC} Backing up production config files..."
-            if [ -f "config_odoo/odoo.conf" ]; then
-              BACKUP_FILE="config_odoo/odoo.conf.backup.$(date +%Y%m%d_%H%M%S)"
-              cp config_odoo/odoo.conf "$BACKUP_FILE" || true
-              echo -e "${GREEN}[BACKUP]${NC} Backed up odoo.conf to $BACKUP_FILE"
-            fi
-            
             # Pull latest code from GitHub
             echo -e "${GREEN}[GIT]${NC} Pulling latest code..."
             git fetch origin master || {
@@ -92,18 +84,7 @@ jobs:
               exit 1
             }
             
-            # Restore config files
-            echo -e "${GREEN}[RESTORE]${NC} Restoring production config files..."
-            if ls config_odoo/odoo.conf.backup.* 1> /dev/null 2>&1; then
-              LATEST_BACKUP=$(ls -t config_odoo/odoo.conf.backup.* 2>/dev/null | head -1)
-              if [ -n "$LATEST_BACKUP" ] && [ -f "$LATEST_BACKUP" ]; then
-                cp "$LATEST_BACKUP" config_odoo/odoo.conf || true
-                echo -e "${GREEN}[RESTORE]${NC} Restored odoo.conf from backup"
-              fi
-            elif [ ! -f "config_odoo/odoo.conf" ] && [ -f "config_odoo/odoo.conf.example" ]; then
-              cp config_odoo/odoo.conf.example config_odoo/odoo.conf || true
-              echo -e "${YELLOW}[WARN]${NC} Created odoo.conf from template (please configure it!)"
-            fi
+            # Note: odoo.conf sekarang di-track Git, jadi akan ter-update otomatis dari GitHub
             
             # Show current commit
             COMMIT_HASH=$(git rev-parse --short HEAD)

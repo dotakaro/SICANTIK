@@ -103,14 +103,6 @@ if [ -d "odoo_source" ]; then
     print_info "Folder odoo_source dihapus"
 fi
 
-# Backup config files sebelum pull (jika ada)
-print_step "Backing up production config files..."
-if [ -f "config_odoo/odoo.conf" ]; then
-    BACKUP_FILE="config_odoo/odoo.conf.backup.$(date +%Y%m%d_%H%M%S)"
-    cp config_odoo/odoo.conf "$BACKUP_FILE" || true
-    print_info "Backed up odoo.conf to $BACKUP_FILE"
-fi
-
 # Reset ke origin/master (force update, discard local changes)
 print_step "Updating code (resetting to origin/master)..."
 git reset --hard origin/master || {
@@ -122,21 +114,8 @@ git reset --hard origin/master || {
     exit 1
 }
 
-# Restore production config files (jangan overwrite dengan template)
-print_step "Restoring production config files..."
-if ls config_odoo/odoo.conf.backup.* 1> /dev/null 2>&1; then
-    LATEST_BACKUP=$(ls -t config_odoo/odoo.conf.backup.* 2>/dev/null | head -1)
-    if [ -n "$LATEST_BACKUP" ] && [ -f "$LATEST_BACKUP" ]; then
-        cp "$LATEST_BACKUP" config_odoo/odoo.conf || true
-        print_info "Restored odoo.conf from backup: $LATEST_BACKUP"
-    fi
-else
-    # Jika tidak ada backup tapi odoo.conf.example ada, copy dari template
-    if [ ! -f "config_odoo/odoo.conf" ] && [ -f "config_odoo/odoo.conf.example" ]; then
-        cp config_odoo/odoo.conf.example config_odoo/odoo.conf || true
-        print_warn "Created odoo.conf from template (please configure it!)"
-    fi
-fi
+# Note: odoo.conf sekarang di-track Git, jadi akan ter-update otomatis dari GitHub
+# Edit odoo.conf di local, commit dan push, maka akan ter-sync ke production
 
 # Show deployed commit
 DEPLOYED_COMMIT=$(git rev-parse --short HEAD)
