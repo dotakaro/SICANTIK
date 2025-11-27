@@ -1263,9 +1263,9 @@ class BsreConfig(models.Model):
         self.ensure_one()
         
         try:
-            # Berdasarkan informasi user: endpoint yang benar adalah {{baseURL}}/api/sign/verify
+            # Gunakan endpoint versi 2: {{baseURL}}/api/v2/verify/pdf
             # Format: {"file": "base64_pdf"} atau {"file": "base64_pdf", "password": "pdfPassword"}
-            endpoint = 'api/sign/verify'
+            endpoint = 'api/v2/verify/pdf'
             
             # Convert PDF to base64 untuk JSON payload
             import base64 as b64
@@ -1275,39 +1275,73 @@ class BsreConfig(models.Model):
                 'file': file_base64
             }
             
-            _logger.info(f'[BSRE VERIFY] Menggunakan endpoint: {endpoint}')
-            _logger.info(f'[BSRE VERIFY] File size: {len(document_data)} bytes, Base64 length: {len(file_base64)} chars')
+            _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+            _logger.info(f'[BSRE VERIFY V2] Menggunakan endpoint V2: {endpoint}')
+            _logger.info(f'[BSRE VERIFY V2] File size: {len(document_data)} bytes, Base64 length: {len(file_base64)} chars')
+            _logger.info(f'[BSRE VERIFY V2] Payload keys: {list(json_payload.keys())}')
+            _logger.info(f'[BSRE VERIFY V2] Payload file (first 100 chars): {file_base64[:100]}...')
             
             result = self._make_api_request(endpoint, method='POST', data=json_payload)
             
-            # Log response untuk debugging
-            _logger.info(f'[BSRE VERIFY] Response dari BSRE API: {json.dumps(result, indent=2) if isinstance(result, dict) else str(result)}')
+            _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+            _logger.info(f'[BSRE VERIFY V2] Response received from BSRE API V2')
+            _logger.info(f'[BSRE VERIFY V2] Response type: {type(result)}')
+            _logger.info(f'[BSRE VERIFY V2] Response is dict: {isinstance(result, dict)}')
+            if isinstance(result, dict):
+                _logger.info(f'[BSRE VERIFY V2] Response keys: {list(result.keys())}')
+                _logger.info(f'[BSRE VERIFY V2] Full response: {json.dumps(result, indent=2, default=str)}')
+            else:
+                _logger.info(f'[BSRE VERIFY V2] Response content: {str(result)[:500]}')
+            _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
             
-            # Handle response - Berdasarkan struktur response yang sebenarnya:
-            # {
-            #   "nama_dokumen": "signed_dok.pdf",
-            #   "jumlah_signature": 1,
-            #   "notes": "Dokumen valid, Sertifikat yang digunakan terpercaya",
-            #   "details": [{
-            #     "info_tsa": {"name": "...", "tsa_cert_validity": null},
-            #     "signature_field": "...",
-            #     "info_signer": {
-            #       "signer_name": "Waspada Sinulingga",
-            #       "signer_dn": "Waspada Sinulingga",
-            #       "cert_user_certified": true
-            #     },
-            #     "signature_document": {
-            #       "signed_in": "2025-11-27 22:02:51.09",
-            #       "location": "Karo, Indonesia",
-            #       "reason": "Menyetujui Dokumen",
-            #       "document_integrity": true,
-            #       "signed_using_tsa": true
-            #     }
-            #   }],
-            #   "summary": "VALID"
-            # }
+            # Handle response - Cek struktur response V2 terlebih dahulu
+            # V2 mungkin memiliki struktur yang berbeda dari V1
+            _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+            _logger.info(f'[BSRE VERIFY V2] Memproses response dari BSRE API V2')
+            _logger.info(f'[BSRE VERIFY V2] Response type: {type(result)}')
             
             if result and isinstance(result, dict):
+                _logger.info(f'[BSRE VERIFY V2] Response structure analysis:')
+                _logger.info(f'[BSRE VERIFY V2] - Top-level keys: {list(result.keys())}')
+                
+                # Cek apakah ini struktur V1 (dengan details array) atau V2 (struktur berbeda)
+                if 'details' in result:
+                    _logger.info(f'[BSRE VERIFY V2] ✅ Detected V1 structure (with details array)')
+                    _logger.info(f'[BSRE VERIFY V2] - details type: {type(result.get("details"))}')
+                    if isinstance(result.get('details'), list) and len(result.get('details', [])) > 0:
+                        _logger.info(f'[BSRE VERIFY V2] - details[0] keys: {list(result["details"][0].keys()) if isinstance(result["details"][0], dict) else "Not a dict"}')
+                else:
+                    _logger.info(f'[BSRE VERIFY V2] ⚠️ Different structure detected (V2 format?)')
+                    _logger.info(f'[BSRE VERIFY V2] - Full response: {json.dumps(result, indent=2, default=str)}')
+                
+                _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+                
+                # Handle response - Berdasarkan struktur response yang sebenarnya:
+                # V1 Structure (dengan details array):
+                # {
+                #   "nama_dokumen": "signed_dok.pdf",
+                #   "jumlah_signature": 1,
+                #   "notes": "Dokumen valid, Sertifikat yang digunakan terpercaya",
+                #   "details": [{
+                #     "info_tsa": {"name": "...", "tsa_cert_validity": null},
+                #     "signature_field": "...",
+                #     "info_signer": {
+                #       "signer_name": "Waspada Sinulingga",
+                #       "signer_dn": "Waspada Sinulingga",
+                #       "cert_user_certified": true
+                #     },
+                #     "signature_document": {
+                #       "signed_in": "2025-11-27 22:02:51.09",
+                #       "location": "Karo, Indonesia",
+                #       "reason": "Menyetujui Dokumen",
+                #       "document_integrity": true,
+                #       "signed_using_tsa": true
+                #     }
+                #   }],
+                #   "summary": "VALID"
+                # }
+                
+                # V2 Structure (mungkin berbeda, akan kita lihat dari response)
                 verification_info = {
                     'success': True,
                     'valid': result.get('summary', '').upper() == 'VALID',
@@ -1353,7 +1387,7 @@ class BsreConfig(models.Model):
                     # Extract signature field
                     verification_info['signature_field'] = detail.get('signature_field')
                 
-                # Set default values jika tidak ada di details
+                # Set default values jika tidak ada
                 if not verification_info.get('signer'):
                     verification_info['signer'] = None
                 if not verification_info.get('signature_date'):
@@ -1371,7 +1405,10 @@ class BsreConfig(models.Model):
                 verification_info['certificate_valid'] = verification_info.get('certificate_valid', True)
                 verification_info['long_term_validation'] = True  # Default untuk BSRE
                 
-                _logger.info(f'[BSRE VERIFY] Parsed verification info: {json.dumps(verification_info, indent=2, default=str)}')
+                _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+                _logger.info(f'[BSRE VERIFY V2] Final parsed verification info:')
+                _logger.info(f'[BSRE VERIFY V2] {json.dumps(verification_info, indent=2, default=str)}')
+                _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
                 
                 return verification_info
             else:
