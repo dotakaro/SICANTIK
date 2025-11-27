@@ -250,6 +250,22 @@ class SicantikDocument(models.Model):
             else:
                 record.verification_url = False
     
+    @api.depends('id', 'original_filename', 'state')
+    def _compute_download_url(self):
+        """Compute URL untuk download dokumen (untuk QR code)"""
+        for record in self:
+            if record.id and record.state in ['signed', 'verified']:
+                # Get base URL dari system parameter atau gunakan default
+                base_url = self.env['ir.config_parameter'].sudo().get_param(
+                    'sicantik_tte.verification_base_url',
+                    default='https://sicantik.dotakaro.com'
+                )
+                base_url = base_url.rstrip('/')
+                # URL download menggunakan route yang sudah ada
+                record.download_url = f'{base_url}/web/content/sicantik.document/{record.id}/download?filename={record.original_filename or "document.pdf"}'
+            else:
+                record.download_url = False
+    
     @api.depends('state', 'minio_object_name')
     def _compute_can_sign(self):
         """Check apakah dokumen dapat ditandatangani"""
