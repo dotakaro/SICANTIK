@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- WhatsApp Message Log Tree View -->
+    <record id="view_whatsapp_message_log_tree" model="ir.ui.view">
+        <field name="name">sicantik.whatsapp.message.log.tree</field>
+        <field name="model">sicantik.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <tree string="Riwayat Pesan WhatsApp" decoration-success="state == 'sent'" 
+                  decoration-danger="state == 'failed'" decoration-muted="state == 'pending'">
+                <field name="create_date" string="Waktu"/>
+                <field name="partner_id" optional="show"/>
+                <field name="mobile_number" string="Nomor Tujuan"/>
+                <field name="provider_type" widget="badge" 
+                       decoration-info="provider_type == 'fonnte'"
+                       decoration-success="provider_type == 'watzap'"
+                       decoration-warning="provider_type == 'meta'"/>
+                <field name="message_type" widget="badge"/>
+                <field name="template_key" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'sent'"
+                       decoration-danger="state == 'failed'"
+                       decoration-muted="state == 'pending'"/>
+                <field name="error_message" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- WhatsApp Message Log Form View -->
+    <record id="view_whatsapp_message_log_form" model="ir.ui.view">
+        <field name="name">sicantik.whatsapp.message.log.form</field>
+        <field name="model">sicantik.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <form string="Detail Pesan WhatsApp">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,sent,delivered,read"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_view_partner)d" type="action" 
+                                class="oe_stat_button" icon="fa-user" 
+                                invisible="not partner_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Partner</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <group>
+                        <group string="Informasi Pesan">
+                            <field name="mobile_number"/>
+                            <field name="partner_id"/>
+                            <field name="provider_type" widget="badge"/>
+                            <field name="provider_id"/>
+                            <field name="message_type" widget="badge"/>
+                            <field name="template_key" invisible="message_type != 'template'"/>
+                            <field name="template_id" invisible="message_type != 'template'"/>
+                        </group>
+                        <group string="Status &amp; Timestamps">
+                            <field name="state" widget="badge"/>
+                            <field name="sent_date" readonly="1"/>
+                            <field name="delivered_date" readonly="1"/>
+                            <field name="read_date" readonly="1"/>
+                            <field name="external_message_id" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Isi Pesan" invisible="message_type != 'text'">
+                        <field name="message_content" nolabel="1" readonly="1"/>
+                    </group>
+                    
+                    <group string="Error" invisible="state != 'failed'">
+                        <field name="error_message" nolabel="1" readonly="1"/>
+                    </group>
+                    
+                    <group string="Related Document" invisible="not res_model">
+                        <field name="res_model" readonly="1"/>
+                        <field name="res_id" readonly="1"/>
+                    </group>
+                    
+                    <group string="Response Data" invisible="not response_data">
+                        <field name="response_data" nolabel="1" readonly="1" widget="text"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- WhatsApp Message Log Search View -->
+    <record id="view_whatsapp_message_log_search" model="ir.ui.view">
+        <field name="name">sicantik.whatsapp.message.log.search</field>
+        <field name="model">sicantik.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <search string="Riwayat Pesan WhatsApp">
+                <field name="mobile_number"/>
+                <field name="partner_id"/>
+                <field name="template_key"/>
+                <field name="message_content"/>
+                
+                <filter string="Pesan Berhasil" name="filter_sent" 
+                        domain="[('state', '=', 'sent')]"/>
+                <filter string="Pesan Gagal" name="filter_failed" 
+                        domain="[('state', '=', 'failed')]"/>
+                <filter string="Pesan Pending" name="filter_pending" 
+                        domain="[('state', '=', 'pending')]"/>
+                
+                <separator/>
+                
+                <filter string="Fonnte" name="filter_fonnte" 
+                        domain="[('provider_type', '=', 'fonnte')]"/>
+                <filter string="Watzap" name="filter_watzap" 
+                        domain="[('provider_type', '=', 'watzap')]"/>
+                
+                <separator/>
+                
+                <filter string="Text Message" name="filter_text" 
+                        domain="[('message_type', '=', 'text')]"/>
+                <filter string="Template Message" name="filter_template" 
+                        domain="[('message_type', '=', 'template')]"/>
+                
+                <separator/>
+                
+                <filter string="Hari Ini" name="filter_today" 
+                        domain="[('create_date', '&gt;=', datetime.datetime.now().replace(hour=0, minute=0, second=0).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <filter string="Minggu Ini" name="filter_this_week" 
+                        domain="[('create_date', '&gt;=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <filter string="Bulan Ini" name="filter_this_month" 
+                        domain="[('create_date', '&gt;=', (datetime.datetime.now() - datetime.timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="Provider" name="groupby_provider_type" 
+                            context="{'group_by': 'provider_type'}"/>
+                    <filter string="Status" name="groupby_state" 
+                            context="{'group_by': 'state'}"/>
+                    <filter string="Tipe Pesan" name="groupby_message_type" 
+                            context="{'group_by': 'message_type'}"/>
+                    <filter string="Tanggal" name="groupby_create_date" 
+                            context="{'group_by': 'create_date:day'}"/>
+                    <filter string="Partner" name="groupby_partner" 
+                            context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- WhatsApp Message Log Action -->
+    <record id="action_whatsapp_message_log" model="ir.actions.act_window">
+        <field name="name">Riwayat Pesan WhatsApp</field>
+        <field name="res_model">sicantik.whatsapp.message.log</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_filter_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Belum ada riwayat pesan WhatsApp
+            </p>
+            <p>
+                Riwayat pesan WhatsApp yang dikirim via Fonnte atau Watzap.id akan muncul di sini.
+                Pesan yang dikirim via Meta WhatsApp Business API dapat dilihat di menu "Riwayat Pesan" (WhatsApp Messages).
+            </p>
+        </field>
+    </record>
+
+    <!-- Action untuk melihat partner -->
+    <record id="action_view_partner" model="ir.actions.act_window">
+        <field name="name">Partner</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Menu untuk Riwayat Pesan WhatsApp -->
+    <menuitem id="menu_whatsapp_message_log"
+              name="Riwayat Pesan (Fonnte/Watzap)"
+              parent="menu_sicantik_whatsapp_monitoring"
+              action="action_whatsapp_message_log"
+              sequence="15"/>
+</odoo>
+

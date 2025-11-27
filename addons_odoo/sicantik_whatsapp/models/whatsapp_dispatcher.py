@@ -262,9 +262,9 @@ class WhatsAppDispatcher(models.AbstractModel):
         # Send via provider implementation
         try:
             if provider.provider_type == 'fonnte':
-                result = self._send_text_via_fonnte(provider, mobile, message)
+                result = self._send_text_via_fonnte(provider, mobile, message, partner_id=partner_id)
             elif provider.provider_type == 'watzap':
-                result = self._send_text_via_watzap(provider, mobile, message)
+                result = self._send_text_via_watzap(provider, mobile, message, partner_id=partner_id)
             elif provider.provider_type == 'meta':
                 # Meta tidak mendukung text message langsung, harus pakai template
                 raise UserError(
@@ -284,7 +284,7 @@ class WhatsAppDispatcher(models.AbstractModel):
                 'error': str(e)
             }
     
-    def _send_text_via_fonnte(self, provider, phone_number, message):
+    def _send_text_via_fonnte(self, provider, phone_number, message, partner_id=None):
         """
         Kirim text message via Fonnte API
         
@@ -310,6 +310,23 @@ class WhatsAppDispatcher(models.AbstractModel):
         # Send message
         result = fonnte.send_text(phone_number=phone_number, message=message)
         
+        # Log pesan ke history
+        try:
+            self.env['sicantik.whatsapp.message.log'].create_log(
+                partner_id=partner_id,
+                mobile_number=phone_number,
+                provider_type='fonnte',
+                provider_id=provider.id,
+                message_type='text',
+                message_content=message,
+                external_message_id=result.get('message_id') if result.get('success') else None,
+                state='sent' if result.get('success') else 'failed',
+                error_message=result.get('error') if not result.get('success') else None,
+                response_data=str(result.get('response', {}))
+            )
+        except Exception as e:
+            _logger.warning(f'Gagal menyimpan log pesan Fonnte: {str(e)}')
+        
         if result['success']:
             return {
                 'success': True,
@@ -323,7 +340,7 @@ class WhatsAppDispatcher(models.AbstractModel):
                 'error': result.get('error'),
             }
     
-    def _send_text_via_watzap(self, provider, phone_number, message):
+    def _send_text_via_watzap(self, provider, phone_number, message, partner_id=None):
         """
         Kirim text message via Watzap.id API
         
@@ -348,6 +365,23 @@ class WhatsAppDispatcher(models.AbstractModel):
         
         # Send message
         result = watzap.send_text(phone_number=phone_number, message=message)
+        
+        # Log pesan ke history
+        try:
+            self.env['sicantik.whatsapp.message.log'].create_log(
+                partner_id=partner_id,
+                mobile_number=phone_number,
+                provider_type='watzap',
+                provider_id=provider.id,
+                message_type='text',
+                message_content=message,
+                external_message_id=result.get('message_id') if result.get('success') else None,
+                state='sent' if result.get('success') else 'failed',
+                error_message=result.get('error') if not result.get('success') else None,
+                response_data=str(result.get('response', {}))
+            )
+        except Exception as e:
+            _logger.warning(f'Gagal menyimpan log pesan Watzap: {str(e)}')
         
         if result['success']:
             return {
@@ -438,6 +472,26 @@ class WhatsAppDispatcher(models.AbstractModel):
             language=master_template.language or 'id'
         )
         
+        # Log pesan ke history
+        try:
+            self.env['sicantik.whatsapp.message.log'].create_log(
+                partner_id=partner_id,
+                mobile_number=mobile,
+                provider_type='watzap',
+                provider_id=provider.id,
+                message_type='template',
+                template_key=master_template.template_key if master_template else None,
+                template_id=master_template.id if master_template else None,
+                external_message_id=result.get('message_id') if result.get('success') else None,
+                state='sent' if result.get('success') else 'failed',
+                error_message=result.get('error') if not result.get('success') else None,
+                res_model=context_values.get('res_model'),
+                res_id=context_values.get('res_id'),
+                response_data=str(result.get('response', {}))
+            )
+        except Exception as e:
+            _logger.warning(f'Gagal menyimpan log pesan template Watzap: {str(e)}')
+        
         if result['success']:
             return {
                 'success': True,
@@ -498,6 +552,26 @@ class WhatsAppDispatcher(models.AbstractModel):
             template_id=provider_template['template_id'] or provider_template['template_name'],
             parameters=fonnte_params
         )
+        
+        # Log pesan ke history
+        try:
+            self.env['sicantik.whatsapp.message.log'].create_log(
+                partner_id=partner_id,
+                mobile_number=mobile,
+                provider_type='fonnte',
+                provider_id=provider.id,
+                message_type='template',
+                template_key=master_template.template_key if master_template else None,
+                template_id=master_template.id if master_template else None,
+                external_message_id=result.get('message_id') if result.get('success') else None,
+                state='sent' if result.get('success') else 'failed',
+                error_message=result.get('error') if not result.get('success') else None,
+                res_model=context_values.get('res_model'),
+                res_id=context_values.get('res_id'),
+                response_data=str(result.get('response', {}))
+            )
+        except Exception as e:
+            _logger.warning(f'Gagal menyimpan log pesan template Fonnte: {str(e)}')
         
         if result['success']:
             return {
