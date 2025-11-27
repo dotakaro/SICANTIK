@@ -147,4 +147,110 @@ class SicantikWhatsappProvider(models.Model):
                 'secret': self.fonnte_secret,
             },
         }
+    
+    def action_test_connection(self):
+        """
+        Test koneksi ke provider API
+        
+        Returns:
+            dict: Action untuk menampilkan hasil test
+        """
+        self.ensure_one()
+        
+        if self.provider_type == 'fonnte':
+            if not self.fonnte_token:
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('Error'),
+                        'message': _('Token Fonnte belum diisi. Silakan isi token terlebih dahulu.'),
+                        'type': 'danger',
+                        'sticky': False,
+                    }
+                }
+            
+            from odoo.addons.sicantik_whatsapp.tools.fonnte_provider import FonnteProvider
+            
+            fonnte = FonnteProvider(
+                token=self.fonnte_token,
+                device=self.fonnte_device or '',
+                api_url=self.fonnte_api_url or 'https://api.fonnte.com'
+            )
+            
+            result = fonnte.test_connection()
+            
+            if result['success']:
+                devices_count = len(result.get('devices', []))
+                message = _(
+                    '✅ Koneksi berhasil!\n\n'
+                    'Token valid dan terhubung ke Fonnte API.\n'
+                    'Device yang terhubung: %d'
+                ) % devices_count
+                
+                self.mark_configured()
+                self.last_error_message = False
+                
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('Koneksi Berhasil'),
+                        'message': message,
+                        'type': 'success',
+                        'sticky': False,
+                    }
+                }
+            else:
+                error_msg = result.get('error', 'Unknown error')
+                self.mark_error(error_msg)
+                
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('Koneksi Gagal'),
+                        'message': _('❌ Koneksi gagal: %s') % error_msg,
+                        'type': 'danger',
+                        'sticky': True,
+                    }
+                }
+        
+        elif self.provider_type == 'watzap':
+            # TODO: Implement test connection untuk Watzap
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Info'),
+                    'message': _('Test connection untuk Watzap.id akan ditambahkan di update berikutnya.'),
+                    'type': 'info',
+                    'sticky': False,
+                }
+            }
+        
+        elif self.provider_type == 'meta':
+            # TODO: Implement test connection untuk Meta
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Info'),
+                    'message': _('Test connection untuk Meta akan ditambahkan di update berikutnya.'),
+                    'type': 'info',
+                    'sticky': False,
+                }
+            }
+        
+        else:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('Error'),
+                    'message': _('Provider type tidak dikenali.'),
+                    'type': 'danger',
+                    'sticky': False,
+                }
+            }
 

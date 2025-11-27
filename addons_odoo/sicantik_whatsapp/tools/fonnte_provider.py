@@ -180,6 +180,170 @@ class FonnteProvider:
                 'error': error_msg
             }
     
+    def test_connection(self):
+        """
+        Test koneksi ke Fonnte API dengan memvalidasi token
+        
+        Returns:
+            dict: Response dengan status koneksi
+        """
+        _logger.info('🔍 Fonnte: Testing connection...')
+        
+        try:
+            # Gunakan endpoint /devices untuk test koneksi
+            # Ini akan mengembalikan daftar device jika token valid
+            url = f'{self.api_url}/devices'
+            response = requests.get(
+                url,
+                headers=self._get_headers(),
+                timeout=self.timeout
+            )
+            
+            _logger.info(f'   Response status: {response.status_code}')
+            
+            if response.status_code == 200:
+                result = response.json()
+                _logger.info(f'✅ Fonnte: Connection successful')
+                return {
+                    'success': True,
+                    'message': 'Koneksi berhasil',
+                    'devices': result.get('data', []),
+                    'response': result
+                }
+            elif response.status_code == 401:
+                _logger.error('❌ Fonnte: Invalid token (401 Unauthorized)')
+                return {
+                    'success': False,
+                    'error': 'Token tidak valid atau tidak terautentikasi',
+                    'response': response.text
+                }
+            else:
+                _logger.error(f'❌ Fonnte: Connection failed ({response.status_code})')
+                return {
+                    'success': False,
+                    'error': f'Koneksi gagal: HTTP {response.status_code}',
+                    'response': response.text
+                }
+                
+        except requests.exceptions.RequestException as e:
+            error_msg = f'Request error: {str(e)}'
+            _logger.error(f'❌ Fonnte: {error_msg}')
+            return {
+                'success': False,
+                'error': error_msg
+            }
+        except Exception as e:
+            error_msg = f'Unexpected error: {str(e)}'
+            _logger.error(f'❌ Fonnte: {error_msg}', exc_info=True)
+            return {
+                'success': False,
+                'error': error_msg
+            }
+    
+    def get_qr_code(self):
+        """
+        Dapatkan QR code untuk koneksi device
+        
+        Returns:
+            dict: Response dengan QR code data
+        """
+        _logger.info('📱 Fonnte: Getting QR code...')
+        
+        try:
+            url = f'{self.api_url}/qr'
+            params = {}
+            if self.device:
+                params['device'] = self.device
+                
+            response = requests.get(
+                url,
+                headers=self._get_headers(),
+                params=params,
+                timeout=self.timeout
+            )
+            
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get('status'):
+                _logger.info(f'✅ Fonnte: QR code retrieved successfully')
+                return {
+                    'success': True,
+                    'qr_code': result.get('qr'),
+                    'response': result
+                }
+            else:
+                error_msg = result.get('reason') or 'Unknown error'
+                _logger.error(f'❌ Fonnte: {error_msg}')
+                return {
+                    'success': False,
+                    'error': error_msg,
+                    'response': result
+                }
+                
+        except Exception as e:
+            error_msg = f'Error getting QR code: {str(e)}'
+            _logger.error(f'❌ Fonnte: {error_msg}')
+            return {
+                'success': False,
+                'error': error_msg
+            }
+    
+    def validate_number(self, phone_number):
+        """
+        Validasi nomor WhatsApp
+        
+        Args:
+            phone_number (str): Nomor HP yang akan divalidasi
+        
+        Returns:
+            dict: Response dengan status validasi
+        """
+        phone = self._normalize_phone(phone_number)
+        _logger.info(f'🔍 Fonnte: Validating number {phone}...')
+        
+        try:
+            url = f'{self.api_url}/validate'
+            payload = {
+                'target': phone,
+            }
+            if self.device:
+                payload['device'] = self.device
+                
+            response = requests.post(
+                url,
+                json=payload,
+                headers=self._get_headers(),
+                timeout=self.timeout
+            )
+            
+            response.raise_for_status()
+            result = response.json()
+            
+            if result.get('status'):
+                _logger.info(f'✅ Fonnte: Number validation successful')
+                return {
+                    'success': True,
+                    'valid': result.get('valid', False),
+                    'response': result
+                }
+            else:
+                error_msg = result.get('reason') or 'Unknown error'
+                _logger.error(f'❌ Fonnte: {error_msg}')
+                return {
+                    'success': False,
+                    'error': error_msg,
+                    'response': result
+                }
+                
+        except Exception as e:
+            error_msg = f'Error validating number: {str(e)}'
+            _logger.error(f'❌ Fonnte: {error_msg}')
+            return {
+                'success': False,
+                'error': error_msg
+            }
+    
     def _normalize_phone(self, phone):
         """
         Normalize nomor HP ke format internasional
