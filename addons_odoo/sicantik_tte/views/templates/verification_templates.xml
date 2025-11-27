@@ -179,15 +179,16 @@
                                     <div class="col-md-8">
                                         <!-- PRIORITAS: Gunakan informasi dari BSRE verify response -->
                                         <t t-if="bsre_verification and bsre_verification.get('signer')">
-                                            <strong><t t-esc="bsre_verification.get('signer')"/></strong>
+                                            <strong><t t-esc="bsre_verification['signer']"/></strong>
                                             <t t-if="bsre_verification.get('signer_identifier')">
                                                 <br/>
                                                 <small class="text-muted">
-                                                    <t t-if="bsre_verification.get('signer_identifier') and '@' in bsre_verification.get('signer_identifier')">
-                                                        Email: <t t-esc="bsre_verification.get('signer_identifier')"/>
+                                                    <t t-set="signer_id" t-value="bsre_verification.get('signer_identifier')"/>
+                                                    <t t-if="signer_id and '@' in signer_id">
+                                                        Email: <t t-esc="signer_id"/>
                                                     </t>
                                                     <t t-else="">
-                                                        NIK: <t t-esc="bsre_verification.get('signer_identifier')"/>
+                                                        NIK: <t t-esc="signer_id"/>
                                                     </t>
                                                 </small>
                                             </t>
@@ -219,7 +220,7 @@
                                     <div class="col-md-4 font-weight-bold">Penanda Waktu:</div>
                                     <div class="col-md-8">
                                         <t t-if="bsre_verification and bsre_verification.get('timestamp_authority')">
-                                            <t t-esc="bsre_verification.get('timestamp_authority')"/>
+                                            <t t-esc="bsre_verification['timestamp_authority']"/>
                                         </t>
                                         <t t-else="">
                                             Timestamp Authority Badan Siber dan Sandi Negara

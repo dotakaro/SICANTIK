@@ -288,9 +288,15 @@ class SicantikTTEController(http.Controller):
             
             # Render verification page dengan hasil verifikasi BSRE
             _logger.info(f'[VERIFY] Rendering verification page template...')
+            _logger.info(f'[VERIFY] verify_result untuk template: {json.dumps(verify_result, indent=2, default=str) if verify_result else "None"}')
+            _logger.info(f'[VERIFY] bsre_verification_success: {bsre_verification_success}')
+            
+            # Pastikan verify_result adalah dict yang bisa diakses di template
+            template_verify_result = verify_result if (verify_result and isinstance(verify_result, dict)) else {}
+            
             result = request.render('sicantik_tte.verification_page', {
                 'document': document,
-                'bsre_verification': verify_result,
+                'bsre_verification': template_verify_result,
                 'bsre_verification_success': bsre_verification_success,
             })
             _logger.info(f'[VERIFY] Template rendered successfully')
