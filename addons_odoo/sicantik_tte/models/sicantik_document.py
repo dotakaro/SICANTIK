@@ -233,9 +233,13 @@ class SicantikDocument(models.Model):
         """Compute URL untuk verifikasi publik"""
         for record in self:
             if record.document_number and record.document_number != 'New' and record.state in ['signed', 'verified']:
-                base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-                if not base_url:
-                    base_url = 'http://localhost:8060'  # Fallback
+                # Gunakan system parameter khusus atau default ke domain production
+                base_url = self.env['ir.config_parameter'].sudo().get_param(
+                    'sicantik_tte.verification_base_url',
+                    default='https://sicantik.dotakaro.com'
+                )
+                # Pastikan tidak ada trailing slash
+                base_url = base_url.rstrip('/')
                 record.verification_url = f'{base_url}/sicantik/tte/verify/{record.document_number}'
             else:
                 record.verification_url = False
@@ -527,8 +531,13 @@ class SicantikDocument(models.Model):
             import qrcode
             from io import BytesIO
             
-            # Get base URL
-            base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+            # Get base URL - gunakan system parameter khusus atau default ke domain production
+            base_url = self.env['ir.config_parameter'].sudo().get_param(
+                'sicantik_tte.verification_base_url',
+                default='https://sicantik.dotakaro.com'
+            )
+            # Pastikan tidak ada trailing slash
+            base_url = base_url.rstrip('/')
             
             # QR code hanya berisi URL verifikasi untuk auto-redirect saat di-scan
             verification_url = f'{base_url}/sicantik/tte/verify/{self.document_number}'

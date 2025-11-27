@@ -58,6 +58,7 @@ Technical:
         'views/signature_workflow_views.xml',
         'views/bsre_config_views.xml',
         'views/sicantik_document_views.xml',
+        'views/res_config_settings_views.xml',
         'views/sicantik_tte_menus.xml',
         
         # Templates (Public pages)
