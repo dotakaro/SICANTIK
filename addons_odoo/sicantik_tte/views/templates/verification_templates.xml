@@ -31,22 +31,41 @@
                                         </div>
                                         <div class="card-body">
                                             <ul class="list-unstyled mb-0">
-                                                <li class="mb-2">
+                                                <li class="mb-2" t-if="bsre_verification.get('document_not_modified')">
                                                     <i class="fa fa-check text-success"></i> 
                                                     Dokumen belum dimodifikasi sejak diberikan tandatangan elektronik
                                                 </li>
-                                                <li class="mb-2">
+                                                <li class="mb-2" t-if="bsre_verification.get('timestamp_from_tsa')">
                                                     <i class="fa fa-check text-success"></i> 
                                                     Waktu penandatanganan didapatkan dari Timestamp Authority (TSA)
                                                 </li>
-                                                <li class="mb-2">
+                                                <li class="mb-2" t-if="bsre_verification.get('certificate_valid')">
                                                     <i class="fa fa-check text-success"></i> 
                                                     Sertifikat yang digunakan untuk penandatangan dokumen adalah valid
                                                 </li>
-                                                <li class="mb-0">
+                                                <li class="mb-0" t-if="bsre_verification.get('long_term_validation')">
                                                     <i class="fa fa-check text-success"></i> 
                                                     Long-Term Validation
                                                 </li>
+                                                <!-- Fallback: tampilkan semua jika field tidak ada -->
+                                                <t t-if="not bsre_verification.get('document_not_modified') and not bsre_verification.get('timestamp_from_tsa')">
+                                                    <li class="mb-2">
+                                                        <i class="fa fa-check text-success"></i> 
+                                                        Dokumen belum dimodifikasi sejak diberikan tandatangan elektronik
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        <i class="fa fa-check text-success"></i> 
+                                                        Waktu penandatanganan didapatkan dari Timestamp Authority (TSA)
+                                                    </li>
+                                                    <li class="mb-2">
+                                                        <i class="fa fa-check text-success"></i> 
+                                                        Sertifikat yang digunakan untuk penandatangan dokumen adalah valid
+                                                    </li>
+                                                    <li class="mb-0">
+                                                        <i class="fa fa-check text-success"></i> 
+                                                        Long-Term Validation
+                                                    </li>
+                                                </t>
                                             </ul>
                                         </div>
                                     </div>
