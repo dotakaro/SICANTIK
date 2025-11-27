@@ -1362,8 +1362,8 @@ class BsreConfig(models.Model):
                     
                     # Prioritas: V2 structure dengan signatureInformations
                     if signature_infos and isinstance(signature_infos, list) and len(signature_infos) > 0:
-                    # Struktur V2 dengan signatureInformations array
-                    _logger.info(f'[BSRE VERIFY V2] ✅ Using V2 structure (signatureInformations array)')
+                        # Struktur V2 dengan signatureInformations array
+                        _logger.info(f'[BSRE VERIFY V2] ✅ Using V2 structure (signatureInformations array)')
                     sig_info = signature_infos[0]  # Ambil signature pertama
                     
                     # Extract signer information
