@@ -34,6 +34,7 @@ Technical:
     'depends': [
         'base',
         'web',
+        'website',  # Required untuk public website routes
         'sicantik_connector',  # Depend on Phase 1 module
     ],
     'external_dependencies': {

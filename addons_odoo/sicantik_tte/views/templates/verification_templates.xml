@@ -117,6 +117,67 @@
         <t t-call="web.frontend_layout">
             <div class="container mt-5 mb-5">
                 <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card shadow-lg">
+                            <div class="card-header bg-danger text-white text-center py-4">
+                                <h2 class="mb-0">
+                                    <i class="fa fa-exclamation-triangle"></i> Dokumen Tidak Ditemukan
+                                </h2>
+                            </div>
+                            <div class="card-body p-4 text-center">
+                                <p class="lead">Nomor Dokumen: <strong><t t-esc="document_number"/></strong></p>
+                                <p class="text-muted">
+                                    Dokumen dengan nomor tersebut tidak ditemukan atau belum ditandatangani.
+                                </p>
+                                <p class="text-muted" t-if="message">
+                                    <t t-esc="message"/>
+                                </p>
+                                <div class="mt-4">
+                                    <a href="/" class="btn btn-primary">Kembali ke Beranda</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+    
+    <!-- Template untuk error -->
+    <template id="verification_error" name="Verification Error">
+        <t t-call="web.frontend_layout">
+            <div class="container mt-5 mb-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card shadow-lg">
+                            <div class="card-header bg-danger text-white text-center py-4">
+                                <h2 class="mb-0">
+                                    <i class="fa fa-exclamation-circle"></i> Error Verifikasi
+                                </h2>
+                            </div>
+                            <div class="card-body p-4 text-center">
+                                <p class="lead" t-if="document_number">
+                                    Nomor Dokumen: <strong><t t-esc="document_number"/></strong>
+                                </p>
+                                <p class="text-danger">
+                                    <t t-esc="error"/>
+                                </p>
+                                <div class="mt-4">
+                                    <a href="/" class="btn btn-primary">Kembali ke Beranda</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+    
+    <!-- Template untuk dokumen tidak ditemukan (OLD - untuk backward compatibility) -->
+    <template id="verification_not_found_old" name="Verification Not Found Old">
+        <t t-call="web.frontend_layout">
+            <div class="container mt-5 mb-5">
+                <div class="row justify-content-center">
                     <div class="col-lg-6">
                         <div class="card shadow-lg">
                             <div class="card-header bg-warning text-white text-center py-4">

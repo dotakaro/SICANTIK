@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import http
+from odoo import http, fields
 from odoo.http import request, Response
 from odoo.exceptions import UserError, AccessError
 import logging
@@ -111,7 +111,7 @@ class SicantikTTEController(http.Controller):
     @http.route([
         '/sicantik/tte/verify/<string:document_number>',
         '/verify/<string:document_number>',
-    ], type='http', auth='public', website=True, methods=['GET'])
+    ], type='http', auth='public', website=True, methods=['GET'], csrf=False)
     def verify_document(self, document_number, **kwargs):
         """
         Public endpoint untuk verifikasi dokumen
@@ -123,23 +123,51 @@ class SicantikTTEController(http.Controller):
             Halaman verifikasi dokumen
         """
         try:
-            # Get document
+            _logger.info(f'[VERIFY] Request untuk verifikasi dokumen: {document_number}')
+            
+            # Get document dengan sudo untuk bypass access rights
             Document = request.env['sicantik.document'].sudo()
+            
+            # Cari dokumen dengan document_number (case-insensitive untuk safety)
             document = Document.search([
-                ('document_number', '=', document_number),
-                ('state', 'in', ['signed', 'verified'])
+                ('document_number', '=', document_number)
             ], limit=1)
             
+            _logger.info(f'[VERIFY] Dokumen ditemukan: {bool(document)}, State: {document.state if document else "N/A"}')
+            
+            # Jika tidak ditemukan, coba tanpa filter state dulu untuk debugging
             if not document:
+                # Coba search tanpa filter state untuk debugging
+                all_docs = Document.search([
+                    ('document_number', '=', document_number)
+                ], limit=5)
+                _logger.warning(f'[VERIFY] Dokumen tidak ditemukan dengan document_number={document_number}')
+                _logger.warning(f'[VERIFY] Total dokumen dengan nomor serupa: {len(all_docs)}')
+                if all_docs:
+                    for doc in all_docs:
+                        _logger.warning(f'[VERIFY] - Found: {doc.document_number}, State: {doc.state}')
+                
                 return request.render('sicantik_tte.verification_not_found', {
                     'document_number': document_number
                 })
             
+            # Check state - hanya allow signed atau verified
+            if document.state not in ['signed', 'verified']:
+                _logger.warning(f'[VERIFY] Dokumen ditemukan tapi state tidak valid: {document.state}')
+                return request.render('sicantik_tte.verification_not_found', {
+                    'document_number': document_number,
+                    'message': f'Dokumen belum ditandatangani. Status: {document.state}'
+                })
+            
+            _logger.info(f'[VERIFY] Dokumen valid, state: {document.state}, ID: {document.id}')
+            
             # Update verification counter
             document.write({
                 'verification_count': document.verification_count + 1,
-                'last_verified_date': http.request.env['ir.fields'].datetime.now()
+                'last_verified_date': fields.Datetime.now()
             })
+            
+            _logger.info(f'[VERIFY] Verification counter updated: {document.verification_count}')
             
             # Render verification page
             return request.render('sicantik_tte.verification_page', {
@@ -147,8 +175,9 @@ class SicantikTTEController(http.Controller):
             })
             
         except Exception as e:
-            _logger.error(f'Error verifying document {document_number}: {str(e)}')
+            _logger.error(f'[VERIFY] Error verifying document {document_number}: {str(e)}', exc_info=True)
             return request.render('sicantik_tte.verification_error', {
-                'error': str(e)
+                'error': str(e),
+                'document_number': document_number
             })
 
