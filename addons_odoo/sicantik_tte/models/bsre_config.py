@@ -1364,58 +1364,58 @@ class BsreConfig(models.Model):
                     if signature_infos and isinstance(signature_infos, list) and len(signature_infos) > 0:
                         # Struktur V2 dengan signatureInformations array
                         _logger.info(f'[BSRE VERIFY V2] ✅ Using V2 structure (signatureInformations array)')
-                    sig_info = signature_infos[0]  # Ambil signature pertama
-                    
-                    # Extract signer information
-                    verification_info['signer'] = sig_info.get('signerName')
-                    _logger.info(f'[BSRE VERIFY V2] - Extracted signer: {verification_info["signer"]}')
-                    
-                    # Extract signature date
-                    verification_info['signature_date'] = sig_info.get('signatureDate')
-                    
-                    # Extract location
-                    verification_info['location'] = sig_info.get('location')
-                    
-                    # Extract reason
-                    verification_info['reason'] = sig_info.get('reason')
-                    
-                    # Extract integrity and certificate info
-                    verification_info['document_not_modified'] = sig_info.get('integrityValid', True)
-                    verification_info['certificate_valid'] = sig_info.get('certificateTrusted', False)
-                    
-                    # Extract timestamp information
-                    timestamp_info = sig_info.get('timestampInfomation') or sig_info.get('timestampInformation')
-                    if timestamp_info:
-                        verification_info['timestamp_authority'] = timestamp_info.get('signerName', 'Timestamp Authority Badan Siber dan Sandi Negara')
-                        verification_info['timestamp_from_tsa'] = True
-                        verification_info['timestamp_date'] = timestamp_info.get('timestampDate')
-                    else:
-                        verification_info['timestamp_authority'] = 'Timestamp Authority Badan Siber dan Sandi Negara'
-                        verification_info['timestamp_from_tsa'] = False
-                    
-                    # Extract certificate details (ambil yang pertama)
-                    cert_details = sig_info.get('certificateDetails', [])
-                    if cert_details and isinstance(cert_details, list) and len(cert_details) > 0:
-                        cert_detail = cert_details[0]
-                        verification_info['certificate_common_name'] = cert_detail.get('commonName')
-                        verification_info['certificate_issuer'] = cert_detail.get('issuerName')
-                    
-                    # Set valid berdasarkan conclusion dan integrityValid
-                    conclusion = result.get('conclusion', '').upper()
-                    verification_info['valid'] = (
-                        conclusion != 'NO_SIGNATURE' and 
-                        verification_info['document_not_modified'] and
-                        verification_info['certificate_valid']
-                    )
-                    
-                    _logger.info(f'[BSRE VERIFY V2] - signature_date: {verification_info["signature_date"]}')
-                    _logger.info(f'[BSRE VERIFY V2] - location: {verification_info["location"]}')
-                    _logger.info(f'[BSRE VERIFY V2] - reason: {verification_info["reason"]}')
-                    _logger.info(f'[BSRE VERIFY V2] - integrityValid: {verification_info["document_not_modified"]}')
-                    _logger.info(f'[BSRE VERIFY V2] - certificateTrusted: {verification_info["certificate_valid"]}')
-                    _logger.info(f'[BSRE VERIFY V2] - valid: {verification_info["valid"]}')
-                    
-                elif details and isinstance(details, list) and len(details) > 0:
+                        sig_info = signature_infos[0]  # Ambil signature pertama
+                        
+                        # Extract signer information
+                        verification_info['signer'] = sig_info.get('signerName')
+                        _logger.info(f'[BSRE VERIFY V2] - Extracted signer: {verification_info["signer"]}')
+                        
+                        # Extract signature date
+                        verification_info['signature_date'] = sig_info.get('signatureDate')
+                        
+                        # Extract location
+                        verification_info['location'] = sig_info.get('location')
+                        
+                        # Extract reason
+                        verification_info['reason'] = sig_info.get('reason')
+                        
+                        # Extract integrity and certificate info
+                        verification_info['document_not_modified'] = sig_info.get('integrityValid', True)
+                        verification_info['certificate_valid'] = sig_info.get('certificateTrusted', False)
+                        
+                        # Extract timestamp information
+                        timestamp_info = sig_info.get('timestampInfomation') or sig_info.get('timestampInformation')
+                        if timestamp_info:
+                            verification_info['timestamp_authority'] = timestamp_info.get('signerName', 'Timestamp Authority Badan Siber dan Sandi Negara')
+                            verification_info['timestamp_from_tsa'] = True
+                            verification_info['timestamp_date'] = timestamp_info.get('timestampDate')
+                        else:
+                            verification_info['timestamp_authority'] = 'Timestamp Authority Badan Siber dan Sandi Negara'
+                            verification_info['timestamp_from_tsa'] = False
+                        
+                        # Extract certificate details (ambil yang pertama)
+                        cert_details = sig_info.get('certificateDetails', [])
+                        if cert_details and isinstance(cert_details, list) and len(cert_details) > 0:
+                            cert_detail = cert_details[0]
+                            verification_info['certificate_common_name'] = cert_detail.get('commonName')
+                            verification_info['certificate_issuer'] = cert_detail.get('issuerName')
+                        
+                        # Set valid berdasarkan conclusion dan integrityValid
+                        conclusion = result.get('conclusion', '').upper()
+                        verification_info['valid'] = (
+                            conclusion != 'NO_SIGNATURE' and 
+                            verification_info['document_not_modified'] and
+                            verification_info['certificate_valid']
+                        )
+                        
+                        _logger.info(f'[BSRE VERIFY V2] - signature_date: {verification_info["signature_date"]}')
+                        _logger.info(f'[BSRE VERIFY V2] - location: {verification_info["location"]}')
+                        _logger.info(f'[BSRE VERIFY V2] - reason: {verification_info["reason"]}')
+                        _logger.info(f'[BSRE VERIFY V2] - integrityValid: {verification_info["document_not_modified"]}')
+                        _logger.info(f'[BSRE VERIFY V2] - certificateTrusted: {verification_info["certificate_valid"]}')
+                        _logger.info(f'[BSRE VERIFY V2] - valid: {verification_info["valid"]}')
+                        
+                    elif details and isinstance(details, list) and len(details) > 0:
                     # Struktur V1 dengan details array
                     _logger.info(f'[BSRE VERIFY V2] ✅ Using V1 structure (details array)')
                     detail = details[0]  # Ambil signature pertama
