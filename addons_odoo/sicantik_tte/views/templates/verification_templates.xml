@@ -93,7 +93,7 @@
                                                 <span class="badge badge-warning">⚠️ Tanda Tangan Tidak Valid</span>
                                             </t>
                                             <br/>
-                                            <small class="text-muted">Diverifikasi langsung ke BSRE API pada <t t-esc="document.last_verified_date" t-options="{'widget': 'datetime'}"/></small>
+                                            <small class="text-muted">Diverifikasi langsung ke BSRE API pada <t t-out="document.last_verified_date" t-options="{'widget': 'datetime'}"/></small>
                                         </t>
                                         <t t-else="">
                                             <strong>Status Verifikasi:</strong> Dokumen ini telah terverifikasi keasliannya dan integritasnya. 
@@ -111,24 +111,24 @@
                                     <div class="col-md-4 font-weight-bold">Nomor Dokumen:</div>
                                     <div class="col-md-8">
                                         <span class="badge badge-primary badge-lg" style="font-size: 1rem; padding: 0.5rem 1rem;">
-                                            <t t-esc="document.document_number"/>
+                                            <t t-out="document.document_number"/>
                                         </span>
                                     </div>
                                 </div>
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Nama Dokumen:</div>
-                                    <div class="col-md-8"><t t-esc="document.name"/></div>
+                                    <div class="col-md-8"><t t-out="document.name"/></div>
                                 </div>
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Nomor Izin:</div>
-                                    <div class="col-md-8"><t t-esc="document.permit_number"/></div>
+                                    <div class="col-md-8"><t t-out="document.permit_number"/></div>
                                 </div>
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Jenis Izin:</div>
-                                    <div class="col-md-8"><t t-esc="document.permit_type_id.name"/></div>
+                                    <div class="col-md-8"><t t-out="document.permit_type_id.name"/></div>
                                 </div>
                                 
                                 <!-- Signature Information -->
@@ -141,10 +141,10 @@
                                     <div class="col-md-8">
                                         <strong>
                                             <t t-if="bsre_verification and bsre_verification.get('signature_date')">
-                                                <t t-esc="bsre_verification['signature_date']"/>
+                                                <t t-out="bsre_verification['signature_date']"/>
                                             </t>
                                             <t t-else="">
-                                                <t t-esc="document.signature_date" t-options="{'widget': 'datetime'}"/>
+                                                <t t-out="document.signature_date" t-options="{'widget': 'datetime'}"/>
                                             </t>
                                         </strong>
                                     </div>
@@ -154,7 +154,7 @@
                                     <div class="col-md-4 font-weight-bold">Lokasi:</div>
                                     <div class="col-md-8">
                                         <t t-if="bsre_verification and bsre_verification.get('location')">
-                                            <t t-esc="bsre_verification['location']"/>
+                                            <t t-out="bsre_verification['location']"/>
                                         </t>
                                         <t t-else="">
                                             <span class="text-muted">null</span>
@@ -166,7 +166,7 @@
                                     <div class="col-md-4 font-weight-bold">Alasan:</div>
                                     <div class="col-md-8">
                                         <t t-if="bsre_verification and bsre_verification.get('reason')">
-                                            <t t-esc="bsre_verification['reason']"/>
+                                            <t t-out="bsre_verification['reason']"/>
                                         </t>
                                         <t t-else="">
                                             <span class="text-muted">null</span>
@@ -179,38 +179,38 @@
                                     <div class="col-md-8">
                                         <!-- PRIORITAS: Gunakan informasi dari BSRE verify response -->
                                         <t t-if="bsre_verification and bsre_verification.get('signer')">
-                                            <strong><t t-esc="bsre_verification['signer']"/></strong>
+                                            <strong><t t-out="bsre_verification['signer']"/></strong>
                                             <t t-if="bsre_verification.get('signer_identifier')">
                                                 <br/>
                                                 <small class="text-muted">
                                                     <t t-set="signer_id" t-value="bsre_verification.get('signer_identifier')"/>
                                                     <t t-if="signer_id and '@' in signer_id">
-                                                        Email: <t t-esc="signer_id"/>
+                                                        Email: <t t-out="signer_id"/>
                                                     </t>
                                                     <t t-else="">
-                                                        NIK: <t t-esc="signer_id"/>
+                                                        NIK: <t t-out="signer_id"/>
                                                     </t>
                                                 </small>
                                             </t>
                                         </t>
                                         <!-- FALLBACK: Gunakan informasi dari database jika verify response tidak ada -->
                                         <t t-elif="document.bsre_signer_name">
-                                            <strong><t t-esc="document.bsre_signer_name"/></strong>
+                                            <strong><t t-out="document.bsre_signer_name"/></strong>
                                             <t t-if="document.bsre_signer_identifier">
                                                 <br/>
                                                 <small class="text-muted">
                                                     <t t-if="document.bsre_signer_identifier and '@' in document.bsre_signer_identifier">
-                                                        Email: <t t-esc="document.bsre_signer_identifier"/>
+                                                        Email: <t t-out="document.bsre_signer_identifier"/>
                                                     </t>
                                                     <t t-else="">
-                                                        NIK: <t t-esc="document.bsre_signer_identifier"/>
+                                                        NIK: <t t-out="document.bsre_signer_identifier"/>
                                                     </t>
                                                 </small>
                                             </t>
                                         </t>
                                         <!-- FALLBACK TERAKHIR: Gunakan user yang melakukan signing (tidak ideal) -->
                                         <t t-else="">
-                                            <strong><t t-esc="document.signer_id.name"/></strong>
+                                            <strong><t t-out="document.signer_id.name"/></strong>
                                             <small class="text-muted d-block">(User yang melakukan tanda tangan - informasi BSRE tidak tersedia)</small>
                                         </t>
                                     </div>
@@ -220,7 +220,7 @@
                                     <div class="col-md-4 font-weight-bold">Penanda Waktu:</div>
                                     <div class="col-md-8">
                                         <t t-if="bsre_verification and bsre_verification.get('timestamp_authority')">
-                                            <t t-esc="bsre_verification['timestamp_authority']"/>
+                                            <t t-out="bsre_verification['timestamp_authority']"/>
                                         </t>
                                         <t t-else="">
                                             Timestamp Authority Badan Siber dan Sandi Negara
@@ -241,7 +241,7 @@
                                     <div class="row mb-3">
                                         <div class="col-md-4 font-weight-bold">BSRE Signature ID:</div>
                                         <div class="col-md-8">
-                                            <code style="font-size: 0.9rem;"><t t-esc="document.bsre_signature_id"/></code>
+                                            <code style="font-size: 0.9rem;"><t t-out="document.bsre_signature_id"/></code>
                                         </div>
                                     </div>
                                 </t>
@@ -250,7 +250,7 @@
                                     <div class="row mb-3">
                                         <div class="col-md-4 font-weight-bold">BSRE Request ID:</div>
                                         <div class="col-md-8">
-                                            <code style="font-size: 0.9rem;"><t t-esc="document.bsre_request_id"/></code>
+                                            <code style="font-size: 0.9rem;"><t t-out="document.bsre_request_id"/></code>
                                         </div>
                                     </div>
                                 </t>
@@ -264,7 +264,7 @@
                                     <div class="col-md-4 font-weight-bold">Hash Dokumen (SHA256):</div>
                                     <div class="col-md-8">
                                         <code style="font-size: 0.85rem; word-break: break-all; background-color: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem; display: block;">
-                                            <t t-esc="document.file_hash"/>
+                                            <t t-out="document.file_hash"/>
                                         </code>
                                         <small class="text-muted">Hash ini dapat digunakan untuk memverifikasi integritas dokumen</small>
                                     </div>
@@ -273,14 +273,14 @@
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Ukuran File:</div>
                                     <div class="col-md-8">
-                                        <t t-esc="'%.2f' % (document.file_size / 1024)"/> KB
+                                        <t t-out="'%.2f' % (document.file_size / 1024)"/> KB
                                     </div>
                                 </div>
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Jumlah Verifikasi:</div>
                                     <div class="col-md-8">
-                                        <span class="badge badge-secondary"><t t-esc="document.verification_count"/> kali</span>
+                                        <span class="badge badge-secondary"><t t-out="document.verification_count"/> kali</span>
                                     </div>
                                 </div>
                                 
@@ -288,7 +288,7 @@
                                     <div class="row mb-3">
                                         <div class="col-md-4 font-weight-bold">Terakhir Diverifikasi:</div>
                                         <div class="col-md-8">
-                                            <t t-esc="document.last_verified_date" t-options="{'widget': 'datetime'}"/>
+                                            <t t-out="document.last_verified_date" t-options="{'widget': 'datetime'}"/>
                                         </div>
                                     </div>
                                 </t>
@@ -354,12 +354,12 @@
                                 </h2>
                             </div>
                             <div class="card-body p-4 text-center">
-                                <p class="lead">Nomor Dokumen: <strong><t t-esc="document_number"/></strong></p>
+                                <p class="lead">Nomor Dokumen: <strong><t t-out="document_number"/></strong></p>
                                 <p class="text-muted">
                                     Dokumen dengan nomor tersebut tidak ditemukan atau belum ditandatangani.
                                 </p>
                                 <p class="text-muted" t-if="message">
-                                    <t t-esc="message"/>
+                                    <t t-out="message"/>
                                 </p>
                                 <div class="mt-4">
                                     <a href="/" class="btn btn-primary">Kembali ke Beranda</a>
@@ -386,10 +386,10 @@
                             </div>
                             <div class="card-body p-4 text-center">
                                 <p class="lead" t-if="document_number">
-                                    Nomor Dokumen: <strong><t t-esc="document_number"/></strong>
+                                    Nomor Dokumen: <strong><t t-out="document_number"/></strong>
                                 </p>
                                 <p class="text-danger">
-                                    <t t-esc="error"/>
+                                    <t t-out="error"/>
                                 </p>
                                 <div class="mt-4">
                                     <a href="/" class="btn btn-primary">Kembali ke Beranda</a>
