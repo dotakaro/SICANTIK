@@ -271,7 +271,16 @@ class BsreConfig(models.Model):
                     headers['Content-Type'] = 'application/json'
                     # Log request data (tanpa file base64 untuk tidak flood log)
                     debug_data = {k: v if k != 'file' else f'[{len(v)} files]' for k, v in (data or {}).items()}
-                    _logger.info(f'Request data: {json.dumps(debug_data)}')
+                    _logger.info(f'Request data: {json.dumps(debug_data, indent=2, ensure_ascii=False)}')
+                    
+                    # CRITICAL: Log actual JSON yang akan dikirim (untuk debugging)
+                    try:
+                        actual_json = json.dumps(data, ensure_ascii=False)
+                        # Log first 500 chars untuk melihat struktur
+                        _logger.info(f'📤 Actual JSON payload (first 500 chars): {actual_json[:500]}...')
+                        _logger.info(f'📤 JSON payload size: {len(actual_json)} chars')
+                    except Exception as e:
+                        _logger.error(f'❌ Error serializing JSON: {str(e)}')
                     
                     # CRITICAL: Log full payload structure untuk debugging (tanpa base64 panjang)
                     # IMPORTANT: Validate imageBase64 BEFORE replacing with placeholder for logging!
