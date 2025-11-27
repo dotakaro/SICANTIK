@@ -652,6 +652,19 @@ class BsreConfig(models.Model):
                     json_payload["signatureProperties"][idx]['imageBase64'] = fallback_png
                     _logger.warning(f'⚠️ Fixed Signature[{idx}] with hardcoded fallback PNG ({len(fallback_png)} chars)')
             
+            # Log full payload untuk debugging (tanpa file base64 yang panjang)
+            payload_debug = json_payload.copy()
+            if 'file' in payload_debug and payload_debug['file']:
+                payload_debug['file'] = [f'[BASE64_PDF: {len(payload_debug["file"][0])} chars]']
+            for sig_prop in payload_debug.get('signatureProperties', []):
+                if 'imageBase64' in sig_prop:
+                    img_len = len(sig_prop['imageBase64'])
+                    sig_prop['imageBase64'] = f'[BASE64_IMAGE: {img_len} chars]'
+            
+            _logger.info(f'📤 BSRE API Request Payload (debug): {json.dumps(payload_debug, indent=2)}')
+            _logger.info(f'📤 BSRE API Request: POST {self.api_url}/api/v2/sign/pdf')
+            _logger.info(f'📤 Payload size: file={len(json_payload.get("file", [""])[0]) if json_payload.get("file") else 0} chars, signatureProperties={len(json_payload.get("signatureProperties", []))} items')
+            
             # Make API request to BSRE dengan JSON (V2)
             # Endpoint: /api/v2/sign/pdf
             # Note: _make_api_request uses 'data' parameter for JSON (when files=None)
