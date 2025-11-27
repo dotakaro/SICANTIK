@@ -335,7 +335,8 @@ class BsreConfig(models.Model):
                     'status_code': response.status_code,
                     'url': url,
                     'method': method,
-                    'response_text': response.text[:500] if response.text else 'No response body'
+                    'response_text': response.text[:1000] if response.text else 'No response body',  # Increased to 1000 chars
+                    'response_headers': dict(response.headers) if response.headers else {}
                 }
                 _logger.error(f'BSRE API Error: {json.dumps(error_details, indent=2)}')
                 
@@ -343,16 +344,32 @@ class BsreConfig(models.Model):
                 # Try to parse response as JSON first to check for 'file' key
                 try:
                     error_json = response.json()
+                    _logger.info(f'📋 BSRE Error Response JSON: {json.dumps(error_json, indent=2)}')
                     
                     # If response contains 'file' key with signed PDF, treat as success despite 500 error
                     if isinstance(error_json, dict) and 'file' in error_json and error_json.get('file'):
-                        _logger.warning(f'BSRE returned {response.status_code} but response contains valid signed file. Treating as success.')
+                        _logger.warning(f'✅ BSRE returned {response.status_code} but response contains valid signed file. Treating as success.')
                         return error_json
                     
+                    # Check for additional error details in response
+                    error_message = error_json.get('message', '')
+                    error_timestamp = error_json.get('timestamp', '')
+                    error_path = error_json.get('path', '')
+                    
+                    # Log detailed error information
+                    _logger.error(f'❌ BSRE API Error Details:')
+                    _logger.error(f'   Status: {response.status_code}')
+                    _logger.error(f'   Message: {error_message}')
+                    _logger.error(f'   Timestamp: {error_timestamp}')
+                    _logger.error(f'   Path: {error_path}')
+                    _logger.error(f'   Full Response: {json.dumps(error_json, indent=2)}')
+                    
                     # Otherwise, it's a real error
-                    error_msg = f"BSRE API Error {response.status_code}: {error_json.get('message', error_json)}"
-                except:
-                    error_msg = f"BSRE API Error {response.status_code}: {response.text[:200]}"
+                    error_msg = f"BSRE API Error {response.status_code}: {error_message or error_json}"
+                except Exception as parse_error:
+                    _logger.error(f'❌ Failed to parse BSRE error response as JSON: {str(parse_error)}')
+                    _logger.error(f'❌ Raw response text (first 1000 chars): {response.text[:1000]}')
+                    error_msg = f"BSRE API Error {response.status_code}: {response.text[:500]}"
                 
                 raise UserError(error_msg)
             
