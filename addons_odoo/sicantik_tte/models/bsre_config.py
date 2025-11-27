@@ -588,16 +588,28 @@ class BsreConfig(models.Model):
                 _logger.info('═' * 60)
                 
                 # Prepare signatureProperties object
+                # CRITICAL: Ensure all numeric values are valid floats (not NaN or Inf)
+                import math
                 signature_props = {
                     'tampilan': 'VISIBLE',
                     'page': 1,  # Always page 1 for now
-                    'originX': origin_x,
-                    'originY': origin_y,
-                    'width': float(sig_width),
-                    'height': float(sig_height),
+                    'originX': float(origin_x) if not (math.isnan(origin_x) or math.isinf(origin_x)) else 10.0,
+                    'originY': float(origin_y) if not (math.isnan(origin_y) or math.isinf(origin_y)) else 10.0,
+                    'width': float(sig_width) if not (math.isnan(sig_width) or math.isinf(sig_width)) else 80.0,
+                    'height': float(sig_height) if not (math.isnan(sig_height) or math.isinf(sig_height)) else 60.0,
                     'location': '',  # Optional
                     'reason': '',    # Optional
                 }
+                
+                # Final validation: ensure no invalid values
+                for key in ['originX', 'originY', 'width', 'height']:
+                    val = signature_props[key]
+                    if math.isnan(val) or math.isinf(val) or val < 0:
+                        _logger.error(f'❌ Invalid {key} value: {val}, using default')
+                        defaults = {'originX': 10.0, 'originY': 10.0, 'width': 80.0, 'height': 60.0}
+                        signature_props[key] = defaults[key]
+                
+                _logger.info(f'✅ Signature properties validated: originX={signature_props["originX"]}, originY={signature_props["originY"]}, width={signature_props["width"]}, height={signature_props["height"]}')
             
                 # Add signature image jika ada
                 if self.signature_image:
