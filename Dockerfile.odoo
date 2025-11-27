@@ -47,7 +47,8 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     reportlab==4.0.* \
     mysql-connector-python==8.3.* \
     phonenumbers \
-    pdfminer.six==20231228.*  # Untuk PDF indexing di Odoo attachment_indexation module
+    pdfminer.six==20231228.* \
+    gevent==24.2.*  # Untuk websocket support (port 8072)
 
 # Install PyPDF2 separately with --ignore-installed
 RUN pip3 install --no-cache-dir --break-system-packages --ignore-installed \
@@ -69,8 +70,8 @@ RUN chown -R odoo:odoo /opt/odoo /mnt/extra-addons /mnt/enterprise-addons /var/l
 # Switch to odoo user
 USER odoo
 
-# Expose Odoo port
-EXPOSE 8069
+# Expose Odoo ports
+EXPOSE 8069 8072
 
 # Default command
 CMD ["python3", "odoo-bin", "--config=/etc/odoo/odoo.conf"]
