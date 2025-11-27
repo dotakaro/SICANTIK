@@ -776,6 +776,9 @@ class BsreConfig(models.Model):
                     'width': 0.0,
                     'height': 0.0,
                     'imageBase64': placeholder_base64,  # Required by V2 API - MUST NOT BE EMPTY
+                    'location': 'null',      # BSRE API expects string "null", not empty string
+                    'reason': 'null',        # BSRE API expects string "null", not empty string
+                    'contactInfo': 'null',   # Required field according to BSRE API v2 documentation
                 }]
                 _logger.info(f'✅ INVISIBLE signature properties created with imageBase64: {len(placeholder_base64)} chars')
             
