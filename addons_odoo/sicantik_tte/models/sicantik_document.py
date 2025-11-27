@@ -250,10 +250,11 @@ class SicantikDocument(models.Model):
             else:
                 record.verification_url = False
     
-    @api.depends('id', 'original_filename', 'state')
+    @api.depends('original_filename', 'state')
     def _compute_download_url(self):
         """Compute URL untuk download dokumen (untuk QR code)"""
         for record in self:
+            # Note: 'id' tidak bisa di depends, tapi bisa diakses langsung di method
             if record.id and record.state in ['signed', 'verified']:
                 # Get base URL dari system parameter atau gunakan default
                 base_url = self.env['ir.config_parameter'].sudo().get_param(
