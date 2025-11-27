@@ -38,10 +38,7 @@ class SicantikPermit(models.Model):
         Kirim notifikasi WhatsApp saat izin selesai diproses
         Template: permit_ready
         
-        Strategy:
-        1. Cek opt-in status atau 24-hour window
-        2. Jika bisa kirim, kirim template message
-        3. Jika tidak bisa, fallback ke SMS/Email atau skip
+        Menggunakan dispatcher multi-provider untuk routing otomatis.
         """
         for record in self:
             if not record.partner_id:
@@ -60,54 +57,45 @@ class SicantikPermit(models.Model):
                 )
                 continue
             
-            # Cari template WhatsApp
-            template = self.env['whatsapp.template'].search([
-                ('template_name', '=', 'izin_selesai_diproses'),
-                ('status', '=', 'approved'),
-                ('active', '=', True)
-            ], limit=1)
-            
-            if not template:
-                _logger.warning('Template WhatsApp "izin_selesai_diproses" tidak ditemukan atau belum approved')
-                return
-            
-            # Cek apakah bisa kirim (opt-in atau 24-hour window)
-            opt_in_manager = self.env['whatsapp.opt.in.manager']
-            can_send_check = opt_in_manager.check_can_send_template(
-                record.partner_id.id,
-                template.wa_account_id.id
-            )
-            
-            if not can_send_check['can_send']:
-                _logger.warning(
-                    f'⏭️  Skip notifikasi izin selesai untuk {record.registration_id}: '
-                    f'{can_send_check["reason"]}'
-                )
-                # TODO: Fallback ke SMS/Email
-                # opt_in_manager.request_opt_in_via_sms_or_email(record.partner_id.id, record.id)
-                continue
-            
             try:
-                # Buat composer untuk mengirim pesan
-                composer = self.env['whatsapp.composer'].create({
-                    'res_model': self._name,
-                    'res_ids': record.ids,
-                    'wa_template_id': template.id,
-                })
+                # Gunakan dispatcher untuk routing otomatis
+                dispatcher = self.env['sicantik.whatsapp.dispatcher']
                 
-                # Kirim pesan
-                composer._send_whatsapp_template(force_send_by_cron=True)
+                # Prepare context values sesuai parameter template master
+                context_values = {
+                    'partner_name': record.applicant_name or record.partner_id.name or '',
+                    'permit_number': record.permit_number or '',
+                    'permit_type': record.permit_type_id.name if record.permit_type_id else '',
+                    'status': dict(record._fields['status'].selection).get(record.status, record.status) if hasattr(record, 'status') else '',
+                }
                 
-                window_info = f" (24h window)" if can_send_check['use_24h_window'] else " (opt-in)"
-                _logger.info(f'✅ Notifikasi izin selesai dikirim ke {record.partner_id.name}{window_info}')
+                # Kirim via dispatcher
+                result = dispatcher.send_template_message(
+                    template_key='permit_ready',
+                    partner_id=record.partner_id.id,
+                    context_values=context_values,
+                    permit_id=record.id
+                )
                 
+                if result.get('success'):
+                    _logger.info(
+                        f'✅ Notifikasi izin selesai dikirim ke {record.partner_id.name} '
+                        f'via {result.get("provider", "unknown")}'
+                    )
+                else:
+                    _logger.error(
+                        f'❌ Gagal kirim notifikasi izin selesai: {result.get("error", "Unknown error")}'
+                    )
+                    
             except Exception as e:
-                _logger.error(f'❌ Error mengirim notifikasi izin selesai: {str(e)}')
+                _logger.error(f'❌ Error mengirim notifikasi izin selesai: {str(e)}', exc_info=True)
     
     def _kirim_notifikasi_update_status(self, status_lama, status_baru):
         """
         Kirim notifikasi WhatsApp saat status izin berubah
         Template: status_update
+        
+        Menggunakan dispatcher multi-provider untuk routing otomatis.
         """
         for record in self:
             if not record.partner_id:
@@ -122,33 +110,50 @@ class SicantikPermit(models.Model):
             if status_lama == status_baru:
                 continue
             
-            template = self.env['whatsapp.template'].search([
-                ('template_name', '=', 'update_status_perizinan'),
-                ('status', '=', 'approved'),
-                ('active', '=', True)
-            ], limit=1)
-            
-            if not template:
-                return
-            
             try:
-                composer = self.env['whatsapp.composer'].create({
-                    'res_model': self._name,
-                    'res_ids': record.ids,
-                    'wa_template_id': template.id,
-                })
+                # Gunakan dispatcher untuk routing otomatis
+                dispatcher = self.env['sicantik.whatsapp.dispatcher']
                 
-                composer._send_whatsapp_template(force_send_by_cron=True)
+                # Prepare context values
+                status_field = record._fields.get('status')
+                status_lama_label = dict(status_field.selection).get(status_lama, status_lama) if status_field else status_lama
+                status_baru_label = dict(status_field.selection).get(status_baru, status_baru) if status_field else status_baru
                 
-                _logger.info(f'✅ Notifikasi update status dikirim: {status_lama} → {status_baru}')
+                context_values = {
+                    'partner_name': record.applicant_name or record.partner_id.name or '',
+                    'permit_number': record.permit_number or record.registration_id or '',
+                    'permit_type': record.permit_type_id.name if record.permit_type_id else '',
+                    'new_status': status_baru_label,
+                    'update_date': fields.Datetime.now().strftime('%d-%m-%Y %H:%M'),
+                }
                 
+                # Kirim via dispatcher
+                result = dispatcher.send_template_message(
+                    template_key='status_update',
+                    partner_id=record.partner_id.id,
+                    context_values=context_values,
+                    permit_id=record.id
+                )
+                
+                if result.get('success'):
+                    _logger.info(
+                        f'✅ Notifikasi update status dikirim: {status_lama} → {status_baru} '
+                        f'via {result.get("provider", "unknown")}'
+                    )
+                else:
+                    _logger.error(
+                        f'❌ Gagal kirim notifikasi update status: {result.get("error", "Unknown error")}'
+                    )
+                    
             except Exception as e:
-                _logger.error(f'❌ Error mengirim notifikasi update status: {str(e)}')
+                _logger.error(f'❌ Error mengirim notifikasi update status: {str(e)}', exc_info=True)
     
     def _kirim_notifikasi_perpanjangan_disetujui(self):
         """
         Kirim notifikasi WhatsApp saat perpanjangan izin disetujui
-        Template: permit_renewal_approved
+        Template: renewal_approved
+        
+        Menggunakan dispatcher multi-provider untuk routing otomatis.
         """
         for record in self:
             if not record.partner_id:
@@ -159,28 +164,42 @@ class SicantikPermit(models.Model):
             if not mobile_number:
                 continue
             
-            template = self.env['whatsapp.template'].search([
-                ('template_name', '=', 'perpanjangan_izin_disetujui'),
-                ('status', '=', 'approved'),
-                ('active', '=', True)
-            ], limit=1)
-            
-            if not template:
-                return
-            
             try:
-                composer = self.env['whatsapp.composer'].create({
-                    'res_model': self._name,
-                    'res_ids': record.ids,
-                    'wa_template_id': template.id,
-                })
+                # Gunakan dispatcher untuk routing otomatis
+                dispatcher = self.env['sicantik.whatsapp.dispatcher']
                 
-                composer._send_whatsapp_template(force_send_by_cron=True)
+                # Prepare context values
+                new_expiry_date = ''
+                if hasattr(record, 'expiry_date') and record.expiry_date:
+                    new_expiry_date = record.expiry_date.strftime('%d-%m-%Y')
                 
-                _logger.info(f'✅ Notifikasi perpanjangan disetujui dikirim ke {record.partner_id.name}')
+                context_values = {
+                    'partner_name': record.applicant_name or record.partner_id.name or '',
+                    'permit_number': record.permit_number or '',
+                    'permit_type': record.permit_type_id.name if record.permit_type_id else '',
+                    'new_expiry_date': new_expiry_date,
+                }
                 
+                # Kirim via dispatcher
+                result = dispatcher.send_template_message(
+                    template_key='renewal_approved',
+                    partner_id=record.partner_id.id,
+                    context_values=context_values,
+                    permit_id=record.id
+                )
+                
+                if result.get('success'):
+                    _logger.info(
+                        f'✅ Notifikasi perpanjangan disetujui dikirim ke {record.partner_id.name} '
+                        f'via {result.get("provider", "unknown")}'
+                    )
+                else:
+                    _logger.error(
+                        f'❌ Gagal kirim notifikasi perpanjangan: {result.get("error", "Unknown error")}'
+                    )
+                    
             except Exception as e:
-                _logger.error(f'❌ Error mengirim notifikasi perpanjangan: {str(e)}')
+                _logger.error(f'❌ Error mengirim notifikasi perpanjangan: {str(e)}', exc_info=True)
     
     @api.model
     def cron_check_expiring_permits(self):
@@ -262,35 +281,52 @@ class SicantikPermit(models.Model):
                     # Hitung sisa hari
                     sisa_hari = (izin.expiry_date - today).days
                     
-                    # Buat composer untuk mengirim pesan
-                    composer = self.env['whatsapp.composer'].create({
-                        'res_model': self._name,
-                        'res_ids': izin.ids,
-                        'wa_template_id': template.id,
-                    })
+                    # Gunakan dispatcher untuk routing otomatis
+                    dispatcher = self.env['sicantik.whatsapp.dispatcher']
                     
-                    # Set free text untuk link perpanjangan dan kontak
-                    # Free text 6: link perpanjangan
-                    composer.free_text_6 = f'https://perizinan.karokab.go.id/perpanjangan/{izin.registration_id}'
-                    # Free text 7: kontak DPMPTSP
-                    composer.free_text_7 = '0628-20XXX'  # TODO: Ambil dari config
+                    # Prepare context values sesuai parameter template master
+                    expiry_date_str = izin.expiry_date.strftime('%d-%m-%Y') if izin.expiry_date else ''
+                    renewal_link = f'https://sicantik.dotakaro.com/perpanjangan/{izin.registration_id}'
+                    contact_info = '0628-20XXX'  # TODO: Ambil dari config
                     
-                    # Kirim pesan
-                    composer._send_whatsapp_template(force_send_by_cron=True)
+                    context_values = {
+                        'partner_name': izin.applicant_name or izin.partner_id.name or '',
+                        'permit_number': izin.permit_number or '',
+                        'permit_type': izin.permit_type_id.name if izin.permit_type_id else '',
+                        'expiry_date': expiry_date_str,
+                        'days_remaining': str(sisa_hari),
+                        'renewal_link': renewal_link,
+                        'contact_info': contact_info,
+                    }
                     
-                    # Tandai sudah dikirim notifikasi
-                    izin.write({field_name: True})
-                    
-                    total_notifikasi += 1
-                    _logger.info(
-                        f'    ✅ Notifikasi {hari} hari dikirim: '
-                        f'{izin.permit_number} - {izin.applicant_name} '
-                        f'(Sisa: {sisa_hari} hari)'
+                    # Kirim via dispatcher
+                    result = dispatcher.send_template_message(
+                        template_key='permit_reminder',
+                        partner_id=izin.partner_id.id,
+                        context_values=context_values,
+                        permit_id=izin.id
                     )
+                    
+                    if result.get('success'):
+                        # Tandai sudah dikirim notifikasi
+                        izin.write({field_name: True})
+                        
+                        total_notifikasi += 1
+                        _logger.info(
+                            f'    ✅ Notifikasi {hari} hari dikirim: '
+                            f'{izin.permit_number} - {izin.applicant_name} '
+                            f'(Sisa: {sisa_hari} hari) via {result.get("provider", "unknown")}'
+                        )
+                    else:
+                        _logger.error(
+                            f'    ❌ Gagal kirim notifikasi untuk {izin.registration_id}: '
+                            f'{result.get("error", "Unknown error")}'
+                        )
                     
                 except Exception as e:
                     _logger.error(
-                        f'    ❌ Error mengirim notifikasi untuk {izin.registration_id}: {str(e)}'
+                        f'    ❌ Error mengirim notifikasi untuk {izin.registration_id}: {str(e)}',
+                        exc_info=True
                     )
         
         _logger.info('='*80)

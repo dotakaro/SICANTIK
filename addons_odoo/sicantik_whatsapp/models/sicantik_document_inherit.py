@@ -32,6 +32,8 @@ class SicantikDocument(models.Model):
         """
         Kirim notifikasi WhatsApp ke staff saat dokumen baru masuk untuk ditandatangani
         Template: document_pending
+        
+        Menggunakan dispatcher multi-provider untuk routing otomatis.
         """
         for record in self:
             # Cari staff yang bertanggung jawab (bisa dari workflow atau default)
@@ -62,52 +64,61 @@ class SicantikDocument(models.Model):
                 _logger.warning('Tidak ada staff dengan nomor WhatsApp untuk notifikasi dokumen baru')
                 return
             
-            template = self.env['whatsapp.template'].search([
-                ('template_name', '=', 'dokumen_baru_untuk_tandatangan'),
-                ('status', '=', 'approved'),
-                ('active', '=', True)
-            ], limit=1)
-            
-            if not template:
-                _logger.warning('Template WhatsApp "dokumen_baru_untuk_tandatangan" tidak ditemukan')
-                return
-            
             # Hitung jumlah dokumen pending
             jumlah_pending = self.env['sicantik.document'].search_count([
                 ('state', '=', 'pending_signature')
             ])
             
+            # Gunakan dispatcher untuk routing otomatis
+            dispatcher = self.env['sicantik.whatsapp.dispatcher']
+            
+            # Prepare context values
+            permit_type_name = record.permit_type_id.name if record.permit_type_id else ''
+            applicant_name = record.permit_id.applicant_name if record.permit_id else ''
+            pendaftaran_id = record.permit_id.registration_id if record.permit_id else record.document_number or ''
+            link_dashboard = 'https://sicantik.dotakaro.com/dashboard'
+            
+            context_values = {
+                'jumlah': str(jumlah_pending),
+                'jenis_izin': permit_type_name,
+                'nama_pemohon': applicant_name,
+                'pendaftaran_id': pendaftaran_id,
+                'link_dashboard': link_dashboard,
+            }
+            
             # Kirim notifikasi ke setiap staff
             for user in staff_users[:5]:  # Limit 5 staff untuk menghindari spam
                 try:
-                    # Ambil nomor mobile dari partner_id
-                    mobile = user.partner_id._get_mobile_or_phone() if user.partner_id else False
-                    if not mobile:
-                        _logger.warning(f'User {user.name} tidak memiliki nomor mobile/phone')
+                    if not user.partner_id:
                         continue
                     
-                    # Buat composer
-                    composer = self.env['whatsapp.composer'].create({
-                        'res_model': self._name,
-                        'res_ids': record.ids,
-                        'wa_template_id': template.id,
-                        'phone': mobile,
-                    })
+                    # Kirim via dispatcher
+                    result = dispatcher.send_template_message(
+                        template_key='document_pending',
+                        partner_id=user.partner_id.id,
+                        context_values=context_values
+                    )
                     
-                    # Set free text untuk jumlah dokumen pending
-                    composer.free_text_1 = str(jumlah_pending)
-                    
-                    composer._send_whatsapp_template(force_send_by_cron=True)
-                    
-                    _logger.info(f'✅ Notifikasi dokumen baru dikirim ke {user.name}')
+                    if result.get('success'):
+                        _logger.info(
+                            f'✅ Notifikasi dokumen baru dikirim ke {user.name} '
+                            f'via {result.get("provider", "unknown")}'
+                        )
+                    else:
+                        _logger.error(
+                            f'❌ Gagal kirim notifikasi ke {user.name}: '
+                            f'{result.get("error", "Unknown error")}'
+                        )
                     
                 except Exception as e:
-                    _logger.error(f'❌ Error mengirim notifikasi ke {user.name}: {str(e)}')
+                    _logger.error(f'❌ Error mengirim notifikasi ke {user.name}: {str(e)}', exc_info=True)
     
     def _kirim_notifikasi_perlu_approval(self):
         """
         Kirim notifikasi WhatsApp ke pejabat saat dokumen perlu approval
         Template: approval_required
+        
+        Menggunakan dispatcher multi-provider untuk routing otomatis.
         """
         for record in self:
             # Cari pejabat berwenang dari workflow (reverse lookup)
@@ -121,63 +132,65 @@ class SicantikDocument(models.Model):
                 return
             
             approver = workflow.approver_id
-            # Ambil nomor mobile dari partner jika approver adalah res.users
-            if hasattr(approver, 'partner_id') and approver.partner_id:
-                mobile = approver.partner_id._get_mobile_or_phone()
-            elif hasattr(approver, 'mobile'):
-                mobile = approver.mobile
-            elif hasattr(approver, '_get_mobile_or_phone'):
-                mobile = approver._get_mobile_or_phone()
-            else:
-                mobile = False
             
+            # Ambil partner dari approver
+            approver_partner = None
+            if hasattr(approver, 'partner_id') and approver.partner_id:
+                approver_partner = approver.partner_id
+            elif hasattr(approver, 'name'):
+                # Jika approver bukan res.users, coba cari partner berdasarkan nama
+                approver_partner = self.env['res.partner'].search([
+                    ('name', '=', approver.name)
+                ], limit=1)
+            
+            if not approver_partner:
+                _logger.warning(f'Pejabat {approver.name} tidak memiliki partner')
+                return
+            
+            # Cek apakah partner memiliki nomor WhatsApp
+            mobile = approver_partner._get_mobile_or_phone() if approver_partner else False
             if not mobile:
                 _logger.warning(f'Pejabat {approver.name} tidak memiliki nomor WhatsApp')
                 return
             
-            template = self.env['whatsapp.template'].search([
-                ('template_name', '=', 'dokumen_perlu_approval'),
-                ('status', '=', 'approved'),
-                ('active', '=', True)
-            ], limit=1)
-            
-            if not template:
-                return
-            
             try:
+                # Gunakan dispatcher untuk routing otomatis
+                dispatcher = self.env['sicantik.whatsapp.dispatcher']
+                
                 # Ambil data dokumen untuk variabel template
                 permit_type_name = record.permit_type_id.name if record.permit_type_id else 'Tidak diketahui'
                 applicant_name = record.permit_id.applicant_name if record.permit_id else 'Tidak diketahui'
                 permit_number = record.permit_id.permit_number if record.permit_id and hasattr(record.permit_id, 'permit_number') else record.document_number or 'Tidak ada'
+                approval_link = f'https://sicantik.dotakaro.com/approval/{workflow.id}'
                 
-                # Buat composer dengan phone manual karena phone_field tidak bisa akses workflow
-                composer = self.env['whatsapp.composer'].create({
-                    'res_model': self._name,
-                    'res_ids': record.ids,
-                    'wa_template_id': template.id,
-                    'phone': mobile,  # Set phone manual
-                })
+                # Prepare context values
+                context_values = {
+                    'nama_pejabat': approver.name or 'Pejabat Berwenang',
+                    'jenis_izin': permit_type_name,
+                    'nama_pemohon': applicant_name,
+                    'permit_number': permit_number,
+                    'approval_link': approval_link,
+                }
                 
-                # Set semua variabel template (semua sekarang menggunakan free_text)
-                # {{1}} = Nama pejabat
-                composer.free_text_1 = approver.name or 'Pejabat Berwenang'
-                # {{2}} = Jenis izin
-                composer.free_text_2 = permit_type_name
-                # {{3}} = Nama pemohon
-                composer.free_text_3 = applicant_name
-                # {{4}} = Nomor surat
-                composer.free_text_4 = permit_number
-                # {{5}} = URL approval
-                composer.free_text_5 = f'https://perizinan.karokab.go.id/approval/{workflow.id}'
+                # Kirim via dispatcher
+                result = dispatcher.send_template_message(
+                    template_key='approval_required',
+                    partner_id=approver_partner.id,
+                    context_values=context_values
+                )
                 
-                composer._send_whatsapp_template(force_send_by_cron=True)
-                
-                _logger.info(f'✅ Notifikasi approval dikirim ke {approver.name}')
+                if result.get('success'):
+                    _logger.info(
+                        f'✅ Notifikasi approval dikirim ke {approver.name} '
+                        f'via {result.get("provider", "unknown")}'
+                    )
+                else:
+                    _logger.error(
+                        f'❌ Gagal kirim notifikasi approval: {result.get("error", "Unknown error")}'
+                    )
                 
             except Exception as e:
-                _logger.error(f'❌ Error mengirim notifikasi approval: {str(e)}')
-                import traceback
-                _logger.error(traceback.format_exc())
+                _logger.error(f'❌ Error mengirim notifikasi approval: {str(e)}', exc_info=True)
     
     @api.model
     def cron_reminder_dokumen_pending(self):
@@ -234,33 +247,54 @@ class SicantikDocument(models.Model):
         
         staff_users = all_staff.filtered(_has_phone)[:3]  # Limit untuk menghindari spam
         
+        # Gunakan dispatcher untuk routing otomatis
+        dispatcher = self.env['sicantik.whatsapp.dispatcher']
+        
+        # Ambil sample dokumen untuk context
+        sample_doc = dokumen_pending[0] if dokumen_pending else None
+        if not sample_doc:
+            return
+        
+        # Prepare context values
+        permit_type_name = sample_doc.permit_type_id.name if sample_doc.permit_type_id else ''
+        applicant_name = sample_doc.permit_id.applicant_name if sample_doc.permit_id else ''
+        waktu_pending = (datetime.now() - sample_doc.write_date).total_seconds() / 3600  # Jam
+        waktu_pending_str = f'{int(waktu_pending)} jam' if waktu_pending < 24 else f'{int(waktu_pending / 24)} hari'
+        link_dashboard = 'https://sicantik.dotakaro.com/dashboard'
+        
+        context_values = {
+            'jumlah': str(len(dokumen_pending)),
+            'jenis_izin': permit_type_name,
+            'nama_pemohon': applicant_name,
+            'waktu_pending': waktu_pending_str,
+            'link_dashboard': link_dashboard,
+        }
+        
         for user in staff_users[:3]:  # Limit 3 staff
             try:
-                # Ambil nomor mobile dari partner_id
-                mobile = user.partner_id._get_mobile_or_phone() if user.partner_id else False
-                if not mobile:
-                    _logger.warning(f'User {user.name} tidak memiliki nomor mobile/phone')
+                if not user.partner_id:
                     continue
                 
-                # Ambil sample dokumen pending
-                sample_doc = dokumen_pending[0]
+                # Kirim via dispatcher
+                result = dispatcher.send_template_message(
+                    template_key='reminder',
+                    partner_id=user.partner_id.id,
+                    context_values=context_values
+                )
                 
-                composer = self.env['whatsapp.composer'].create({
-                    'res_model': self._name,
-                    'res_ids': sample_doc.ids,
-                    'wa_template_id': template.id,
-                    'phone': mobile,
-                })
-                
-                # Set free text untuk jumlah dokumen
-                composer.free_text_1 = str(len(dokumen_pending))
-                
-                composer._send_whatsapp_template(force_send_by_cron=True)
-                
-                _logger.info(f'✅ Reminder dikirim ke {user.name}')
+                if result.get('success'):
+                    _logger.info(
+                        f'✅ Reminder dikirim ke {user.name} '
+                        f'via {result.get("provider", "unknown")}'
+                    )
+                else:
+                    _logger.error(
+                        f'❌ Gagal kirim reminder ke {user.name}: '
+                        f'{result.get("error", "Unknown error")}'
+                    )
                 
             except Exception as e:
-                _logger.error(f'❌ Error mengirim reminder: {str(e)}')
+                _logger.error(f'❌ Error mengirim reminder: {str(e)}', exc_info=True)
         
         _logger.info(f'✅ Total reminder dikirim: {len(staff_users[:3])}')
         _logger.info('='*80)

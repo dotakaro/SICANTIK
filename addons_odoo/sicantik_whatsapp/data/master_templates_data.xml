@@ -96,6 +96,76 @@ Terima kasih.</field>
             <field name="fonnte_template_name">perpanjangan_disetujui</field>
         </record>
 
+        <!-- Master Template: Dokumen Baru untuk Tandatangan -->
+        <record id="master_template_document_pending" model="sicantik.whatsapp.template.master">
+            <field name="template_key">document_pending</field>
+            <field name="name">Dokumen Baru untuk Tandatangan</field>
+            <field name="description">Notifikasi ke staff saat ada dokumen baru yang perlu ditandatangani</field>
+            <field name="body_preview">🔔 Notifikasi Dokumen Baru
+
+Ada {{jumlah}} dokumen menunggu tanda tangan digital:
+
+1. {{jenis_izin}} - {{nama_pemohon}}
+   No: {{pendaftaran_id}}
+
+Silakan proses melalui dashboard:
+🔗 {{link_dashboard}}
+
+SICANTIK Companion</field>
+            <field name="parameter_list">["jumlah", "jenis_izin", "nama_pemohon", "pendaftaran_id", "link_dashboard"]</field>
+            <field name="language">id</field>
+            <field name="meta_template_name">dokumen_baru_untuk_tandatangan</field>
+            <field name="watzap_template_name">dokumen_baru</field>
+            <field name="fonnte_template_name">dokumen_baru</field>
+        </record>
+
+        <!-- Master Template: Dokumen Perlu Approval -->
+        <record id="master_template_approval_required" model="sicantik.whatsapp.template.master">
+            <field name="template_key">approval_required</field>
+            <field name="name">Dokumen Perlu Approval</field>
+            <field name="description">Notifikasi ke pejabat saat dokumen perlu approval</field>
+            <field name="body_preview">🔐 Approval Required
+
+Yth. {{nama_pejabat}},
+
+Dokumen berikut memerlukan persetujuan Anda:
+📋 {{jenis_izin}}
+👤 Pemohon: {{nama_pemohon}}
+📄 No: {{permit_number}}
+
+Approve via:
+🔗 {{approval_link}}
+
+SICANTIK Companion</field>
+            <field name="parameter_list">["nama_pejabat", "jenis_izin", "nama_pemohon", "permit_number", "approval_link"]</field>
+            <field name="language">id</field>
+            <field name="meta_template_name">dokumen_perlu_approval</field>
+            <field name="watzap_template_name">approval_required</field>
+            <field name="fonnte_template_name">approval_required</field>
+        </record>
+
+        <!-- Master Template: Reminder Dokumen Pending -->
+        <record id="master_template_reminder" model="sicantik.whatsapp.template.master">
+            <field name="template_key">reminder</field>
+            <field name="name">Reminder Dokumen Pending</field>
+            <field name="description">Reminder untuk dokumen yang pending lebih dari 24 jam</field>
+            <field name="body_preview">⏰ Reminder: Dokumen Pending
+
+{{jumlah}} dokumen belum diproses:
+
+- {{jenis_izin}} ({{nama_pemohon}})
+  Pending sejak: {{waktu_pending}}
+
+Segera proses: {{link_dashboard}}
+
+SICANTIK Companion</field>
+            <field name="parameter_list">["jumlah", "jenis_izin", "nama_pemohon", "waktu_pending", "link_dashboard"]</field>
+            <field name="language">id</field>
+            <field name="meta_template_name">reminder_dokumen_pending</field>
+            <field name="watzap_template_name">reminder</field>
+            <field name="fonnte_template_name">reminder</field>
+        </record>
+
         <!-- Master Template: Meta Opt-In Request -->
         <record id="master_template_meta_opt_in" model="sicantik.whatsapp.template.master">
             <field name="template_key">meta_opt_in_request</field>
