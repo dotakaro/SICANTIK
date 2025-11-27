@@ -810,7 +810,9 @@ class BsreConfig(models.Model):
                         _logger.warning(f'⚠️ Replaced invalid imageBase64 with fallback PNG')
             
             # Log full payload untuk debugging (tanpa file base64 yang panjang)
-            payload_debug = json_payload.copy()
+            # CRITICAL: Use deepcopy to avoid modifying original json_payload!
+            import copy
+            payload_debug = copy.deepcopy(json_payload)
             if 'file' in payload_debug and payload_debug['file']:
                 payload_debug['file'] = [f'[BASE64_PDF: {len(payload_debug["file"][0])} chars]']
             for sig_prop in payload_debug.get('signatureProperties', []):
