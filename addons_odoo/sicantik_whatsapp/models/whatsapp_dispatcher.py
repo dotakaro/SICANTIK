@@ -199,6 +199,169 @@ class WhatsAppDispatcher(models.AbstractModel):
                 'error': str(e)
             }
     
+    def send_text_message(self, partner_id, message, provider_type=None):
+        """
+        Kirim pesan teks langsung (bukan template) via provider
+        
+        Args:
+            partner_id (int): ID partner penerima
+            message (str): Teks pesan yang akan dikirim
+            provider_type (str, optional): Force provider type ('fonnte', 'watzap', 'meta')
+                                          Jika None, gunakan default provider
+        
+        Returns:
+            dict: {
+                'success': bool,
+                'provider': provider name,
+                'message_id': ID pesan (jika sukses),
+                'error': error message (jika gagal)
+            }
+        """
+        partner = self.env['res.partner'].browse(partner_id)
+        
+        if not partner:
+            raise UserError('Partner tidak ditemukan')
+        
+        # Get phone number
+        mobile = partner._get_mobile_or_phone()
+        if not mobile:
+            raise UserError(f'Partner {partner.name} tidak memiliki nomor WhatsApp')
+        
+        # Determine provider
+        if provider_type:
+            # Force provider type
+            provider = self.env['sicantik.whatsapp.provider'].search([
+                ('provider_type', '=', provider_type),
+                ('active', '=', True),
+                ('credential_state', '=', 'configured')
+            ], limit=1, order='sequence ASC')
+            
+            if not provider:
+                raise UserError(f'Provider {provider_type} tidak ditemukan atau tidak aktif')
+        else:
+            # Use default provider
+            default_provider_id = self.env['ir.config_parameter'].sudo().get_param(
+                'sicantik_whatsapp.default_provider_id'
+            )
+            
+            if not default_provider_id:
+                raise UserError(
+                    'Default provider belum dikonfigurasi.\n\n'
+                    'Silakan set provider default di Settings → General Settings → WhatsApp Notifications'
+                )
+            
+            provider = self.env['sicantik.whatsapp.provider'].browse(int(default_provider_id))
+            
+            if not provider or not provider.active:
+                raise UserError('Default provider tidak valid atau tidak aktif')
+        
+        _logger.info(
+            f'📤 Sending text message to {partner.name} ({mobile}) via {provider.name}'
+        )
+        
+        # Send via provider implementation
+        try:
+            if provider.provider_type == 'fonnte':
+                result = self._send_text_via_fonnte(provider, mobile, message)
+            elif provider.provider_type == 'watzap':
+                result = self._send_text_via_watzap(provider, mobile, message)
+            elif provider.provider_type == 'meta':
+                # Meta tidak mendukung text message langsung, harus pakai template
+                raise UserError(
+                    'Meta WhatsApp Business API hanya mendukung template messages.\n\n'
+                    'Gunakan send_template_message() untuk Meta, atau pilih provider lain (Fonnte/Watzap) untuk text message.'
+                )
+            else:
+                raise UserError(f'Provider type tidak didukung: {provider.provider_type}')
+            
+            return result
+            
+        except Exception as e:
+            _logger.error(f'Error sending text via {provider.name}: {str(e)}', exc_info=True)
+            return {
+                'success': False,
+                'provider': provider.name,
+                'error': str(e)
+            }
+    
+    def _send_text_via_fonnte(self, provider, phone_number, message):
+        """
+        Kirim text message via Fonnte API
+        
+        Returns:
+            dict: Result dictionary
+        """
+        from odoo.addons.sicantik_whatsapp.tools.fonnte_provider import FonnteProvider
+        
+        # Validate credentials
+        if not provider.fonnte_token:
+            raise UserError(
+                f'Provider "{provider.name}" belum dikonfigurasi dengan lengkap.\n\n'
+                f'Silakan set API Token di menu WhatsApp → Konfigurasi → Profil Provider'
+            )
+        
+        # Initialize provider
+        fonnte = FonnteProvider(
+            token=provider.fonnte_token,
+            device=provider.fonnte_device or '',
+            api_url=provider.fonnte_api_url or 'https://api.fonnte.com'
+        )
+        
+        # Send message
+        result = fonnte.send_text(phone_number=phone_number, message=message)
+        
+        if result['success']:
+            return {
+                'success': True,
+                'provider': provider.name,
+                'message_id': result.get('message_id'),
+            }
+        else:
+            return {
+                'success': False,
+                'provider': provider.name,
+                'error': result.get('error'),
+            }
+    
+    def _send_text_via_watzap(self, provider, phone_number, message):
+        """
+        Kirim text message via Watzap.id API
+        
+        Returns:
+            dict: Result dictionary
+        """
+        from odoo.addons.sicantik_whatsapp.tools.watzap_provider import WatzapProvider
+        
+        # Validate credentials
+        if not provider.watzap_api_key or not provider.watzap_device_id:
+            raise UserError(
+                f'Provider "{provider.name}" belum dikonfigurasi dengan lengkap.\n\n'
+                f'Silakan set API Key dan Device ID di menu WhatsApp → Konfigurasi → Profil Provider'
+            )
+        
+        # Initialize provider
+        watzap = WatzapProvider(
+            api_key=provider.watzap_api_key,
+            device_id=provider.watzap_device_id,
+            base_url=provider.watzap_base_url or 'https://api.watzap.id/v1'
+        )
+        
+        # Send message
+        result = watzap.send_text(phone_number=phone_number, message=message)
+        
+        if result['success']:
+            return {
+                'success': True,
+                'provider': provider.name,
+                'message_id': result.get('message_id'),
+            }
+        else:
+            return {
+                'success': False,
+                'provider': provider.name,
+                'error': result.get('error'),
+            }
+    
     def _send_via_meta(self, provider, provider_template, partner_id, context_values, master_template):
         """
         Kirim via Meta Official API (menggunakan modul Odoo Enterprise)

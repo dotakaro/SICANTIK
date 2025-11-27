@@ -650,4 +650,220 @@ class SicantikPermit(models.Model):
                     'sticky': True,
                 }
             }
+    
+    def action_send_opt_in_message(self):
+        """
+        Kirim pesan opt-in ke pemilik izin untuk notifikasi WhatsApp
+        
+        Menggunakan text message langsung via Fonnte/Watzap (bukan template).
+        """
+        self.ensure_one()
+        
+        if not self.partner_id:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Pesan Opt-In',
+                    'message': 'Permit ini belum memiliki partner. Silakan link partner terlebih dahulu.',
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        mobile = self.partner_id._get_mobile_or_phone()
+        if not mobile:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Pesan Opt-In',
+                    'message': f'Partner {self.partner_id.name} tidak memiliki nomor WhatsApp.',
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        # Prepare pesan opt-in
+        message = f"""Yth. {self.applicant_name or self.partner_id.name},
+
+DPMPTSP Kabupaten Karo memberikan layanan notifikasi WhatsApp untuk memudahkan komunikasi terkait perizinan Anda.
+
+Dengan layanan ini, Anda akan menerima:
+✅ Notifikasi real-time saat izin selesai diproses
+✅ Update status perizinan otomatis
+✅ Peringatan masa berlaku izin
+✅ Link download dokumen langsung
+
+Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "SETUJU".
+
+Terima kasih atas perhatiannya.
+
+DPMPTSP Kabupaten Karo
+Kabupaten Karo"""
+        
+        try:
+            dispatcher = self.env['sicantik.whatsapp.dispatcher']
+            
+            # Kirim via Fonnte (atau provider default yang mendukung text message)
+            result = dispatcher.send_text_message(
+                partner_id=self.partner_id.id,
+                message=message,
+                provider_type='fonnte'  # Force Fonnte karena mendukung text message
+            )
+            
+            if result.get('success'):
+                _logger.info(
+                    f'✅ Pesan opt-in dikirim ke {self.partner_id.name} ({mobile}) '
+                    f'via {result.get("provider", "unknown")}'
+                )
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Pesan Opt-In',
+                        'message': f'✅ Pesan opt-in berhasil dikirim ke {self.partner_id.name} ({mobile}) via {result.get("provider", "unknown")}.\n\nPenerima dapat membalas dengan "YA" atau "SETUJU" untuk mengaktifkan notifikasi WhatsApp.',
+                        'type': 'success',
+                        'sticky': False,
+                    }
+                }
+            else:
+                error_msg = result.get('error', 'Unknown error')
+                _logger.error(f'❌ Gagal kirim pesan opt-in: {error_msg}')
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Pesan Opt-In',
+                        'message': f'Gagal mengirim pesan opt-in: {error_msg}',
+                        'type': 'danger',
+                        'sticky': True,
+                    }
+                }
+                
+        except Exception as e:
+            _logger.error(f'❌ Error mengirim pesan opt-in: {str(e)}', exc_info=True)
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Pesan Opt-In',
+                    'message': f'Error mengirim pesan opt-in: {str(e)}',
+                    'type': 'danger',
+                    'sticky': True,
+                }
+            }
+    
+    def action_send_notification_info(self):
+        """
+        Kirim pesan informasi layanan notifikasi WhatsApp ke pemilik izin
+        
+        Menggunakan text message langsung via Fonnte/Watzap.
+        """
+        self.ensure_one()
+        
+        if not self.partner_id:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Informasi Notifikasi',
+                    'message': 'Permit ini belum memiliki partner. Silakan link partner terlebih dahulu.',
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        mobile = self.partner_id._get_mobile_or_phone()
+        if not mobile:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Informasi Notifikasi',
+                    'message': f'Partner {self.partner_id.name} tidak memiliki nomor WhatsApp.',
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        # Prepare pesan informasi
+        message = f"""Yth. {self.applicant_name or self.partner_id.name},
+
+📱 Layanan Notifikasi WhatsApp DPMPTSP Kabupaten Karo
+
+Kami memberikan layanan notifikasi WhatsApp untuk memudahkan komunikasi terkait perizinan Anda.
+
+Layanan yang tersedia:
+✅ Notifikasi saat izin selesai diproses
+✅ Update status perizinan otomatis
+✅ Peringatan masa berlaku izin (90, 60, 30, 7 hari sebelum expired)
+✅ Link download dokumen langsung
+✅ Notifikasi perpanjangan izin
+
+Layanan ini GRATIS dan dapat membantu Anda:
+• Tetap update dengan status perizinan Anda
+• Tidak ketinggalan informasi penting
+• Akses dokumen dengan mudah via WhatsApp
+
+Untuk pertanyaan atau bantuan, silakan hubungi:
+📞 DPMPTSP Kabupaten Karo
+🌐 https://sicantik.dotakaro.com
+
+Terima kasih atas perhatiannya.
+
+DPMPTSP Kabupaten Karo
+Kabupaten Karo"""
+        
+        try:
+            dispatcher = self.env['sicantik.whatsapp.dispatcher']
+            
+            # Kirim via Fonnte (atau provider default yang mendukung text message)
+            result = dispatcher.send_text_message(
+                partner_id=self.partner_id.id,
+                message=message,
+                provider_type='fonnte'  # Force Fonnte karena mendukung text message
+            )
+            
+            if result.get('success'):
+                _logger.info(
+                    f'✅ Pesan informasi notifikasi dikirim ke {self.partner_id.name} ({mobile}) '
+                    f'via {result.get("provider", "unknown")}'
+                )
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Informasi Notifikasi',
+                        'message': f'✅ Pesan informasi berhasil dikirim ke {self.partner_id.name} ({mobile}) via {result.get("provider", "unknown")}.',
+                        'type': 'success',
+                        'sticky': False,
+                    }
+                }
+            else:
+                error_msg = result.get('error', 'Unknown error')
+                _logger.error(f'❌ Gagal kirim pesan informasi: {error_msg}')
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Informasi Notifikasi',
+                        'message': f'Gagal mengirim pesan informasi: {error_msg}',
+                        'type': 'danger',
+                        'sticky': True,
+                    }
+                }
+                
+        except Exception as e:
+            _logger.error(f'❌ Error mengirim pesan informasi: {str(e)}', exc_info=True)
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Informasi Notifikasi',
+                    'message': f'Error mengirim pesan informasi: {str(e)}',
+                    'type': 'danger',
+                    'sticky': True,
+                }
+            }
 
