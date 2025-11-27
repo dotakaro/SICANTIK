@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit SICANTIK Permit Form View untuk menambahkan button WhatsApp -->
+    <record id="view_sicantik_permit_form_inherit_whatsapp" model="ir.ui.view">
+        <field name="name">sicantik.permit.form.inherit.whatsapp</field>
+        <field name="model">sicantik.permit</field>
+        <field name="inherit_id" ref="sicantik_connector.view_sicantik_permit_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <button name="action_send_opt_in_message" type="object" string="📱 Kirim Pesan Opt-In" 
+                        class="btn-success" invisible="not partner_id"
+                        title="Kirim pesan WhatsApp untuk meminta opt-in notifikasi"/>
+                <button name="action_send_notification_info" type="object" string="ℹ️ Info Layanan Notifikasi" 
+                        class="btn-info" invisible="not partner_id"
+                        title="Kirim informasi layanan notifikasi WhatsApp"/>
+            </header>
+        </field>
+    </record>
+</odoo>
+

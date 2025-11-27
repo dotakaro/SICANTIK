@@ -42,6 +42,7 @@ Kepatuhan WhatsApp Business:
         "views/sicantik_whatsapp_provider_views.xml",
         "views/whatsapp_template_master_views.xml",  # Master templates
         "views/res_config_settings_views.xml",
+        "views/sicantik_permit_inherit_views.xml",  # Inherit permit views untuk button WhatsApp
         "wizard/sicantik_whatsapp_cleanup_wizard_views.xml",
         "wizard/export_phone_numbers_wizard_views.xml",
         "wizard/test_multi_provider_wizard_views.xml",  # Must load before menus
