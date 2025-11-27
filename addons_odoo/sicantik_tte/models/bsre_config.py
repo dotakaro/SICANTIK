@@ -809,14 +809,15 @@ class BsreConfig(models.Model):
                     placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
                     _logger.warning('⚠️ Using hardcoded fallback PNG for INVISIBLE signature')
                 
+                # CRITICAL: Urutan field HARUS sesuai Postman: imageBase64, tampilan, page, originX, originY, width, height, location, reason, contactInfo
                 json_payload['signatureProperties'] = [{
+                    'imageBase64': placeholder_base64,  # Required by V2 API - MUST NOT BE EMPTY, harus di urutan pertama
                     'tampilan': 'INVISIBLE',
                     'page': 1,
                     'originX': 0.0,
                     'originY': 0.0,
                     'width': 0.0,
                     'height': 0.0,
-                    'imageBase64': placeholder_base64,  # Required by V2 API - MUST NOT BE EMPTY
                     'location': 'null',      # BSRE API expects string "null", not empty string
                     'reason': 'null',        # BSRE API expects string "null", not empty string
                     'contactInfo': 'null',   # Required field according to BSRE API v2 documentation
