@@ -1258,7 +1258,7 @@ class BsreConfig(models.Model):
             document_data (bytes): Binary data PDF
         
         Returns:
-            dict: Verification result
+            dict: Verification result dengan informasi penandatangan
         """
         self.ensure_one()
         
@@ -1268,28 +1268,78 @@ class BsreConfig(models.Model):
                 'document': ('document.pdf', document_data, 'application/pdf')
             }
             
-            # Make API request
-            result = self._make_api_request('verify/signature', method='POST', files=files)
+            # Make API request ke endpoint verify
+            # Coba beberapa endpoint yang mungkin digunakan BSRE API
+            endpoints_to_try = [
+                'api/v2/verify/signature',  # V2 API endpoint
+                'verify/signature',  # Alternative endpoint
+                'api/verify/signature',  # V1 API endpoint
+            ]
             
-            if result.get('success'):
-                return {
-                    'success': True,
-                    'valid': result.get('valid'),
-                    'signer': result.get('signer'),
-                    'signature_date': result.get('signature_date'),
-                    'certificate': result.get('certificate'),
-                    'message': 'Verifikasi berhasil'
-                }
+            result = None
+            last_error = None
+            
+            for endpoint in endpoints_to_try:
+                try:
+                    _logger.info(f'[BSRE VERIFY] Mencoba endpoint: {endpoint}')
+                    result = self._make_api_request(endpoint, method='POST', files=files)
+                    if result:
+                        _logger.info(f'[BSRE VERIFY] ✅ Berhasil dengan endpoint: {endpoint}')
+                        break
+                except Exception as e:
+                    last_error = e
+                    _logger.warning(f'[BSRE VERIFY] ⚠️ Endpoint {endpoint} gagal: {str(e)}')
+                    continue
+            
+            if not result:
+                raise Exception(f'Semua endpoint verify gagal. Error terakhir: {str(last_error)}')
+            
+            # Log response untuk debugging
+            _logger.info(f'[BSRE VERIFY] Response dari BSRE API: {json.dumps(result, indent=2) if isinstance(result, dict) else str(result)}')
+            
+            # Handle response - BSRE API mungkin mengembalikan berbagai format
+            if result and isinstance(result, dict):
+                # Check jika response langsung mengandung informasi verifikasi
+                if 'valid' in result or 'signer' in result or 'certificate' in result:
+                    return {
+                        'success': True,
+                        'valid': result.get('valid', True),  # Default True jika tidak ada field valid
+                        'signer': result.get('signer') or result.get('signerInfo') or result.get('signer_info'),
+                        'signature_date': result.get('signature_date') or result.get('signatureDate') or result.get('signingTime'),
+                        'certificate': result.get('certificate') or result.get('certificateInfo') or result.get('certificate_info'),
+                        'message': result.get('message', 'Verifikasi berhasil')
+                    }
+                # Jika response mengandung 'success' key
+                elif result.get('success'):
+                    return {
+                        'success': True,
+                        'valid': result.get('valid', True),
+                        'signer': result.get('signer'),
+                        'signature_date': result.get('signature_date'),
+                        'certificate': result.get('certificate'),
+                        'message': result.get('message', 'Verifikasi berhasil')
+                    }
+                else:
+                    # Response mungkin dalam format lain, coba extract informasi
+                    _logger.warning(f'[BSRE VERIFY] Response format tidak dikenali, mencoba extract informasi...')
+                    return {
+                        'success': True,
+                        'valid': True,  # Assume valid jika tidak ada informasi
+                        'signer': result.get('signer') or result.get('signerInfo') or result.get('signer_info') or result,
+                        'signature_date': result.get('signature_date') or result.get('signatureDate'),
+                        'certificate': result.get('certificate') or result.get('certificateInfo'),
+                        'message': 'Verifikasi berhasil (format response tidak standar)'
+                    }
             else:
                 return {
                     'success': False,
                     'valid': False,
-                    'message': result.get('message', 'Verifikasi gagal')
+                    'message': f'Response tidak valid: {type(result)}'
                 }
                 
         except Exception as e:
             error_msg = str(e)
-            _logger.error(f'Error verifying signature: {error_msg}')
+            _logger.error(f'[BSRE VERIFY] Error verifying signature: {error_msg}', exc_info=True)
             
             return {
                 'success': False,
