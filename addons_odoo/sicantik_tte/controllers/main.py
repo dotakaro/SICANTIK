@@ -216,7 +216,12 @@ class SicantikTTEController(http.Controller):
                                 _logger.info(f'[VERIFY] ✅ BSRE API Verification berhasil')
                                 _logger.info(f'[VERIFY] - Valid: {verify_result.get("valid")}')
                                 _logger.info(f'[VERIFY] - Signer: {verify_result.get("signer")}')
+                                _logger.info(f'[VERIFY] - Signer Identifier: {verify_result.get("signer_identifier")}')
                                 _logger.info(f'[VERIFY] - Signature Date: {verify_result.get("signature_date")}')
+                                _logger.info(f'[VERIFY] - Location: {verify_result.get("location")}')
+                                _logger.info(f'[VERIFY] - Reason: {verify_result.get("reason")}')
+                                _logger.info(f'[VERIFY] - Timestamp Authority: {verify_result.get("timestamp_authority")}')
+                                _logger.info(f'[VERIFY] - Full verify_result keys: {list(verify_result.keys()) if isinstance(verify_result, dict) else "Not a dict"}')
                                 
                                 # Update dokumen dengan informasi dari BSRE verify response
                                 update_vals = {}
