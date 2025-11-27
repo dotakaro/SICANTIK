@@ -716,37 +716,52 @@ class BsreConfig(models.Model):
                     _logger.info(f'✅ imageBase64 length: {len(image_base64)} chars')
                 else:
                     # V2 API requires imageBase64 even for VISIBLE signature without image
-                    # CRITICAL: BSRE API may reject very small imageBase64!
-                    # Create a more realistic placeholder with border and content to ensure larger size
-                    _logger.info('⚠️ No signature image uploaded - creating realistic placeholder with signature dimensions')
+                    # CRITICAL: BSRE API rejects very small imageBase64 (204 chars)!
+                    # Create a larger placeholder with complex content to ensure sufficient size
+                    _logger.info('⚠️ No signature image uploaded - creating larger placeholder with signature dimensions')
                     placeholder_base64 = ''
                     try:
-                        from PIL import Image, ImageDraw, ImageFont
+                        from PIL import Image, ImageDraw
                         import io
                         # Create image dengan ukuran signature yang sebenarnya
-                        # Add border and some content to make it larger and more realistic
                         placeholder = Image.new('RGB', (int(sig_width), int(sig_height)), (255, 255, 255))
                         draw = ImageDraw.Draw(placeholder)
                         
-                        # Draw border untuk membuat image lebih besar
-                        border_width = max(1, int(sig_width / 40))
-                        draw.rectangle([0, 0, int(sig_width)-1, int(sig_height)-1], outline=(200, 200, 200), width=border_width)
+                        # Draw complex pattern to increase file size significantly
+                        # Draw border
+                        border_width = max(2, int(sig_width / 20))
+                        draw.rectangle([0, 0, int(sig_width)-1, int(sig_height)-1], outline=(150, 150, 150), width=border_width)
                         
-                        # Draw a simple line pattern to increase file size
-                        for i in range(0, int(sig_height), max(2, int(sig_height/10))):
-                            draw.line([(0, i), (int(sig_width), i)], fill=(240, 240, 240), width=1)
+                        # Draw grid pattern untuk meningkatkan ukuran file
+                        grid_size = max(5, int(sig_width / 15))
+                        for x in range(0, int(sig_width), grid_size):
+                            draw.line([(x, 0), (x, int(sig_height))], fill=(230, 230, 230), width=1)
+                        for y in range(0, int(sig_height), grid_size):
+                            draw.line([(0, y), (int(sig_width), y)], fill=(230, 230, 230), width=1)
+                        
+                        # Draw diagonal lines untuk menambah kompleksitas
+                        for i in range(0, int(sig_width + sig_height), grid_size):
+                            draw.line([(i, 0), (0, i)], fill=(240, 240, 240), width=1)
+                            if i < int(sig_width):
+                                draw.line([(i, int(sig_height)), (int(sig_width), int(sig_height) - i)], fill=(240, 240, 240), width=1)
+                        
+                        # Draw circles untuk menambah kompleksitas
+                        center_x, center_y = int(sig_width / 2), int(sig_height / 2)
+                        radius = min(int(sig_width / 4), int(sig_height / 4))
+                        for r in range(radius, 0, -max(2, radius // 5)):
+                            draw.ellipse([center_x - r, center_y - r, center_x + r, center_y + r], outline=(200, 200, 200), width=1)
                         
                         placeholder_buffer = io.BytesIO()
-                        # Use optimize=False to ensure larger file size
-                        placeholder.save(placeholder_buffer, format='PNG', optimize=False, compress_level=1)
+                        # Use optimize=False and compress_level=0 untuk file size maksimal
+                        placeholder.save(placeholder_buffer, format='PNG', optimize=False, compress_level=0)
                         placeholder_buffer.seek(0)
                         placeholder_base64 = base64.b64encode(placeholder_buffer.read()).decode('utf-8')
                         
-                        # Validate the generated base64
-                        if not placeholder_base64 or len(placeholder_base64) < 500:
-                            raise ValueError(f'Generated placeholder too small: {len(placeholder_base64)} chars')
+                        # Validate the generated base64 - harus minimal 1000 chars
+                        if not placeholder_base64 or len(placeholder_base64) < 1000:
+                            raise ValueError(f'Generated placeholder too small: {len(placeholder_base64)} chars, need at least 1000')
                         
-                        _logger.info(f'✅ Created realistic placeholder: {int(sig_width)}x{int(sig_height)} px, {len(placeholder_base64)} chars base64')
+                        _logger.info(f'✅ Created large placeholder: {int(sig_width)}x{int(sig_height)} px, {len(placeholder_base64)} chars base64')
                     except Exception as e:
                         _logger.error(f'❌ Error creating placeholder: {str(e)}', exc_info=True)
                         # Fallback: Try to create a larger minimal PNG programmatically
