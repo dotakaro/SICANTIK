@@ -1416,51 +1416,51 @@ class BsreConfig(models.Model):
                         _logger.info(f'[BSRE VERIFY V2] - valid: {verification_info["valid"]}')
                         
                     elif details and isinstance(details, list) and len(details) > 0:
-                    # Struktur V1 dengan details array
-                    _logger.info(f'[BSRE VERIFY V2] ✅ Using V1 structure (details array)')
-                    detail = details[0]  # Ambil signature pertama
-                    
-                    # Extract signer information dari info_signer
-                    info_signer = detail.get('info_signer', {})
-                    if info_signer:
-                        _logger.info(f'[BSRE VERIFY V2] - info_signer keys: {list(info_signer.keys())}')
-                        verification_info['signer'] = (
-                            info_signer.get('signer_name') or 
-                            info_signer.get('signer_dn') or
-                            info_signer.get('name')
-                        )
-                        _logger.info(f'[BSRE VERIFY V2] - Extracted signer: {verification_info["signer"]}')
+                        # Struktur V1 dengan details array
+                        _logger.info(f'[BSRE VERIFY V2] ✅ Using V1 structure (details array)')
+                        detail = details[0]  # Ambil signature pertama
                         
-                        # Extract identifier dari signer_dn jika ada (format: "CN=Name, O=Org, C=ID")
-                        signer_dn = info_signer.get('signer_dn', '')
-                        if signer_dn and not verification_info.get('signer'):
-                            # Parse DN untuk mendapatkan nama
-                            verification_info['signer'] = signer_dn
+                        # Extract signer information dari info_signer
+                        info_signer = detail.get('info_signer', {})
+                        if info_signer:
+                            _logger.info(f'[BSRE VERIFY V2] - info_signer keys: {list(info_signer.keys())}')
+                            verification_info['signer'] = (
+                                info_signer.get('signer_name') or 
+                                info_signer.get('signer_dn') or
+                                info_signer.get('name')
+                            )
+                            _logger.info(f'[BSRE VERIFY V2] - Extracted signer: {verification_info["signer"]}')
+                            
+                            # Extract identifier dari signer_dn jika ada (format: "CN=Name, O=Org, C=ID")
+                            signer_dn = info_signer.get('signer_dn', '')
+                            if signer_dn and not verification_info.get('signer'):
+                                # Parse DN untuk mendapatkan nama
+                                verification_info['signer'] = signer_dn
+                            
+                            verification_info['certificate_valid'] = info_signer.get('cert_user_certified', True)
                         
-                        verification_info['certificate_valid'] = info_signer.get('cert_user_certified', True)
-                    
-                    # Extract signature document information
-                    signature_doc = detail.get('signature_document', {})
-                    if signature_doc:
-                        _logger.info(f'[BSRE VERIFY V2] - signature_document keys: {list(signature_doc.keys())}')
-                        verification_info['signature_date'] = signature_doc.get('signed_in')
-                        verification_info['location'] = signature_doc.get('location')
-                        verification_info['reason'] = signature_doc.get('reason')
-                        verification_info['document_not_modified'] = signature_doc.get('document_integrity', True)
-                        verification_info['timestamp_from_tsa'] = signature_doc.get('signed_using_tsa', True)
-                        _logger.info(f'[BSRE VERIFY V2] - signature_date: {verification_info["signature_date"]}')
-                        _logger.info(f'[BSRE VERIFY V2] - location: {verification_info["location"]}')
-                        _logger.info(f'[BSRE VERIFY V2] - reason: {verification_info["reason"]}')
-                    
-                    # Extract TSA information
-                    info_tsa = detail.get('info_tsa', {})
-                    if info_tsa:
-                        verification_info['timestamp_authority'] = info_tsa.get('name')
-                        verification_info['tsa_cert_validity'] = info_tsa.get('tsa_cert_validity')
-                    
-                    # Extract signature field
-                    verification_info['signature_field'] = detail.get('signature_field')
-                else:
+                        # Extract signature document information
+                        signature_doc = detail.get('signature_document', {})
+                        if signature_doc:
+                            _logger.info(f'[BSRE VERIFY V2] - signature_document keys: {list(signature_doc.keys())}')
+                            verification_info['signature_date'] = signature_doc.get('signed_in')
+                            verification_info['location'] = signature_doc.get('location')
+                            verification_info['reason'] = signature_doc.get('reason')
+                            verification_info['document_not_modified'] = signature_doc.get('document_integrity', True)
+                            verification_info['timestamp_from_tsa'] = signature_doc.get('signed_using_tsa', True)
+                            _logger.info(f'[BSRE VERIFY V2] - signature_date: {verification_info["signature_date"]}')
+                            _logger.info(f'[BSRE VERIFY V2] - location: {verification_info["location"]}')
+                            _logger.info(f'[BSRE VERIFY V2] - reason: {verification_info["reason"]}')
+                        
+                        # Extract TSA information
+                        info_tsa = detail.get('info_tsa', {})
+                        if info_tsa:
+                            verification_info['timestamp_authority'] = info_tsa.get('name')
+                            verification_info['tsa_cert_validity'] = info_tsa.get('tsa_cert_validity')
+                        
+                        # Extract signature field
+                        verification_info['signature_field'] = detail.get('signature_field')
+                    else:
                     # Struktur V2 mungkin berbeda - coba extract langsung dari root
                     _logger.info(f'[BSRE VERIFY V2] ⚠️ Using V2 structure (no details array)')
                     _logger.info(f'[BSRE VERIFY V2] - Attempting to extract from root level')
