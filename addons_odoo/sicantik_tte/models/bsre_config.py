@@ -548,6 +548,32 @@ class BsreConfig(models.Model):
                 origin_x = float(pos_x)
                 origin_y = float(pos_y)
                 
+                # CRITICAL: Validate coordinates are within page bounds
+                # A4 Portrait: Width=595 points, Height=842 points
+                PAGE_WIDTH = 595
+                PAGE_HEIGHT = 842
+                MARGIN = 5  # Minimum margin
+                
+                # Validate X coordinate
+                if origin_x < 0:
+                    _logger.warning(f'⚠️ originX ({origin_x}) < 0, clamping to 0')
+                    origin_x = 0
+                if origin_x + sig_width > PAGE_WIDTH:
+                    _logger.warning(f'⚠️ originX + width ({origin_x + sig_width}) > PAGE_WIDTH ({PAGE_WIDTH}), adjusting')
+                    origin_x = PAGE_WIDTH - sig_width - MARGIN
+                    if origin_x < 0:
+                        origin_x = 0
+                
+                # Validate Y coordinate
+                if origin_y < 0:
+                    _logger.warning(f'⚠️ originY ({origin_y}) < 0, clamping to 0')
+                    origin_y = 0
+                if origin_y + sig_height > PAGE_HEIGHT:
+                    _logger.warning(f'⚠️ originY + height ({origin_y + sig_height}) > PAGE_HEIGHT ({PAGE_HEIGHT}), adjusting')
+                    origin_y = PAGE_HEIGHT - sig_height - MARGIN
+                    if origin_y < 0:
+                        origin_y = 0
+                
                 # LOG DETAIL untuk debug
                 _logger.info('═' * 60)
                 _logger.info('📐 SIGNATURE PARAMETERS (V2 API):')
@@ -556,8 +582,9 @@ class BsreConfig(models.Model):
                 _logger.info(f'   Custom Position: {self.use_custom_position}')
                 _logger.info(f'   Width: {sig_width} px')
                 _logger.info(f'   Height: {sig_height} px')
-                _logger.info(f'   originX: {origin_x} (V2 coordinate)')
-                _logger.info(f'   originY: {origin_y} (V2 coordinate - Y=0 at TOP!)')
+                _logger.info(f'   originX: {origin_x} (V2 coordinate, validated)')
+                _logger.info(f'   originY: {origin_y} (V2 coordinate - Y=0 at TOP!, validated)')
+                _logger.info(f'   Bounds check: X={origin_x}+{sig_width}={origin_x + sig_width} ≤ {PAGE_WIDTH}, Y={origin_y}+{sig_height}={origin_y + sig_height} ≤ {PAGE_HEIGHT}')
                 _logger.info('═' * 60)
                 
                 # Prepare signatureProperties object
