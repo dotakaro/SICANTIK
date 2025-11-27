@@ -21,6 +21,37 @@
                             </div>
                             
                             <div class="card-body p-4">
+                                <!-- Informasi Verifikasi BSRE -->
+                                <t t-if="bsre_verification_success and bsre_verification and bsre_verification.get('valid')">
+                                    <div class="card border-success mb-4">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0">
+                                                <i class="fa fa-check-circle"></i> Informasi Verifikasi
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <i class="fa fa-check text-success"></i> 
+                                                    Dokumen belum dimodifikasi sejak diberikan tandatangan elektronik
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="fa fa-check text-success"></i> 
+                                                    Waktu penandatanganan didapatkan dari Timestamp Authority (TSA)
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="fa fa-check text-success"></i> 
+                                                    Sertifikat yang digunakan untuk penandatangan dokumen adalah valid
+                                                </li>
+                                                <li class="mb-0">
+                                                    <i class="fa fa-check text-success"></i> 
+                                                    Long-Term Validation
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </t>
+                                
                                 <!-- Penjelasan Keabsahan Tanda Tangan Elektronik -->
                                 <div class="alert alert-success border-left-success border-left-4 mb-4">
                                     <h5 class="alert-heading">
@@ -83,36 +114,71 @@
                                 
                                 <!-- Signature Information -->
                                 <h4 class="border-bottom pb-2 mb-3 mt-4">
-                                    <i class="fa fa-signature"></i> Informasi Tanda Tangan Elektronik
+                                    <i class="fa fa-signature"></i> Informasi Tandatangan
                                 </h4>
                                 
                                 <div class="row mb-3">
-                                    <div class="col-md-4 font-weight-bold">Tanggal Tanda Tangan:</div>
+                                    <div class="col-md-4 font-weight-bold">Waktu Penandatanganan:</div>
                                     <div class="col-md-8">
-                                        <strong><t t-esc="document.signature_date" t-options="{'widget': 'datetime'}"/></strong>
+                                        <strong>
+                                            <t t-if="bsre_verification and bsre_verification.get('signature_date')">
+                                                <t t-esc="bsre_verification.get('signature_date')"/>
+                                            </t>
+                                            <t t-else="">
+                                                <t t-esc="document.signature_date" t-options="{'widget': 'datetime'}"/>
+                                            </t>
+                                        </strong>
                                     </div>
                                 </div>
                                 
                                 <div class="row mb-3">
-                                    <div class="col-md-4 font-weight-bold">Identitas Penandatangan:</div>
+                                    <div class="col-md-4 font-weight-bold">Lokasi:</div>
                                     <div class="col-md-8">
-                                        <t t-if="document.bsre_signer_name">
+                                        <t t-if="bsre_verification and bsre_verification.get('location')">
+                                            <t t-esc="bsre_verification.get('location')"/>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="text-muted">null</span>
+                                        </t>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-4 font-weight-bold">Alasan:</div>
+                                    <div class="col-md-8">
+                                        <t t-if="bsre_verification and bsre_verification.get('reason')">
+                                            <t t-esc="bsre_verification.get('reason')"/>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="text-muted">null</span>
+                                        </t>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-4 font-weight-bold">Penandatangan:</div>
+                                    <div class="col-md-8">
+                                        <t t-if="bsre_verification and bsre_verification.get('signer')">
+                                            <strong><t t-esc="bsre_verification.get('signer')"/></strong>
+                                        </t>
+                                        <t t-elif="document.bsre_signer_name">
                                             <strong><t t-esc="document.bsre_signer_name"/></strong>
-                                            <t t-if="document.bsre_signer_identifier">
-                                                <br/>
-                                                <small class="text-muted">
-                                                    <t t-if="document.bsre_signer_identifier and '@' in document.bsre_signer_identifier">
-                                                        Email: <t t-esc="document.bsre_signer_identifier"/>
-                                                    </t>
-                                                    <t t-else="">
-                                                        NIK: <t t-esc="document.bsre_signer_identifier"/>
-                                                    </t>
-                                                </small>
-                                            </t>
                                         </t>
                                         <t t-else="">
                                             <strong><t t-esc="document.signer_id.name"/></strong>
                                             <small class="text-muted d-block">(User yang melakukan tanda tangan)</small>
+                                        </t>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-4 font-weight-bold">Penanda Waktu:</div>
+                                    <div class="col-md-8">
+                                        <t t-if="bsre_verification and bsre_verification.get('timestamp_authority')">
+                                            <t t-esc="bsre_verification.get('timestamp_authority')"/>
+                                        </t>
+                                        <t t-else="">
+                                            Timestamp Authority Badan Siber dan Sandi Negara
                                         </t>
                                     </div>
                                 </div>
