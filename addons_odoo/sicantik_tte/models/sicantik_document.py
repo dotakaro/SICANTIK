@@ -495,12 +495,12 @@ class SicantikDocument(models.Model):
                         'minio_object_name': signed_object_name,
                     })
                     
-                    # CRITICAL: Trigger recompute verification_url setelah state berubah ke 'signed'
-                    # Ini memastikan verification_url ter-update sebelum generate QR code
-                    self._compute_verification_url()
-                    _logger.info(f'✅ verification_url recomputed setelah signing: {self.verification_url}')
+                    # CRITICAL: Trigger recompute download_url setelah state berubah ke 'signed'
+                    # Ini memastikan download_url ter-update sebelum generate QR code
+                    self._compute_download_url()
+                    _logger.info(f'✅ download_url recomputed setelah signing: {self.download_url}')
                     
-                    # Generate QR Code - sekarang akan menggunakan verification_url yang sudah di-compute
+                    # Generate QR Code - sekarang akan menggunakan download_url untuk QR code
                     self._generate_qr_code()
                     
                     # Embed QR Code ke PDF
