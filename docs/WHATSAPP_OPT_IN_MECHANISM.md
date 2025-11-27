@@ -13,6 +13,20 @@ Dokumen ini menjelaskan mekanisme opt-in yang benar untuk WhatsApp Business API,
 
 ## 📋 Meta WhatsApp Business API Opt-In
 
+### ⚠️ PENTING: Konsep "Opt-In Formal" adalah INTERNAL kita, BUKAN dari Meta!
+
+**Yang perlu dipahami:**
+- **Meta TIDAK punya konsep "opt-in formal"** seperti yang kita definisikan
+- **Yang Meta tahu adalah:**
+  1. **24-Hour Window**: Setelah user mengirim pesan inbound, Meta memberikan 24 jam untuk mengirim template messages
+  2. **Pre-Approved Contacts**: Nomor yang di-upload ke Meta Business Manager → Phone Numbers → Contacts
+  3. **Template Approval**: Template messages harus di-approve oleh Meta sebelum bisa digunakan
+
+- **"Opt-In Formal" di database Odoo** adalah konsep INTERNAL kita untuk:
+  - Tracking: Mengetahui apakah user sudah pernah mengirim pesan inbound
+  - Decision Making: Memutuskan apakah kita bisa kirim template messages (setelah 24 jam)
+  - Compliance: Memiliki bukti bahwa user sudah memberikan consent
+
 ### ✅ Cara Opt-In yang Valid (Menurut Meta)
 
 Meta WhatsApp Business API **WAJIB** memerlukan opt-in sebelum bisa mengirim template messages. Berikut adalah cara-cara valid untuk mendapatkan opt-in:
@@ -21,12 +35,13 @@ Meta WhatsApp Business API **WAJIB** memerlukan opt-in sebelum bisa mengirim tem
 - User mengirim pesan ke nomor WhatsApp Business Account (Meta)
 - Sistem otomatis mendeteksi pesan inbound via webhook
 - Odoo core otomatis remove dari blacklist (artinya opt-in)
-- Sistem juga set `whatsapp_opt_in = True` di partner record
-- **24-Hour Window**: Setelah user mengirim pesan, kita punya 24 jam untuk mengirim template messages tanpa perlu opt-in formal
-- **⚠️ PENTING**: Setelah 24 jam berlalu, kita TIDAK bisa kirim template message lagi kecuali:
-  - User sudah opt-in formal (ada consent yang tercatat di database)
+- **24-Hour Window**: Setelah user mengirim pesan, Meta memberikan 24 jam untuk mengirim template messages
+- **⚠️ PENTING**: Setelah 24 jam berlalu, Meta akan MENOLAK template messages kecuali:
+  - Nomor sudah di-upload sebagai **pre-approved contact** di Meta Business Manager
+  - Template message sudah **pre-approved** untuk nomor tersebut
   - User mengirim pesan inbound lagi (reset 24-hour window)
-  - Template message yang sudah pre-approved untuk nomor tersebut di Meta Business Manager
+
+**Catatan:** Kita juga set `whatsapp_opt_in = True` di database Odoo untuk tracking internal, tapi ini TIDAK mempengaruhi Meta. Meta hanya tahu tentang 24-hour window dan pre-approved contacts.
 
 #### 2. **Form Pendaftaran dengan Checkbox**
 - Saat user mendaftar izin baru, minta persetujuan untuk notifikasi WhatsApp
@@ -40,11 +55,14 @@ Meta WhatsApp Business API **WAJIB** memerlukan opt-in sebelum bisa mengirim tem
 - User klik link/scan QR → membuka chat dengan Meta WhatsApp Business Account
 - User mengirim pesan → auto opt-in
 
-#### 4. **Pre-Approval di Meta Business Manager**
+#### 4. **Pre-Approval di Meta Business Manager** (Cara Paling Reliable untuk Setelah 24 Jam)
 - Export daftar nomor yang sudah terdaftar
 - Upload ke Meta Business Manager → Phone Numbers → Contacts
 - Request approval untuk nomor-nomor tersebut
-- Setelah approved, bisa kirim template messages tanpa perlu opt-in manual
+- Setelah approved, **Meta akan mengizinkan** kirim template messages kapan saja (tidak terbatas 24 jam)
+- **Ini adalah cara yang BENAR untuk mengirim template messages setelah 24 jam berlalu**
+
+**⚠️ PENTING:** Pre-approved contacts di Meta Business Manager adalah cara yang BENAR untuk mengirim template messages setelah 24 jam. "Opt-in formal" di database Odoo hanya untuk tracking internal kita, tapi tidak mempengaruhi Meta.
 
 ### ❌ Cara Opt-In yang TIDAK Valid
 
@@ -275,18 +293,34 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 
 ### Q: Setelah 24 jam, apakah masih bisa kirim template message?
 
-**A: TIDAK**, setelah 24 jam berlalu sejak pesan inbound terakhir, kita **TIDAK bisa kirim template message lagi** kecuali:
+**A: TIDAK**, setelah 24 jam berlalu sejak pesan inbound terakhir, **Meta akan MENOLAK template messages** kecuali:
 
-1. **User sudah opt-in formal** (ada consent yang tercatat di database dengan `whatsapp_opt_in = True`)
+1. **Nomor sudah di-upload sebagai pre-approved contact** di Meta Business Manager → Phone Numbers → Contacts
 2. **User mengirim pesan inbound lagi** (reset 24-hour window)
-3. **Template message yang sudah pre-approved** untuk nomor tersebut di Meta Business Manager
+3. **Template message sudah pre-approved** untuk nomor tersebut di Meta Business Manager
 
-### Q: Bagaimana cara memastikan user opt-in sebelum 24 jam habis?
+**⚠️ PENTING:** 
+- "Opt-in formal" di database Odoo (`whatsapp_opt_in = True`) **TIDAK mempengaruhi Meta**
+- Meta hanya tahu tentang 24-hour window dan pre-approved contacts
+- Untuk mengirim template messages setelah 24 jam, nomor HARUS di-upload sebagai pre-approved contact di Meta Business Manager
+
+### Q: Bagaimana cara memastikan bisa kirim template messages setelah 24 jam?
 
 **A:**
-- Kirim pesan opt-in via Fonnte dengan link WhatsApp Business Account
-- User klik link → kirim pesan ke Meta → auto opt-in
-- Setelah opt-in, sistem bisa kirim template messages kapan saja (tidak terbatas 24 jam)
+- **Cara 1: Upload nomor sebagai pre-approved contact di Meta Business Manager**
+  - Export daftar nomor yang sudah terdaftar
+  - Upload ke Meta Business Manager → Phone Numbers → Contacts
+  - Request approval
+  - Setelah approved, bisa kirim template messages kapan saja ✅
+
+- **Cara 2: User mengirim pesan inbound lagi** (reset 24-hour window)
+  - Kirim pesan opt-in via Fonnte dengan link WhatsApp Business Account
+  - User klik link → kirim pesan ke Meta → reset 24-hour window
+  - Bisa kirim template messages dalam 24 jam berikutnya ✅
+
+**⚠️ PENTING:** 
+- "Opt-in formal" di database Odoo hanya untuk tracking internal
+- Untuk mengirim template messages setelah 24 jam, nomor HARUS di-upload sebagai pre-approved contact di Meta Business Manager
 
 ### Q: Apakah 24-hour window berlaku untuk semua jenis pesan?
 
@@ -312,11 +346,29 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 
 ---
 
-## 🔧 Cara Membuat Opt-In Formal
+## 🔧 Cara Membuat Opt-In Formal (INTERNAL Tracking di Odoo)
 
-### Flow Opt-In Formal Otomatis
+### ⚠️ PENTING: Ini adalah Tracking INTERNAL di Database Odoo, BUKAN di Meta!
 
-Sistem sudah diatur untuk **otomatis mencatat opt-in formal** ketika user mengirim pesan inbound ke Meta WhatsApp Business Account. Berikut cara kerjanya:
+**"Opt-In Formal" di database Odoo adalah:**
+- Konsep INTERNAL kita untuk tracking consent user
+- Mengetahui apakah user sudah pernah mengirim pesan inbound
+- Memutuskan apakah kita bisa kirim template messages (setelah 24 jam)
+- Memiliki bukti compliance bahwa user sudah memberikan consent
+
+**Yang Meta tahu:**
+- 24-hour window setelah user mengirim pesan inbound
+- Pre-approved contacts yang di-upload ke Meta Business Manager
+- Template messages yang sudah approved
+
+**Setelah 24 jam berlalu:**
+- Meta akan MENOLAK template messages kecuali nomor sudah di-upload sebagai pre-approved contact
+- "Opt-in formal" di database Odoo TIDAK mempengaruhi Meta
+- Untuk mengirim template messages setelah 24 jam, nomor HARUS di-upload sebagai pre-approved contact di Meta Business Manager
+
+### Flow Opt-In Formal Otomatis (INTERNAL Tracking)
+
+Sistem sudah diatur untuk **otomatis mencatat opt-in formal di database Odoo** ketika user mengirim pesan inbound ke Meta WhatsApp Business Account. Berikut cara kerjanya:
 
 #### 1. **Kirim Pesan Opt-In via Fonnte**
 
@@ -362,11 +414,11 @@ Setelah Odoo core memproses pesan inbound:
    - Set `whatsapp_opt_in_date` dengan timestamp saat ini
    - Log opt-in untuk tracking
 
-#### 4. **Setelah Opt-In Formal Tercatat**
+#### 4. **Setelah Opt-In Formal Tercatat (INTERNAL Tracking)**
 
-✅ **Bisa kirim template messages kapan saja** (tidak terbatas 24 jam)
-✅ **Opt-in tercatat permanen** di database dengan timestamp
-✅ **Tidak perlu khawatir 24-hour window** habis
+✅ **Opt-in tercatat permanen** di database Odoo dengan timestamp
+✅ **Tracking internal** untuk mengetahui user sudah memberikan consent
+✅ **⚠️ PENTING**: Ini TIDAK mempengaruhi Meta. Setelah 24 jam, Meta tetap akan MENOLAK template messages kecuali nomor sudah di-upload sebagai pre-approved contact di Meta Business Manager
 
 ### Implementasi Teknis
 
