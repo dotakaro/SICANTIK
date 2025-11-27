@@ -274,7 +274,21 @@ class BsreConfig(models.Model):
                     _logger.info(f'Request data: {json.dumps(debug_data)}')
                     
                     # CRITICAL: Log full payload structure untuk debugging (tanpa base64 panjang)
+                    # IMPORTANT: Validate imageBase64 BEFORE replacing with placeholder for logging!
                     if data and isinstance(data, dict):
+                        # First, validate imageBase64 in original data (before creating debug structure)
+                        if 'signatureProperties' in data:
+                            for idx, sig_prop in enumerate(data['signatureProperties']):
+                                img_b64 = sig_prop.get('imageBase64', '')
+                                img_len = len(img_b64) if img_b64 else 0
+                                if not img_b64 or img_len == 0:
+                                    _logger.error(f'❌ CRITICAL: signatureProperties[{idx}] has EMPTY imageBase64 in final payload!')
+                                elif img_len < 100:
+                                    _logger.warning(f'⚠️ signatureProperties[{idx}] imageBase64 is very small ({img_len} chars), may cause BSRE API 500 error!')
+                                else:
+                                    _logger.info(f'✅ signatureProperties[{idx}] imageBase64 is valid: {img_len} chars')
+                        
+                        # Now create debug structure for logging (replace with placeholders)
                         payload_structure = {}
                         for key, value in data.items():
                             if key == 'file' and isinstance(value, list):
@@ -286,11 +300,6 @@ class BsreConfig(models.Model):
                                     if 'imageBase64' in sig_debug:
                                         img_len = len(sig_debug['imageBase64'])
                                         sig_debug['imageBase64'] = f'[BASE64_IMAGE: {img_len} chars]'
-                                        # Validate imageBase64 is not empty or too small
-                                        if img_len == 0:
-                                            _logger.error(f'❌ CRITICAL: imageBase64 is EMPTY in payload!')
-                                        elif img_len < 100:
-                                            _logger.warning(f'⚠️ imageBase64 is very small ({img_len} chars), may be invalid')
                                     # Validate numeric fields
                                     for num_field in ['originX', 'originY', 'width', 'height']:
                                         if num_field in sig_debug:
@@ -304,15 +313,6 @@ class BsreConfig(models.Model):
                             else:
                                 payload_structure[key] = value
                         _logger.info(f'📋 Full Payload Structure: {json.dumps(payload_structure, indent=2, ensure_ascii=False)}')
-                        
-                        # Additional validation: check if signatureProperties has valid imageBase64
-                        if 'signatureProperties' in data:
-                            for idx, sig_prop in enumerate(data['signatureProperties']):
-                                img_b64 = sig_prop.get('imageBase64', '')
-                                if not img_b64 or len(img_b64) == 0:
-                                    _logger.error(f'❌ CRITICAL: signatureProperties[{idx}] has EMPTY imageBase64 in final payload!')
-                                elif len(img_b64) < 100:
-                                    _logger.warning(f'⚠️ signatureProperties[{idx}] imageBase64 is very small ({len(img_b64)} chars)')
                     
                     response = requests.post(url, auth=auth, headers=headers, json=data, timeout=self.api_timeout)
             elif method == 'GET':
