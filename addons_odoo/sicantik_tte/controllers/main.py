@@ -108,8 +108,10 @@ class SicantikTTEController(http.Controller):
                 status=500
             )
     
-    @http.route('/sicantik/tte/verify/<string:document_number>', type='http', auth='public', methods=['GET'], csrf=False, website=True)
-    @http.route('/sicantik/tte/verify/<string:document_number>/', type='http', auth='public', methods=['GET'], csrf=False, website=True)
+    @http.route([
+        '/sicantik/tte/verify/<string:document_number>',
+        '/sicantik/tte/verify/<string:document_number>/',  # Dengan trailing slash untuk kompatibilitas
+    ], type='http', auth='public', website=True, methods=['GET'], csrf=False)
     def verify_document(self, document_number, **kwargs):
         """
         Public endpoint untuk verifikasi dokumen
@@ -178,6 +180,7 @@ class SicantikTTEController(http.Controller):
             _logger.info(f'[VERIFY] Dokumen valid, state: {document.state}, ID: {document.id}')
             
             # Update verification counter
+            from odoo import fields
             document.write({
                 'verification_count': document.verification_count + 1,
                 'last_verified_date': fields.Datetime.now()

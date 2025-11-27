@@ -5,30 +5,51 @@
         <t t-call="web.frontend_layout">
             <div class="container mt-5 mb-5">
                 <div class="row justify-content-center">
-                    <div class="col-lg-8">
-                        <!-- Header -->
-                        <div class="card shadow-lg mb-4">
+                    <div class="col-lg-10">
+                        <!-- Header dengan Status Keabsahan -->
+                        <div class="card shadow-lg mb-4 border-success">
                             <div class="card-header bg-success text-white text-center py-4">
+                                <h1 class="mb-2">
+                                    <i class="fa fa-check-circle fa-2x"></i>
+                                </h1>
                                 <h2 class="mb-0">
-                                    <i class="fa fa-check-circle"></i> Dokumen Terverifikasi
+                                    Dokumen Sah &amp; Tertandatangani Digital
                                 </h2>
+                                <p class="mb-0 mt-2" style="font-size: 1rem; opacity: 0.9;">
+                                    Tanda Tangan Elektronik Terverifikasi
+                                </p>
                             </div>
                             
                             <div class="card-body p-4">
-                                <!-- Status Badge -->
-                                <div class="text-center mb-4">
-                                    <span class="badge badge-success p-3" style="font-size: 1.2rem;">
-                                        <i class="fa fa-shield"></i> Dokumen Sah &amp; Tertandatangani Digital
-                                    </span>
+                                <!-- Penjelasan Keabsahan Tanda Tangan Elektronik -->
+                                <div class="alert alert-success border-left-success border-left-4 mb-4">
+                                    <h5 class="alert-heading">
+                                        <i class="fa fa-shield-alt"></i> Keabsahan Tanda Tangan Elektronik
+                                    </h5>
+                                    <p class="mb-2">
+                                        Dokumen ini telah ditandatangani secara digital menggunakan <strong>BSRE (Balai Sertifikat Elektronik)</strong> 
+                                        yang merupakan lembaga sertifikasi elektronik resmi di Indonesia. Tanda tangan elektronik ini memiliki 
+                                        kekuatan hukum yang sama dengan tanda tangan basah sesuai dengan Undang-Undang No. 11 Tahun 2008 
+                                        tentang Informasi dan Transaksi Elektronik (UU ITE).
+                                    </p>
+                                    <hr>
+                                    <p class="mb-0">
+                                        <strong>Status Verifikasi:</strong> Dokumen ini telah terverifikasi keasliannya dan integritasnya. 
+                                        Setiap perubahan pada dokumen akan merusak tanda tangan digital dan dapat dideteksi melalui verifikasi.
+                                    </p>
                                 </div>
                                 
                                 <!-- Document Information -->
-                                <h4 class="border-bottom pb-2 mb-3">Informasi Dokumen</h4>
+                                <h4 class="border-bottom pb-2 mb-3">
+                                    <i class="fa fa-file-alt"></i> Informasi Dokumen
+                                </h4>
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Nomor Dokumen:</div>
                                     <div class="col-md-8">
-                                        <span class="badge badge-primary"><t t-esc="document.document_number"/></span>
+                                        <span class="badge badge-primary badge-lg" style="font-size: 1rem; padding: 0.5rem 1rem;">
+                                            <t t-esc="document.document_number"/>
+                                        </span>
                                     </div>
                                 </div>
                                 
@@ -47,32 +68,64 @@
                                     <div class="col-md-8"><t t-esc="document.permit_type_id.name"/></div>
                                 </div>
                                 
+                                <!-- Signature Information -->
+                                <h4 class="border-bottom pb-2 mb-3 mt-4">
+                                    <i class="fa fa-signature"></i> Informasi Tanda Tangan Elektronik
+                                </h4>
+                                
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Tanggal Tanda Tangan:</div>
                                     <div class="col-md-8">
-                                        <t t-esc="document.signature_date" t-options="{'widget': 'datetime'}"/>
+                                        <strong><t t-esc="document.signature_date" t-options="{'widget': 'datetime'}"/></strong>
                                     </div>
                                 </div>
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Ditandatangani Oleh:</div>
-                                    <div class="col-md-8"><t t-esc="document.signer_id.name"/></div>
+                                    <div class="col-md-8">
+                                        <strong><t t-esc="document.signer_id.name"/></strong>
+                                    </div>
                                 </div>
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Metode Tanda Tangan:</div>
                                     <div class="col-md-8">
-                                        <span class="badge badge-info">BSRE TTE (Balai Sertifikat Elektronik)</span>
+                                        <span class="badge badge-info badge-lg" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+                                            <i class="fa fa-certificate"></i> BSRE TTE (Balai Sertifikat Elektronik)
+                                        </span>
                                     </div>
                                 </div>
                                 
+                                <t t-if="document.bsre_signature_id">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 font-weight-bold">BSRE Signature ID:</div>
+                                        <div class="col-md-8">
+                                            <code style="font-size: 0.9rem;"><t t-esc="document.bsre_signature_id"/></code>
+                                        </div>
+                                    </div>
+                                </t>
+                                
+                                <t t-if="document.bsre_request_id">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 font-weight-bold">BSRE Request ID:</div>
+                                        <div class="col-md-8">
+                                            <code style="font-size: 0.9rem;"><t t-esc="document.bsre_request_id"/></code>
+                                        </div>
+                                    </div>
+                                </t>
+                                
                                 <!-- Security Information -->
-                                <h4 class="border-bottom pb-2 mb-3 mt-4">Informasi Keamanan</h4>
+                                <h4 class="border-bottom pb-2 mb-3 mt-4">
+                                    <i class="fa fa-lock"></i> Informasi Keamanan &amp; Integritas
+                                </h4>
                                 
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Hash Dokumen (SHA256):</div>
                                     <div class="col-md-8">
-                                        <code style="font-size: 0.85rem; word-break: break-all;"><t t-esc="document.file_hash"/></code>
+                                        <code style="font-size: 0.85rem; word-break: break-all; background-color: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem; display: block;">
+                                            <t t-esc="document.file_hash"/>
+                                        </code>
+                                        <small class="text-muted">Hash ini dapat digunakan untuk memverifikasi integritas dokumen</small>
                                     </div>
                                 </div>
                                 
@@ -90,19 +143,54 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Download Button -->
-                                <div class="text-center mt-4 pt-4 border-top">
-                                    <a t-attf-href="/web/content/sicantik.document/#{document.id}/download?filename=#{document.original_filename}" 
-                                       class="btn btn-lg btn-primary">
-                                        <i class="fa fa-download"></i> Download Dokumen Tertandatangani
-                                    </a>
+                                <t t-if="document.last_verified_date">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 font-weight-bold">Terakhir Diverifikasi:</div>
+                                        <div class="col-md-8">
+                                            <t t-esc="document.last_verified_date" t-options="{'widget': 'datetime'}"/>
+                                        </div>
+                                    </div>
+                                </t>
+                                
+                                <!-- Download Section -->
+                                <div class="card bg-light mt-4 mb-4">
+                                    <div class="card-body text-center">
+                                        <h5 class="mb-3">
+                                            <i class="fa fa-download"></i> Download Dokumen Tertandatangani
+                                        </h5>
+                                        <p class="text-muted mb-3">
+                                            Unduh dokumen PDF yang telah ditandatangani secara digital untuk keperluan arsip atau verifikasi lebih lanjut.
+                                        </p>
+                                        <a t-attf-href="/web/content/sicantik.document/#{document.id}/download?filename=#{document.original_filename}" 
+                                           class="btn btn-lg btn-primary btn-block" 
+                                           style="max-width: 400px; margin: 0 auto;">
+                                            <i class="fa fa-download"></i> Download Dokumen PDF
+                                        </a>
+                                    </div>
                                 </div>
                                 
                                 <!-- Info Footer -->
                                 <div class="alert alert-info mt-4 mb-0">
-                                    <i class="fa fa-info-circle"></i>
-                                    <strong>Catatan:</strong> Dokumen ini telah ditandatangani secara digital menggunakan BSRE (Balai Sertifikat Elektronik) 
-                                    dan telah terverifikasi keasliannya. Hash SHA256 dapat digunakan untuk memverifikasi integritas dokumen.
+                                    <h6 class="alert-heading">
+                                        <i class="fa fa-info-circle"></i> Informasi Penting
+                                    </h6>
+                                    <ul class="mb-0 pl-3">
+                                        <li>
+                                            Dokumen ini telah ditandatangani secara digital menggunakan <strong>BSRE (Balai Sertifikat Elektronik)</strong> 
+                                            yang merupakan lembaga sertifikasi elektronik resmi di Indonesia.
+                                        </li>
+                                        <li>
+                                            Tanda tangan elektronik ini memiliki <strong>kekuatan hukum yang sama dengan tanda tangan basah</strong> 
+                                            sesuai dengan Undang-Undang No. 11 Tahun 2008 tentang Informasi dan Transaksi Elektronik (UU ITE).
+                                        </li>
+                                        <li>
+                                            Hash SHA256 dapat digunakan untuk memverifikasi integritas dokumen. 
+                                            Setiap perubahan pada dokumen akan menghasilkan hash yang berbeda.
+                                        </li>
+                                        <li>
+                                            Dokumen ini dapat diverifikasi kapan saja dengan mengakses URL verifikasi atau memindai QR code yang terdapat pada dokumen.
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
