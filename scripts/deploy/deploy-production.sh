@@ -84,6 +84,16 @@ fi
 print_info "Deploying changes:"
 git log --oneline HEAD..origin/master | head -5
 
+# Handle divergent branches - reset ke origin/master (discard local changes)
+print_step "Handling divergent branches..."
+LOCAL_COMMITS=$(git rev-list --count HEAD..origin/master 2>/dev/null || echo "0")
+REMOTE_COMMITS=$(git rev-list --count origin/master..HEAD 2>/dev/null || echo "0")
+
+if [ "$REMOTE_COMMITS" -gt 0 ]; then
+    print_warn "Found $REMOTE_COMMITS local commit(s) that will be discarded"
+    print_info "Local changes akan di-discard dan menggunakan versi dari GitHub"
+fi
+
 # Handle odoo_source folder - hapus jika ada karena akan di-clone dari GitHub Odoo
 print_step "Handling odoo_source folder..."
 if [ -d "odoo_source" ]; then
@@ -96,12 +106,13 @@ fi
 # Backup config files sebelum pull (jika ada)
 print_step "Backing up production config files..."
 if [ -f "config_odoo/odoo.conf" ]; then
-    cp config_odoo/odoo.conf config_odoo/odoo.conf.backup.$(date +%Y%m%d_%H%M%S) || true
-    print_info "Backed up odoo.conf"
+    BACKUP_FILE="config_odoo/odoo.conf.backup.$(date +%Y%m%d_%H%M%S)"
+    cp config_odoo/odoo.conf "$BACKUP_FILE" || true
+    print_info "Backed up odoo.conf to $BACKUP_FILE"
 fi
 
-# Pull latest changes
-print_step "Updating code..."
+# Reset ke origin/master (force update, discard local changes)
+print_step "Updating code (resetting to origin/master)..."
 git reset --hard origin/master || {
     print_error "Failed to reset to origin/master"
     if [ "$ROLLBACK_ON_FAILURE" = "true" ]; then
@@ -113,11 +124,17 @@ git reset --hard origin/master || {
 
 # Restore production config files (jangan overwrite dengan template)
 print_step "Restoring production config files..."
-if [ -f "config_odoo/odoo.conf.backup."* ]; then
+if ls config_odoo/odoo.conf.backup.* 1> /dev/null 2>&1; then
     LATEST_BACKUP=$(ls -t config_odoo/odoo.conf.backup.* 2>/dev/null | head -1)
-    if [ -n "$LATEST_BACKUP" ]; then
+    if [ -n "$LATEST_BACKUP" ] && [ -f "$LATEST_BACKUP" ]; then
         cp "$LATEST_BACKUP" config_odoo/odoo.conf || true
-        print_info "Restored odoo.conf from backup"
+        print_info "Restored odoo.conf from backup: $LATEST_BACKUP"
+    fi
+else
+    # Jika tidak ada backup tapi odoo.conf.example ada, copy dari template
+    if [ ! -f "config_odoo/odoo.conf" ] && [ -f "config_odoo/odoo.conf.example" ]; then
+        cp config_odoo/odoo.conf.example config_odoo/odoo.conf || true
+        print_warn "Created odoo.conf from template (please configure it!)"
     fi
 fi
 
