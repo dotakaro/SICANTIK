@@ -651,6 +651,18 @@ class BsreConfig(models.Model):
                     fallback_png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
                     json_payload["signatureProperties"][idx]['imageBase64'] = fallback_png
                     _logger.warning(f'⚠️ Fixed Signature[{idx}] with hardcoded fallback PNG ({len(fallback_png)} chars)')
+                else:
+                    # Validate imageBase64 format (harus valid base64)
+                    try:
+                        import base64 as b64_check
+                        decoded = b64_check.b64decode(image_b64, validate=True)
+                        _logger.info(f'✅ Signature[{idx}] imageBase64 is valid base64 ({image_length} chars, decoded: {len(decoded)} bytes)')
+                    except Exception as b64_error:
+                        _logger.error(f'❌ Signature[{idx}] imageBase64 is INVALID base64: {str(b64_error)}')
+                        # Replace with valid fallback
+                        fallback_png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+                        json_payload["signatureProperties"][idx]['imageBase64'] = fallback_png
+                        _logger.warning(f'⚠️ Replaced invalid imageBase64 with fallback PNG')
             
             # Log full payload untuk debugging (tanpa file base64 yang panjang)
             payload_debug = json_payload.copy()
