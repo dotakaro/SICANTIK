@@ -527,10 +527,16 @@ class SicantikDocument(models.Model):
             file_data = download_result['data']
             
             # Sign with BSRE (dengan passphrase dari user)
+            # Ambil nama jenis izin untuk default reason
+            permit_type_name = None
+            if self.permit_type_id:
+                permit_type_name = self.permit_type_id.name
+            
             sign_result = bsre_config.sign_document(
                 document_data=file_data,
                 document_name=self.original_filename,
-                passphrase=passphrase  # Passphrase dari wizard
+                passphrase=passphrase,  # Passphrase dari wizard
+                permit_type_name=permit_type_name  # Nama jenis izin untuk default reason
             )
             
             if sign_result['success']:

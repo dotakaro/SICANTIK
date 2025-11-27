@@ -528,11 +528,15 @@ class BsreConfig(models.Model):
             # Fallback: return original image
             return base64.b64decode(self.signature_image)
     
-    def sign_document(self, document_data, document_name, passphrase=None):
+    def sign_document(self, document_data, document_name, passphrase=None, permit_type_name=None):
         """
         Sign document dengan BSRE TTE API v2
         
         Args:
+            document_data: Binary data dari PDF yang akan ditandatangani
+            document_name: Nama dokumen (untuk logging)
+            passphrase: Passphrase untuk sertifikat elektronik
+            permit_type_name: Nama jenis izin (untuk default reason), optional
             document_data (bytes): Binary data PDF
             document_name (str): Nama dokumen
             passphrase (str): Passphrase untuk signing (dari user input)
@@ -674,6 +678,13 @@ class BsreConfig(models.Model):
                 # CRITICAL: Urutan field HARUS sesuai dengan dokumentasi Postman:
                 # imageBase64, tampilan, page, originX, originY, width, height, location, reason, contactInfo
                 import math
+                # Set default location dan reason
+                default_location = 'Kabanjahe'
+                if permit_type_name:
+                    default_reason = f'Penerbitan Izin {permit_type_name}'
+                else:
+                    default_reason = 'Penerbitan Izin'
+                
                 signature_props = {
                     'imageBase64': '',  # Will be filled later
                     'tampilan': 'VISIBLE',
@@ -682,8 +693,8 @@ class BsreConfig(models.Model):
                     'originY': float(origin_y) if not (math.isnan(origin_y) or math.isinf(origin_y)) else 10.0,
                     'width': float(sig_width) if not (math.isnan(sig_width) or math.isinf(sig_width)) else 80.0,
                     'height': float(sig_height) if not (math.isnan(sig_height) or math.isinf(sig_height)) else 60.0,
-                    'location': 'null',      # BSRE API expects string "null", not empty string
-                    'reason': 'null',        # BSRE API expects string "null", not empty string
+                    'location': default_location,  # Default: Kabanjahe
+                    'reason': default_reason,      # Default: Penerbitan Izin <jenis izin>
                     'contactInfo': 'null',   # Required field according to BSRE API v2 documentation
                 }
                 
@@ -853,6 +864,13 @@ class BsreConfig(models.Model):
                     placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
                     _logger.warning('⚠️ Using hardcoded fallback PNG for INVISIBLE signature')
                 
+                # Set default location dan reason untuk INVISIBLE signature juga
+                default_location = 'Kabanjahe'
+                if permit_type_name:
+                    default_reason = f'Penerbitan Izin {permit_type_name}'
+                else:
+                    default_reason = 'Penerbitan Izin'
+                
                 # CRITICAL: Urutan field HARUS sesuai Postman: imageBase64, tampilan, page, originX, originY, width, height, location, reason, contactInfo
                 json_payload['signatureProperties'] = [{
                     'imageBase64': placeholder_base64,  # Required by V2 API - MUST NOT BE EMPTY, harus di urutan pertama
@@ -862,8 +880,8 @@ class BsreConfig(models.Model):
                     'originY': 0.0,
                     'width': 0.0,
                     'height': 0.0,
-                    'location': 'null',      # BSRE API expects string "null", not empty string
-                    'reason': 'null',        # BSRE API expects string "null", not empty string
+                    'location': default_location,  # Default: Kabanjahe
+                    'reason': default_reason,      # Default: Penerbitan Izin <jenis izin>
                     'contactInfo': 'null',   # Required field according to BSRE API v2 documentation
                 }]
                 _logger.info(f'✅ INVISIBLE signature properties created with imageBase64: {len(placeholder_base64)} chars')
