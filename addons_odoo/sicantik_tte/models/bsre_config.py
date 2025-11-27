@@ -289,6 +289,8 @@ class BsreConfig(models.Model):
                                     _logger.info(f'✅ signatureProperties[{idx}] imageBase64 is valid: {img_len} chars')
                         
                         # Now create debug structure for logging (replace with placeholders)
+                        # CRITICAL: Create a deep copy to avoid modifying original data!
+                        import copy
                         payload_structure = {}
                         for key, value in data.items():
                             if key == 'file' and isinstance(value, list):
@@ -296,7 +298,8 @@ class BsreConfig(models.Model):
                             elif key == 'signatureProperties' and isinstance(value, list):
                                 payload_structure[key] = []
                                 for sig_prop in value:
-                                    sig_debug = sig_prop.copy()
+                                    # Use copy to avoid modifying original
+                                    sig_debug = copy.deepcopy(sig_prop)
                                     if 'imageBase64' in sig_debug:
                                         img_len = len(sig_debug['imageBase64'])
                                         sig_debug['imageBase64'] = f'[BASE64_IMAGE: {img_len} chars]'
