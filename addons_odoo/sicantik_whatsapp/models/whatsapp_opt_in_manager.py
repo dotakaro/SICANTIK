@@ -176,31 +176,85 @@ class WhatsAppOptInManager(models.Model):
     
     def auto_opt_in_from_inbound_message(self, whatsapp_message_id):
         """
-        Auto opt-in ketika user mengirim pesan inbound
-        Sudah di-handle oleh Odoo core, tapi kita bisa enhance dengan logging
+        Auto opt-in formal ketika user mengirim pesan inbound ke Meta WhatsApp Business Account
+        
+        Method ini dipanggil setelah Odoo core memproses pesan inbound.
+        Ini memastikan bahwa opt-in formal tercatat di database sehingga
+        kita bisa kirim template messages kapan saja (tidak terbatas 24 jam).
+        
+        Args:
+            whatsapp_message_id (int): ID whatsapp.message yang baru dibuat
+        
+        Returns:
+            bool: True jika opt-in berhasil dicatat
         """
         message = self.env['whatsapp.message'].browse(whatsapp_message_id)
         
-        if message.message_type == 'inbound' and message.mobile_number_formatted:
-            # Cari partner berdasarkan nomor (coba phone dulu, fallback ke whatsapp_number)
+        if not message.exists():
+            return False
+        
+        if message.message_type != 'inbound' or not message.mobile_number_formatted:
+            return False
+        
+        # Normalize nomor untuk pencarian
+        mobile_formatted = message.mobile_number_formatted
+        mobile_variants = [
+            mobile_formatted,
+            mobile_formatted.replace(' ', '').replace('-', '').replace('(', '').replace(')', ''),
+        ]
+        
+        # Jika nomor dimulai dengan +, hapus
+        if mobile_formatted.startswith('+'):
+            mobile_variants.append(mobile_formatted[1:])
+        
+        # Cari partner berdasarkan nomor (coba berbagai format)
+        partner = None
+        for variant in mobile_variants:
+            # Cari dengan phone field
             partner = self.env['res.partner'].search([
-                ('phone', 'ilike', message.mobile_number_formatted)
+                ('phone', 'ilike', variant)
             ], limit=1)
             
-            if not partner:
-                partner = self.env['res.partner'].search([
-                    ('whatsapp_number', 'ilike', message.mobile_number_formatted)
-                ], limit=1)
+            if partner:
+                break
+            
+            # Cari dengan whatsapp_number field
+            partner = self.env['res.partner'].search([
+                ('whatsapp_number', 'ilike', variant)
+            ], limit=1)
             
             if partner:
-                # Set opt-in jika belum
-                if not getattr(partner, 'whatsapp_opt_in', False):
-                    mobile = partner._get_mobile_or_phone()
-                    partner.write({
-                        'whatsapp_opt_in': True,
-                        'whatsapp_opt_in_date': fields.Datetime.now()
-                    })
-                    _logger.info(f'✅ Auto opt-in untuk {partner.name} ({mobile}) dari inbound message')
+                break
+        
+        if partner:
+            # Set opt-in formal jika belum
+            if not getattr(partner, 'whatsapp_opt_in', False):
+                mobile = partner._get_mobile_or_phone()
+                partner.write({
+                    'whatsapp_opt_in': True,
+                    'whatsapp_opt_in_date': fields.Datetime.now()
+                })
+                _logger.info(
+                    f'✅ Opt-in formal tercatat untuk {partner.name} ({mobile}) '
+                    f'dari pesan inbound WhatsApp Business Account (Message ID: {message.id})'
+                )
+                return True
+            else:
+                # Sudah opt-in sebelumnya, update timestamp jika perlu
+                mobile = partner._get_mobile_or_phone()
+                _logger.debug(
+                    f'Partner {partner.name} ({mobile}) sudah opt-in sebelumnya '
+                    f'(Opt-in date: {partner.whatsapp_opt_in_date})'
+                )
+                return True
+        else:
+            # Partner tidak ditemukan, log untuk tracking
+            _logger.warning(
+                f'⚠️ Partner tidak ditemukan untuk nomor {mobile_formatted} '
+                f'dari pesan inbound (Message ID: {message.id}). '
+                f'Opt-in tidak bisa dicatat, tapi pesan tetap diproses oleh Odoo core.'
+            )
+            return False
         
         return True
     
