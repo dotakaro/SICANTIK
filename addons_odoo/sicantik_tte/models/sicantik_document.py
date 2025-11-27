@@ -294,9 +294,13 @@ class SicantikDocument(models.Model):
                 record.download_url = False
     
     def _generate_download_token(self):
-        """Generate secure token untuk download publik"""
+        """Generate secure token untuk download publik
+        
+        Token digunakan untuk download publik tanpa login.
+        Token expire setelah 1 jam untuk keamanan dan mencegah DDoS.
+        """
         for record in self:
-            # Generate token 32 karakter (16 bytes hex)
+            # Generate token 32 karakter (16 bytes hex = 32 hex chars)
             token = secrets.token_hex(16)
             # Token expire setelah 1 jam
             expires = fields.Datetime.now() + timedelta(hours=1)
@@ -304,7 +308,7 @@ class SicantikDocument(models.Model):
                 'download_token': token,
                 'download_token_expires': expires
             })
-            _logger.info(f'Generated download token untuk dokumen {record.document_number}: expires {expires}')
+            _logger.info(f'[TOKEN] Generated download token untuk dokumen {record.document_number}: expires {expires}')
     
     @api.depends('state', 'minio_object_name')
     def _compute_can_sign(self):
