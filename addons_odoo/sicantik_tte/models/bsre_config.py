@@ -670,33 +670,68 @@ class BsreConfig(models.Model):
                     _logger.info(f'✅ imageBase64 length: {len(image_base64)} chars')
                 else:
                     # V2 API requires imageBase64 even for VISIBLE signature without image
-                    # Create a small transparent PNG placeholder
-                    _logger.info('⚠️ No signature image uploaded - creating transparent placeholder')
+                    # CRITICAL: For VISIBLE signature, we MUST create a proper-sized image, not a 1x1 pixel!
+                    # BSRE API may reject signatures with imageBase64 that's too small
+                    _logger.info('⚠️ No signature image uploaded - creating transparent placeholder with signature dimensions')
                     placeholder_base64 = ''
                     try:
                         from PIL import Image
                         import io
-                        # Create transparent image dengan ukuran signature
+                        # CRITICAL: Create image dengan ukuran signature yang sebenarnya (bukan 1x1!)
+                        # This ensures the imageBase64 is large enough for BSRE API
                         placeholder = Image.new('RGBA', (int(sig_width), int(sig_height)), (255, 255, 255, 0))
                         placeholder_buffer = io.BytesIO()
-                        placeholder.save(placeholder_buffer, format='PNG')
+                        # Use optimize=False to ensure consistent size
+                        placeholder.save(placeholder_buffer, format='PNG', optimize=False)
                         placeholder_buffer.seek(0)
                         placeholder_base64 = base64.b64encode(placeholder_buffer.read()).decode('utf-8')
+                        
+                        # Validate the generated base64
+                        if not placeholder_base64 or len(placeholder_base64) < 100:
+                            raise ValueError(f'Generated placeholder too small: {len(placeholder_base64)} chars')
+                        
                         _logger.info(f'✅ Created transparent placeholder: {int(sig_width)}x{int(sig_height)} px, {len(placeholder_base64)} chars base64')
                     except Exception as e:
                         _logger.error(f'❌ Error creating placeholder: {str(e)}', exc_info=True)
-                        # Fallback: create minimal base64 PNG manually
-                        # Minimal transparent PNG dengan ukuran signature (simplified)
-                        placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-                        _logger.warning('⚠️ Using hardcoded minimal PNG placeholder as fallback')
+                        # Fallback: Try to create a larger minimal PNG programmatically
+                        try:
+                            from PIL import Image
+                            import io
+                            # Create a minimal but valid PNG with signature dimensions
+                            # Even if PIL fails, we'll create a white/transparent image
+                            fallback_img = Image.new('RGB', (max(1, int(sig_width)), max(1, int(sig_height))), (255, 255, 255))
+                            fallback_buffer = io.BytesIO()
+                            fallback_img.save(fallback_buffer, format='PNG')
+                            fallback_buffer.seek(0)
+                            placeholder_base64 = base64.b64encode(fallback_buffer.read()).decode('utf-8')
+                            _logger.info(f'✅ Created fallback placeholder via PIL: {len(placeholder_base64)} chars base64')
+                        except Exception as e2:
+                            _logger.error(f'❌ PIL fallback also failed: {str(e2)}')
+                            # Last resort: use hardcoded minimal PNG (1x1 transparent)
+                            # This is NOT ideal but better than empty
+                            placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+                            _logger.warning(f'⚠️ Using hardcoded minimal PNG placeholder as last resort: {len(placeholder_base64)} chars')
                     
-                    # Ensure placeholder_base64 is not empty
+                    # CRITICAL: Final validation - ensure placeholder_base64 is valid and not too small
                     if not placeholder_base64:
                         placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-                        _logger.warning('⚠️ Using hardcoded fallback PNG')
+                        _logger.warning('⚠️ placeholder_base64 was empty, using hardcoded fallback')
+                    
+                    # Validate base64 format
+                    try:
+                        decoded = base64.b64decode(placeholder_base64, validate=True)
+                        _logger.info(f'✅ Validated placeholder base64: {len(placeholder_base64)} chars, decoded to {len(decoded)} bytes')
+                    except Exception as e:
+                        _logger.error(f'❌ Invalid base64 format: {str(e)}')
+                        # Use hardcoded fallback
+                        placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
                     
                     signature_props['imageBase64'] = placeholder_base64
                     _logger.info(f'✅ VISIBLE signature placeholder set: {len(placeholder_base64)} chars base64')
+                    
+                    # CRITICAL: Warn if imageBase64 is too small (may cause BSRE API 500 error)
+                    if len(placeholder_base64) < 500:
+                        _logger.warning(f'⚠️ WARNING: imageBase64 is very small ({len(placeholder_base64)} chars). BSRE API may reject this. Consider uploading a signature image.')
                 
                 # Add signatureProperties array to payload
                 json_payload['signatureProperties'] = [signature_props]
