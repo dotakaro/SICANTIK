@@ -23,6 +23,10 @@ Meta WhatsApp Business API **WAJIB** memerlukan opt-in sebelum bisa mengirim tem
 - Odoo core otomatis remove dari blacklist (artinya opt-in)
 - Sistem juga set `whatsapp_opt_in = True` di partner record
 - **24-Hour Window**: Setelah user mengirim pesan, kita punya 24 jam untuk mengirim template messages tanpa perlu opt-in formal
+- **⚠️ PENTING**: Setelah 24 jam berlalu, kita TIDAK bisa kirim template message lagi kecuali:
+  - User sudah opt-in formal (ada consent yang tercatat di database)
+  - User mengirim pesan inbound lagi (reset 24-hour window)
+  - Template message yang sudah pre-approved untuk nomor tersebut di Meta Business Manager
 
 #### 2. **Form Pendaftaran dengan Checkbox**
 - Saat user mendaftar izin baru, minta persetujuan untuk notifikasi WhatsApp
@@ -99,7 +103,13 @@ Fonnte adalah gateway WhatsApp Indonesia yang **tidak memiliki mekanisme opt-in 
        └─ Setelah user klik link → kirim pesan ke Meta → auto opt-in ✅
 ```
 
-### Scenario 2: Pesan Opt-In via Fonnte
+### Scenario 2: Pesan Opt-In via Fonnte (Flow Sederhana)
+
+**Flow yang BENAR (Tanpa Response YA/TIDAK):**
+1. Kirim pesan via Fonnte dengan link WhatsApp Business Account
+2. User klik link → membuka chat dengan Meta WhatsApp Business Account
+3. User mengirim pesan → auto opt-in ke Meta ✅
+4. Sistem bisa kirim template messages via Meta
 
 **Pesan yang BENAR:**
 ```
@@ -113,10 +123,9 @@ Dengan layanan ini, Anda akan menerima:
 ✅ Peringatan masa berlaku izin
 ✅ Link download dokumen langsung
 
-Untuk mengaktifkan layanan ini, silakan klik link berikut atau scan QR code:
+Untuk mengaktifkan layanan ini, silakan klik link berikut:
 
-🔗 Link: https://wa.me/6281234567890?text=Halo
-📱 QR Code: [QR Code Image]
+🔗 https://wa.me/6281234567890?text=Halo
 
 Setelah Anda mengirim pesan ke nomor WhatsApp Business Account di atas, notifikasi akan aktif secara otomatis.
 
@@ -126,7 +135,13 @@ DPMPTSP Kabupaten Karo
 Kabupaten Karo
 ```
 
-**Pesan yang SALAH (Implementasi Saat Ini):**
+**Catatan:**
+- ✅ Tidak perlu minta response YA/TIDAK
+- ✅ Langsung kirim link, user klik → langsung opt-in
+- ✅ Lebih sederhana dan cepat
+- ✅ Sesuai dengan kebijakan Meta (user harus mengirim pesan ke WhatsApp Business Account)
+
+**Pesan yang SALAH (Implementasi Lama):**
 ```
 ...
 Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "SETUJU".
@@ -135,6 +150,7 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 ❌ Ini salah karena:
 - Membalas ke Fonnte tidak akan membuat user opt-in ke Meta
 - Meta tidak akan tahu bahwa user sudah memberikan consent
+- Membutuhkan 2 kali response (balas Fonnte + kirim ke Meta)
 
 ### Scenario 3: Webhook Handler untuk Inbound Messages
 

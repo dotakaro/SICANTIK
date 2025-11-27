@@ -699,7 +699,7 @@ class SicantikPermit(models.Model):
             wa_phone_number = None
             wa_account_name = 'WhatsApp Business Account'
         
-        # Prepare pesan opt-in
+        # Prepare pesan opt-in (Flow sederhana: langsung kirim link, tidak perlu response YA/TIDAK)
         if whatsapp_link:
             message = f"""Yth. {self.applicant_name or self.partner_id.name},
 
@@ -714,9 +714,6 @@ Dengan layanan ini, Anda akan menerima:
 Untuk mengaktifkan layanan ini, silakan klik link berikut:
 
 🔗 {whatsapp_link}
-
-Atau kirim pesan ke nomor WhatsApp Business Account:
-📱 {wa_phone_number}
 
 Setelah Anda mengirim pesan ke nomor WhatsApp Business Account di atas, notifikasi akan aktif secara otomatis.
 
@@ -763,7 +760,7 @@ Kabupaten Karo"""
                     'tag': 'display_notification',
                     'params': {
                         'title': 'Pesan Opt-In',
-                        'message': f'✅ Pesan opt-in berhasil dikirim ke {self.partner_id.name} ({mobile}) via {result.get("provider", "unknown")}.\n\nPenerima dapat mengklik link WhatsApp Business Account di pesan untuk mengaktifkan notifikasi WhatsApp.',
+                        'message': f'✅ Pesan opt-in berhasil dikirim ke {self.partner_id.name} ({mobile}) via {result.get("provider", "unknown")}.\n\nPenerima dapat mengklik link WhatsApp Business Account di pesan untuk langsung mengaktifkan notifikasi WhatsApp. Tidak perlu membalas pesan.',
                         'type': 'success',
                         'sticky': False,
                     }
