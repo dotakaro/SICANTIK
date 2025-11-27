@@ -111,8 +111,6 @@ class SicantikTTEController(http.Controller):
     @http.route([
         '/sicantik/tte/verify/<string:document_number>',
         '/sicantik/tte/verify/<string:document_number>/',
-        '/verify/<string:document_number>',
-        '/verify/<string:document_number>/',
     ], type='http', auth='public', methods=['GET'], csrf=False, website=True)
     def verify_document(self, document_number, **kwargs):
         """
@@ -125,20 +123,30 @@ class SicantikTTEController(http.Controller):
             Halaman verifikasi dokumen
         """
         try:
+            _logger.info(f'[VERIFY] ==========================================')
             _logger.info(f'[VERIFY] Request untuk verifikasi dokumen: {document_number}')
+            _logger.info(f'[VERIFY] URL: {request.httprequest.url}')
+            _logger.info(f'[VERIFY] Method: {request.httprequest.method}')
+            _logger.info(f'[VERIFY] User Agent: {request.httprequest.headers.get("User-Agent", "N/A")}')
+            
+            # Normalize document_number (remove leading/trailing spaces)
+            document_number = document_number.strip()
             
             # Get document dengan sudo untuk bypass access rights
             Document = request.env['sicantik.document'].sudo()
             
-            # Cari dokumen dengan document_number (case-insensitive untuk safety)
+            # Cari dokumen dengan document_number (exact match)
             document = Document.search([
                 ('document_number', '=', document_number)
             ], limit=1)
             
-            _logger.info(f'[VERIFY] Dokumen ditemukan: {bool(document)}, State: {document.state if document else "N/A"}')
-            
-            # Jika tidak ditemukan, coba tanpa filter state dulu untuk debugging
-            if not document:
+            _logger.info(f'[VERIFY] Dokumen ditemukan: {bool(document)}')
+            if document:
+                _logger.info(f'[VERIFY] - ID: {document.id}')
+                _logger.info(f'[VERIFY] - State: {document.state}')
+                _logger.info(f'[VERIFY] - Name: {document.name}')
+                _logger.info(f'[VERIFY] - Signature Date: {document.signature_date}')
+            else:
                 # Coba search tanpa filter state untuk debugging
                 all_docs = Document.search([
                     ('document_number', '=', document_number)
@@ -147,7 +155,15 @@ class SicantikTTEController(http.Controller):
                 _logger.warning(f'[VERIFY] Total dokumen dengan nomor serupa: {len(all_docs)}')
                 if all_docs:
                     for doc in all_docs:
-                        _logger.warning(f'[VERIFY] - Found: {doc.document_number}, State: {doc.state}')
+                        _logger.warning(f'[VERIFY] - Found: {doc.document_number}, State: {doc.state}, ID: {doc.id}')
+                else:
+                    # Coba search dengan ilike untuk debugging
+                    similar_docs = Document.search([
+                        ('document_number', 'ilike', f'%{document_number}%')
+                    ], limit=10)
+                    _logger.warning(f'[VERIFY] Total dokumen dengan nomor mirip: {len(similar_docs)}')
+                    for doc in similar_docs[:5]:
+                        _logger.warning(f'[VERIFY] - Similar: {doc.document_number}, State: {doc.state}')
                 
                 return request.render('sicantik_tte.verification_not_found', {
                     'document_number': document_number
@@ -172,12 +188,18 @@ class SicantikTTEController(http.Controller):
             _logger.info(f'[VERIFY] Verification counter updated: {document.verification_count}')
             
             # Render verification page
-            return request.render('sicantik_tte.verification_page', {
+            _logger.info(f'[VERIFY] Rendering verification page template...')
+            result = request.render('sicantik_tte.verification_page', {
                 'document': document,
             })
+            _logger.info(f'[VERIFY] Template rendered successfully')
+            _logger.info(f'[VERIFY] ==========================================')
+            return result
             
         except Exception as e:
+            _logger.error(f'[VERIFY] ==========================================')
             _logger.error(f'[VERIFY] Error verifying document {document_number}: {str(e)}', exc_info=True)
+            _logger.error(f'[VERIFY] ==========================================')
             return request.render('sicantik_tte.verification_error', {
                 'error': str(e),
                 'document_number': document_number
