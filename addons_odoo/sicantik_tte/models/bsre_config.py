@@ -1463,39 +1463,39 @@ class BsreConfig(models.Model):
                     else:
                         # Struktur V2 mungkin berbeda - coba extract langsung dari root
                         _logger.info(f'[BSRE VERIFY V2] ⚠️ Using V2 structure (no details array)')
-                    _logger.info(f'[BSRE VERIFY V2] - Attempting to extract from root level')
+                        _logger.info(f'[BSRE VERIFY V2] - Attempting to extract from root level')
+                        
+                        # Coba berbagai kemungkinan field untuk V2
+                        verification_info['signer'] = (
+                            result.get('signer') or 
+                            result.get('signerName') or 
+                            result.get('signer_name') or
+                            result.get('penandatangan')
+                        )
+                        verification_info['signature_date'] = (
+                            result.get('signatureDate') or 
+                            result.get('signingTime') or 
+                            result.get('signed_in') or
+                            result.get('signature_date')
+                        )
+                        verification_info['location'] = result.get('location')
+                        verification_info['reason'] = result.get('reason')
+                        verification_info['timestamp_authority'] = (
+                            result.get('timestampAuthority') or 
+                            result.get('timestamp_authority') or
+                            result.get('tsa')
+                        )
+                        verification_info['document_not_modified'] = result.get('documentNotModified', result.get('document_integrity', True))
+                        verification_info['timestamp_from_tsa'] = result.get('timestampFromTSA', result.get('signed_using_tsa', True))
+                        verification_info['certificate_valid'] = result.get('certificateValid', result.get('cert_user_certified', True))
+                        
+                        _logger.info(f'[BSRE VERIFY V2] - Extracted from root:')
+                        _logger.info(f'[BSRE VERIFY V2]   - signer: {verification_info["signer"]}')
+                        _logger.info(f'[BSRE VERIFY V2]   - signature_date: {verification_info["signature_date"]}')
+                        _logger.info(f'[BSRE VERIFY V2]   - location: {verification_info["location"]}')
+                        _logger.info(f'[BSRE VERIFY V2]   - reason: {verification_info["reason"]}')
                     
-                    # Coba berbagai kemungkinan field untuk V2
-                    verification_info['signer'] = (
-                        result.get('signer') or 
-                        result.get('signerName') or 
-                        result.get('signer_name') or
-                        result.get('penandatangan')
-                    )
-                    verification_info['signature_date'] = (
-                        result.get('signatureDate') or 
-                        result.get('signingTime') or 
-                        result.get('signed_in') or
-                        result.get('signature_date')
-                    )
-                    verification_info['location'] = result.get('location')
-                    verification_info['reason'] = result.get('reason')
-                    verification_info['timestamp_authority'] = (
-                        result.get('timestampAuthority') or 
-                        result.get('timestamp_authority') or
-                        result.get('tsa')
-                    )
-                    verification_info['document_not_modified'] = result.get('documentNotModified', result.get('document_integrity', True))
-                    verification_info['timestamp_from_tsa'] = result.get('timestampFromTSA', result.get('signed_using_tsa', True))
-                    verification_info['certificate_valid'] = result.get('certificateValid', result.get('cert_user_certified', True))
-                    
-                    _logger.info(f'[BSRE VERIFY V2] - Extracted from root:')
-                    _logger.info(f'[BSRE VERIFY V2]   - signer: {verification_info["signer"]}')
-                    _logger.info(f'[BSRE VERIFY V2]   - signature_date: {verification_info["signature_date"]}')
-                    _logger.info(f'[BSRE VERIFY V2]   - location: {verification_info["location"]}')
-                    _logger.info(f'[BSRE VERIFY V2]   - reason: {verification_info["reason"]}')
-                
-                # Set default values jika tidak ada
+                    # Set default values jika tidak ada
                 if not verification_info.get('signer'):
                     verification_info['signer'] = None
                 if not verification_info.get('signature_date'):
