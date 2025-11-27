@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 class SicantikTTEController(http.Controller):
     """
-    Controller untuk handle download dokumen dari MinIO
+    Controller untuk handle download dokumen dari MinIO dan verifikasi publik
     """
     
     @http.route([
