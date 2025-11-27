@@ -1296,66 +1296,129 @@ class BsreConfig(models.Model):
             
             # Handle response - Cek struktur response V2 terlebih dahulu
             # V2 mungkin memiliki struktur yang berbeda dari V1
-            _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
-            _logger.info(f'[BSRE VERIFY V2] Memproses response dari BSRE API V2')
-            _logger.info(f'[BSRE VERIFY V2] Response type: {type(result)}')
-            
-            if result and isinstance(result, dict):
-                _logger.info(f'[BSRE VERIFY V2] Response structure analysis:')
-                _logger.info(f'[BSRE VERIFY V2] - Top-level keys: {list(result.keys())}')
-                
-                # Cek apakah ini struktur V1 (dengan details array) atau V2 (struktur berbeda)
-                if 'details' in result:
-                    _logger.info(f'[BSRE VERIFY V2] ✅ Detected V1 structure (with details array)')
-                    _logger.info(f'[BSRE VERIFY V2] - details type: {type(result.get("details"))}')
-                    if isinstance(result.get('details'), list) and len(result.get('details', [])) > 0:
-                        _logger.info(f'[BSRE VERIFY V2] - details[0] keys: {list(result["details"][0].keys()) if isinstance(result["details"][0], dict) else "Not a dict"}')
-                else:
-                    _logger.info(f'[BSRE VERIFY V2] ⚠️ Different structure detected (V2 format?)')
-                    _logger.info(f'[BSRE VERIFY V2] - Full response: {json.dumps(result, indent=2, default=str)}')
-                
                 _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+                _logger.info(f'[BSRE VERIFY V2] Memproses response dari BSRE API V2')
+                _logger.info(f'[BSRE VERIFY V2] Response type: {type(result)}')
                 
-                # Handle response - Berdasarkan struktur response yang sebenarnya:
-                # V1 Structure (dengan details array):
-                # {
-                #   "nama_dokumen": "signed_dok.pdf",
-                #   "jumlah_signature": 1,
-                #   "notes": "Dokumen valid, Sertifikat yang digunakan terpercaya",
-                #   "details": [{
-                #     "info_tsa": {"name": "...", "tsa_cert_validity": null},
-                #     "signature_field": "...",
-                #     "info_signer": {
-                #       "signer_name": "Waspada Sinulingga",
-                #       "signer_dn": "Waspada Sinulingga",
-                #       "cert_user_certified": true
-                #     },
-                #     "signature_document": {
-                #       "signed_in": "2025-11-27 22:02:51.09",
-                #       "location": "Karo, Indonesia",
-                #       "reason": "Menyetujui Dokumen",
-                #       "document_integrity": true,
-                #       "signed_using_tsa": true
-                #     }
-                #   }],
-                #   "summary": "VALID"
-                # }
-                
-                # V2 Structure (mungkin berbeda, akan kita lihat dari response)
+                if result and isinstance(result, dict):
+                    _logger.info(f'[BSRE VERIFY V2] Response structure analysis:')
+                    _logger.info(f'[BSRE VERIFY V2] - Top-level keys: {list(result.keys())}')
+                    
+                    # Berdasarkan dokumentasi V2.2.1, struktur response V2 adalah:
+                    # {
+                    #   "conclusion": "NO_SIGNATURE" atau lainnya,
+                    #   "description": "Dokumen tidak memiliki tandatangan elektronik",
+                    #   "signatureInformations": [{
+                    #     "id": "...",
+                    #     "signatureFormat": "PKCS7-T",
+                    #     "signerName": "User Development",  <-- NAMA PENANDATANGAN
+                    #     "signatureDate": "2023-07-11T02:41:23.000+00:00",
+                    #     "fieldName": "sig_1689043283248",
+                    #     "reason": "Dokumen ini telah ditandatangani...",
+                    #     "location": "Indonesia",
+                    #     "certLevelCode": 0,
+                    #     "signatureAlgorithm": null,
+                    #     "digestAlgorithm": null,
+                    #     "timestampInfomation": {
+                    #       "id": "...",
+                    #       "signerName": "Timestamp Authority...",
+                    #       "timestampDate": "2023-07-11T02:46:28.000+00:00"
+                    #     },
+                    #     "certificateDetails": [...],
+                    #     "integrityValid": true,
+                    #     "certificateTrusted": false,
+                    #     "lastSignature": false
+                    #   }],
+                    #   "signatureCount": 0
+                    # }
+                    
+                    # Cek apakah ini struktur V1 (dengan details array) atau V2 (dengan signatureInformations)
+                    if 'signatureInformations' in result:
+                        _logger.info(f'[BSRE VERIFY V2] ✅ Detected V2 structure (with signatureInformations array)')
+                        _logger.info(f'[BSRE VERIFY V2] - signatureInformations type: {type(result.get("signatureInformations"))}')
+                        if isinstance(result.get('signatureInformations'), list) and len(result.get('signatureInformations', [])) > 0:
+                            _logger.info(f'[BSRE VERIFY V2] - signatureInformations[0] keys: {list(result["signatureInformations"][0].keys()) if isinstance(result["signatureInformations"][0], dict) else "Not a dict"}')
+                    elif 'details' in result:
+                        _logger.info(f'[BSRE VERIFY V2] ⚠️ Detected V1 structure (with details array) - fallback')
+                        _logger.info(f'[BSRE VERIFY V2] - details type: {type(result.get("details"))}')
+                        if isinstance(result.get('details'), list) and len(result.get('details', [])) > 0:
+                            _logger.info(f'[BSRE VERIFY V2] - details[0] keys: {list(result["details"][0].keys()) if isinstance(result["details"][0], dict) else "Not a dict"}')
+                    else:
+                        _logger.info(f'[BSRE VERIFY V2] ⚠️ Unknown structure detected')
+                        _logger.info(f'[BSRE VERIFY V2] - Full response: {json.dumps(result, indent=2, default=str)}')
+                    
+                    _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
                 verification_info = {
                     'success': True,
-                    'valid': result.get('summary', '').upper() == 'VALID' or result.get('valid', False),
-                    'message': result.get('notes', result.get('message', 'Verifikasi berhasil')),
+                    'valid': False,  # Akan di-set berdasarkan conclusion atau integrityValid
+                    'message': result.get('description', result.get('notes', 'Verifikasi berhasil')),
                 }
                 
                 _logger.info(f'[BSRE VERIFY V2] Extracting verification info...')
-                _logger.info(f'[BSRE VERIFY V2] - valid: {verification_info["valid"]}')
-                _logger.info(f'[BSRE VERIFY V2] - message: {verification_info["message"]}')
+                _logger.info(f'[BSRE VERIFY V2] - conclusion: {result.get("conclusion")}')
+                _logger.info(f'[BSRE VERIFY V2] - description: {result.get("description")}')
+                _logger.info(f'[BSRE VERIFY V2] - signatureCount: {result.get("signatureCount", 0)}')
                 
-                # Extract dari details array (struktur V1) atau langsung dari root (struktur V2)
+                # Extract dari signatureInformations array (struktur V2) atau details array (struktur V1)
+                signature_infos = result.get('signatureInformations', [])
                 details = result.get('details', [])
                 
-                if details and isinstance(details, list) and len(details) > 0:
+                # Prioritas: V2 structure dengan signatureInformations
+                if signature_infos and isinstance(signature_infos, list) and len(signature_infos) > 0:
+                    # Struktur V2 dengan signatureInformations array
+                    _logger.info(f'[BSRE VERIFY V2] ✅ Using V2 structure (signatureInformations array)')
+                    sig_info = signature_infos[0]  # Ambil signature pertama
+                    
+                    # Extract signer information
+                    verification_info['signer'] = sig_info.get('signerName')
+                    _logger.info(f'[BSRE VERIFY V2] - Extracted signer: {verification_info["signer"]}')
+                    
+                    # Extract signature date
+                    verification_info['signature_date'] = sig_info.get('signatureDate')
+                    
+                    # Extract location
+                    verification_info['location'] = sig_info.get('location')
+                    
+                    # Extract reason
+                    verification_info['reason'] = sig_info.get('reason')
+                    
+                    # Extract integrity and certificate info
+                    verification_info['document_not_modified'] = sig_info.get('integrityValid', True)
+                    verification_info['certificate_valid'] = sig_info.get('certificateTrusted', False)
+                    
+                    # Extract timestamp information
+                    timestamp_info = sig_info.get('timestampInfomation') or sig_info.get('timestampInformation')
+                    if timestamp_info:
+                        verification_info['timestamp_authority'] = timestamp_info.get('signerName', 'Timestamp Authority Badan Siber dan Sandi Negara')
+                        verification_info['timestamp_from_tsa'] = True
+                        verification_info['timestamp_date'] = timestamp_info.get('timestampDate')
+                    else:
+                        verification_info['timestamp_authority'] = 'Timestamp Authority Badan Siber dan Sandi Negara'
+                        verification_info['timestamp_from_tsa'] = False
+                    
+                    # Extract certificate details (ambil yang pertama)
+                    cert_details = sig_info.get('certificateDetails', [])
+                    if cert_details and isinstance(cert_details, list) and len(cert_details) > 0:
+                        cert_detail = cert_details[0]
+                        verification_info['certificate_common_name'] = cert_detail.get('commonName')
+                        verification_info['certificate_issuer'] = cert_detail.get('issuerName')
+                    
+                    # Set valid berdasarkan conclusion dan integrityValid
+                    conclusion = result.get('conclusion', '').upper()
+                    verification_info['valid'] = (
+                        conclusion != 'NO_SIGNATURE' and 
+                        verification_info['document_not_modified'] and
+                        verification_info['certificate_valid']
+                    )
+                    
+                    _logger.info(f'[BSRE VERIFY V2] - signature_date: {verification_info["signature_date"]}')
+                    _logger.info(f'[BSRE VERIFY V2] - location: {verification_info["location"]}')
+                    _logger.info(f'[BSRE VERIFY V2] - reason: {verification_info["reason"]}')
+                    _logger.info(f'[BSRE VERIFY V2] - integrityValid: {verification_info["document_not_modified"]}')
+                    _logger.info(f'[BSRE VERIFY V2] - certificateTrusted: {verification_info["certificate_valid"]}')
+                    _logger.info(f'[BSRE VERIFY V2] - valid: {verification_info["valid"]}')
+                    
+                elif details and isinstance(details, list) and len(details) > 0:
                     # Struktur V1 dengan details array
                     _logger.info(f'[BSRE VERIFY V2] ✅ Using V1 structure (details array)')
                     detail = details[0]  # Ambil signature pertama
