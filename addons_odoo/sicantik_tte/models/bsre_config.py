@@ -284,11 +284,35 @@ class BsreConfig(models.Model):
                                 for sig_prop in value:
                                     sig_debug = sig_prop.copy()
                                     if 'imageBase64' in sig_debug:
-                                        sig_debug['imageBase64'] = f'[BASE64_IMAGE: {len(sig_debug["imageBase64"])} chars]'
+                                        img_len = len(sig_debug['imageBase64'])
+                                        sig_debug['imageBase64'] = f'[BASE64_IMAGE: {img_len} chars]'
+                                        # Validate imageBase64 is not empty or too small
+                                        if img_len == 0:
+                                            _logger.error(f'❌ CRITICAL: imageBase64 is EMPTY in payload!')
+                                        elif img_len < 100:
+                                            _logger.warning(f'⚠️ imageBase64 is very small ({img_len} chars), may be invalid')
+                                    # Validate numeric fields
+                                    for num_field in ['originX', 'originY', 'width', 'height']:
+                                        if num_field in sig_debug:
+                                            val = sig_debug[num_field]
+                                            if isinstance(val, (int, float)):
+                                                if val < 0:
+                                                    _logger.warning(f'⚠️ {num_field} is negative: {val}')
+                                                if val > 1000:
+                                                    _logger.warning(f'⚠️ {num_field} is very large: {val}')
                                     payload_structure[key].append(sig_debug)
                             else:
                                 payload_structure[key] = value
                         _logger.info(f'📋 Full Payload Structure: {json.dumps(payload_structure, indent=2, ensure_ascii=False)}')
+                        
+                        # Additional validation: check if signatureProperties has valid imageBase64
+                        if 'signatureProperties' in data:
+                            for idx, sig_prop in enumerate(data['signatureProperties']):
+                                img_b64 = sig_prop.get('imageBase64', '')
+                                if not img_b64 or len(img_b64) == 0:
+                                    _logger.error(f'❌ CRITICAL: signatureProperties[{idx}] has EMPTY imageBase64 in final payload!')
+                                elif len(img_b64) < 100:
+                                    _logger.warning(f'⚠️ signatureProperties[{idx}] imageBase64 is very small ({len(img_b64)} chars)')
                     
                     response = requests.post(url, auth=auth, headers=headers, json=data, timeout=self.api_timeout)
             elif method == 'GET':
