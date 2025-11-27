@@ -531,16 +531,27 @@ class SicantikDocument(models.Model):
             import qrcode
             from io import BytesIO
             
-            # Get base URL - gunakan system parameter khusus atau default ke domain production
-            base_url = self.env['ir.config_parameter'].sudo().get_param(
-                'sicantik_tte.verification_base_url',
-                default='https://sicantik.dotakaro.com'
-            )
-            # Pastikan tidak ada trailing slash
-            base_url = base_url.rstrip('/')
+            # CRITICAL: Gunakan verification_url yang sudah di-compute, bukan membuat URL sendiri
+            # Ini memastikan konsistensi dengan computed field
+            # Trigger recompute verification_url terlebih dahulu untuk memastikan up-to-date
+            self._compute_verification_url()
             
-            # QR code hanya berisi URL verifikasi untuk auto-redirect saat di-scan
-            verification_url = f'{base_url}/sicantik/tte/verify/{self.document_number}'
+            # Gunakan verification_url yang sudah di-compute
+            verification_url = self.verification_url
+            
+            # Validasi: pastikan verification_url ada dan valid
+            if not verification_url:
+                _logger.warning(f'verification_url kosong untuk dokumen {self.document_number}, state: {self.state}')
+                # Fallback: buat URL manual jika computed field belum tersedia
+                base_url = self.env['ir.config_parameter'].sudo().get_param(
+                    'sicantik_tte.verification_base_url',
+                    default='https://sicantik.dotakaro.com'
+                )
+                base_url = base_url.rstrip('/')
+                verification_url = f'{base_url}/sicantik/tte/verify/{self.document_number}'
+                _logger.warning(f'Using fallback URL: {verification_url}')
+            
+            _logger.info(f'Generating QR code untuk dokumen {self.document_number} dengan URL: {verification_url}')
             
             # Generate QR code dengan URL langsung (tidak JSON)
             qr = qrcode.QRCode(
@@ -560,16 +571,16 @@ class SicantikDocument(models.Model):
             img.save(buffer, format='PNG')
             qr_image_data = base64.b64encode(buffer.getvalue())
             
-            # Update record
+            # Update record - gunakan verification_url yang sudah di-compute
             self.write({
                 'qr_code_data': verification_url,  # Simpan URL untuk reference
                 'qr_code_image': qr_image_data,
             })
             
-            _logger.info(f'QR code generated for document {self.document_number}: {verification_url}')
+            _logger.info(f'✅ QR code generated successfully untuk dokumen {self.document_number}: {verification_url}')
             
         except Exception as e:
-            _logger.error(f'Error generating QR code: {str(e)}')
+            _logger.error(f'❌ Error generating QR code untuk dokumen {self.document_number}: {str(e)}', exc_info=True)
             # Don't raise error, just log it
     
     def action_embed_qr_code(self):
