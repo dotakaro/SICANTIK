@@ -1293,14 +1293,10 @@ class BsreConfig(models.Model):
             else:
                 _logger.info(f'[BSRE VERIFY V2] Response content: {str(result)[:500]}')
             _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+            _logger.info(f'[BSRE VERIFY V2] Memproses response dari BSRE API V2')
+            _logger.info(f'[BSRE VERIFY V2] Response type: {type(result)}')
             
-            # Handle response - Cek struktur response V2 terlebih dahulu
-            # V2 mungkin memiliki struktur yang berbeda dari V1
-                _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
-                _logger.info(f'[BSRE VERIFY V2] Memproses response dari BSRE API V2')
-                _logger.info(f'[BSRE VERIFY V2] Response type: {type(result)}')
-                
-                if result and isinstance(result, dict):
+            if result and isinstance(result, dict):
                     _logger.info(f'[BSRE VERIFY V2] Response structure analysis:')
                     _logger.info(f'[BSRE VERIFY V2] - Top-level keys: {list(result.keys())}')
                     
@@ -1347,7 +1343,8 @@ class BsreConfig(models.Model):
                         _logger.info(f'[BSRE VERIFY V2] ⚠️ Unknown structure detected')
                         _logger.info(f'[BSRE VERIFY V2] - Full response: {json.dumps(result, indent=2, default=str)}')
                     
-                    _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+                _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+                
                 verification_info = {
                     'success': True,
                     'valid': False,  # Akan di-set berdasarkan conclusion atau integrityValid
