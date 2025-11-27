@@ -120,11 +120,12 @@
                 <separator/>
                 
                 <filter string="Hari Ini" name="filter_today" 
-                        domain="[('create_date', '&gt;=', (context_today() - datetime.timedelta(days=0)).strftime('%Y-%m-%d'))]"/>
+                        domain="[('create_date', '&gt;=', (context_today() - relativedelta(days=0)).strftime('%Y-%m-%d'))]"/>
                 <filter string="Minggu Ini" name="filter_this_week" 
-                        domain="[('create_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                        domain="[('create_date', '&gt;=', (context_today() - relativedelta(days=7)).strftime('%Y-%m-%d'))]"/>
                 <filter string="Bulan Ini" name="filter_this_month" 
-                        domain="[('create_date', '&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                        domain="[('create_date', '&gt;=', (context_today() - relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Create Date" name="filter_create_date" date="create_date"/>
                 
                 <group expand="0" string="Group By">
                     <filter string="Provider" name="groupby_provider_type" 
