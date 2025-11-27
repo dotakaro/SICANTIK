@@ -126,6 +126,16 @@ class SicantikDocument(models.Model):
         string='BSRE Certificate',
         readonly=True
     )
+    bsre_signer_name = fields.Char(
+        string='Nama Penandatangan (BSRE)',
+        readonly=True,
+        help='Nama penandatangan dari sertifikat BSRE'
+    )
+    bsre_signer_identifier = fields.Char(
+        string='Identitas Penandatangan (BSRE)',
+        readonly=True,
+        help='NIK atau Email penandatangan dari BSRE'
+    )
     
     # QR Code
     qr_code_data = fields.Text(
@@ -325,14 +335,28 @@ class SicantikDocument(models.Model):
             if not bucket_name:
                 raise UserError('Nama bucket tidak ditemukan. Silakan set bucket name di dokumen atau konfigurasi MinIO.')
             
-            # Generate unique object name
+            # Generate filename dari nama dokumen (format: Nama Pemohon - Nomor Izin - Jenis Izin.pdf)
+            # Jika nama dokumen sudah ada, gunakan sebagai nama file
+            if self.name:
+                # Bersihkan nama dokumen dari karakter yang tidak valid untuk filename
+                safe_filename = self.name.replace('/', '-').replace('\\', '-').replace(':', '-')
+                safe_filename = safe_filename.replace('*', '').replace('?', '').replace('"', '').replace('<', '').replace('>', '').replace('|', '')
+                # Pastikan extension .pdf
+                if not safe_filename.lower().endswith('.pdf'):
+                    safe_filename = f'{safe_filename}.pdf'
+                final_filename = safe_filename
+            else:
+                # Fallback ke filename asli jika nama dokumen tidak ada
+                final_filename = filename
+            
+            # Generate unique object name dengan timestamp untuk menghindari konflik
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            object_name = f'{self.permit_id.permit_number}/{timestamp}_{filename}'
+            object_name = f'{self.permit_id.permit_number}/{timestamp}_{final_filename}'
             
             # Calculate file hash
             file_hash = hashlib.sha256(file_data).hexdigest()
             
-            _logger.info(f'Uploading document: bucket={bucket_name}, object={object_name}, size={len(file_data)} bytes')
+            _logger.info(f'Uploading document: bucket={bucket_name}, object={object_name}, filename={final_filename}, size={len(file_data)} bytes')
             
             # Upload to MinIO
             result = minio_connector.upload_file(
@@ -343,9 +367,9 @@ class SicantikDocument(models.Model):
             )
             
             if result['success']:
-                # Update record
+                # Update record - gunakan final_filename untuk original_filename
                 self.write({
-                    'original_filename': filename,
+                    'original_filename': final_filename,
                     'file_size': len(file_data),
                     'file_hash': file_hash,
                     'minio_bucket': bucket_name,  # Ensure bucket name is saved
@@ -499,16 +523,22 @@ class SicantikDocument(models.Model):
                 )
                 
                 if upload_result['success']:
+                    # Get informasi penandatangan dari BSRE config
+                    bsre_signer_name = bsre_config.certificate_owner or ''
+                    bsre_signer_identifier = bsre_config.signing_identifier or ''
+                    
                     # Update record with signed document info
                     # CRITICAL: Update state dulu, lalu trigger recompute verification_url
                     self.write({
                         'state': 'signed',
                         'signature_date': fields.Datetime.now(),
-                        'signer_id': self.env.user.id,
+                        'signer_id': self.env.user.id,  # User yang melakukan signing (untuk audit)
                         'signature_method': 'bsre',
                         'bsre_request_id': sign_result.get('request_id'),
                         'bsre_signature_id': sign_result.get('signature_id'),
                         'bsre_certificate': sign_result.get('certificate'),
+                        'bsre_signer_name': bsre_signer_name,  # Nama penandatangan dari BSRE
+                        'bsre_signer_identifier': bsre_signer_identifier,  # NIK/Email penandatangan dari BSRE
                         'minio_object_name': signed_object_name,
                     })
                     
