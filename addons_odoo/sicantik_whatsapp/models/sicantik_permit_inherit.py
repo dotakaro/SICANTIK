@@ -684,8 +684,24 @@ class SicantikPermit(models.Model):
                 }
             }
         
+        # Generate link WhatsApp Business Account untuk opt-in
+        opt_in_manager = self.env['whatsapp.opt.in.manager']
+        try:
+            opt_in_info = opt_in_manager.generate_whatsapp_opt_in_link(
+                message='Halo, saya ingin mengaktifkan notifikasi WhatsApp untuk perizinan saya.'
+            )
+            whatsapp_link = opt_in_info['link']
+            wa_phone_number = opt_in_info['phone_number']
+            wa_account_name = opt_in_info.get('wa_account_name', 'WhatsApp Business Account')
+        except Exception as e:
+            _logger.warning(f'⚠️ Tidak dapat generate WhatsApp opt-in link: {str(e)}')
+            whatsapp_link = None
+            wa_phone_number = None
+            wa_account_name = 'WhatsApp Business Account'
+        
         # Prepare pesan opt-in
-        message = f"""Yth. {self.applicant_name or self.partner_id.name},
+        if whatsapp_link:
+            message = f"""Yth. {self.applicant_name or self.partner_id.name},
 
 DPMPTSP Kabupaten Karo memberikan layanan notifikasi WhatsApp untuk memudahkan komunikasi terkait perizinan Anda.
 
@@ -695,7 +711,32 @@ Dengan layanan ini, Anda akan menerima:
 ✅ Peringatan masa berlaku izin
 ✅ Link download dokumen langsung
 
-Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "SETUJU".
+Untuk mengaktifkan layanan ini, silakan klik link berikut:
+
+🔗 {whatsapp_link}
+
+Atau kirim pesan ke nomor WhatsApp Business Account:
+📱 {wa_phone_number}
+
+Setelah Anda mengirim pesan ke nomor WhatsApp Business Account di atas, notifikasi akan aktif secara otomatis.
+
+Terima kasih atas perhatiannya.
+
+DPMPTSP Kabupaten Karo
+Kabupaten Karo"""
+        else:
+            # Fallback jika tidak bisa generate link
+            message = f"""Yth. {self.applicant_name or self.partner_id.name},
+
+DPMPTSP Kabupaten Karo memberikan layanan notifikasi WhatsApp untuk memudahkan komunikasi terkait perizinan Anda.
+
+Dengan layanan ini, Anda akan menerima:
+✅ Notifikasi real-time saat izin selesai diproses
+✅ Update status perizinan otomatis
+✅ Peringatan masa berlaku izin
+✅ Link download dokumen langsung
+
+Untuk mengaktifkan layanan ini, silakan hubungi WhatsApp Business Account kami.
 
 Terima kasih atas perhatiannya.
 
@@ -722,7 +763,7 @@ Kabupaten Karo"""
                     'tag': 'display_notification',
                     'params': {
                         'title': 'Pesan Opt-In',
-                        'message': f'✅ Pesan opt-in berhasil dikirim ke {self.partner_id.name} ({mobile}) via {result.get("provider", "unknown")}.\n\nPenerima dapat membalas dengan "YA" atau "SETUJU" untuk mengaktifkan notifikasi WhatsApp.',
+                        'message': f'✅ Pesan opt-in berhasil dikirim ke {self.partner_id.name} ({mobile}) via {result.get("provider", "unknown")}.\n\nPenerima dapat mengklik link WhatsApp Business Account di pesan untuk mengaktifkan notifikasi WhatsApp.',
                         'type': 'success',
                         'sticky': False,
                     }

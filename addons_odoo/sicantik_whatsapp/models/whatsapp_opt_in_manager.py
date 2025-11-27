@@ -346,3 +346,91 @@ class WhatsAppOptInManager(models.Model):
             'file_content': csv_encoded,
             'total_numbers': len(phone_numbers)
         }
+    
+    def generate_whatsapp_opt_in_link(self, wa_account_id=None, message='Halo'):
+        """
+        Generate link WhatsApp untuk opt-in
+        
+        Link format: https://wa.me/{phone_number}?text={message}
+        
+        Args:
+            wa_account_id (int, optional): ID WhatsApp Account (Meta)
+            message (str): Pesan default yang akan dikirim user
+        
+        Returns:
+            dict: {
+                'link': str,  # Link WhatsApp
+                'phone_number': str,  # Nomor WhatsApp Business Account
+                'qr_code_data': str,  # Base64 QR code (optional)
+            }
+        """
+        # Jika wa_account_id tidak diberikan, cari default Meta account
+        if not wa_account_id:
+            # Cari provider Meta yang aktif
+            meta_provider = self.env['sicantik.whatsapp.provider'].search([
+                ('provider_type', '=', 'meta'),
+                ('active', '=', True),
+                ('meta_account_id', '!=', False)
+            ], limit=1, order='sequence ASC')
+            
+            if meta_provider and meta_provider.meta_account_id:
+                wa_account_id = meta_provider.meta_account_id.id
+            else:
+                # Fallback: cari WhatsApp Account langsung
+                wa_account = self.env['whatsapp.account'].search([
+                    ('active', '=', True)
+                ], limit=1)
+                
+                if wa_account:
+                    wa_account_id = wa_account.id
+                else:
+                    raise UserError(_('Tidak ada WhatsApp Business Account yang dikonfigurasi. Silakan setup WhatsApp Account terlebih dahulu.'))
+        
+        wa_account = self.env['whatsapp.account'].browse(wa_account_id)
+        
+        if not wa_account:
+            raise UserError(_('WhatsApp Account tidak ditemukan'))
+        
+        # Cari nomor WhatsApp dari account
+        # Odoo Enterprise menyimpan nomor di phone_uid atau bisa diambil dari phone_number_id
+        phone_number = None
+        
+        # Coba ambil dari phone_number_id (jika ada)
+        if hasattr(wa_account, 'phone_number_id') and wa_account.phone_number_id:
+            # Phone number biasanya dalam format internasional tanpa +
+            phone_number = wa_account.phone_number_id.name or wa_account.phone_number_id.phone
+        
+        # Jika tidak ada, coba ambil dari phone_uid (format: 6281234567890)
+        if not phone_number and hasattr(wa_account, 'phone_uid') and wa_account.phone_uid:
+            phone_number = wa_account.phone_uid
+        
+        # Jika masih tidak ada, coba cari dari WhatsApp message terakhir yang dikirim
+        if not phone_number:
+            last_message = self.env['whatsapp.message'].search([
+                ('wa_account_id', '=', wa_account.id)
+            ], order='create_date desc', limit=1)
+            
+            if last_message and last_message.mobile_number:
+                # Ambil dari mobile_number (biasanya format internasional)
+                phone_number = last_message.mobile_number.replace('+', '').replace(' ', '')
+        
+        if not phone_number:
+            raise UserError(_('Tidak dapat menemukan nomor WhatsApp Business Account. Pastikan WhatsApp Account sudah dikonfigurasi dengan benar.'))
+        
+        # Normalize phone number (pastikan format internasional tanpa +)
+        phone_number = phone_number.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+        if phone_number.startswith('+'):
+            phone_number = phone_number[1:]
+        
+        # Generate link WhatsApp
+        import urllib.parse
+        encoded_message = urllib.parse.quote(message)
+        whatsapp_link = f'https://wa.me/{phone_number}?text={encoded_message}'
+        
+        _logger.info(f'✅ Generated WhatsApp opt-in link: {whatsapp_link}')
+        
+        return {
+            'link': whatsapp_link,
+            'phone_number': phone_number,
+            'wa_account_name': wa_account.name,
+        }
