@@ -565,6 +565,7 @@ class BsreConfig(models.Model):
                     # V2 API requires imageBase64 even for VISIBLE signature without image
                     # Create a small transparent PNG placeholder
                     _logger.info('⚠️ No signature image uploaded - creating transparent placeholder')
+                    placeholder_base64 = ''
                     try:
                         from PIL import Image
                         import io
@@ -574,13 +575,21 @@ class BsreConfig(models.Model):
                         placeholder.save(placeholder_buffer, format='PNG')
                         placeholder_buffer.seek(0)
                         placeholder_base64 = base64.b64encode(placeholder_buffer.read()).decode('utf-8')
-                        signature_props['imageBase64'] = placeholder_base64
                         _logger.info(f'✅ Created transparent placeholder: {int(sig_width)}x{int(sig_height)} px, {len(placeholder_base64)} chars base64')
                     except Exception as e:
-                        _logger.error(f'❌ Error creating placeholder: {str(e)}')
-                        # Fallback: use empty string (may cause API error, but better than nothing)
-                        signature_props['imageBase64'] = ''
-                        _logger.warning('⚠️ Using empty imageBase64 as fallback')
+                        _logger.error(f'❌ Error creating placeholder: {str(e)}', exc_info=True)
+                        # Fallback: create minimal base64 PNG manually
+                        # Minimal transparent PNG dengan ukuran signature (simplified)
+                        placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+                        _logger.warning('⚠️ Using hardcoded minimal PNG placeholder as fallback')
+                    
+                    # Ensure placeholder_base64 is not empty
+                    if not placeholder_base64:
+                        placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+                        _logger.warning('⚠️ Using hardcoded fallback PNG')
+                    
+                    signature_props['imageBase64'] = placeholder_base64
+                    _logger.info(f'✅ VISIBLE signature placeholder set: {len(placeholder_base64)} chars base64')
                 
                 # Add signatureProperties array to payload
                 json_payload['signatureProperties'] = [signature_props]
