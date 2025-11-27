@@ -93,6 +93,13 @@ if [ -d "odoo_source" ]; then
     print_info "Folder odoo_source dihapus"
 fi
 
+# Backup config files sebelum pull (jika ada)
+print_step "Backing up production config files..."
+if [ -f "config_odoo/odoo.conf" ]; then
+    cp config_odoo/odoo.conf config_odoo/odoo.conf.backup.$(date +%Y%m%d_%H%M%S) || true
+    print_info "Backed up odoo.conf"
+fi
+
 # Pull latest changes
 print_step "Updating code..."
 git reset --hard origin/master || {
@@ -103,6 +110,16 @@ git reset --hard origin/master || {
     fi
     exit 1
 }
+
+# Restore production config files (jangan overwrite dengan template)
+print_step "Restoring production config files..."
+if [ -f "config_odoo/odoo.conf.backup."* ]; then
+    LATEST_BACKUP=$(ls -t config_odoo/odoo.conf.backup.* 2>/dev/null | head -1)
+    if [ -n "$LATEST_BACKUP" ]; then
+        cp "$LATEST_BACKUP" config_odoo/odoo.conf || true
+        print_info "Restored odoo.conf from backup"
+    fi
+fi
 
 # Show deployed commit
 DEPLOYED_COMMIT=$(git rev-parse --short HEAD)
