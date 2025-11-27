@@ -684,19 +684,8 @@ class SicantikDocument(models.Model):
                     _logger.info(f'[SIGN] Dokumen {self.document_number} berhasil ditandatangani')
                     _logger.info(f'[SIGN] - bsre_signer_name: {self.bsre_signer_name}')
                     _logger.info(f'[SIGN] - bsre_signer_identifier: {self.bsre_signer_identifier}')
-                    
-                    # CRITICAL: File yang sudah ditandatangani secara digital TIDAK BOLEH dimodifikasi
-                    # karena akan merusak signature digital. QR code akan ditampilkan di UI, bukan di-embed ke PDF.
-                    # Jika perlu embed QR code, harus dilakukan SEBELUM signing, bukan setelah.
-                    
-                    # Pastikan verification_url sudah di-compute sebelum generate QR code
-                    self._compute_verification_url()
-                    
-                    # Generate QR Code untuk ditampilkan di UI (TIDAK di-embed ke PDF yang sudah signed)
-                    self._generate_qr_code()
-                    
-                    _logger.info(f'[SIGN] ⚠️ QR code TIDAK di-embed ke PDF untuk menjaga integritas signature digital')
-                    _logger.info(f'[SIGN] QR code akan ditampilkan di UI untuk verifikasi dokumen')
+                    _logger.info(f'[SIGN] ✅ File signed disimpan dengan nama: {signed_object_name}')
+                    _logger.info(f'[SIGN] QR code sudah di-embed sebelum signing, signature digital tetap utuh')
                     _logger.info(f'Document {self.document_number} signed with BSRE')
                     
                     return {
