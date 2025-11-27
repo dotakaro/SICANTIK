@@ -514,6 +514,16 @@ class BsreConfig(models.Model):
                 'file': [document_base64],  # V2 uses base64 string array
             }
             
+            # Validasi payload sebelum menambahkan signatureProperties
+            if not json_payload['nik'] and not json_payload['email']:
+                raise UserError('NIK atau Email untuk signing harus diisi di konfigurasi BSRE')
+            if not json_payload['passphrase']:
+                raise UserError('Passphrase tidak boleh kosong')
+            if not json_payload['file'] or not json_payload['file'][0]:
+                raise UserError('File dokumen tidak boleh kosong')
+            
+            _logger.info(f'📋 Payload base: nik={"***" if json_payload["nik"] else ""}, email={"***" if json_payload["email"] else ""}, passphrase={"***" if json_payload["passphrase"] else ""}, file_size={len(json_payload["file"][0])} chars')
+            
             # Add signature visualization parameters jika visible
             # V2 API uses signatureProperties array structure
             if self.signature_visible:
