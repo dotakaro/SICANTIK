@@ -1263,36 +1263,22 @@ class BsreConfig(models.Model):
         self.ensure_one()
         
         try:
-            # Prepare file
-            files = {
-                'document': ('document.pdf', document_data, 'application/pdf')
+            # Berdasarkan Postman collection: {{baseURL}}/api/v2/verify/pdf
+            # Format: {"file": "base64_pdf"} atau {"file": "base64_pdf", "password": "pdfPassword"}
+            endpoint = 'api/v2/verify/pdf'
+            
+            # Convert PDF to base64 untuk JSON payload
+            import base64 as b64
+            file_base64 = b64.b64encode(document_data).decode('utf-8')
+            
+            json_payload = {
+                'file': file_base64
             }
             
-            # Make API request ke endpoint verify
-            # Coba beberapa endpoint yang mungkin digunakan BSRE API
-            endpoints_to_try = [
-                'api/v2/verify/signature',  # V2 API endpoint
-                'verify/signature',  # Alternative endpoint
-                'api/verify/signature',  # V1 API endpoint
-            ]
+            _logger.info(f'[BSRE VERIFY] Menggunakan endpoint: {endpoint}')
+            _logger.info(f'[BSRE VERIFY] File size: {len(document_data)} bytes, Base64 length: {len(file_base64)} chars')
             
-            result = None
-            last_error = None
-            
-            for endpoint in endpoints_to_try:
-                try:
-                    _logger.info(f'[BSRE VERIFY] Mencoba endpoint: {endpoint}')
-                    result = self._make_api_request(endpoint, method='POST', files=files)
-                    if result:
-                        _logger.info(f'[BSRE VERIFY] ✅ Berhasil dengan endpoint: {endpoint}')
-                        break
-                except Exception as e:
-                    last_error = e
-                    _logger.warning(f'[BSRE VERIFY] ⚠️ Endpoint {endpoint} gagal: {str(e)}')
-                    continue
-            
-            if not result:
-                raise Exception(f'Semua endpoint verify gagal. Error terakhir: {str(last_error)}')
+            result = self._make_api_request(endpoint, method='POST', data=json_payload)
             
             # Log response untuk debugging
             _logger.info(f'[BSRE VERIFY] Response dari BSRE API: {json.dumps(result, indent=2) if isinstance(result, dict) else str(result)}')

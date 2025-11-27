@@ -358,11 +358,31 @@ class SicantikDocument(models.Model):
             
             _logger.info(f'Uploading document: bucket={bucket_name}, object={object_name}, filename={final_filename}, size={len(file_data)} bytes')
             
-            # Upload to MinIO
+            # CRITICAL: Embed QR code SEBELUM upload ke MinIO
+            # QR code harus di-embed sebelum signing karena PDF yang sudah signed tidak boleh dimodifikasi
+            _logger.info(f'[UPLOAD] Embed QR code ke PDF sebelum upload ke MinIO...')
+            
+            # Generate QR code terlebih dahulu
+            self._compute_verification_url()
+            self._generate_qr_code()
+            
+            # Embed QR code ke PDF
+            pdf_with_qr = file_data
+            try:
+                if self.qr_code_image:
+                    pdf_with_qr = self._embed_qr_code_to_pdf(file_data)
+                    _logger.info(f'[UPLOAD] ✅ QR code berhasil di-embed ke PDF')
+                else:
+                    _logger.warning(f'[UPLOAD] ⚠️ QR code belum digenerate, upload tanpa QR code')
+            except Exception as qr_error:
+                _logger.error(f'[UPLOAD] ❌ Error embed QR code: {str(qr_error)}, upload tanpa QR code')
+                # Continue dengan file asli jika embed QR code gagal
+            
+            # Upload to MinIO (dengan QR code sudah di-embed)
             result = minio_connector.upload_file(
                 bucket_name=bucket_name,
                 object_name=object_name,
-                file_data=file_data,
+                file_data=pdf_with_qr,
                 content_type='application/pdf'
             )
             
@@ -370,19 +390,20 @@ class SicantikDocument(models.Model):
                 # Update record - gunakan final_filename untuk original_filename
                 self.write({
                     'original_filename': final_filename,
-                    'file_size': len(file_data),
-                    'file_hash': file_hash,
+                    'file_size': len(pdf_with_qr),
+                    'file_hash': hashlib.sha256(pdf_with_qr).hexdigest(),  # Recalculate hash dengan QR code
                     'minio_bucket': bucket_name,  # Ensure bucket name is saved
                     'minio_object_name': object_name,
                     'state': 'uploaded',
-                    'upload_date': fields.Datetime.now()
+                    'upload_date': fields.Datetime.now(),
+                    'qr_code_embedded': True  # Mark bahwa QR code sudah di-embed
                 })
                 
-                _logger.info(f'Document {self.document_number} uploaded to MinIO: {object_name}')
+                _logger.info(f'[UPLOAD] ✅ Document {self.document_number} uploaded to MinIO dengan QR code: {object_name}')
                 
                 return {
                     'success': True,
-                    'message': f'Dokumen berhasil diupload ke MinIO',
+                    'message': f'Dokumen berhasil diupload ke MinIO dengan QR code',
                     'object_name': object_name
                 }
             else:
@@ -556,8 +577,21 @@ class SicantikDocument(models.Model):
                     except Exception as download_error:
                         _logger.warning(f'[SIGN] ⚠️ Error saat download dari BSRE API, menggunakan file dari response signing: {str(download_error)}')
                 
-                # Upload signed document back to MinIO (file signed asli dari BSRE, TIDAK dimodifikasi)
-                signed_object_name = self.minio_object_name.replace('.pdf', '_signed.pdf')
+                # Upload signed document back to MinIO dengan nama <nama dokumen>-signed.pdf
+                # Format nama: <nama dokumen>-signed.pdf
+                if self.name:
+                    # Bersihkan nama dokumen dari karakter yang tidak valid
+                    safe_name = self.name.replace('/', '-').replace('\\', '-').replace(':', '-')
+                    safe_name = safe_name.replace('*', '').replace('?', '').replace('"', '').replace('<', '').replace('>', '').replace('|', '')
+                    signed_filename = f'{safe_name}-signed.pdf'
+                else:
+                    # Fallback ke original filename dengan suffix -signed
+                    signed_filename = self.original_filename.replace('.pdf', '-signed.pdf') if self.original_filename else 'document-signed.pdf'
+                
+                # Generate object name dengan timestamp untuk menghindari konflik
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                signed_object_name = f'{self.permit_id.permit_number}/{timestamp}_{signed_filename}'
+                
                 upload_result = minio_connector.upload_file(
                     bucket_name=self.minio_bucket,
                     object_name=signed_object_name,
@@ -741,6 +775,109 @@ class SicantikDocument(models.Model):
         except Exception as e:
             _logger.error(f'❌ Error generating QR code untuk dokumen {self.document_number}: {str(e)}', exc_info=True)
             # Don't raise error, just log it
+    
+    def _embed_qr_code_to_pdf(self, pdf_data):
+        """
+        Helper method untuk embed QR code ke PDF data
+        Mengembalikan PDF data dengan QR code yang sudah di-embed
+        
+        Args:
+            pdf_data (bytes): Binary PDF data
+        
+        Returns:
+            bytes: PDF data dengan QR code yang sudah di-embed
+        """
+        if not self.qr_code_image:
+            _logger.warning(f'QR code belum digenerate, return PDF as-is')
+            return pdf_data
+        
+        try:
+            from PyPDF2 import PdfReader, PdfWriter
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.units import inch
+            from reportlab.lib.utils import ImageReader
+            from io import BytesIO
+            from PIL import Image
+            
+            # Decode QR code image
+            qr_image_bytes = base64.b64decode(self.qr_code_image)
+            qr_image = Image.open(BytesIO(qr_image_bytes))
+            
+            # Convert PIL Image to ImageReader for reportlab
+            qr_buffer = BytesIO()
+            qr_image.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
+            qr_img_reader = ImageReader(qr_buffer)
+            
+            # Read existing PDF
+            existing_pdf = PdfReader(BytesIO(pdf_data))
+            output = PdfWriter()
+            
+            # Process each page
+            for page_num in range(len(existing_pdf.pages)):
+                page = existing_pdf.pages[page_num]
+                
+                # Get page dimensions
+                page_width = float(page.mediabox.width)
+                page_height = float(page.mediabox.height)
+                
+                # Create overlay with QR code
+                packet = BytesIO()
+                can = canvas.Canvas(packet, pagesize=(page_width, page_height))
+                
+                # QR code size and position (BOTTOM LEFT to avoid BSRE signature)
+                qr_size = 1.2 * inch  # 1.2 inch = ~3 cm
+                margin = 0.3 * inch   # 0.3 inch margin from edges
+                
+                # Position: BOTTOM LEFT corner (BSRE signature di kanan)
+                x_position = margin
+                y_position = margin
+                
+                # Draw QR code
+                can.drawImage(
+                    qr_img_reader,
+                    x_position,
+                    y_position,
+                    width=qr_size,
+                    height=qr_size,
+                    preserveAspectRatio=True,
+                    mask='auto'
+                )
+                
+                # Add verification text below QR code
+                can.setFont("Helvetica", 7)
+                can.setFillColorRGB(0, 0, 0)
+                text_y = y_position - 0.15 * inch
+                can.drawString(
+                    x_position,
+                    text_y,
+                    f"Scan untuk verifikasi"
+                )
+                can.drawString(
+                    x_position,
+                    text_y - 0.12 * inch,
+                    f"Doc: {self.document_number}"
+                )
+                can.save()
+                
+                # Merge overlay with page
+                packet.seek(0)
+                overlay_pdf = PdfReader(packet)
+                page.merge_page(overlay_pdf.pages[0])
+                
+                # Add to output
+                output.add_page(page)
+            
+            # Write output PDF
+            output_buffer = BytesIO()
+            output.write(output_buffer)
+            output_buffer.seek(0)
+            return output_buffer.read()
+            
+        except Exception as e:
+            _logger.error(f'Error embedding QR code to PDF: {str(e)}', exc_info=True)
+            # Return original PDF if embedding fails
+            return pdf_data
     
     def action_embed_qr_code(self):
         """
