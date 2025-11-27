@@ -24,4 +24,18 @@ class WhatsappAccount(models.Model):
             # Pastikan tidak ada trailing slash
             webhook_base_url = webhook_base_url.rstrip('/')
             account.callback_url = f"{webhook_base_url}/whatsapp/webhook"
+    
+    @api.model
+    def create(self, vals):
+        """Override create untuk memastikan callback_url ter-set dengan benar."""
+        account = super().create(vals)
+        account._compute_callback_url()
+        return account
+    
+    def write(self, vals):
+        """Override write untuk memastikan callback_url ter-update jika account_uid berubah."""
+        result = super().write(vals)
+        if 'account_uid' in vals:
+            self._compute_callback_url()
+        return result
 
