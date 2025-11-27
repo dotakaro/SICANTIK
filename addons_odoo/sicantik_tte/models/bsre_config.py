@@ -1343,25 +1343,25 @@ class BsreConfig(models.Model):
                         _logger.info(f'[BSRE VERIFY V2] ⚠️ Unknown structure detected')
                         _logger.info(f'[BSRE VERIFY V2] - Full response: {json.dumps(result, indent=2, default=str)}')
                     
-                _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
-                
-                verification_info = {
-                    'success': True,
-                    'valid': False,  # Akan di-set berdasarkan conclusion atau integrityValid
-                    'message': result.get('description', result.get('notes', 'Verifikasi berhasil')),
-                }
-                
-                _logger.info(f'[BSRE VERIFY V2] Extracting verification info...')
-                _logger.info(f'[BSRE VERIFY V2] - conclusion: {result.get("conclusion")}')
-                _logger.info(f'[BSRE VERIFY V2] - description: {result.get("description")}')
-                _logger.info(f'[BSRE VERIFY V2] - signatureCount: {result.get("signatureCount", 0)}')
-                
-                # Extract dari signatureInformations array (struktur V2) atau details array (struktur V1)
-                signature_infos = result.get('signatureInformations', [])
-                details = result.get('details', [])
-                
-                # Prioritas: V2 structure dengan signatureInformations
-                if signature_infos and isinstance(signature_infos, list) and len(signature_infos) > 0:
+                    _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+                    
+                    verification_info = {
+                        'success': True,
+                        'valid': False,  # Akan di-set berdasarkan conclusion atau integrityValid
+                        'message': result.get('description', result.get('notes', 'Verifikasi berhasil')),
+                    }
+                    
+                    _logger.info(f'[BSRE VERIFY V2] Extracting verification info...')
+                    _logger.info(f'[BSRE VERIFY V2] - conclusion: {result.get("conclusion")}')
+                    _logger.info(f'[BSRE VERIFY V2] - description: {result.get("description")}')
+                    _logger.info(f'[BSRE VERIFY V2] - signatureCount: {result.get("signatureCount", 0)}')
+                    
+                    # Extract dari signatureInformations array (struktur V2) atau details array (struktur V1)
+                    signature_infos = result.get('signatureInformations', [])
+                    details = result.get('details', [])
+                    
+                    # Prioritas: V2 structure dengan signatureInformations
+                    if signature_infos and isinstance(signature_infos, list) and len(signature_infos) > 0:
                     # Struktur V2 dengan signatureInformations array
                     _logger.info(f'[BSRE VERIFY V2] ✅ Using V2 structure (signatureInformations array)')
                     sig_info = signature_infos[0]  # Ambil signature pertama
