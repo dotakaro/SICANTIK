@@ -1263,9 +1263,9 @@ class BsreConfig(models.Model):
         self.ensure_one()
         
         try:
-            # Berdasarkan Postman collection: {{baseURL}}/api/v2/verify/pdf
+            # Berdasarkan informasi user: endpoint yang benar adalah {{baseURL}}/api/sign/verify
             # Format: {"file": "base64_pdf"} atau {"file": "base64_pdf", "password": "pdfPassword"}
-            endpoint = 'api/v2/verify/pdf'
+            endpoint = 'api/sign/verify'
             
             # Convert PDF to base64 untuk JSON payload
             import base64 as b64
@@ -1283,123 +1283,93 @@ class BsreConfig(models.Model):
             # Log response untuk debugging
             _logger.info(f'[BSRE VERIFY] Response dari BSRE API: {json.dumps(result, indent=2) if isinstance(result, dict) else str(result)}')
             
-            # Handle response - BSRE API mengembalikan informasi verifikasi detail
+            # Handle response - Berdasarkan struktur response yang sebenarnya:
+            # {
+            #   "nama_dokumen": "signed_dok.pdf",
+            #   "jumlah_signature": 1,
+            #   "notes": "Dokumen valid, Sertifikat yang digunakan terpercaya",
+            #   "details": [{
+            #     "info_tsa": {"name": "...", "tsa_cert_validity": null},
+            #     "signature_field": "...",
+            #     "info_signer": {
+            #       "signer_name": "Waspada Sinulingga",
+            #       "signer_dn": "Waspada Sinulingga",
+            #       "cert_user_certified": true
+            #     },
+            #     "signature_document": {
+            #       "signed_in": "2025-11-27 22:02:51.09",
+            #       "location": "Karo, Indonesia",
+            #       "reason": "Menyetujui Dokumen",
+            #       "document_integrity": true,
+            #       "signed_using_tsa": true
+            #     }
+            #   }],
+            #   "summary": "VALID"
+            # }
+            
             if result and isinstance(result, dict):
-                # Extract informasi verifikasi dari response
-                # Format response BSRE verify biasanya mengandung:
-                # - valid: boolean
-                # - signer: nama penandatangan atau object dengan detail
-                # - signatureDate atau signingTime: waktu penandatanganan
-                # - location: lokasi penandatanganan
-                # - reason: alasan penandatanganan
-                # - timestampAuthority: informasi TSA
-                # - certificate: informasi sertifikat
-                # - verificationInfo: informasi verifikasi detail
-                
                 verification_info = {
                     'success': True,
-                    'valid': result.get('valid', True),
-                    'message': result.get('message', 'Verifikasi berhasil'),
+                    'valid': result.get('summary', '').upper() == 'VALID',
+                    'message': result.get('notes', 'Verifikasi berhasil'),
                 }
                 
-                # Extract signer information
-                # Coba berbagai kemungkinan field untuk signer
-                signer = (
-                    result.get('signer') or 
-                    result.get('signerInfo') or 
-                    result.get('signer_info') or 
-                    result.get('penandatangan') or
-                    result.get('signerName') or
-                    result.get('signer_name') or
-                    result.get('namaPenandatangan') or
-                    result.get('nama_penandatangan')
-                )
-                
-                if signer:
-                    if isinstance(signer, dict):
+                # Extract dari details array (ambil signature pertama)
+                details = result.get('details', [])
+                if details and isinstance(details, list) and len(details) > 0:
+                    detail = details[0]  # Ambil signature pertama
+                    
+                    # Extract signer information dari info_signer
+                    info_signer = detail.get('info_signer', {})
+                    if info_signer:
                         verification_info['signer'] = (
-                            signer.get('name') or 
-                            signer.get('nama') or 
-                            signer.get('penandatangan') or 
-                            signer.get('signerName') or
-                            signer.get('fullName') or
-                            str(signer)
+                            info_signer.get('signer_name') or 
+                            info_signer.get('signer_dn') or
+                            info_signer.get('name')
                         )
-                        verification_info['signer_identifier'] = (
-                            signer.get('nik') or 
-                            signer.get('email') or 
-                            signer.get('identifier') or
-                            signer.get('nikPenandatangan') or
-                            signer.get('emailPenandatangan')
-                        )
-                    else:
-                        verification_info['signer'] = str(signer)
-                        # Coba ambil identifier dari field lain jika signer adalah string
-                        verification_info['signer_identifier'] = (
-                            result.get('nik') or 
-                            result.get('email') or
-                            result.get('signerNik') or
-                            result.get('signerEmail')
-                        )
-                else:
+                        # Extract identifier dari signer_dn jika ada (format: "CN=Name, O=Org, C=ID")
+                        signer_dn = info_signer.get('signer_dn', '')
+                        if signer_dn and not verification_info.get('signer'):
+                            # Parse DN untuk mendapatkan nama
+                            verification_info['signer'] = signer_dn
+                        
+                        verification_info['certificate_valid'] = info_signer.get('cert_user_certified', True)
+                    
+                    # Extract signature document information
+                    signature_doc = detail.get('signature_document', {})
+                    if signature_doc:
+                        verification_info['signature_date'] = signature_doc.get('signed_in')
+                        verification_info['location'] = signature_doc.get('location')
+                        verification_info['reason'] = signature_doc.get('reason')
+                        verification_info['document_not_modified'] = signature_doc.get('document_integrity', True)
+                        verification_info['timestamp_from_tsa'] = signature_doc.get('signed_using_tsa', True)
+                    
+                    # Extract TSA information
+                    info_tsa = detail.get('info_tsa', {})
+                    if info_tsa:
+                        verification_info['timestamp_authority'] = info_tsa.get('name')
+                        verification_info['tsa_cert_validity'] = info_tsa.get('tsa_cert_validity')
+                    
+                    # Extract signature field
+                    verification_info['signature_field'] = detail.get('signature_field')
+                
+                # Set default values jika tidak ada di details
+                if not verification_info.get('signer'):
                     verification_info['signer'] = None
-                    verification_info['signer_identifier'] = None
+                if not verification_info.get('signature_date'):
+                    verification_info['signature_date'] = None
+                if not verification_info.get('location'):
+                    verification_info['location'] = None
+                if not verification_info.get('reason'):
+                    verification_info['reason'] = None
+                if not verification_info.get('timestamp_authority'):
+                    verification_info['timestamp_authority'] = 'Timestamp Authority Badan Siber dan Sandi Negara'
                 
-                _logger.info(f'[BSRE VERIFY] Extracted signer: {verification_info.get("signer")}, identifier: {verification_info.get("signer_identifier")}')
-                
-                # Extract signature date/time
-                verification_info['signature_date'] = (
-                    result.get('signatureDate') or 
-                    result.get('signingTime') or 
-                    result.get('signature_date') or
-                    result.get('waktuPenandatanganan') or
-                    result.get('waktu_penandatanganan')
-                )
-                
-                # Extract location
-                verification_info['location'] = (
-                    result.get('location') or 
-                    result.get('lokasi') or
-                    result.get('signatureLocation')
-                )
-                
-                # Extract reason
-                verification_info['reason'] = (
-                    result.get('reason') or 
-                    result.get('alasan') or
-                    result.get('signatureReason')
-                )
-                
-                # Extract timestamp authority
-                verification_info['timestamp_authority'] = (
-                    result.get('timestampAuthority') or 
-                    result.get('timestamp_authority') or
-                    result.get('penandaWaktu') or
-                    result.get('penanda_waktu') or
-                    result.get('tsa')
-                )
-                
-                # Extract certificate information
-                certificate = result.get('certificate') or result.get('certificateInfo') or result.get('certificate_info')
-                if certificate:
-                    verification_info['certificate'] = certificate
-                    if isinstance(certificate, dict):
-                        verification_info['certificate_valid'] = certificate.get('valid', True)
-                        verification_info['certificate_owner'] = certificate.get('owner') or certificate.get('name') or certificate.get('subject')
-                
-                # Extract verification details (untuk 4 poin checkmark)
-                verification_info['document_not_modified'] = result.get('documentNotModified', True)
-                verification_info['timestamp_from_tsa'] = result.get('timestampFromTSA', True)
-                verification_info['certificate_valid'] = result.get('certificateValid', verification_info.get('certificate_valid', True))
-                verification_info['long_term_validation'] = result.get('longTermValidation', True)
-                
-                # Jika ada verificationInfo object, extract dari sana juga
-                verification_details = result.get('verificationInfo') or result.get('verification_info')
-                if verification_details and isinstance(verification_details, dict):
-                    verification_info['document_not_modified'] = verification_details.get('documentNotModified', verification_info.get('document_not_modified', True))
-                    verification_info['timestamp_from_tsa'] = verification_details.get('timestampFromTSA', verification_info.get('timestamp_from_tsa', True))
-                    verification_info['certificate_valid'] = verification_details.get('certificateValid', verification_info.get('certificate_valid', True))
-                    verification_info['long_term_validation'] = verification_details.get('longTermValidation', verification_info.get('long_term_validation', True))
+                # Set verification details defaults
+                verification_info['document_not_modified'] = verification_info.get('document_not_modified', True)
+                verification_info['timestamp_from_tsa'] = verification_info.get('timestamp_from_tsa', True)
+                verification_info['certificate_valid'] = verification_info.get('certificate_valid', True)
+                verification_info['long_term_validation'] = True  # Default untuk BSRE
                 
                 _logger.info(f'[BSRE VERIFY] Parsed verification info: {json.dumps(verification_info, indent=2, default=str)}')
                 
