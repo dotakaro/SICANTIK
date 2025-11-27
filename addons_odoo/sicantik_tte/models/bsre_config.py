@@ -1461,8 +1461,8 @@ class BsreConfig(models.Model):
                         # Extract signature field
                         verification_info['signature_field'] = detail.get('signature_field')
                     else:
-                    # Struktur V2 mungkin berbeda - coba extract langsung dari root
-                    _logger.info(f'[BSRE VERIFY V2] ⚠️ Using V2 structure (no details array)')
+                        # Struktur V2 mungkin berbeda - coba extract langsung dari root
+                        _logger.info(f'[BSRE VERIFY V2] ⚠️ Using V2 structure (no details array)')
                     _logger.info(f'[BSRE VERIFY V2] - Attempting to extract from root level')
                     
                     # Coba berbagai kemungkinan field untuk V2
