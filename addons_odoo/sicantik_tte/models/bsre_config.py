@@ -588,6 +588,7 @@ class BsreConfig(models.Model):
                 # INVISIBLE signature
                 # V2 API requires imageBase64 even for INVISIBLE signature
                 # Create a small transparent placeholder (1x1 pixel)
+                placeholder_base64 = ''
                 try:
                     from PIL import Image
                     import io
@@ -599,9 +600,16 @@ class BsreConfig(models.Model):
                     placeholder_base64 = base64.b64encode(placeholder_buffer.read()).decode('utf-8')
                     _logger.info(f'✅ Created transparent placeholder for INVISIBLE signature: {len(placeholder_base64)} chars base64')
                 except Exception as e:
-                    _logger.error(f'❌ Error creating INVISIBLE placeholder: {str(e)}')
-                    placeholder_base64 = ''
-                    _logger.warning('⚠️ Using empty imageBase64 for INVISIBLE signature as fallback')
+                    _logger.error(f'❌ Error creating INVISIBLE placeholder: {str(e)}', exc_info=True)
+                    # Fallback: create minimal base64 PNG manually
+                    # Minimal 1x1 transparent PNG: iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==
+                    placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+                    _logger.warning(f'⚠️ Using hardcoded minimal PNG placeholder for INVISIBLE signature')
+                
+                # Ensure placeholder_base64 is not empty
+                if not placeholder_base64:
+                    placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+                    _logger.warning('⚠️ Using hardcoded fallback PNG for INVISIBLE signature')
                 
                 json_payload['signatureProperties'] = [{
                     'tampilan': 'INVISIBLE',
@@ -610,8 +618,9 @@ class BsreConfig(models.Model):
                     'originY': 0.0,
                     'width': 0.0,
                     'height': 0.0,
-                    'imageBase64': placeholder_base64,  # Required by V2 API
+                    'imageBase64': placeholder_base64,  # Required by V2 API - MUST NOT BE EMPTY
                 }]
+                _logger.info(f'✅ INVISIBLE signature properties created with imageBase64: {len(placeholder_base64)} chars')
             
             _logger.info(f'V2 API JSON payload prepared (file size: {len(document_base64)} chars base64)')
             _logger.info(f'Signature properties: {len(json_payload["signatureProperties"])} items')
