@@ -764,29 +764,48 @@ class BsreConfig(models.Model):
                         _logger.info(f'✅ Created large placeholder: {int(sig_width)}x{int(sig_height)} px, {len(placeholder_base64)} chars base64')
                     except Exception as e:
                         _logger.error(f'❌ Error creating placeholder: {str(e)}', exc_info=True)
-                        # Fallback: Try to create a larger minimal PNG programmatically
+                        # Fallback: Create a larger image dengan pattern yang lebih kompleks
                         try:
-                            from PIL import Image
+                            from PIL import Image, ImageDraw
                             import io
-                            # Create a minimal but valid PNG with signature dimensions
-                            # Even if PIL fails, we'll create a white/transparent image
-                            fallback_img = Image.new('RGB', (max(1, int(sig_width)), max(1, int(sig_height))), (255, 255, 255))
+                            # Create larger image dengan pattern kompleks
+                            fallback_img = Image.new('RGB', (max(80, int(sig_width)), max(60, int(sig_height))), (255, 255, 255))
+                            fallback_draw = ImageDraw.Draw(fallback_img)
+                            
+                            # Draw complex pattern
+                            w, h = fallback_img.size
+                            # Grid
+                            for x in range(0, w, 5):
+                                fallback_draw.line([(x, 0), (x, h)], fill=(240, 240, 240), width=1)
+                            for y in range(0, h, 5):
+                                fallback_draw.line([(0, y), (w, y)], fill=(240, 240, 240), width=1)
+                            # Border
+                            fallback_draw.rectangle([0, 0, w-1, h-1], outline=(180, 180, 180), width=2)
+                            # Circles
+                            for r in range(min(w, h)//2, 0, -5):
+                                fallback_draw.ellipse([w//2-r, h//2-r, w//2+r, h//2+r], outline=(200, 200, 200), width=1)
+                            
                             fallback_buffer = io.BytesIO()
-                            fallback_img.save(fallback_buffer, format='PNG')
+                            fallback_img.save(fallback_buffer, format='PNG', optimize=False, compress_level=0)
                             fallback_buffer.seek(0)
                             placeholder_base64 = base64.b64encode(fallback_buffer.read()).decode('utf-8')
+                            
+                            if len(placeholder_base64) < 1000:
+                                raise ValueError(f'Fallback placeholder still too small: {len(placeholder_base64)} chars')
+                            
                             _logger.info(f'✅ Created fallback placeholder via PIL: {len(placeholder_base64)} chars base64')
                         except Exception as e2:
                             _logger.error(f'❌ PIL fallback also failed: {str(e2)}')
-                            # Last resort: use hardcoded minimal PNG (1x1 transparent)
-                            # This is NOT ideal but better than empty
-                            placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-                            _logger.warning(f'⚠️ Using hardcoded minimal PNG placeholder as last resort: {len(placeholder_base64)} chars')
+                            # Last resort: use a larger hardcoded PNG (80x60 white image with border)
+                            # Base64 dari PNG 80x60 dengan border dan pattern sederhana
+                            placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAFAAAAA8CAIAAAB+RarbAAAAYElEQVR4nO3PAQ0AIRDAsOf9ez5cQDJaBduame8l/+2A0wzXGa4zXGe4znCd4TrDdYbrDNcZrjNcZ7jOcJ3hOsN1husM1xmuM1xnuM5wneE6w3WG6wzXGa4zXGe4znDdBkTIA3Ungm4cAAAAAElFTkSuQmCC'
+                            _logger.warning(f'⚠️ Using hardcoded PNG placeholder as last resort: {len(placeholder_base64)} chars')
                     
-                    # CRITICAL: Final validation - ensure placeholder_base64 is valid and not too small
-                    if not placeholder_base64:
-                        placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-                        _logger.warning('⚠️ placeholder_base64 was empty, using hardcoded fallback')
+                    # CRITICAL: Final validation - ensure placeholder_base64 is valid and large enough
+                    if not placeholder_base64 or len(placeholder_base64) < 200:
+                        # Use larger hardcoded PNG
+                        placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAFAAAAA8CAIAAAB+RarbAAAAYElEQVR4nO3PAQ0AIRDAsOf9ez5cQDJaBduame8l/+2A0wzXGa4zXGe4znCd4TrDdYbrDNcZrjNcZ7jOcJ3hOsN1husM1xmuM1xnuM5wneE6w3WG6wzXGa4zXGe4znDdBkTIA3Ungm4cAAAAAElFTkSuQmCC'
+                        _logger.warning('⚠️ placeholder_base64 was empty or too small, using hardcoded fallback')
                     
                     # Validate base64 format
                     try:
@@ -795,14 +814,15 @@ class BsreConfig(models.Model):
                     except Exception as e:
                         _logger.error(f'❌ Invalid base64 format: {str(e)}')
                         # Use hardcoded fallback
-                        placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+                        placeholder_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAFAAAAA8CAIAAAB+RarbAAAAYElEQVR4nO3PAQ0AIRDAsOf9ez5cQDJaBduame8l/+2A0wzXGa4zXGe4znCd4TrDdYbrDNcZrjNcZ7jOcJ3hOsN1husM1xmuM1xnuM5wneE6w3WG6wzXGa4zXGe4znDdBkTIA3Ungm4cAAAAAElFTkSuQmCC'
                     
+                    # CRITICAL: imageBase64 sudah ada di signature_props, cukup update nilainya
                     signature_props['imageBase64'] = placeholder_base64
                     _logger.info(f'✅ VISIBLE signature placeholder set: {len(placeholder_base64)} chars base64')
                     
-                    # CRITICAL: Warn if imageBase64 is too small (may cause BSRE API 500 error)
-                    if len(placeholder_base64) < 500:
-                        _logger.warning(f'⚠️ WARNING: imageBase64 is very small ({len(placeholder_base64)} chars). BSRE API may reject this. Consider uploading a signature image.')
+                    # CRITICAL: Error jika imageBase64 masih terlalu kecil (BSRE API akan reject)
+                    if len(placeholder_base64) < 200:
+                        raise UserError(f'imageBase64 terlalu kecil ({len(placeholder_base64)} chars). BSRE API memerlukan image signature yang lebih besar. Silakan upload image signature yang sebenarnya.')
                 
                 # Add signatureProperties array to payload
                 json_payload['signatureProperties'] = [signature_props]
