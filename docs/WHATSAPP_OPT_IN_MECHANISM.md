@@ -312,6 +312,140 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 
 ---
 
+## 🔧 Cara Membuat Opt-In Formal
+
+### Flow Opt-In Formal Otomatis
+
+Sistem sudah diatur untuk **otomatis mencatat opt-in formal** ketika user mengirim pesan inbound ke Meta WhatsApp Business Account. Berikut cara kerjanya:
+
+#### 1. **Kirim Pesan Opt-In via Fonnte**
+
+Gunakan button **"📱 Kirim Pesan Opt-In"** di form permit untuk mengirim pesan dengan link WhatsApp Business Account:
+
+```
+Yth. [Nama Pemohon],
+
+DPMPTSP Kabupaten Karo memberikan layanan notifikasi WhatsApp untuk memudahkan komunikasi terkait perizinan Anda.
+
+Dengan layanan ini, Anda akan menerima:
+✅ Notifikasi real-time saat izin selesai diproses
+✅ Update status perizinan otomatis
+✅ Peringatan masa berlaku izin
+✅ Link download dokumen langsung
+
+Untuk mengaktifkan layanan ini, silakan klik link berikut:
+
+🔗 https://wa.me/6281234567890?text=Halo
+
+Setelah Anda mengirim pesan ke nomor WhatsApp Business Account di atas, notifikasi akan aktif secara otomatis.
+
+Terima kasih atas perhatiannya.
+
+DPMPTSP Kabupaten Karo
+Kabupaten Karo
+```
+
+#### 2. **User Klik Link dan Kirim Pesan**
+
+- User klik link → membuka chat dengan Meta WhatsApp Business Account
+- User kirim pesan apa saja (misalnya "Halo")
+- Meta mengirim webhook ke Odoo dengan pesan inbound
+
+#### 3. **Sistem Otomatis Mencatat Opt-In Formal**
+
+Setelah Odoo core memproses pesan inbound:
+
+1. **Odoo Core**: Remove nomor dari blacklist (artinya opt-in)
+2. **Sistem Kita**: 
+   - Cari partner berdasarkan nomor WhatsApp
+   - Set `whatsapp_opt_in = True` di partner record
+   - Set `whatsapp_opt_in_date` dengan timestamp saat ini
+   - Log opt-in untuk tracking
+
+#### 4. **Setelah Opt-In Formal Tercatat**
+
+✅ **Bisa kirim template messages kapan saja** (tidak terbatas 24 jam)
+✅ **Opt-in tercatat permanen** di database dengan timestamp
+✅ **Tidak perlu khawatir 24-hour window** habis
+
+### Implementasi Teknis
+
+**File:** `addons_odoo/sicantik_whatsapp/models/whatsapp_message_inherit.py`
+
+```python
+@api.model_create_multi
+def create(self, vals_list):
+    """
+    Override create untuk memastikan opt-in formal tercatat
+    setelah pesan inbound dibuat oleh Odoo core.
+    """
+    messages = super().create(vals_list)
+    
+    for message in messages:
+        if message.message_type == 'inbound' and message.mobile_number_formatted:
+            # Panggil opt-in manager untuk set opt-in formal
+            opt_in_manager = self.env['whatsapp.opt.in.manager']
+            opt_in_manager.auto_opt_in_from_inbound_message(message.id)
+    
+    return messages
+```
+
+**File:** `addons_odoo/sicantik_whatsapp/models/whatsapp_opt_in_manager.py`
+
+```python
+def auto_opt_in_from_inbound_message(self, whatsapp_message_id):
+    """
+    Auto opt-in formal ketika user mengirim pesan inbound ke Meta WhatsApp Business Account
+    """
+    # Cari partner berdasarkan nomor WhatsApp
+    # Set whatsapp_opt_in = True jika belum
+    # Catat timestamp opt-in
+```
+
+### Verifikasi Opt-In Formal
+
+Untuk memverifikasi bahwa opt-in formal sudah tercatat:
+
+1. **Cek di Partner Record:**
+   - Buka form partner
+   - Cek field **"WhatsApp Notifications"** = ✅ (True)
+   - Cek field **"Opt-in Date"** = timestamp saat opt-in
+
+2. **Cek di Log:**
+   ```
+   ✅ Opt-in formal tercatat untuk [Nama Partner] ([Nomor]) dari pesan inbound WhatsApp Business Account
+   ```
+
+3. **Test Kirim Template Message:**
+   - Setelah opt-in formal tercatat, coba kirim template message
+   - Harusnya bisa kirim kapan saja (tidak terbatas 24 jam)
+
+### Troubleshooting
+
+**Q: Opt-in formal tidak tercatat setelah user kirim pesan?**
+
+**A:** Cek beberapa hal:
+1. Pastikan webhook Meta sudah dikonfigurasi dengan benar
+2. Pastikan nomor WhatsApp di partner record sesuai dengan nomor yang mengirim pesan
+3. Cek log Odoo untuk error messages
+4. Pastikan module `sicantik_whatsapp` sudah di-upgrade
+
+**Q: Partner tidak ditemukan saat proses opt-in?**
+
+**A:** 
+- Pastikan nomor WhatsApp di partner record sudah diisi dengan benar
+- Sistem akan mencari partner dengan berbagai format nomor (dengan/tanpa +, spasi, dll)
+- Jika partner tidak ditemukan, opt-in tidak bisa dicatat tapi pesan tetap diproses oleh Odoo core
+
+**Q: Bagaimana jika user tidak klik link opt-in?**
+
+**A:**
+- User tetap bisa menerima notifikasi via Fonnte/Watzap (fallback provider)
+- Tapi tidak bisa menerima template messages via Meta
+- Sistem akan otomatis route ke provider yang sesuai berdasarkan opt-in status
+
+---
+
 ## 📝 Catatan Penting
 
 1. **Meta Opt-In adalah WAJIB** untuk mengirim template messages via Meta
