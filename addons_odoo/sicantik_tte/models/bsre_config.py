@@ -1496,29 +1496,29 @@ class BsreConfig(models.Model):
                         _logger.info(f'[BSRE VERIFY V2]   - reason: {verification_info["reason"]}')
                     
                     # Set default values jika tidak ada
-                if not verification_info.get('signer'):
-                    verification_info['signer'] = None
-                if not verification_info.get('signature_date'):
-                    verification_info['signature_date'] = None
-                if not verification_info.get('location'):
-                    verification_info['location'] = None
-                if not verification_info.get('reason'):
-                    verification_info['reason'] = None
-                if not verification_info.get('timestamp_authority'):
-                    verification_info['timestamp_authority'] = 'Timestamp Authority Badan Siber dan Sandi Negara'
-                
-                # Set verification details defaults
-                verification_info['document_not_modified'] = verification_info.get('document_not_modified', True)
-                verification_info['timestamp_from_tsa'] = verification_info.get('timestamp_from_tsa', True)
-                verification_info['certificate_valid'] = verification_info.get('certificate_valid', True)
-                verification_info['long_term_validation'] = True  # Default untuk BSRE
-                
-                _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
-                _logger.info(f'[BSRE VERIFY V2] Final parsed verification info:')
-                _logger.info(f'[BSRE VERIFY V2] {json.dumps(verification_info, indent=2, default=str)}')
-                _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
-                
-                return verification_info
+                    if not verification_info.get('signer'):
+                        verification_info['signer'] = None
+                    if not verification_info.get('signature_date'):
+                        verification_info['signature_date'] = None
+                    if not verification_info.get('location'):
+                        verification_info['location'] = None
+                    if not verification_info.get('reason'):
+                        verification_info['reason'] = None
+                    if not verification_info.get('timestamp_authority'):
+                        verification_info['timestamp_authority'] = 'Timestamp Authority Badan Siber dan Sandi Negara'
+                    
+                    # Set verification details defaults
+                    verification_info['document_not_modified'] = verification_info.get('document_not_modified', True)
+                    verification_info['timestamp_from_tsa'] = verification_info.get('timestamp_from_tsa', True)
+                    verification_info['certificate_valid'] = verification_info.get('certificate_valid', True)
+                    verification_info['long_term_validation'] = True  # Default untuk BSRE
+                    
+                    _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+                    _logger.info(f'[BSRE VERIFY V2] Final parsed verification info:')
+                    _logger.info(f'[BSRE VERIFY V2] {json.dumps(verification_info, indent=2, default=str)}')
+                    _logger.info(f'[BSRE VERIFY V2] ════════════════════════════════════════════════════════════')
+                    
+                    return verification_info
             else:
                 return {
                     'success': False,
