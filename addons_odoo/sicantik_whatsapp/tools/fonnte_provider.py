@@ -184,8 +184,8 @@ class FonnteProvider:
         """
         Test koneksi ke Fonnte API dengan memvalidasi token
         
-        Menggunakan endpoint /qr untuk validasi token karena endpoint ini
-        tersedia dan hanya memvalidasi tanpa melakukan aksi yang merugikan.
+        Menggunakan endpoint /send dengan nomor dummy untuk validasi token.
+        Endpoint ini akan mengembalikan error yang jelas jika token tidak valid.
         
         Returns:
             dict: Response dengan status koneksi
@@ -193,65 +193,105 @@ class FonnteProvider:
         _logger.info('🔍 Fonnte: Testing connection...')
         
         try:
-            # Gunakan endpoint /qr untuk test koneksi
-            # Endpoint ini akan mengembalikan QR code jika token valid
-            # atau error yang jelas jika token tidak valid
-            url = f'{self.api_url}/qr'
-            params = {}
-            if self.device:
-                params['device'] = self.device
-                
-            response = requests.get(
+            # Gunakan endpoint /send dengan nomor dummy untuk test koneksi
+            # Ini akan mengembalikan error yang jelas jika token tidak valid
+            # Nomor dummy tidak akan benar-benar mengirim pesan
+            url = f'{self.api_url}/send'
+            payload = {
+                'target': '628000000000',  # Nomor dummy (tidak akan benar-benar mengirim)
+                'message': 'TEST_CONNECTION_ONLY',  # Pesan test
+            }
+            # Device tidak diperlukan untuk test, hanya token
+            
+            response = requests.post(
                 url,
+                json=payload,
                 headers=self._get_headers(),
-                params=params,
                 timeout=self.timeout
             )
             
             _logger.info(f'   Response status: {response.status_code}')
-            _logger.debug(f'   Response body: {response.text[:200]}')
+            _logger.debug(f'   Response body: {response.text[:500]}')
             
+            # Parse response
+            try:
+                result = response.json()
+            except ValueError:
+                # Response bukan JSON
+                result = {'raw_response': response.text[:500]}
+            
+            # Jika 401, berarti token tidak valid
+            if response.status_code == 401:
+                _logger.error('❌ Fonnte: Invalid token (401 Unauthorized)')
+                return {
+                    'success': False,
+                    'error': 'Token tidak valid atau tidak terautentikasi. Pastikan token API sudah benar dan diambil dari dashboard Fonnte → Devices.',
+                    'response': result
+                }
+            
+            # Jika 200, berarti token valid (meskipun mungkin ada error lain seperti nomor tidak valid)
             if response.status_code == 200:
-                try:
-                    result = response.json()
-                    if result.get('status'):
-                        _logger.info(f'✅ Fonnte: Connection successful')
+                if result.get('status'):
+                    _logger.info(f'✅ Fonnte: Connection successful')
+                    return {
+                        'success': True,
+                        'message': 'Koneksi berhasil. Token valid dan terhubung ke Fonnte API.',
+                        'response': result
+                    }
+                else:
+                    # Token valid tapi ada error lain (misalnya nomor tidak valid)
+                    error_msg = result.get('reason') or 'Unknown error'
+                    # Jika error tentang nomor/target, berarti token valid
+                    if 'target' in error_msg.lower() or 'number' in error_msg.lower() or 'nomor' in error_msg.lower():
+                        _logger.info(f'✅ Fonnte: Token valid (error tentang nomor: {error_msg})')
                         return {
                             'success': True,
-                            'message': 'Koneksi berhasil. Token valid dan terhubung ke Fonnte API.',
+                            'message': f'Koneksi berhasil. Token valid. (Catatan: {error_msg})',
                             'response': result
                         }
                     else:
-                        error_msg = result.get('reason') or 'Unknown error'
                         _logger.error(f'❌ Fonnte: {error_msg}')
                         return {
                             'success': False,
                             'error': error_msg,
                             'response': result
                         }
-                except ValueError:
-                    # Response bukan JSON, mungkin HTML atau plain text
-                    _logger.warning('Response bukan JSON, mungkin endpoint berbeda')
-                    # Coba alternatif: gunakan endpoint /send dengan payload minimal
-                    return self._test_connection_alternative()
-            elif response.status_code == 401:
-                _logger.error('❌ Fonnte: Invalid token (401 Unauthorized)')
+            
+            # Jika 400, biasanya berarti request tidak valid (tapi token mungkin valid)
+            if response.status_code == 400:
+                error_msg = result.get('reason') or result.get('message') or 'Bad request'
+                # Jika error tentang nomor/target, berarti token valid
+                if 'target' in error_msg.lower() or 'number' in error_msg.lower() or 'nomor' in error_msg.lower():
+                    _logger.info(f'✅ Fonnte: Token valid (error tentang nomor: {error_msg})')
+                    return {
+                        'success': True,
+                        'message': f'Koneksi berhasil. Token valid. (Catatan: {error_msg})',
+                        'response': result
+                    }
+                else:
+                    _logger.error(f'❌ Fonnte: {error_msg}')
+                    return {
+                        'success': False,
+                        'error': error_msg,
+                        'response': result
+                    }
+            
+            # Jika 405, berarti method HTTP salah
+            if response.status_code == 405:
+                _logger.error('❌ Fonnte: Method not allowed (405)')
                 return {
                     'success': False,
-                    'error': 'Token tidak valid atau tidak terautentikasi. Pastikan token API sudah benar.',
-                    'response': response.text[:500]
+                    'error': 'Method HTTP tidak diizinkan. Pastikan menggunakan endpoint yang benar sesuai dokumentasi Fonnte.',
+                    'response': result
                 }
-            elif response.status_code == 404:
-                _logger.warning('Endpoint /qr tidak ditemukan, mencoba alternatif...')
-                # Coba alternatif endpoint
-                return self._test_connection_alternative()
-            else:
-                _logger.error(f'❌ Fonnte: Connection failed ({response.status_code})')
-                return {
-                    'success': False,
-                    'error': f'Koneksi gagal: HTTP {response.status_code}. Pastikan API URL benar: {self.api_url}',
-                    'response': response.text[:500]
-                }
+            
+            # Status code lain
+            _logger.error(f'❌ Fonnte: Connection failed ({response.status_code})')
+            return {
+                'success': False,
+                'error': f'Koneksi gagal: HTTP {response.status_code}. Pastikan API URL benar: {self.api_url}',
+                'response': result
+            }
                 
         except requests.exceptions.RequestException as e:
             error_msg = f'Request error: {str(e)}'
@@ -266,67 +306,6 @@ class FonnteProvider:
             return {
                 'success': False,
                 'error': error_msg
-            }
-    
-    def _test_connection_alternative(self):
-        """
-        Alternatif test connection menggunakan endpoint /send dengan payload minimal
-        yang tidak akan benar-benar mengirim pesan (hanya validasi token)
-        """
-        _logger.info('🔍 Fonnte: Trying alternative test method...')
-        
-        try:
-            # Coba endpoint /send dengan payload yang tidak valid
-            # Ini akan mengembalikan error yang jelas jika token tidak valid
-            url = f'{self.api_url}/send'
-            payload = {
-                'target': '628000000000',  # Nomor dummy yang tidak akan benar-benar mengirim
-                'message': 'TEST_CONNECTION',  # Pesan test
-            }
-            if self.device:
-                payload['device'] = self.device
-            
-            response = requests.post(
-                url,
-                json=payload,
-                headers=self._get_headers(),
-                timeout=self.timeout
-            )
-            
-            _logger.info(f'   Alternative response status: {response.status_code}')
-            
-            # Jika 401, berarti token tidak valid
-            if response.status_code == 401:
-                return {
-                    'success': False,
-                    'error': 'Token tidak valid atau tidak terautentikasi. Pastikan token API sudah benar.',
-                }
-            
-            # Jika 200 atau 400 (bad request karena nomor dummy), berarti token valid
-            # tapi endpoint /send tidak cocok untuk test
-            if response.status_code in [200, 400]:
-                try:
-                    result = response.json()
-                    # Jika status true atau ada error yang jelas tentang nomor (bukan token)
-                    if result.get('status') or 'target' in str(result).lower() or 'number' in str(result).lower():
-                        return {
-                            'success': True,
-                            'message': 'Koneksi berhasil. Token valid dan terhubung ke Fonnte API.',
-                        }
-                except ValueError:
-                    pass
-            
-            # Jika sampai sini, anggap token valid (karena tidak dapat 401)
-            return {
-                'success': True,
-                'message': 'Koneksi berhasil. Token valid dan terhubung ke Fonnte API.',
-            }
-            
-        except Exception as e:
-            _logger.error(f'❌ Fonnte: Alternative test failed: {str(e)}')
-            return {
-                'success': False,
-                'error': f'Test koneksi gagal: {str(e)}. Pastikan API URL dan token sudah benar.'
             }
     
     def get_qr_code(self):

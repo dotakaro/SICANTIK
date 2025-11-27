@@ -91,9 +91,11 @@
                         <page string="Fonnte" name="fonnte">
                             <group invisible="provider_type != 'fonnte'">
                                 <field name="fonnte_api_url"/>
-                                <field name="fonnte_token" password="True"/>
-                                <field name="fonnte_device"/>
-                                <field name="fonnte_secret" password="True"/>
+                                <field name="fonnte_token" password="True" required="1"/>
+                                <field name="fonnte_device" 
+                                       placeholder="Opsional - hanya jika menggunakan multiple device"/>
+                                <field name="fonnte_secret" password="True"
+                                       placeholder="Opsional - untuk webhook verification"/>
                                 
                                 <div class="oe_button_box" name="button_box_test">
                                     <button type="object" name="action_test_connection" 
@@ -108,11 +110,23 @@
                                     </button>
                                 </div>
                                 
-                                <span class="text-muted fw-bold">Catatan API</span>
-                                <p class="text-muted">
-                                    Masukkan token API, Device ID, dan secret dari dashboard Fonnte.
-                                    Klik tombol "Test Connection" untuk memverifikasi koneksi ke Fonnte API.
-                                </p>
+                                <div class="alert alert-info" role="alert">
+                                    <strong>📋 Cara Mendapatkan Kredensial Fonnte:</strong>
+                                    <ol style="margin-top: 10px; margin-bottom: 0;">
+                                        <li>Login ke <a href="https://fonnte.com" target="_blank">dashboard Fonnte</a></li>
+                                        <li>Buka menu <strong>"Devices"</strong> atau <strong>"Perangkat"</strong></li>
+                                        <li>Pilih device yang ingin digunakan</li>
+                                        <li>Salin <strong>Token API</strong> (Device Token) dari device tersebut</li>
+                                        <li>Tempelkan token tersebut di field <strong>"Fonnte Token"</strong> di atas</li>
+                                    </ol>
+                                    <p style="margin-top: 10px; margin-bottom: 0;">
+                                        <strong>Catatan:</strong> Fonnte hanya memerlukan <strong>Token API</strong> untuk operasi dasar. 
+                                        Device ID dan Secret bersifat opsional dan hanya diperlukan untuk kasus khusus.
+                                    </p>
+                                    <p style="margin-top: 10px; margin-bottom: 0;">
+                                        <strong>Dokumentasi:</strong> <a href="https://docs.fonnte.com" target="_blank">https://docs.fonnte.com</a>
+                                    </p>
+                                </div>
                             </group>
                             <group invisible="provider_type == 'fonnte'">
                                 <span class="text-muted fw-bold">Tidak relevan</span>
