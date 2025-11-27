@@ -5,6 +5,7 @@ from odoo.http import request, Response
 from odoo.exceptions import UserError, AccessError
 import logging
 import base64
+import json
 
 _logger = logging.getLogger(__name__)
 
@@ -181,6 +182,96 @@ class SicantikTTEController(http.Controller):
             
             _logger.info(f'[VERIFY] Dokumen valid, state: {document.state}, ID: {document.id}')
             
+            # Verifikasi ke BSRE API
+            verify_result = None
+            bsre_verification_success = False
+            
+            try:
+                # Get BSRE config
+                BsreConfig = request.env['bsre.config'].sudo()
+                bsre_config = BsreConfig.search([('active', '=', True)], limit=1)
+                
+                if bsre_config and document.minio_object_name:
+                    _logger.info(f'[VERIFY] Memulai verifikasi ke BSRE API...')
+                    
+                    # Download dokumen dari MinIO untuk verifikasi
+                    MinioConnector = request.env['minio.connector'].sudo()
+                    minio_connector = MinioConnector.search([], limit=1)
+                    
+                    if minio_connector:
+                        download_result = minio_connector.download_file(
+                            bucket_name=document.minio_bucket,
+                            object_name=document.minio_object_name
+                        )
+                        
+                        if download_result.get('success'):
+                            file_data = download_result['data']
+                            _logger.info(f'[VERIFY] Dokumen berhasil di-download dari MinIO untuk verifikasi: {len(file_data)} bytes')
+                            
+                            # Verifikasi ke BSRE API
+                            verify_result = bsre_config.verify_signature(file_data)
+                            
+                            if verify_result.get('success'):
+                                bsre_verification_success = True
+                                _logger.info(f'[VERIFY] ✅ BSRE API Verification berhasil')
+                                _logger.info(f'[VERIFY] - Valid: {verify_result.get("valid")}')
+                                _logger.info(f'[VERIFY] - Signer: {verify_result.get("signer")}')
+                                _logger.info(f'[VERIFY] - Signature Date: {verify_result.get("signature_date")}')
+                                
+                                # Update dokumen dengan informasi dari BSRE verify response
+                                update_vals = {}
+                                
+                                # Ambil informasi penandatangan dari response verify
+                                signer_info = verify_result.get('signer')
+                                if signer_info:
+                                    if isinstance(signer_info, dict):
+                                        # Jika signer adalah dict, ambil nama dan identifier
+                                        signer_name = signer_info.get('name') or signer_info.get('nama') or ''
+                                        signer_identifier = signer_info.get('nik') or signer_info.get('email') or signer_info.get('identifier') or ''
+                                    elif isinstance(signer_info, str):
+                                        # Jika signer adalah string, gunakan sebagai nama
+                                        signer_name = signer_info
+                                        signer_identifier = document.bsre_signer_identifier or ''
+                                    else:
+                                        signer_name = str(signer_info)
+                                        signer_identifier = document.bsre_signer_identifier or ''
+                                    
+                                    if signer_name:
+                                        update_vals['bsre_signer_name'] = signer_name
+                                    if signer_identifier:
+                                        update_vals['bsre_signer_identifier'] = signer_identifier
+                                
+                                # Update certificate jika ada di response
+                                certificate_info = verify_result.get('certificate')
+                                if certificate_info:
+                                    if isinstance(certificate_info, dict):
+                                        cert_owner = certificate_info.get('owner') or certificate_info.get('name') or certificate_info.get('pemilik') or ''
+                                        if cert_owner and not update_vals.get('bsre_signer_name'):
+                                            update_vals['bsre_signer_name'] = cert_owner
+                                    
+                                    # Update certificate jika belum ada
+                                    if not document.bsre_certificate:
+                                        update_vals['bsre_certificate'] = str(certificate_info) if not isinstance(certificate_info, dict) else json.dumps(certificate_info)
+                                
+                                # Update dokumen jika ada perubahan
+                                if update_vals:
+                                    document.write(update_vals)
+                                    _logger.info(f'[VERIFY] Dokumen di-update dengan informasi dari BSRE verify: {update_vals}')
+                            else:
+                                _logger.warning(f'[VERIFY] ⚠️ BSRE API Verification gagal: {verify_result.get("message")}')
+                        else:
+                            _logger.warning(f'[VERIFY] ⚠️ Gagal download dokumen dari MinIO untuk verifikasi')
+                    else:
+                        _logger.warning(f'[VERIFY] ⚠️ MinIO connector tidak ditemukan')
+                else:
+                    if not bsre_config:
+                        _logger.warning(f'[VERIFY] ⚠️ BSRE config tidak ditemukan atau tidak aktif')
+                    if not document.minio_object_name:
+                        _logger.warning(f'[VERIFY] ⚠️ Dokumen tidak memiliki minio_object_name')
+            except Exception as verify_error:
+                _logger.error(f'[VERIFY] ❌ Error saat verifikasi ke BSRE API: {str(verify_error)}', exc_info=True)
+                # Continue dengan verifikasi lokal meskipun BSRE verify gagal
+            
             # Update verification counter
             from odoo import fields
             document.write({
@@ -190,10 +281,12 @@ class SicantikTTEController(http.Controller):
             
             _logger.info(f'[VERIFY] Verification counter updated: {document.verification_count}')
             
-            # Render verification page
+            # Render verification page dengan hasil verifikasi BSRE
             _logger.info(f'[VERIFY] Rendering verification page template...')
             result = request.render('sicantik_tte.verification_page', {
                 'document': document,
+                'bsre_verification': verify_result,
+                'bsre_verification_success': bsre_verification_success,
             })
             _logger.info(f'[VERIFY] Template rendered successfully')
             _logger.info(f'[VERIFY] ==========================================')

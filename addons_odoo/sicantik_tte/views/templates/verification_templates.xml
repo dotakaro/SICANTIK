@@ -34,8 +34,21 @@
                                     </p>
                                     <hr/>
                                     <p class="mb-0">
-                                        <strong>Status Verifikasi:</strong> Dokumen ini telah terverifikasi keasliannya dan integritasnya. 
-                                        Setiap perubahan pada dokumen akan merusak tanda tangan digital dan dapat dideteksi melalui verifikasi.
+                                        <t t-if="bsre_verification_success and bsre_verification">
+                                            <strong>Status Verifikasi BSRE:</strong> 
+                                            <t t-if="bsre_verification.get('valid')">
+                                                <span class="badge badge-success">✅ Tanda Tangan Valid</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="badge badge-warning">⚠️ Tanda Tangan Tidak Valid</span>
+                                            </t>
+                                            <br/>
+                                            <small class="text-muted">Diverifikasi langsung ke BSRE API pada <t t-esc="document.last_verified_date" t-options="{'widget': 'datetime'}"/></small>
+                                        </t>
+                                        <t t-else="">
+                                            <strong>Status Verifikasi:</strong> Dokumen ini telah terverifikasi keasliannya dan integritasnya. 
+                                            Setiap perubahan pada dokumen akan merusak tanda tangan digital dan dapat dideteksi melalui verifikasi.
+                                        </t>
                                     </p>
                                 </div>
                                 
