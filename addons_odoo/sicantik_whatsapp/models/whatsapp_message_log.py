@@ -260,4 +260,21 @@ class WhatsAppMessageLog(models.Model):
         store=True,
         index=True
     )
+    
+    def action_view_partner(self):
+        """
+        Action untuk membuka form partner dari log pesan
+        """
+        self.ensure_one()
+        if not self.partner_id:
+            return False
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Partner',
+            'res_model': 'res.partner',
+            'res_id': self.partner_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
