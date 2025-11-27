@@ -392,17 +392,32 @@ class WhatsAppOptInManager(models.Model):
             raise UserError(_('WhatsApp Account tidak ditemukan'))
         
         # Cari nomor WhatsApp dari account
-        # Odoo Enterprise menyimpan nomor di phone_uid atau bisa diambil dari phone_number_id
+        # Odoo Enterprise menyimpan nomor di phone_number field (setelah sync template)
         phone_number = None
         
-        # Coba ambil dari phone_number_id (jika ada)
-        if hasattr(wa_account, 'phone_number_id') and wa_account.phone_number_id:
-            # Phone number biasanya dalam format internasional tanpa +
-            phone_number = wa_account.phone_number_id.name or wa_account.phone_number_id.phone
+        # Coba ambil dari phone_number field (field ini diisi saat sync template)
+        if hasattr(wa_account, 'phone_number') and wa_account.phone_number:
+            phone_number = wa_account.phone_number
         
         # Jika tidak ada, coba ambil dari phone_uid (format: 6281234567890)
+        # phone_uid adalah Phone Number ID dari Meta, bukan nomor aktual
+        # Tapi kita bisa coba gunakan jika formatnya benar
         if not phone_number and hasattr(wa_account, 'phone_uid') and wa_account.phone_uid:
-            phone_number = wa_account.phone_uid
+            # Phone UID biasanya bukan nomor aktual, tapi kita coba dulu
+            # Jika formatnya seperti nomor (hanya angka), gunakan
+            phone_uid = wa_account.phone_uid.strip()
+            if phone_uid.isdigit() and len(phone_uid) >= 10:
+                phone_number = phone_uid
+        
+        # Jika masih tidak ada, sync template untuk mendapatkan phone_number
+        if not phone_number:
+            try:
+                _logger.info(f'📞 Phone number tidak ditemukan, mencoba sync template untuk mendapatkan nomor...')
+                wa_account.button_sync_whatsapp_account_templates()
+                if hasattr(wa_account, 'phone_number') and wa_account.phone_number:
+                    phone_number = wa_account.phone_number
+            except Exception as e:
+                _logger.warning(f'⚠️ Gagal sync template: {str(e)}')
         
         # Jika masih tidak ada, coba cari dari WhatsApp message terakhir yang dikirim
         if not phone_number:
@@ -415,7 +430,7 @@ class WhatsAppOptInManager(models.Model):
                 phone_number = last_message.mobile_number.replace('+', '').replace(' ', '')
         
         if not phone_number:
-            raise UserError(_('Tidak dapat menemukan nomor WhatsApp Business Account. Pastikan WhatsApp Account sudah dikonfigurasi dengan benar.'))
+            raise UserError(_('Tidak dapat menemukan nomor WhatsApp Business Account. Pastikan WhatsApp Account sudah dikonfigurasi dengan benar dan sudah sync template setidaknya sekali.'))
         
         # Normalize phone number (pastikan format internasional tanpa +)
         phone_number = phone_number.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
