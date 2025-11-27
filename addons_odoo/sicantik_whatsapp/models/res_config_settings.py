@@ -13,6 +13,13 @@ class ResConfigSettings(models.TransientModel):
         help='Provider default untuk mengirim notifikasi WhatsApp. '
              'Dapat di override per workflow jika dibutuhkan.',
     )
+    
+    whatsapp_webhook_base_url = fields.Char(
+        string='WhatsApp Webhook Base URL',
+        help='Base URL untuk webhook WhatsApp Meta. '
+             'Contoh: https://sicantik.dotakaro.com',
+        config_parameter='sicantik_whatsapp.webhook_base_url',
+    )
 
     def set_values(self):
         super().set_values()
@@ -21,6 +28,9 @@ class ResConfigSettings(models.TransientModel):
             'sicantik_whatsapp.default_provider_id',
             self.whatsapp_provider_id.id or False,
         )
+        # Trigger recompute callback_url untuk semua WhatsApp account
+        if self.whatsapp_webhook_base_url:
+            self.env['whatsapp.account'].search([])._compute_callback_url()
 
     @api.model
     def get_values(self):
