@@ -6,6 +6,7 @@ from odoo.exceptions import UserError, AccessError
 import logging
 import base64
 import json
+from datetime import timedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -400,7 +401,6 @@ class SicantikTTEController(http.Controller):
                 document._generate_download_token()
             
             # Update verification counter
-            from odoo import fields
             document.write({
                 'verification_count': document.verification_count + 1,
                 'last_verified_date': fields.Datetime.now()
