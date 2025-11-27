@@ -5,7 +5,8 @@ from odoo.exceptions import UserError, ValidationError
 import base64
 import hashlib
 import logging
-from datetime import datetime
+import secrets
+from datetime import datetime, timedelta
 
 _logger = logging.getLogger(__name__)
 
@@ -166,6 +167,17 @@ class SicantikDocument(models.Model):
         store=True,
         help='URL untuk download dokumen (untuk QR code)'
     )
+    download_token = fields.Char(
+        string='Download Token',
+        readonly=True,
+        copy=False,
+        help='Token untuk download publik (expire setelah 1 jam)'
+    )
+    download_token_expires = fields.Datetime(
+        string='Token Expires',
+        readonly=True,
+        help='Waktu kadaluarsa token download'
+    )
     verification_count = fields.Integer(
         string='Jumlah Verifikasi',
         default=0,
@@ -260,9 +272,9 @@ class SicantikDocument(models.Model):
             else:
                 record.verification_url = False
     
-    @api.depends('original_filename', 'state')
+    @api.depends('original_filename', 'state', 'download_token')
     def _compute_download_url(self):
-        """Compute URL untuk download dokumen (untuk QR code)"""
+        """Compute URL untuk download dokumen dengan token (untuk QR code)"""
         for record in self:
             # Note: 'id' tidak bisa di depends, tapi bisa diakses langsung di method
             if record.id and record.state in ['signed', 'verified']:
@@ -272,10 +284,27 @@ class SicantikDocument(models.Model):
                     default='https://sicantik.dotakaro.com'
                 )
                 base_url = base_url.rstrip('/')
-                # URL download menggunakan route yang sudah ada
-                record.download_url = f'{base_url}/web/content/sicantik.document/{record.id}/download?filename={record.original_filename or "document.pdf"}'
+                # Generate token jika belum ada atau sudah expired
+                if not record.download_token or (record.download_token_expires and fields.Datetime.now() > record.download_token_expires):
+                    record._generate_download_token()
+                # URL download menggunakan token untuk keamanan
+                filename = record.original_filename or 'document.pdf'
+                record.download_url = f'{base_url}/sicantik/tte/download/{record.document_number}/{record.download_token}?filename={filename}'
             else:
                 record.download_url = False
+    
+    def _generate_download_token(self):
+        """Generate secure token untuk download publik"""
+        for record in self:
+            # Generate token 32 karakter (16 bytes hex)
+            token = secrets.token_hex(16)
+            # Token expire setelah 1 jam
+            expires = fields.Datetime.now() + timedelta(hours=1)
+            record.write({
+                'download_token': token,
+                'download_token_expires': expires
+            })
+            _logger.info(f'Generated download token untuk dokumen {record.document_number}: expires {expires}')
     
     @api.depends('state', 'minio_object_name')
     def _compute_can_sign(self):
@@ -599,6 +628,9 @@ class SicantikDocument(models.Model):
                 
                 if upload_result['success']:
                     # Update record dengan state signed terlebih dahulu
+                    # Generate download token saat dokumen ditandatangani
+                    self._generate_download_token()
+                    
                     self.write({
                         'state': 'signed',
                         'signature_date': fields.Datetime.now(),

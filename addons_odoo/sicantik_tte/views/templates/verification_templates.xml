@@ -302,11 +302,16 @@
                                         <p class="text-muted mb-3">
                                             Unduh dokumen PDF yang telah ditandatangani secara digital untuk keperluan arsip atau verifikasi lebih lanjut.
                                         </p>
-                                        <a t-attf-href="/web/content/sicantik.document/#{document.id}/download?filename=#{document.original_filename}" 
-                                           class="btn btn-lg btn-primary btn-block" 
-                                           style="max-width: 400px; margin: 0 auto;">
-                                            <i class="fa fa-download"></i> Download Dokumen PDF
-                                        </a>
+                                        <t t-if="document.download_token">
+                                            <a t-attf-href="/sicantik/tte/download/#{document.document_number}/#{document.download_token}?filename=#{document.original_filename}" 
+                                               class="btn btn-lg btn-primary btn-block" 
+                                               style="max-width: 400px; margin: 0 auto;">
+                                                <i class="fa fa-download"></i> Download Dokumen PDF
+                                            </a>
+                                        </t>
+                                        <t t-else="">
+                                            <p class="text-muted">Token download sedang di-generate, silakan refresh halaman.</p>
+                                        </t>
                                     </div>
                                 </div>
                                 

@@ -16,6 +16,124 @@ class SicantikTTEController(http.Controller):
     """
     
     @http.route([
+        '/sicantik/tte/download/<path:document_number>/<token>',
+    ], type='http', auth='public', methods=['GET'], csrf=False)
+    def download_document_public(self, document_number, token, filename=None, **kwargs):
+        """
+        Public download endpoint dengan token verification
+        Mencegah DDoS dengan token yang expire setelah 1 jam
+        
+        Args:
+            document_number: Nomor dokumen
+            token: Download token yang di-generate saat verifikasi
+            filename: Nama file untuk download (optional)
+        
+        Returns:
+            HTTP Response dengan file data atau error
+        """
+        try:
+            _logger.info(f'[DOWNLOAD] Request download dengan token: document={document_number}, token={token[:8]}...')
+            
+            # Normalize document_number
+            document_number = document_number.strip().strip('/')
+            
+            # Get document dengan sudo untuk bypass access rights
+            Document = request.env['sicantik.document'].sudo()
+            document = Document.search([
+                ('document_number', '=', document_number),
+                ('download_token', '=', token)
+            ], limit=1)
+            
+            if not document.exists():
+                _logger.warning(f'[DOWNLOAD] Dokumen tidak ditemukan atau token tidak valid: {document_number}')
+                return Response(
+                    'Dokumen tidak ditemukan atau token tidak valid',
+                    status=404
+                )
+            
+            # Check token expiration
+            if document.download_token_expires and fields.Datetime.now() > document.download_token_expires:
+                _logger.warning(f'[DOWNLOAD] Token sudah expired untuk dokumen {document_number}')
+                return Response(
+                    'Token download sudah kadaluarsa. Silakan scan QR code lagi untuk mendapatkan token baru.',
+                    status=403
+                )
+            
+            # Check state - hanya allow signed atau verified
+            if document.state not in ['signed', 'verified']:
+                _logger.warning(f'[DOWNLOAD] Dokumen belum ditandatangani: {document.state}')
+                return Response(
+                    'Dokumen belum ditandatangani',
+                    status=403
+                )
+            
+            # Check if document has MinIO object
+            if not document.minio_object_name:
+                _logger.error(f'[DOWNLOAD] Document {document.id} does not have MinIO object')
+                return Response(
+                    'Dokumen belum diupload ke storage',
+                    status=404
+                )
+            
+            # Get MinIO connector
+            MinioConnector = request.env['minio.connector'].sudo()
+            minio_connector = MinioConnector.search([], limit=1)
+            
+            if not minio_connector:
+                _logger.error('[DOWNLOAD] MinIO connector not found')
+                return Response(
+                    'Konfigurasi MinIO tidak ditemukan',
+                    status=500
+                )
+            
+            # Download file from MinIO
+            _logger.info(f'[DOWNLOAD] Downloading document {document.id} from MinIO: {document.minio_object_name}')
+            
+            download_result = minio_connector.download_file(
+                bucket_name=document.minio_bucket,
+                object_name=document.minio_object_name
+            )
+            
+            if not download_result.get('success'):
+                error_msg = download_result.get('message', 'Unknown error')
+                _logger.error(f'[DOWNLOAD] Failed to download from MinIO: {error_msg}')
+                return Response(
+                    f'Gagal download dari MinIO: {error_msg}',
+                    status=500
+                )
+            
+            # Get file data
+            file_data = download_result['data']
+            
+            # Determine filename
+            if not filename:
+                filename = document.original_filename or 'document.pdf'
+            
+            # Prepare response headers
+            headers = [
+                ('Content-Type', 'application/pdf'),
+                ('Content-Disposition', f'attachment; filename="{filename}"'),
+                ('Content-Length', str(len(file_data))),
+                ('X-Content-Type-Options', 'nosniff'),
+            ]
+            
+            _logger.info(f'[DOWNLOAD] Document {document.id} downloaded successfully: {filename} ({len(file_data)} bytes)')
+            
+            # Return file as HTTP response
+            return Response(
+                file_data,
+                headers=headers,
+                status=200
+            )
+            
+        except Exception as e:
+            _logger.error(f'[DOWNLOAD] Error downloading document {document_number}: {str(e)}', exc_info=True)
+            return Response(
+                f'Error download dokumen: {str(e)}',
+                status=500
+            )
+    
+    @http.route([
         '/web/content/sicantik.document/<int:document_id>/download',
     ], type='http', auth='user', methods=['GET'])
     def download_document(self, document_id, filename=None, **kwargs):
@@ -276,6 +394,10 @@ class SicantikTTEController(http.Controller):
             except Exception as verify_error:
                 _logger.error(f'[VERIFY] ❌ Error saat verifikasi ke BSRE API: {str(verify_error)}', exc_info=True)
                 # Continue dengan verifikasi lokal meskipun BSRE verify gagal
+            
+            # Generate download token jika belum ada atau sudah expired
+            if not document.download_token or (document.download_token_expires and fields.Datetime.now() > document.download_token_expires):
+                document._generate_download_token()
             
             # Update verification counter
             from odoo import fields
