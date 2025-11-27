@@ -109,28 +109,30 @@ class SicantikTTEController(http.Controller):
             )
     
     @http.route([
-        '/sicantik/tte/verify/<string:document_number>',
-        '/sicantik/tte/verify/<string:document_number>/',  # Dengan trailing slash untuk kompatibilitas
+        '/sicantik/tte/verify/<path:document_number>',  # Gunakan <path:> untuk handle slash dalam document_number
+        '/sicantik/tte/verify/<path:document_number>/',  # Dengan trailing slash untuk kompatibilitas
     ], type='http', auth='public', website=True, methods=['GET'], csrf=False)
     def verify_document(self, document_number, **kwargs):
         """
         Public endpoint untuk verifikasi dokumen
         
         Args:
-            document_number: Nomor dokumen
+            document_number: Nomor dokumen (dapat mengandung slash seperti DOC/2025/00003)
         
         Returns:
             Halaman verifikasi dokumen
         """
         try:
             _logger.info(f'[VERIFY] ==========================================')
+            _logger.info(f'[VERIFY] Controller method called!')
             _logger.info(f'[VERIFY] Request untuk verifikasi dokumen: {document_number}')
             _logger.info(f'[VERIFY] URL: {request.httprequest.url}')
+            _logger.info(f'[VERIFY] Full path: {request.httprequest.path}')
             _logger.info(f'[VERIFY] Method: {request.httprequest.method}')
             _logger.info(f'[VERIFY] User Agent: {request.httprequest.headers.get("User-Agent", "N/A")}')
             
-            # Normalize document_number (remove leading/trailing spaces)
-            document_number = document_number.strip()
+            # Normalize document_number (remove leading/trailing spaces dan slash)
+            document_number = document_number.strip().strip('/')
             
             # Get document dengan sudo untuk bypass access rights
             Document = request.env['sicantik.document'].sudo()
