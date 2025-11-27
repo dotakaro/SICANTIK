@@ -550,33 +550,6 @@ class SicantikDocument(models.Model):
                 
                 _logger.info(f'[SIGN] ✅ File signed dari BSRE API valid: {len(signed_file_data)} bytes, dimulai dengan PDF header')
                 
-                # Jika ada request_id atau signature_id, coba download ulang dari BSRE untuk memastikan
-                # file yang di-upload adalah file signed asli dari BSRE
-                request_id = sign_result.get('request_id')
-                signature_id = sign_result.get('signature_id')
-                
-                if request_id or signature_id:
-                    _logger.info(f'[SIGN] Mencoba download file signed dari BSRE API menggunakan request_id={request_id}, signature_id={signature_id}')
-                    try:
-                        download_result = bsre_config.download_signed_document(
-                            request_id=request_id,
-                            signature_id=signature_id
-                        )
-                        
-                        if download_result.get('success'):
-                            downloaded_data = download_result['signed_data']
-                            
-                            # Validasi file yang di-download
-                            if downloaded_data and len(downloaded_data) > 100 and downloaded_data.startswith(b'%PDF'):
-                                signed_file_data = downloaded_data
-                                _logger.info(f'[SIGN] ✅ File signed berhasil di-download dari BSRE API: {len(signed_file_data)} bytes')
-                            else:
-                                _logger.warning(f'[SIGN] ⚠️ File yang di-download tidak valid, menggunakan file dari response signing')
-                        else:
-                            _logger.warning(f'[SIGN] ⚠️ Gagal download dari BSRE API, menggunakan file dari response signing: {download_result.get("message")}')
-                    except Exception as download_error:
-                        _logger.warning(f'[SIGN] ⚠️ Error saat download dari BSRE API, menggunakan file dari response signing: {str(download_error)}')
-                
                 # Upload signed document back to MinIO dengan nama <nama dokumen>-signed.pdf
                 # Format nama: <nama dokumen>-signed.pdf
                 if self.name:
