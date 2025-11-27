@@ -524,12 +524,20 @@ class SicantikDocument(models.Model):
                 
                 if upload_result['success']:
                     # Get informasi penandatangan dari BSRE config
+                    # certificate_owner berisi nama pemilik sertifikat dari BSRE
                     bsre_signer_name = bsre_config.certificate_owner or ''
+                    # signing_identifier berisi NIK atau Email yang digunakan untuk signing
                     bsre_signer_identifier = bsre_config.signing_identifier or ''
+                    
+                    # Log informasi penandatangan untuk debugging
+                    _logger.info(f'[SIGN] Informasi penandatangan dari BSRE config:')
+                    _logger.info(f'[SIGN] - certificate_owner: {bsre_signer_name}')
+                    _logger.info(f'[SIGN] - signing_identifier: {bsre_signer_identifier}')
+                    _logger.info(f'[SIGN] - signing_identifier_type: {bsre_config.signing_identifier_type}')
                     
                     # Update record with signed document info
                     # CRITICAL: Update state dulu, lalu trigger recompute verification_url
-                    self.write({
+                    write_vals = {
                         'state': 'signed',
                         'signature_date': fields.Datetime.now(),
                         'signer_id': self.env.user.id,  # User yang melakukan signing (untuk audit)
@@ -537,10 +545,20 @@ class SicantikDocument(models.Model):
                         'bsre_request_id': sign_result.get('request_id'),
                         'bsre_signature_id': sign_result.get('signature_id'),
                         'bsre_certificate': sign_result.get('certificate'),
-                        'bsre_signer_name': bsre_signer_name,  # Nama penandatangan dari BSRE
-                        'bsre_signer_identifier': bsre_signer_identifier,  # NIK/Email penandatangan dari BSRE
                         'minio_object_name': signed_object_name,
-                    })
+                    }
+                    
+                    # Hanya tambahkan bsre_signer_name dan bsre_signer_identifier jika ada
+                    if bsre_signer_name:
+                        write_vals['bsre_signer_name'] = bsre_signer_name
+                    if bsre_signer_identifier:
+                        write_vals['bsre_signer_identifier'] = bsre_signer_identifier
+                    
+                    self.write(write_vals)
+                    
+                    _logger.info(f'[SIGN] Dokumen {self.document_number} berhasil ditandatangani')
+                    _logger.info(f'[SIGN] - bsre_signer_name: {self.bsre_signer_name}')
+                    _logger.info(f'[SIGN] - bsre_signer_identifier: {self.bsre_signer_identifier}')
                     
                     # Pastikan verification_url sudah di-compute sebelum generate QR code
                     self._compute_verification_url()
