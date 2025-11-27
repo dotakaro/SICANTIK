@@ -1303,15 +1303,49 @@ class BsreConfig(models.Model):
                 }
                 
                 # Extract signer information
-                signer = result.get('signer') or result.get('signerInfo') or result.get('signer_info') or result.get('penandatangan')
+                # Coba berbagai kemungkinan field untuk signer
+                signer = (
+                    result.get('signer') or 
+                    result.get('signerInfo') or 
+                    result.get('signer_info') or 
+                    result.get('penandatangan') or
+                    result.get('signerName') or
+                    result.get('signer_name') or
+                    result.get('namaPenandatangan') or
+                    result.get('nama_penandatangan')
+                )
+                
                 if signer:
                     if isinstance(signer, dict):
-                        verification_info['signer'] = signer.get('name') or signer.get('nama') or signer.get('penandatangan') or str(signer)
-                        verification_info['signer_identifier'] = signer.get('nik') or signer.get('email') or signer.get('identifier')
+                        verification_info['signer'] = (
+                            signer.get('name') or 
+                            signer.get('nama') or 
+                            signer.get('penandatangan') or 
+                            signer.get('signerName') or
+                            signer.get('fullName') or
+                            str(signer)
+                        )
+                        verification_info['signer_identifier'] = (
+                            signer.get('nik') or 
+                            signer.get('email') or 
+                            signer.get('identifier') or
+                            signer.get('nikPenandatangan') or
+                            signer.get('emailPenandatangan')
+                        )
                     else:
                         verification_info['signer'] = str(signer)
+                        # Coba ambil identifier dari field lain jika signer adalah string
+                        verification_info['signer_identifier'] = (
+                            result.get('nik') or 
+                            result.get('email') or
+                            result.get('signerNik') or
+                            result.get('signerEmail')
+                        )
                 else:
                     verification_info['signer'] = None
+                    verification_info['signer_identifier'] = None
+                
+                _logger.info(f'[BSRE VERIFY] Extracted signer: {verification_info.get("signer")}, identifier: {verification_info.get("signer_identifier")}')
                 
                 # Extract signature date/time
                 verification_info['signature_date'] = (

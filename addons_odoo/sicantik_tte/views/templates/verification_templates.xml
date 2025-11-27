@@ -177,15 +177,40 @@
                                 <div class="row mb-3">
                                     <div class="col-md-4 font-weight-bold">Penandatangan:</div>
                                     <div class="col-md-8">
+                                        <!-- PRIORITAS: Gunakan informasi dari BSRE verify response -->
                                         <t t-if="bsre_verification and bsre_verification.get('signer')">
                                             <strong><t t-esc="bsre_verification.get('signer')"/></strong>
+                                            <t t-if="bsre_verification.get('signer_identifier')">
+                                                <br/>
+                                                <small class="text-muted">
+                                                    <t t-if="bsre_verification.get('signer_identifier') and '@' in bsre_verification.get('signer_identifier')">
+                                                        Email: <t t-esc="bsre_verification.get('signer_identifier')"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        NIK: <t t-esc="bsre_verification.get('signer_identifier')"/>
+                                                    </t>
+                                                </small>
+                                            </t>
                                         </t>
+                                        <!-- FALLBACK: Gunakan informasi dari database jika verify response tidak ada -->
                                         <t t-elif="document.bsre_signer_name">
                                             <strong><t t-esc="document.bsre_signer_name"/></strong>
+                                            <t t-if="document.bsre_signer_identifier">
+                                                <br/>
+                                                <small class="text-muted">
+                                                    <t t-if="document.bsre_signer_identifier and '@' in document.bsre_signer_identifier">
+                                                        Email: <t t-esc="document.bsre_signer_identifier"/>
+                                                    </t>
+                                                    <t t-else="">
+                                                        NIK: <t t-esc="document.bsre_signer_identifier"/>
+                                                    </t>
+                                                </small>
+                                            </t>
                                         </t>
+                                        <!-- FALLBACK TERAKHIR: Gunakan user yang melakukan signing (tidak ideal) -->
                                         <t t-else="">
                                             <strong><t t-esc="document.signer_id.name"/></strong>
-                                            <small class="text-muted d-block">(User yang melakukan tanda tangan)</small>
+                                            <small class="text-muted d-block">(User yang melakukan tanda tangan - informasi BSRE tidak tersedia)</small>
                                         </t>
                                     </div>
                                 </div>
