@@ -551,22 +551,49 @@ class BsreConfig(models.Model):
             document_base64 = b64.b64encode(document_data).decode('utf-8')
             
             # Prepare JSON payload for V2 API
+            # CRITICAL: Jangan sertakan field yang kosong (sesuai contoh Postman yang berhasil)
+            # Jika menggunakan NIK, jangan sertakan email, dan sebaliknya
             json_payload = {
-                'nik': self.signing_identifier if self.signing_identifier_type == 'nik' else '',
-                'email': self.signing_identifier if self.signing_identifier_type == 'email' else '',
                 'passphrase': passphrase,
                 'file': [document_base64],  # V2 uses base64 string array
             }
             
+            # Add nik atau email (tidak keduanya, sesuai dokumentasi Postman)
+            if self.signing_identifier_type == 'nik':
+                if not self.signing_identifier:
+                    raise UserError('NIK untuk signing harus diisi di konfigurasi BSRE')
+                json_payload['nik'] = self.signing_identifier
+            elif self.signing_identifier_type == 'email':
+                if not self.signing_identifier:
+                    raise UserError('Email untuk signing harus diisi di konfigurasi BSRE')
+                json_payload['email'] = self.signing_identifier
+            else:
+                raise UserError('Tipe identifier harus NIK atau Email')
+            
             # Validasi payload sebelum menambahkan signatureProperties
-            if not json_payload['nik'] and not json_payload['email']:
+            if not json_payload.get('nik') and not json_payload.get('email'):
                 raise UserError('NIK atau Email untuk signing harus diisi di konfigurasi BSRE')
             if not json_payload['passphrase']:
                 raise UserError('Passphrase tidak boleh kosong')
             if not json_payload['file'] or not json_payload['file'][0]:
                 raise UserError('File dokumen tidak boleh kosong')
             
-            _logger.info(f'📋 Payload base: nik={"***" if json_payload["nik"] else ""}, email={"***" if json_payload["email"] else ""}, passphrase={"***" if json_payload["passphrase"] else ""}, file_size={len(json_payload["file"][0])} chars')
+            # Validate PDF file is valid (check if base64 decodes to valid PDF header)
+            try:
+                pdf_bytes = b64.b64decode(document_base64)
+                if not pdf_bytes.startswith(b'%PDF'):
+                    _logger.warning('⚠️ WARNING: Decoded file does not start with PDF header! File may be invalid.')
+                else:
+                    _logger.info(f'✅ PDF file validated: starts with PDF header, size: {len(pdf_bytes)} bytes')
+            except Exception as e:
+                _logger.error(f'❌ Error validating PDF file: {str(e)}')
+                raise UserError(f'File PDF tidak valid: {str(e)}')
+            
+            # Log payload base (hide sensitive data)
+            nik_log = "***" if json_payload.get("nik") else ""
+            email_log = "***" if json_payload.get("email") else ""
+            passphrase_log = "***" if json_payload.get("passphrase") else ""
+            _logger.info(f'📋 Payload base: nik={nik_log}, email={email_log}, passphrase={passphrase_log}, file_size={len(json_payload["file"][0])} chars')
             
             # Add signature visualization parameters jika visible
             # V2 API uses signatureProperties array structure
