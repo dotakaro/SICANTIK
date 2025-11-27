@@ -294,6 +294,13 @@ class SicantikTTEController(http.Controller):
             # Pastikan verify_result adalah dict yang bisa diakses di template
             template_verify_result = verify_result if (verify_result and isinstance(verify_result, dict)) else {}
             
+            # Log khusus untuk signer field sebelum dikirim ke template
+            if template_verify_result:
+                _logger.info(f'[VERIFY] template_verify_result keys: {list(template_verify_result.keys())}')
+                _logger.info(f'[VERIFY] template_verify_result.get("signer"): {template_verify_result.get("signer")}')
+                _logger.info(f'[VERIFY] template_verify_result type: {type(template_verify_result)}')
+                _logger.info(f'[VERIFY] template_verify_result["signer"] (direct access): {template_verify_result.get("signer") if "signer" in template_verify_result else "KEY NOT FOUND"}')
+            
             result = request.render('sicantik_tte.verification_page', {
                 'document': document,
                 'bsre_verification': template_verify_result,
