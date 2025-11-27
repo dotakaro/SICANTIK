@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Document Number Sequence -->
+    <!-- 
+    Sequence untuk nomor dokumen dengan format: DOC/YYYY/NNNNN
+    - use_date_range=True: Setiap tahun memiliki sequence terpisah (tidak reset ke 1)
+    - prefix: DOC/%(year)s/ menghasilkan DOC/2025/
+    - padding: 5 menghasilkan 00001, 00002, dst
+    - number_increment: 1 (increment per dokumen)
+    - number_next: 1 (mulai dari 1 untuk tahun baru)
+    -->
     <record id="seq_sicantik_document" model="ir.sequence">
         <field name="name">SICANTIK Document Sequence</field>
         <field name="code">sicantik.document</field>
@@ -9,6 +17,13 @@
         <field name="number_increment">1</field>
         <field name="number_next">1</field>
         <field name="implementation">standard</field>
+        <field name="use_date_range">True</field>
+        <field name="date_range_ids" eval="[(0, 0, {
+            'date_from': '2025-01-01',
+            'date_to': '2025-12-31',
+            'number_next': 1,
+            'number_increment': 1,
+        })]"/>
     </record>
 </odoo>
 
