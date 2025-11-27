@@ -1347,6 +1347,91 @@ class BsreConfig(models.Model):
                 'message': f'Verifikasi gagal: {error_msg}'
             }
     
+    def download_signed_document(self, request_id=None, signature_id=None):
+        """
+        Download dokumen yang sudah ditandatangani dari BSRE API
+        
+        Args:
+            request_id (str): Request ID dari proses signing
+            signature_id (str): Signature ID dari proses signing
+        
+        Returns:
+            dict: Result dengan signed document data
+        """
+        self.ensure_one()
+        
+        try:
+            # Coba beberapa endpoint yang mungkin digunakan BSRE untuk download signed document
+            endpoints_to_try = []
+            
+            if signature_id:
+                endpoints_to_try.extend([
+                    f'api/v2/download/signature/{signature_id}',
+                    f'api/v2/signature/{signature_id}/download',
+                    f'download/signature/{signature_id}',
+                ])
+            
+            if request_id:
+                endpoints_to_try.extend([
+                    f'api/v2/download/request/{request_id}',
+                    f'api/v2/request/{request_id}/download',
+                    f'download/request/{request_id}',
+                ])
+            
+            if not endpoints_to_try:
+                return {
+                    'success': False,
+                    'message': 'Request ID atau Signature ID harus disediakan untuk download dokumen'
+                }
+            
+            result = None
+            last_error = None
+            
+            for endpoint in endpoints_to_try:
+                try:
+                    _logger.info(f'[BSRE DOWNLOAD] Mencoba endpoint: {endpoint}')
+                    result = self._make_api_request(endpoint, method='GET')
+                    
+                    if result:
+                        # Check jika response adalah binary PDF
+                        if isinstance(result, dict) and 'content' in result:
+                            _logger.info(f'[BSRE DOWNLOAD] ✅ Berhasil download dengan endpoint: {endpoint}')
+                            return {
+                                'success': True,
+                                'signed_data': result['content'],
+                                'message': 'Dokumen berhasil di-download dari BSRE'
+                            }
+                        # Check jika response adalah base64 PDF
+                        elif isinstance(result, dict) and 'file' in result:
+                            file_list = result.get('file', [])
+                            if file_list and isinstance(file_list, list) and len(file_list) > 0:
+                                signed_base64 = file_list[0]
+                                signed_data = base64.b64decode(signed_base64)
+                                _logger.info(f'[BSRE DOWNLOAD] ✅ Berhasil download dengan endpoint: {endpoint}')
+                                return {
+                                    'success': True,
+                                    'signed_data': signed_data,
+                                    'message': 'Dokumen berhasil di-download dari BSRE'
+                                }
+                except Exception as e:
+                    last_error = e
+                    _logger.warning(f'[BSRE DOWNLOAD] ⚠️ Endpoint {endpoint} gagal: {str(e)}')
+                    continue
+            
+            return {
+                'success': False,
+                'message': f'Semua endpoint download gagal. Error terakhir: {str(last_error)}'
+            }
+                
+        except Exception as e:
+            error_msg = str(e)
+            _logger.error(f'[BSRE DOWNLOAD] Error downloading signed document: {error_msg}', exc_info=True)
+            
+            return {
+                'success': False,
+                'message': f'Gagal download dokumen: {error_msg}'
+            }
+    
     def action_view_statistics(self):
         """View signature statistics"""
         self.ensure_one()

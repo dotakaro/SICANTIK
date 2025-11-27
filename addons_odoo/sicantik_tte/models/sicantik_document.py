@@ -513,12 +513,37 @@ class SicantikDocument(models.Model):
             )
             
             if sign_result['success']:
-                # Upload signed document back to MinIO
+                # CRITICAL: Gunakan file signed dari BSRE API response
+                # File ini sudah ditandatangani secara digital dan TIDAK BOLEH dimodifikasi
+                signed_file_data = sign_result['signed_data']
+                
+                # Jika ada request_id atau signature_id, coba download ulang dari BSRE untuk memastikan
+                # file yang di-upload adalah file signed asli dari BSRE
+                request_id = sign_result.get('request_id')
+                signature_id = sign_result.get('signature_id')
+                
+                if request_id or signature_id:
+                    _logger.info(f'[SIGN] Mencoba download file signed dari BSRE API menggunakan request_id={request_id}, signature_id={signature_id}')
+                    try:
+                        download_result = bsre_config.download_signed_document(
+                            request_id=request_id,
+                            signature_id=signature_id
+                        )
+                        
+                        if download_result.get('success'):
+                            signed_file_data = download_result['signed_data']
+                            _logger.info(f'[SIGN] ✅ File signed berhasil di-download dari BSRE API: {len(signed_file_data)} bytes')
+                        else:
+                            _logger.warning(f'[SIGN] ⚠️ Gagal download dari BSRE API, menggunakan file dari response signing: {download_result.get("message")}')
+                    except Exception as download_error:
+                        _logger.warning(f'[SIGN] ⚠️ Error saat download dari BSRE API, menggunakan file dari response signing: {str(download_error)}')
+                
+                # Upload signed document back to MinIO (file signed asli dari BSRE, TIDAK dimodifikasi)
                 signed_object_name = self.minio_object_name.replace('.pdf', '_signed.pdf')
                 upload_result = minio_connector.upload_file(
                     bucket_name=self.minio_bucket,
                     object_name=signed_object_name,
-                    file_data=sign_result['signed_data'],
+                    file_data=signed_file_data,
                     content_type='application/pdf'
                 )
                 
@@ -608,20 +633,18 @@ class SicantikDocument(models.Model):
                     _logger.info(f'[SIGN] - bsre_signer_name: {self.bsre_signer_name}')
                     _logger.info(f'[SIGN] - bsre_signer_identifier: {self.bsre_signer_identifier}')
                     
+                    # CRITICAL: File yang sudah ditandatangani secara digital TIDAK BOLEH dimodifikasi
+                    # karena akan merusak signature digital. QR code akan ditampilkan di UI, bukan di-embed ke PDF.
+                    # Jika perlu embed QR code, harus dilakukan SEBELUM signing, bukan setelah.
+                    
                     # Pastikan verification_url sudah di-compute sebelum generate QR code
                     self._compute_verification_url()
                     
-                    # Generate QR Code (akan menggunakan verification_url yang sudah di-compute)
+                    # Generate QR Code untuk ditampilkan di UI (TIDAK di-embed ke PDF yang sudah signed)
                     self._generate_qr_code()
                     
-                    # Embed QR Code ke PDF
-                    try:
-                        self.action_embed_qr_code()
-                        _logger.info(f'QR code embedded for document {self.document_number}')
-                    except Exception as qr_error:
-                        _logger.error(f'Failed to embed QR code: {qr_error}')
-                        # Continue even if QR embedding fails
-                    
+                    _logger.info(f'[SIGN] ⚠️ QR code TIDAK di-embed ke PDF untuk menjaga integritas signature digital')
+                    _logger.info(f'[SIGN] QR code akan ditampilkan di UI untuk verifikasi dokumen')
                     _logger.info(f'Document {self.document_number} signed with BSRE')
                     
                     return {
