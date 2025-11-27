@@ -633,6 +633,8 @@ class BsreConfig(models.Model):
                 
                 # Prepare signatureProperties object
                 # CRITICAL: Ensure all numeric values are valid floats (not NaN or Inf)
+                # NOTE: Format harus sesuai dengan dokumentasi BSRE API v2 (dari Postman collection)
+                # Field yang diperlukan: tampilan, page, originX, originY, width, height, imageBase64, location, reason, contactInfo
                 import math
                 signature_props = {
                     'tampilan': 'VISIBLE',
@@ -641,8 +643,9 @@ class BsreConfig(models.Model):
                     'originY': float(origin_y) if not (math.isnan(origin_y) or math.isinf(origin_y)) else 10.0,
                     'width': float(sig_width) if not (math.isnan(sig_width) or math.isinf(sig_width)) else 80.0,
                     'height': float(sig_height) if not (math.isnan(sig_height) or math.isinf(sig_height)) else 60.0,
-                    'location': '',  # Optional
-                    'reason': '',    # Optional
+                    'location': 'null',      # BSRE API expects string "null", not empty string
+                    'reason': 'null',        # BSRE API expects string "null", not empty string
+                    'contactInfo': 'null',   # Required field according to BSRE API v2 documentation
                 }
                 
                 # Final validation: ensure no invalid values
