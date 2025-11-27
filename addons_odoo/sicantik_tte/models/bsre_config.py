@@ -703,27 +703,37 @@ class BsreConfig(models.Model):
                     _logger.info(f'✅ imageBase64 length: {len(image_base64)} chars')
                 else:
                     # V2 API requires imageBase64 even for VISIBLE signature without image
-                    # CRITICAL: For VISIBLE signature, we MUST create a proper-sized image, not a 1x1 pixel!
-                    # BSRE API may reject signatures with imageBase64 that's too small
-                    _logger.info('⚠️ No signature image uploaded - creating transparent placeholder with signature dimensions')
+                    # CRITICAL: BSRE API may reject very small imageBase64!
+                    # Create a more realistic placeholder with border and content to ensure larger size
+                    _logger.info('⚠️ No signature image uploaded - creating realistic placeholder with signature dimensions')
                     placeholder_base64 = ''
                     try:
-                        from PIL import Image
+                        from PIL import Image, ImageDraw, ImageFont
                         import io
-                        # CRITICAL: Create image dengan ukuran signature yang sebenarnya (bukan 1x1!)
-                        # This ensures the imageBase64 is large enough for BSRE API
-                        placeholder = Image.new('RGBA', (int(sig_width), int(sig_height)), (255, 255, 255, 0))
+                        # Create image dengan ukuran signature yang sebenarnya
+                        # Add border and some content to make it larger and more realistic
+                        placeholder = Image.new('RGB', (int(sig_width), int(sig_height)), (255, 255, 255))
+                        draw = ImageDraw.Draw(placeholder)
+                        
+                        # Draw border untuk membuat image lebih besar
+                        border_width = max(1, int(sig_width / 40))
+                        draw.rectangle([0, 0, int(sig_width)-1, int(sig_height)-1], outline=(200, 200, 200), width=border_width)
+                        
+                        # Draw a simple line pattern to increase file size
+                        for i in range(0, int(sig_height), max(2, int(sig_height/10))):
+                            draw.line([(0, i), (int(sig_width), i)], fill=(240, 240, 240), width=1)
+                        
                         placeholder_buffer = io.BytesIO()
-                        # Use optimize=False to ensure consistent size
-                        placeholder.save(placeholder_buffer, format='PNG', optimize=False)
+                        # Use optimize=False to ensure larger file size
+                        placeholder.save(placeholder_buffer, format='PNG', optimize=False, compress_level=1)
                         placeholder_buffer.seek(0)
                         placeholder_base64 = base64.b64encode(placeholder_buffer.read()).decode('utf-8')
                         
                         # Validate the generated base64
-                        if not placeholder_base64 or len(placeholder_base64) < 100:
+                        if not placeholder_base64 or len(placeholder_base64) < 500:
                             raise ValueError(f'Generated placeholder too small: {len(placeholder_base64)} chars')
                         
-                        _logger.info(f'✅ Created transparent placeholder: {int(sig_width)}x{int(sig_height)} px, {len(placeholder_base64)} chars base64')
+                        _logger.info(f'✅ Created realistic placeholder: {int(sig_width)}x{int(sig_height)} px, {len(placeholder_base64)} chars base64')
                     except Exception as e:
                         _logger.error(f'❌ Error creating placeholder: {str(e)}', exc_info=True)
                         # Fallback: Try to create a larger minimal PNG programmatically
