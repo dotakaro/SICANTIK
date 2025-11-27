@@ -150,6 +150,12 @@ class SicantikDocument(models.Model):
         compute='_compute_verification_url',
         store=True
     )
+    download_url = fields.Char(
+        string='URL Download',
+        compute='_compute_download_url',
+        store=True,
+        help='URL untuk download dokumen (untuk QR code)'
+    )
     verification_count = fields.Integer(
         string='Jumlah Verifikasi',
         default=0,
@@ -537,36 +543,35 @@ class SicantikDocument(models.Model):
             import qrcode
             from io import BytesIO
             
-            # CRITICAL: Gunakan verification_url yang sudah di-compute, bukan membuat URL sendiri
-            # Ini memastikan konsistensi dengan computed field
-            # Trigger recompute verification_url terlebih dahulu untuk memastikan up-to-date
-            self._compute_verification_url()
+            # CRITICAL: QR code harus mengarah ke URL download file, bukan URL verifikasi!
+            # Trigger recompute download_url terlebih dahulu untuk memastikan up-to-date
+            self._compute_download_url()
             
-            # Gunakan verification_url yang sudah di-compute
-            verification_url = self.verification_url
+            # Gunakan download_url untuk QR code (bukan verification_url)
+            download_url = self.download_url
             
-            # Validasi: pastikan verification_url ada dan valid
-            if not verification_url:
-                _logger.warning(f'verification_url kosong untuk dokumen {self.document_number}, state: {self.state}')
+            # Validasi: pastikan download_url ada dan valid
+            if not download_url:
+                _logger.warning(f'download_url kosong untuk dokumen {self.document_number}, state: {self.state}')
                 # Fallback: buat URL manual jika computed field belum tersedia
                 base_url = self.env['ir.config_parameter'].sudo().get_param(
                     'sicantik_tte.verification_base_url',
                     default='https://sicantik.dotakaro.com'
                 )
                 base_url = base_url.rstrip('/')
-                verification_url = f'{base_url}/sicantik/tte/verify/{self.document_number}'
-                _logger.warning(f'Using fallback URL: {verification_url}')
+                download_url = f'{base_url}/web/content/sicantik.document/{self.id}/download?filename={self.original_filename or "document.pdf"}'
+                _logger.warning(f'Using fallback download URL: {download_url}')
             
-            _logger.info(f'Generating QR code untuk dokumen {self.document_number} dengan URL: {verification_url}')
+            _logger.info(f'Generating QR code untuk dokumen {self.document_number} dengan download URL: {download_url}')
             
-            # Generate QR code dengan URL langsung (tidak JSON)
+            # Generate QR code dengan URL download langsung (tidak JSON)
             qr = qrcode.QRCode(
                 version=1,
                 error_correction=qrcode.constants.ERROR_CORRECT_H,
                 box_size=10,
                 border=4,
             )
-            qr.add_data(verification_url)
+            qr.add_data(download_url)
             qr.make(fit=True)
             
             # Create image
@@ -577,13 +582,13 @@ class SicantikDocument(models.Model):
             img.save(buffer, format='PNG')
             qr_image_data = base64.b64encode(buffer.getvalue())
             
-            # Update record - gunakan verification_url yang sudah di-compute
+            # Update record - simpan download_url di qr_code_data
             self.write({
-                'qr_code_data': verification_url,  # Simpan URL untuk reference
+                'qr_code_data': download_url,  # Simpan download URL untuk reference
                 'qr_code_image': qr_image_data,
             })
             
-            _logger.info(f'✅ QR code generated successfully untuk dokumen {self.document_number}: {verification_url}')
+            _logger.info(f'✅ QR code generated successfully untuk dokumen {self.document_number} dengan download URL: {download_url}')
             
         except Exception as e:
             _logger.error(f'❌ Error generating QR code untuk dokumen {self.document_number}: {str(e)}', exc_info=True)
