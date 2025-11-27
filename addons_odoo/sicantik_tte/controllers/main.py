@@ -108,10 +108,8 @@ class SicantikTTEController(http.Controller):
                 status=500
             )
     
-    @http.route([
-        '/sicantik/tte/verify/<string:document_number>',
-        '/sicantik/tte/verify/<string:document_number>/',
-    ], type='http', auth='public', methods=['GET'], csrf=False, website=True)
+    @http.route('/sicantik/tte/verify/<string:document_number>', type='http', auth='public', methods=['GET'], csrf=False, website=True)
+    @http.route('/sicantik/tte/verify/<string:document_number>/', type='http', auth='public', methods=['GET'], csrf=False, website=True)
     def verify_document(self, document_number, **kwargs):
         """
         Public endpoint untuk verifikasi dokumen
