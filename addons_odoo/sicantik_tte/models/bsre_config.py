@@ -273,6 +273,23 @@ class BsreConfig(models.Model):
                     debug_data = {k: v if k != 'file' else f'[{len(v)} files]' for k, v in (data or {}).items()}
                     _logger.info(f'Request data: {json.dumps(debug_data)}')
                     
+                    # CRITICAL: Log full payload structure untuk debugging (tanpa base64 panjang)
+                    if data and isinstance(data, dict):
+                        payload_structure = {}
+                        for key, value in data.items():
+                            if key == 'file' and isinstance(value, list):
+                                payload_structure[key] = [f'[BASE64_PDF: {len(v)} chars]' for v in value]
+                            elif key == 'signatureProperties' and isinstance(value, list):
+                                payload_structure[key] = []
+                                for sig_prop in value:
+                                    sig_debug = sig_prop.copy()
+                                    if 'imageBase64' in sig_debug:
+                                        sig_debug['imageBase64'] = f'[BASE64_IMAGE: {len(sig_debug["imageBase64"])} chars]'
+                                    payload_structure[key].append(sig_debug)
+                            else:
+                                payload_structure[key] = value
+                        _logger.info(f'📋 Full Payload Structure: {json.dumps(payload_structure, indent=2, ensure_ascii=False)}')
+                    
                     response = requests.post(url, auth=auth, headers=headers, json=data, timeout=self.api_timeout)
             elif method == 'GET':
                 response = requests.get(url, auth=auth, params=data, timeout=self.api_timeout)
