@@ -523,21 +523,8 @@ class SicantikDocument(models.Model):
                 )
                 
                 if upload_result['success']:
-                    # Get informasi penandatangan dari BSRE config
-                    # certificate_owner berisi nama pemilik sertifikat dari BSRE
-                    bsre_signer_name = bsre_config.certificate_owner or ''
-                    # signing_identifier berisi NIK atau Email yang digunakan untuk signing
-                    bsre_signer_identifier = bsre_config.signing_identifier or ''
-                    
-                    # Log informasi penandatangan untuk debugging
-                    _logger.info(f'[SIGN] Informasi penandatangan dari BSRE config:')
-                    _logger.info(f'[SIGN] - certificate_owner: {bsre_signer_name}')
-                    _logger.info(f'[SIGN] - signing_identifier: {bsre_signer_identifier}')
-                    _logger.info(f'[SIGN] - signing_identifier_type: {bsre_config.signing_identifier_type}')
-                    
-                    # Update record with signed document info
-                    # CRITICAL: Update state dulu, lalu trigger recompute verification_url
-                    write_vals = {
+                    # Update record dengan state signed terlebih dahulu
+                    self.write({
                         'state': 'signed',
                         'signature_date': fields.Datetime.now(),
                         'signer_id': self.env.user.id,  # User yang melakukan signing (untuk audit)
@@ -546,15 +533,76 @@ class SicantikDocument(models.Model):
                         'bsre_signature_id': sign_result.get('signature_id'),
                         'bsre_certificate': sign_result.get('certificate'),
                         'minio_object_name': signed_object_name,
-                    }
+                    })
                     
-                    # Hanya tambahkan bsre_signer_name dan bsre_signer_identifier jika ada
-                    if bsre_signer_name:
-                        write_vals['bsre_signer_name'] = bsre_signer_name
-                    if bsre_signer_identifier:
-                        write_vals['bsre_signer_identifier'] = bsre_signer_identifier
-                    
-                    self.write(write_vals)
+                    # Verifikasi dokumen yang baru ditandatangani untuk mendapatkan informasi penandatangan dari BSRE
+                    _logger.info(f'[SIGN] Memverifikasi dokumen yang baru ditandatangani untuk mendapatkan informasi penandatangan...')
+                    try:
+                        verify_result = bsre_config.verify_signature(sign_result['signed_data'])
+                        
+                        if verify_result.get('success') and verify_result.get('valid'):
+                            _logger.info(f'[SIGN] ✅ Verifikasi berhasil, mengambil informasi penandatangan dari BSRE')
+                            
+                            update_vals = {}
+                            
+                            # Ambil informasi penandatangan dari response verify
+                            signer_info = verify_result.get('signer')
+                            if signer_info:
+                                if isinstance(signer_info, dict):
+                                    signer_name = signer_info.get('name') or signer_info.get('nama') or signer_info.get('pemilik') or ''
+                                    signer_identifier = signer_info.get('nik') or signer_info.get('email') or signer_info.get('identifier') or ''
+                                elif isinstance(signer_info, str):
+                                    signer_name = signer_info
+                                    signer_identifier = bsre_config.signing_identifier or ''
+                                else:
+                                    signer_name = str(signer_info)
+                                    signer_identifier = bsre_config.signing_identifier or ''
+                                
+                                if signer_name:
+                                    update_vals['bsre_signer_name'] = signer_name
+                                    _logger.info(f'[SIGN] - bsre_signer_name dari verify: {signer_name}')
+                                if signer_identifier:
+                                    update_vals['bsre_signer_identifier'] = signer_identifier
+                                    _logger.info(f'[SIGN] - bsre_signer_identifier dari verify: {signer_identifier}')
+                            
+                            # Ambil dari certificate jika signer tidak ada
+                            if not update_vals.get('bsre_signer_name'):
+                                certificate_info = verify_result.get('certificate')
+                                if certificate_info and isinstance(certificate_info, dict):
+                                    cert_owner = certificate_info.get('owner') or certificate_info.get('name') or certificate_info.get('pemilik') or certificate_info.get('subject') or ''
+                                    if cert_owner:
+                                        update_vals['bsre_signer_name'] = cert_owner
+                                        _logger.info(f'[SIGN] - bsre_signer_name dari certificate: {cert_owner}')
+                            
+                            # Fallback ke BSRE config jika verify tidak memberikan informasi
+                            if not update_vals.get('bsre_signer_name'):
+                                if bsre_config.certificate_owner:
+                                    update_vals['bsre_signer_name'] = bsre_config.certificate_owner
+                                    _logger.info(f'[SIGN] - bsre_signer_name dari config: {bsre_config.certificate_owner}')
+                            
+                            # Pastikan signing_identifier selalu di-set
+                            if not update_vals.get('bsre_signer_identifier') and bsre_config.signing_identifier:
+                                update_vals['bsre_signer_identifier'] = bsre_config.signing_identifier
+                                _logger.info(f'[SIGN] - bsre_signer_identifier dari config: {bsre_config.signing_identifier}')
+                            
+                            # Update dokumen dengan informasi penandatangan
+                            if update_vals:
+                                self.write(update_vals)
+                                _logger.info(f'[SIGN] Dokumen di-update dengan informasi penandatangan: {update_vals}')
+                        else:
+                            _logger.warning(f'[SIGN] ⚠️ Verifikasi gagal atau tanda tangan tidak valid, menggunakan informasi dari config')
+                            # Fallback: gunakan informasi dari config
+                            if bsre_config.certificate_owner:
+                                self.write({'bsre_signer_name': bsre_config.certificate_owner})
+                            if bsre_config.signing_identifier:
+                                self.write({'bsre_signer_identifier': bsre_config.signing_identifier})
+                    except Exception as verify_error:
+                        _logger.error(f'[SIGN] ❌ Error saat verifikasi untuk mendapatkan informasi penandatangan: {str(verify_error)}', exc_info=True)
+                        # Fallback: gunakan informasi dari config
+                        if bsre_config.certificate_owner:
+                            self.write({'bsre_signer_name': bsre_config.certificate_owner})
+                        if bsre_config.signing_identifier:
+                            self.write({'bsre_signer_identifier': bsre_config.signing_identifier})
                     
                     _logger.info(f'[SIGN] Dokumen {self.document_number} berhasil ditandatangani')
                     _logger.info(f'[SIGN] - bsre_signer_name: {self.bsre_signer_name}')
