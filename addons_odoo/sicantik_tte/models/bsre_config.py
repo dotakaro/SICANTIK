@@ -551,24 +551,27 @@ class BsreConfig(models.Model):
             document_base64 = b64.b64encode(document_data).decode('utf-8')
             
             # Prepare JSON payload for V2 API
-            # CRITICAL: Jangan sertakan field yang kosong (sesuai contoh Postman yang berhasil)
-            # Jika menggunakan NIK, jangan sertakan email, dan sebaliknya
-            json_payload = {
-                'passphrase': passphrase,
-                'file': [document_base64],  # V2 uses base64 string array
-            }
-            
-            # Add nik atau email (tidak keduanya, sesuai dokumentasi Postman)
+            # CRITICAL: Urutan field harus sesuai dengan contoh Postman yang berhasil
+            # Format: nik, passphrase, signatureProperties, file (urutan ini penting!)
             if self.signing_identifier_type == 'nik':
                 if not self.signing_identifier:
                     raise UserError('NIK untuk signing harus diisi di konfigurasi BSRE')
-                json_payload['nik'] = self.signing_identifier
+                json_payload = {
+                    'nik': self.signing_identifier,
+                    'passphrase': passphrase,
+                }
             elif self.signing_identifier_type == 'email':
                 if not self.signing_identifier:
                     raise UserError('Email untuk signing harus diisi di konfigurasi BSRE')
-                json_payload['email'] = self.signing_identifier
+                json_payload = {
+                    'email': self.signing_identifier,
+                    'passphrase': passphrase,
+                }
             else:
                 raise UserError('Tipe identifier harus NIK atau Email')
+            
+            # Add file array (akan ditambahkan sebelum signatureProperties)
+            json_payload['file'] = [document_base64]  # V2 uses base64 string array
             
             # Validasi payload sebelum menambahkan signatureProperties
             if not json_payload.get('nik') and not json_payload.get('email'):
@@ -869,8 +872,19 @@ class BsreConfig(models.Model):
             
             # Make API request to BSRE dengan JSON (V2)
             # Endpoint: /api/v2/sign/pdf
-            # Note: _make_api_request uses 'data' parameter for JSON (when files=None)
-            result = self._make_api_request('api/v2/sign/pdf', method='POST', data=json_payload)
+            # CRITICAL: Pastikan urutan field sesuai Postman: nik, passphrase, signatureProperties, file
+            # Reorder payload untuk memastikan urutan sesuai (beberapa API sensitive terhadap urutan)
+            ordered_payload = {}
+            if 'nik' in json_payload:
+                ordered_payload['nik'] = json_payload['nik']
+            if 'email' in json_payload:
+                ordered_payload['email'] = json_payload['email']
+            ordered_payload['passphrase'] = json_payload['passphrase']
+            ordered_payload['signatureProperties'] = json_payload['signatureProperties']
+            ordered_payload['file'] = json_payload['file']
+            
+            _logger.info(f'📤 Final payload order: {list(ordered_payload.keys())}')
+            result = self._make_api_request('api/v2/sign/pdf', method='POST', data=ordered_payload)
             
             # Handle response based on format
             # FORMDATA endpoint returns: {'success': True, 'content': binary_pdf, 'content_type': 'application/pdf'}
