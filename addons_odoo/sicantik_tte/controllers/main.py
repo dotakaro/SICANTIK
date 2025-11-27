@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import http, fields
-from odoo.http import request, Response
+from odoo.http import request, Response, content_disposition
 from odoo.exceptions import UserError, AccessError
 import logging
 import base64
@@ -110,21 +110,22 @@ class SicantikTTEController(http.Controller):
             if not filename:
                 filename = document.original_filename or 'document.pdf'
             
-            # Prepare response headers
-            headers = [
-                ('Content-Type', 'application/pdf'),
-                ('Content-Disposition', f'attachment; filename="{filename}"'),
-                ('Content-Length', str(len(file_data))),
-                ('X-Content-Type-Options', 'nosniff'),
-            ]
+            # Ensure filename is safe and has .pdf extension
+            if not filename.endswith('.pdf'):
+                filename = filename.rsplit('.', 1)[0] + '.pdf'
             
             _logger.info(f'[DOWNLOAD] Document {document.id} downloaded successfully: {filename} ({len(file_data)} bytes)')
             
-            # Return file as HTTP response
-            return Response(
+            # Return file as HTTP response using request.make_response (Odoo standard)
+            # This ensures proper binary handling and streaming
+            return request.make_response(
                 file_data,
-                headers=headers,
-                status=200
+                headers=[
+                    ('Content-Type', 'application/pdf'),
+                    ('Content-Disposition', content_disposition(filename)),
+                    ('Content-Length', str(len(file_data))),
+                    ('X-Content-Type-Options', 'nosniff'),
+                ]
             )
             
         except Exception as e:
