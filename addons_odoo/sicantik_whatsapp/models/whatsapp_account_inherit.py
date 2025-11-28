@@ -126,7 +126,31 @@ class WhatsappAccount(models.Model):
                         f'✅ Template "{template_name}" di-update dengan status: {template.get("status", "unknown")}'
                     )
                 else:
-                    # Template tidak ada di Odoo - CREATE baru dari Meta
+                    # Double-check: Pastikan template benar-benar tidak ada di Odoo sebelum create
+                    # Ini untuk menghindari race condition atau masalah pencarian
+                    if template_name and lang_code:
+                        normalized_name = str(template_name).lower().strip()
+                        normalized_lang = str(lang_code).lower().strip()
+                        double_check = existing_tmpl_by_name.get((normalized_name, normalized_lang))
+                        
+                        if double_check:
+                            # Template ditemukan di double-check - skip create
+                            if not double_check.wa_template_uid:
+                                _logger.warning(
+                                    f'⚠️ Template "{template_name}" (lang: {lang_code}) ditemukan di double-check '
+                                    f'tapi masih draft (tidak punya wa_template_uid). Skip create dari Meta.'
+                                )
+                            else:
+                                # Template ditemukan tapi tidak terdeteksi sebelumnya - update sekarang
+                                _logger.warning(
+                                    f'⚠️ Template "{template_name}" (lang: {lang_code}) ditemukan di double-check. '
+                                    f'Update dengan wa_template_uid: {template_id_str}'
+                                )
+                                template_update_count += 1
+                                double_check._update_template_from_response(template)
+                            continue  # Skip create
+                    
+                    # Template benar-benar tidak ada di Odoo - CREATE baru dari Meta
                     template_create_count += 1
                     create_vals.append(WhatsappTemplate._create_template_from_response(template, self))
                     _logger.info(
