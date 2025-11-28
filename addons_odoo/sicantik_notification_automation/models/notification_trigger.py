@@ -181,7 +181,7 @@ class NotificationTrigger(models.Model):
             'name': _('Aturan Notifikasi'),
             'type': 'ir.actions.act_window',
             'res_model': 'sicantik.notification.rule',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('trigger_id', '=', self.id)],
             'context': {'default_trigger_id': self.id},
         }
