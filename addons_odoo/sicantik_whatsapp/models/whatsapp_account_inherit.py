@@ -88,32 +88,29 @@ class WhatsappAccount(models.Model):
                 # Ini untuk menangani kasus:
                 # 1. Template sudah di-submit ke Meta tapi wa_template_uid berbeda (rare case)
                 # 2. Template sudah di-submit ke Meta tapi wa_template_uid belum tersimpan di Odoo
-                # 3. Template masih draft di Odoo (belum di-submit) - SKIP update
+                # 3. Template masih draft di Odoo tapi sudah ada di Meta (di-submit manual dari Meta) - UPDATE
                 if not existing_tmpl and template_name and lang_code:
                     normalized_name = str(template_name).lower().strip()
                     normalized_lang = str(lang_code).lower().strip()
                     existing_tmpl_candidate = existing_tmpl_by_name.get((normalized_name, normalized_lang))
                     
                     if existing_tmpl_candidate:
-                        if existing_tmpl_candidate.wa_template_uid:
-                            # Template sudah di-submit sebelumnya (punya wa_template_uid)
-                            # Update dengan data dari Meta, termasuk wa_template_uid baru jika berbeda
-                            existing_tmpl = existing_tmpl_candidate
+                        # Template ditemukan di Odoo berdasarkan template_name + lang_code
+                        # Jika template ada di Meta (punya template_id), berarti sudah di-submit ke Meta
+                        # Update template di Odoo dengan data dari Meta, termasuk wa_template_uid dan status
+                        existing_tmpl = existing_tmpl_candidate
+                        if existing_tmpl.wa_template_uid:
                             _logger.info(
                                 f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
                                 f'Template sudah punya wa_template_uid: {existing_tmpl.wa_template_uid}, '
                                 f'update dengan wa_template_uid baru: {template_id_str} dan status dari Meta'
                             )
                         else:
-                            # Template masih draft di Odoo (belum di-submit ke Meta)
-                            # JANGAN update template ini dengan data dari Meta
-                            # Biarkan user submit template ini secara manual melalui tombol "Submit for Approval"
                             _logger.info(
-                                f'⏸️ Template "{template_name}" (lang: {lang_code}) masih draft di Odoo '
-                                f'(belum punya wa_template_uid). Skip update dari Meta. '
-                                f'User harus submit template ini secara manual melalui tombol "Submit for Approval".'
+                                f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
+                                f'Template masih draft di Odoo tapi sudah ada di Meta. '
+                                f'Update dengan wa_template_uid: {template_id_str} dan status dari Meta'
                             )
-                            existing_tmpl = None  # Pastikan tidak di-update, tidak di-create
                     else:
                         # Template tidak ditemukan di Odoo - akan di-create baru dari Meta
                         _logger.debug(
