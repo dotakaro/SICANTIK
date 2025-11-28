@@ -303,16 +303,17 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 
 ### Q: Setelah 24 jam, apakah masih bisa kirim template message?
 
-**A: TIDAK**, setelah 24 jam berlalu sejak pesan inbound terakhir, **Meta akan MENOLAK template messages** kecuali:
+**A: YA**, setelah 24 jam berlalu sejak pesan inbound terakhir, kita **MASIH BISA kirim template messages** yang sudah approved, dengan syarat:
 
-1. **Nomor sudah di-upload sebagai pre-approved contact** di Meta Business Manager → Phone Numbers → Contacts
-2. **User mengirim pesan inbound lagi** (reset 24-hour window)
-3. **Template message sudah pre-approved** untuk nomor tersebut di Meta Business Manager
+1. **Template message sudah di-approve oleh Meta** (ini sudah ada di sistem kita)
+2. **User sudah memberikan persetujuan** (dicatat di database Odoo dengan `whatsapp_opt_in = True`)
+3. **Meta akan menerima template messages** yang sudah approved ke user yang sudah memberikan persetujuan
 
 **⚠️ PENTING:** 
-- "Opt-in formal" di database Odoo (`whatsapp_opt_in = True`) **TIDAK mempengaruhi Meta**
-- Meta hanya tahu tentang 24-hour window dan pre-approved contacts
-- Untuk mengirim template messages setelah 24 jam, nomor HARUS di-upload sebagai pre-approved contact di Meta Business Manager
+- Setelah 24 jam, Meta akan MENOLAK **session messages** (pesan tanpa template)
+- Tapi Meta akan MENERIMA **template messages** yang sudah approved
+- "Opt-in formal" di database Odoo (`whatsapp_opt_in = True`) adalah untuk compliance dan tracking internal kita
+- Meta tidak perlu tahu tentang opt-in kita - yang penting adalah template sudah approved dan kita punya bukti persetujuan user
 
 ### Q: Bagaimana cara memastikan bisa kirim template messages setelah 24 jam?
 
@@ -377,9 +378,10 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 - Template messages yang sudah approved
 
 **Setelah 24 jam berlalu:**
-- Meta akan MENOLAK template messages kecuali nomor sudah di-upload sebagai pre-approved contact
-- "Opt-in formal" di database Odoo TIDAK mempengaruhi Meta
-- Untuk mengirim template messages setelah 24 jam, nomor HARUS di-upload sebagai pre-approved contact di Meta Business Manager
+- Meta akan MENOLAK session messages (pesan tanpa template)
+- Meta akan MENERIMA template messages yang sudah approved
+- "Opt-in formal" di database Odoo TIDAK mempengaruhi Meta - ini untuk compliance dan tracking internal kita
+- Setelah 24 jam, kita bisa kirim template messages yang sudah approved ke user yang sudah memberikan persetujuan (dicatat di database kita)
 
 ### Flow Opt-In Formal Otomatis (INTERNAL Tracking)
 
@@ -433,7 +435,9 @@ Setelah Odoo core memproses pesan inbound:
 
 ✅ **Opt-in tercatat permanen** di database Odoo dengan timestamp
 ✅ **Tracking internal** untuk mengetahui user sudah memberikan consent
-✅ **⚠️ PENTING**: Ini TIDAK mempengaruhi Meta. Setelah 24 jam, Meta tetap akan MENOLAK template messages kecuali nomor sudah di-upload sebagai pre-approved contact di Meta Business Manager
+✅ **24-hour window reset** → bisa kirim template messages dalam 24 jam berikutnya
+✅ **Setelah 24 jam**, bisa kirim template messages yang sudah approved ke user yang sudah opt-in
+✅ **⚠️ PENTING**: Ini TIDAK mempengaruhi Meta. Meta hanya tahu tentang 24-hour window dan template approval. Setelah 24 jam, Meta akan menerima template messages yang sudah approved, dan kita yang bertanggung jawab untuk memastikan user sudah memberikan persetujuan (dicatat di database kita)
 
 ### Implementasi Teknis
 
@@ -445,14 +449,31 @@ def create(self, vals_list):
     """
     Override create untuk memastikan opt-in formal tercatat
     setelah pesan inbound dibuat oleh Odoo core.
+    Juga mendeteksi pesan persetujuan khusus untuk logging yang lebih detail.
     """
     messages = super().create(vals_list)
     
     for message in messages:
         if message.message_type == 'inbound' and message.mobile_number_formatted:
+            # Cek apakah pesan mengandung persetujuan
+            body_text = html2plaintext(message.body).lower()
+            consent_keywords = [
+                'ya saya setuju',
+                'setuju',
+                'saya setuju',
+                'ya setuju',
+                'setuju menerima',
+                'setuju menerima pesan notifikasi',
+            ]
+            
+            is_consent_message = any(keyword in body_text for keyword in consent_keywords)
+            
             # Panggil opt-in manager untuk set opt-in formal
             opt_in_manager = self.env['whatsapp.opt.in.manager']
             opt_in_manager.auto_opt_in_from_inbound_message(message.id)
+            
+            if is_consent_message:
+                _logger.info(f'✅ Pesan persetujuan terdeteksi untuk nomor {message.mobile_number_formatted}')
     
     return messages
 ```
