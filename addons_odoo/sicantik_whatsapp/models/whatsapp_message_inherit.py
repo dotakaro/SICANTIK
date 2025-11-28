@@ -152,9 +152,10 @@ Kabupaten Karo"""
                 wa_api = WhatsAppApi(inbound_message.wa_account_id)
                 
                 # Kirim sebagai reply ke pesan inbound
-                # Format send_vals untuk text message: {'body': 'text content'}
+                # Format send_vals untuk text message: {'body': 'text content', 'preview_url': True}
                 send_vals = {
-                    'body': reply_message
+                    'body': reply_message,
+                    'preview_url': True,  # Enable link preview
                 }
                 
                 # Cari msg_uid dari pesan inbound untuk reply
@@ -172,10 +173,10 @@ Kabupaten Karo"""
                     parent_message_id=parent_message_id  # Reply ke pesan inbound (jika ada)
                 )
                 
-                # Update message dengan message_uid dari Meta
+                # Update message dengan msg_uid dari Meta
                 if msg_uid:
                     reply_msg.write({
-                        'message_uid': msg_uid,
+                        'msg_uid': msg_uid,
                         'state': 'sent'
                     })
                     _logger.info(
