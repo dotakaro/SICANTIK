@@ -63,6 +63,11 @@ class WhatsappAccount(models.Model):
             f'{len(existing_tmpl_by_id)} dengan wa_template_uid, '
             f'{len(existing_tmpl_by_name)} dengan template_name+lang_code'
         )
+        
+        # Simpan semua template_name dari Meta untuk tracking
+        # Template yang TIDAK ada di list ini berarti TIDAK ada di Meta dan TIDAK BOLEH di-update
+        meta_template_names = set()
+        
         template_update_count = 0
         template_create_count = 0
         if response.get('data'):
@@ -77,12 +82,18 @@ class WhatsappAccount(models.Model):
                     _logger.warning(f'⚠️ Template dari Meta tidak punya ID: {template}')
                     continue
                 
+                # Tambahkan ke set template yang ada di Meta
+                if template_name and lang_code:
+                    normalized_name = str(template_name).lower().strip()
+                    normalized_lang = str(lang_code).lower().strip()
+                    meta_template_names.add((normalized_name, normalized_lang))
+                
                 # Convert template_id ke string untuk konsistensi (wa_template_uid adalah Char field)
                 template_id_str = str(template_id)
                 
                 # LOGIKA SEDERHANA:
                 # 1. Cari berdasarkan template_name + lang_code (prioritas utama)
-                # 2. Jika ditemukan → UPDATE dengan data dari Meta
+                # 2. Jika ditemukan → UPDATE dengan data dari Meta (HANYA jika template ini ada di Meta)
                 # 3. Jika tidak ditemukan → CREATE baru dari Meta
                 # 4. Template di Odoo yang tidak ada di Meta → biarkan as is (tetap draft)
                 existing_tmpl = None
@@ -93,10 +104,12 @@ class WhatsappAccount(models.Model):
                     
                     if existing_tmpl:
                         # Template ditemukan di Odoo berdasarkan template_name + lang_code
-                        # UPDATE dengan data dari Meta (termasuk wa_template_uid dan status)
+                        # PENTING: Hanya update jika template ini BENAR-BENAR ada di Meta
+                        # Template ini sudah ada di meta_template_names (ditambahkan di atas)
+                        # Jadi kita bisa langsung UPDATE dengan data dari Meta
                         _logger.info(
-                            f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
-                            f'Update dengan wa_template_uid: {template_id_str} dan status dari Meta'
+                            f'📝 Template ditemukan di Odoo: "{template_name}" (lang: {lang_code}). '
+                            f'Template ini ada di Meta, akan di-update dengan wa_template_uid: {template_id_str} dan status dari Meta'
                         )
                     else:
                         # Template tidak ditemukan di Odoo - akan di-create baru dari Meta
@@ -108,9 +121,11 @@ class WhatsappAccount(models.Model):
                     _logger.warning(
                         f'⚠️ Template dari Meta tidak punya template_name atau lang_code: {template}'
                     )
+                    continue  # Skip template yang tidak punya nama atau bahasa
                 
                 if existing_tmpl:
-                    # Template sudah ada di Odoo dan sudah di-submit ke Meta - UPDATE dengan data dari Meta
+                    # Template sudah ada di Odoo dan BENAR-BENAR ada di Meta - UPDATE dengan data dari Meta
+                    # PENTING: Hanya template yang ada di response Meta yang akan di-update
                     template_update_count += 1
                     existing_tmpl._update_template_from_response(template)
                     # Pastikan wa_account_id di-set jika template dari XML belum punya wa_account_id
@@ -133,6 +148,14 @@ class WhatsappAccount(models.Model):
             # Create semua template baru sekaligus (batch create)
             if create_vals:
                 WhatsappTemplate.create(create_vals)
+            
+            # PENTING: Template di Odoo yang TIDAK ada di Meta TIDAK BOLEH di-update
+            # Hanya template yang ada di meta_template_names yang boleh di-update
+            # Template yang tidak ada di Meta akan tetap draft (tidak diubah)
+            _logger.info(
+                f'📋 Template yang ada di Meta: {len(meta_template_names)} template. '
+                f'Template di Odoo yang tidak ada di Meta akan tetap draft (tidak diubah).'
+            )
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
