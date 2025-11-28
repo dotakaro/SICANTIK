@@ -58,22 +58,9 @@ class WhatsappTemplate(models.Model):
 
         self.write(update_vals)
         
-        # Verifikasi status setelah write
-        # Invalidate cache untuk memastikan data terbaru dibaca dari database
-        self.invalidate_recordset(['status'])
-        # Baca ulang dari database untuk verifikasi
-        self.env.cr.commit()  # Commit perubahan terlebih dahulu
-        self._cr.execute('SELECT status FROM whatsapp_template WHERE id = %s', (self.id,))
-        actual_status = self._cr.fetchone()[0] if self._cr.rowcount > 0 else None
-        
-        if actual_status != new_status:
-            _logger.warning(
-                f'⚠️ Status tidak ter-update untuk template "{self.template_name or self.name}": '
-                f'diharapkan {new_status}, tapi masih {actual_status}'
-            )
-        else:
-            _logger.info(
-                f'✅ Status berhasil di-update untuk template "{self.template_name or self.name}": '
-                f'{old_status} → {new_status}'
-            )
+        # Log hasil update
+        _logger.info(
+            f'✅ Template "{self.template_name or self.name}" berhasil di-update: '
+            f'status {old_status} → {new_status}'
+        )
 
