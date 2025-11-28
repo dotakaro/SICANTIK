@@ -18,14 +18,24 @@ Dokumen ini menjelaskan mekanisme opt-in yang benar untuk WhatsApp Business API,
 **Yang perlu dipahami:**
 - **Meta TIDAK punya konsep "opt-in formal"** seperti yang kita definisikan
 - **Yang Meta tahu adalah:**
-  1. **24-Hour Window**: Setelah user mengirim pesan inbound, Meta memberikan 24 jam untuk mengirim template messages
-  2. **Pre-Approved Contacts**: Nomor yang di-upload ke Meta Business Manager → Phone Numbers → Contacts
-  3. **Template Approval**: Template messages harus di-approve oleh Meta sebelum bisa digunakan
+  1. **24-Hour Window**: Setelah user mengirim pesan inbound, Meta memberikan 24 jam untuk mengirim pesan
+  2. **Template Approval**: Template messages harus di-approve oleh Meta sebelum bisa digunakan
 
 - **"Opt-In Formal" di database Odoo** adalah konsep INTERNAL kita untuk:
   - Tracking: Mengetahui apakah user sudah pernah mengirim pesan inbound
   - Decision Making: Memutuskan apakah kita bisa kirim template messages (setelah 24 jam)
   - Compliance: Memiliki bukti bahwa user sudah memberikan consent
+
+### 📱 Penjelasan 24-Hour Window
+
+**Dalam 24 jam setelah user mengirim pesan inbound:**
+- ✅ Bisa kirim pesan tanpa template (session messages) - **hanya via Meta**
+- ✅ Bisa kirim template messages - via Meta atau Fonnte
+
+**Setelah 24 jam berlalu:**
+- ❌ Tidak bisa kirim session messages (pesan tanpa template) - **hanya Meta yang punya batasan ini**
+- ✅ Hanya bisa kirim template messages yang sudah approved - via Meta atau Fonnte
+- ⚠️ **Catatan**: Fonnte tidak memiliki batasan 24-hour window seperti Meta, tapi tetap harus menggunakan template messages untuk notifikasi profesional
 
 ### ✅ Cara Opt-In yang Valid (Menurut Meta)
 
@@ -35,13 +45,11 @@ Meta WhatsApp Business API **WAJIB** memerlukan opt-in sebelum bisa mengirim tem
 - User mengirim pesan ke nomor WhatsApp Business Account (Meta)
 - Sistem otomatis mendeteksi pesan inbound via webhook
 - Odoo core otomatis remove dari blacklist (artinya opt-in)
-- **24-Hour Window**: Setelah user mengirim pesan, Meta memberikan 24 jam untuk mengirim template messages
-- **⚠️ PENTING**: Setelah 24 jam berlalu, Meta akan MENOLAK template messages kecuali:
-  - Nomor sudah di-upload sebagai **pre-approved contact** di Meta Business Manager
-  - Template message sudah **pre-approved** untuk nomor tersebut
-  - User mengirim pesan inbound lagi (reset 24-hour window)
+- **24-Hour Window**: Setelah user mengirim pesan, Meta memberikan 24 jam untuk mengirim pesan (session messages dan template messages)
+- **⚠️ PENTING**: Setelah 24 jam berlalu, Meta akan MENOLAK session messages, tapi tetap bisa kirim template messages yang sudah approved
+- User mengirim pesan inbound lagi → reset 24-hour window
 
-**Catatan:** Kita juga set `whatsapp_opt_in = True` di database Odoo untuk tracking internal, tapi ini TIDAK mempengaruhi Meta. Meta hanya tahu tentang 24-hour window dan pre-approved contacts.
+**Catatan:** Kita juga set `whatsapp_opt_in = True` di database Odoo untuk tracking internal, tapi ini TIDAK mempengaruhi Meta. Meta hanya tahu tentang 24-hour window. Setelah 24 jam, kita bisa kirim template messages yang sudah approved ke user yang sudah memberikan persetujuan (dicatat di database kita).
 
 #### 2. **Form Pendaftaran dengan Checkbox**
 - Saat user mendaftar izin baru, minta persetujuan untuk notifikasi WhatsApp
@@ -49,11 +57,13 @@ Meta WhatsApp Business API **WAJIB** memerlukan opt-in sebelum bisa mengirim tem
 - Set `whatsapp_opt_in = True` saat user centang
 - Simpan consent di database dengan timestamp
 
-#### 3. **Link/QR Code yang Mengarah ke WhatsApp Business Account**
-- Buat link WhatsApp: `https://wa.me/6281234567890?text=Halo`
-- Atau QR code yang ketika di-scan membuka chat dengan WhatsApp Business Account
-- User klik link/scan QR → membuka chat dengan Meta WhatsApp Business Account
-- User mengirim pesan → auto opt-in
+#### 3. **Link WhatsApp dengan Pesan Pre-filled** (Recommended)
+- Buat link WhatsApp dengan pesan pre-filled: `https://wa.me/6281234567890?text=Ya%20Saya%20Setuju%20Menerima%20Pesan%20Notifikasi%20dari%20DPMPTSP`
+- Link ini dikirim via Fonnte sebagai text message biasa (Fonnte tidak support button)
+- User klik link → membuka WhatsApp dengan pesan sudah terisi: "Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP"
+- User klik "Kirim" → pesan terkirim ke Meta WhatsApp Business Account
+- Sistem otomatis deteksi pesan persetujuan → catat sebagai opt-in formal
+- 24-hour window reset → bisa kirim template messages dalam 24 jam berikutnya
 
 #### 4. **Pre-Approval di Meta Business Manager** (Cara Paling Reliable untuk Setelah 24 Jam)
 - Export daftar nomor yang sudah terdaftar
@@ -307,27 +317,30 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 ### Q: Bagaimana cara memastikan bisa kirim template messages setelah 24 jam?
 
 **A:**
-- **Cara 1: Upload nomor sebagai pre-approved contact di Meta Business Manager**
-  - Export daftar nomor yang sudah terdaftar
-  - Upload ke Meta Business Manager → Phone Numbers → Contacts
-  - Request approval
-  - Setelah approved, bisa kirim template messages kapan saja ✅
-
-- **Cara 2: User mengirim pesan inbound lagi** (reset 24-hour window)
-  - Kirim pesan opt-in via Fonnte dengan link WhatsApp Business Account
+- **Cara 1: User mengirim pesan inbound lagi** (reset 24-hour window)
+  - Kirim pesan opt-in via Fonnte dengan link WhatsApp Business Account (pesan pre-filled: "Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP")
   - User klik link → kirim pesan ke Meta → reset 24-hour window
   - Bisa kirim template messages dalam 24 jam berikutnya ✅
 
+- **Cara 2: Kirim template messages yang sudah approved** (setelah 24 jam)
+  - Pastikan template message sudah di-approve oleh Meta (ini sudah ada di sistem kita)
+  - Pastikan user sudah memberikan persetujuan (dicatat di database Odoo)
+  - Kirim template messages yang sudah approved → Meta akan menerima ✅
+
 **⚠️ PENTING:** 
-- "Opt-in formal" di database Odoo hanya untuk tracking internal
-- Untuk mengirim template messages setelah 24 jam, nomor HARUS di-upload sebagai pre-approved contact di Meta Business Manager
+- Setelah 24 jam, kita bisa kirim template messages yang sudah approved ke user yang sudah memberikan persetujuan
+- "Opt-in formal" di database Odoo adalah untuk compliance dan tracking internal kita
+- Meta tidak perlu tahu tentang opt-in kita - yang penting adalah template sudah approved
 
 ### Q: Apakah 24-hour window berlaku untuk semua jenis pesan?
 
 **A:**
-- **24-hour window**: Hanya untuk template messages
-- **Setelah 24 jam**: Hanya bisa kirim template messages yang sudah pre-approved
-- **Session messages** (pesan bebas): Hanya bisa dikirim dalam 24-hour window
+- **24-hour window**: Berlaku untuk session messages (pesan tanpa template) dan template messages
+- **Dalam 24 jam**: Bisa kirim session messages dan template messages
+- **Setelah 24 jam**: 
+  - ❌ Tidak bisa kirim session messages (pesan tanpa template) - hanya Meta yang punya batasan ini
+  - ✅ Bisa kirim template messages yang sudah approved - via Meta atau Fonnte
+- **Catatan**: Fonnte tidak memiliki batasan 24-hour window seperti Meta, tapi tetap harus menggunakan template messages untuk notifikasi profesional
 
 ### Q: Bagaimana jika user tidak klik link opt-in?
 
@@ -339,10 +352,12 @@ Untuk mengaktifkan layanan ini, silakan balas pesan ini dengan kata "YA" atau "S
 ### Q: Apakah Fonnte mendukung button messages seperti Meta?
 
 **A:**
-- Fonnte adalah gateway WhatsApp Indonesia yang lebih sederhana
-- Tidak memiliki fitur button/list messages seperti Meta
-- Tapi kita bisa kirim text message dengan link yang jelas
+- ❌ **TIDAK**, Fonnte **TIDAK mendukung button messages**
+- Fitur button di Fonnte sudah **DEPRECATED** sejak 10 Mei 2023
+- Alasan: WhatsApp melakukan update yang memverifikasi pengirim, sehingga fitur button tidak bisa digunakan
+- **Solusi**: Gunakan link WhatsApp dengan pesan pre-filled yang dikirim sebagai text message biasa
 - Link WhatsApp (`https://wa.me/...`) akan otomatis menjadi clickable di WhatsApp
+- Ketika user klik link, WhatsApp akan membuka chat dengan pesan sudah terisi
 
 ---
 

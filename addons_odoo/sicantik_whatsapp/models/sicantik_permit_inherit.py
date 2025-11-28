@@ -684,11 +684,11 @@ class SicantikPermit(models.Model):
                 }
             }
         
-        # Generate link WhatsApp Business Account untuk opt-in
+        # Generate link WhatsApp Business Account untuk opt-in dengan pesan pre-filled
         opt_in_manager = self.env['whatsapp.opt.in.manager']
         try:
             opt_in_info = opt_in_manager.generate_whatsapp_opt_in_link(
-                message='Halo, saya ingin mengaktifkan notifikasi WhatsApp untuk perizinan saya.'
+                message='Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP'
             )
             whatsapp_link = opt_in_info['link']
             wa_phone_number = opt_in_info['phone_number']
@@ -715,7 +715,10 @@ Untuk mengaktifkan layanan ini, silakan klik link berikut:
 
 🔗 {whatsapp_link}
 
-Setelah Anda mengirim pesan ke nomor WhatsApp Business Account di atas, notifikasi akan aktif secara otomatis.
+Setelah Anda klik link di atas, pesan persetujuan akan otomatis terisi: "Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP"
+Anda cukup klik tombol "Kirim" untuk mengaktifkan notifikasi WhatsApp.
+
+Setelah Anda mengirim pesan persetujuan, notifikasi akan aktif secara otomatis.
 
 Terima kasih atas perhatiannya.
 

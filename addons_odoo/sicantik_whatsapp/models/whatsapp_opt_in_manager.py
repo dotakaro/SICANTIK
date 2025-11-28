@@ -401,15 +401,17 @@ class WhatsAppOptInManager(models.Model):
             'total_numbers': len(phone_numbers)
         }
     
-    def generate_whatsapp_opt_in_link(self, wa_account_id=None, message='Halo'):
+    def generate_whatsapp_opt_in_link(self, wa_account_id=None, message='Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP'):
         """
-        Generate link WhatsApp untuk opt-in
+        Generate link WhatsApp dengan pesan pre-filled untuk opt-in
         
-        Link format: https://wa.me/{phone_number}?text={message}
+        Link format: https://wa.me/{phone_number}?text={encoded_message}
+        Ketika user klik link, WhatsApp akan membuka chat dengan pesan sudah terisi.
+        User cukup klik "Kirim" untuk mengirim pesan persetujuan.
         
         Args:
             wa_account_id (int, optional): ID WhatsApp Account (Meta)
-            message (str): Pesan default yang akan dikirim user
+            message (str): Pesan default yang akan dikirim user (default: "Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP")
         
         Returns:
             dict: {
