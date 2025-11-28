@@ -218,10 +218,11 @@ class WhatsAppOptInManager(models.Model):
             if partner:
                 break
             
-            # Cari dengan whatsapp_number field
-            partner = self.env['res.partner'].search([
-                ('whatsapp_number', 'ilike', variant)
-            ], limit=1)
+            # Cari dengan whatsapp_number field (jika ada)
+            if 'whatsapp_number' in self.env['res.partner']._fields:
+                partner = self.env['res.partner'].search([
+                    ('whatsapp_number', 'ilike', variant)
+                ], limit=1)
             
             if partner:
                 break
