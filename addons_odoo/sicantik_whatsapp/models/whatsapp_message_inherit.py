@@ -24,11 +24,33 @@ class WhatsappMessage(models.Model):
         Juga mendeteksi pesan persetujuan khusus untuk logging yang lebih detail.
         Dan mengirim balasan otomatis atas persetujuan tersebut.
         """
+        # Log semua pesan yang akan dibuat untuk debugging
+        _logger.info(
+            f'🔍 [DEBUG] whatsapp.message.create() dipanggil dengan {len(vals_list)} pesan'
+        )
+        for idx, vals in enumerate(vals_list):
+            _logger.info(
+                f'   [{idx}] message_type={vals.get("message_type")}, '
+                f'mobile={vals.get("mobile_number")}, '
+                f'body={str(vals.get("body", ""))[:50]}...'
+            )
+        
         # Panggil method parent untuk membuat pesan (Odoo core logic)
         messages = super().create(vals_list)
         
+        _logger.info(
+            f'🔍 [DEBUG] whatsapp.message.create() selesai, {len(messages)} pesan dibuat'
+        )
+        
         # Setelah pesan dibuat, cek apakah ada pesan inbound baru
         for message in messages:
+            _logger.info(
+                f'🔍 [DEBUG] Memproses pesan ID={message.id}, '
+                f'type={message.message_type}, '
+                f'mobile={message.mobile_number_formatted}, '
+                f'body={str(message.body)[:50] if message.body else "None"}...'
+            )
+            
             if message.message_type == 'inbound' and message.mobile_number_formatted:
                 try:
                     # Cek apakah pesan mengandung persetujuan
