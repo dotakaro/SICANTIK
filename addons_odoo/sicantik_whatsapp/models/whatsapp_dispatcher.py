@@ -583,24 +583,25 @@ class WhatsAppDispatcher(models.AbstractModel):
         # Kirim via Odoo Enterprise WhatsApp Composer
         try:
             # Prepare template variables dalam format yang diharapkan oleh whatsapp.composer
-            # Format: {'1': value1, '2': value2, ...}
-            free_text_json = {}
+            # Format: free_text_1, free_text_2, free_text_3, dll
+            composer_vals = {
+                'res_model': context_values.get('res_model', 'res.partner'),
+                'res_ids': str(partner_id),
+                'wa_template_id': meta_template.id,
+                'phone': mobile,
+            }
+            
+            # Set free_text fields berdasarkan urutan variabel template
             for i in range(1, 20):  # Meta supports up to 20 variables
                 var_key = str(i)
                 if var_key in context_values:
-                    free_text_json[f'free_text_{i}'] = str(context_values[var_key])
+                    composer_vals[f'free_text_{i}'] = str(context_values[var_key])
                 else:
                     # Stop jika tidak ada lagi variabel
                     break
             
             # Create whatsapp.composer
-            composer = self.env['whatsapp.composer'].create({
-                'res_model': context_values.get('res_model', 'res.partner'),
-                'res_ids': str(partner_id),
-                'wa_template_id': meta_template.id,
-                'phone': mobile,
-                'free_text_json': str(free_text_json) if free_text_json else False,
-            })
+            composer = self.env['whatsapp.composer'].create(composer_vals)
             
             # Send template message
             messages = composer._send_whatsapp_template(force_send_by_cron=True)
