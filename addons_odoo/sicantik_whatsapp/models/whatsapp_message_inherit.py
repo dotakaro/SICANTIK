@@ -86,7 +86,25 @@ class WhatsappMessage(models.Model):
                     opt_in_manager = self.env['whatsapp.opt.in.manager']
                     opt_in_manager.auto_opt_in_from_inbound_message(message.id)
                     
-                    if is_consent_message:
+                    # Jika body kosong atau mail_message_id belum terisi, coba lagi dengan delay
+                    if not body_text and not message.mail_message_id:
+                        _logger.info(
+                            f'⚠️ Body kosong atau mail_message_id belum terisi untuk Message ID={message.id}, '
+                            f'mencoba delayed check...'
+                        )
+                        # Schedule delayed check (gunakan cron atau delay)
+                        # Untuk sekarang, kita coba langsung setelah create selesai
+                        self.env['ir.cron'].sudo().create({
+                            'name': f'Check consent reply for message {message.id}',
+                            'model_id': self.env['ir.model']._get_id('whatsapp.message'),
+                            'state': 'code',
+                            'code': f'model._check_and_send_consent_reply_delayed({message.id})',
+                            'interval_number': 1,
+                            'interval_type': 'minutes',
+                            'numbercall': 1,
+                            'active': True,
+                        })
+                    elif is_consent_message:
                         _logger.info(
                             f'✅ Pesan persetujuan terdeteksi untuk nomor {message.mobile_number_formatted} '
                             f'(Message ID: {message.id})'
