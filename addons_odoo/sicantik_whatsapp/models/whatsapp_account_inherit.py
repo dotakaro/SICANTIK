@@ -37,16 +37,8 @@ class WhatsappAccount(models.Model):
             '|', ('wa_account_id', '=', self.id), ('wa_account_id', '=', False)
         ])
         
-        # Index by wa_template_uid (ID dari Meta) - prioritas utama
-        # wa_template_uid adalah Char field, jadi kita simpan sebagai string untuk konsistensi
-        existing_tmpl_by_id = {}
-        for t in existing_tmpls:
-            if t.wa_template_uid:
-                # Simpan sebagai string (karena wa_template_uid adalah Char field)
-                existing_tmpl_by_id[str(t.wa_template_uid)] = t
-        
-        # Index by template_name + lang_code (untuk fallback jika wa_template_uid belum ada atau berbeda)
-        # Ini penting untuk template yang sudah ada di Odoo tapi belum di-submit ke Meta (masih draft)
+        # Index by template_name + lang_code (prioritas utama)
+        # Logika sederhana: jika template_name sama → UPDATE, jika tidak → CREATE baru
         # Normalize template_name (lowercase, strip whitespace) untuk menghindari masalah case sensitivity
         existing_tmpl_by_name = {}
         for t in existing_tmpls:
@@ -58,6 +50,13 @@ class WhatsappAccount(models.Model):
                 # Jika sudah ada, prioritaskan yang punya wa_template_uid
                 if key not in existing_tmpl_by_name or t.wa_template_uid:
                     existing_tmpl_by_name[key] = t
+        
+        # Index by wa_template_uid untuk fallback (jika template_name berbeda tapi wa_template_uid sama)
+        existing_tmpl_by_id = {}
+        for t in existing_tmpls:
+            if t.wa_template_uid:
+                # Simpan sebagai string (karena wa_template_uid adalah Char field)
+                existing_tmpl_by_id[str(t.wa_template_uid)] = t
         
         _logger.info(
             f'📊 Template yang sudah ada di Odoo: {len(existing_tmpls)} total, '
@@ -81,47 +80,34 @@ class WhatsappAccount(models.Model):
                 # Convert template_id ke string untuk konsistensi (wa_template_uid adalah Char field)
                 template_id_str = str(template_id)
                 
-                # Cari berdasarkan wa_template_uid terlebih dahulu (prioritas utama)
-                existing_tmpl = existing_tmpl_by_id.get(template_id_str)
-                
-                # Jika tidak ditemukan berdasarkan wa_template_uid, cari berdasarkan template_name + lang_code
-                # Ini untuk menangani kasus:
-                # 1. Template sudah di-submit ke Meta tapi wa_template_uid berbeda (rare case)
-                # 2. Template sudah di-submit ke Meta tapi wa_template_uid belum tersimpan di Odoo
-                # 3. Template masih draft di Odoo tapi sudah ada di Meta (di-submit manual dari Meta) - UPDATE
-                # Jika template ditemukan di Meta berdasarkan template_name, berarti sudah di-submit ke Meta
-                # Jadi kita harus update template di Odoo dengan data dari Meta
-                if not existing_tmpl and template_name and lang_code:
+                # LOGIKA SEDERHANA:
+                # 1. Cari berdasarkan template_name + lang_code (prioritas utama)
+                # 2. Jika ditemukan → UPDATE dengan data dari Meta
+                # 3. Jika tidak ditemukan → CREATE baru dari Meta
+                # 4. Template di Odoo yang tidak ada di Meta → biarkan as is (tetap draft)
+                existing_tmpl = None
+                if template_name and lang_code:
                     normalized_name = str(template_name).lower().strip()
                     normalized_lang = str(lang_code).lower().strip()
-                    existing_tmpl_candidate = existing_tmpl_by_name.get((normalized_name, normalized_lang))
+                    existing_tmpl = existing_tmpl_by_name.get((normalized_name, normalized_lang))
                     
-                    if existing_tmpl_candidate:
+                    if existing_tmpl:
                         # Template ditemukan di Odoo berdasarkan template_name + lang_code
-                        # Jika template ada di Meta (punya template_id), berarti sudah di-submit ke Meta
-                        # Update template di Odoo dengan data dari Meta, termasuk wa_template_uid dan status
-                        existing_tmpl = existing_tmpl_candidate
-                        if existing_tmpl.wa_template_uid:
-                            _logger.info(
-                                f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
-                                f'Template sudah punya wa_template_uid: {existing_tmpl.wa_template_uid}, '
-                                f'update dengan wa_template_uid baru: {template_id_str} dan status dari Meta'
-                            )
-                        else:
-                            # Template masih draft di Odoo tapi sudah ada di Meta (di-submit manual dari Meta)
-                            # Update dengan data dari Meta, termasuk wa_template_uid dan status
-                            _logger.info(
-                                f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
-                                f'Template masih draft di Odoo tapi sudah ada di Meta (di-submit manual). '
-                                f'Update dengan wa_template_uid: {template_id_str} dan status dari Meta'
-                            )
+                        # UPDATE dengan data dari Meta (termasuk wa_template_uid dan status)
+                        _logger.info(
+                            f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
+                            f'Update dengan wa_template_uid: {template_id_str} dan status dari Meta'
+                        )
                     else:
                         # Template tidak ditemukan di Odoo - akan di-create baru dari Meta
                         _logger.debug(
                             f'🔍 Template "{template_name}" (lang: {lang_code}) tidak ditemukan di Odoo. '
-                            f'Will be created from Meta. '
-                            f'Available keys: {list(existing_tmpl_by_name.keys())[:10]}...'
+                            f'Will be created from Meta.'
                         )
+                else:
+                    _logger.warning(
+                        f'⚠️ Template dari Meta tidak punya template_name atau lang_code: {template}'
+                    )
                 
                 if existing_tmpl:
                     # Template sudah ada di Odoo dan sudah di-submit ke Meta - UPDATE dengan data dari Meta
@@ -137,37 +123,7 @@ class WhatsappAccount(models.Model):
                         f'✅ Template "{template_name}" di-update dengan status: {template.get("status", "unknown")}'
                     )
                 else:
-                    # Double-check: Pastikan template benar-benar tidak ada di Odoo sebelum create
-                    # Ini untuk menghindari race condition atau masalah pencarian
-                    if template_name and lang_code:
-                        normalized_name = str(template_name).lower().strip()
-                        normalized_lang = str(lang_code).lower().strip()
-                        double_check = existing_tmpl_by_name.get((normalized_name, normalized_lang))
-                        
-                        if double_check:
-                            # Template ditemukan di double-check
-                            # Jika template ada di Meta (punya template_id), berarti sudah di-submit ke Meta
-                            # Update template di Odoo dengan data dari Meta, termasuk wa_template_uid dan status
-                            if double_check.wa_template_uid:
-                                _logger.warning(
-                                    f'⚠️ Template "{template_name}" (lang: {lang_code}) ditemukan di double-check. '
-                                    f'Template sudah punya wa_template_uid: {double_check.wa_template_uid}, '
-                                    f'update dengan wa_template_uid baru: {template_id_str}'
-                                )
-                            else:
-                                _logger.warning(
-                                    f'⚠️ Template "{template_name}" (lang: {lang_code}) ditemukan di double-check. '
-                                    f'Template masih draft di Odoo tapi sudah ada di Meta (di-submit manual). '
-                                    f'Update dengan wa_template_uid: {template_id_str} dan status dari Meta'
-                                )
-                            template_update_count += 1
-                            double_check._update_template_from_response(template)
-                            # Pastikan wa_account_id di-set jika template dari XML belum punya wa_account_id
-                            if not double_check.wa_account_id:
-                                double_check.wa_account_id = self.id
-                            continue  # Skip create
-                    
-                    # Template benar-benar tidak ada di Odoo - CREATE baru dari Meta
+                    # Template tidak ditemukan di Odoo - CREATE baru dari Meta
                     template_create_count += 1
                     create_vals.append(WhatsappTemplate._create_template_from_response(template, self))
                     _logger.info(
