@@ -16,8 +16,20 @@ class WhatsappTemplate(models.Model):
         Perbaikan:
         - Tambahkan wa_template_uid ke update_fields agar template yang belum di-submit ke Meta bisa di-link
         - Tambahkan template_name ke update_fields agar template_name di Odoo sesuai dengan Meta
+        - PENTING: Hanya update jika template ini BENAR-BENAR ada di Meta (punya ID dari Meta)
         """
         self.ensure_one()
+        
+        # PENTING: Cek apakah template ini benar-benar ada di Meta
+        # Jika tidak punya ID dari Meta, berarti template ini tidak ada di Meta dan tidak boleh di-update
+        template_id_from_meta = remote_template_vals.get('id')
+        if not template_id_from_meta:
+            _logger.warning(
+                f'⚠️ Template "{self.template_name or self.name}" tidak punya ID dari Meta. '
+                f'SKIP update, biarkan tetap draft.'
+            )
+            return  # Jangan update jika tidak ada ID dari Meta
+        
         # Tambahkan wa_template_uid dan template_name ke update_fields
         update_fields = ('body', 'header_type', 'header_text', 'footer_text', 'lang_code', 'template_type', 'status', 'quality', 'wa_template_uid', 'template_name')
         template_vals = self._get_template_vals_from_response(remote_template_vals, self.wa_account_id)
