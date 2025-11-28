@@ -31,7 +31,11 @@ class WhatsappAccount(models.Model):
             raise ValidationError(str(err)) from err
 
         WhatsappTemplate = self.env['whatsapp.template']
-        existing_tmpls = WhatsappTemplate.with_context(active_test=False).search([('wa_account_id', '=', self.id)])
+        # Cari template dengan wa_account_id yang sama ATAU template tanpa wa_account_id (dari XML/data)
+        # Template dari XML mungkin belum punya wa_account_id, jadi kita cari juga yang NULL
+        existing_tmpls = WhatsappTemplate.with_context(active_test=False).search([
+            '|', ('wa_account_id', '=', self.id), ('wa_account_id', '=', False)
+        ])
         
         # Index by wa_template_uid (ID dari Meta) - prioritas utama
         # wa_template_uid adalah Char field, jadi kita simpan sebagai string untuk konsistensi
