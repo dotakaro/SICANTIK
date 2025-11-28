@@ -130,18 +130,48 @@ class WhatsAppDispatcher(models.AbstractModel):
                 'error': error message (jika gagal)
             }
         """
-        # Get master template
-        master_template = self.env['sicantik.whatsapp.template.master'].search([
-            ('template_key', '=', template_key),
-            ('active', '=', True)
-        ], limit=1)
+        # Determine provider first to select appropriate template
+        routing = self.determine_provider(partner_id, permit_id)
+        provider = routing['provider']
+        
+        # Mapping template_key lama ke template_key baru dengan prefix izin_ untuk Meta
+        template_key_mapping = {
+            'permit_ready': 'izin_selesai_diproses',
+            'permit_reminder': 'izin_peringatan_berlaku',
+            'status_update': 'izin_update_status',
+            'renewal_approved': 'izin_perpanjangan_disetujui',
+            'document_pending': 'izin_dokumen_baru',
+            'approval_required': 'izin_perlu_approval',
+            'reminder': 'izin_reminder',
+        }
+        
+        # Get master template - prefer izin_ prefix template for Meta
+        if provider.provider_type == 'meta':
+            # Try to find template with izin_ prefix first (mapped from old key)
+            mapped_key = template_key_mapping.get(template_key, template_key)
+            if not mapped_key.startswith('izin_'):
+                mapped_key = f'izin_{mapped_key}'
+            
+            master_template = self.env['sicantik.whatsapp.template.master'].search([
+                ('template_key', '=', mapped_key),
+                ('active', '=', True)
+            ], limit=1)
+            
+            # Fallback to original template if izin_ version not found
+            if not master_template:
+                master_template = self.env['sicantik.whatsapp.template.master'].search([
+                    ('template_key', '=', template_key),
+                    ('active', '=', True)
+                ], limit=1)
+        else:
+            # For non-Meta providers, use original template
+            master_template = self.env['sicantik.whatsapp.template.master'].search([
+                ('template_key', '=', template_key),
+                ('active', '=', True)
+            ], limit=1)
         
         if not master_template:
             raise UserError(f'Template dengan key "{template_key}" tidak ditemukan')
-        
-        # Determine provider
-        routing = self.determine_provider(partner_id, permit_id)
-        provider = routing['provider']
         
         _logger.info(
             f'📤 Sending template "{template_key}" via {provider.name}: {routing["reason"]}'
