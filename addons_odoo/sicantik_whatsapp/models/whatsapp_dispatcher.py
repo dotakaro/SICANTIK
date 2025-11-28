@@ -147,17 +147,38 @@ class WhatsAppDispatcher(models.AbstractModel):
         
         # Get master template - prefer izin_ prefix template for Meta
         if provider.provider_type == 'meta':
-            # Try to find template with izin_ prefix first (mapped from old key)
+            # Untuk Meta, cari template langsung di whatsapp.template dengan prefix izin_
             mapped_key = template_key_mapping.get(template_key, template_key)
             if not mapped_key.startswith('izin_'):
                 mapped_key = f'izin_{mapped_key}'
             
+            # Cari template Meta langsung berdasarkan template_name
+            meta_template = self.env['whatsapp.template'].search([
+                ('template_name', '=', mapped_key),
+                ('status', '=', 'approved'),
+                ('active', '=', True)
+            ], limit=1)
+            
+            if meta_template:
+                # Jika template Meta ditemukan, gunakan langsung tanpa master template
+                _logger.info(
+                    f'📤 Using Meta template directly: "{mapped_key}" (ID: {meta_template.id})'
+                )
+                # Kirim langsung via Meta tanpa master template
+                return self._send_via_meta_direct(
+                    provider,
+                    meta_template,
+                    partner_id,
+                    context_values
+                )
+            
+            # Fallback: cari master template dengan izin_ prefix
             master_template = self.env['sicantik.whatsapp.template.master'].search([
                 ('template_key', '=', mapped_key),
                 ('active', '=', True)
             ], limit=1)
             
-            # Fallback to original template if izin_ version not found
+            # Fallback: cari master template original jika izin_ tidak ditemukan
             if not master_template:
                 master_template = self.env['sicantik.whatsapp.template.master'].search([
                     ('template_key', '=', template_key),
@@ -507,6 +528,92 @@ class WhatsAppDispatcher(models.AbstractModel):
                 'success': False,
                 'provider': provider.name,
                 'error': result.get('error'),
+            }
+    
+    def _send_via_meta_direct(self, provider, meta_template, partner_id, context_values):
+        """
+        Kirim langsung via Meta menggunakan template whatsapp.template (tanpa master template)
+        
+        Args:
+            provider: sicantik.whatsapp.provider object
+            meta_template: whatsapp.template object (Odoo Enterprise)
+            partner_id: ID partner penerima
+            context_values: dict dengan nilai parameter template
+        
+        Returns:
+            dict: Result dictionary
+        """
+        partner = self.env['res.partner'].browse(partner_id)
+        
+        if not partner:
+            raise UserError('Partner tidak ditemukan')
+        
+        # Get phone number
+        mobile = partner._get_mobile_or_phone()
+        if not mobile:
+            raise UserError(f'Partner {partner.name} tidak memiliki nomor WhatsApp')
+        
+        # Get Meta WhatsApp Account
+        if not provider.meta_account_id:
+            raise UserError(
+                f'Provider "{provider.name}" belum dikonfigurasi dengan Meta WhatsApp Account.'
+            )
+        
+        wa_account = provider.meta_account_id
+        
+        # Prepare template variables dalam format Meta ({{1}}, {{2}}, dll)
+        # Context values harus sudah dalam format yang sesuai dengan urutan variabel template
+        template_variables = []
+        for i in range(1, 20):  # Meta supports up to 20 variables
+            var_key = str(i)
+            if var_key in context_values:
+                template_variables.append({
+                    'name': var_key,
+                    'value': str(context_values[var_key])
+                })
+            else:
+                # Stop jika tidak ada lagi variabel
+                break
+        
+        _logger.info(
+            f'📤 Sending Meta template "{meta_template.template_name}" to {partner.name} ({mobile}) '
+            f'with {len(template_variables)} variables'
+        )
+        
+        # Kirim via Odoo Enterprise WhatsApp API
+        try:
+            from odoo.addons.whatsapp.models.whatsapp_api import WhatsAppApi
+            
+            whatsapp_api = WhatsAppApi(self.env)
+            
+            result = whatsapp_api._send_whatsapp(
+                wa_account=wa_account,
+                template=meta_template,
+                phone_number=mobile,
+                template_variables=template_variables,
+                res_model=context_values.get('res_model'),
+                res_id=context_values.get('res_id')
+            )
+            
+            if result.get('success'):
+                return {
+                    'success': True,
+                    'provider': provider.name,
+                    'message_id': result.get('message_id'),
+                }
+            else:
+                return {
+                    'success': False,
+                    'provider': provider.name,
+                    'error': result.get('error', 'Unknown error'),
+                }
+                
+        except Exception as e:
+            _logger.error(f'Error sending Meta template: {str(e)}', exc_info=True)
+            return {
+                'success': False,
+                'provider': provider.name,
+                'error': str(e),
             }
     
     def _send_via_meta(self, provider, provider_template, partner_id, context_values, master_template):

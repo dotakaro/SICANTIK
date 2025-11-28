@@ -49,8 +49,7 @@ Kepatuhan WhatsApp Business:
         "wizard/test_multi_provider_wizard_views.xml",  # Must load before menus
         "views/sicantik_whatsapp_menus.xml",  # Menu untuk WhatsApp
         "data/master_templates_data.xml",  # Default master templates
-        "data/master_templates_utility_meta.xml",  # Template Utility-compliant untuk Meta
-        "data/whatsapp_templates.xml",
+        "data/whatsapp_templates.xml",  # Template Meta (Odoo Enterprise) - termasuk template Utility-compliant dengan prefix izin_
         "data/cron_data.xml",
     ],
     "installable": True,
