@@ -48,7 +48,7 @@ class NotificationTrigger(models.Model):
         'ir.model',
         string='Model',
         required=True,
-        ondelete='restrict',
+        ondelete='cascade',
         help='Model Odoo yang akan di-monitor'
     )
     model_name = fields.Char(
