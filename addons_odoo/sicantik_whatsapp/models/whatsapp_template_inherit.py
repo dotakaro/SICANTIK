@@ -22,6 +22,15 @@ class WhatsappTemplate(models.Model):
         update_fields = ('body', 'header_type', 'header_text', 'footer_text', 'lang_code', 'template_type', 'status', 'quality', 'wa_template_uid', 'template_name')
         template_vals = self._get_template_vals_from_response(remote_template_vals, self.wa_account_id)
         update_vals = {field: template_vals[field] for field in update_fields}
+        
+        # Log status sebelum dan sesudah update untuk debugging
+        old_status = self.status
+        new_status = update_vals.get('status', 'unknown')
+        _logger.info(
+            f'🔄 Update template "{self.template_name or self.name}": '
+            f'status {old_status} → {new_status}, '
+            f'wa_template_uid {self.wa_template_uid or "None"} → {update_vals.get("wa_template_uid", "None")}'
+        )
 
         # variables should be preserved instead of overwritten to keep odoo-specific data like fields
         variable_ids = []
@@ -43,4 +52,12 @@ class WhatsappTemplate(models.Model):
             update_vals['header_attachment_ids'] = [Command.clear()] + new_attachment_commands
 
         self.write(update_vals)
+        
+        # Verifikasi status setelah write
+        self.refresh()
+        if self.status != new_status:
+            _logger.warning(
+                f'⚠️ Status tidak ter-update untuk template "{self.template_name or self.name}": '
+                f'diharapkan {new_status}, tapi masih {self.status}'
+            )
 
