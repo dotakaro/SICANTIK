@@ -247,6 +247,41 @@ class WhatsAppDispatcher(models.AbstractModel):
                 'error': str(e)
             }
     
+    def _find_fallback_provider(self, exclude_provider_type):
+        """
+        Cari provider alternatif sebagai fallback jika provider utama gagal.
+        
+        Args:
+            exclude_provider_type (str): Provider type yang ingin di-exclude (yang gagal)
+        
+        Returns:
+            sicantik.whatsapp.provider: Provider record jika ditemukan, False jika tidak
+        """
+        # Prioritas fallback: Fonnte > Watzap > Meta
+        fallback_order = ['fonnte', 'watzap', 'meta']
+        
+        # Hapus provider yang gagal dari daftar fallback
+        if exclude_provider_type in fallback_order:
+            fallback_order.remove(exclude_provider_type)
+        
+        # Cari provider aktif dengan urutan prioritas
+        for provider_type in fallback_order:
+            provider = self.env['sicantik.whatsapp.provider'].search([
+                ('provider_type', '=', provider_type),
+                ('active', '=', True)
+            ], limit=1)
+            
+            if provider:
+                # Validasi credentials berdasarkan provider type
+                if provider_type == 'fonnte' and provider.fonnte_api_token:
+                    return provider
+                elif provider_type == 'watzap' and provider.watzap_api_key and provider.watzap_device_id:
+                    return provider
+                elif provider_type == 'meta' and provider.meta_account_id:
+                    return provider
+        
+        return False
+    
     def send_text_message(self, partner_id, message, provider_type=None):
         """
         Kirim pesan teks langsung (bukan template) via provider
