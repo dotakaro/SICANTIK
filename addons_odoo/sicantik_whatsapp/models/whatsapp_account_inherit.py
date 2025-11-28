@@ -126,6 +126,12 @@ class WhatsappAccount(models.Model):
                     # Template sudah ada di Odoo dan sudah di-submit ke Meta - UPDATE dengan data dari Meta
                     template_update_count += 1
                     existing_tmpl._update_template_from_response(template)
+                    # Pastikan wa_account_id di-set jika template dari XML belum punya wa_account_id
+                    if not existing_tmpl.wa_account_id:
+                        existing_tmpl.wa_account_id = self.id
+                        _logger.info(
+                            f'🔗 Template "{template_name}" di-link dengan wa_account_id: {self.id}'
+                        )
                     _logger.info(
                         f'✅ Template "{template_name}" di-update dengan status: {template.get("status", "unknown")}'
                     )
