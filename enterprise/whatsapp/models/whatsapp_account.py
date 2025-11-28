@@ -89,13 +89,27 @@ class WhatsappAccount(models.Model):
 
         WhatsappTemplate = self.env['whatsapp.template']
         existing_tmpls = WhatsappTemplate.with_context(active_test=False).search([('wa_account_id', '=', self.id)])
-        existing_tmpl_by_id = {t.wa_template_uid: t for t in existing_tmpls}
+        # Index by wa_template_uid (ID dari Meta)
+        existing_tmpl_by_id = {t.wa_template_uid: t for t in existing_tmpls if t.wa_template_uid}
+        # Index by template_name + lang_code (untuk fallback jika wa_template_uid belum ada)
+        existing_tmpl_by_name = {(t.template_name, t.lang_code): t for t in existing_tmpls if t.template_name}
         template_update_count = 0
         template_create_count = 0
         if response.get('data'):
             create_vals = []
             for template in response['data']:
-                existing_tmpl = existing_tmpl_by_id.get(template['id'])
+                # Extract template_name dan lang_code dari response Meta
+                template_name = template.get('name', '')
+                lang_code = template.get('language', '')
+                template_id = template.get('id')
+                
+                # Cari berdasarkan wa_template_uid terlebih dahulu
+                existing_tmpl = existing_tmpl_by_id.get(template_id)
+                
+                # Jika tidak ditemukan berdasarkan wa_template_uid, cari berdasarkan template_name + lang_code
+                if not existing_tmpl and template_name and lang_code:
+                    existing_tmpl = existing_tmpl_by_name.get((template_name, lang_code))
+                
                 if existing_tmpl:
                     template_update_count += 1
                     existing_tmpl._update_template_from_response(template)
