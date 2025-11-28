@@ -43,10 +43,14 @@ class WhatsappAccount(models.Model):
         
         # Index by template_name + lang_code (untuk fallback jika wa_template_uid belum ada atau berbeda)
         # Ini penting untuk template yang sudah ada di Odoo tapi belum di-submit ke Meta (masih draft)
+        # Normalize template_name (lowercase, strip whitespace) untuk menghindari masalah case sensitivity
         existing_tmpl_by_name = {}
         for t in existing_tmpls:
             if t.template_name and t.lang_code:
-                key = (t.template_name, t.lang_code)
+                # Normalize: lowercase dan strip whitespace
+                normalized_name = str(t.template_name).lower().strip()
+                normalized_lang = str(t.lang_code).lower().strip()
+                key = (normalized_name, normalized_lang)
                 # Jika sudah ada, prioritaskan yang punya wa_template_uid
                 if key not in existing_tmpl_by_name or t.wa_template_uid:
                     existing_tmpl_by_name[key] = t
@@ -78,8 +82,11 @@ class WhatsappAccount(models.Model):
                 
                 # Jika tidak ditemukan berdasarkan wa_template_uid, cari berdasarkan template_name + lang_code
                 # Ini untuk template yang sudah ada di Odoo tapi belum di-submit ke Meta (belum punya wa_template_uid)
+                # Normalize template_name dan lang_code untuk menghindari masalah case sensitivity
                 if not existing_tmpl and template_name and lang_code:
-                    existing_tmpl = existing_tmpl_by_name.get((template_name, lang_code))
+                    normalized_name = str(template_name).lower().strip()
+                    normalized_lang = str(lang_code).lower().strip()
+                    existing_tmpl = existing_tmpl_by_name.get((normalized_name, normalized_lang))
                     if existing_tmpl:
                         _logger.info(
                             f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
