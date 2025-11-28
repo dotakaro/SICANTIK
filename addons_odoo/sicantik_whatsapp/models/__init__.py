@@ -8,6 +8,7 @@ from . import res_config_settings
 from . import whatsapp_template_master
 from . import whatsapp_dispatcher
 from . import whatsapp_account_inherit
+from . import whatsapp_template_inherit
 from . import whatsapp_message_inherit
 from . import whatsapp_message_log
 
