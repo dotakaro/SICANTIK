@@ -170,18 +170,34 @@ class WhatsappMessage(models.Model):
                 return
             
             # Cari partner berdasarkan nomor WhatsApp
+            # Odoo 18.4 hanya punya field 'phone', tidak ada 'mobile'
             partner = self.env['res.partner'].search([
                 ('phone', '=', inbound_message.mobile_number_formatted)
             ], limit=1)
             
             if not partner:
-                # Coba cari dengan format lain
-                mobile_clean = inbound_message.mobile_number_formatted.replace('+', '').replace(' ', '')
+                # Coba cari dengan format lain (tanpa +, tanpa spasi)
+                mobile_clean = inbound_message.mobile_number_formatted.replace('+', '').replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
                 partner = self.env['res.partner'].search([
-                    '|',
                     ('phone', 'ilike', mobile_clean),
-                    ('mobile', 'ilike', mobile_clean),
                 ], limit=1)
+            
+            # Jika masih tidak ditemukan, coba cari dengan berbagai variasi format
+            if not partner:
+                # Coba dengan format internasional (dengan +)
+                if not inbound_message.mobile_number_formatted.startswith('+'):
+                    partner = self.env['res.partner'].search([
+                        ('phone', 'ilike', f'+{inbound_message.mobile_number_formatted}'),
+                    ], limit=1)
+            
+            if not partner:
+                # Coba cari dengan format lokal (tanpa kode negara)
+                # Jika nomor dimulai dengan 62 (Indonesia), coba tanpa 62
+                if inbound_message.mobile_number_formatted.startswith('62'):
+                    local_number = inbound_message.mobile_number_formatted[2:]
+                    partner = self.env['res.partner'].search([
+                        ('phone', 'ilike', local_number),
+                    ], limit=1)
             
             # Siapkan pesan balasan
             partner_name = partner.name if partner else 'Bapak/Ibu'
