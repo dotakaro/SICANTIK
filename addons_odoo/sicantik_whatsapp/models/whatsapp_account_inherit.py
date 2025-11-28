@@ -81,17 +81,36 @@ class WhatsappAccount(models.Model):
                 existing_tmpl = existing_tmpl_by_id.get(template_id_str)
                 
                 # Jika tidak ditemukan berdasarkan wa_template_uid, cari berdasarkan template_name + lang_code
-                # Ini untuk template yang sudah ada di Odoo tapi belum di-submit ke Meta (belum punya wa_template_uid)
-                # Normalize template_name dan lang_code untuk menghindari masalah case sensitivity
+                # TAPI: Hanya update jika template di Odoo sudah punya wa_template_uid (sudah di-submit ke Meta)
+                # Template yang masih draft di Odoo (belum punya wa_template_uid) TIDAK boleh di-update
+                # karena itu adalah template lokal yang belum di-submit ke Meta
                 if not existing_tmpl and template_name and lang_code:
                     normalized_name = str(template_name).lower().strip()
                     normalized_lang = str(lang_code).lower().strip()
-                    existing_tmpl = existing_tmpl_by_name.get((normalized_name, normalized_lang))
-                    if existing_tmpl:
+                    existing_tmpl_candidate = existing_tmpl_by_name.get((normalized_name, normalized_lang))
+                    
+                    # Hanya update jika template sudah punya wa_template_uid (sudah di-submit ke Meta sebelumnya)
+                    # Ini berarti template sudah pernah di-submit, lalu di-update di Meta
+                    if existing_tmpl_candidate and existing_tmpl_candidate.wa_template_uid:
+                        # Template sudah di-submit sebelumnya, tapi wa_template_uid mungkin berbeda
+                        # Atau template di-update di Meta dengan ID yang berbeda
+                        # Link template dengan wa_template_uid yang baru dari Meta
+                        existing_tmpl = existing_tmpl_candidate
                         _logger.info(
                             f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
-                            f'Update dengan wa_template_uid: {template_id_str} dan status dari Meta'
+                            f'Template sudah punya wa_template_uid: {existing_tmpl.wa_template_uid}, '
+                            f'update dengan wa_template_uid baru: {template_id_str} dan status dari Meta'
                         )
+                    elif existing_tmpl_candidate and not existing_tmpl_candidate.wa_template_uid:
+                        # Template masih draft di Odoo (belum di-submit ke Meta)
+                        # JANGAN update template ini dengan data dari Meta
+                        # Biarkan user submit template ini secara manual melalui tombol "Submit for Approval"
+                        _logger.info(
+                            f'⏸️ Template "{template_name}" (lang: {lang_code}) masih draft di Odoo '
+                            f'(belum punya wa_template_uid). Skip update dari Meta. '
+                            f'User harus submit template ini secara manual melalui tombol "Submit for Approval".'
+                        )
+                        existing_tmpl = None  # Pastikan tidak di-update
                     else:
                         _logger.debug(
                             f'🔍 Template "{template_name}" (lang: {lang_code}) tidak ditemukan di Odoo. '
@@ -99,7 +118,7 @@ class WhatsappAccount(models.Model):
                         )
                 
                 if existing_tmpl:
-                    # Template sudah ada di Odoo - UPDATE dengan data dari Meta
+                    # Template sudah ada di Odoo dan sudah di-submit ke Meta - UPDATE dengan data dari Meta
                     template_update_count += 1
                     existing_tmpl._update_template_from_response(template)
                     _logger.info(
