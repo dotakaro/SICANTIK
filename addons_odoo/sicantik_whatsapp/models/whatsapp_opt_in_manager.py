@@ -7,6 +7,7 @@ import logging
 import csv
 import io
 import base64
+import re
 
 _logger = logging.getLogger(__name__)
 
