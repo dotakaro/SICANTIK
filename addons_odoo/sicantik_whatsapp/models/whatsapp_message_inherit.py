@@ -152,20 +152,19 @@ Kabupaten Karo"""
                 wa_api = WhatsAppApi(inbound_message.wa_account_id)
                 
                 # Kirim sebagai reply ke pesan inbound
+                # Format send_vals untuk text message: {'body': 'text content'}
                 send_vals = {
                     'body': reply_message
                 }
                 
-                # Cari message_uid dari pesan inbound
-                # message_uid biasanya ada di field message_uid atau di mail.message
+                # Cari msg_uid dari pesan inbound untuk reply
+                # msg_uid adalah WhatsApp Message ID dari Meta (format: wamid.xxx)
                 parent_message_id = False
-                if hasattr(inbound_message, 'message_uid') and inbound_message.message_uid:
-                    parent_message_id = inbound_message.message_uid
-                elif inbound_message.mail_message_id and hasattr(inbound_message.mail_message_id, 'message_id'):
-                    # Coba ambil dari mail.message
-                    parent_message_id = inbound_message.mail_message_id.message_id
+                if hasattr(inbound_message, 'msg_uid') and inbound_message.msg_uid:
+                    parent_message_id = inbound_message.msg_uid
                 
                 # Kirim sebagai reply (dengan context message_id jika ada)
+                # Ini adalah session message (text tanpa template) karena masih dalam 24-hour window
                 msg_uid = wa_api._send_whatsapp(
                     number=inbound_message.mobile_number_formatted,
                     message_type='text',
