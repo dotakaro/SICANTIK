@@ -128,19 +128,25 @@ Kabupaten Karo"""
             
             # Buat whatsapp.message untuk session message (text tanpa template)
             # Karena masih dalam 24-hour window, kita bisa kirim session message langsung
+            # Catatan: whatsapp.message memerlukan mail.message untuk body
+            # Kita perlu buat mail.message terlebih dahulu
+            mail_message_vals = {
+                'model': 'res.partner' if partner else False,
+                'res_id': partner.id if partner else False,
+                'body': reply_message,
+                'message_type': 'notification',
+                'subtype_id': self.env.ref('mail.mt_note').id,
+            }
+            mail_message = self.env['mail.message'].create(mail_message_vals)
+            
             message_vals = {
                 'wa_account_id': inbound_message.wa_account_id.id,
                 'mobile_number': inbound_message.mobile_number,
                 'mobile_number_formatted': inbound_message.mobile_number_formatted,
-                'body': reply_message,
-                'message_type': 'text',  # Session message (text tanpa template)
+                'mail_message_id': mail_message.id,
+                'message_type': 'outbound',  # Outbound message
                 'state': 'outgoing',
             }
-            
-            # Jika ada partner, link ke partner
-            if partner:
-                message_vals['res_model'] = 'res.partner'
-                message_vals['res_id'] = partner.id
             
             # Buat dan kirim pesan
             reply_msg = self.env['whatsapp.message'].create(message_vals)
