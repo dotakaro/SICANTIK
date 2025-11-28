@@ -538,9 +538,19 @@ Untuk memverifikasi bahwa opt-in formal sudah tercatat:
 
 1. **Meta Opt-In adalah WAJIB** untuk mengirim template messages via Meta
 2. **Fonnte tidak memerlukan opt-in ketat**, tapi tetap baik untuk best practice
-3. **Dua sistem terpisah**: Opt-in ke Fonnte ≠ Opt-in ke Meta
-4. **Routing otomatis**: Sistem sudah handle routing berdasarkan opt-in status
-5. **24-Hour Window**: Manfaatkan window ini untuk notifikasi penting setelah user mengirim pesan
+3. **Fonnte tidak support button**: Fitur button sudah deprecated sejak 10 Mei 2023
+4. **Solusi Opt-In**: Gunakan link WhatsApp dengan pesan pre-filled "Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP"
+5. **Dua sistem terpisah**: Opt-in ke Fonnte ≠ Opt-in ke Meta
+6. **Routing otomatis**: Sistem sudah handle routing berdasarkan opt-in status
+7. **24-Hour Window**: 
+   - Dalam 24 jam: Bisa kirim session messages dan template messages
+   - Setelah 24 jam: Hanya bisa kirim template messages yang sudah approved
+8. **Flow Opt-In Sederhana**: 
+   - Kirim link WhatsApp Business Account via Fonnte (text message biasa)
+   - Link dengan pesan pre-filled: "Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP"
+   - User klik link → kirim pesan → auto opt-in ke Meta
+   - Sistem deteksi pesan persetujuan → catat sebagai opt-in formal
+   - Lebih cepat dan sesuai kebijakan Meta
 
 ---
 
