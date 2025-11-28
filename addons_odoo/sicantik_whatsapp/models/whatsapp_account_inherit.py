@@ -32,10 +32,10 @@ class WhatsappAccount(models.Model):
 
         WhatsappTemplate = self.env['whatsapp.template']
         existing_tmpls = WhatsappTemplate.with_context(active_test=False).search([('wa_account_id', '=', self.id)])
-        # Index by wa_template_uid (ID dari Meta)
-        existing_tmpl_by_id = {t.wa_template_uid: t for t in existing_tmpls if t.wa_template_uid}
-        # Index by template_name + lang_code (untuk fallback jika wa_template_uid belum ada)
-        existing_tmpl_by_name = {(t.template_name, t.lang_code): t for t in existing_tmpls if t.template_name}
+        # Index by wa_template_uid (ID dari Meta) - prioritas utama
+        existing_tmpl_by_id = {int(t.wa_template_uid): t for t in existing_tmpls if t.wa_template_uid}
+        # Index by template_name + lang_code (untuk fallback jika wa_template_uid belum ada atau berbeda)
+        existing_tmpl_by_name = {(t.template_name, t.lang_code): t for t in existing_tmpls if t.template_name and t.lang_code}
         template_update_count = 0
         template_create_count = 0
         if response.get('data'):
@@ -46,32 +46,50 @@ class WhatsappAccount(models.Model):
                 lang_code = template.get('language', '')
                 template_id = template.get('id')
                 
-                # Convert template_id ke integer jika perlu (Meta bisa return string atau int)
+                # Convert template_id ke integer (Meta selalu return string, tapi kita simpan sebagai int)
+                template_id_int = None
                 if template_id:
                     try:
-                        template_id = int(template_id)
+                        template_id_int = int(template_id)
                     except (ValueError, TypeError):
-                        pass
+                        _logger.warning(f'⚠️ Invalid template_id dari Meta: {template_id}')
+                        continue
                 
-                # Cari berdasarkan wa_template_uid terlebih dahulu
-                existing_tmpl = existing_tmpl_by_id.get(template_id)
+                if not template_id_int:
+                    _logger.warning(f'⚠️ Template dari Meta tidak punya ID: {template}')
+                    continue
+                
+                # Cari berdasarkan wa_template_uid terlebih dahulu (prioritas utama)
+                existing_tmpl = existing_tmpl_by_id.get(template_id_int)
                 
                 # Jika tidak ditemukan berdasarkan wa_template_uid, cari berdasarkan template_name + lang_code
+                # Ini untuk template yang sudah ada di Odoo tapi belum di-submit ke Meta (belum punya wa_template_uid)
                 if not existing_tmpl and template_name and lang_code:
                     existing_tmpl = existing_tmpl_by_name.get((template_name, lang_code))
                     if existing_tmpl:
                         _logger.info(
                             f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
-                            f'Update dengan wa_template_uid: {template_id}'
+                            f'Update dengan wa_template_uid: {template_id_int} dan status dari Meta'
                         )
                 
                 if existing_tmpl:
+                    # Template sudah ada di Odoo - UPDATE dengan data dari Meta
                     template_update_count += 1
                     existing_tmpl._update_template_from_response(template)
+                    _logger.info(
+                        f'✅ Template "{template_name}" di-update dengan status: {template.get("status", "unknown")}'
+                    )
                 else:
+                    # Template tidak ada di Odoo - CREATE baru dari Meta
                     template_create_count += 1
                     create_vals.append(WhatsappTemplate._create_template_from_response(template, self))
-            WhatsappTemplate.create(create_vals)
+                    _logger.info(
+                        f'➕ Template baru "{template_name}" akan di-create dari Meta'
+                    )
+            
+            # Create semua template baru sekaligus (batch create)
+            if create_vals:
+                WhatsappTemplate.create(create_vals)
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
