@@ -124,6 +124,20 @@ class WhatsappAccount(models.Model):
                     continue  # Skip template yang tidak punya nama atau bahasa
                 
                 if existing_tmpl:
+                    # PENTING: Double-check bahwa template ini BENAR-BENAR ada di Meta
+                    # Cek apakah (normalized_name, normalized_lang) ada di meta_template_names
+                    normalized_name = str(template_name).lower().strip()
+                    normalized_lang = str(lang_code).lower().strip()
+                    template_key = (normalized_name, normalized_lang)
+                    
+                    if template_key not in meta_template_names:
+                        # Template tidak ada di Meta, skip update
+                        _logger.warning(
+                            f'⚠️ Template "{template_name}" (lang: {lang_code}) ditemukan di Odoo '
+                            f'tapi TIDAK ada di Meta. SKIP update, biarkan tetap draft.'
+                        )
+                        continue
+                    
                     # Template sudah ada di Odoo dan BENAR-BENAR ada di Meta - UPDATE dengan data dari Meta
                     # PENTING: Hanya template yang ada di response Meta yang akan di-update
                     template_update_count += 1
