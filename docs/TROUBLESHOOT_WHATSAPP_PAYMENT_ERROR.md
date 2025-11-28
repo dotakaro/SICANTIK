@@ -104,6 +104,61 @@ Setelah memperbaiki masalah pembayaran:
 2. Periksa log Odoo untuk melihat apakah error masih terjadi
 3. Jika masih error, tunggu beberapa menit (Meta perlu waktu untuk memperbarui status)
 
+## Penyebab Khusus: Template Kategori Marketing
+
+### Error 131042 untuk Template Kategori Marketing
+
+**Penyebab:**
+- Template dikategorikan sebagai **Marketing** oleh Meta
+- Template kategori Marketing memerlukan payment method yang lebih ketat
+- Meta memiliki kebijakan otomatis untuk mengubah kategori template dari Utility ke Marketing jika tidak mengikuti aturan
+
+**Mengapa Template Diubah ke Marketing?**
+
+Meta akan otomatis mengubah kategori template ke Marketing jika:
+- Template mengandung emoji marketing (🔔, ⏰, 🔐, dll)
+- Template mengandung ajakan promosional ("Silakan ambil", "Segera lakukan", dll)
+- Template tidak fokus pada informasi transaksi spesifik
+- Template menggunakan bahasa promosional ("Selamat!", "Jangan lewatkan", dll)
+
+**Solusi: Gunakan Template dengan Prefix `izin_`**
+
+Kami sudah membuat template baru dengan prefix `izin_` yang mengikuti aturan Meta untuk kategori **Utility**:
+
+1. **izin_selesai_diproses** - Izin Selesai Diproses
+2. **izin_update_status** - Update Status Perizinan
+3. **izin_dokumen_baru** - Dokumen Baru untuk Tandatangan
+4. **izin_perlu_approval** - Dokumen Perlu Approval
+5. **izin_reminder** - Reminder Dokumen Pending
+6. **izin_peringatan_berlaku** - Peringatan Masa Berlaku Izin
+7. **izin_perpanjangan_disetujui** - Perpanjangan Izin Disetujui
+
+**Cara Menggunakan Template Baru:**
+
+1. **Buat Template di Meta Business Manager:**
+   - Login ke Meta Business Manager
+   - Buka **WhatsApp → Message Templates**
+   - Klik **Create Template**
+   - Pilih kategori **Utility** (bukan Marketing)
+   - Gunakan nama template dengan prefix `izin_` (contoh: `izin_selesai_diproses`)
+   - Copy body dari template master di Odoo (WhatsApp → Konfigurasi → Master Templates)
+   - Submit untuk review
+
+2. **Update Master Template di Odoo:**
+   - Menu: WhatsApp → Konfigurasi → Master Templates
+   - Edit template yang sesuai
+   - Pastikan `meta_template_name` menggunakan nama dengan prefix `izin_`
+   - Set status menjadi "Configured"
+
+3. **Verifikasi Template:**
+   - Pastikan template di Meta Business Manager sudah **Approved**
+   - Pastikan kategori template adalah **Utility** (bukan Marketing)
+   - Test pengiriman pesan dengan template baru
+
+**Dokumentasi Lengkap:**
+- Lihat `docs/META_UTILITY_TEMPLATE_RULES.md` untuk aturan lengkap tentang template Utility
+- Lihat `docs/WHATSAPP_MESSAGING_IMPLEMENTATION.md` untuk informasi tentang master templates
+
 ## Solusi Alternatif: Fallback ke Provider Lain
 
 Jika masalah pembayaran Meta tidak bisa segera diselesaikan, sistem kita sudah memiliki mekanisme fallback:
@@ -206,4 +261,13 @@ A: Ya, semua template message via Meta akan gagal sampai masalah pembayaran dipe
 
 **Q: Apakah session message (dalam 24h window) juga akan gagal?**
 A: Tidak, session message tidak memerlukan pembayaran. Hanya template message yang berbayar.
+
+**Q: Mengapa template saya diubah ke Marketing oleh Meta?**
+A: Meta memiliki kebijakan otomatis untuk mengubah kategori template ke Marketing jika template tidak mengikuti aturan Utility. Lihat `docs/META_UTILITY_TEMPLATE_RULES.md` untuk aturan lengkap.
+
+**Q: Bagaimana cara membuat template yang tidak akan diubah ke Marketing?**
+A: Gunakan template dengan prefix `izin_` yang sudah dibuat sesuai aturan Meta Utility. Template ini sudah dioptimalkan untuk tetap dalam kategori Utility.
+
+**Q: Apakah template dengan prefix `izin_` akan selalu kategori Utility?**
+A: Tidak ada jaminan 100%, tapi dengan mengikuti aturan Meta Utility (tidak ada emoji marketing, fokus pada transaksi spesifik, bahasa formal), kemungkinan besar akan tetap Utility. Meta akan review dan menentukan kategori akhir.
 
