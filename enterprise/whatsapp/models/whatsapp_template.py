@@ -594,7 +594,7 @@ class WhatsappTemplate(models.Model):
 
     def _update_template_from_response(self, remote_template_vals):
         self.ensure_one()
-        update_fields = ('body', 'header_type', 'header_text', 'footer_text', 'lang_code', 'template_type', 'status', 'quality')
+        update_fields = ('body', 'header_type', 'header_text', 'footer_text', 'lang_code', 'template_type', 'status', 'quality', 'wa_template_uid', 'template_name')
         template_vals = self._get_template_vals_from_response(remote_template_vals, self.wa_account_id)
         update_vals = {field: template_vals[field] for field in update_fields}
 
