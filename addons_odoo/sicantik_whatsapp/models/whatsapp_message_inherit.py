@@ -205,34 +205,82 @@ class WhatsappMessage(models.Model):
             )
             
             partner = None
-            for variant in search_variants:
-                # Cari dengan format eksak
-                partner = self.env['res.partner'].search([
-                    ('phone', '=', variant)
-                ], limit=1)
+            
+            # Coba cari dengan phone_mobile_search jika ada (Odoo Enterprise WhatsApp)
+            if 'phone_mobile_search' in self.env['res.partner']._fields:
+                for variant in search_variants:
+                    partner = self.env['res.partner'].search([
+                        ('phone_mobile_search', '=', variant)
+                    ], limit=1)
+                    
+                    if partner:
+                        _logger.info(
+                            f'✅ Partner ditemukan dengan phone_mobile_search (eksak): {variant} → {partner.name} (ID: {partner.id})'
+                        )
+                        break
                 
-                if partner:
-                    _logger.info(
-                        f'✅ Partner ditemukan dengan format eksak: {variant} → {partner.name}'
-                    )
-                    break
-                
-                # Cari dengan ilike (case-insensitive, partial match)
-                partner = self.env['res.partner'].search([
-                    ('phone', 'ilike', variant)
-                ], limit=1)
-                
-                if partner:
-                    _logger.info(
-                        f'✅ Partner ditemukan dengan ilike: {variant} → {partner.name}'
-                    )
-                    break
+                if not partner:
+                    # Coba dengan ilike
+                    for variant in search_variants:
+                        partner = self.env['res.partner'].search([
+                            ('phone_mobile_search', 'ilike', variant)
+                        ], limit=1)
+                        
+                        if partner:
+                            _logger.info(
+                                f'✅ Partner ditemukan dengan phone_mobile_search (ilike): {variant} → {partner.name} (ID: {partner.id})'
+                            )
+                            break
+            
+            # Jika belum ditemukan, cari dengan field phone
+            if not partner:
+                for variant in search_variants:
+                    # Cari dengan format eksak
+                    partner = self.env['res.partner'].search([
+                        ('phone', '=', variant)
+                    ], limit=1)
+                    
+                    if partner:
+                        _logger.info(
+                            f'✅ Partner ditemukan dengan phone (eksak): {variant} → {partner.name} (ID: {partner.id})'
+                        )
+                        break
+                    
+                    # Cari dengan ilike (case-insensitive, partial match)
+                    partner = self.env['res.partner'].search([
+                        ('phone', 'ilike', variant)
+                    ], limit=1)
+                    
+                    if partner:
+                        _logger.info(
+                            f'✅ Partner ditemukan dengan phone (ilike): {variant} → {partner.name} (ID: {partner.id})'
+                        )
+                        break
+            
+            # Jika masih belum ditemukan, cari dengan whatsapp_number (jika ada)
+            if not partner and 'whatsapp_number' in self.env['res.partner']._fields:
+                for variant in search_variants:
+                    partner = self.env['res.partner'].search([
+                        ('whatsapp_number', 'ilike', variant)
+                    ], limit=1)
+                    
+                    if partner:
+                        _logger.info(
+                            f'✅ Partner ditemukan dengan whatsapp_number: {variant} → {partner.name} (ID: {partner.id})'
+                        )
+                        break
             
             if not partner:
                 _logger.warning(
                     f'⚠️ Partner tidak ditemukan untuk nomor {mobile_formatted} '
                     f'dengan semua variasi: {search_variants}'
                 )
+                
+                # Debug: Cek semua partner dengan nomor yang mirip
+                _logger.info(
+                    f'🔍 [DEBUG] Mencoba pattern matching dengan 8 digit terakhir...'
+                )
+                
                 # Coba cari dengan pattern matching yang lebih luas
                 # Cari nomor yang mengandung digit terakhir (minimal 8 digit terakhir)
                 if len(mobile_clean) >= 8:
@@ -243,8 +291,26 @@ class WhatsappMessage(models.Model):
                     
                     if partner:
                         _logger.info(
-                            f'✅ Partner ditemukan dengan pattern matching (8 digit terakhir): {last_digits} → {partner.name}'
+                            f'✅ Partner ditemukan dengan pattern matching (8 digit terakhir): {last_digits} → {partner.name} (ID: {partner.id})'
                         )
+                    else:
+                        _logger.warning(
+                            f'⚠️ Partner tidak ditemukan bahkan dengan pattern matching (8 digit terakhir: {last_digits})'
+                        )
+                        
+                        # Debug: Tampilkan beberapa partner dengan nomor yang mirip untuk debugging
+                        similar_partners = self.env['res.partner'].search([
+                            ('phone', '!=', False),
+                            ('phone', '!=', ''),
+                        ], limit=10)
+                        
+                        _logger.info(
+                            f'🔍 [DEBUG] Contoh partner dengan nomor phone di database:'
+                        )
+                        for p in similar_partners:
+                            _logger.info(
+                                f'   - {p.name}: phone={p.phone}'
+                            )
             
             # Siapkan pesan balasan
             partner_name = partner.name if partner else 'Bapak/Ibu'
