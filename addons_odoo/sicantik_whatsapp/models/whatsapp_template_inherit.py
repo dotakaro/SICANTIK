@@ -23,6 +23,11 @@ class WhatsappTemplate(models.Model):
         template_vals = self._get_template_vals_from_response(remote_template_vals, self.wa_account_id)
         update_vals = {field: template_vals[field] for field in update_fields}
         
+        # Convert wa_template_uid ke string untuk konsistensi (wa_template_uid adalah Char field)
+        # _get_template_vals_from_response mengembalikan int, tapi kita perlu string
+        if 'wa_template_uid' in update_vals and update_vals['wa_template_uid']:
+            update_vals['wa_template_uid'] = str(update_vals['wa_template_uid'])
+        
         # Log status sebelum dan sesudah update untuk debugging
         old_status = self.status
         new_status = update_vals.get('status', 'unknown')
