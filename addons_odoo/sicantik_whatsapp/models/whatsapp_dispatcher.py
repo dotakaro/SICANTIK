@@ -136,21 +136,21 @@ class WhatsAppDispatcher(models.AbstractModel):
         
         # Mapping template_key lama ke template_key baru dengan prefix izin_ untuk Meta
         template_key_mapping = {
-            'permit_ready': 'izin_selesai_diproses',
-            'permit_reminder': 'izin_peringatan_berlaku',
-            'status_update': 'izin_update_status',
-            'renewal_approved': 'izin_perpanjangan_disetujui',
-            'document_pending': 'izin_dokumen_baru',
-            'approval_required': 'izin_perlu_approval',
-            'reminder': 'izin_reminder',
+            'permit_ready': 'meta_selesai_diproses',
+            'permit_reminder': 'meta_peringatan_berlaku',
+            'status_update': 'meta_update_status',
+            'renewal_approved': 'meta_perpanjangan_disetujui',
+            'document_pending': 'meta_dokumen_baru',
+            'approval_required': 'meta_perlu_approval',
+            'reminder': 'meta_reminder',
         }
         
-        # Get master template - prefer izin_ prefix template for Meta
+        # Get master template - prefer meta_ prefix template for Meta
         if provider.provider_type == 'meta':
-            # Untuk Meta, cari template langsung di whatsapp.template dengan prefix izin_
+            # Untuk Meta, cari template langsung di whatsapp.template dengan prefix meta_
             mapped_key = template_key_mapping.get(template_key, template_key)
-            if not mapped_key.startswith('izin_'):
-                mapped_key = f'izin_{mapped_key}'
+            if not mapped_key.startswith('meta_'):
+                mapped_key = f'meta_{mapped_key}'
             
             # Cari template Meta langsung berdasarkan template_name
             meta_template = self.env['whatsapp.template'].search([
@@ -172,13 +172,13 @@ class WhatsAppDispatcher(models.AbstractModel):
                     context_values
                 )
             
-            # Fallback: cari master template dengan izin_ prefix
+            # Fallback: cari master template dengan meta_ prefix
             master_template = self.env['sicantik.whatsapp.template.master'].search([
                 ('template_key', '=', mapped_key),
                 ('active', '=', True)
             ], limit=1)
             
-            # Fallback: cari master template original jika izin_ tidak ditemukan
+            # Fallback: cari master template original jika meta_ tidak ditemukan
             if not master_template:
                 master_template = self.env['sicantik.whatsapp.template.master'].search([
                     ('template_key', '=', template_key),
