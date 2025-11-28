@@ -33,7 +33,15 @@ class WhatsappAccount(models.Model):
         WhatsappTemplate = self.env['whatsapp.template']
         existing_tmpls = WhatsappTemplate.with_context(active_test=False).search([('wa_account_id', '=', self.id)])
         # Index by wa_template_uid (ID dari Meta) - prioritas utama
-        existing_tmpl_by_id = {int(t.wa_template_uid): t for t in existing_tmpls if t.wa_template_uid}
+        # Convert ke integer untuk konsistensi (Meta return string, tapi kita simpan sebagai int)
+        existing_tmpl_by_id = {}
+        for t in existing_tmpls:
+            if t.wa_template_uid:
+                try:
+                    existing_tmpl_by_id[int(t.wa_template_uid)] = t
+                except (ValueError, TypeError):
+                    # Jika wa_template_uid bukan integer, skip
+                    pass
         # Index by template_name + lang_code (untuk fallback jika wa_template_uid belum ada atau berbeda)
         existing_tmpl_by_name = {(t.template_name, t.lang_code): t for t in existing_tmpls if t.template_name and t.lang_code}
         template_update_count = 0
