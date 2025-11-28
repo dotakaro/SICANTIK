@@ -32,18 +32,30 @@ class WhatsappAccount(models.Model):
 
         WhatsappTemplate = self.env['whatsapp.template']
         existing_tmpls = WhatsappTemplate.with_context(active_test=False).search([('wa_account_id', '=', self.id)])
+        
         # Index by wa_template_uid (ID dari Meta) - prioritas utama
-        # Convert ke integer untuk konsistensi (Meta return string, tapi kita simpan sebagai int)
+        # wa_template_uid adalah Char field, jadi kita simpan sebagai string untuk konsistensi
         existing_tmpl_by_id = {}
         for t in existing_tmpls:
             if t.wa_template_uid:
-                try:
-                    existing_tmpl_by_id[int(t.wa_template_uid)] = t
-                except (ValueError, TypeError):
-                    # Jika wa_template_uid bukan integer, skip
-                    pass
+                # Simpan sebagai string (karena wa_template_uid adalah Char field)
+                existing_tmpl_by_id[str(t.wa_template_uid)] = t
+        
         # Index by template_name + lang_code (untuk fallback jika wa_template_uid belum ada atau berbeda)
-        existing_tmpl_by_name = {(t.template_name, t.lang_code): t for t in existing_tmpls if t.template_name and t.lang_code}
+        # Ini penting untuk template yang sudah ada di Odoo tapi belum di-submit ke Meta (masih draft)
+        existing_tmpl_by_name = {}
+        for t in existing_tmpls:
+            if t.template_name and t.lang_code:
+                key = (t.template_name, t.lang_code)
+                # Jika sudah ada, prioritaskan yang punya wa_template_uid
+                if key not in existing_tmpl_by_name or t.wa_template_uid:
+                    existing_tmpl_by_name[key] = t
+        
+        _logger.info(
+            f'📊 Template yang sudah ada di Odoo: {len(existing_tmpls)} total, '
+            f'{len(existing_tmpl_by_id)} dengan wa_template_uid, '
+            f'{len(existing_tmpl_by_name)} dengan template_name+lang_code'
+        )
         template_update_count = 0
         template_create_count = 0
         if response.get('data'):
@@ -54,21 +66,15 @@ class WhatsappAccount(models.Model):
                 lang_code = template.get('language', '')
                 template_id = template.get('id')
                 
-                # Convert template_id ke integer (Meta selalu return string, tapi kita simpan sebagai int)
-                template_id_int = None
-                if template_id:
-                    try:
-                        template_id_int = int(template_id)
-                    except (ValueError, TypeError):
-                        _logger.warning(f'⚠️ Invalid template_id dari Meta: {template_id}')
-                        continue
-                
-                if not template_id_int:
+                if not template_id:
                     _logger.warning(f'⚠️ Template dari Meta tidak punya ID: {template}')
                     continue
                 
+                # Convert template_id ke string untuk konsistensi (wa_template_uid adalah Char field)
+                template_id_str = str(template_id)
+                
                 # Cari berdasarkan wa_template_uid terlebih dahulu (prioritas utama)
-                existing_tmpl = existing_tmpl_by_id.get(template_id_int)
+                existing_tmpl = existing_tmpl_by_id.get(template_id_str)
                 
                 # Jika tidak ditemukan berdasarkan wa_template_uid, cari berdasarkan template_name + lang_code
                 # Ini untuk template yang sudah ada di Odoo tapi belum di-submit ke Meta (belum punya wa_template_uid)
@@ -77,7 +83,12 @@ class WhatsappAccount(models.Model):
                     if existing_tmpl:
                         _logger.info(
                             f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
-                            f'Update dengan wa_template_uid: {template_id_int} dan status dari Meta'
+                            f'Update dengan wa_template_uid: {template_id_str} dan status dari Meta'
+                        )
+                    else:
+                        _logger.debug(
+                            f'🔍 Template "{template_name}" (lang: {lang_code}) tidak ditemukan di Odoo. '
+                            f'Available keys: {list(existing_tmpl_by_name.keys())[:5]}...'
                         )
                 
                 if existing_tmpl:
