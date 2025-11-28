@@ -54,7 +54,18 @@ class WhatsappMessage(models.Model):
             if message.message_type == 'inbound' and message.mobile_number_formatted:
                 try:
                     # Cek apakah pesan mengandung persetujuan
-                    body_text = html2plaintext(message.body).lower() if message.body else ''
+                    # Body ada di mail_message_id, bukan langsung di whatsapp.message
+                    body_text = ''
+                    if message.mail_message_id and message.mail_message_id.body:
+                        body_text = html2plaintext(message.mail_message_id.body).lower()
+                    elif message.body:
+                        # Fallback jika body langsung ada di whatsapp.message
+                        body_text = html2plaintext(message.body).lower()
+                    
+                    _logger.info(
+                        f'🔍 [DEBUG] Body text untuk Message ID={message.id}: {body_text[:100]}...'
+                    )
+                    
                     consent_keywords = [
                         'ya saya setuju',
                         'setuju',
@@ -66,6 +77,10 @@ class WhatsappMessage(models.Model):
                     ]
                     
                     is_consent_message = any(keyword in body_text for keyword in consent_keywords)
+                    
+                    _logger.info(
+                        f'🔍 [DEBUG] Is consent message: {is_consent_message} untuk Message ID={message.id}'
+                    )
                     
                     # Panggil opt-in manager untuk set opt-in formal
                     opt_in_manager = self.env['whatsapp.opt.in.manager']
