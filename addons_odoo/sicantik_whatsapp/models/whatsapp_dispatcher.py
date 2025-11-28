@@ -580,32 +580,51 @@ class WhatsAppDispatcher(models.AbstractModel):
             f'with {len(template_variables)} variables'
         )
         
-        # Kirim via Odoo Enterprise WhatsApp API
+        # Kirim via Odoo Enterprise WhatsApp Composer
         try:
-            from odoo.addons.whatsapp.models.whatsapp_api import WhatsAppApi
+            # Prepare template variables dalam format yang diharapkan oleh whatsapp.composer
+            # Format: {'1': value1, '2': value2, ...}
+            free_text_json = {}
+            for i in range(1, 20):  # Meta supports up to 20 variables
+                var_key = str(i)
+                if var_key in context_values:
+                    free_text_json[f'free_text_{i}'] = str(context_values[var_key])
+                else:
+                    # Stop jika tidak ada lagi variabel
+                    break
             
-            whatsapp_api = WhatsAppApi(self.env)
+            # Create whatsapp.composer
+            composer = self.env['whatsapp.composer'].create({
+                'res_model': context_values.get('res_model', 'res.partner'),
+                'res_ids': str(partner_id),
+                'wa_template_id': meta_template.id,
+                'phone': mobile,
+                'free_text_json': str(free_text_json) if free_text_json else False,
+            })
             
-            result = whatsapp_api._send_whatsapp(
-                wa_account=wa_account,
-                template=meta_template,
-                phone_number=mobile,
-                template_variables=template_variables,
-                res_model=context_values.get('res_model'),
-                res_id=context_values.get('res_id')
-            )
+            # Send template message
+            messages = composer._send_whatsapp_template(force_send_by_cron=True)
             
-            if result.get('success'):
-                return {
-                    'success': True,
-                    'provider': provider.name,
-                    'message_id': result.get('message_id'),
-                }
+            if messages:
+                # Get the first message result
+                message = messages[0]
+                if message.state == 'sent':
+                    return {
+                        'success': True,
+                        'provider': provider.name,
+                        'message_id': message.msg_uid or message.id,
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'provider': provider.name,
+                        'error': f'Message state: {message.state}',
+                    }
             else:
                 return {
                     'success': False,
                     'provider': provider.name,
-                    'error': result.get('error', 'Unknown error'),
+                    'error': 'No messages created',
                 }
                 
         except Exception as e:
