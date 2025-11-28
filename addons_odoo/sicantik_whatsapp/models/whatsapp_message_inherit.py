@@ -55,15 +55,35 @@ class WhatsappMessage(models.Model):
                 try:
                     # Cek apakah pesan mengandung persetujuan
                     # Body ada di mail_message_id, bukan langsung di whatsapp.message
+                    # whatsapp.message.body adalah related field ke mail_message_id.body
                     body_text = ''
-                    if message.mail_message_id and message.mail_message_id.body:
-                        body_text = html2plaintext(message.mail_message_id.body).lower()
-                    elif message.body:
-                        # Fallback jika body langsung ada di whatsapp.message
+                    
+                    # Baca body dari mail_message_id (prioritas utama)
+                    if message.mail_message_id:
+                        if message.mail_message_id.body:
+                            body_text = html2plaintext(message.mail_message_id.body).lower()
+                            _logger.info(
+                                f'🔍 [DEBUG] Body dari mail_message_id untuk Message ID={message.id}: {body_text[:100]}...'
+                            )
+                        else:
+                            _logger.warning(
+                                f'⚠️ mail_message_id.body kosong untuk Message ID={message.id}, '
+                                f'mail_message_id={message.mail_message_id.id}'
+                            )
+                    else:
+                        _logger.warning(
+                            f'⚠️ mail_message_id tidak ditemukan untuk Message ID={message.id}'
+                        )
+                    
+                    # Fallback: baca dari whatsapp.message.body (related field)
+                    if not body_text and message.body:
                         body_text = html2plaintext(message.body).lower()
+                        _logger.info(
+                            f'🔍 [DEBUG] Body dari whatsapp.message.body (fallback) untuk Message ID={message.id}: {body_text[:100]}...'
+                        )
                     
                     _logger.info(
-                        f'🔍 [DEBUG] Body text untuk Message ID={message.id}: {body_text[:100]}...'
+                        f'🔍 [DEBUG] Body text final untuk Message ID={message.id}: {body_text[:100] if body_text else "(kosong)"}...'
                     )
                     
                     consent_keywords = [
