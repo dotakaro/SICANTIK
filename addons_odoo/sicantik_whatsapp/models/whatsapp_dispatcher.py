@@ -185,6 +185,54 @@ class WhatsAppDispatcher(models.AbstractModel):
             else:
                 raise UserError(f'Provider type tidak didukung: {provider.provider_type}')
             
+            # Jika Meta gagal dengan error payment (131042), coba fallback
+            if provider.provider_type == 'meta' and not result.get('success'):
+                error_msg = str(result.get('error', ''))
+                if '131042' in error_msg or 'payment' in error_msg.lower():
+                    _logger.warning(
+                        f'⚠️ Meta payment error untuk template "{template_key}". '
+                        f'Periksa metode pembayaran di Meta Business Manager. '
+                        f'Lihat docs/TROUBLESHOOT_WHATSAPP_PAYMENT_ERROR.md untuk solusi.'
+                    )
+                    
+                    # Coba fallback ke provider lain jika tersedia
+                    fallback_provider = self._find_fallback_provider(provider.provider_type)
+                    if fallback_provider:
+                        _logger.info(
+                            f'🔄 Mencoba fallback ke provider: {fallback_provider.name} ({fallback_provider.provider_type})'
+                        )
+                        try:
+                            fallback_template = master_template.get_provider_template(fallback_provider.provider_type)
+                            if fallback_template['status'] in ['configured', 'approved']:
+                                if fallback_provider.provider_type == 'fonnte':
+                                    fallback_result = self._send_via_fonnte(fallback_provider, fallback_template, partner_id, context_values, master_template)
+                                elif fallback_provider.provider_type == 'watzap':
+                                    fallback_result = self._send_via_watzap(fallback_provider, fallback_template, partner_id, context_values, master_template)
+                                else:
+                                    fallback_result = {'success': False, 'error': 'Provider type tidak didukung untuk fallback'}
+                                
+                                if fallback_result.get('success'):
+                                    _logger.info(
+                                        f'✅ Fallback berhasil: pesan dikirim via {fallback_provider.name}'
+                                    )
+                                    fallback_result['fallback_used'] = True
+                                    fallback_result['original_provider'] = provider.name
+                                    fallback_result['original_error'] = error_msg
+                                    result = fallback_result
+                                else:
+                                    _logger.warning(
+                                        f'⚠️ Fallback ke {fallback_provider.name} juga gagal: {fallback_result.get("error")}'
+                                    )
+                            else:
+                                _logger.warning(
+                                    f'⚠️ Template belum dikonfigurasi untuk fallback provider {fallback_provider.name}. '
+                                    f'Status: {fallback_template["status"]}'
+                                )
+                        except Exception as fallback_error:
+                            _logger.warning(
+                                f'⚠️ Error saat fallback ke {fallback_provider.name}: {str(fallback_error)}'
+                            )
+            
             # Increment usage counter
             if result.get('success'):
                 master_template.increment_usage()
