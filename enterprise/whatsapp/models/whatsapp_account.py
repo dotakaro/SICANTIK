@@ -103,13 +103,6 @@ class WhatsappAccount(models.Model):
                 lang_code = template.get('language', '')
                 template_id = template.get('id')
                 
-                # Convert template_id ke integer jika perlu (Meta bisa return string atau int)
-                if template_id:
-                    try:
-                        template_id = int(template_id)
-                    except (ValueError, TypeError):
-                        pass
-                
                 # Cari berdasarkan wa_template_uid terlebih dahulu
                 existing_tmpl = existing_tmpl_by_id.get(template_id)
                 

@@ -1,96 +1,85 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, models
+from odoo import models, _
+from odoo.exceptions import ValidationError
+from odoo.addons.whatsapp.tools.whatsapp_api import WhatsAppApi
+from odoo.addons.whatsapp.tools.whatsapp_exception import WhatsAppError
 import logging
 
 _logger = logging.getLogger(__name__)
 
 
 class WhatsappAccount(models.Model):
-    """
-    Override WhatsApp Account untuk fix webhook URL menggunakan domain yang benar
-    dan memastikan opt-in formal tercatat ketika pesan inbound diterima.
-    """
     _inherit = 'whatsapp.account'
 
-    @api.depends('account_uid')
-    def _compute_callback_url(self):
+    def button_sync_whatsapp_account_templates(self):
         """
-        Override untuk menggunakan domain yang benar (sicantik.dotakaro.com)
-        bukan localhost atau internal URL.
-        """
-        for account in self:
-            # Ambil webhook base URL dari system parameter atau gunakan default
-            webhook_base_url = self.env['ir.config_parameter'].sudo().get_param(
-                'sicantik_whatsapp.webhook_base_url',
-                default='https://sicantik.dotakaro.com'
-            )
-            # Pastikan tidak ada trailing slash
-            webhook_base_url = webhook_base_url.rstrip('/')
-            account.callback_url = f"{webhook_base_url}/whatsapp/webhook"
-    
-    @api.model
-    def create(self, vals):
-        """Override create untuk memastikan callback_url ter-set dengan benar."""
-        account = super().create(vals)
-        account._compute_callback_url()
-        return account
-    
-    def write(self, vals):
-        """Override write untuk memastikan callback_url ter-update jika account_uid berubah."""
-        result = super().write(vals)
-        if 'account_uid' in vals:
-            self._compute_callback_url()
-        return result
-    
-    def _process_messages(self, value):
-        """
-        Override _process_messages untuk memastikan opt-in formal tercatat
-        ketika pesan inbound diterima dari Meta WhatsApp Business Account.
+        Override untuk memperbaiki sync template Meta agar update bukan replace.
         
-        Setelah Odoo core memproses pesan inbound, kita akan:
-        1. Cari partner berdasarkan nomor WhatsApp
-        2. Set whatsapp_opt_in = True jika belum
-        3. Catat timestamp opt-in
+        Perbaikan:
+        - Cari template berdasarkan template_name + lang_code jika wa_template_uid tidak ditemukan
+        - Update template yang sudah ada di Odoo dengan data dari Meta
+        - Hanya create template baru jika benar-benar tidak ada di Odoo
         """
-        # Panggil method parent untuk memproses pesan (Odoo core logic)
-        result = super()._process_messages(value)
-        
-        # Setelah pesan diproses, cek apakah ada pesan inbound baru
-        # Odoo core akan membuat whatsapp.message record untuk setiap pesan inbound
+        self.ensure_one()
         try:
-            # Cari pesan inbound yang baru saja dibuat untuk account ini
-            # Format value dari webhook Meta
-            if 'messages' not in value and value.get('whatsapp_business_api_data', {}).get('messages'):
-                value = value['whatsapp_business_api_data']
-            
-            for message_data in value.get('messages', []):
-                sender_mobile = message_data.get('from')
-                if not sender_mobile:
-                    continue
-                
-                # Cari whatsapp.message yang baru dibuat untuk nomor ini
-                whatsapp_message = self.env['whatsapp.message'].sudo().search([
-                    ('wa_account_id', '=', self.id),
-                    ('mobile_number_formatted', '=', sender_mobile),
-                    ('message_type', '=', 'inbound')
-                ], order='create_date desc', limit=1)
-                
-                if whatsapp_message:
-                    # Panggil opt-in manager untuk set opt-in formal
-                    opt_in_manager = self.env['whatsapp.opt.in.manager']
-                    opt_in_manager.auto_opt_in_from_inbound_message(whatsapp_message.id)
-                    _logger.info(
-                        f'✅ Opt-in formal tercatat untuk nomor {sender_mobile} '
-                        f'dari pesan inbound WhatsApp Business Account'
-                    )
-        except Exception as e:
-            # Jangan gagal jika ada error dalam opt-in processing
-            # Log error tapi tetap lanjutkan proses normal
-            _logger.warning(
-                f'⚠️ Error saat memproses opt-in formal untuk pesan inbound: {str(e)}',
-                exc_info=True
-            )
-        
-        return result
+            response = WhatsAppApi(self)._get_all_template(fetch_all=True)
+            wa_phone_number = WhatsAppApi(self)._get_phone_number(self.phone_uid)
+            if wa_phone_number:
+                self.phone_number = wa_phone_number
+        except WhatsAppError as err:
+            raise ValidationError(str(err)) from err
 
+        WhatsappTemplate = self.env['whatsapp.template']
+        existing_tmpls = WhatsappTemplate.with_context(active_test=False).search([('wa_account_id', '=', self.id)])
+        # Index by wa_template_uid (ID dari Meta)
+        existing_tmpl_by_id = {t.wa_template_uid: t for t in existing_tmpls if t.wa_template_uid}
+        # Index by template_name + lang_code (untuk fallback jika wa_template_uid belum ada)
+        existing_tmpl_by_name = {(t.template_name, t.lang_code): t for t in existing_tmpls if t.template_name}
+        template_update_count = 0
+        template_create_count = 0
+        if response.get('data'):
+            create_vals = []
+            for template in response['data']:
+                # Extract template_name dan lang_code dari response Meta
+                template_name = template.get('name', '')
+                lang_code = template.get('language', '')
+                template_id = template.get('id')
+                
+                # Convert template_id ke integer jika perlu (Meta bisa return string atau int)
+                if template_id:
+                    try:
+                        template_id = int(template_id)
+                    except (ValueError, TypeError):
+                        pass
+                
+                # Cari berdasarkan wa_template_uid terlebih dahulu
+                existing_tmpl = existing_tmpl_by_id.get(template_id)
+                
+                # Jika tidak ditemukan berdasarkan wa_template_uid, cari berdasarkan template_name + lang_code
+                if not existing_tmpl and template_name and lang_code:
+                    existing_tmpl = existing_tmpl_by_name.get((template_name, lang_code))
+                    if existing_tmpl:
+                        _logger.info(
+                            f'📝 Template ditemukan berdasarkan template_name: "{template_name}" (lang: {lang_code}). '
+                            f'Update dengan wa_template_uid: {template_id}'
+                        )
+                
+                if existing_tmpl:
+                    template_update_count += 1
+                    existing_tmpl._update_template_from_response(template)
+                else:
+                    template_create_count += 1
+                    create_vals.append(WhatsappTemplate._create_template_from_response(template, self))
+            WhatsappTemplate.create(create_vals)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _("Templates synchronized!"),
+                'type': 'success',
+                'message': _("%(create_count)s were created, %(update_count)s were updated",
+                    create_count=template_create_count, update_count=template_update_count),
+                'next': {'type': 'ir.actions.act_window_close'},
+            }
+        }
