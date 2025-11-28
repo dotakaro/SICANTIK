@@ -16,6 +16,228 @@ class WhatsappMessage(models.Model):
     """
     _inherit = 'whatsapp.message'
     
+    def _normalize_phone_number(self, phone_number):
+        """
+        Normalisasi nomor telepon untuk pencarian yang konsisten.
+        Menghapus semua karakter non-digit kecuali + di awal, lalu normalisasi format.
+        
+        Contoh:
+        - '+62 821-6609-9334' -> '6282166099334'
+        - '081234567890' -> '6281234567890'
+        - '+6281234567890' -> '6281234567890'
+        - '62 812 3456 7890' -> '6281234567890'
+        
+        Args:
+            phone_number (str): Nomor telepon dalam format apapun
+            
+        Returns:
+            str: Nomor telepon yang sudah dinormalisasi (hanya digit, tanpa +)
+        """
+        if not phone_number:
+            return ''
+        
+        # Hapus semua karakter non-digit kecuali + di awal
+        # Pertama, hapus semua karakter kecuali digit dan +
+        cleaned = re.sub(r'[^\d+]', '', str(phone_number))
+        
+        # Jika ada + di awal, hapus
+        if cleaned.startswith('+'):
+            cleaned = cleaned[1:]
+        
+        # Hapus semua karakter non-digit (seharusnya sudah tidak ada lagi, tapi untuk jaga-jaga)
+        cleaned = re.sub(r'[^\d]', '', cleaned)
+        
+        # Normalisasi format Indonesia:
+        # - Jika dimulai dengan 0, ganti dengan 62
+        # - Jika tidak dimulai dengan 62 dan panjang >= 10, tambahkan 62
+        if cleaned.startswith('0') and len(cleaned) > 1:
+            cleaned = '62' + cleaned[1:]
+        elif not cleaned.startswith('62') and len(cleaned) >= 10:
+            # Jika nomor lokal (10-12 digit), tambahkan 62
+            cleaned = '62' + cleaned
+        
+        return cleaned
+    
+    def _find_partner_by_phone(self, phone_number):
+        """
+        Cari partner berdasarkan nomor telepon dengan berbagai variasi format.
+        
+        Args:
+            phone_number (str): Nomor telepon dalam format apapun
+            
+        Returns:
+            res.partner: Partner record jika ditemukan, False jika tidak
+        """
+        if not phone_number:
+            return False
+        
+        # Normalisasi nomor untuk pencarian
+        normalized = self._normalize_phone_number(phone_number)
+        _logger.info(
+            f'🔍 [DEBUG] Normalisasi nomor: {phone_number} → {normalized}'
+        )
+        
+        if not normalized or len(normalized) < 10:
+            _logger.warning(
+                f'⚠️ Nomor tidak valid setelah normalisasi: {phone_number} → {normalized}'
+            )
+            return False
+        
+        # Buat berbagai variasi format untuk pencarian
+        search_variants = [
+            normalized,  # Format normalisasi (6282166099334)
+        ]
+        
+        # Tambahkan variasi tanpa kode negara (jika dimulai dengan 62)
+        if normalized.startswith('62') and len(normalized) > 2:
+            search_variants.append('0' + normalized[2:])  # 081234567890
+            search_variants.append(normalized[2:])  # 81234567890
+        
+        # Tambahkan variasi dengan + di awal
+        search_variants.append('+' + normalized)
+        
+        # Tambahkan variasi dengan format yang lebih readable (dengan dash)
+        if len(normalized) >= 12:
+            # Format: +62 812-3456-7890
+            if normalized.startswith('62'):
+                readable = f"+{normalized[:2]} {normalized[2:5]}-{normalized[5:9]}-{normalized[9:]}"
+                search_variants.append(readable)
+                # Format tanpa +: 62 812-3456-7890
+                search_variants.append(readable[1:])
+        
+        # Hapus duplikat
+        search_variants = list(dict.fromkeys(search_variants))
+        
+        _logger.info(
+            f'🔍 [DEBUG] Variasi nomor untuk pencarian: {search_variants}'
+        )
+        
+        partner = None
+        
+        # Fungsi helper untuk normalisasi nomor dari database
+        def normalize_db_phone(db_phone):
+            """Normalisasi nomor dari database untuk perbandingan"""
+            if not db_phone:
+                return ''
+            return self._normalize_phone_number(db_phone)
+        
+        # Coba cari dengan phone_mobile_search jika ada (Odoo Enterprise WhatsApp)
+        if 'phone_mobile_search' in self.env['res.partner']._fields:
+            for variant in search_variants:
+                partner = self.env['res.partner'].search([
+                    ('phone_mobile_search', '=', variant)
+                ], limit=1)
+                
+                if partner:
+                    _logger.info(
+                        f'✅ Partner ditemukan dengan phone_mobile_search (eksak): {variant} → {partner.name} (ID: {partner.id})'
+                    )
+                    return partner
+            
+            # Coba dengan ilike
+            for variant in search_variants:
+                partner = self.env['res.partner'].search([
+                    ('phone_mobile_search', 'ilike', variant)
+                ], limit=1)
+                
+                if partner:
+                    _logger.info(
+                        f'✅ Partner ditemukan dengan phone_mobile_search (ilike): {variant} → {partner.name} (ID: {partner.id})'
+                    )
+                    return partner
+        
+        # Cari dengan field phone - gunakan pendekatan normalisasi
+        # Ambil semua partner yang punya phone, lalu bandingkan nomor yang sudah dinormalisasi
+        partners_with_phone = self.env['res.partner'].search([
+            ('phone', '!=', False),
+            ('phone', '!=', ''),
+        ])
+        
+        _logger.info(
+            f'🔍 [DEBUG] Mencari dari {len(partners_with_phone)} partner yang punya nomor phone...'
+        )
+        
+        for p in partners_with_phone:
+            db_normalized = normalize_db_phone(p.phone)
+            if db_normalized == normalized:
+                partner = p
+                _logger.info(
+                    f'✅ Partner ditemukan dengan normalisasi phone: {p.phone} (normalized: {db_normalized}) → {p.name} (ID: {p.id})'
+                )
+                return partner
+        
+        # Jika belum ditemukan, coba dengan ilike untuk setiap variant
+        for variant in search_variants:
+            partner = self.env['res.partner'].search([
+                ('phone', 'ilike', variant)
+            ], limit=1)
+            
+            if partner:
+                _logger.info(
+                    f'✅ Partner ditemukan dengan phone (ilike): {variant} → {partner.name} (ID: {partner.id})'
+                )
+                return partner
+        
+        # Cari dengan whatsapp_number jika ada
+        if 'whatsapp_number' in self.env['res.partner']._fields:
+            for variant in search_variants:
+                partner = self.env['res.partner'].search([
+                    ('whatsapp_number', 'ilike', variant)
+                ], limit=1)
+                
+                if partner:
+                    _logger.info(
+                        f'✅ Partner ditemukan dengan whatsapp_number: {variant} → {partner.name} (ID: {partner.id})'
+                    )
+                    return partner
+            
+            # Coba dengan normalisasi juga
+            partners_with_wa = self.env['res.partner'].search([
+                ('whatsapp_number', '!=', False),
+                ('whatsapp_number', '!=', ''),
+            ])
+            
+            for p in partners_with_wa:
+                db_normalized = normalize_db_phone(p.whatsapp_number)
+                if db_normalized == normalized:
+                    partner = p
+                    _logger.info(
+                        f'✅ Partner ditemukan dengan normalisasi whatsapp_number: {p.whatsapp_number} (normalized: {db_normalized}) → {p.name} (ID: {p.id})'
+                    )
+                    return partner
+        
+        # Jika masih belum ditemukan, coba dengan pattern matching (8 digit terakhir)
+        if len(normalized) >= 8:
+            last_digits = normalized[-8:]
+            _logger.info(
+                f'🔍 [DEBUG] Mencoba pattern matching dengan 8 digit terakhir: {last_digits}'
+            )
+            
+            # Cari dengan normalisasi juga
+            for p in partners_with_phone:
+                db_normalized = normalize_db_phone(p.phone)
+                if db_normalized.endswith(last_digits):
+                    partner = p
+                    _logger.info(
+                        f'✅ Partner ditemukan dengan pattern matching (8 digit terakhir): {p.phone} (normalized: {db_normalized}) → {p.name} (ID: {p.id})'
+                    )
+                    return partner
+        
+        # Debug: Tampilkan beberapa partner dengan nomor yang mirip
+        _logger.warning(
+            f'⚠️ Partner tidak ditemukan untuk nomor {phone_number} (normalized: {normalized})'
+        )
+        _logger.info(
+            f'🔍 [DEBUG] Contoh partner dengan nomor phone di database (10 pertama):'
+        )
+        for p in partners_with_phone[:10]:
+            db_normalized = normalize_db_phone(p.phone)
+            _logger.info(
+                f'   - {p.name}: phone="{p.phone}" (normalized: {db_normalized})'
+            )
+        
+        return False
+    
     @api.model_create_multi
     def create(self, vals_list):
         """
@@ -169,148 +391,14 @@ class WhatsappMessage(models.Model):
                 )
                 return
             
-            # Cari partner berdasarkan nomor WhatsApp
-            # Odoo 18.4 hanya punya field 'phone', tidak ada 'mobile'
+            # Cari partner berdasarkan nomor WhatsApp menggunakan normalisasi
             mobile_formatted = inbound_message.mobile_number_formatted
             _logger.info(
                 f'🔍 [DEBUG] Mencari partner untuk nomor: {mobile_formatted}'
             )
             
-            # Normalize nomor untuk pencarian (hapus semua karakter non-digit kecuali +)
-            mobile_clean = mobile_formatted.replace(' ', '').replace('-', '').replace('(', '').replace(')', '').replace('.', '')
-            
-            # Buat berbagai variasi format untuk pencarian
-            search_variants = [
-                mobile_formatted,  # Format asli
-                mobile_clean,  # Format bersih
-            ]
-            
-            # Jika ada +, tambahkan variasi tanpa +
-            if mobile_clean.startswith('+'):
-                search_variants.append(mobile_clean[1:])
-            
-            # Jika dimulai dengan 62 (Indonesia), tambahkan variasi tanpa 62
-            if mobile_clean.startswith('62') and len(mobile_clean) > 2:
-                search_variants.append(mobile_clean[2:])
-            
-            # Jika dimulai dengan 0, tambahkan variasi dengan 62
-            if mobile_clean.startswith('0'):
-                search_variants.append('62' + mobile_clean[1:])
-            
-            # Hapus duplikat
-            search_variants = list(dict.fromkeys(search_variants))
-            
-            _logger.info(
-                f'🔍 [DEBUG] Variasi nomor untuk pencarian: {search_variants}'
-            )
-            
-            partner = None
-            
-            # Coba cari dengan phone_mobile_search jika ada (Odoo Enterprise WhatsApp)
-            if 'phone_mobile_search' in self.env['res.partner']._fields:
-                for variant in search_variants:
-                    partner = self.env['res.partner'].search([
-                        ('phone_mobile_search', '=', variant)
-                    ], limit=1)
-                    
-                    if partner:
-                        _logger.info(
-                            f'✅ Partner ditemukan dengan phone_mobile_search (eksak): {variant} → {partner.name} (ID: {partner.id})'
-                        )
-                        break
-                
-                if not partner:
-                    # Coba dengan ilike
-                    for variant in search_variants:
-                        partner = self.env['res.partner'].search([
-                            ('phone_mobile_search', 'ilike', variant)
-                        ], limit=1)
-                        
-                        if partner:
-                            _logger.info(
-                                f'✅ Partner ditemukan dengan phone_mobile_search (ilike): {variant} → {partner.name} (ID: {partner.id})'
-                            )
-                            break
-            
-            # Jika belum ditemukan, cari dengan field phone
-            if not partner:
-                for variant in search_variants:
-                    # Cari dengan format eksak
-                    partner = self.env['res.partner'].search([
-                        ('phone', '=', variant)
-                    ], limit=1)
-                    
-                    if partner:
-                        _logger.info(
-                            f'✅ Partner ditemukan dengan phone (eksak): {variant} → {partner.name} (ID: {partner.id})'
-                        )
-                        break
-                    
-                    # Cari dengan ilike (case-insensitive, partial match)
-                    partner = self.env['res.partner'].search([
-                        ('phone', 'ilike', variant)
-                    ], limit=1)
-                    
-                    if partner:
-                        _logger.info(
-                            f'✅ Partner ditemukan dengan phone (ilike): {variant} → {partner.name} (ID: {partner.id})'
-                        )
-                        break
-            
-            # Jika masih belum ditemukan, cari dengan whatsapp_number (jika ada)
-            if not partner and 'whatsapp_number' in self.env['res.partner']._fields:
-                for variant in search_variants:
-                    partner = self.env['res.partner'].search([
-                        ('whatsapp_number', 'ilike', variant)
-                    ], limit=1)
-                    
-                    if partner:
-                        _logger.info(
-                            f'✅ Partner ditemukan dengan whatsapp_number: {variant} → {partner.name} (ID: {partner.id})'
-                        )
-                        break
-            
-            if not partner:
-                _logger.warning(
-                    f'⚠️ Partner tidak ditemukan untuk nomor {mobile_formatted} '
-                    f'dengan semua variasi: {search_variants}'
-                )
-                
-                # Debug: Cek semua partner dengan nomor yang mirip
-                _logger.info(
-                    f'🔍 [DEBUG] Mencoba pattern matching dengan 8 digit terakhir...'
-                )
-                
-                # Coba cari dengan pattern matching yang lebih luas
-                # Cari nomor yang mengandung digit terakhir (minimal 8 digit terakhir)
-                if len(mobile_clean) >= 8:
-                    last_digits = mobile_clean[-8:]  # 8 digit terakhir
-                    partner = self.env['res.partner'].search([
-                        ('phone', 'ilike', last_digits)
-                    ], limit=1)
-                    
-                    if partner:
-                        _logger.info(
-                            f'✅ Partner ditemukan dengan pattern matching (8 digit terakhir): {last_digits} → {partner.name} (ID: {partner.id})'
-                        )
-                    else:
-                        _logger.warning(
-                            f'⚠️ Partner tidak ditemukan bahkan dengan pattern matching (8 digit terakhir: {last_digits})'
-                        )
-                        
-                        # Debug: Tampilkan beberapa partner dengan nomor yang mirip untuk debugging
-                        similar_partners = self.env['res.partner'].search([
-                            ('phone', '!=', False),
-                            ('phone', '!=', ''),
-                        ], limit=10)
-                        
-                        _logger.info(
-                            f'🔍 [DEBUG] Contoh partner dengan nomor phone di database:'
-                        )
-                        for p in similar_partners:
-                            _logger.info(
-                                f'   - {p.name}: phone={p.phone}'
-                            )
+            # Gunakan method _find_partner_by_phone untuk pencarian yang lebih robust
+            partner = self._find_partner_by_phone(mobile_formatted)
             
             # Siapkan pesan balasan
             partner_name = partner.name if partner else 'Bapak/Ibu'
