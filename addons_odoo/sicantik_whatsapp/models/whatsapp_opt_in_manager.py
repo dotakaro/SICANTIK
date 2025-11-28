@@ -174,6 +174,207 @@ class WhatsAppOptInManager(models.Model):
         _logger.info(f'Request opt-in untuk {partner.name} ({mobile})')
         return False
     
+    def _normalize_phone_number(self, phone_number):
+        """
+        Normalisasi nomor telepon untuk pencarian yang konsisten.
+        Sama seperti di whatsapp_message_inherit.py untuk konsistensi.
+        
+        Args:
+            phone_number (str): Nomor telepon dalam format apapun
+            
+        Returns:
+            str: Nomor telepon yang sudah dinormalisasi (hanya digit, tanpa +)
+        """
+        if not phone_number:
+            return ''
+        
+        # Hapus semua karakter non-digit kecuali + di awal
+        cleaned = re.sub(r'[^\d+]', '', str(phone_number))
+        
+        # Jika ada + di awal, hapus
+        if cleaned.startswith('+'):
+            cleaned = cleaned[1:]
+        
+        # Hapus semua karakter non-digit
+        cleaned = re.sub(r'[^\d]', '', cleaned)
+        
+        # Normalisasi format Indonesia:
+        # - Jika dimulai dengan 0, ganti dengan 62
+        # - Jika tidak dimulai dengan 62 dan panjang >= 10, tambahkan 62
+        if cleaned.startswith('0') and len(cleaned) > 1:
+            cleaned = '62' + cleaned[1:]
+        elif not cleaned.startswith('62') and len(cleaned) >= 10:
+            cleaned = '62' + cleaned
+        
+        return cleaned
+    
+    def _find_partner_by_phone(self, phone_number):
+        """
+        Cari partner berdasarkan nomor telepon dengan normalisasi.
+        Sama seperti di whatsapp_message_inherit.py untuk konsistensi.
+        
+        Args:
+            phone_number (str): Nomor telepon dalam format apapun
+            
+        Returns:
+            res.partner: Partner record jika ditemukan, False jika tidak
+        """
+        if not phone_number:
+            return False
+        
+        # Normalisasi nomor untuk pencarian
+        normalized = self._normalize_phone_number(phone_number)
+        _logger.info(
+            f'🔍 [DEBUG] [OPT-IN] Normalisasi nomor: {phone_number} → {normalized}'
+        )
+        
+        if not normalized or len(normalized) < 10:
+            _logger.warning(
+                f'⚠️ [OPT-IN] Nomor tidak valid setelah normalisasi: {phone_number} → {normalized}'
+            )
+            return False
+        
+        # Buat berbagai variasi format untuk pencarian
+        search_variants = [
+            normalized,  # Format normalisasi (6282166099334)
+        ]
+        
+        # Tambahkan variasi tanpa kode negara (jika dimulai dengan 62)
+        if normalized.startswith('62') and len(normalized) > 2:
+            search_variants.append('0' + normalized[2:])  # 081234567890
+            search_variants.append(normalized[2:])  # 81234567890
+        
+        # Tambahkan variasi dengan + di awal
+        search_variants.append('+' + normalized)
+        
+        # Tambahkan variasi dengan format yang lebih readable (dengan dash)
+        if len(normalized) >= 12:
+            if normalized.startswith('62'):
+                readable = f"+{normalized[:2]} {normalized[2:5]}-{normalized[5:9]}-{normalized[9:]}"
+                search_variants.append(readable)
+                search_variants.append(readable[1:])
+        
+        # Hapus duplikat
+        search_variants = list(dict.fromkeys(search_variants))
+        
+        _logger.info(
+            f'🔍 [DEBUG] [OPT-IN] Variasi nomor untuk pencarian: {search_variants}'
+        )
+        
+        partner = None
+        
+        # Fungsi helper untuk normalisasi nomor dari database
+        def normalize_db_phone(db_phone):
+            """Normalisasi nomor dari database untuk perbandingan"""
+            if not db_phone:
+                return ''
+            return self._normalize_phone_number(db_phone)
+        
+        # Coba cari dengan phone_mobile_search jika ada (Odoo Enterprise WhatsApp)
+        if 'phone_mobile_search' in self.env['res.partner']._fields:
+            for variant in search_variants:
+                partner = self.env['res.partner'].search([
+                    ('phone_mobile_search', '=', variant)
+                ], limit=1)
+                
+                if partner:
+                    _logger.info(
+                        f'✅ [OPT-IN] Partner ditemukan dengan phone_mobile_search (eksak): {variant} → {partner.name} (ID: {partner.id})'
+                    )
+                    return partner
+            
+            # Coba dengan ilike
+            for variant in search_variants:
+                partner = self.env['res.partner'].search([
+                    ('phone_mobile_search', 'ilike', variant)
+                ], limit=1)
+                
+                if partner:
+                    _logger.info(
+                        f'✅ [OPT-IN] Partner ditemukan dengan phone_mobile_search (ilike): {variant} → {partner.name} (ID: {partner.id})'
+                    )
+                    return partner
+        
+        # Cari dengan field phone - gunakan pendekatan normalisasi
+        partners_with_phone = self.env['res.partner'].search([
+            ('phone', '!=', False),
+            ('phone', '!=', ''),
+        ])
+        
+        _logger.info(
+            f'🔍 [DEBUG] [OPT-IN] Mencari dari {len(partners_with_phone)} partner yang punya nomor phone...'
+        )
+        
+        for p in partners_with_phone:
+            db_normalized = normalize_db_phone(p.phone)
+            if db_normalized == normalized:
+                partner = p
+                _logger.info(
+                    f'✅ [OPT-IN] Partner ditemukan dengan normalisasi phone: {p.phone} (normalized: {db_normalized}) → {p.name} (ID: {p.id})'
+                )
+                return partner
+        
+        # Jika belum ditemukan, coba dengan ilike untuk setiap variant
+        for variant in search_variants:
+            partner = self.env['res.partner'].search([
+                ('phone', 'ilike', variant)
+            ], limit=1)
+            
+            if partner:
+                _logger.info(
+                    f'✅ [OPT-IN] Partner ditemukan dengan phone (ilike): {variant} → {partner.name} (ID: {partner.id})'
+                )
+                return partner
+        
+        # Cari dengan whatsapp_number jika ada
+        if 'whatsapp_number' in self.env['res.partner']._fields:
+            for variant in search_variants:
+                partner = self.env['res.partner'].search([
+                    ('whatsapp_number', 'ilike', variant)
+                ], limit=1)
+                
+                if partner:
+                    _logger.info(
+                        f'✅ [OPT-IN] Partner ditemukan dengan whatsapp_number: {variant} → {partner.name} (ID: {partner.id})'
+                    )
+                    return partner
+            
+            # Coba dengan normalisasi juga
+            partners_with_wa = self.env['res.partner'].search([
+                ('whatsapp_number', '!=', False),
+                ('whatsapp_number', '!=', ''),
+            ])
+            
+            for p in partners_with_wa:
+                db_normalized = normalize_db_phone(p.whatsapp_number)
+                if db_normalized == normalized:
+                    partner = p
+                    _logger.info(
+                        f'✅ [OPT-IN] Partner ditemukan dengan normalisasi whatsapp_number: {p.whatsapp_number} (normalized: {db_normalized}) → {p.name} (ID: {p.id})'
+                    )
+                    return partner
+        
+        # Jika masih belum ditemukan, coba dengan pattern matching (8 digit terakhir)
+        if len(normalized) >= 8:
+            last_digits = normalized[-8:]
+            _logger.info(
+                f'🔍 [DEBUG] [OPT-IN] Mencoba pattern matching dengan 8 digit terakhir: {last_digits}'
+            )
+            
+            for p in partners_with_phone:
+                db_normalized = normalize_db_phone(p.phone)
+                if db_normalized.endswith(last_digits):
+                    partner = p
+                    _logger.info(
+                        f'✅ [OPT-IN] Partner ditemukan dengan pattern matching (8 digit terakhir): {p.phone} (normalized: {db_normalized}) → {p.name} (ID: {p.id})'
+                    )
+                    return partner
+        
+        _logger.warning(
+            f'⚠️ [OPT-IN] Partner tidak ditemukan untuk nomor {phone_number} (normalized: {normalized})'
+        )
+        return False
+    
     def auto_opt_in_from_inbound_message(self, whatsapp_message_id):
         """
         Auto opt-in formal ketika user mengirim pesan inbound ke Meta WhatsApp Business Account
@@ -196,36 +397,9 @@ class WhatsAppOptInManager(models.Model):
         if message.message_type != 'inbound' or not message.mobile_number_formatted:
             return False
         
-        # Normalize nomor untuk pencarian
+        # Gunakan method _find_partner_by_phone untuk pencarian yang konsisten
         mobile_formatted = message.mobile_number_formatted
-        mobile_variants = [
-            mobile_formatted,
-            mobile_formatted.replace(' ', '').replace('-', '').replace('(', '').replace(')', ''),
-        ]
-        
-        # Jika nomor dimulai dengan +, hapus
-        if mobile_formatted.startswith('+'):
-            mobile_variants.append(mobile_formatted[1:])
-        
-        # Cari partner berdasarkan nomor (coba berbagai format)
-        partner = None
-        for variant in mobile_variants:
-            # Cari dengan phone field
-            partner = self.env['res.partner'].search([
-                ('phone', 'ilike', variant)
-            ], limit=1)
-            
-            if partner:
-                break
-            
-            # Cari dengan whatsapp_number field (jika ada)
-            if 'whatsapp_number' in self.env['res.partner']._fields:
-                partner = self.env['res.partner'].search([
-                    ('whatsapp_number', 'ilike', variant)
-                ], limit=1)
-            
-            if partner:
-                break
+        partner = self._find_partner_by_phone(mobile_formatted)
         
         if partner:
             # Set opt-in formal jika belum
