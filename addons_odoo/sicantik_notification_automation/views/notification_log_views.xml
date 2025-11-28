@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Tree View -->
+    <record id="view_notification_log_tree" model="ir.ui.view">
+        <field name="name">sicantik.notification.log.tree</field>
+        <field name="model">sicantik.notification.log</field>
+        <field name="arch" type="xml">
+            <list string="Log Notifikasi">
+                <field name="partner_id"/>
+                <field name="template_key"/>
+                <field name="state" widget="badge" decoration-success="state == 'sent'" decoration-danger="state == 'failed'"/>
+                <field name="sent_date"/>
+                <field name="provider_type"/>
+                <field name="processing_time_ms"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_notification_log_form" model="ir.ui.view">
+        <field name="name">sicantik.notification.log.form</field>
+        <field name="model">sicantik.notification.log</field>
+        <field name="arch" type="xml">
+            <form string="Log Notifikasi" readonly="1">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="display_name"/>
+                            <field name="rule_id"/>
+                            <field name="campaign_id"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group>
+                            <field name="template_key"/>
+                            <field name="state"/>
+                            <field name="sent_date"/>
+                            <field name="provider_type"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Error">
+                            <field name="error_message" invisible="not error_message"/>
+                        </page>
+                        <page string="Context Values">
+                            <field name="context_values" widget="ace" options="{'mode': 'json'}"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_notification_log" model="ir.actions.act_window">
+        <field name="name">Log Notifikasi</field>
+        <field name="res_model">sicantik.notification.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    
+</odoo>
+

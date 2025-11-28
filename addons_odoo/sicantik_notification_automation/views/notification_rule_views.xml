@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Tree View -->
+    <record id="view_notification_rule_tree" model="ir.ui.view">
+        <field name="name">sicantik.notification.rule.tree</field>
+        <field name="model">sicantik.notification.rule</field>
+        <field name="arch" type="xml">
+            <list string="Aturan Notifikasi">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="trigger_id"/>
+                <field name="template_key"/>
+                <field name="recipient_type"/>
+                <field name="schedule_type"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="execution_count"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_notification_rule_form" model="ir.ui.view">
+        <field name="name">sicantik.notification.rule.form</field>
+        <field name="model">sicantik.notification.rule</field>
+        <field name="arch" type="xml">
+            <form string="Aturan Notifikasi">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="active"/>
+                            <field name="sequence"/>
+                            <field name="trigger_id"/>
+                        </group>
+                        <group>
+                            <field name="template_key"/>
+                            <field name="template_master_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Penjelasan tentang aturan ini..."/>
+                    </group>
+                    <notebook>
+                        <page string="Kondisi">
+                            <group>
+                                <field name="condition_domain" placeholder="[('state', '=', 'approved')]"/>
+                                <field name="condition_python" widget="ace" options="{'mode': 'python'}"/>
+                            </group>
+                        </page>
+                        <page string="Penerima">
+                            <group>
+                                <field name="recipient_type"/>
+                                <field name="recipient_domain" invisible="recipient_type != 'custom'" placeholder="[('is_company', '=', False)]"/>
+                                <field name="recipient_field" invisible="recipient_type != 'field'"/>
+                                <field name="staff_group_id" invisible="recipient_type != 'staff'"/>
+                                <field name="official_group_id" invisible="recipient_type != 'official'"/>
+                            </group>
+                        </page>
+                        <page string="Penjadwalan">
+                            <group>
+                                <field name="schedule_type"/>
+                                <field name="scheduled_delay" invisible="schedule_type != 'scheduled'"/>
+                                <field name="batch_size" invisible="schedule_type != 'batch'"/>
+                                <field name="batch_interval" invisible="schedule_type != 'batch'"/>
+                            </group>
+                        </page>
+                        <page string="Pembatasan &amp; Ulang Coba">
+                            <group>
+                                <group string="Pembatasan Laju">
+                                    <field name="rate_limit_enabled"/>
+                                    <field name="rate_limit_count" invisible="not rate_limit_enabled"/>
+                                    <field name="rate_limit_period" invisible="not rate_limit_enabled"/>
+                                </group>
+                                <group string="Ulang Coba">
+                                    <field name="max_retries"/>
+                                    <field name="retry_delay"/>
+                                </group>
+                            </group>
+                            <group>
+                                <field name="respect_blacklist"/>
+                            </group>
+                        </page>
+                        <page string="Context Values">
+                            <field name="context_preparation_code" widget="ace" options="{'mode': 'python'}"/>
+                        </page>
+                        <page string="Statistik">
+                            <group>
+                                <group>
+                                    <field name="execution_count"/>
+                                    <field name="success_count"/>
+                                    <field name="failed_count"/>
+                                </group>
+                                <group>
+                                    <field name="last_execution_date"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_notification_rule_search" model="ir.ui.view">
+        <field name="name">sicantik.notification.rule.search</field>
+        <field name="model">sicantik.notification.rule</field>
+        <field name="arch" type="xml">
+            <search string="Cari Aturan">
+                <field name="name"/>
+                <field name="template_key"/>
+                <field name="trigger_id"/>
+                <filter string="Aktif" name="active" domain="[('active', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Pemicu" name="group_by_trigger" context="{'group_by': 'trigger_id'}"/>
+                    <filter string="Tipe Penerima" name="group_by_recipient_type" context="{'group_by': 'recipient_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_notification_rule" model="ir.actions.act_window">
+        <field name="name">Aturan Notifikasi</field>
+        <field name="res_model">sicantik.notification.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_notification_rule_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Buat aturan baru
+            </p>
+            <p>
+                Aturan menentukan kapan dan kepada siapa notifikasi dikirim saat pemicu terjadi.
+            </p>
+        </field>
+    </record>
+    
+</odoo>
+

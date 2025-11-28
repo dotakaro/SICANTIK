@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Pemicu: Status Izin Berubah -->
+        <record id="trigger_permit_state_change" model="sicantik.notification.trigger">
+            <field name="name">Status Izin Berubah</field>
+            <field name="code">permit_state_change</field>
+            <field name="active" eval="True"/>
+            <field name="sequence">10</field>
+            <field name="description">Pemicu saat status izin berubah</field>
+            <field name="model_id" ref="sicantik_connector.model_sicantik_permit"/>
+            <field name="trigger_type">on_state_change</field>
+            <field name="state_field">state</field>
+        </record>
+        
+        <!-- Pemicu: Izin Mendekati Masa Berlaku -->
+        <record id="trigger_permit_expiring" model="sicantik.notification.trigger">
+            <field name="name">Izin Mendekati Masa Berlaku</field>
+            <field name="code">permit_expiring</field>
+            <field name="active" eval="True"/>
+            <field name="sequence">20</field>
+            <field name="description">Pemicu saat izin mendekati masa berlaku (cron-based)</field>
+            <field name="model_id" ref="sicantik_connector.model_sicantik_permit"/>
+            <field name="trigger_type">cron</field>
+            <field name="cron_interval_number">1</field>
+            <field name="cron_interval_type">days</field>
+            <field name="condition_domain">[('expiry_date', '&lt;=', (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d'))]</field>
+        </record>
+        
+        <!-- Pemicu: Dokumen Baru Diupload -->
+        <record id="trigger_document_uploaded" model="sicantik.notification.trigger">
+            <field name="name">Dokumen Baru Diupload</field>
+            <field name="code">document_uploaded</field>
+            <field name="active" eval="True"/>
+            <field name="sequence">30</field>
+            <field name="description">Pemicu saat dokumen baru diupload</field>
+            <field name="model_id" ref="sicantik_tte.model_sicantik_document"/>
+            <field name="trigger_type">on_state_change</field>
+            <field name="state_field">state</field>
+            <field name="state_from">draft</field>
+            <field name="state_to">uploaded</field>
+        </record>
+        
+        <!-- Pemicu: Dokumen Perlu Ditandatangani -->
+        <record id="trigger_document_pending_signature" model="sicantik.notification.trigger">
+            <field name="name">Dokumen Perlu Ditandatangani</field>
+            <field name="code">document_pending_signature</field>
+            <field name="active" eval="True"/>
+            <field name="sequence">40</field>
+            <field name="description">Pemicu saat dokumen perlu ditandatangani</field>
+            <field name="model_id" ref="sicantik_tte.model_sicantik_document"/>
+            <field name="trigger_type">on_state_change</field>
+            <field name="state_field">state</field>
+            <field name="state_to">pending_signature</field>
+        </record>
+        
+        <!-- Pemicu: Dokumen Sudah Ditandatangani -->
+        <record id="trigger_document_signed" model="sicantik.notification.trigger">
+            <field name="name">Dokumen Sudah Ditandatangani</field>
+            <field name="code">document_signed</field>
+            <field name="active" eval="True"/>
+            <field name="sequence">50</field>
+            <field name="description">Pemicu saat dokumen sudah ditandatangani</field>
+            <field name="model_id" ref="sicantik_tte.model_sicantik_document"/>
+            <field name="trigger_type">on_state_change</field>
+            <field name="state_field">state</field>
+            <field name="state_to">signed</field>
+        </record>
+        
+        <!-- Pemicu: Reminder Dokumen Pending -->
+        <record id="trigger_document_pending_reminder" model="sicantik.notification.trigger">
+            <field name="name">Reminder Dokumen Pending</field>
+            <field name="code">document_pending_reminder</field>
+            <field name="active" eval="True"/>
+            <field name="sequence">60</field>
+            <field name="description">Reminder untuk dokumen yang pending lebih dari 24 jam (cron-based)</field>
+            <field name="model_id" ref="sicantik_tte.model_sicantik_document"/>
+            <field name="trigger_type">cron</field>
+            <field name="cron_interval_number">1</field>
+            <field name="cron_interval_type">days</field>
+            <field name="condition_domain">[('state', '=', 'pending_signature'), ('create_date', '&lt;', (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S'))]</field>
+        </record>
+        
+    </data>
+</odoo>
+

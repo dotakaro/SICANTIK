@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Tree View -->
+    <record id="view_notification_campaign_tree" model="ir.ui.view">
+        <field name="name">sicantik.notification.campaign.tree</field>
+        <field name="model">sicantik.notification.campaign</field>
+        <field name="arch" type="xml">
+            <list string="Kampanye Notifikasi">
+                <field name="name"/>
+                <field name="rule_id"/>
+                <field name="state" widget="badge" decoration-success="state == 'completed'" decoration-warning="state == 'running'" decoration-info="state == 'scheduled'" decoration-danger="state == 'cancelled'"/>
+                <field name="total_targets"/>
+                <field name="total_sent"/>
+                <field name="progress_percentage" widget="progressbar"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_notification_campaign_form" model="ir.ui.view">
+        <field name="name">sicantik.notification.campaign.form</field>
+        <field name="model">sicantik.notification.campaign</field>
+        <field name="arch" type="xml">
+            <form string="Kampanye Notifikasi">
+                <header>
+                    <button name="action_start" type="object" string="Mulai Kampanye" class="oe_highlight" invisible="state not in ('draft', 'scheduled', 'paused')"/>
+                    <button name="action_pause" type="object" string="Jeda" invisible="state != 'running'"/>
+                    <button name="action_resume" type="object" string="Lanjutkan" invisible="state != 'paused'"/>
+                    <button name="action_cancel" type="object" string="Batalkan" invisible="state in ('completed', 'cancelled')"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="rule_id"/>
+                            <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,running,completed"/>
+                        </group>
+                        <group>
+                            <field name="target_model"/>
+                            <field name="template_key"/>
+                            <field name="scheduled_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Penjelasan tentang kampanye ini..."/>
+                    </group>
+                    <group string="Statistik">
+                        <group>
+                            <field name="total_targets"/>
+                            <field name="total_sent"/>
+                            <field name="total_failed"/>
+                            <field name="total_pending"/>
+                        </group>
+                        <group>
+                            <field name="progress_percentage" widget="progressbar"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Target Domain">
+                            <field name="target_domain" widget="ace" options="{'mode': 'python'}"/>
+                        </page>
+                        <page string="Antrian Pengiriman">
+                            <field name="queue_ids" nolabel="1">
+                                <list>
+                                    <field name="partner_id"/>
+                                    <field name="template_key"/>
+                                    <field name="state"/>
+                                    <field name="scheduled_date"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Log Pengiriman">
+                            <field name="log_ids" nolabel="1">
+                                <list>
+                                    <field name="partner_id"/>
+                                    <field name="state"/>
+                                    <field name="sent_date"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_notification_campaign" model="ir.actions.act_window">
+        <field name="name">Kampanye Notifikasi</field>
+        <field name="res_model">sicantik.notification.campaign</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    
+</odoo>
+

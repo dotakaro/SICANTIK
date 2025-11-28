@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Tree View -->
+    <record id="view_notification_trigger_tree" model="ir.ui.view">
+        <field name="name">sicantik.notification.trigger.tree</field>
+        <field name="model">sicantik.notification.trigger</field>
+        <field name="arch" type="xml">
+            <list string="Pemicu Notifikasi">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="model_id"/>
+                <field name="trigger_type"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="rule_count"/>
+                <field name="execution_count"/>
+                <field name="last_execution_date"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_notification_trigger_form" model="ir.ui.view">
+        <field name="name">sicantik.notification.trigger.form</field>
+        <field name="model">sicantik.notification.trigger</field>
+        <field name="arch" type="xml">
+            <form string="Pemicu Notifikasi">
+                <header>
+                    <button name="action_view_rules" type="object" string="Lihat Aturan" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="active"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="model_id"/>
+                            <field name="trigger_type"/>
+                            <field name="state_field" invisible="trigger_type != 'on_state_change'"/>
+                            <field name="state_from" invisible="trigger_type != 'on_state_change'"/>
+                            <field name="state_to" invisible="trigger_type != 'on_state_change'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Penjelasan tentang pemicu ini..."/>
+                    </group>
+                    <notebook>
+                        <page string="Kondisi">
+                            <field name="condition_domain" placeholder="[('active', '=', True)]"/>
+                        </page>
+                        <page string="Aturan Terkait">
+                            <field name="rule_ids" nolabel="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="template_key"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Statistik">
+                            <group>
+                                <group>
+                                    <field name="execution_count"/>
+                                    <field name="last_execution_date"/>
+                                </group>
+                                <group>
+                                    <field name="rule_count"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_notification_trigger_search" model="ir.ui.view">
+        <field name="name">sicantik.notification.trigger.search</field>
+        <field name="model">sicantik.notification.trigger</field>
+        <field name="arch" type="xml">
+            <search string="Cari Pemicu">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="model_id"/>
+                <filter string="Aktif" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Nonaktif" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Model" name="group_by_model" context="{'group_by': 'model_id'}"/>
+                    <filter string="Tipe Pemicu" name="group_by_trigger_type" context="{'group_by': 'trigger_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_notification_trigger" model="ir.actions.act_window">
+        <field name="name">Pemicu Notifikasi</field>
+        <field name="res_model">sicantik.notification.trigger</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_notification_trigger_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Buat pemicu baru
+            </p>
+            <p>
+                Pemicu mendefinisikan event yang dapat memicu notifikasi.
+            </p>
+        </field>
+    </record>
+    
+</odoo>
+

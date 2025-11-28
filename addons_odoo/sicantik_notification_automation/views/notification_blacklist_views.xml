@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Tree View -->
+    <record id="view_notification_blacklist_tree" model="ir.ui.view">
+        <field name="name">sicantik.notification.blacklist.tree</field>
+        <field name="model">sicantik.notification.blacklist</field>
+        <field name="arch" type="xml">
+            <list string="Daftar Hitam">
+                <field name="phone_number"/>
+                <field name="partner_id"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="blocked_count"/>
+                <field name="last_blocked_date"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_notification_blacklist_form" model="ir.ui.view">
+        <field name="name">sicantik.notification.blacklist.form</field>
+        <field name="model">sicantik.notification.blacklist</field>
+        <field name="arch" type="xml">
+            <form string="Daftar Hitam">
+                <header>
+                    <button name="action_block" type="object" string="Blokir" class="oe_highlight" invisible="active"/>
+                    <button name="action_unblock" type="object" string="Aktifkan Kembali" invisible="not active"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="phone_number"/>
+                            <field name="partner_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="blocked_count"/>
+                            <field name="last_blocked_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="reason" placeholder="Alasan nomor ini diblokir..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_notification_blacklist" model="ir.actions.act_window">
+        <field name="name">Daftar Hitam</field>
+        <field name="res_model">sicantik.notification.blacklist</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    
+</odoo>
+

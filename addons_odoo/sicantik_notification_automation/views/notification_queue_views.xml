@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Tree View -->
+    <record id="view_notification_queue_tree" model="ir.ui.view">
+        <field name="name">sicantik.notification.queue.tree</field>
+        <field name="model">sicantik.notification.queue</field>
+        <field name="arch" type="xml">
+            <list string="Antrian Notifikasi">
+                <field name="partner_id"/>
+                <field name="template_key"/>
+                <field name="state" widget="badge" decoration-success="state == 'sent'" decoration-danger="state == 'failed'" decoration-muted="state == 'cancelled'"/>
+                <field name="scheduled_date"/>
+                <field name="sent_date"/>
+                <field name="retry_count"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_notification_queue_form" model="ir.ui.view">
+        <field name="name">sicantik.notification.queue.form</field>
+        <field name="model">sicantik.notification.queue</field>
+        <field name="arch" type="xml">
+            <form string="Antrian Notifikasi">
+                <header>
+                    <button name="action_process" type="object" string="Proses Sekarang" class="oe_highlight" invisible="state != 'pending'"/>
+                    <button name="action_retry" type="object" string="Ulang Coba" invisible="state != 'failed'"/>
+                    <button name="action_cancel" type="object" string="Batalkan" invisible="state in ('sent', 'cancelled')"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="rule_id"/>
+                            <field name="campaign_id"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group>
+                            <field name="template_key"/>
+                            <field name="state" widget="statusbar" statusbar_visible="pending,processing,sent,failed"/>
+                            <field name="scheduled_date"/>
+                            <field name="sent_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Error">
+                            <field name="error_message" invisible="not error_message"/>
+                            <field name="retry_count"/>
+                            <field name="max_retries"/>
+                            <field name="next_retry_date"/>
+                        </page>
+                        <page string="Context Values">
+                            <field name="context_values" widget="ace" options="{'mode': 'json'}"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_notification_queue" model="ir.actions.act_window">
+        <field name="name">Antrian Notifikasi</field>
+        <field name="res_model">sicantik.notification.queue</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    
+</odoo>
+
