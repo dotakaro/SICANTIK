@@ -155,4 +155,136 @@ class ResPartner(models.Model):
             'domain': [('partner_id', '=', self.id)],
             'context': {'default_partner_id': self.id},
         }
+    
+    def action_send_opt_in_message(self):
+        """
+        Kirim pesan opt-in ke pemohon untuk notifikasi WhatsApp
+        
+        Menggunakan text message langsung via Fonnte/Watzap (bukan template).
+        """
+        self.ensure_one()
+        
+        mobile = self._get_mobile_or_phone()
+        if not mobile:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Pesan Opt-In',
+                    'message': f'Pemohon {self.name} tidak memiliki nomor WhatsApp.',
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        
+        # Generate link WhatsApp Business Account untuk opt-in dengan pesan pre-filled
+        opt_in_manager = self.env['whatsapp.opt.in.manager']
+        try:
+            opt_in_info = opt_in_manager.generate_whatsapp_opt_in_link(
+                message='Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP'
+            )
+            whatsapp_link = opt_in_info['link']
+            wa_phone_number = opt_in_info['phone_number']
+            wa_account_name = opt_in_info.get('wa_account_name', 'WhatsApp Business Account')
+        except Exception as e:
+            _logger.warning(f'⚠️ Tidak dapat generate WhatsApp opt-in link: {str(e)}')
+            whatsapp_link = None
+            wa_phone_number = None
+            wa_account_name = 'WhatsApp Business Account'
+        
+        # Prepare pesan opt-in
+        if whatsapp_link:
+            message = f"""Yth. {self.name},
+
+DPMPTSP Kabupaten Karo memberikan layanan notifikasi WhatsApp untuk memudahkan komunikasi terkait perizinan Anda.
+
+Dengan layanan ini, Anda akan menerima:
+✅ Notifikasi real-time saat izin selesai diproses
+✅ Update status perizinan otomatis
+✅ Peringatan masa berlaku izin
+✅ Link download dokumen langsung
+
+Untuk mengaktifkan layanan ini, silakan klik link berikut:
+
+🔗 {whatsapp_link}
+
+Setelah Anda klik link di atas, pesan persetujuan akan otomatis terisi: "Ya Saya Setuju Menerima Pesan Notifikasi dari DPMPTSP"
+Anda cukup klik tombol "Kirim" untuk mengaktifkan notifikasi WhatsApp.
+
+Setelah Anda mengirim pesan persetujuan, notifikasi akan aktif secara otomatis.
+
+Terima kasih atas perhatiannya.
+
+DPMPTSP Kabupaten Karo
+Kabupaten Karo"""
+        else:
+            # Fallback jika tidak bisa generate link
+            message = f"""Yth. {self.name},
+
+DPMPTSP Kabupaten Karo memberikan layanan notifikasi WhatsApp untuk memudahkan komunikasi terkait perizinan Anda.
+
+Dengan layanan ini, Anda akan menerima:
+✅ Notifikasi real-time saat izin selesai diproses
+✅ Update status perizinan otomatis
+✅ Peringatan masa berlaku izin
+✅ Link download dokumen langsung
+
+Untuk mengaktifkan layanan ini, silakan hubungi WhatsApp Business Account kami.
+
+Terima kasih atas perhatiannya.
+
+DPMPTSP Kabupaten Karo
+Kabupaten Karo"""
+        
+        try:
+            dispatcher = self.env['sicantik.whatsapp.dispatcher']
+            
+            # Kirim via Fonnte (atau provider default yang mendukung text message)
+            result = dispatcher.send_text_message(
+                partner_id=self.id,
+                message=message,
+                provider_type='fonnte'  # Force Fonnte karena mendukung text message
+            )
+            
+            if result.get('success'):
+                _logger.info(
+                    f'✅ Pesan opt-in dikirim ke {self.name} ({mobile}) '
+                    f'via {result.get("provider", "unknown")}'
+                )
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Pesan Opt-In',
+                        'message': f'✅ Pesan opt-in berhasil dikirim ke {self.name} ({mobile}) via {result.get("provider", "unknown")}.\n\nPenerima dapat mengklik link WhatsApp Business Account di pesan untuk langsung mengaktifkan notifikasi WhatsApp. Tidak perlu membalas pesan.',
+                        'type': 'success',
+                        'sticky': False,
+                    }
+                }
+            else:
+                error_msg = result.get('error', 'Unknown error')
+                _logger.error(f'❌ Gagal kirim pesan opt-in: {error_msg}')
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': 'Pesan Opt-In',
+                        'message': f'Gagal mengirim pesan opt-in: {error_msg}',
+                        'type': 'danger',
+                        'sticky': True,
+                    }
+                }
+                
+        except Exception as e:
+            _logger.error(f'❌ Error mengirim pesan opt-in: {str(e)}', exc_info=True)
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Pesan Opt-In',
+                    'message': f'Terjadi error saat mengirim pesan opt-in: {str(e)}',
+                    'type': 'danger',
+                    'sticky': True,
+                }
+            }
 

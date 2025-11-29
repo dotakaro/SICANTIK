@@ -47,6 +47,11 @@
                             <field name="whatsapp_opt_in_date" readonly="1"/>
                         </group>
                         <group string="Aksi">
+                            <button name="action_send_opt_in_message" type="object" 
+                                    string="📱 Kirim Permintaan Opt-In" 
+                                    class="btn-primary"
+                                    invisible="whatsapp_opt_in or not whatsapp_number"
+                                    title="Kirim pesan WhatsApp untuk meminta opt-in notifikasi"/>
                             <button name="action_opt_in_whatsapp" type="object" 
                                     string="Aktifkan Notifikasi WhatsApp" 
                                     class="btn-success"
@@ -81,9 +86,17 @@
                 <field name="name"/>
                 <field name="phone"/>
                 <field name="whatsapp_number"/>
-                <field name="whatsapp_opt_in" widget="boolean_toggle"/>
+                <field name="whatsapp_opt_in" widget="boolean_toggle" 
+                       decoration-success="whatsapp_opt_in == True"
+                       decoration-muted="whatsapp_opt_in == False"/>
                 <field name="sicantik_permit_count"/>
                 <field name="is_company" invisible="1"/>
+                <button name="action_send_opt_in_message" type="object" 
+                        string="Kirim Permintaan Opt-In" 
+                        class="btn-primary"
+                        icon="fa-whatsapp"
+                        invisible="whatsapp_opt_in == True or not whatsapp_number"
+                        title="Kirim pesan WhatsApp untuk meminta opt-in notifikasi"/>
             </list>
         </field>
     </record>
