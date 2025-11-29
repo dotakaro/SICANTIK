@@ -65,33 +65,33 @@ class SicantikDashboardStats(models.TransientModel):
             ]
         
         # Per tahun (5 tahun terakhir)
-        # Gunakan create_date jika issue_date tidak ada atau null
+        # Gunakan issue_date jika ada, jika tidak gunakan create_date
         current_year = today.year
         by_year = []
         for year in range(current_year - 4, current_year + 1):
-            # Coba dengan issue_date dulu, jika tidak ada gunakan create_date
             year_start = fields.Date.to_date(f'{year}-01-01')
             year_end = fields.Date.to_date(f'{year + 1}-01-01')
             
-            # Cari dengan issue_date jika ada
-            count_with_issue_date = Permit.search_count([
+            # Cari semua permit aktif yang issue_date di tahun tersebut
+            permits_with_issue_date = Permit.search([
                 ('status', '=', 'active'),
                 ('issue_date', '>=', year_start),
                 ('issue_date', '<', year_end),
             ])
             
-            # Cari dengan create_date untuk yang tidak punya issue_date
-            count_with_create_date = Permit.search_count([
+            # Cari permit aktif yang tidak punya issue_date tapi create_date di tahun tersebut
+            year_start_dt = datetime.combine(year_start, datetime.min.time())
+            year_end_dt = datetime.combine(year_end, datetime.min.time())
+            
+            permits_without_issue_date = Permit.search([
                 ('status', '=', 'active'),
-                '|',
                 ('issue_date', '=', False),
-                ('issue_date', '=', None),
-                ('create_date', '>=', f'{year}-01-01 00:00:00'),
-                ('create_date', '<', f'{year + 1}-01-01 00:00:00'),
+                ('create_date', '>=', year_start_dt),
+                ('create_date', '<', year_end_dt),
             ])
             
-            # Total: yang punya issue_date + yang tidak punya issue_date tapi create_date di tahun tersebut
-            total_count = count_with_issue_date + count_with_create_date
+            # Total count
+            total_count = len(permits_with_issue_date) + len(permits_without_issue_date)
             
             by_year.append({
                 'year': year,
