@@ -92,39 +92,76 @@ class SicantikDashboardStats(models.TransientModel):
                 for name, count in sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:20]
             ]
         
-        # Per tahun (5 tahun terakhir)
-        # Gunakan issue_date jika ada, jika tidak gunakan create_date
-        current_year = today.year
-        by_year = []
-        for year in range(current_year - 4, current_year + 1):
-            year_start = fields.Date.to_date(f'{year}-01-01')
-            year_end = fields.Date.to_date(f'{year + 1}-01-01')
-            
-            # Cari semua permit aktif yang issue_date di tahun tersebut
-            permits_with_issue_date = Permit.search([
-                ('status', '=', 'active'),
-                ('issue_date', '>=', year_start),
-                ('issue_date', '<', year_end),
-            ])
-            
-            # Cari permit aktif yang tidak punya issue_date tapi create_date di tahun tersebut
-            year_start_dt = datetime.combine(year_start, datetime.min.time())
-            year_end_dt = datetime.combine(year_end, datetime.min.time())
-            
-            permits_without_issue_date = Permit.search([
-                ('status', '=', 'active'),
-                ('issue_date', '=', False),
-                ('create_date', '>=', year_start_dt),
-                ('create_date', '<', year_end_dt),
-            ])
-            
-            # Total count
-            total_count = len(permits_with_issue_date) + len(permits_without_issue_date)
-            
-            by_year.append({
-                'year': year,
-                'count': total_count
-            })
+        # Per tahun atau per bulan berdasarkan filter
+        if year_filter == 'all':
+            # Tampilkan trend tahun ke tahun (5 tahun terakhir)
+            current_year = today.year
+            by_year = []
+            for year in range(current_year - 4, current_year + 1):
+                year_start = fields.Date.to_date(f'{year}-01-01')
+                year_end = fields.Date.to_date(f'{year + 1}-01-01')
+                
+                permits_with_issue_date = Permit.search([
+                    ('status', '=', 'active'),
+                    ('issue_date', '>=', year_start),
+                    ('issue_date', '<', year_end),
+                ])
+                
+                year_start_dt = datetime.combine(year_start, datetime.min.time())
+                year_end_dt = datetime.combine(year_end, datetime.min.time())
+                
+                permits_without_issue_date = Permit.search([
+                    ('status', '=', 'active'),
+                    ('issue_date', '=', False),
+                    ('create_date', '>=', year_start_dt),
+                    ('create_date', '<', year_end_dt),
+                ])
+                
+                total_count = len(permits_with_issue_date) + len(permits_without_issue_date)
+                
+                by_year.append({
+                    'year': year,
+                    'count': total_count
+                })
+        else:
+            # Tampilkan breakdown bulanan untuk tahun yang dipilih
+            try:
+                year = int(year_filter)
+                by_year = []
+                month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 
+                              'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+                
+                for month in range(1, 13):
+                    month_start = fields.Date.to_date(f'{year}-{month:02d}-01')
+                    if month == 12:
+                        month_end = fields.Date.to_date(f'{year + 1}-01-01')
+                    else:
+                        month_end = fields.Date.to_date(f'{year}-{month + 1:02d}-01')
+                    
+                    permits_with_issue_date = Permit.search([
+                        ('status', '=', 'active'),
+                        ('issue_date', '>=', month_start),
+                        ('issue_date', '<', month_end),
+                    ])
+                    
+                    month_start_dt = datetime.combine(month_start, datetime.min.time())
+                    month_end_dt = datetime.combine(month_end, datetime.min.time())
+                    
+                    permits_without_issue_date = Permit.search([
+                        ('status', '=', 'active'),
+                        ('issue_date', '=', False),
+                        ('create_date', '>=', month_start_dt),
+                        ('create_date', '<', month_end_dt),
+                    ])
+                    
+                    total_count = len(permits_with_issue_date) + len(permits_without_issue_date)
+                    
+                    by_year.append({
+                        'year': month_names[month - 1],  # Gunakan nama bulan sebagai label
+                        'count': total_count
+                    })
+            except (ValueError, TypeError):
+                by_year = []
         
         # Expiry breakdown
         # Expired (sudah kadaluarsa)
