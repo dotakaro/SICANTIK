@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="sicantik_dashboard.Dashboard">
-        <div class="sicantik_dashboard o_action_manager">
-            <div class="o_action o_view_controller">
-                <div class="o_controller">
-                    <div class="o_content">
-                        <!-- Header -->
-                        <div class="o_dashboard_header">
-                            <h1>Dashboard SICANTIK</h1>
-                            <button 
-                                class="btn btn-primary" 
-                                t-on-click="onRefresh"
-                                t-att-disabled="state.loading">
-                                <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
-                                <span>Refresh</span>
-                            </button>
-                        </div>
+        <div class="sicantik_dashboard o_view_manager">
+            <div class="o_content">
+                <!-- Header -->
+                <div class="o_dashboard_header">
+                    <h1>Dashboard SICANTIK</h1>
+                    <button 
+                        class="btn btn-primary o_dashboard_refresh_btn" 
+                        t-on-click="onRefresh"
+                        t-att-disabled="state.loading">
+                        <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
+                        <span>Refresh</span>
+                    </button>
+                </div>
                         
                         <!-- Loading State -->
                         <t t-if="state.loading and !state.stats">
@@ -245,8 +243,6 @@
                                 </div>
                             </div>
                         </t>
-                    </div>
-                </div>
             </div>
         </div>
     </t>
