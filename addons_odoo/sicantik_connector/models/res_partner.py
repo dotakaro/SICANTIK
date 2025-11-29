@@ -17,10 +17,27 @@ class ResPartner(models.Model):
     
     def _auto_init(self):
         """Create column manually to avoid computation during installation/upgrade"""
-        if not column_exists(self.env.cr, "res_partner", "sicantik_permit_count"):
-            # Create the column to avoid computation during installation
-            create_column(self.env.cr, "res_partner", "sicantik_permit_count", "int4")
-            _logger.info('✅ Kolom sicantik_permit_count dibuat di _auto_init()')
+        # Gunakan try-except untuk handle error jika kolom sudah ada atau ada masalah lain
+        try:
+            if not column_exists(self.env.cr, "res_partner", "sicantik_permit_count"):
+                # Create the column to avoid computation during installation
+                create_column(self.env.cr, "res_partner", "sicantik_permit_count", "int4")
+                _logger.info('✅ Kolom sicantik_permit_count dibuat di _auto_init()')
+            else:
+                _logger.debug('ℹ️  Kolom sicantik_permit_count sudah ada')
+        except Exception as e:
+            # Jika ada error, coba buat dengan SQL langsung
+            _logger.warning(f'⚠️  Error saat membuat kolom dengan create_column: {str(e)}')
+            try:
+                self.env.cr.execute("""
+                    ALTER TABLE "res_partner" 
+                    ADD COLUMN IF NOT EXISTS "sicantik_permit_count" int4 DEFAULT 0;
+                """)
+                self.env.cr.commit()
+                _logger.info('✅ Kolom sicantik_permit_count dibuat dengan SQL langsung')
+            except Exception as sql_error:
+                _logger.error(f'❌ Error saat membuat kolom dengan SQL: {str(sql_error)}')
+                # Jangan raise, biarkan Odoo handle sendiri
         return super()._auto_init()
     
     # WhatsApp Fields
@@ -81,7 +98,8 @@ class ResPartner(models.Model):
         string='Jumlah Izin',
         compute='_compute_sicantik_permit_count',
         store=True,
-        help='Jumlah izin terkait dengan pemohon ini'
+        help='Jumlah izin terkait dengan pemohon ini',
+        default=0,  # Default value untuk menghindari error saat kolom belum ada
     )
     
     @api.depends('sicantik_permit_ids')
