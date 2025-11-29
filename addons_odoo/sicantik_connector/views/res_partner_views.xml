@@ -61,14 +61,19 @@
                 </page>
             </xpath>
             
-            <!-- Update header untuk menambahkan button lihat izin -->
-            <xpath expr="//header" position="inside">
+            <!-- Tambahkan button lihat izin di button_box (header area) -->
+            <div name="button_box" position="inside">
                 <button name="action_view_permits" type="object" 
                         string="Lihat Izin" 
-                        class="oe_highlight"
+                        class="oe_stat_button"
                         invisible="sicantik_permit_count == 0"
-                        title="Lihat semua izin terkait dengan pemohon ini"/>
-            </xpath>
+                        title="Lihat semua izin terkait dengan pemohon ini">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Izin</span>
+                        <field name="sicantik_permit_count" class="o_stat_value"/>
+                    </div>
+                </button>
+            </div>
         </field>
     </record>
     
