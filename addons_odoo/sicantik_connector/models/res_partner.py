@@ -66,14 +66,15 @@ class ResPartner(models.Model):
     )
     
     sicantik_permit_count = fields.Integer(
-        string='Permit Count',
+        string='Jumlah Izin',
         compute='_compute_sicantik_permit_count',
-        help='Number of permits for this contact'
+        store=True,
+        help='Jumlah izin terkait dengan pemohon ini'
     )
     
     @api.depends('sicantik_permit_ids')
     def _compute_sicantik_permit_count(self):
-        """Compute permit count"""
+        """Hitung jumlah izin terkait"""
         for partner in self:
             partner.sicantik_permit_count = len(partner.sicantik_permit_ids)
     
@@ -148,7 +149,7 @@ class ResPartner(models.Model):
         
         return {
             'type': 'ir.actions.act_window',
-            'name': f'Permits: {self.name}',
+            'name': f'Izin: {self.name}',
             'res_model': 'sicantik.permit',
             'view_mode': 'list,form',
             'domain': [('partner_id', '=', self.id)],
