@@ -36,20 +36,33 @@ class SicantikDashboardStats(models.TransientModel):
         total_renewed = Permit.search_count([('status', '=', 'renewed')])
         
         # Per kategori
-        permits_by_category = Permit.read_group(
-            [('status', '=', 'active')],
-            ['permit_type_name', 'id:count'],
-            ['permit_type_name'],
-            orderby='id:count desc',
-            limit=20
-        )
-        by_category = [
-            {
-                'name': item['permit_type_name'] or 'Tidak Diketahui',
-                'count': item['__count']
-            }
-            for item in permits_by_category
-        ]
+        try:
+            permits_by_category = Permit._read_group(
+                domain=[('status', '=', 'active')],
+                groupby=['permit_type_name'],
+                aggregates=['__count'],
+                order='__count desc',
+                limit=20
+            )
+            by_category = [
+                {
+                    'name': (permit_type_name or 'Tidak Diketahui') if isinstance(permit_type_name, str) else 'Tidak Diketahui',
+                    'count': count
+                }
+                for permit_type_name, count in permits_by_category
+            ]
+        except Exception as e:
+            _logger.warning(f"Error getting permits by category: {str(e)}")
+            # Fallback: gunakan search biasa
+            permits = Permit.search([('status', '=', 'active')])
+            category_counts = {}
+            for permit in permits:
+                category = permit.permit_type_name or 'Tidak Diketahui'
+                category_counts[category] = category_counts.get(category, 0) + 1
+            by_category = [
+                {'name': name, 'count': count}
+                for name, count in sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:20]
+            ]
         
         # Per tahun (5 tahun terakhir)
         current_year = today.year
