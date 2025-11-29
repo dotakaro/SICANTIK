@@ -25,7 +25,14 @@ export class PermitChart extends Component {
         this.labelColor = getCustomColor(colorScheme, "#111827", "#E4E4E4");
         
         onWillStart(() => loadJS("/web/static/lib/Chart/Chart.js"));
-        useEffect(() => this.renderChart());
+        useEffect(() => {
+            this.renderChart();
+            return () => {
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+            };
+        }, () => [this.props.data, this.state.chartType]);
         onWillUnmount(() => {
             if (this.chart) {
                 this.chart.destroy();
