@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="sicantik_dashboard.Dashboard">
+        <div class="sicantik_dashboard o_action_manager">
+            <div class="o_action o_view_controller">
+                <div class="o_controller">
+                    <div class="o_content">
+                        <!-- Header -->
+                        <div class="o_dashboard_header">
+                            <h1>Dashboard SICANTIK</h1>
+                            <button 
+                                class="btn btn-primary" 
+                                t-on-click="onRefresh"
+                                t-att-disabled="state.loading">
+                                <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
+                                <span t-esc="_t('Refresh')"/>
+                            </button>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <t t-if="state.loading and not state.stats">
+                            <div class="o_dashboard_loading">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p>Memuat data dashboard...</p>
+                            </div>
+                        </t>
+                        
+                        <!-- Error State -->
+                        <t t-if="state.error">
+                            <div class="alert alert-danger" role="alert">
+                                <strong>Error:</strong> <t t-esc="state.error"/>
+                                <button class="btn btn-sm btn-outline-danger ml-2" t-on-click="onRefresh">
+                                    Coba Lagi
+                                </button>
+                            </div>
+                        </t>
+                        
+                        <!-- Dashboard Content -->
+                        <t t-if="state.stats and not state.loading">
+                            <div class="sicantik_dashboard_content">
+                                <!-- Statistik Izin -->
+                                <div class="dashboard_section">
+                                    <h2>Statistik Izin</h2>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_success">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-check-circle"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.permit_stats.total_active)"/>
+                                                    <div class="stat_card_label">Izin Aktif</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_danger">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-times-circle"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.permit_stats.total_expired)"/>
+                                                    <div class="stat_card_label">Izin Expired</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_warning">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-file-o"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.permit_stats.total_draft)"/>
+                                                    <div class="stat_card_label">Draft</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_info">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-refresh"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.permit_stats.total_renewed)"/>
+                                                    <div class="stat_card_label">Renewed</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Statistik Dokumen TTE -->
+                                <div class="dashboard_section">
+                                    <h2>Statistik Dokumen TTE</h2>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_success">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-check"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.document_stats.total_signed)"/>
+                                                    <div class="stat_card_label">Ditandatangani</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_warning">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-clock-o"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.document_stats.pending_signature)"/>
+                                                    <div class="stat_card_label">Pending</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_info">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-shield"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.document_stats.verified)"/>
+                                                    <div class="stat_card_label">Verified</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_danger">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-ban"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.document_stats.cancelled)"/>
+                                                    <div class="stat_card_label">Cancelled</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Statistik WhatsApp -->
+                                <div class="dashboard_section">
+                                    <h2>Statistik WhatsApp</h2>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_info">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-users"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.whatsapp_stats.total_contacts)"/>
+                                                    <div class="stat_card_label">Total Kontak</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_success">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-check-square"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.whatsapp_stats.opt_in_active)"/>
+                                                    <div class="stat_card_label">Opt-In Aktif</div>
+                                                    <div class="stat_card_sublabel" t-esc="formatPercentage(state.stats.whatsapp_stats.opt_in_rate)"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_info">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-paper-plane"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.whatsapp_stats.messages_this_month)"/>
+                                                    <div class="stat_card_label">Pesan Bulan Ini</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat_card stat_card_danger">
+                                                <div class="stat_card_icon">
+                                                    <i class="fa fa-exclamation-triangle"/>
+                                                </div>
+                                                <div class="stat_card_content">
+                                                    <div class="stat_card_value" t-esc="formatNumber(state.stats.whatsapp_stats.messages_failed)"/>
+                                                    <div class="stat_card_label">Pesan Gagal</div>
+                                                    <div class="stat_card_sublabel" t-esc="formatPercentage(state.stats.whatsapp_stats.failure_rate)"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Expiry Breakdown -->
+                                <div class="dashboard_section">
+                                    <h2>Breakdown Expired &amp; Akan Expired</h2>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="expiry_breakdown_table">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Periode</th>
+                                                            <th>Jumlah</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><strong>Sudah Expired</strong></td>
+                                                            <td t-esc="formatNumber(state.stats.permit_stats.expiry_breakdown.expired)"/>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Hari Ini</td>
+                                                            <td t-esc="formatNumber(state.stats.permit_stats.expiry_breakdown.today)"/>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Minggu Ini</td>
+                                                            <td t-esc="formatNumber(state.stats.permit_stats.expiry_breakdown.this_week)"/>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Bulan Ini</td>
+                                                            <td t-esc="formatNumber(state.stats.permit_stats.expiry_breakdown.this_month)"/>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>3 Bulan Ke Depan</td>
+                                                            <td t-esc="formatNumber(state.stats.permit_stats.expiry_breakdown.next_3_months)"/>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>6 Bulan Ke Depan</td>
+                                                            <td t-esc="formatNumber(state.stats.permit_stats.expiry_breakdown.next_6_months)"/>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tahun Ini</td>
+                                                            <td t-esc="formatNumber(state.stats.permit_stats.expiry_breakdown.this_year)"/>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
+
