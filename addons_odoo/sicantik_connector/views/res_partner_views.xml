@@ -13,8 +13,8 @@
             <xpath expr="//notebook" position="inside">
                 <page string="Data Perizinan" name="sicantik_permits">
                     <group>
-                        <group string="Izin Terkait">
-                            <field name="sicantik_permit_ids" nolabel="1" context="{'default_partner_id': id}">
+                        <group string="Izin Terkait" col="2">
+                            <field name="sicantik_permit_ids" nolabel="1" context="{'default_partner_id': id}" colspan="2">
                                 <list string="Daftar Izin">
                                     <field name="permit_number"/>
                                     <field name="permit_type_id"/>
@@ -28,9 +28,20 @@
                                 </list>
                             </field>
                         </group>
-                        <group string="Statistik">
-                            <field name="sicantik_permit_count" readonly="1"/>
-                            <button name="action_view_permits" type="object" string="Lihat Semua Izin" class="oe_link"/>
+                        <group string="Statistik" col="1">
+                            <group>
+                                <field name="sicantik_permit_count" 
+                                       readonly="1" 
+                                       widget="integer"
+                                       string="Total Izin"
+                                       class="oe_read_only"/>
+                                <button name="action_view_permits" 
+                                        type="object" 
+                                        string="Lihat Semua Izin" 
+                                        class="oe_link"
+                                        icon="fa-external-link"
+                                        title="Lihat semua izin terkait dengan pemohon ini"/>
+                            </group>
                         </group>
                     </group>
                 </page>
