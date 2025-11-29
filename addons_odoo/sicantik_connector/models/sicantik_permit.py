@@ -159,19 +159,12 @@ class SicantikPermit(models.Model):
         tracking=True,
     )
     
-    # Field untuk sum di list view
+    # Field untuk sum di list view (selalu bernilai 1 untuk menghitung jumlah baris)
     count_line = fields.Integer(
         string="Count",
-        compute="_compute_count_line",
-        store=False,
         default=1,
+        readonly=True,
     )
-    
-    @api.depends('id')
-    def _compute_count_line(self):
-        """Compute count line untuk sum di list view"""
-        for record in self:
-            record.count_line = 1
 
     # Renewal
     is_renewal = fields.Boolean(
