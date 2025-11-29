@@ -278,26 +278,57 @@ class SicantikDashboardStats(models.TransientModel):
         verified = Document.search_count(base_domain_verified)
         cancelled = Document.search_count(base_domain_cancelled)
         
-        # Monthly trend (12 bulan terakhir)
+        # Monthly trend (12 bulan terakhir atau breakdown bulanan untuk tahun spesifik)
         monthly_trend = []
-        for i in range(11, -1, -1):
-            month_start = today.replace(day=1) - relativedelta(months=i)
-            month_end = month_start + relativedelta(months=1) - timedelta(days=1)
-            
-            # Convert date to datetime for signature_date field (Datetime field)
-            month_start_dt = datetime.combine(month_start, datetime.min.time())
-            month_end_dt = datetime.combine(month_end, datetime.max.time())
-            
-            count = Document.search_count([
-                ('state', '=', 'signed'),
-                ('signature_date', '>=', month_start_dt),
-                ('signature_date', '<=', month_end_dt)
-            ])
-            
-            monthly_trend.append({
-                'month': month_start.strftime('%Y-%m'),
-                'count': count
-            })
+        if year_filter == 'all':
+            # Tampilkan trend 12 bulan terakhir
+            for i in range(11, -1, -1):
+                month_start = today.replace(day=1) - relativedelta(months=i)
+                month_end = month_start + relativedelta(months=1) - timedelta(days=1)
+                
+                # Convert date to datetime for signature_date field (Datetime field)
+                month_start_dt = datetime.combine(month_start, datetime.min.time())
+                month_end_dt = datetime.combine(month_end, datetime.max.time())
+                
+                count = Document.search_count([
+                    ('state', '=', 'signed'),
+                    ('signature_date', '>=', month_start_dt),
+                    ('signature_date', '<=', month_end_dt)
+                ])
+                
+                monthly_trend.append({
+                    'month': month_start.strftime('%Y-%m'),
+                    'count': count
+                })
+        else:
+            # Tampilkan breakdown bulanan untuk tahun yang dipilih
+            try:
+                year = int(year_filter)
+                month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 
+                              'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+                
+                for month in range(1, 13):
+                    month_start = fields.Date.to_date(f'{year}-{month:02d}-01')
+                    if month == 12:
+                        month_end = fields.Date.to_date(f'{year + 1}-01-01')
+                    else:
+                        month_end = fields.Date.to_date(f'{year}-{month + 1:02d}-01')
+                    
+                    month_start_dt = datetime.combine(month_start, datetime.min.time())
+                    month_end_dt = datetime.combine(month_end, datetime.min.time())
+                    
+                    count = Document.search_count([
+                        ('state', '=', 'signed'),
+                        ('signature_date', '>=', month_start_dt),
+                        ('signature_date', '<', month_end_dt)
+                    ])
+                    
+                    monthly_trend.append({
+                        'month': month_names[month - 1],
+                        'count': count
+                    })
+            except (ValueError, TypeError):
+                monthly_trend = []
         
         return {
             'total_signed': total_signed,
