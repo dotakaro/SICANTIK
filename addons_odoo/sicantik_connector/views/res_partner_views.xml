@@ -109,12 +109,14 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_res_partner_filter"/>
         <field name="arch" type="xml">
-            <search string="Cari Pemohon">
-                <field name="name"/>
+            <!-- Tambahkan field search custom -->
+            <xpath expr="//field[@name='name']" position="after">
                 <field name="phone"/>
                 <field name="whatsapp_number"/>
-                <field name="email"/>
-                
+            </xpath>
+            
+            <!-- Tambahkan filter custom sebelum filter yang sudah ada -->
+            <xpath expr="//filter[1]" position="before">
                 <filter string="Pemohon" name="applicants" 
                         domain="[('sicantik_permit_ids', '!=', False)]"/>
                 <filter string="Dengan WhatsApp" name="with_whatsapp" 
@@ -123,18 +125,18 @@
                         domain="[('whatsapp_opt_in', '=', True)]"/>
                 <filter string="Belum Opt-In" name="no_whatsapp_opt_in" 
                         domain="[('whatsapp_opt_in', '=', False), ('whatsapp_number', '!=', False)]"/>
-                
                 <separator/>
-                <filter string="Orang" name="person" domain="[('is_company', '=', False)]"/>
-                <filter string="Perusahaan" name="company" domain="[('is_company', '=', True)]"/>
-                
+            </xpath>
+            
+            <!-- Tambahkan group by custom di akhir -->
+            <xpath expr="//group[@expand]" position="after">
                 <group expand="0" string="Group By">
                     <filter string="Jenis Kontak" name="group_by_category" 
                             context="{'group_by': 'category_id'}"/>
                     <filter string="Kota" name="group_by_city" 
                             context="{'group_by': 'city'}"/>
                 </group>
-            </search>
+            </xpath>
         </field>
     </record>
     
