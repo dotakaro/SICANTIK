@@ -235,9 +235,12 @@ class SicantikDashboardStats(models.TransientModel):
         }
 
     @api.model
-    def get_document_stats(self):
+    def get_document_stats(self, year_filter='all'):
         """
         Komputasi statistik dokumen TTE
+        
+        Args:
+            year_filter: 'all' untuk semua tahun, atau tahun spesifik (2021, 2022, dll)
         
         Returns:
             dict: Statistik dokumen lengkap
@@ -245,11 +248,35 @@ class SicantikDashboardStats(models.TransientModel):
         Document = self.env['sicantik.document']
         today = fields.Date.today()
         
-        # Total per status
-        total_signed = Document.search_count([('state', '=', 'signed')])
-        pending_signature = Document.search_count([('state', '=', 'pending_signature')])
-        verified = Document.search_count([('state', '=', 'verified')])
-        cancelled = Document.search_count([('state', '=', 'cancelled')])
+        # Domain filter berdasarkan tahun
+        year_domain = []
+        if year_filter != 'all':
+            try:
+                year = int(year_filter)
+                year_start = fields.Date.to_date(f'{year}-01-01')
+                year_end = fields.Date.to_date(f'{year + 1}-01-01')
+                year_domain = [
+                    '|',
+                    ('signature_date', '>=', datetime.combine(year_start, datetime.min.time())),
+                    ('signature_date', '<', datetime.combine(year_end, datetime.min.time())),
+                    '|',
+                    ('signature_date', '=', False),
+                    ('create_date', '>=', datetime.combine(year_start, datetime.min.time())),
+                    ('create_date', '<', datetime.combine(year_end, datetime.min.time())),
+                ]
+            except (ValueError, TypeError):
+                year_domain = []
+        
+        # Total per status (dengan filter tahun jika ada)
+        base_domain_signed = [('state', '=', 'signed')] + (year_domain if year_domain else [])
+        base_domain_pending = [('state', '=', 'pending_signature')] + (year_domain if year_domain else [])
+        base_domain_verified = [('state', '=', 'verified')] + (year_domain if year_domain else [])
+        base_domain_cancelled = [('state', '=', 'cancelled')] + (year_domain if year_domain else [])
+        
+        total_signed = Document.search_count(base_domain_signed)
+        pending_signature = Document.search_count(base_domain_pending)
+        verified = Document.search_count(base_domain_verified)
+        cancelled = Document.search_count(base_domain_cancelled)
         
         # Monthly trend (12 bulan terakhir)
         monthly_trend = []
@@ -281,9 +308,12 @@ class SicantikDashboardStats(models.TransientModel):
         }
 
     @api.model
-    def get_whatsapp_stats(self):
+    def get_whatsapp_stats(self, year_filter='all'):
         """
         Komputasi statistik WhatsApp
+        
+        Args:
+            year_filter: 'all' untuk semua tahun, atau tahun spesifik (2021, 2022, dll)
         
         Returns:
             dict: Statistik WhatsApp lengkap
@@ -292,6 +322,20 @@ class SicantikDashboardStats(models.TransientModel):
         MessageLog = self.env['sicantik.whatsapp.message.log']
         today = fields.Date.today()
         now = fields.Datetime.now()
+        
+        # Domain filter berdasarkan tahun untuk message log
+        message_year_domain = []
+        if year_filter != 'all':
+            try:
+                year = int(year_filter)
+                year_start_dt = datetime.combine(fields.Date.to_date(f'{year}-01-01'), datetime.min.time())
+                year_end_dt = datetime.combine(fields.Date.to_date(f'{year + 1}-01-01'), datetime.min.time())
+                message_year_domain = [
+                    ('sent_date', '>=', year_start_dt),
+                    ('sent_date', '<', year_end_dt),
+                ]
+            except (ValueError, TypeError):
+                message_year_domain = []
         
         # Total kontak dengan WhatsApp
         total_contacts = Partner.search_count([
