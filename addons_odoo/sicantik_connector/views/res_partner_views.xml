@@ -7,17 +7,9 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Sembunyikan tab Sales & Purchase jika ada (hanya jika modul sale terinstall) -->
-            <xpath expr="//page[@name='sales_purchases']" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            
-            <!-- Sembunyikan tab Accounting jika ada (hanya jika modul account terinstall) -->
-            <xpath expr="//page[@name='accounting']" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            
-            <!-- Tambahkan tab Data Perizinan setelah tab Kontak -->
+            <!-- Tambahkan tab Data Perizinan dan WhatsApp Notifikasi -->
+            <!-- Catatan: Tidak menyembunyikan tab Sales/Accounting karena mereka mungkin tidak ada di base Odoo -->
+            <!-- Jika tab tersebut ada (dari modul lain), mereka akan tetap terlihat -->
             <xpath expr="//notebook" position="inside">
                 <page string="Data Perizinan" name="sicantik_permits">
                     <group>
