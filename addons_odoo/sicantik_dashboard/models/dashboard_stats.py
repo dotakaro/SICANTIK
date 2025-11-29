@@ -19,9 +19,12 @@ class SicantikDashboardStats(models.TransientModel):
     _description = 'SICANTIK Dashboard Statistics'
 
     @api.model
-    def get_permit_stats(self):
+    def get_permit_stats(self, year_filter='all'):
         """
         Komputasi statistik izin
+        
+        Args:
+            year_filter: 'all' untuk semua tahun, atau tahun spesifik (2021, 2022, dll)
         
         Returns:
             dict: Statistik izin lengkap
@@ -29,11 +32,35 @@ class SicantikDashboardStats(models.TransientModel):
         Permit = self.env['sicantik.permit']
         today = fields.Date.today()
         
-        # Total per status
-        total_active = Permit.search_count([('status', '=', 'active')])
-        total_expired = Permit.search_count([('status', '=', 'expired')])
-        total_draft = Permit.search_count([('status', '=', 'draft')])
-        total_renewed = Permit.search_count([('status', '=', 'renewed')])
+        # Domain filter berdasarkan tahun
+        year_domain = []
+        if year_filter != 'all':
+            try:
+                year = int(year_filter)
+                year_start = fields.Date.to_date(f'{year}-01-01')
+                year_end = fields.Date.to_date(f'{year + 1}-01-01')
+                year_domain = [
+                    '|',
+                    ('issue_date', '>=', year_start),
+                    ('issue_date', '<', year_end),
+                    '|',
+                    ('issue_date', '=', False),
+                    ('create_date', '>=', datetime.combine(year_start, datetime.min.time())),
+                    ('create_date', '<', datetime.combine(year_end, datetime.min.time())),
+                ]
+            except (ValueError, TypeError):
+                year_domain = []
+        
+        # Total per status (dengan filter tahun jika ada)
+        base_domain_active = [('status', '=', 'active')] + year_domain if year_domain else [('status', '=', 'active')]
+        base_domain_expired = [('status', '=', 'expired')] + year_domain if year_domain else [('status', '=', 'expired')]
+        base_domain_draft = [('status', '=', 'draft')] + year_domain if year_domain else [('status', '=', 'draft')]
+        base_domain_renewed = [('status', '=', 'renewed')] + year_domain if year_domain else [('status', '=', 'renewed')]
+        
+        total_active = Permit.search_count(base_domain_active)
+        total_expired = Permit.search_count(base_domain_expired)
+        total_draft = Permit.search_count(base_domain_draft)
+        total_renewed = Permit.search_count(base_domain_renewed)
         
         # Per kategori
         try:

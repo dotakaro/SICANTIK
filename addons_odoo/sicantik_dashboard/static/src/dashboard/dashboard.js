@@ -17,7 +17,7 @@ export class SicantikDashboard extends Component {
             stats: null,
             error: null,
             isFullscreen: false,
-            selectedYear: new Date().getFullYear(), // Default tahun saat ini
+            selectedYear: 'all', // Default: 'all' untuk semua tahun, atau tahun spesifik (2021, 2022, dll)
         });
         
         this.dashboardRef = useRef("dashboard");
