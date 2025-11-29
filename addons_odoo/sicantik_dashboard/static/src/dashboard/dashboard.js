@@ -12,6 +12,7 @@ export class SicantikDashboard extends Component {
             loading: true,
             stats: null,
             error: null,
+            isFullscreen: false,
         });
         
         this.refreshInterval = null;
@@ -22,6 +23,20 @@ export class SicantikDashboard extends Component {
             this.refreshInterval = setInterval(() => {
                 this.loadStats();
             }, 5 * 60 * 1000);
+            
+            // Listen untuk fullscreen change events
+            document.addEventListener('fullscreenchange', () => {
+                this.state.isFullscreen = !!document.fullscreenElement;
+            });
+            document.addEventListener('webkitfullscreenchange', () => {
+                this.state.isFullscreen = !!document.webkitFullscreenElement;
+            });
+            document.addEventListener('mozfullscreenchange', () => {
+                this.state.isFullscreen = !!document.mozFullScreenElement;
+            });
+            document.addEventListener('MSFullscreenChange', () => {
+                this.state.isFullscreen = !!document.msFullscreenElement;
+            });
         });
         onWillUnmount(() => {
             if (this.refreshInterval) {
@@ -66,6 +81,37 @@ export class SicantikDashboard extends Component {
     formatPercentage(num) {
         if (num === null || num === undefined) return "0%";
         return `${parseFloat(num).toFixed(2)}%`;
+    }
+    
+    toggleFullscreen() {
+        const element = this.el;
+        
+        if (!document.fullscreenElement && 
+            !document.webkitFullscreenElement && 
+            !document.mozFullScreenElement &&
+            !document.msFullscreenElement) {
+            // Enter fullscreen
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.webkitRequestFullscreen) {
+                element.webkitRequestFullscreen();
+            } else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
+            } else if (element.msRequestFullscreen) {
+                element.msRequestFullscreen();
+            }
+        } else {
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
     }
 }
 

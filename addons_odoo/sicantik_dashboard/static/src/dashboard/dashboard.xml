@@ -6,13 +6,22 @@
                 <!-- Header -->
                 <div class="o_dashboard_header">
                     <h1>Dashboard SICANTIK</h1>
-                    <button 
-                        class="btn btn-primary o_dashboard_refresh_btn" 
-                        t-on-click="onRefresh"
-                        t-att-disabled="state.loading">
-                        <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
-                        <span>Refresh</span>
-                    </button>
+                    <div class="o_dashboard_actions">
+                        <button 
+                            class="btn btn-secondary o_dashboard_fullscreen_btn" 
+                            t-on-click="toggleFullscreen"
+                            title="Toggle Fullscreen">
+                            <i class="fa" t-att-class="state.isFullscreen ? 'fa-compress' : 'fa-expand'"/>
+                            <span t-esc="state.isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'"/>
+                        </button>
+                        <button 
+                            class="btn btn-primary o_dashboard_refresh_btn" 
+                            t-on-click="onRefresh"
+                            t-att-disabled="state.loading">
+                            <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
+                            <span>Refresh</span>
+                        </button>
+                    </div>
                 </div>
                         
                         <!-- Loading State -->
