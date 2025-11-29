@@ -8,8 +8,8 @@ import { getColor, getCustomColor } from "@web/core/colors/colors";
 export class PermitChart extends Component {
     static template = "sicantik_dashboard.PermitChart";
     static props = {
-        title: String,
-        data: Object, // { labels: [], values: [] }
+        title: { type: String },
+        data: { type: Object }, // { labels: [], values: [] }
         chartType: { type: String, optional: true }, // 'bar', 'pie', 'line'
     };
     
