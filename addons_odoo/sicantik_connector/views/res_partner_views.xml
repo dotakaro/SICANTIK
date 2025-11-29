@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Inherit Base Partner Form View untuk Aplikasi Perizinan -->
+    <record id="view_partner_form_sicantik" model="ir.ui.view">
+        <field name="name">res.partner.form.sicantik</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Hilangkan tab Sales & Purchase -->
+            <xpath expr="//page[@name='sales_purchases']" position="replace"/>
+            
+            <!-- Hilangkan tab Penagihan -->
+            <xpath expr="//page[@name='accounting_tab']" position="replace"/>
+            
+            <!-- Tambahkan tab Data Perizinan setelah tab Kontak -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Data Perizinan" name="sicantik_permits">
+                    <group>
+                        <group string="Izin Terkait">
+                            <field name="sicantik_permit_ids" nolabel="1" context="{'default_partner_id': id}">
+                                <list string="Daftar Izin">
+                                    <field name="permit_number"/>
+                                    <field name="permit_type_id"/>
+                                    <field name="state" widget="badge" 
+                                           decoration-success="state == 'approved'"
+                                           decoration-warning="state == 'pending'"
+                                           decoration-danger="state == 'rejected'"/>
+                                    <field name="issue_date"/>
+                                    <field name="expiry_date"/>
+                                    <button name="action_view_permit" type="object" string="Lihat Detail" class="oe_link"/>
+                                </list>
+                            </field>
+                        </group>
+                        <group string="Statistik">
+                            <field name="sicantik_permit_count" readonly="1"/>
+                            <button name="action_view_permits" type="object" string="Lihat Semua Izin" class="oe_link"/>
+                        </group>
+                    </group>
+                </page>
+                
+                <!-- Tab WhatsApp Notifikasi -->
+                <page string="WhatsApp Notifikasi" name="whatsapp_notifications">
+                    <group>
+                        <group string="Informasi WhatsApp">
+                            <field name="whatsapp_number" placeholder="+62xxx"/>
+                            <field name="whatsapp_opt_in" widget="boolean_toggle"/>
+                            <field name="whatsapp_opt_in_date" readonly="1"/>
+                        </group>
+                        <group string="Aksi">
+                            <button name="action_opt_in_whatsapp" type="object" 
+                                    string="Aktifkan Notifikasi WhatsApp" 
+                                    class="btn-success"
+                                    invisible="whatsapp_opt_in"/>
+                            <button name="action_opt_out_whatsapp" type="object" 
+                                    string="Nonaktifkan Notifikasi WhatsApp" 
+                                    class="btn-secondary"
+                                    invisible="not whatsapp_opt_in"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+            
+            <!-- Update header untuk menambahkan button lihat izin -->
+            <xpath expr="//header" position="inside">
+                <button name="action_view_permits" type="object" 
+                        string="Lihat Izin" 
+                        class="oe_highlight"
+                        invisible="sicantik_permit_count == 0"
+                        title="Lihat semua izin terkait dengan pemohon ini"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Custom List View untuk Pemohon -->
+    <record id="view_partner_list_sicantik" model="ir.ui.view">
+        <field name="name">res.partner.list.sicantik</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <list string="Pemohon">
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="whatsapp_number"/>
+                <field name="whatsapp_opt_in" widget="boolean_toggle"/>
+                <field name="sicantik_permit_count"/>
+                <field name="is_company" invisible="1"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Custom Search View untuk Pemohon -->
+    <record id="view_partner_search_sicantik" model="ir.ui.view">
+        <field name="name">res.partner.search.sicantik</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <search string="Cari Pemohon">
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="whatsapp_number"/>
+                <field name="email"/>
+                <field name="permit_number" string="No. Izin" 
+                       domain="[('sicantik_permit_ids.permit_number', 'ilike', self)]"/>
+                
+                <filter string="Pemohon" name="applicants" 
+                        domain="[('sicantik_permit_ids', '!=', False)]"/>
+                <filter string="Dengan WhatsApp" name="with_whatsapp" 
+                        domain="[('whatsapp_number', '!=', False)]"/>
+                <filter string="Opt-In Aktif" name="whatsapp_opt_in" 
+                        domain="[('whatsapp_opt_in', '=', True)]"/>
+                <filter string="Belum Opt-In" name="no_whatsapp_opt_in" 
+                        domain="[('whatsapp_opt_in', '=', False), ('whatsapp_number', '!=', False)]"/>
+                
+                <separator/>
+                <filter string="Orang" name="person" domain="[('is_company', '=', False)]"/>
+                <filter string="Perusahaan" name="company" domain="[('is_company', '=', True)]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="Jenis Kontak" name="group_by_category" 
+                            context="{'group_by': 'category_id'}"/>
+                    <filter string="Kota" name="group_by_city" 
+                            context="{'group_by': 'city'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action untuk Menu Pemohon -->
+    <record id="action_sicantik_partner" model="ir.actions.act_window">
+        <field name="name">Pemohon</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_partner_list_sicantik"/>
+        <field name="search_view_id" ref="view_partner_search_sicantik"/>
+        <field name="domain">[('sicantik_permit_ids', '!=', False)]</field>
+        <field name="context">{'default_is_company': False, 'search_default_applicants': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Belum ada pemohon
+            </p>
+            <p>
+                Pemohon adalah kontak yang memiliki izin di sistem SICANTIK.
+                Pemohon akan otomatis dibuat saat data izin di-sync dari server SICANTIK.
+            </p>
+        </field>
+    </record>
+    
+</odoo>
+
