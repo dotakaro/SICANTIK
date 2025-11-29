@@ -82,7 +82,7 @@ class SicantikDashboardStats(models.TransientModel):
         except Exception as e:
             _logger.warning(f"Error getting permits by category: {str(e)}")
             # Fallback: gunakan search biasa
-            permits = Permit.search([('status', '=', 'active')])
+            permits = Permit.search(category_domain)
             category_counts = {}
             for permit in permits:
                 category = permit.permit_type_name or 'Tidak Diketahui'

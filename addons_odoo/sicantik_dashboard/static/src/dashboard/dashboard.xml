@@ -7,19 +7,31 @@
                 <div class="o_dashboard_header">
                     <h1>Dashboard SICANTIK</h1>
                     <div class="o_dashboard_actions">
-                        <button 
-                            class="btn btn-secondary o_dashboard_fullscreen_btn" 
-                            t-on-click="toggleFullscreen"
-                            title="Toggle Fullscreen">
-                            <i class="fa" t-att-class="state.isFullscreen ? 'fa-compress' : 'fa-expand'"/>
-                            <span t-esc="state.isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'"/>
-                        </button>
+                        <div class="year_filter_header">
+                            <label for="year_filter_header" class="year_filter_label_header">Filter Tahun:</label>
+                            <select 
+                                id="year_filter_header" 
+                                class="form-control year_filter_select_header"
+                                t-att-value="state.selectedYear"
+                                t-on-change="onYearChange">
+                                <t t-foreach="availableYears" t-as="year" t-key="year">
+                                    <option t-att-value="year" t-esc="year === 'all' ? 'All Tahun' : year"/>
+                                </t>
+                            </select>
+                        </div>
                         <button 
                             class="btn btn-primary o_dashboard_refresh_btn" 
                             t-on-click="onRefresh"
                             t-att-disabled="state.loading">
                             <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
                             <span>Refresh</span>
+                        </button>
+                        <button 
+                            class="btn btn-secondary o_dashboard_fullscreen_btn" 
+                            t-on-click="toggleFullscreen"
+                            title="Toggle Fullscreen">
+                            <i class="fa" t-att-class="state.isFullscreen ? 'fa-compress' : 'fa-expand'"/>
+                            <span t-esc="state.isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'"/>
                         </button>
                     </div>
                 </div>
