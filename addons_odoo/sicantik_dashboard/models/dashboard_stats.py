@@ -172,10 +172,14 @@ class SicantikDashboardStats(models.TransientModel):
             month_start = today.replace(day=1) - relativedelta(months=i)
             month_end = month_start + relativedelta(months=1) - timedelta(days=1)
             
+            # Convert date to datetime for signature_date field (Datetime field)
+            month_start_dt = datetime.combine(month_start, datetime.min.time())
+            month_end_dt = datetime.combine(month_end, datetime.max.time())
+            
             count = Document.search_count([
                 ('state', '=', 'signed'),
-                ('sign_date', '>=', month_start),
-                ('sign_date', '<=', month_end)
+                ('signature_date', '>=', month_start_dt),
+                ('signature_date', '<=', month_end_dt)
             ])
             
             monthly_trend.append({
