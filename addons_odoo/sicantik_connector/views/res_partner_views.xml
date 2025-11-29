@@ -13,36 +13,20 @@
             <xpath expr="//notebook" position="inside">
                 <page string="Data Perizinan" name="sicantik_permits">
                     <group>
-                        <group string="Izin Terkait" col="2">
-                            <field name="sicantik_permit_ids" nolabel="1" context="{'default_partner_id': id}" colspan="2">
-                                <list string="Daftar Izin">
-                                    <field name="permit_number"/>
-                                    <field name="permit_type_id"/>
-                                    <field name="status" widget="badge" 
-                                           decoration-success="status == 'active'"
-                                           decoration-warning="status == 'draft'"
-                                           decoration-danger="status == 'expired' or status == 'cancelled'"
-                                           decoration-info="status == 'renewed'"/>
-                                    <field name="issue_date"/>
-                                    <field name="expiry_date"/>
-                                </list>
-                            </field>
-                        </group>
-                        <group string="Statistik" col="1">
-                            <group>
-                                <field name="sicantik_permit_count" 
-                                       readonly="1" 
-                                       widget="integer"
-                                       string="Total Izin"
-                                       class="oe_read_only"/>
-                                <button name="action_view_permits" 
-                                        type="object" 
-                                        string="Lihat Semua Izin" 
-                                        class="oe_link"
-                                        icon="fa-external-link"
-                                        title="Lihat semua izin terkait dengan pemohon ini"/>
-                            </group>
-                        </group>
+                        <field name="sicantik_permit_ids" nolabel="1" context="{'default_partner_id': id}">
+                            <list string="Daftar Izin">
+                                <field name="permit_number"/>
+                                <field name="permit_type_id"/>
+                                <field name="status" widget="badge" 
+                                       decoration-success="status == 'active'"
+                                       decoration-warning="status == 'draft'"
+                                       decoration-danger="status == 'expired' or status == 'cancelled'"
+                                       decoration-info="status == 'renewed'"/>
+                                <field name="issue_date"/>
+                                <field name="expiry_date"/>
+                                <field name="count_line" sum="Total" string="Jumlah Izin" readonly="1" invisible="1"/>
+                            </list>
+                        </field>
                     </group>
                 </page>
                 
