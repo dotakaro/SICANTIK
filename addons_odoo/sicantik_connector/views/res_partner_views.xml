@@ -7,11 +7,15 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Hilangkan tab Sales & Purchase -->
-            <xpath expr="//page[@name='sales_purchases']" position="replace"/>
+            <!-- Sembunyikan tab Sales & Purchase jika ada (hanya jika modul sale terinstall) -->
+            <xpath expr="//page[@name='sales_purchases']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
             
-            <!-- Hilangkan tab Penagihan -->
-            <xpath expr="//page[@name='accounting_tab']" position="replace"/>
+            <!-- Sembunyikan tab Accounting jika ada (hanya jika modul account terinstall) -->
+            <xpath expr="//page[@name='accounting']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
             
             <!-- Tambahkan tab Data Perizinan setelah tab Kontak -->
             <xpath expr="//notebook" position="inside">
