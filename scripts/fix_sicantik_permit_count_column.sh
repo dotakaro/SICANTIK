@@ -13,7 +13,7 @@ if command -v docker-compose &> /dev/null; then
     # Cek apakah container postgres ada
     if docker-compose ps | grep -q postgres; then
         DB_CONTAINER=$(docker-compose ps | grep postgres | awk '{print $1}' | head -n 1)
-        DB_NAME="${DB_NAME:-sicantik_companion_standalone}"
+        DB_NAME="${DB_NAME:-sicantik}"
         DB_USER="${DB_USER:-odoo}"
         
         echo "✅ Container PostgreSQL ditemukan: $DB_CONTAINER"
