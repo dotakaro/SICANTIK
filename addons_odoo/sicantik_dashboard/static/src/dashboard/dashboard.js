@@ -151,6 +151,14 @@ export class SicantikDashboard extends Component {
         };
     }
     
+    get yearlyChartTitle() {
+        if (this.state.selectedYear === 'all') {
+            return 'Izin per Tahun (Trend Multi-Tahun)';
+        } else {
+            return `Izin per Bulan (${this.state.selectedYear})`;
+        }
+    }
+    
     get availableYears() {
         // Generate tahun dari 5 tahun lalu sampai tahun sekarang + 1 tahun ke depan
         const currentYear = new Date().getFullYear();
