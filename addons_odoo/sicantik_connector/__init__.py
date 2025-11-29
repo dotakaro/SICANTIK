@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from . import hooks
+from .hooks import pre_init_hook
 from . import models
 from . import wizard
 
