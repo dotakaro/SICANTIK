@@ -84,15 +84,15 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_tree"/>
         <field name="arch" type="xml">
-            <list string="Pemohon">
-                <field name="name"/>
-                <field name="phone"/>
-                <field name="whatsapp_number"/>
+            <!-- Tambahkan field-field custom ke list view -->
+            <list position="inside">
+                <field name="phone" optional="show"/>
+                <field name="whatsapp_number" optional="show"/>
                 <field name="whatsapp_opt_in" widget="boolean_toggle" 
+                       optional="show"
                        decoration-success="whatsapp_opt_in == True"
                        decoration-muted="whatsapp_opt_in == False"/>
-                <field name="sicantik_permit_count"/>
-                <field name="is_company" invisible="1"/>
+                <field name="sicantik_permit_count" optional="show"/>
                 <button name="action_send_opt_in_message" type="object" 
                         string="Kirim Permintaan Opt-In" 
                         class="btn-primary"
