@@ -66,5 +66,6 @@ License: LGPL-3
     'application': True,
     'auto_install': False,
     'images': ['static/description/icon.png'],
+    'pre_init_hook': 'pre_init_hook',
 }
 

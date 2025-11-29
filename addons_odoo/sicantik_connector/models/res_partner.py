@@ -2,7 +2,6 @@
 
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
-from odoo.tools.sql import column_exists, create_column
 import re
 import logging
 
@@ -14,12 +13,6 @@ class ResPartner(models.Model):
     Extend Partner model for WhatsApp integration
     """
     _inherit = 'res.partner'
-    
-    def _auto_init(self):
-        """Create column manually to avoid computation during installation"""
-        if not column_exists(self.env.cr, "res_partner", "sicantik_permit_count"):
-            create_column(self.env.cr, "res_partner", "sicantik_permit_count", "int4")
-        return super()._auto_init()
     
     # WhatsApp Fields
     whatsapp_number = fields.Char(
