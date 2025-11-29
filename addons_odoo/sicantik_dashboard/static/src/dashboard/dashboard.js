@@ -123,5 +123,27 @@ export class SicantikDashboard extends Component {
             }
         }
     }
+    
+    get categoryChartData() {
+        if (!this.state.stats || !this.state.stats.permit_stats) {
+            return { labels: [], values: [] };
+        }
+        const byCategory = this.state.stats.permit_stats.by_category || [];
+        return {
+            labels: byCategory.map(item => item.name),
+            values: byCategory.map(item => item.count),
+        };
+    }
+    
+    get yearlyChartData() {
+        if (!this.state.stats || !this.state.stats.permit_stats) {
+            return { labels: [], values: [] };
+        }
+        const byYear = this.state.stats.permit_stats.by_year || [];
+        return {
+            labels: byYear.map(item => item.year.toString()),
+            values: byYear.map(item => item.count),
+        };
+    }
 }
 
