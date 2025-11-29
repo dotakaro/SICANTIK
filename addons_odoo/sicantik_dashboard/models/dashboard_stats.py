@@ -352,61 +352,69 @@ class SicantikDashboardStats(models.TransientModel):
         # Opt-in rate
         opt_in_rate = (opt_in_active / total_contacts * 100) if total_contacts > 0 else 0.0
         
-        # Pesan terkirim hari ini
+        # Pesan terkirim hari ini (dengan filter tahun jika ada)
         today_start = datetime.combine(today, datetime.min.time())
         today_end = datetime.combine(today, datetime.max.time())
-        messages_today = MessageLog.search_count([
+        messages_today_domain = [
             ('state', '=', 'sent'),
             ('sent_date', '>=', today_start),
             ('sent_date', '<=', today_end)
-        ])
+        ] + (message_year_domain if message_year_domain else [])
+        messages_today = MessageLog.search_count(messages_today_domain)
         
-        # Pesan terkirim minggu ini
+        # Pesan terkirim minggu ini (dengan filter tahun jika ada)
         week_start = today - timedelta(days=today.weekday())
         week_start_dt = datetime.combine(week_start, datetime.min.time())
-        messages_this_week = MessageLog.search_count([
+        messages_this_week_domain = [
             ('state', '=', 'sent'),
             ('sent_date', '>=', week_start_dt),
             ('sent_date', '<=', now)
-        ])
+        ] + (message_year_domain if message_year_domain else [])
+        messages_this_week = MessageLog.search_count(messages_this_week_domain)
         
-        # Pesan terkirim bulan ini
+        # Pesan terkirim bulan ini (dengan filter tahun jika ada)
         month_start = today.replace(day=1)
         month_start_dt = datetime.combine(month_start, datetime.min.time())
-        messages_this_month = MessageLog.search_count([
+        messages_this_month_domain = [
             ('state', '=', 'sent'),
             ('sent_date', '>=', month_start_dt),
             ('sent_date', '<=', now)
-        ])
+        ] + (message_year_domain if message_year_domain else [])
+        messages_this_month = MessageLog.search_count(messages_this_month_domain)
         
-        # Pesan terkirim tahun ini
-        year_start = today.replace(month=1, day=1)
-        year_start_dt = datetime.combine(year_start, datetime.min.time())
-        messages_this_year = MessageLog.search_count([
-            ('state', '=', 'sent'),
-            ('sent_date', '>=', year_start_dt),
-            ('sent_date', '<=', now)
-        ])
+        # Pesan terkirim tahun ini (dengan filter tahun jika ada)
+        if year_filter == 'all':
+            year_start = today.replace(month=1, day=1)
+            year_start_dt = datetime.combine(year_start, datetime.min.time())
+            messages_this_year_domain = [
+                ('state', '=', 'sent'),
+                ('sent_date', '>=', year_start_dt),
+                ('sent_date', '<=', now)
+            ]
+        else:
+            messages_this_year_domain = [
+                ('state', '=', 'sent')
+            ] + (message_year_domain if message_year_domain else [])
+        messages_this_year = MessageLog.search_count(messages_this_year_domain)
         
-        # Pesan gagal
-        messages_failed = MessageLog.search_count([
-            ('state', '=', 'failed')
-        ])
+        # Pesan gagal (dengan filter tahun jika ada)
+        messages_failed_domain = [('state', '=', 'failed')] + (message_year_domain if message_year_domain else [])
+        messages_failed = MessageLog.search_count(messages_failed_domain)
         
-        # Total pesan terkirim (untuk menghitung failure rate)
-        total_sent = MessageLog.search_count([
-            ('state', 'in', ['sent', 'delivered', 'read'])
-        ])
+        # Total pesan terkirim (untuk menghitung failure rate, dengan filter tahun jika ada)
+        total_sent_domain = [('state', 'in', ['sent', 'delivered', 'read'])] + (message_year_domain if message_year_domain else [])
+        total_sent = MessageLog.search_count(total_sent_domain)
         total_messages = total_sent + messages_failed
         failure_rate = (messages_failed / total_messages * 100) if total_messages > 0 else 0.0
         
-        # Per provider
+        # Per provider (dengan filter tahun jika ada)
         by_provider = {}
         for provider_type in ['meta', 'fonnte', 'watzap']:
-            count = MessageLog.search_count([
+            provider_domain = [
                 ('provider_type', '=', provider_type),
                 ('state', 'in', ['sent', 'delivered', 'read'])
-            ])
+            ] + (message_year_domain if message_year_domain else [])
+            count = MessageLog.search_count(provider_domain)
             by_provider[provider_type] = count
         
         return {
