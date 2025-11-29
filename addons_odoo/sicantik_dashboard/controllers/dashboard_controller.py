@@ -38,17 +38,20 @@ class DashboardController(http.Controller):
         _logger.debug(f"Cache set untuk {cache_key}")
 
     @http.route('/sicantik/dashboard/stats', type='json', auth='user', methods=['POST'])
-    def get_dashboard_stats(self):
+    def get_dashboard_stats(self, year_filter='all'):
         """
         Endpoint untuk mengambil data statistik dashboard
         Dengan caching 5 menit untuk performa optimal
+        
+        Args:
+            year_filter: 'all' untuk semua tahun, atau tahun spesifik (2021, 2022, dll)
         
         Returns:
             dict: Dictionary berisi semua statistik (permit, document, whatsapp)
         """
         try:
             user_id = request.env.user.id
-            cache_key = self._get_cache_key(user_id)
+            cache_key = f"{self._get_cache_key(user_id)}_{year_filter}"
             
             # Cek cache terlebih dahulu
             cached_result = self._get_cached_stats(cache_key)
@@ -58,10 +61,10 @@ class DashboardController(http.Controller):
             # Jika tidak ada di cache, hitung statistik
             stats_model = request.env['sicantik.dashboard.stats']
             
-            # Ambil semua statistik
-            permit_stats = stats_model.get_permit_stats()
-            document_stats = stats_model.get_document_stats()
-            whatsapp_stats = stats_model.get_whatsapp_stats()
+            # Ambil semua statistik dengan filter tahun
+            permit_stats = stats_model.get_permit_stats(year_filter=year_filter)
+            document_stats = stats_model.get_document_stats(year_filter=year_filter)
+            whatsapp_stats = stats_model.get_whatsapp_stats(year_filter=year_filter)
             
             result = {
                 'success': True,

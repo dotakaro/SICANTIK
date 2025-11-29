@@ -56,7 +56,10 @@ export class SicantikDashboard extends Component {
         this.state.error = null;
         
         try {
-            const result = await rpc("/sicantik/dashboard/stats", {});
+            const yearFilter = this.state.selectedYear;
+            const result = await rpc("/sicantik/dashboard/stats", {
+                year_filter: yearFilter
+            });
             
             if (result.success) {
                 this.state.stats = {
@@ -142,31 +145,26 @@ export class SicantikDashboard extends Component {
         }
         const byYear = this.state.stats.permit_stats.by_year || [];
         
-        // Filter berdasarkan tahun yang dipilih (tampilkan 5 tahun: 2 tahun sebelum, tahun terpilih, 2 tahun setelah)
-        const selectedYear = this.state.selectedYear;
-        const startYear = selectedYear - 2;
-        const endYear = selectedYear + 2;
-        
-        const filteredYears = byYear.filter(item => 
-            item.year >= startYear && item.year <= endYear
-        );
-        
         return {
-            labels: filteredYears.map(item => item.year.toString()),
-            values: filteredYears.map(item => item.count),
+            labels: byYear.map(item => item.year.toString()),
+            values: byYear.map(item => item.count),
         };
     }
     
     get availableYears() {
-        if (!this.state.stats || !this.state.stats.permit_stats) {
-            return [];
+        // Generate tahun dari 5 tahun lalu sampai tahun sekarang + 1 tahun ke depan
+        const currentYear = new Date().getFullYear();
+        const years = ['all'];
+        for (let year = currentYear - 4; year <= currentYear + 1; year++) {
+            years.push(year.toString());
         }
-        const byYear = this.state.stats.permit_stats.by_year || [];
-        return byYear.map(item => item.year).sort((a, b) => b - a); // Sort descending
+        return years;
     }
     
     onYearChange(event) {
-        this.state.selectedYear = parseInt(event.target.value);
+        this.state.selectedYear = event.target.value;
+        // Reload stats saat filter tahun berubah
+        this.loadStats();
     }
 }
 

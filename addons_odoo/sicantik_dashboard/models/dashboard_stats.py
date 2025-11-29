@@ -62,10 +62,11 @@ class SicantikDashboardStats(models.TransientModel):
         total_draft = Permit.search_count(base_domain_draft)
         total_renewed = Permit.search_count(base_domain_renewed)
         
-        # Per kategori
+        # Per kategori (dengan filter tahun jika ada)
+        category_domain = [('status', '=', 'active')] + (year_domain if year_domain else [])
         try:
             permits_by_category = Permit._read_group(
-                domain=[('status', '=', 'active')],
+                domain=category_domain,
                 groupby=['permit_type_name'],
                 aggregates=['__count'],
                 order='__count desc',
