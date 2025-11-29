@@ -108,8 +108,20 @@
                                         </div>
                                         <div class="col-md-6">
                                             <t t-set="yearlyData" t-value="yearlyChartData"/>
+                                            <div class="year_filter_container">
+                                                <label for="year_filter" class="year_filter_label">Filter Tahun:</label>
+                                                <select 
+                                                    id="year_filter" 
+                                                    class="form-control year_filter_select"
+                                                    t-att-value="state.selectedYear"
+                                                    t-on-change="onYearChange">
+                                                    <t t-foreach="availableYears" t-as="year" t-key="year">
+                                                        <option t-att-value="year" t-esc="year"/>
+                                                    </t>
+                                                </select>
+                                            </div>
                                             <PermitChart 
-                                                title="'Izin per Tahun (5 Tahun Terakhir)'"
+                                                title="'Izin per Tahun'"
                                                 data="yearlyData"
                                                 chartType="'line'"/>
                                         </div>

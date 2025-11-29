@@ -8,8 +8,8 @@ import { getColor, getCustomColor } from "@web/core/colors/colors";
 export class PermitChart extends Component {
     static template = "sicantik_dashboard.PermitChart";
     static props = {
-        title: { type: String },
-        data: { type: Object }, // { labels: [], values: [] }
+        title: String,
+        data: Object, // { labels: [], values: [] }
         chartType: { type: String, optional: true }, // 'bar', 'pie', 'line'
     };
     
@@ -200,10 +200,20 @@ export class PermitChart extends Component {
     }
     
     generateColors(count) {
+        // Color palette yang lebih baik dengan variasi warna yang lebih banyak
+        const colorPalette = [
+            '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8',
+            '#6f42c1', '#e83e8c', '#fd7e14', '#20c997', '#6c757d',
+            '#0056b3', '#1e7e34', '#d39e00', '#bd2130', '#117a8b',
+            '#5a6268', '#c82333', '#138496', '#e0a800', '#218838',
+            '#0069d9', '#1c7430', '#ffb300', '#c82333', '#0c5460',
+        ];
+        
         const colors = [];
-        const colorScheme = cookie.get("color_scheme");
         for (let i = 0; i < count; i++) {
-            colors.push(getColor(i, colorScheme, "odoo"));
+            // Gunakan modulo untuk cycle melalui palette
+            const colorIndex = i % colorPalette.length;
+            colors.push(colorPalette[colorIndex]);
         }
         return colors;
     }

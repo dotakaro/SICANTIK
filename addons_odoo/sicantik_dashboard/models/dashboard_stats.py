@@ -65,17 +65,37 @@ class SicantikDashboardStats(models.TransientModel):
             ]
         
         # Per tahun (5 tahun terakhir)
+        # Gunakan create_date jika issue_date tidak ada atau null
         current_year = today.year
         by_year = []
         for year in range(current_year - 4, current_year + 1):
-            count = Permit.search_count([
+            # Coba dengan issue_date dulu, jika tidak ada gunakan create_date
+            year_start = fields.Date.to_date(f'{year}-01-01')
+            year_end = fields.Date.to_date(f'{year + 1}-01-01')
+            
+            # Cari dengan issue_date jika ada
+            count_with_issue_date = Permit.search_count([
                 ('status', '=', 'active'),
-                ('issue_date', '>=', f'{year}-01-01'),
-                ('issue_date', '<', f'{year + 1}-01-01'),
+                ('issue_date', '>=', year_start),
+                ('issue_date', '<', year_end),
             ])
+            
+            # Cari dengan create_date untuk yang tidak punya issue_date
+            count_with_create_date = Permit.search_count([
+                ('status', '=', 'active'),
+                '|',
+                ('issue_date', '=', False),
+                ('issue_date', '=', None),
+                ('create_date', '>=', f'{year}-01-01 00:00:00'),
+                ('create_date', '<', f'{year + 1}-01-01 00:00:00'),
+            ])
+            
+            # Total: yang punya issue_date + yang tidak punya issue_date tapi create_date di tahun tersebut
+            total_count = count_with_issue_date + count_with_create_date
+            
             by_year.append({
                 'year': year,
-                'count': count
+                'count': total_count
             })
         
         # Expiry breakdown

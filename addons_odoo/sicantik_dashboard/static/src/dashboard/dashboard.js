@@ -17,6 +17,7 @@ export class SicantikDashboard extends Component {
             stats: null,
             error: null,
             isFullscreen: false,
+            selectedYear: new Date().getFullYear(), // Default tahun saat ini
         });
         
         this.dashboardRef = useRef("dashboard");
@@ -140,10 +141,32 @@ export class SicantikDashboard extends Component {
             return { labels: [], values: [] };
         }
         const byYear = this.state.stats.permit_stats.by_year || [];
+        
+        // Filter berdasarkan tahun yang dipilih (tampilkan 5 tahun: 2 tahun sebelum, tahun terpilih, 2 tahun setelah)
+        const selectedYear = this.state.selectedYear;
+        const startYear = selectedYear - 2;
+        const endYear = selectedYear + 2;
+        
+        const filteredYears = byYear.filter(item => 
+            item.year >= startYear && item.year <= endYear
+        );
+        
         return {
-            labels: byYear.map(item => item.year.toString()),
-            values: byYear.map(item => item.count),
+            labels: filteredYears.map(item => item.year.toString()),
+            values: filteredYears.map(item => item.count),
         };
+    }
+    
+    get availableYears() {
+        if (!this.state.stats || !this.state.stats.permit_stats) {
+            return [];
+        }
+        const byYear = this.state.stats.permit_stats.by_year || [];
+        return byYear.map(item => item.year).sort((a, b) => b - a); // Sort descending
+    }
+    
+    onYearChange(event) {
+        this.state.selectedYear = parseInt(event.target.value);
     }
 }
 
