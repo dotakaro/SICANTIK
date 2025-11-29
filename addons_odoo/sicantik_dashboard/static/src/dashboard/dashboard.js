@@ -3,9 +3,13 @@
 import { Component, useState, useRef, onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
 import { rpc } from "@web/core/network/rpc";
 import { _t } from "@web/core/l10n/translation";
+import { PermitChart } from "./components/permit_chart";
 
 export class SicantikDashboard extends Component {
     static template = "sicantik_dashboard.Dashboard";
+    static components = {
+        PermitChart,
+    };
     
     setup() {
         this.state = useState({

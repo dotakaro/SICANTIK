@@ -51,6 +51,8 @@ License: LGPL-3
             'sicantik_dashboard/static/src/dashboard/dashboard.js',
             'sicantik_dashboard/static/src/dashboard/dashboard.xml',
             'sicantik_dashboard/static/src/dashboard/dashboard.scss',
+            'sicantik_dashboard/static/src/dashboard/components/*.js',
+            'sicantik_dashboard/static/src/dashboard/components/*.xml',
             'sicantik_dashboard/static/src/dashboard/registry.js',
         ],
     },
