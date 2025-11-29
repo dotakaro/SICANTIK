@@ -15,6 +15,7 @@ export class SicantikDashboard extends Component {
             isFullscreen: false,
         });
         
+        this.dashboardRef = useRef("dashboard");
         this.refreshInterval = null;
         
         onWillStart(() => this.loadStats());
@@ -84,7 +85,12 @@ export class SicantikDashboard extends Component {
     }
     
     toggleFullscreen() {
-        const element = this.el;
+        const element = this.dashboardRef.el;
+        
+        if (!element) {
+            console.warn("Dashboard element not found");
+            return;
+        }
         
         if (!document.fullscreenElement && 
             !document.webkitFullscreenElement && 
