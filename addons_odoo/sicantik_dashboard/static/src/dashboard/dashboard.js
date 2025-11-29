@@ -44,10 +44,10 @@ export class SicantikDashboard extends Component {
                     whatsapp_stats: result.whatsapp_stats,
                 };
             } else {
-                this.state.error = result.error || _t("Unknown error occurred");
+                this.state.error = result.error || "Terjadi kesalahan yang tidak diketahui";
             }
         } catch (error) {
-            this.state.error = error.message || _t("Failed to load dashboard statistics");
+            this.state.error = error.message || "Gagal memuat statistik dashboard";
             console.error("Dashboard stats error:", error);
         } finally {
             this.state.loading = false;
